@@ -164,17 +164,17 @@ namespace internal
 namespace testing
 {
 
-typedef void TestControlSignature(TestControlSignatureTagInput, TestControlSignatureTagOutput);
+using TestControlSignature = void(TestControlSignatureTagInput, TestControlSignatureTagOutput);
 using TestControlInterface = vtkm::internal::FunctionInterface<TestControlSignature>;
 
-typedef void TestExecutionSignature1(vtkm::exec::arg::BasicArg<1>, vtkm::exec::arg::BasicArg<2>);
+using TestExecutionSignature1 = void(vtkm::exec::arg::BasicArg<1>, vtkm::exec::arg::BasicArg<2>);
 using TestExecutionInterface1 = vtkm::internal::FunctionInterface<TestExecutionSignature1>;
 
-typedef vtkm::exec::arg::BasicArg<2> TestExecutionSignature2(vtkm::exec::arg::BasicArg<1>);
+using TestExecutionSignature2 = vtkm::exec::arg::BasicArg<2>(vtkm::exec::arg::BasicArg<1>);
 using TestExecutionInterface2 = vtkm::internal::FunctionInterface<TestExecutionSignature2>;
 
-typedef vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)>
-  ExecutionParameterInterface;
+using ExecutionParameterInterface =
+  vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)>;
 
 using InvocationType1 = vtkm::internal::Invocation<ExecutionParameterInterface,
                                                    TestControlInterface,
@@ -225,7 +225,7 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
     const InputDomainType&,
     const G& globalThreadIndexOffset) const
   {
-    const vtkm::Id index = vtkm::dot(threadIndex, vtkm::Id3(1, 8, 64));
+    const vtkm::Id index = vtkm::Dot(threadIndex, vtkm::Id3(1, 8, 64));
     return vtkm::exec::arg::ThreadIndicesBasic(
       index, outToIn.Get(index), visit.Get(index), globalThreadIndexOffset);
   }
@@ -265,7 +265,7 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
     const InputDomainType&,
     const G& globalThreadIndexOffset) const
   {
-    const vtkm::Id index = vtkm::dot(threadIndex, vtkm::Id3(1, 8, 64));
+    const vtkm::Id index = vtkm::Dot(threadIndex, vtkm::Id3(1, 8, 64));
     return vtkm::exec::arg::ThreadIndicesBasic(
       index, outToIn.Get(index), visit.Get(index), globalThreadIndexOffset);
   }

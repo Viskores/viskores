@@ -36,18 +36,15 @@ public:
   //
   struct DistributeCellData : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<> inIndices, FieldOut<> outIndices);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<> inIndices, FieldOut<> outIndices);
+    using ExecutionSignature = void(_1, _2);
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
     template <typename CountArrayType, typename DeviceAdapter>
-    VTKM_CONT DistributeCellData(const CountArrayType& countArray, DeviceAdapter device)
-      : Scatter(countArray, device)
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray, DeviceAdapter device)
     {
+      return ScatterType(countArray, device);
     }
 
     template <typename T>
@@ -55,9 +52,6 @@ public:
     {
       outputIndex = inputIndex;
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   Triangulate()
@@ -96,8 +90,8 @@ public:
   {
     vtkm::cont::ArrayHandle<ValueType> output;
 
-    DistributeCellData distribute(this->OutCellsPerCell, device);
-    vtkm::worklet::DispatcherMapField<DistributeCellData, DeviceAdapter> dispatcher(distribute);
+    vtkm::worklet::DispatcherMapField<DistributeCellData, DeviceAdapter> dispatcher(
+      DistributeCellData::MakeScatter(this->OutCellsPerCell, device));
     dispatcher.Invoke(input, output);
 
     return output;

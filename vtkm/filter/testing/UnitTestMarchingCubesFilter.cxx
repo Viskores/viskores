@@ -35,8 +35,8 @@ namespace vtkm_ut_mc_filter
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
@@ -109,7 +109,7 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   dataSet.AddField(
-    vtkm::cont::Field(std::string("nodevar"), vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+    vtkm::cont::Field(std::string("nodevar"), vtkm::cont::Field::Association::POINTS, fieldArray));
 
   static constexpr vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
@@ -176,22 +176,28 @@ public:
 
     switch (localId)
     {
-      case 2:
-        globalId += 1;
-      case 3:
-        globalId += this->Dimension;
-      case 1:
-        globalId += 1;
       case 0:
         break;
-      case 6:
+      case 1:
         globalId += 1;
-      case 7:
-        globalId += this->Dimension;
-      case 5:
-        globalId += 1;
+        break;
+      case 2:
+        globalId += this->Dimension + 2;
+        break;
+      case 3:
+        globalId += this->Dimension + 1;
+        break;
       case 4:
         globalId += this->DimPlus1Squared;
+        break;
+      case 5:
+        globalId += this->DimPlus1Squared + 1;
+        break;
+      case 6:
+        globalId += this->Dimension + this->DimPlus1Squared + 2;
+        break;
+      case 7:
+        globalId += this->Dimension + this->DimPlus1Squared + 1;
         break;
     }
 
@@ -276,10 +282,10 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
   //Set point scalar
   dataSet.AddField(vtkm::cont::Field("distanceToOrigin",
-                                     vtkm::cont::Field::ASSOC_POINTS,
+                                     vtkm::cont::Field::Association::POINTS,
                                      vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
   dataSet.AddField(vtkm::cont::Field("distanceToOther",
-                                     vtkm::cont::Field::ASSOC_POINTS,
+                                     vtkm::cont::Field::Association::POINTS,
                                      vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
   CellSet cellSet("cells");

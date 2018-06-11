@@ -87,11 +87,13 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>
                  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field2,
                  const vtkm::cont::DataSet& result)
 {
-  VTKM_TEST_ASSERT(result.HasField("dotproduct", vtkm::cont::Field::ASSOC_POINTS),
+  VTKM_TEST_ASSERT(result.HasField("dotproduct", vtkm::cont::Field::Association::POINTS),
                    "Output field is missing.");
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputArray;
-  result.GetField("dotproduct", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(outputArray);
+  result.GetField("dotproduct", vtkm::cont::Field::Association::POINTS)
+    .GetData()
+    .CopyTo(outputArray);
 
   auto v1Portal = field1.GetPortalConstControl();
   auto v2Portal = field2.GetPortalConstControl();
@@ -108,7 +110,7 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>
     vtkm::Vec<vtkm::FloatDefault, 3> v2 = v2Portal.Get(j);
     vtkm::FloatDefault res = outPortal.Get(j);
 
-    VTKM_TEST_ASSERT(test_equal(vtkm::dot(v1, v2), res), "Wrong result for dot product");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Dot(v1, v2), res), "Wrong result for dot product");
   }
 }
 

@@ -112,33 +112,18 @@ TestScatterArrays MakeScatterArraysZero()
 
 struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> inputIndices,
+  using ControlSignature = void(FieldIn<> inputIndices,
                                 FieldOut<> copyIndices,
                                 FieldOut<> recordVisit,
                                 FieldOut<> recordWorkId);
-  typedef void ExecutionSignature(_1, _2, _3, _4, VisitIndex, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, VisitIndex, WorkIndex);
 
   using ScatterType = vtkm::worklet::ScatterCounting;
 
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->Scatter; }
-
-  template <typename CountArrayType>
-  VTKM_CONT TestScatterCountingWorklet(const CountArrayType& countArray)
-    : Scatter(countArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG())
-  {
-  }
-
   template <typename CountArrayType, typename Device>
-  VTKM_CONT TestScatterCountingWorklet(const CountArrayType& countArray, Device)
-    : Scatter(countArray, Device())
+  VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray, Device)
   {
-  }
-
-  VTKM_CONT
-  TestScatterCountingWorklet(const vtkm::worklet::ScatterCounting& scatter)
-    : Scatter(scatter)
-  {
+    return ScatterType(countArray, Device());
   }
 
   VTKM_EXEC
@@ -153,9 +138,6 @@ struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
     writeVisit = visitIndex;
     captureWorkId = TestValue(workId, vtkm::Float32());
   }
-
-private:
-  ScatterType Scatter;
 };
 
 template <typename T>
@@ -203,9 +185,8 @@ void TestScatterWorklet(const TestScatterArrays& arrays)
 {
   std::cout << "  Testing scatter counting in a worklet." << std::endl;
 
-  vtkm::worklet::ScatterCounting scatter(arrays.CountArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  TestScatterCountingWorklet worklet(scatter);
-  vtkm::worklet::DispatcherMapField<TestScatterCountingWorklet> dispatcher(worklet);
+  vtkm::worklet::DispatcherMapField<TestScatterCountingWorklet> dispatcher(
+    TestScatterCountingWorklet::MakeScatter(arrays.CountArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
 
   vtkm::Id inputSize = arrays.CountArray.GetNumberOfValues();
   vtkm::cont::ArrayHandleIndex inputIndices(inputSize);

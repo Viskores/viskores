@@ -46,9 +46,9 @@ public:
   class BinPointsWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> coord, FieldOut<> label);
+    using ControlSignature = void(FieldIn<> coord, FieldOut<> label);
 
-    typedef void ExecutionSignature(_1, _2);
+    using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
     BinPointsWorklet(vtkm::Vec<T, 3> _min, vtkm::Vec<T, 3> _max, vtkm::Vec<vtkm::Id, 3> _dims)
@@ -74,7 +74,7 @@ public:
   class UniformGridSearch : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> query,
+    using ControlSignature = void(FieldIn<> query,
                                   WholeArrayIn<> coordIn,
                                   WholeArrayIn<IdType> pointId,
                                   WholeArrayIn<IdType> cellLower,
@@ -82,7 +82,7 @@ public:
                                   FieldOut<IdType> neighborId,
                                   FieldOut<> distance);
 
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
 
     VTKM_CONT
     UniformGridSearch(const vtkm::Vec<T, 3>& _min,
@@ -160,7 +160,7 @@ public:
 
       nnId = neareast;
       nnDis = vtkm::Sqrt(min_distance);
-    };
+    }
 
   private:
     vtkm::Vec<T, 3> Min;
@@ -173,7 +173,8 @@ public:
   /// \param coords An ArrayHandle of x, y, z coordinates of input points.
   /// \param device Tag for selecting device adapter
   template <typename DeviceAdapter>
-  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords, DeviceAdapter)
+  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
+             DeviceAdapter vtkmNotUsed(device))
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     // generate unique id for each input point
@@ -182,7 +183,8 @@ public:
 
     // bin points into cells and give each of them the cell id.
     BinPointsWorklet cellIdWorklet(Min, Max, Dims);
-    vtkm::worklet::DispatcherMapField<BinPointsWorklet> dispatchCellId(cellIdWorklet);
+    vtkm::worklet::DispatcherMapField<BinPointsWorklet, DeviceAdapter> dispatchCellId(
+      cellIdWorklet);
     dispatchCellId.Invoke(coords, CellIds);
 
     // Group points of the same cell together by sorting them according to the cell ids
@@ -192,7 +194,7 @@ public:
     vtkm::cont::ArrayHandleCounting<vtkm::Id> cell_ids_counting(0, 1, Dims[0] * Dims[1] * Dims[2]);
     Algorithm::UpperBounds(CellIds, cell_ids_counting, CellUpper);
     Algorithm::LowerBounds(CellIds, cell_ids_counting, CellLower);
-  };
+  }
 
   /// \brief Nearest neighbor search using a Uniform Grid
   ///
@@ -219,7 +221,7 @@ public:
       uniformGridSearch);
     searchDispatcher.Invoke(
       queryPoints, coords, PointIds, CellLower, CellUpper, nearestNeighborIds, distances);
-  };
+  }
 
 private:
   vtkm::Vec<T, 3> Min;

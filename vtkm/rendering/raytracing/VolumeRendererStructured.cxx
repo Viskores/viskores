@@ -53,11 +53,11 @@ template <typename Device>
 class RectilinearLocator
 {
 protected:
-  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
-  typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>
-    CartesianArrayHandle;
-  typedef typename DefaultHandle::ExecutionTypes<Device>::PortalConst DefaultConstHandle;
-  typedef typename CartesianArrayHandle::ExecutionTypes<Device>::PortalConst CartesianConstPortal;
+  using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+  using CartesianArrayHandle =
+    vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
+  using DefaultConstHandle = typename DefaultHandle::ExecutionTypes<Device>::PortalConst;
+  using CartesianConstPortal = typename CartesianArrayHandle::ExecutionTypes<Device>::PortalConst;
 
   vtkm::Float32 InverseDeltaScalar;
   DefaultConstHandle CoordPortals[3];
@@ -202,8 +202,8 @@ template <typename Device>
 class UniformLocator
 {
 protected:
-  typedef typename vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;
-  typedef typename UniformArrayHandle::ExecutionTypes<Device>::PortalConst UniformConstPortal;
+  using UniformArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
+  using UniformConstPortal = typename UniformArrayHandle::ExecutionTypes<Device>::PortalConst;
 
   vtkm::Id3 PointDimensions;
   vtkm::Vec<vtkm::Float32, 3> Origin;
@@ -312,8 +312,8 @@ template <typename Device, typename LocatorType>
 class Sampler : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorArrayHandle;
-  typedef typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst ColorArrayPortal;
+  using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;
@@ -339,13 +339,13 @@ public:
     else
       InverseDeltaScalar = minScalar;
   }
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
                                 WholeArrayInOut<>,
                                 WholeArrayIn<ScalarRenderingTypes>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& rayDir,
@@ -508,8 +508,8 @@ template <typename Device, typename LocatorType>
 class SamplerCellAssoc : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorArrayHandle;
-  typedef typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst ColorArrayPortal;
+  using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;
@@ -535,13 +535,13 @@ public:
     else
       InverseDeltaScalar = minScalar;
   }
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
                                 WholeArrayInOut<>,
                                 WholeArrayIn<ScalarRenderingTypes>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& rayDir,
@@ -682,8 +682,8 @@ public:
   VTKM_EXEC
   vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
 
-  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldInOut<>, FieldInOut<>, FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+  using ControlSignature = void(FieldIn<>, FieldOut<>, FieldInOut<>, FieldInOut<>, FieldIn<>);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
   template <typename Precision>
   VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& rayDir,
                             vtkm::Float32& minDistance,
@@ -825,11 +825,12 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   logger->AddLogData("calc_ray_start", time);
   timer.Reset();
 
-  bool isSupportedField = (ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
-                           ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+  bool isSupportedField =
+    (ScalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+     ScalarField->GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
   if (!isSupportedField)
     throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
-  bool isAssocPoints = ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+  bool isAssocPoints = ScalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS;
 
   if (IsUniformDataSet)
   {

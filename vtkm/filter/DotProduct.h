@@ -41,13 +41,13 @@ public:
   VTKM_CONT
   void SetPrimaryField(
     const std::string& name,
-    vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
     this->SetActiveField(name, association);
   }
 
   VTKM_CONT const std::string& GetPrimaryFieldName() const { return this->SecondaryFieldName; }
-  VTKM_CONT vtkm::cont::Field::AssociationEnum GetPrimaryFieldAssociation() const
+  VTKM_CONT vtkm::cont::Field::Association GetPrimaryFieldAssociation() const
   {
     return this->SecondaryFieldAssociation;
   }
@@ -86,14 +86,14 @@ public:
   VTKM_CONT
   void SetSecondaryField(
     const std::string& name,
-    vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
     this->SecondaryFieldName = name;
     this->SecondaryFieldAssociation = association;
   }
 
   VTKM_CONT const std::string& GetSecondaryFieldName() const { return this->GetActiveFieldName(); }
-  VTKM_CONT vtkm::cont::Field::AssociationEnum GetSecondaryFieldAssociation() const
+  VTKM_CONT vtkm::cont::Field::Association GetSecondaryFieldAssociation() const
   {
     return this->GetActiveFieldAssociation();
   }
@@ -146,7 +146,7 @@ public:
 
 private:
   std::string SecondaryFieldName;
-  vtkm::cont::Field::AssociationEnum SecondaryFieldAssociation;
+  vtkm::cont::Field::Association SecondaryFieldAssociation;
   bool UseCoordinateSystemAsSecondaryField;
   vtkm::Id SecondaryCoordinateSystemIndex;
 };
@@ -155,7 +155,7 @@ template <>
 class FilterTraits<DotProduct>
 { //currently the DotProduct filter only works on vector data.
 public:
-  typedef TypeListTagVecCommon InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagVecCommon;
 };
 }
 } // namespace vtkm::filter

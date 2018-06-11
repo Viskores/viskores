@@ -401,7 +401,7 @@ void TestTransformInvoke()
 void TestStaticTransform()
 {
   std::cout << "Trying static transform." << std::endl;
-  typedef vtkm::internal::FunctionInterface<void(Type1, Type2, Type3)> OriginalType;
+  using OriginalType = vtkm::internal::FunctionInterface<void(Type1, Type2, Type3)>;
   OriginalType funcInterface = vtkm::internal::make_FunctionInterface<void>(Arg1, Arg2, Arg3);
 
   std::cout << "Transform with reported type." << std::endl;

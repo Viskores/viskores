@@ -37,8 +37,8 @@ namespace raytracing
 class VTKM_RENDERING_EXPORT LinearBVH
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> InnerNodesHandle;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> LeafNodesHandle;
+  using InnerNodesHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using LeafNodesHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
   InnerNodesHandle FlatBVH;
   LeafNodesHandle LeafNodes;
   struct ConstructFunctor;

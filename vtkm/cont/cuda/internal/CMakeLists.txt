@@ -20,11 +20,12 @@
 
 set(headers
   ArrayManagerExecutionCuda.h
-  ArrayManagerExecutionThrustDevice.h
   CudaAllocator.h
   DeviceAdapterAlgorithmCuda.h
-  DeviceAdapterAlgorithmThrust.h
+  DeviceAdapterAtomicArrayImplementationCuda.h
+  DeviceAdapterRuntimeDetectorCuda.h
   DeviceAdapterTagCuda.h
+  DeviceAdapterTimerImplementationCuda.h
   ExecutionArrayInterfaceBasicCuda.h
   MakeThrustIterator.h
   TaskTuner.h
@@ -34,13 +35,21 @@ set(headers
 
 vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
 
-#-----------------------------------------------------------------------------
+
 if (NOT VTKm_ENABLE_CUDA)
+  #build the file with cpp compiler if cuda is disabled
+  target_sources(vtkm_cont PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorCuda.cxx
+    )
+
   return()
 endif()
 
 target_sources(vtkm_cont PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionCuda.cu
-  ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicCuda.cu
   ${CMAKE_CURRENT_SOURCE_DIR}/CudaAllocator.cu
+  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmCuda.cu
+  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorCuda.cu
+  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterTimerImplementationCuda.cu
+  ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicCuda.cu
 )

@@ -148,23 +148,12 @@ namespace cosmotools
 template <typename T>
 struct ScatterWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> inIndices, FieldOut<> outIndices);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<> inIndices, FieldOut<> outIndices);
+  using ExecutionSignature = void(_1, _2);
   using ScatterType = vtkm::worklet::ScatterCounting;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->Scatter; }
-
-  VTKM_CONT
-  ScatterWorklet(const vtkm::worklet::ScatterCounting& scatter)
-    : Scatter(scatter)
-  {
-  }
 
   VTKM_EXEC
   void operator()(T inputIndex, T& outputIndex) const { outputIndex = inputIndex; }
-private:
-  ScatterType Scatter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

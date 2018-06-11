@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     std::cout << "using: " << argv[1] << " as MarchingCubes input file" << std::endl;
     vtkm::io::reader::VTKDataSetReader reader(argv[1]);
     inputData = reader.ReadDataSet();
-    isovalue = atof(argv[2]);
+    isovalue = static_cast<vtkm::Float32>(atof(argv[2]));
     fieldName = "SCALARS:pointvar";
   }
 

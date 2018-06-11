@@ -39,7 +39,7 @@ VTKM_CONT CoordinateSystem::CoordinateSystem()
 VTKM_CONT CoordinateSystem::CoordinateSystem(
   std::string name,
   const vtkm::cont::ArrayHandleVirtualCoordinates::Superclass& data)
-  : Superclass(name, ASSOC_POINTS, data)
+  : Superclass(name, Association::POINTS, data)
 {
 }
 
@@ -51,7 +51,7 @@ CoordinateSystem::CoordinateSystem(std::string name,
                                    vtkm::Vec<vtkm::FloatDefault, 3> origin,
                                    vtkm::Vec<vtkm::FloatDefault, 3> spacing)
   : Superclass(name,
-               ASSOC_POINTS,
+               Association::POINTS,
                vtkm::cont::ArrayHandleVirtualCoordinates(
                  vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing)))
 {
@@ -127,18 +127,18 @@ template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(
   std::string name,
   const vtkm::cont::ArrayHandle<
     vtkm::Vec<vtkm::Float32, 3>,
-    vtkm::cont::internal::StorageTagCompositeVector<vtkm::Vec<vtkm::Float32, 3>(
+    typename vtkm::cont::ArrayHandleCompositeVector<
       vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>,
       vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>,
-      vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>)>>&);
+      vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>>::StorageTag>&);
 template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(
   std::string name,
   const vtkm::cont::ArrayHandle<
     vtkm::Vec<vtkm::Float64, 3>,
-    vtkm::cont::internal::StorageTagCompositeVector<vtkm::Vec<vtkm::Float64, 3>(
+    typename vtkm::cont::ArrayHandleCompositeVector<
       vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>,
       vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>,
-      vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>)>>&);
+      vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>>::StorageTag>&);
 
 template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(std::string name,
                                                              const vtkm::cont::DynamicArrayHandle&);

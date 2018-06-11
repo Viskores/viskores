@@ -181,6 +181,7 @@ public:
   VTKM_CONT virtual void Allocate(vtkm::Id numberOfValues) = 0;
   VTKM_CONT virtual void Shrink(vtkm::Id numberOfValues) = 0;
   VTKM_CONT virtual void ReleaseResources() = 0;
+  VTKM_CONT virtual void ReleaseResourcesExecution() = 0;
 
   VTKM_CONT virtual PortalConst PrepareForInput(vtkm::cont::DeviceAdapterId deviceId) = 0;
   VTKM_CONT virtual Portal PrepareForOutput(vtkm::Id numberOfValues,
@@ -240,6 +241,8 @@ public:
   VTKM_CONT void Shrink(vtkm::Id numberOfValues) override { this->Array.Shrink(numberOfValues); }
 
   VTKM_CONT void ReleaseResources() override { this->Array.ReleaseResources(); }
+
+  VTKM_CONT void ReleaseResourcesExecution() override { this->Array.ReleaseResourcesExecution(); }
 
   VTKM_CONT PortalConst PrepareForInput(vtkm::cont::DeviceAdapterId deviceId) override
   {
@@ -406,8 +409,10 @@ public:
   VTKM_CONT
   void Shrink(vtkm::Id numberOfValues) { this->Array->Shrink(numberOfValues); }
 
+  // ArrayTransfer should only be capable of releasing resources in the execution
+  // environment
   VTKM_CONT
-  void ReleaseResources() { this->Array->ReleaseResources(); }
+  void ReleaseResources() { this->Array->ReleaseResourcesExecution(); }
 
 private:
   CoordinatesArrayHandleBase* Array;
@@ -522,6 +527,7 @@ void CastAndCall(const typename vtkm::cont::ArrayHandleVirtualCoordinates::Super
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
+#include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -550,6 +556,10 @@ using CudaPortalsRectilinearCoords = CudaPortalTypes<
   vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                           vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                           vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>;
+using CudaPortalsCompositeCoords = CudaPortalTypes<
+  vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                         vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                         vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>;
 }
 }
 } // vtkm::cont::internal
@@ -573,6 +583,11 @@ VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(
     vtkm::cont::internal::CudaPortalsRectilinearCoords::PortalConst>);
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::cont::internal::CoordinatesPortal<
                                      vtkm::cont::internal::CudaPortalsRectilinearCoords::Portal>);
+VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(
+  vtkm::cont::internal::CoordinatesPortalConst<
+    vtkm::cont::internal::CudaPortalsCompositeCoords::PortalConst>);
+VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::cont::internal::CoordinatesPortal<
+                                     vtkm::cont::internal::CudaPortalsCompositeCoords::Portal>);
 
 #endif // VTKM_CUDA
 

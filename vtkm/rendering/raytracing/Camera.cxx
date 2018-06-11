@@ -76,8 +76,8 @@ public:
     , Origin(origin)
     , BoundingBox(boundingBox)
   {
-    vtkm::Float32 thx = tanf((fovX * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
-    vtkm::Float32 thy = tanf((fovY * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
+    vtkm::Float32 thx = tanf((fovX * vtkm::Pi_180f()) * .5f);
+    vtkm::Float32 thy = tanf((fovY * vtkm::Pi_180f()) * .5f);
     vtkm::Vec<vtkm::Float32, 3> ru = vtkm::Cross(look, up);
     vtkm::Normalize(ru);
 
@@ -106,9 +106,9 @@ public:
     return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
   }
 
-  typedef void ControlSignature(FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut<>, FieldOut<>);
 
-  typedef void ExecutionSignature(WorkIndex, _1, _2);
+  using ExecutionSignature = void(WorkIndex, _1, _2);
   VTKM_EXEC
   void operator()(const vtkm::Id idx, vtkm::Int32& hit, vtkm::Float32& distance) const
   {
@@ -121,7 +121,7 @@ public:
     ray_dir = nlook + delta_x * ((2.f * vtkm::Float32(i) - vtkm::Float32(w)) / 2.0f) +
       delta_y * ((2.f * vtkm::Float32(j) - vtkm::Float32(h)) / 2.0f);
 
-    vtkm::Float32 dot = vtkm::dot(ray_dir, ray_dir);
+    vtkm::Float32 dot = vtkm::Dot(ray_dir, ray_dir);
     vtkm::Float32 sq_mag = vtkm::Sqrt(dot);
 
     ray_dir[0] = ray_dir[0] / sq_mag;
@@ -216,15 +216,10 @@ public:
     vtkm::Normalize(nlook);
   }
 
-  typedef void ControlSignature(FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>);
+  using ControlSignature =
+    void(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
 
-  typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
   template <typename Precision>
   VTKM_EXEC void operator()(vtkm::Id idx,
                             Precision& rayDirX,
@@ -290,8 +285,8 @@ public:
     , Miny(miny)
     , SubsetWidth(subsetWidth)
   {
-    vtkm::Float32 thx = tanf((fovX * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
-    vtkm::Float32 thy = tanf((fovY * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
+    vtkm::Float32 thx = tanf((fovX * vtkm::Pi_180f()) * .5f);
+    vtkm::Float32 thy = tanf((fovY * vtkm::Pi_180f()) * .5f);
     vtkm::Vec<vtkm::Float32, 3> ru = vtkm::Cross(look, up);
     vtkm::Normalize(ru);
 
@@ -313,9 +308,9 @@ public:
     vtkm::Normalize(nlook);
   }
 
-  typedef void ControlSignature(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
 
-  typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4);
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
   template <typename Precision>
   VTKM_EXEC void operator()(vtkm::Id idx,
                             Precision& rayDirX,
@@ -338,7 +333,7 @@ public:
       if (ray_dir[d] == 0.f)
         ray_dir[d] += 0.0000001f;
     }
-    Precision dot = vtkm::dot(ray_dir, ray_dir);
+    Precision dot = vtkm::Dot(ray_dir, ray_dir);
     Precision sq_mag = vtkm::Sqrt(dot);
 
     rayDirX = ray_dir[0] / sq_mag;
@@ -455,7 +450,7 @@ void Camera::SetHeight(const vtkm::Int32& height)
   if (Height != height)
   {
     this->Height = height;
-    this->SetFieldOfView(this->FovX);
+    this->SetFieldOfView(this->FovY);
   }
 }
 
@@ -475,7 +470,7 @@ void Camera::SetWidth(const vtkm::Int32& width)
   if (this->Width != width)
   {
     this->Width = width;
-    this->SetFieldOfView(this->FovX);
+    this->SetFieldOfView(this->FovY);
   }
 }
 
@@ -529,8 +524,32 @@ void Camera::SetFieldOfView(const vtkm::Float32& degrees)
     throw vtkm::cont::ErrorBadValue("Camera feild of view must be less than 180.");
   }
 
-  vtkm::Float32 newFOVY = (vtkm::Float32(this->Height) / vtkm::Float32(this->Width)) * degrees;
-  vtkm::Float32 newFOVX = degrees;
+  vtkm::Float32 newFOVY = degrees;
+  vtkm::Float32 newFOVX;
+
+  if (this->Width != this->Height)
+  {
+    vtkm::Float32 fovyRad = newFOVY * vtkm::Pi_180f();
+
+    // Use the tan function to find the distance from the center of the image to the top (or
+    // bottom). (Actually, we are finding the ratio of this distance to the near plane distance,
+    // but since we scale everything by the near plane distance, we can use this ratio as a scaled
+    // proxy of the distances we need.)
+    vtkm::Float32 verticalDistance = vtkm::Tan(0.5f * fovyRad);
+
+    // Scale the vertical distance by the aspect ratio to get the horizontal distance.
+    vtkm::Float32 aspectRatio = vtkm::Float32(this->Width) / vtkm::Float32(this->Height);
+    vtkm::Float32 horizontalDistance = aspectRatio * verticalDistance;
+
+    // Now use the arctan function to get the proper field of view in the x direction.
+    vtkm::Float32 fovxRad = 2.0f * vtkm::ATan(horizontalDistance);
+    newFOVX = fovxRad / vtkm::Pi_180f();
+  }
+  else
+  {
+    newFOVX = newFOVY;
+  }
+
   if (newFOVX != this->FovX)
   {
     this->IsViewDirty = true;
@@ -541,13 +560,13 @@ void Camera::SetFieldOfView(const vtkm::Float32& degrees)
   }
   this->FovX = newFOVX;
   this->FovY = newFOVY;
-  this->CameraView.SetFieldOfView(this->FovX);
+  this->CameraView.SetFieldOfView(this->FovY);
 }
 
 VTKM_CONT
 vtkm::Float32 Camera::GetFieldOfView() const
 {
-  return this->FovX;
+  return this->FovY;
 }
 
 VTKM_CONT
@@ -1010,8 +1029,8 @@ void Camera::CreateDebugRayImp(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<Precision>& 
   rays.MinDistance.GetPortalControl().Set(0, 0.f);
   rays.HitIdx.GetPortalControl().Set(0, -2);
 
-  vtkm::Float32 thx = tanf((this->FovX * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
-  vtkm::Float32 thy = tanf((this->FovY * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
+  vtkm::Float32 thx = tanf((this->FovX * vtkm::Pi_180f()) * .5f);
+  vtkm::Float32 thy = tanf((this->FovY * vtkm::Pi_180f()) * .5f);
   vtkm::Vec<vtkm::Float32, 3> ru = vtkm::Cross(this->Look, this->Up);
   vtkm::Normalize(ru);
 
@@ -1040,7 +1059,7 @@ void Camera::CreateDebugRayImp(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<Precision>& 
   ray_dir = nlook + delta_x * ((2.f * Precision(i) - Precision(this->Width)) / 2.0f) +
     delta_y * ((2.f * Precision(j) - Precision(this->Height)) / 2.0f);
 
-  Precision dot = vtkm::dot(ray_dir, ray_dir);
+  Precision dot = vtkm::Dot(ray_dir, ray_dir);
   Precision sq_mag = vtkm::Sqrt(dot);
 
   ray_dir[0] = ray_dir[0] / sq_mag;

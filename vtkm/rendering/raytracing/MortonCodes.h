@@ -149,13 +149,10 @@ public:
   {
   }
 
-  typedef void ControlSignature(CellSetIn cellset,
-                                WholeArrayIn<>,
-                                FieldInTo<>,
-                                WholeArrayOut<>,
-                                WholeArrayOut<>);
+  using ControlSignature =
+    void(CellSetIn cellset, WholeArrayIn<>, FieldInTo<>, WholeArrayOut<>, WholeArrayOut<>);
 
-  typedef void ExecutionSignature(CellShape, FromIndices, WorkIndex, _2, _3, _4, _5);
+  using ExecutionSignature = void(CellShape, FromIndices, WorkIndex, _2, _3, _4, _5);
 
   template <typename CellShape,
             typename CellNodeVecType,
@@ -213,8 +210,7 @@ public:
       // the wonders of floating point math. This is bad. If we calculate in the same order
       // for all faces, then at worst, two different faces can enter the same bucket, which
       // we currently check for.
-      vtkm::Vec<vtkm::Id, 4> faceIndices;
-      faceIndices[3] = -1;
+      vtkm::Vec<vtkm::Id, 4> faceIndices(-1);
       //Number of indices this face has
       const vtkm::Int32 indiceCount = tables.ShapesFaceList(tableOffset + i, 0);
       for (vtkm::Int32 j = 1; j <= indiceCount; j++)
@@ -265,9 +261,9 @@ public:
   {
   }
 
-  typedef void
-    ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+  using ControlSignature =
+    void(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
   typedef _7 InputDomain;
 
   VTKM_EXEC
@@ -280,7 +276,7 @@ public:
                   vtkm::UInt32& mortonCode) const
   {
     vtkm::Vec<vtkm::Float32, 3> direction(xmax - xmin, ymax - ymin, zmax - zmin);
-    vtkm::Float32 halfDistance = sqrtf(vtkm::dot(direction, direction)) * 0.5f;
+    vtkm::Float32 halfDistance = sqrtf(vtkm::Dot(direction, direction)) * 0.5f;
     vtkm::Normalize(direction);
     vtkm::Float32 centroidx = xmin + halfDistance * direction[0] - MinCoordinate[0];
     vtkm::Float32 centroidy = ymin + halfDistance * direction[1] - MinCoordinate[1];

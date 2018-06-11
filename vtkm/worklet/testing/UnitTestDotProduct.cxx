@@ -97,7 +97,7 @@ void TestDotProduct()
     vtkm::Vec<T, 3> v2 = inputArray2.GetPortalConstControl().Get(i);
     T ans = answer[static_cast<std::size_t>(i)];
 
-    VTKM_TEST_ASSERT(test_equal(ans, vtkm::dot(v1, v2)), "Wrong result for dot product");
+    VTKM_TEST_ASSERT(test_equal(ans, vtkm::Dot(v1, v2)), "Wrong result for dot product");
   }
 }
 

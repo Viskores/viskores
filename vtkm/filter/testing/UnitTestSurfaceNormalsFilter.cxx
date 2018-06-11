@@ -28,7 +28,7 @@ namespace
 void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
 {
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
-  ds.GetField("Normals", vtkm::cont::Field::ASSOC_CELL_SET).GetData().CopyTo(normals);
+  ds.GetField("Normals", vtkm::cont::Field::Association::CELL_SET).GetData().CopyTo(normals);
 
   vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
     { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f }, { 0.707f, 0.500f, -0.500f },
@@ -48,7 +48,7 @@ void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
 void VerifyPointNormalValues(const vtkm::cont::DataSet& ds)
 {
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
-  ds.GetField("Normals", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(normals);
+  ds.GetField("Normals", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(normals);
 
   vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
     { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
@@ -75,22 +75,22 @@ void TestSurfaceNormals()
 
   std::cout << "testing default output (generate only point normals):\n";
   result = filter.Execute(ds);
-  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_POINTS),
+  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::Association::POINTS),
                    "Point normals missing.");
 
   std::cout << "generate only cell normals:\n";
   filter.SetGenerateCellNormals(true);
   filter.SetGeneratePointNormals(false);
   result = filter.Execute(ds);
-  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_CELL_SET),
+  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::Association::CELL_SET),
                    "Cell normals missing.");
 
   std::cout << "generate both cell and point normals:\n";
   filter.SetGeneratePointNormals(true);
   result = filter.Execute(ds);
-  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_POINTS),
+  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::Association::POINTS),
                    "Point normals missing.");
-  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_CELL_SET),
+  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::Association::CELL_SET),
                    "Cell normals missing.");
 
   std::cout << "test result values:\n";

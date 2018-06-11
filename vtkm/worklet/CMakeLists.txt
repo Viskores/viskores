@@ -22,6 +22,7 @@ set(headers
   AverageByKey.h
   CellAverage.h
   CellDeepCopy.h
+  CellMeasure.h
   Clip.h
   ContourTreeUniform.h
   CosmoTools.h
@@ -54,6 +55,7 @@ set(headers
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
+  PointTransform.h
   Probe.h
   RemoveUnusedPoints.h
   ScalarsToColors.h

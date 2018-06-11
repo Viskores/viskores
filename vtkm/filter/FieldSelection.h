@@ -60,7 +60,7 @@ public:
   FieldSelection(const std::string& field, ModeEnum mode = MODE_SELECT)
     : Mode(mode)
   {
-    this->AddField(field, vtkm::cont::Field::ASSOC_ANY);
+    this->AddField(field, vtkm::cont::Field::Association::ANY);
   }
 
   /// Use this constructor to create a field selection given a single field name
@@ -71,16 +71,16 @@ public:
   FieldSelection(const char* field, ModeEnum mode = MODE_SELECT)
     : Mode(mode)
   {
-    this->AddField(field, vtkm::cont::Field::ASSOC_ANY);
+    this->AddField(field, vtkm::cont::Field::Association::ANY);
   }
 
   /// Use this constructor to create a field selection given a single name and association.
   /// \code{cpp}
-  /// FieldSelection("field_name", vtkm::cont::Field::ASSOC_POINTS)
+  /// FieldSelection("field_name", vtkm::cont::Field::Association::POINTS)
   /// \endcode{cpp}
   VTKM_CONT
   FieldSelection(const std::string& field,
-                 vtkm::cont::Field::AssociationEnum association,
+                 vtkm::cont::Field::Association association,
                  ModeEnum mode = MODE_SELECT)
     : Mode(mode)
   {
@@ -97,21 +97,21 @@ public:
   {
     for (const std::string& afield : fields)
     {
-      this->AddField(afield, vtkm::cont::Field::ASSOC_ANY);
+      this->AddField(afield, vtkm::cont::Field::Association::ANY);
     }
   }
 
   /// Use this constructor create a field selection given the field names and
   /// associations e.g.
   /// @code{cpp}
-  /// using pair_type = std::pair<std::string, vtkm::cont::Field::AssociationEnum>;
+  /// using pair_type = std::pair<std::string, vtkm::cont::Field::Association>;
   /// FieldSelection({
-  ///      pair_type{"field_one", vtkm::cont::Field::ASSOC_POINTS},
-  ///      pair_type{"field_two", vtkm::cont::Field::ASSOC_CELL_SET} });
+  ///      pair_type{"field_one", vtkm::cont::Field::Association::POINTS},
+  ///      pair_type{"field_two", vtkm::cont::Field::Association::CELL_SET} });
   /// @endcode
   VTKM_CONT
   FieldSelection(
-    std::initializer_list<std::pair<std::string, vtkm::cont::Field::AssociationEnum>> fields,
+    std::initializer_list<std::pair<std::string, vtkm::cont::Field::Association>> fields,
     ModeEnum mode = MODE_SELECT)
     : Mode(mode)
   {
@@ -124,14 +124,14 @@ public:
   /// Use this constructor create a field selection given the field names and
   /// associations e.g.
   /// @code{cpp}
-  /// using pair_type = vtkm::Pair<std::string, vtkm::cont::Field::AssociationEnum>;
+  /// using pair_type = vtkm::Pair<std::string, vtkm::cont::Field::Association>;
   /// FieldSelection({
-  ///      pair_type{"field_one", vtkm::cont::Field::ASSOC_POINTS},
-  ///      pair_type{"field_two", vtkm::cont::Field::ASSOC_CELL_SET} });
+  ///      pair_type{"field_one", vtkm::cont::Field::Association::POINTS},
+  ///      pair_type{"field_two", vtkm::cont::Field::Association::CELL_SET} });
   /// @endcode
   VTKM_CONT
   FieldSelection(
-    std::initializer_list<vtkm::Pair<std::string, vtkm::cont::Field::AssociationEnum>> fields,
+    std::initializer_list<vtkm::Pair<std::string, vtkm::cont::Field::Association>> fields,
     ModeEnum mode = MODE_SELECT)
     : Mode(mode)
   {
@@ -154,7 +154,7 @@ public:
 
   bool IsFieldSelected(
     const std::string& name,
-    vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY) const
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY) const
   {
     switch (this->Mode)
     {
@@ -184,7 +184,7 @@ public:
 
   VTKM_CONT
   void AddField(const std::string& fieldName,
-                vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+                vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
     this->Fields.insert(Field(fieldName, association));
   }
@@ -200,20 +200,21 @@ public:
     return this->HasField(inputField.GetName(), inputField.GetAssociation());
   }
 
-  bool HasField(const std::string& name,
-                vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY) const
+  bool HasField(
+    const std::string& name,
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY) const
   {
     if (this->Fields.find(Field(name, association)) != this->Fields.end())
     {
       return true;
     }
-    // if not exact match, let's lookup for ASSOC_ANY.
+    // if not exact match, let's lookup for Association::ANY.
     for (const auto& aField : this->Fields)
     {
       if (aField.Name == name)
       {
-        if (aField.Association == vtkm::cont::Field::ASSOC_ANY ||
-            association == vtkm::cont::Field::ASSOC_ANY)
+        if (aField.Association == vtkm::cont::Field::Association::ANY ||
+            association == vtkm::cont::Field::Association::ANY)
         {
           return true;
         }
@@ -236,9 +237,9 @@ private:
   struct Field
   {
     std::string Name;
-    vtkm::cont::Field::AssociationEnum Association;
+    vtkm::cont::Field::Association Association;
     Field() = default;
-    Field(const std::string& name, vtkm::cont::Field::AssociationEnum assoc)
+    Field(const std::string& name, vtkm::cont::Field::Association assoc)
       : Name(name)
       , Association(assoc)
     {

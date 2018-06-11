@@ -157,7 +157,7 @@ private:
 struct VTKDataSetWriter
 {
 private:
-  static void WritePoints(std::ostream& out, vtkm::cont::DataSet dataSet)
+  static void WritePoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   {
     ///\todo: support other coordinate systems
     int cindex = 0;
@@ -171,7 +171,7 @@ private:
   }
 
   template <class CellSetType>
-  static void WriteExplicitCells(std::ostream& out, CellSetType cellSet)
+  static void WriteExplicitCells(std::ostream& out, const CellSetType& cellSet)
   {
     vtkm::Id nCells = cellSet.GetNumberOfCells();
 
@@ -203,7 +203,7 @@ private:
     }
   }
 
-  static void WriteVertexCells(std::ostream& out, vtkm::cont::DataSet dataSet)
+  static void WriteVertexCells(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   {
     vtkm::Id nCells = dataSet.GetCoordinateSystem(0).GetData().GetNumberOfValues();
 
@@ -219,14 +219,14 @@ private:
     }
   }
 
-  static void WritePointFields(std::ostream& out, vtkm::cont::DataSet dataSet)
+  static void WritePointFields(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   {
     bool wrote_header = false;
     for (vtkm::Id f = 0; f < dataSet.GetNumberOfFields(); f++)
     {
       const vtkm::cont::Field field = dataSet.GetField(f);
 
-      if (field.GetAssociation() != vtkm::cont::Field::ASSOC_POINTS)
+      if (field.GetAssociation() != vtkm::cont::Field::Association::POINTS)
       {
         continue;
       }
@@ -255,15 +255,15 @@ private:
   }
 
   static void WriteCellFields(std::ostream& out,
-                              vtkm::cont::DataSet dataSet,
-                              vtkm::cont::DynamicCellSet cellSet)
+                              const vtkm::cont::DataSet& dataSet,
+                              const vtkm::cont::DynamicCellSet& cellSet)
   {
     bool wrote_header = false;
     for (vtkm::Id f = 0; f < dataSet.GetNumberOfFields(); f++)
     {
       const vtkm::cont::Field field = dataSet.GetField(f);
 
-      if (field.GetAssociation() != vtkm::cont::Field::ASSOC_CELL_SET)
+      if (field.GetAssociation() != vtkm::cont::Field::Association::CELL_SET)
       {
         continue;
       }
@@ -293,7 +293,7 @@ private:
     }
   }
 
-  static void WriteDataSetAsPoints(std::ostream& out, vtkm::cont::DataSet dataSet)
+  static void WriteDataSetAsPoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   {
     out << "DATASET UNSTRUCTURED_GRID" << std::endl;
     WritePoints(out, dataSet);
@@ -302,8 +302,8 @@ private:
 
   template <class CellSetType>
   static void WriteDataSetAsUnstructured(std::ostream& out,
-                                         vtkm::cont::DataSet dataSet,
-                                         CellSetType cellSet)
+                                         const vtkm::cont::DataSet& dataSet,
+                                         const CellSetType& cellSet)
   {
     out << "DATASET UNSTRUCTURED_GRID" << std::endl;
     WritePoints(out, dataSet);
@@ -312,8 +312,8 @@ private:
 
   template <vtkm::IdComponent DIM>
   static void WriteDataSetAsStructured(std::ostream& out,
-                                       vtkm::cont::DataSet dataSet,
-                                       vtkm::cont::CellSetStructured<DIM> cellSet)
+                                       const vtkm::cont::DataSet& dataSet,
+                                       const vtkm::cont::CellSetStructured<DIM>& cellSet)
   {
     ///\todo: support uniform/rectilinear
     out << "DATASET STRUCTURED_GRID" << std::endl;
@@ -326,7 +326,7 @@ private:
     WritePoints(out, dataSet);
   }
 
-  static void Write(std::ostream& out, vtkm::cont::DataSet dataSet, vtkm::Id csindex = 0)
+  static void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet, vtkm::Id csindex = 0)
   {
     VTKM_ASSERT(csindex < dataSet.GetNumberOfCellSets());
 
@@ -377,7 +377,7 @@ public:
   }
 
   VTKM_CONT
-  void WriteDataSet(vtkm::cont::DataSet dataSet, vtkm::Id cellSetIndex = 0) const
+  void WriteDataSet(const vtkm::cont::DataSet& dataSet, vtkm::Id cellSetIndex = 0) const
   {
     if (cellSetIndex >= dataSet.GetNumberOfCellSets())
     {
@@ -412,7 +412,7 @@ public:
   }
 
   VTKM_CONT
-  void WriteDataSet(vtkm::cont::DataSet dataSet, const std::string& cellSetName)
+  void WriteDataSet(const vtkm::cont::DataSet& dataSet, const std::string& cellSetName)
   {
     this->WriteDataSet(dataSet, dataSet.GetCellSetIndex(cellSetName));
   }

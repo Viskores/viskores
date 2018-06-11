@@ -44,8 +44,22 @@ endif()
 
 
 #-----------------------------------------------------------------------------
-# vtkm_compiler_flags is used by all the vtkm targets
+# vtkm_compiler_flags is used by all the vtkm targets and consumers of VTK-m
+# The flags on vtkm_compiler_flags are needed when using/building vtk-m
 add_library(vtkm_compiler_flags INTERFACE)
+
+# When building libraries/tests that are part of the VTK-m repository
+# inherit the properties from vtkm_developer_flags and vtkm_vectorization_flags.
+# The flags are intended only for VTK-m itself and are not needed by consumers.
+# We will export vtkm_vectorization_flags in general so consumer can enable
+# vectorization if they so desire
+if (VTKm_ENABLE_DEVELOPER_FLAGS)
+  target_link_libraries(vtkm_compiler_flags
+    INTERFACE $<BUILD_INTERFACE:vtkm_developer_flags>)
+endif()
+target_link_libraries(vtkm_compiler_flags
+  INTERFACE $<BUILD_INTERFACE:vtkm_vectorization_flags>)
+
 
 # setup that we need C++11 support
 if(CMAKE_VERSION VERSION_LESS 3.8)
@@ -56,14 +70,9 @@ endif()
 
 # Enable large object support so we can have 2^32 addressable sections
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  if(CMAKE_VERSION VERSION_LESS 3.11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/bigobj\"")
-  else()
-    target_compile_options(vtkm_compiler_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:/bigobj>>)
-    if(TARGET vtkm::cuda)
-      target_compile_options(vtkm_compiler_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/bigobj">>)
-    endif()
+  target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/bigobj>)
+  if(TARGET vtkm::cuda)
+    target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/bigobj">)
   endif()
 endif()
 
@@ -74,28 +83,21 @@ target_include_directories(vtkm_compiler_flags INTERFACE
   $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}>
   )
 
-# Additional warnings just for Clang 3.5+, and AppleClang 7+ we specify
-# for all build types, since these failures to vectorize are not limited
-# to developer builds
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
-    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)
-  target_compile_options(vtkm_compiler_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>>)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
-       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.99)
-  target_compile_options(vtkm_compiler_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>>)
-endif()
-
-# When building libraries/tests that are part of the VTK-m repository
-# inherit the properties from vtkm_developer_flags
-target_link_libraries(vtkm_compiler_flags
-  INTERFACE $<BUILD_INTERFACE:vtkm_developer_flags vtkm_vectorization_flags>)
-
-
 #-----------------------------------------------------------------------------
 # vtkm_developer_flags is used ONLY BY libraries that are built as part of this
 # repository
 add_library(vtkm_developer_flags INTERFACE)
 target_link_libraries(vtkm_developer_flags INTERFACE vtkm_compiler_flags)
+
+# Additional warnings just for Clang 3.5+, and AppleClang 7+
+# about failures to vectorize.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)
+  target_compile_options(vtkm_developer_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>>)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
+       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.99)
+  target_compile_options(vtkm_developer_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>>)
+endif()
 
 if(VTKM_COMPILER_IS_MSVC)
   target_compile_definitions(vtkm_developer_flags INTERFACE "_SCL_SECURE_NO_WARNINGS"
@@ -124,12 +126,23 @@ elseif(VTKM_COMPILER_IS_ICC)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   set(cxx_flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
-  set(cuda_flags "-Xcudafe=\"--display_error_number\"")
-  target_compile_options(vtkm_compiler_flags
+  set(cuda_flags -Xcudafe=--display_error_number -Xcompiler=-Wall,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-local-typedefs,-Wno-unused-function,-Wno-long-long,-Wcast-align,-Wconversion,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-Wunused-parameter,-fno-common)
+
+  #GCC 5, 6 don't properly handle strict-overflow suppression through pragma's.
+  #Instead of suppressing around the location of the strict-overflow you
+  #have to suppress around the entry point, or in vtk-m case the worklet
+  #invocation site. This is incredibly tedious and has been fixed in gcc 7
+  #
+  if(VTKM_COMPILER_IS_GNU AND
+    (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.99) AND
+    (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.99) )
+    list(APPEND cxx_flags -Wno-strict-overflow)
+  endif()
+  target_compile_options(vtkm_developer_flags
     INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>>
     )
   if(TARGET vtkm::cuda)
-    target_compile_options(vtkm_compiler_flags
+    target_compile_options(vtkm_developer_flags
       INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags}>>
       )
   endif()

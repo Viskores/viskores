@@ -29,32 +29,24 @@
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+namespace vtkm
+{
+namespace worklet
+{
+namespace connectivity
+{
 template <typename DeviceAdapter>
 class InnerJoin
 {
 public:
   struct Merge : vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  WholeArrayIn<>,
-                                  FieldOut<>,
-                                  FieldOut<>,
-                                  FieldOut<>);
-    typedef void ExecutionSignature(_1, _2, _3, VisitIndex, _4, _5, _6, _7);
+    using ControlSignature =
+      void(FieldIn<>, FieldIn<>, FieldIn<>, WholeArrayIn<>, FieldOut<>, FieldOut<>, FieldOut<>);
+    using ExecutionSignature = void(_1, _2, _3, VisitIndex, _4, _5, _6, _7);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
-
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
-    VTKM_CONT
-    Merge(const ScatterType& scatter)
-      : Scatter(scatter)
-    {
-    }
 
     // TODO: type trait for array portal?
     template <typename KeyType, typename ValueType1, typename InPortalType, typename ValueType2>
@@ -72,9 +64,6 @@ public:
       value1Out = value1;
       value2Out = v2;
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
@@ -101,9 +90,12 @@ public:
     Algorithm::Transform(ubs, lbs, counts, vtkm::Subtract());
 
     vtkm::worklet::ScatterCounting scatter{ counts, DeviceAdapter() };
-    Merge merge(scatter);
-    vtkm::worklet::DispatcherMapField<Merge, DeviceAdapter> mergeDisp(merge);
+    vtkm::worklet::DispatcherMapField<Merge, DeviceAdapter> mergeDisp(scatter);
     mergeDisp.Invoke(key1, value1, lbs, value2, keyOut, value1Out, value2Out);
   }
 };
+}
+}
+} // vtkm::worklet::connectivity
+
 #endif //vtk_m_worklet_connectivity_InnerJoin_h

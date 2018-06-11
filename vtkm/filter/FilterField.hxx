@@ -42,7 +42,7 @@ inline VTKM_CONT FilterField<Derived>::FilterField()
   : OutputFieldName()
   , CoordinateSystemIndex(0)
   , ActiveFieldName()
-  , ActiveFieldAssociation(vtkm::cont::Field::ASSOC_ANY)
+  , ActiveFieldAssociation(vtkm::cont::Field::Association::ANY)
   , UseCoordinateSystemAsField(false)
 {
 }
@@ -122,18 +122,6 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
     supportsCoordinateSystem(), field, functor, this->GetRuntimeDeviceTracker());
 
   return result;
-}
-
-//-----------------------------------------------------------------------------
-template <typename Derived>
-template <typename DerivedPolicy>
-inline VTKM_CONT bool FilterField<Derived>::MapFieldOntoOutput(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::Field& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  result.AddField(field);
-  return true;
 }
 }
 }

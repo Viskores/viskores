@@ -607,17 +607,14 @@ template <class DeviceAdapterTag>
 class DeviceAdapterRuntimeDetector
 {
 public:
-  /// Returns true if the given device adapter is supported on the current
-  /// machine.
-  ///
-  /// The default implementation is to return the value of
-  /// vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>::Valid
-  ///
-  VTKM_CONT bool Exists() const
-  {
-    using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    return DeviceAdapterTraits::Valid;
-  }
+/// Returns true if the given device adapter is supported on the current
+/// machine.
+///
+/// No default implementation is provided as it could possible cause
+/// ODR violations when headers are included in differing order.
+#ifdef VTKM_DOXYGEN_ONLY
+  VTKM_CONT bool Exists() const;
+#endif
 };
 
 /// \brief Class providing a device-specific support for atomic operations.

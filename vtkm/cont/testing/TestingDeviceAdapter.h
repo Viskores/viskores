@@ -46,6 +46,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <ctime>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -111,23 +113,31 @@ public:
     IdPortalType OutputArray;
   };
 
-  struct ClearArrayKernel
+  template <typename PortalType>
+  struct GenericClearArrayKernel
   {
+    using ValueType = typename PortalType::ValueType;
+
     VTKM_CONT
-    ClearArrayKernel(const IdPortalType& array)
+    GenericClearArrayKernel(const PortalType& array,
+                            const ValueType& fillValue = static_cast<ValueType>(OFFSET))
       : Array(array)
       , Dims()
+      , FillValue(fillValue)
     {
     }
 
     VTKM_CONT
-    ClearArrayKernel(const IdPortalType& array, const vtkm::Id3& dims)
+    GenericClearArrayKernel(const PortalType& array,
+                            const vtkm::Id3& dims,
+                            const ValueType& fillValue = static_cast<ValueType>(OFFSET))
       : Array(array)
       , Dims(dims)
+      , FillValue(fillValue)
     {
     }
 
-    VTKM_EXEC void operator()(vtkm::Id index) const { this->Array.Set(index, OFFSET); }
+    VTKM_EXEC void operator()(vtkm::Id index) const { this->Array.Set(index, this->FillValue); }
 
     VTKM_EXEC void operator()(vtkm::Id3 index) const
     {
@@ -138,15 +148,18 @@ public:
 
     VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
-    IdPortalType Array;
+    PortalType Array;
     vtkm::Id3 Dims;
+    ValueType FillValue;
   };
+
+  using ClearArrayKernel = GenericClearArrayKernel<IdPortalType>;
 
   struct ClearArrayMapKernel //: public vtkm::exec::WorkletMapField
   {
 
-    // typedef void ControlSignature(Field(Out));
-    // typedef void ExecutionSignature(_1);
+    // using ControlSignature = void(Field(Out));
+    // using ExecutionSignature = void(_1);
 
     template <typename T>
     VTKM_EXEC void operator()(T& value) const
@@ -187,6 +200,57 @@ public:
 
     IdPortalType Array;
     vtkm::Id3 Dims;
+  };
+
+  // Checks that each instance is only visited once:
+  struct OverlapKernel
+  {
+    using ArrayType = ArrayHandle<bool>;
+    using PortalType = typename ArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal;
+
+    PortalType TrackerPortal;
+    PortalType ValidPortal;
+    vtkm::Id3 Dims;
+
+    VTKM_CONT
+    OverlapKernel(const PortalType& trackerPortal,
+                  const PortalType& validPortal,
+                  const vtkm::Id3& dims)
+      : TrackerPortal(trackerPortal)
+      , ValidPortal(validPortal)
+      , Dims(dims)
+    {
+    }
+
+    VTKM_CONT
+    OverlapKernel(const PortalType& trackerPortal, const PortalType& validPortal)
+      : TrackerPortal(trackerPortal)
+      , ValidPortal(validPortal)
+      , Dims()
+    {
+    }
+
+    VTKM_EXEC void operator()(vtkm::Id index) const
+    {
+      if (this->TrackerPortal.Get(index))
+      { // this index has already been visited, that's an error
+        this->ValidPortal.Set(index, false);
+      }
+      else
+      {
+        this->TrackerPortal.Set(index, true);
+        this->ValidPortal.Set(index, true);
+      }
+    }
+
+    VTKM_EXEC void operator()(vtkm::Id3 index) const
+    {
+      //convert from id3 to id
+      vtkm::Id flatIndex = index[0] + this->Dims[0] * (index[1] + this->Dims[1] * index[2]);
+      this->operator()(flatIndex);
+    }
+
+    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
   };
 
   struct OneErrorKernel
@@ -599,10 +663,16 @@ private:
       std::cout << "Checking results." << std::endl;
       manager.RetrieveOutputData(&storage);
 
-      for (vtkm::Id index = 0; index < size; index += 100)
+      //Rather than testing for correctness every value of a large array,
+      // we randomly test a subset of that array.
+      std::default_random_engine generator(static_cast<unsigned int>(std::time(nullptr)));
+      std::uniform_int_distribution<vtkm::Id> distribution(0, size - 1);
+      vtkm::Id numberOfSamples = size / 100;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        vtkm::Id value = storage.GetPortalConst().Get(index);
-        VTKM_TEST_ASSERT(value == index + OFFSET, "Got bad value for scheduled kernels.");
+        vtkm::Id randomIndex = distribution(generator);
+        vtkm::Id value = storage.GetPortalConst().Get(randomIndex);
+        VTKM_TEST_ASSERT(value == randomIndex + OFFSET, "Got bad value for scheduled kernels.");
       }
     } //release memory
 
@@ -634,6 +704,78 @@ private:
         VTKM_TEST_ASSERT(value == index + OFFSET, "Got bad value for scheduled vtkm::Id3 kernels.");
       }
     } //release memory
+
+    // Ensure that each element is only visited once:
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Schedule for overlap" << std::endl;
+
+    {
+      using BoolArray = ArrayHandle<bool>;
+      using BoolPortal = typename BoolArray::template ExecutionTypes<DeviceAdapterTag>::Portal;
+      BoolArray tracker;
+      BoolArray valid;
+
+      // Initialize tracker with 'false' values
+      std::cout << "Allocating and initializing memory" << std::endl;
+      Algorithm::Schedule(GenericClearArrayKernel<BoolPortal>(
+                            tracker.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag()), false),
+                          ARRAY_SIZE);
+      Algorithm::Schedule(GenericClearArrayKernel<BoolPortal>(
+                            valid.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag()), false),
+                          ARRAY_SIZE);
+
+      std::cout << "Running Overlap kernel." << std::endl;
+      Algorithm::Schedule(OverlapKernel(tracker.PrepareForInPlace(DeviceAdapterTag()),
+                                        valid.PrepareForInPlace(DeviceAdapterTag())),
+                          ARRAY_SIZE);
+
+      std::cout << "Checking results." << std::endl;
+
+      auto vPortal = valid.GetPortalConstControl();
+      for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
+      {
+        bool isValid = vPortal.Get(i);
+        VTKM_TEST_ASSERT(isValid, "Schedule executed some elements more than once.");
+      }
+    } // release memory
+
+    // Ensure that each element is only visited once:
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Schedule for overlap with vtkm::Id3" << std::endl;
+
+    {
+      static constexpr vtkm::Id numElems{ DIM_SIZE * DIM_SIZE * DIM_SIZE };
+      static const vtkm::Id3 dims{ DIM_SIZE, DIM_SIZE, DIM_SIZE };
+
+      using BoolArray = ArrayHandle<bool>;
+      using BoolPortal = typename BoolArray::template ExecutionTypes<DeviceAdapterTag>::Portal;
+      BoolArray tracker;
+      BoolArray valid;
+
+      // Initialize tracker with 'false' values
+      std::cout << "Allocating and initializing memory" << std::endl;
+      Algorithm::Schedule(GenericClearArrayKernel<BoolPortal>(
+                            tracker.PrepareForOutput(numElems, DeviceAdapterTag()), dims, false),
+                          numElems);
+      Algorithm::Schedule(GenericClearArrayKernel<BoolPortal>(
+                            valid.PrepareForOutput(numElems, DeviceAdapterTag()), dims, false),
+                          numElems);
+
+      std::cout << "Running Overlap kernel." << std::endl;
+      Algorithm::Schedule(OverlapKernel(tracker.PrepareForInPlace(DeviceAdapterTag()),
+                                        valid.PrepareForInPlace(DeviceAdapterTag()),
+                                        dims),
+                          dims);
+
+      std::cout << "Checking results." << std::endl;
+
+      auto vPortal = valid.GetPortalConstControl();
+      for (vtkm::Id i = 0; i < numElems; i++)
+      {
+        bool isValid = vPortal.Get(i);
+        VTKM_TEST_ASSERT(isValid, "Id3 Schedule executed some elements more than once.");
+      }
+    } // release memory
   }
 
   static VTKM_CONT void TestCopyIf()
@@ -1839,6 +1981,7 @@ private:
 #define COPY_ARRAY_SIZE 10000
 
     std::vector<T> testData(COPY_ARRAY_SIZE);
+    std::default_random_engine generator(static_cast<unsigned int>(std::time(nullptr)));
 
     vtkm::Id index = 0;
     for (std::size_t i = 0; i < COPY_ARRAY_SIZE; ++i, ++index)
@@ -1855,12 +1998,16 @@ private:
       Algorithm::Copy(input, temp);
       VTKM_TEST_ASSERT(temp.GetNumberOfValues() == COPY_ARRAY_SIZE, "Copy Needs to Resize Array");
 
-      typename std::vector<T>::const_iterator c = testData.begin();
       const auto& portal = temp.GetPortalConstControl();
-      for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
+
+      std::uniform_int_distribution<vtkm::Id> distribution(0, COPY_ARRAY_SIZE - 1);
+      vtkm::Id numberOfSamples = COPY_ARRAY_SIZE / 50;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        T value = portal.Get(i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (Copy)");
+        vtkm::Id randomIndex = distribution(generator);
+        T value = portal.Get(randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (Copy)");
       }
     }
 
@@ -1918,11 +2065,14 @@ private:
       VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE - 100),
                        "CopySubRange needs to shorten input range");
 
-      typename std::vector<T>::const_iterator c = testData.begin() + 100;
-      for (vtkm::Id i = 0; i < (COPY_ARRAY_SIZE - 100); i += 100, c += 100)
+      std::uniform_int_distribution<vtkm::Id> distribution(0, COPY_ARRAY_SIZE - 100 - 1);
+      vtkm::Id numberOfSamples = (COPY_ARRAY_SIZE - 100) / 100;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        T value = output.GetPortalConstControl().Get(i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 2)");
+        vtkm::Id randomIndex = distribution(generator);
+        T value = output.GetPortalConstControl().Get(randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex) + 100],
+                         "Got bad value (CopySubRange 2)");
       }
     }
 
@@ -1935,13 +2085,17 @@ private:
       VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE * 2),
                        "CopySubRange needs to not resize array");
 
-      typename std::vector<T>::const_iterator c = testData.begin();
-      for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
+      std::uniform_int_distribution<vtkm::Id> distribution(0, COPY_ARRAY_SIZE - 1);
+      vtkm::Id numberOfSamples = COPY_ARRAY_SIZE / 50;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        T value = output.GetPortalConstControl().Get(i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 5)");
-        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 5)");
+        vtkm::Id randomIndex = distribution(generator);
+        T value = output.GetPortalConstControl().Get(randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (CopySubRange 5)");
+        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (CopySubRange 5)");
       }
     }
 
@@ -1954,13 +2108,17 @@ private:
       Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, COPY_ARRAY_SIZE);
       VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE * 2),
                        "CopySubRange needs too resize Array");
-      typename std::vector<T>::const_iterator c = testData.begin();
-      for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
+      std::uniform_int_distribution<vtkm::Id> distribution(0, COPY_ARRAY_SIZE - 1);
+      vtkm::Id numberOfSamples = COPY_ARRAY_SIZE / 50;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        T value = output.GetPortalConstControl().Get(i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 6)");
-        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 6)");
+        vtkm::Id randomIndex = distribution(generator);
+        T value = output.GetPortalConstControl().Get(randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (CopySubRange 6)");
+        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (CopySubRange 6)");
       }
     }
 

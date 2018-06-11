@@ -122,8 +122,8 @@ void BenchmarkValueType()
     try
     {
       bench.GatherSamples(functor);
-      vtkm::UInt64 speed = size / static_cast<vtkm::UInt64>(stats::Mean(bench.GetSamples()));
-      speedStr = HumanSize(speed) + std::string("/s");
+      vtkm::Float64 speed = static_cast<Float64>(size) / stats::Mean(bench.GetSamples());
+      speedStr = HumanSize(static_cast<UInt64>(speed)) + std::string("/s");
     }
     catch (vtkm::cont::ErrorBadAllocation&)
     {

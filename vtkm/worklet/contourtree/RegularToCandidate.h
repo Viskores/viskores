@@ -81,11 +81,11 @@ namespace contourtree
 class RegularToCandidate : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexId,       // (input) vertex id of candidate
+  using ControlSignature = void(FieldIn<IdType> vertexId,       // (input) vertex id of candidate
                                 WholeArrayIn<IdType> mergeArcs, // (input) merge arcs
                                 WholeArrayIn<IdType> regularToCritical, // (input) sorting indices
                                 FieldOut<IdType> sortVector); // (output) target for write back
-  typedef _4 ExecutionSignature(_1, _2, _3);
+  using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 
   // Constructor

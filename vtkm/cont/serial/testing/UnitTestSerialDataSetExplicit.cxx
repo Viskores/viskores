@@ -28,5 +28,7 @@
 
 int UnitTestSerialDataSetExplicit(int, char* [])
 {
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::TestingDataSetExplicit<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

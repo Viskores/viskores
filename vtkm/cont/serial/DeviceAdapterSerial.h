@@ -23,6 +23,7 @@
 // Keep headers in this order.
 // clang-format off
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
 #include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
 #include <vtkm/cont/serial/internal/VirtualObjectTransferSerial.h>

@@ -42,8 +42,8 @@ namespace internal
 
 struct ClearBuffers : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldOut<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldOut<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2);
 
   VTKM_CONT
   ClearBuffers() {}
@@ -63,8 +63,8 @@ struct ClearBuffers : public vtkm::worklet::WorkletMapField
 
 struct ClearBuffersExecutor
 {
-  typedef vtkm::rendering::Canvas::ColorBufferType ColorBufferType;
-  typedef vtkm::rendering::Canvas::DepthBufferType DepthBufferType;
+  using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
+  using DepthBufferType = vtkm::rendering::Canvas::DepthBufferType;
 
   ColorBufferType ColorBuffer;
   DepthBufferType DepthBuffer;
@@ -98,8 +98,8 @@ struct BlendBackground : public vtkm::worklet::WorkletMapField
   {
   }
 
-  typedef void ControlSignature(FieldInOut<>);
-  typedef void ExecutionSignature(_1);
+  using ControlSignature = void(FieldInOut<>);
+  using ExecutionSignature = void(_1);
 
   VTKM_EXEC void operator()(vtkm::Vec<vtkm::Float32, 4>& color) const
   {
@@ -116,7 +116,7 @@ struct BlendBackground : public vtkm::worklet::WorkletMapField
 
 struct BlendBackgroundExecutor
 {
-  typedef vtkm::rendering::Canvas::ColorBufferType ColorBufferType;
+  using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
 
   ColorBufferType ColorBuffer;
   BlendBackground Worklet;
@@ -142,8 +142,8 @@ struct BlendBackgroundExecutor
 
 struct DrawColorSwatch : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, WholeArrayInOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, WholeArrayInOut<>);
+  using ExecutionSignature = void(_1, _2);
 
   VTKM_CONT
   DrawColorSwatch(vtkm::Id2 dims,
@@ -185,8 +185,8 @@ struct DrawColorSwatch : public vtkm::worklet::WorkletMapField
 
 struct DrawColorBar : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
+  using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_CONT
   DrawColorBar(vtkm::Id2 dims, vtkm::Id2 xBounds, vtkm::Id2 yBounds, bool horizontal)
@@ -213,8 +213,9 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
 
     const vtkm::Vec<vtkm::UInt8, 4> color = colorMap.Get(sample);
 
-    vtkm::Float32 normalizedHeight =
-      Horizontal ? vtkm::Float32(y) / BarHeight : vtkm::Float32(x) / BarWidth;
+    vtkm::Float32 normalizedHeight = Horizontal
+      ? static_cast<vtkm::Float32>(y) / static_cast<vtkm::Float32>(BarHeight)
+      : static_cast<vtkm::Float32>(x) / static_cast<vtkm::Float32>(BarWidth);
     // offset to global image coord
     x += BarBottomLeft[0];
     y += BarBottomLeft[1];

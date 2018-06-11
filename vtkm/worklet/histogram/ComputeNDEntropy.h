@@ -33,8 +33,8 @@ namespace histogram
 class SetBinInformationContent : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<> freq, FieldOut<> informationContent);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<> freq, FieldOut<> informationContent);
+  using ExecutionSignature = void(_1, _2);
 
   vtkm::Float64 FreqSum;
 

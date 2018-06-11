@@ -88,8 +88,8 @@ class LinearBVHBuilder::CountingIterator : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CountingIterator() {}
-  typedef void ControlSignature(FieldOut<>);
-  typedef void ExecutionSignature(WorkIndex, _1);
+  using ControlSignature = void(FieldOut<>);
+  using ExecutionSignature = void(WorkIndex, _1);
   VTKM_EXEC
   void operator()(const vtkm::Id& index, vtkm::Id& outId) const { outId = index; }
 }; //class countingIterator
@@ -99,7 +99,7 @@ class LinearBVHBuilder::FindAABBs : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   FindAABBs() {}
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 FieldOut<>,
                                 FieldOut<>,
                                 FieldOut<>,
@@ -107,7 +107,7 @@ public:
                                 FieldOut<>,
                                 FieldOut<>,
                                 WholeArrayIn<Vec3RenderingTypes>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
   template <typename PointPortalType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 4> indices,
                             vtkm::Float32& xmin,
@@ -162,9 +162,9 @@ template <typename Device>
 class LinearBVHBuilder::GatherFloat32 : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Float32> FloatArrayHandle;
-  typedef typename FloatArrayHandle::ExecutionTypes<Device>::PortalConst PortalConst;
-  typedef typename FloatArrayHandle::ExecutionTypes<Device>::Portal Portal;
+  using FloatArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Float32>;
+  using PortalConst = typename FloatArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using Portal = typename FloatArrayHandle::ExecutionTypes<Device>::Portal;
   PortalConst InputPortal;
   Portal OutputPortal;
 
@@ -177,8 +177,8 @@ public:
   {
     this->OutputPortal = outputPortal.PrepareForOutput(size, Device());
   }
-  typedef void ControlSignature(FieldIn<>);
-  typedef void ExecutionSignature(WorkIndex, _1);
+  using ControlSignature = void(FieldIn<>);
+  using ExecutionSignature = void(WorkIndex, _1);
   VTKM_EXEC
   void operator()(const vtkm::Id& outIndex, const vtkm::Id& inIndex) const
   {
@@ -190,10 +190,10 @@ template <typename Device>
 class LinearBVHBuilder::GatherVecCast : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Vec4IdArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> Vec4IntArrayHandle;
-  typedef typename Vec4IdArrayHandle::ExecutionTypes<Device>::PortalConst PortalConst;
-  typedef typename Vec4IntArrayHandle::ExecutionTypes<Device>::Portal Portal;
+  using Vec4IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
+  using PortalConst = typename Vec4IdArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using Portal = typename Vec4IntArrayHandle::ExecutionTypes<Device>::Portal;
 
 private:
   PortalConst InputPortal;
@@ -208,8 +208,8 @@ public:
   {
     this->OutputPortal = outputPortal.PrepareForOutput(size, Device());
   }
-  typedef void ControlSignature(FieldIn<>);
-  typedef void ExecutionSignature(WorkIndex, _1);
+  using ControlSignature = void(FieldIn<>);
+  using ExecutionSignature = void(WorkIndex, _1);
   VTKM_EXEC
   void operator()(const vtkm::Id& outIndex, const vtkm::Id& inIndex) const
   {
@@ -278,17 +278,17 @@ template <typename Device>
 class LinearBVHBuilder::PropagateAABBs : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Int8> Int8Handle;
-  typedef typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 2>> Float2ArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 2>> VecInt2Handle;
-  typedef typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 4>> Float4ArrayHandle;
+  using IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
+  using Int8Handle = typename vtkm::cont::ArrayHandle<vtkm::Int8>;
+  using Float2ArrayHandle = typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 2>>;
+  using VecInt2Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 2>>;
+  using Float4ArrayHandle = typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 4>>;
 
-  typedef typename IdArrayHandle::ExecutionTypes<Device>::PortalConst IdConstPortal;
-  typedef typename Float2ArrayHandle::ExecutionTypes<Device>::Portal Float2ArrayPortal;
-  typedef typename VecInt2Handle::ExecutionTypes<Device>::Portal Int2ArrayPortal;
-  typedef typename Int8Handle::ExecutionTypes<Device>::Portal Int8ArrayPortal;
-  typedef typename Float4ArrayHandle::ExecutionTypes<Device>::Portal Float4ArrayPortal;
+  using IdConstPortal = typename IdArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using Float2ArrayPortal = typename Float2ArrayHandle::ExecutionTypes<Device>::Portal;
+  using Int2ArrayPortal = typename VecInt2Handle::ExecutionTypes<Device>::Portal;
+  using Int8ArrayPortal = typename Int8Handle::ExecutionTypes<Device>::Portal;
+  using Float4ArrayPortal = typename Float4ArrayHandle::ExecutionTypes<Device>::Portal;
 
   Float4ArrayPortal FlatBVH;
   IdConstPortal Parents;
@@ -316,13 +316,13 @@ public:
   {
     this->FlatBVH = flatBVH.PrepareForOutput((LeafCount - 1) * 4, Device());
   }
-  typedef void ControlSignature(WholeArrayIn<Scalar>,
+  using ControlSignature = void(WholeArrayIn<Scalar>,
                                 WholeArrayIn<Scalar>,
                                 WholeArrayIn<Scalar>,
                                 WholeArrayIn<Scalar>,
                                 WholeArrayIn<Scalar>,
                                 WholeArrayIn<Scalar>);
-  typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4, _5, _6);
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6);
 
   template <typename InputPortalType>
   VTKM_EXEC_CONT void operator()(const vtkm::Id workIndex,
@@ -443,10 +443,10 @@ template <typename Device>
 class LinearBVHBuilder::TreeBuilder : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt32> UIntArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
-  typedef typename UIntArrayHandle::ExecutionTypes<Device>::PortalConst UIntPortalType;
-  typedef typename IdArrayHandle::ExecutionTypes<Device>::Portal IdPortalType;
+  using UIntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::UInt32>;
+  using IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
+  using UIntPortalType = typename UIntArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using IdPortalType = typename IdArrayHandle::ExecutionTypes<Device>::Portal;
 
 private:
   UIntPortalType MortonCodePortal;
@@ -527,8 +527,8 @@ public:
     InnerCount = LeafCount - 1;
     this->ParentPortal = parentHandle.PrepareForOutput(InnerCount + LeafCount, Device());
   }
-  typedef void ControlSignature(FieldOut<>, FieldOut<>);
-  typedef void ExecutionSignature(WorkIndex, _1, _2);
+  using ControlSignature = void(FieldOut<>, FieldOut<>);
+  using ExecutionSignature = void(WorkIndex, _1, _2);
   VTKM_EXEC
   void operator()(const vtkm::Id& index, vtkm::Id& leftChild, vtkm::Id& rightChild) const
   {
@@ -898,18 +898,20 @@ void LinearBVH::ConstructOnDevice(Device device)
   logger->CloseLogEntry(time);
 }
 
-// explicitly export to workaround an intel compiler bug
-#if defined(VTKM_ICC)
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagSerial>(
-  vtkm::cont::DeviceAdapterTagSerial);
+// explicitly export
+template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<
+  vtkm::cont::DeviceAdapterTagSerial>(vtkm::cont::DeviceAdapterTagSerial);
 #ifdef VTKM_ENABLE_TBB
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
+template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
   vtkm::cont::DeviceAdapterTagTBB);
 #endif
-#ifdef VTKM_ENABLE_CUDA
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(
-  vtkm::cont::DeviceAdapterTagCuda);
+#ifdef VTKM_ENABLE_OPENMP
+template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagOpenMP>(
+  vtkm::cont::DeviceAdapterTagOpenMP);
 #endif
+#ifdef VTKM_ENABLE_CUDA
+template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(
+  vtkm::cont::DeviceAdapterTagCuda);
 #endif
 
 VTKM_CONT

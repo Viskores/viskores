@@ -74,22 +74,22 @@ private:
 
     // test various field-getting methods and associations
     const vtkm::cont::Field& f1 = ds.GetField("pointvar");
-    VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                     "Association of 'pointvar' was not ASSOC_POINTS");
+    VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::Association::POINTS,
+                     "Association of 'pointvar' was not Association::POINTS");
     try
     {
       //const vtkm::cont::Field &f2 =
-      ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+      ds.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
     }
     catch (...)
     {
-      VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+      VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
     }
 
     try
     {
       //const vtkm::cont::Field &f3 =
-      ds.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
+      ds.GetField("cellvar", vtkm::cont::Field::Association::POINTS);
       VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
     }
     catch (vtkm::cont::ErrorBadValue& error)

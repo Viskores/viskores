@@ -50,18 +50,31 @@ struct TestExecObject
   vtkm::Id* Array;
 };
 
-struct TestExecObjectType : vtkm::exec::ExecutionObjectBase
+template <typename Device>
+struct ExecutionObject
+{
+  vtkm::Id Value;
+};
+
+struct TestExecObjectType : vtkm::cont::ExecutionObjectBase
 {
   template <typename Functor, typename... Args>
   void CastAndCall(Functor f, Args&&... args) const
   {
     f(*this, std::forward<Args>(args)...);
   }
+  template <typename Device>
+  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device) const
+  {
+    ExecutionObject<Device> object;
+    object.Value = this->Value;
+    return object;
+  }
   vtkm::Id Value;
 };
 
 struct TestExecObjectTypeBad
-{ //this will fail as it doesn't inherit from vtkm::exec::ExecutionObjectBase
+{ //this will fail as it doesn't inherit from vtkm::cont::ExecutionObjectBase
   template <typename Functor, typename... Args>
   void CastAndCall(Functor f, Args&&... args) const
   {
@@ -219,11 +232,11 @@ public:
 class TestWorklet : public TestWorkletBase
 {
 public:
-  typedef void ControlSignature(TestIn, ExecObject, TestOut);
-  typedef _3 ExecutionSignature(_1, _2, WorkIndex);
+  using ControlSignature = void(TestIn, ExecObject, TestOut);
+  using ExecutionSignature = _3(_1, _2, WorkIndex);
 
-  VTKM_EXEC
-  vtkm::Id operator()(vtkm::Id value, TestExecObjectType execObject, vtkm::Id index) const
+  template <typename ExecObjectType>
+  VTKM_EXEC vtkm::Id operator()(vtkm::Id value, ExecObjectType execObject, vtkm::Id index) const
   {
     VTKM_TEST_ASSERT(value == TestValue(index, vtkm::Id()), "Got bad value in worklet.");
     VTKM_TEST_ASSERT(execObject.Value == EXPECTED_EXEC_OBJECT_VALUE,
@@ -237,11 +250,14 @@ public:
 class TestErrorWorklet : public TestWorkletBase
 {
 public:
-  typedef void ControlSignature(TestIn, ExecObject, TestOut);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(TestIn, ExecObject, TestOut);
+  using ExecutionSignature = void(_1, _2, _3);
 
-  VTKM_EXEC
-  void operator()(vtkm::Id, TestExecObjectType, vtkm::Id) const { this->RaiseError(ERROR_MESSAGE); }
+  template <typename ExecObjectType>
+  VTKM_EXEC void operator()(vtkm::Id, ExecObjectType, vtkm::Id) const
+  {
+    this->RaiseError(ERROR_MESSAGE);
+  }
 };
 
 template <typename WorkletType>
@@ -252,11 +268,13 @@ class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispat
   using Superclass = vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
                                                              WorkletType,
                                                              TestWorkletBase>;
+  using ScatterType = typename Superclass::ScatterType;
 
 public:
   VTKM_CONT
-  TestDispatcher(const WorkletType& worklet = WorkletType())
-    : Superclass(worklet)
+  TestDispatcher(const WorkletType& worklet = WorkletType(),
+                 const ScatterType& scatter = ScatterType())
+    : Superclass(worklet, scatter)
   {
   }
 

@@ -74,7 +74,7 @@ public:
 
     vtkm::worklet::Threshold threshold;
     OutCellSetType outCellSet = threshold.Run(
-      cellset, pointvar, vtkm::cont::Field::ASSOC_POINTS, HasValue(60.1f), DeviceAdapter());
+      cellset, pointvar, vtkm::cont::Field::Association::POINTS, HasValue(60.1f), DeviceAdapter());
 
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 1, "Wrong number of cells");
 
@@ -105,7 +105,7 @@ public:
 
     vtkm::worklet::Threshold threshold;
     OutCellSetType outCellSet = threshold.Run(
-      cellset, pointvar, vtkm::cont::Field::ASSOC_POINTS, HasValue(20.1f), DeviceAdapter());
+      cellset, pointvar, vtkm::cont::Field::Association::POINTS, HasValue(20.1f), DeviceAdapter());
 
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 2, "Wrong number of cells");
 
@@ -136,8 +136,11 @@ public:
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
 
     vtkm::worklet::Threshold threshold;
-    OutCellSetType outCellSet = threshold.Run(
-      cellset, cellvar, vtkm::cont::Field::ASSOC_CELL_SET, HasValue(100.1f), DeviceAdapter());
+    OutCellSetType outCellSet = threshold.Run(cellset,
+                                              cellvar,
+                                              vtkm::cont::Field::Association::CELL_SET,
+                                              HasValue(100.1f),
+                                              DeviceAdapter());
 
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 1, "Wrong number of cells");
 

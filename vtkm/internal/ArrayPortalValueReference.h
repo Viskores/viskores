@@ -101,6 +101,26 @@ void swap(vtkm::internal::ArrayPortalValueReference<T> a,
 {
   a.Swap(b);
 }
+
+template <typename T>
+void swap(vtkm::internal::ArrayPortalValueReference<T> a,
+          typename vtkm::internal::ArrayPortalValueReference<T>::ValueType& b)
+{
+  using ValueType = typename vtkm::internal::ArrayPortalValueReference<T>::ValueType;
+  const ValueType tmp = a;
+  a = b;
+  b = tmp;
+}
+
+template <typename T>
+void swap(typename vtkm::internal::ArrayPortalValueReference<T>::ValueType& a,
+          vtkm::internal::ArrayPortalValueReference<T> b)
+{
+  using ValueType = typename vtkm::internal::ArrayPortalValueReference<T>::ValueType;
+  const ValueType tmp = b;
+  b = a;
+  a = tmp;
+}
 }
 } // namespace vtkm::internal
 

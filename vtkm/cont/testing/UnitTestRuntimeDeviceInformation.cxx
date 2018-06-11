@@ -37,19 +37,37 @@ template <typename DeviceAdapterTag>
 void detect_if_exists(DeviceAdapterTag tag)
 {
   using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-  DoesExist<DeviceAdapterTraits::Valid>::Exist(tag);
+  std::cout << "testing runtime support for " << DeviceAdapterTraits::GetName() << std::endl;
+  DoesExist<DeviceAdapterTraits::Valid> exist;
+  exist.Exist(tag);
 }
 
 template <>
 struct DoesExist<false>
 {
   template <typename DeviceAdapterTag>
-  static void Exist(DeviceAdapterTag)
+  void Exist(DeviceAdapterTag) const
   {
+
     //runtime information for this device should return false
     vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
     VTKM_TEST_ASSERT(runtime.Exists() == false,
                      "A backend with zero compile time support, can't have runtime support");
+  }
+
+  void Exist(vtkm::cont::DeviceAdapterTagCuda) const
+  {
+    //Since we are in a C++ compilation unit the Device Adapter
+    //trait should be false. But CUDA could still be enabled.
+    //That is why we check VTKM_ENABLE_CUDA.
+    vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagCuda> runtime;
+#ifdef VTKM_ENABLE_CUDA
+    VTKM_TEST_ASSERT(runtime.Exists() == true,
+                     "with cuda backend enabled, runtime support should be enabled");
+#else
+    VTKM_TEST_ASSERT(runtime.Exists() == false,
+                     "with cuda backend disabled, runtime support should be disabled");
+#endif
   }
 };
 
@@ -57,7 +75,7 @@ template <>
 struct DoesExist<true>
 {
   template <typename DeviceAdapterTag>
-  static void Exist(DeviceAdapterTag)
+  void Exist(DeviceAdapterTag) const
   {
     //runtime information for this device should return true
     vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;

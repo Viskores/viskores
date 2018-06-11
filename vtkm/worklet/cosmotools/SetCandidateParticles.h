@@ -79,11 +79,11 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<TagType> bestPot,   // (input) bin's best potential
+  using ControlSignature = void(FieldIn<TagType> bestPot,   // (input) bin's best potential
                                 FieldIn<IdType> partOffset, // (input) offset to first particle
                                 FieldIn<IdType> partCount,  // (input) count of particles in bin
                                 WholeArrayOut<IdType> candidate); // (input) z location in bin
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   T cutoffPotential; // Lowest potential for a candidate bin

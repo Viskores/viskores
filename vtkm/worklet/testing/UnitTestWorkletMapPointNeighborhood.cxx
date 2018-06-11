@@ -38,11 +38,11 @@ namespace test_pointneighborhood
 struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 {
 
-  typedef void ControlSignature(FieldInNeighborhood<Scalar> neighbors,
+  using ControlSignature = void(FieldInNeighborhood<Scalar> neighbors,
                                 CellSetIn,
                                 FieldOut<Scalar> maxV);
 
-  typedef void ExecutionSignature(OnBoundary, _1, _3);
+  using ExecutionSignature = void(OnBoundary, _1, _3);
   //verify input domain can be something other than first parameter
   using InputDomain = _2;
 
@@ -116,13 +116,9 @@ struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 
 struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood5x5x5
 {
-  typedef void ControlSignature(CellSetIn topology, FieldIn<Vec3> pointCoords);
-  typedef void ExecutionSignature(_2,
-                                  WorkIndex,
-                                  InputIndex,
-                                  OutputIndex,
-                                  ThreadIndices,
-                                  VisitIndex);
+  using ControlSignature = void(CellSetIn topology, FieldIn<Vec3> pointCoords);
+  using ExecutionSignature =
+    void(_2, WorkIndex, InputIndex, OutputIndex, ThreadIndices, VisitIndex);
 
   VTKM_CONT
   ScatterIdentityNeighbor() {}
@@ -152,20 +148,13 @@ struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood5
 
 
   using ScatterType = vtkm::worklet::ScatterIdentity;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(); }
 };
 
 struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood5x5x5
 {
-  typedef void ControlSignature(CellSetIn topology, FieldIn<Vec3> pointCoords);
-  typedef void ExecutionSignature(_2,
-                                  WorkIndex,
-                                  InputIndex,
-                                  OutputIndex,
-                                  ThreadIndices,
-                                  VisitIndex);
+  using ControlSignature = void(CellSetIn topology, FieldIn<Vec3> pointCoords);
+  using ExecutionSignature =
+    void(_2, WorkIndex, InputIndex, OutputIndex, ThreadIndices, VisitIndex);
 
   VTKM_CONT
   ScatterUniformNeighbor() {}
@@ -194,10 +183,7 @@ struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood5x
   }
 
 
-  using ScatterType = vtkm::worklet::ScatterUniform;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(3); }
+  using ScatterType = vtkm::worklet::ScatterUniform<3>;
 };
 }
 

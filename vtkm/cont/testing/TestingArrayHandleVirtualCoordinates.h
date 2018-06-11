@@ -39,8 +39,8 @@ namespace
 
 struct CopyWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<FieldCommon> in, FieldOut<FieldCommon> out);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn<FieldCommon> in, FieldOut<FieldCommon> out);
+  using ExecutionSignature = _2(_1);
 
   template <typename T>
   VTKM_EXEC T operator()(const T& in) const
@@ -48,6 +48,33 @@ struct CopyWorklet : public vtkm::worklet::WorkletMapField
     return in;
   }
 };
+
+// A dummy worklet
+struct DoubleWorklet : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<FieldCommon> in);
+  typedef void ExecutionSignature(_1);
+  using InputDomain = _1;
+
+  template <typename T>
+  VTKM_EXEC void operator()(T& in) const
+  {
+    in = in * 2;
+  }
+};
+
+template <typename T, typename S, typename DeviceAdapter>
+inline void TestVirtualAccess(const vtkm::cont::ArrayHandle<T, S>& in,
+                              vtkm::cont::ArrayHandle<T>& out,
+                              DeviceAdapter)
+{
+  vtkm::worklet::DispatcherMapField<CopyWorklet, DeviceAdapter>().Invoke(
+    vtkm::cont::ArrayHandleVirtualCoordinates(in), vtkm::cont::ArrayHandleVirtualCoordinates(out));
+
+  VTKM_TEST_ASSERT(test_equal_portals(in.GetPortalConstControl(), out.GetPortalConstControl()),
+                   "Input and output portals don't match");
+}
+
 
 } // anonymous namespace
 
@@ -60,17 +87,7 @@ private:
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
 
-  template <typename T, typename InStorageTag, typename OutStorageTag>
-  static void TestVirtualAccess(const vtkm::cont::ArrayHandle<T, InStorageTag>& in,
-                                vtkm::cont::ArrayHandle<T, OutStorageTag>& out)
-  {
-    vtkm::worklet::DispatcherMapField<CopyWorklet, DeviceAdapter>().Invoke(
-      vtkm::cont::ArrayHandleVirtualCoordinates(in),
-      vtkm::cont::ArrayHandleVirtualCoordinates(out));
 
-    VTKM_TEST_ASSERT(test_equal_portals(in.GetPortalConstControl(), out.GetPortalConstControl()),
-                     "Input and output portals don't match");
-  }
 
   static void TestAll()
   {
@@ -86,10 +103,11 @@ private:
     {
       a1.GetPortalControl().Set(i, TestValue(i, PointType()));
     }
-    TestVirtualAccess(a1, out);
+    TestVirtualAccess(a1, out, DeviceAdapter{});
 
     std::cout << "Testing ArrayHandleUniformPointCoordinates as input\n";
-    TestVirtualAccess(vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(4, 4, 4)), out);
+    auto t = vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(4, 4, 4));
+    TestVirtualAccess(t, out, DeviceAdapter{});
 
     std::cout << "Testing ArrayHandleCartesianProduct as input\n";
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> c1, c2, c3;
@@ -103,7 +121,25 @@ private:
       c2.GetPortalControl().Set(i, p[1]);
       c3.GetPortalControl().Set(i, p[2]);
     }
-    TestVirtualAccess(vtkm::cont::make_ArrayHandleCartesianProduct(c1, c2, c3), out);
+    TestVirtualAccess(
+      vtkm::cont::make_ArrayHandleCartesianProduct(c1, c2, c3), out, DeviceAdapter{});
+
+    std::cout << "Testing resources releasing on ArrayHandleVirtualCoordinates\n";
+    vtkm::cont::ArrayHandleVirtualCoordinates virtualC =
+      vtkm::cont::ArrayHandleVirtualCoordinates(a1);
+    vtkm::worklet::DispatcherMapField<DoubleWorklet, DeviceAdapter>().Invoke(a1);
+    virtualC.ReleaseResourcesExecution();
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == length,
+                     "ReleaseResourcesExecution"
+                     " should not change the number of values on the Arrayhandle");
+    VTKM_TEST_ASSERT(
+      virtualC.GetNumberOfValues() == length,
+      "ReleaseResources"
+      " should set the number of values on the ArrayHandleVirtualCoordinates to be 0");
+    virtualC.ReleaseResources();
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 0,
+                     "ReleaseResources"
+                     " should set the number of values on the Arrayhandle to be 0");
   }
 
 public:

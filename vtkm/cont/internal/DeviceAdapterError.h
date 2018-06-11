@@ -29,4 +29,30 @@
 ///
 VTKM_INVALID_DEVICE_ADAPTER(Error, VTKM_DEVICE_ADAPTER_ERROR);
 
+namespace vtkm
+{
+namespace cont
+{
+
+/// \brief Class providing a Error runtime support detector.
+///
+/// The class provide the actual implementation used by
+/// vtkm::cont::RuntimeDeviceInformation for the Error backend.
+///
+/// We will always state that the current machine doesn't support
+/// the error backend.
+///
+template <class DeviceAdapterTag>
+class DeviceAdapterRuntimeDetector;
+
+template <>
+class DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagError>
+{
+public:
+  /// Returns false as the Error Device can never be run on.
+  VTKM_CONT bool Exists() const { return false; }
+};
+}
+}
+
 #endif //vtk_m_cont_internal_DeviceAdapterError_h

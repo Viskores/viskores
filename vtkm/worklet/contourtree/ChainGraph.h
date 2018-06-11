@@ -333,8 +333,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::FindGoverningSaddles()
 
   // now loop through the edges
   GoverningSaddleFinder governingSaddleFinder;
-  vtkm::worklet::DispatcherMapField<GoverningSaddleFinder> governingSaddleFinderDispatcher(
-    governingSaddleFinder);
+  vtkm::worklet::DispatcherMapField<GoverningSaddleFinder, DeviceAdapter>
+    governingSaddleFinderDispatcher(governingSaddleFinder);
   vtkm::Id nEdges = edgeSorter.GetNumberOfValues();
   vtkm::cont::ArrayHandleIndex edgeIndexArray(nEdges);
 
@@ -361,8 +361,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferRegularPoints()
   std::cout << std::endl;
 #endif
   RegularPointTransferrer<T> regularPointTransferrer(isJoinGraph);
-  vtkm::worklet::DispatcherMapField<RegularPointTransferrer<T>> regularPointTransferrerDispatcher(
-    regularPointTransferrer);
+  vtkm::worklet::DispatcherMapField<RegularPointTransferrer<T>, DeviceAdapter>
+    regularPointTransferrerDispatcher(regularPointTransferrer);
 
   regularPointTransferrerDispatcher.Invoke(activeVertices, // input
                                            chainExtremum,  // input (whole array)
@@ -430,8 +430,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveEdges()
   // WARNING: Using chainMaximum for I/O in parallel loop
   // See functor description for algorithmic justification of safety
   VertexDegreeUpdater vertexDegreeUpdater;
-  vtkm::worklet::DispatcherMapField<VertexDegreeUpdater> vertexDegreeUpdaterDispatcher(
-    vertexDegreeUpdater);
+  vtkm::worklet::DispatcherMapField<VertexDegreeUpdater, DeviceAdapter>
+    vertexDegreeUpdaterDispatcher(vertexDegreeUpdater);
 
   vertexDegreeUpdaterDispatcher.Invoke(activeVertices, // input
                                        activeEdges,    // input (whole array)
@@ -457,7 +457,7 @@ void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveEdges()
   // See functor description for algorithmic justification of safety
   ActiveEdgeTransferrer<DeviceAdapter> activeEdgeTransferrer(
     activeEdges.PrepareForInput(DeviceAdapter()), prunesTo.PrepareForInput(DeviceAdapter()));
-  vtkm::worklet::DispatcherMapField<ActiveEdgeTransferrer<DeviceAdapter>>
+  vtkm::worklet::DispatcherMapField<ActiveEdgeTransferrer<DeviceAdapter>, DeviceAdapter>
     activeEdgeTransferrerDispatcher(activeEdgeTransferrer);
 
   activeEdgeTransferrerDispatcher.Invoke(activeVertices,  // input
@@ -499,7 +499,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::BuildChains()
     nLogSteps++;
 
   ChainDoubler chainDoubler;
-  vtkm::worklet::DispatcherMapField<ChainDoubler> chainDoublerDispatcher(chainDoubler);
+  vtkm::worklet::DispatcherMapField<ChainDoubler, DeviceAdapter> chainDoublerDispatcher(
+    chainDoubler);
 
   // 2.	Use path compression / step doubling to collect vertices along ascending chains
   //		until every vertex has been assigned to *an* extremum
@@ -541,8 +542,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferSaddleStarts()
 
   // 2. now test all active vertices to see if they have only one chain maximum
   SaddleAscentFunctor saddleAscentFunctor;
-  vtkm::worklet::DispatcherMapField<SaddleAscentFunctor> saddleAscentFunctorDispatcher(
-    saddleAscentFunctor);
+  vtkm::worklet::DispatcherMapField<SaddleAscentFunctor, DeviceAdapter>
+    saddleAscentFunctorDispatcher(saddleAscentFunctor);
 
   saddleAscentFunctorDispatcher.Invoke(activeVertices, // input
                                        firstEdge,      // input (whole array)
@@ -561,8 +562,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferSaddleStarts()
   edgeSorter.Allocate(nEdgesToSort);
 
   SaddleAscentTransferrer saddleAscentTransferrer;
-  vtkm::worklet::DispatcherMapField<SaddleAscentTransferrer> saddleAscentTransferrerDispatcher(
-    saddleAscentTransferrer);
+  vtkm::worklet::DispatcherMapField<SaddleAscentTransferrer, DeviceAdapter>
+    saddleAscentTransferrerDispatcher(saddleAscentTransferrer);
 
   saddleAscentTransferrerDispatcher.Invoke(activeVertices, // input
                                            newOutdegree,   // input
@@ -589,7 +590,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::BuildTrunk()
 #endif
 
   TrunkBuilder trunkBuilder;
-  vtkm::worklet::DispatcherMapField<TrunkBuilder> trunkBuilderDispatcher(trunkBuilder);
+  vtkm::worklet::DispatcherMapField<TrunkBuilder, DeviceAdapter> trunkBuilderDispatcher(
+    trunkBuilder);
 
   trunkBuilderDispatcher.Invoke(activeVertices, // input
                                 chainExtremum,  // input (whole array)
@@ -619,8 +621,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferToMergeTree(
   DeviceAlgorithm::Copy(arcArray, saddles);
 
   JoinTreeTransferrer joinTreeTransferrer;
-  vtkm::worklet::DispatcherMapField<JoinTreeTransferrer> joinTreeTransferrerDispatcher(
-    joinTreeTransferrer);
+  vtkm::worklet::DispatcherMapField<JoinTreeTransferrer, DeviceAdapter>
+    joinTreeTransferrerDispatcher(joinTreeTransferrer);
   vtkm::cont::ArrayHandleIndex valueIndexArray(valueIndex.GetNumberOfValues());
 
   joinTreeTransferrerDispatcher.Invoke(valueIndexArray, // input

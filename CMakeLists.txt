@@ -22,10 +22,15 @@
 #   - Support for target_sources
 #   - Support for usage requirements
 #
-# If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX or
-# CMake 3.10 on windows.
+# If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX.
+# We require CMake 3.11 with the MSVC generator as the $<COMPILE_LANGUAGE:>
+# generator expression is not supported on older versions.
 cmake_minimum_required(VERSION 3.3)
 project (VTKm)
+
+if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
+  cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+endif()
 
 # Update module path
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
@@ -81,6 +86,7 @@ endmacro ()
 # Configurable Options
 vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
+vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
@@ -112,10 +118,16 @@ vtkm_option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols fr
 vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
+# This flag can be used to prevent VTK-m from exporting its warning flags in its
+# build interface. This is useful when building VTK-m as a thirdparty library
+# and the warnings are too strict for the parent project.
+vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are usefull while developing VTK-m" ON)
+
 mark_as_advanced(
   VTKm_NO_ASSERT
   VTKm_INSTALL_ONLY_LIBRARIES
   VTKm_USE_DEFAULT_SYMBOL_VISIBILITY
+  VTKm_ENABLE_DEVELOPER_FLAGS
   )
 
 #-----------------------------------------------------------------------------
@@ -169,6 +181,9 @@ if (VTKm_ENABLE_TESTING)
   add_test(NAME CopyrightStatement
     COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
     )
+  # increase timeout since on some machines CopyrightStatement test takes a long time.
+  set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
+
   add_test(NAME SourceInBuild
     COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInBuild.cmake"
     )
@@ -252,6 +267,7 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     FILES
       ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindOpenGL.cmake
+      ${VTKm_SOURCE_DIR}/CMake/FindOpenMP.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
     )
 

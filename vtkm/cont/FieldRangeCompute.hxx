@@ -29,15 +29,11 @@ namespace cont
 namespace detail
 {
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> MergeRanges(const vtkm::cont::ArrayHandle<vtkm::Range>& a,
-                                                 const vtkm::cont::ArrayHandle<vtkm::Range>& b);
-
 template <typename TypeList, typename StorageList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeComputeImpl(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc,
+  vtkm::cont::Field::Association assoc,
   TypeList,
   StorageList)
 {
@@ -59,19 +55,34 @@ template <typename TypeList, typename StorageList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeComputeImpl(
   const vtkm::cont::MultiBlock& multiblock,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc,
+  vtkm::cont::Field::Association assoc,
   TypeList,
   StorageList)
 {
-  return std::accumulate(
+  std::vector<vtkm::Range> result_vector = std::accumulate(
     multiblock.begin(),
     multiblock.end(),
-    vtkm::cont::ArrayHandle<vtkm::Range>(),
-    [&](const vtkm::cont::ArrayHandle<vtkm::Range>& val, const vtkm::cont::DataSet& dataset) {
-      auto cur_range =
+    std::vector<vtkm::Range>(),
+    [&](const std::vector<vtkm::Range>& accumulated_value, const vtkm::cont::DataSet& dataset) {
+      vtkm::cont::ArrayHandle<vtkm::Range> block_range =
         vtkm::cont::detail::FieldRangeComputeImpl(dataset, name, assoc, TypeList(), StorageList());
-      return vtkm::cont::detail::MergeRanges(val, cur_range);
+
+      std::vector<vtkm::Range> result = accumulated_value;
+
+      // if the current block has more components than we have seen so far,
+      // resize the result to fit all components.
+      result.resize(std::max(result.size(), static_cast<size_t>(block_range.GetNumberOfValues())));
+
+      auto portal = block_range.GetPortalConstControl();
+      std::transform(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                     vtkm::cont::ArrayPortalToIteratorEnd(portal),
+                     result.begin(),
+                     result.begin(),
+                     std::plus<vtkm::Range>());
+      return result;
     });
+
+  return vtkm::cont::make_ArrayHandle(result_vector, vtkm::CopyFlag::On);
 }
 }
 }

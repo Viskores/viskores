@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -39,7 +39,7 @@ namespace exec
 /// structure.
 ///
 template <typename T, typename StorageTag, typename DeviceAdapterTag>
-class ExecutionWholeArray : public vtkm::exec::ExecutionObjectBase
+class ExecutionWholeArray : public vtkm::cont::ExecutionObjectBase
 {
 public:
   using ValueType = T;
@@ -89,7 +89,7 @@ private:
 /// structure
 ///
 template <typename T, typename StorageTag, typename DeviceAdapterTag>
-class ExecutionWholeArrayConst : public vtkm::exec::ExecutionObjectBase
+class ExecutionWholeArrayConst : public vtkm::cont::ExecutionObjectBase
 {
 public:
   using ValueType = T;

@@ -54,9 +54,9 @@ class MeshConnExec
 class UnstructuredMeshConn
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandle;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
-  typedef vtkm::cont::ArrayHandle<vtkm::UInt8> UCharHandle;
+  using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using UCharHandle = vtkm::cont::ArrayHandle<vtkm::UInt8>;
   // Control Environment Handles
   // FaceConn
   IdHandle FaceConnectivity;
@@ -204,11 +204,11 @@ template <typename Device>
 class MeshConnExec<UnstructuredMeshConn, Device>
 {
 protected:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt8> UCharHandle;
-  typedef typename IdHandle::ExecutionTypes<Device>::PortalConst IdConstPortal;
-  typedef typename UCharHandle::ExecutionTypes<Device>::PortalConst UCharConstPortal;
+  using IdHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
+  using Id4Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using UCharHandle = typename vtkm::cont::ArrayHandle<vtkm::UInt8>;
+  using IdConstPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using UCharConstPortal = typename UCharHandle::ExecutionTypes<Device>::PortalConst;
 
   // Constant Portals for the execution Environment
   //FaceConn
@@ -295,11 +295,11 @@ public:
 class UnstructuredMeshConnSingleType
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandle;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
-  typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> CountingHandle;
-  typedef vtkm::cont::ArrayHandleConstant<vtkm::UInt8> ShapesHandle;
-  typedef vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> NumIndicesHandle;
+  using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using CountingHandle = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
+  using ShapesHandle = vtkm::cont::ArrayHandleConstant<vtkm::UInt8>;
+  using NumIndicesHandle = vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>;
   // Control Environment Handles
   IdHandle FaceConnectivity;
   CountingHandle CellOffsets;
@@ -456,14 +456,14 @@ template <typename Device>
 class MeshConnExec<UnstructuredMeshConnSingleType, Device>
 {
 protected:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
-  typedef typename vtkm::cont::ArrayHandleCounting<vtkm::Id> CountingHandle;
-  typedef typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8> ShapesHandle;
+  using IdHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
+  using Id4Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using CountingHandle = typename vtkm::cont::ArrayHandleCounting<vtkm::Id>;
+  using ShapesHandle = typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>;
 
-  typedef typename IdHandle::ExecutionTypes<Device>::PortalConst IdConstPortal;
-  typedef typename CountingHandle::ExecutionTypes<Device>::PortalConst CountingPortal;
-  typedef typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> NumIndicesHandle;
+  using IdConstPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using CountingPortal = typename CountingHandle::ExecutionTypes<Device>::PortalConst;
+  using NumIndicesHandle = typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>;
   // Constant Portals for the execution Environment
   IdConstPortal FaceConnPortal;
   IdConstPortal CellConnectivityPortal;
@@ -542,7 +542,7 @@ public:
 class StructuredMeshConn
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
+  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
   vtkm::Bounds CoordinateBounds;
@@ -658,7 +658,7 @@ template <typename Device>
 class MeshConnExec<StructuredMeshConn, Device>
 {
 protected:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
+  using Id4Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
   vtkm::Bounds CoordinateBounds;

@@ -18,6 +18,7 @@ namespace diy
   //! A serialization buffer. \ingroup Serialization
   struct BinaryBuffer
   {
+    virtual ~BinaryBuffer()                                         =default;
     virtual void        save_binary(const char* x, size_t count)    =0;   //!< copy `count` bytes from `x` into the buffer
     virtual void        load_binary(char* x, size_t count)          =0;   //!< copy `count` bytes into `x` from the buffer
     virtual void        load_binary_back(char* x, size_t count)     =0;   //!< copy `count` bytes into `x` from the back of the buffer

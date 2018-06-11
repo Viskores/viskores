@@ -23,6 +23,7 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/Math.h>
+#include <vtkm/Swap.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -135,8 +136,8 @@ union PackedValue {
 
 struct CopyIntoFrameBuffer : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_CONT
   CopyIntoFrameBuffer() {}
@@ -159,8 +160,8 @@ class EdgePlotter : public vtkm::worklet::WorkletMapField
 public:
   using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArray<vtkm::Int64, DeviceTag>;
 
-  typedef void ControlSignature(FieldIn<Id2Type>, WholeArrayIn<Vec3>, WholeArrayIn<Scalar>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn<Id2Type>, WholeArrayIn<Vec3>, WholeArrayIn<Scalar>);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
   VTKM_CONT
@@ -219,16 +220,16 @@ public:
     bool transposed = vtkm::Abs(y2 - y1) > vtkm::Abs(x2 - x1);
     if (transposed)
     {
-      std::swap(x1, y1);
-      std::swap(x2, y2);
+      vtkm::Swap(x1, y1);
+      vtkm::Swap(x2, y2);
     }
 
     // Ensure we are always going from left to right
     if (x1 > x2)
     {
-      std::swap(x1, x2);
-      std::swap(y1, y2);
-      std::swap(z1, z2);
+      vtkm::Swap(x1, x2);
+      vtkm::Swap(y1, y2);
+      vtkm::Swap(z1, z2);
     }
 
     vtkm::Float32 dx = x2 - x1;
@@ -395,10 +396,10 @@ public:
   VTKM_CONT
   BufferConverter() {}
 
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 WholeArrayOut<vtkm::ListTagBase<vtkm::Float32>>,
                                 WholeArrayOut<vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 4>>>);
-  typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, WorkIndex);
 
   template <typename DepthBufferPortalType, typename ColorBufferPortalType>
   VTKM_EXEC void operator()(const vtkm::Int64& packedValue,
@@ -532,11 +533,12 @@ private:
       xOffset = static_cast<vtkm::Id>(_x);
     }
 
-    bool isSupportedField = (ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
-                             ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+    bool isSupportedField =
+      (ScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+       ScalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
     if (!isSupportedField)
       throw vtkm::cont::ErrorBadValue("Field not associated with cell set or points");
-    bool isAssocPoints = ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    bool isAssocPoints = ScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
 
     EdgePlotter<DeviceTag> plotter(WorldToProjection,
                                    width,

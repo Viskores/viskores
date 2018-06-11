@@ -101,8 +101,8 @@ namespace contourtree
 class ChainDoubler : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexID, WholeArrayInOut<IdType> chains);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> vertexID, WholeArrayInOut<IdType> chains);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   // Constructor

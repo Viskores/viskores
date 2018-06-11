@@ -77,12 +77,12 @@ public:
                                                                 DIM>;
 
   public:
-    typedef void ControlSignature(FieldIn<Vec3> points,
+    using ControlSignature = void(FieldIn<Vec3> points,
                                   WholeCellSetIn<> cellSet,
                                   WholeArrayIn<Vec3> coordinates,
                                   FieldOut<IdType> cellIds,
                                   FieldOut<Vec3> parametricCoordinates);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
     template <typename CoordsPortalType, vtkm::IdComponent DIM>
     VTKM_EXEC void operator()(const vtkm::Vec<vtkm::FloatDefault, 3>& point,

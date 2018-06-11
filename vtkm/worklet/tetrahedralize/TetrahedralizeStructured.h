@@ -49,14 +49,11 @@ namespace tetrahedralize
 class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
-  typedef void ExecutionSignature(PointIndices, _2, ThreadIndices);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell<> connectivityOut);
+  using ExecutionSignature = void(PointIndices, _2, ThreadIndices);
   using InputDomain = _1;
 
-  using ScatterType = vtkm::worklet::ScatterUniform;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(5); }
+  using ScatterType = vtkm::worklet::ScatterUniform<5>;
 
   // Each hexahedron cell produces five tetrahedron cells
   template <typename ConnectivityInVec, typename ConnectivityOutVec, typename ThreadIndicesType>

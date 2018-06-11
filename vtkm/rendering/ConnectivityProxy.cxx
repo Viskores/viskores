@@ -34,8 +34,8 @@ namespace rendering
 struct ConnectivityProxy::InternalsType
 {
 protected:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMapType;
-  typedef vtkm::rendering::raytracing::ConnectivityBase BaseType;
+  using ColorMapType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using BaseType = vtkm::rendering::raytracing::ConnectivityBase;
 
   BaseType* Tracer;
   vtkm::cont::Field ScalarField;

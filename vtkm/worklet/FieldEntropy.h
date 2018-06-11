@@ -44,8 +44,8 @@ public:
   class SetBinInformationContent : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> freq, FieldOut<> informationContent);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<> freq, FieldOut<> informationContent);
+    using ExecutionSignature = void(_1, _2);
 
     vtkm::Float64 FreqSum;
 
@@ -91,8 +91,8 @@ public:
     ///// calculate information content of each bin using self-define worklet /////
     vtkm::cont::ArrayHandle<vtkm::Float64> informationContent;
     SetBinInformationContent binWorklet(static_cast<vtkm::Float64>(freqSum));
-    vtkm::worklet::DispatcherMapField<SetBinInformationContent> setBinInformationContentDispatcher(
-      binWorklet);
+    vtkm::worklet::DispatcherMapField<SetBinInformationContent, DeviceAdapter>
+      setBinInformationContentDispatcher(binWorklet);
     setBinInformationContentDispatcher.Invoke(binArray, informationContent);
 
     ///// calculate entropy by summing up information conetent of all bins /////

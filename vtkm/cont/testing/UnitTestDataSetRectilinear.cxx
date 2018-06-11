@@ -62,16 +62,16 @@ static void TwoDimRectilinearTest()
   // test various field-getting methods and associations
   try
   {
-    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    dataSet.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
   }
 
   try
   {
-    dataSet.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    dataSet.GetField("pointvar", vtkm::cont::Field::Association::POINTS);
   }
   catch (...)
   {
@@ -149,16 +149,16 @@ static void ThreeDimRectilinearTest()
 
   try
   {
-    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    dataSet.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
   }
 
   try
   {
-    dataSet.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    dataSet.GetField("pointvar", vtkm::cont::Field::Association::POINTS);
   }
   catch (...)
   {

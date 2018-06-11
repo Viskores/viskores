@@ -78,6 +78,7 @@ set(headers
   ErrorFilterExecution.h
   ErrorExecution.h
   ErrorInternal.h
+  ExecutionObjectBase.h
   Field.h
   FieldRangeCompute.h
   FieldRangeGlobalCompute.h
@@ -113,6 +114,9 @@ set(sources
   BoundsGlobalCompute.cxx
   CellSet.cxx
   CellSetStructured.cxx
+  DataSetBuilderExplicit.cxx
+  DataSetBuilderRectilinear.cxx
+  DataSetBuilderUniform.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
   Field.cxx
@@ -150,6 +154,7 @@ add_subdirectory(arg)
 add_subdirectory(diy)
 add_subdirectory(serial)
 add_subdirectory(tbb)
+add_subdirectory(openmp)
 add_subdirectory(cuda)
 
 set(backends )
@@ -159,10 +164,13 @@ endif()
 if(TARGET vtkm::cuda)
   list(APPEND backends vtkm::cuda)
 endif()
+if(TARGET vtkm::openmp)
+  list(APPEND backends vtkm::openmp)
+endif()
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
 if(TARGET vtkm_diy)
   # This will become a required dependency eventually.
-  target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
+  target_link_libraries(vtkm_cont PUBLIC vtkm_diy vtkm_taotuple)
 endif()
 
 #-----------------------------------------------------------------------------

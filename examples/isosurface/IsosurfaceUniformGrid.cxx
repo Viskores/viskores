@@ -62,8 +62,8 @@ namespace
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
@@ -130,7 +130,8 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
-  dataSet.AddField(vtkm::cont::Field("nodevar", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  dataSet.AddField(
+    vtkm::cont::Field("nodevar", vtkm::cont::Field::Association::POINTS, fieldArray));
 
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
@@ -210,13 +211,12 @@ void mouseMove(int x, int y)
 
   if (mouse_state == 0)
   {
-    vtkm::Float32 pideg = static_cast<vtkm::Float32>(vtkm::Pi_2());
     Quaternion newRotX;
-    newRotX.setEulerAngles(-0.2f * dx * pideg / 180.0f, 0.0f, 0.0f);
+    newRotX.setEulerAngles(-0.2f * dx * vtkm::Pi_180f(), 0.0f, 0.0f);
     qrot.mul(newRotX);
 
     Quaternion newRotY;
-    newRotY.setEulerAngles(0.0f, 0.0f, -0.2f * dy * pideg / 180.0f);
+    newRotY.setEulerAngles(0.0f, 0.0f, -0.2f * dy * vtkm::Pi_180f());
     qrot.mul(newRotY);
   }
   lastx = x;

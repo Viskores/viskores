@@ -37,11 +37,11 @@ namespace
 
 void RenderTests()
 {
-  typedef vtkm::rendering::MapperGL M;
-  typedef vtkm::rendering::CanvasEGL C;
-  typedef vtkm::rendering::View3D V3;
-  typedef vtkm::rendering::View2D V2;
-  typedef vtkm::rendering::View1D V1;
+  using M = vtkm::rendering::MapperGL;
+  using C = vtkm::rendering::CanvasEGL;
+  using V3 = vtkm::rendering::View3D;
+  using V2 = vtkm::rendering::View2D;
+  using V1 = vtkm::rendering::View1D;
 
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::testing::MakeTestDataSet maker;

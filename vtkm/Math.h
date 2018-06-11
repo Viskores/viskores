@@ -53,40 +53,6 @@ namespace vtkm
 {
 
 //-----------------------------------------------------------------------------
-/// Returns the constant 2 times Pi.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 TwoPi()
-{
-  return 6.28318530717958647692528676655900576;
-}
-
-/// Returns the constant Pi.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi()
-{
-  return 3.14159265358979323846264338327950288;
-}
-
-/// Returns the constant Pi halves.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi_2()
-{
-  return 1.57079632679489661923132169163975144;
-}
-/// Returns the constant Pi thirds.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi_3()
-{
-  return 1.04719755119659774615421446109316762;
-}
-
-/// Returns the constant Pi fourths.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi_4()
-{
-  return 0.78539816339744830961566084581987572;
-}
-
 namespace detail
 {
 template <typename T>
@@ -100,6 +66,149 @@ struct FloatingPointReturnType
                                          vtkm::Float64>::type;
 };
 } // namespace detail
+
+/// Returns the constant 2 times Pi in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 TwoPif()
+{
+  return 6.28318530717958647692528676655900576f;
+}
+
+/// Returns the constant Pi in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pif()
+{
+  return 3.14159265358979323846264338327950288f;
+}
+
+/// Returns the constant Pi halves in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_2f()
+{
+  return 1.57079632679489661923132169163975144f;
+}
+
+/// Returns the constant Pi thirds in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_3f()
+{
+  return 1.04719755119659774615421446109316762f;
+}
+
+/// Returns the constant Pi fourths in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_4f()
+{
+  return 0.78539816339744830961566084581987572f;
+}
+
+/// Returns the constant Pi one hundred and eightieth in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_180f()
+{
+  return 0.01745329251994329547437168059786927f;
+}
+
+/// Returns the constant 2 times Pi in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 TwoPi()
+{
+  return 6.28318530717958647692528676655900576;
+}
+
+/// Returns the constant Pi in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi()
+{
+  return 3.14159265358979323846264338327950288;
+}
+
+/// Returns the constant Pi halves in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_2()
+{
+  return 1.57079632679489661923132169163975144;
+}
+
+/// Returns the constant Pi thirds in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_3()
+{
+  return 1.04719755119659774615421446109316762;
+}
+
+/// Returns the constant Pi fourths in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_4()
+{
+  return 0.78539816339744830961566084581987572;
+}
+
+/// Returns the constant Pi one hundred and eightieth in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_180()
+{
+  return 0.01745329251994329547437168059786927;
+}
+
+/// Returns the constant 2 times Pi.
+///
+template <typename T>
+  static constexpr inline VTKM_EXEC_CONT auto TwoPi() -> typename detail::FloatingPointReturnType<T>::Type
+  {
+    using FT = typename detail::FloatingPointReturnType<T>::Type;
+    using RAFT = typename detail::FloatingPointReturnType<T>::representable_as_float_type;
+    return static_cast<FT>(RAFT::value ? TwoPif() : TwoPi());
+  }
+
+/// Returns the constant Pi.
+///
+template <typename T>
+  static constexpr inline VTKM_EXEC_CONT auto Pi() -> typename detail::FloatingPointReturnType<T>::Type
+  {
+    using FT = typename detail::FloatingPointReturnType<T>::Type;
+    using RAFT = typename detail::FloatingPointReturnType<T>::representable_as_float_type;
+    return static_cast<FT>(RAFT::value ? Pif() : Pi());
+  }
+
+/// Returns the constant Pi halves.
+///
+template <typename T>
+  static constexpr inline VTKM_EXEC_CONT auto Pi_2() -> typename detail::FloatingPointReturnType<T>::Type
+  {
+    using FT = typename detail::FloatingPointReturnType<T>::Type;
+    using RAFT = typename detail::FloatingPointReturnType<T>::representable_as_float_type;
+    return static_cast<FT>(RAFT::value ? Pi_2f() : Pi_2());
+  }
+
+/// Returns the constant Pi thirds.
+///
+template <typename T>
+  static constexpr inline VTKM_EXEC_CONT auto Pi_3() -> typename detail::FloatingPointReturnType<T>::Type
+  {
+    using FT = typename detail::FloatingPointReturnType<T>::Type;
+    using RAFT = typename detail::FloatingPointReturnType<T>::representable_as_float_type;
+    return static_cast<FT>(RAFT::value ? Pi_3f() : Pi_3());
+  }
+
+/// Returns the constant Pi fourths.
+///
+template <typename T>
+  static constexpr inline VTKM_EXEC_CONT auto Pi_4() -> typename detail::FloatingPointReturnType<T>::Type
+  {
+    using FT = typename detail::FloatingPointReturnType<T>::Type;
+    using RAFT = typename detail::FloatingPointReturnType<T>::representable_as_float_type;
+    return static_cast<FT>(RAFT::value ? Pi_4f() : Pi_4());
+  }
+/// Returns the constant Pi one hundred and eightieth.
+///
+template <typename T>
+  static constexpr inline VTKM_EXEC_CONT auto Pi_180() -> typename detail::FloatingPointReturnType<T>::Type
+  {
+    using FT = typename detail::FloatingPointReturnType<T>::Type;
+    using RAFT = typename detail::FloatingPointReturnType<T>::representable_as_float_type;
+    return static_cast<FT>(RAFT::value ? Pi_180f() : Pi_180());
+  }
 
 /// Compute the sine of \p x.
 ///
@@ -2267,12 +2376,12 @@ static inline VTKM_EXEC_CONT vtkm::Float32 RemainderQuotient(vtkm::Float32 numer
 {
   int iQuotient;
 #ifdef VTKM_CUDA
-  const vtkm::Float64 result =
+  const vtkm::Float32 result =
     VTKM_CUDA_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
 #else
   const vtkm::Float32 result = std::remquo(numerator, denominator, &iQuotient);
 #endif
-  quotient = iQuotient;
+  quotient = static_cast<QType>(iQuotient);
   return result;
 }
 template <typename QType>
@@ -2287,7 +2396,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 RemainderQuotient(vtkm::Float64 numer
 #else
   const vtkm::Float64 result = std::remquo(numerator, denominator, &iQuotient);
 #endif
-  quotient = iQuotient;
+  quotient = static_cast<QType>(iQuotient);
   return result;
 }
 

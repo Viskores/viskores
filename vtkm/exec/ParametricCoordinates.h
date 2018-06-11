@@ -628,17 +628,17 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   // Because this is a line, there is only one valid parametric coordinate. Let
   // vec be the vector from the first point to the second point
   // (pointWCoords[1] - pointWCoords[0]), which is the direction of the line.
-  // dot(vec,wcoords-pointWCoords[0])/mag(vec) is the orthoginal projection of
+  // Dot(vec,wcoords-pointWCoords[0])/mag(vec) is the orthoginal projection of
   // wcoords on the line and represents the distance between the orthoginal
   // projection and pointWCoords[0]. The parametric coordinate is the fraction
   // of this over the length of the segment, which is mag(vec). Thus, the
-  // parametric coordinate is dot(vec,wcoords-pointWCoords[0])/mag(vec)^2.
+  // parametric coordinate is Dot(vec,wcoords-pointWCoords[0])/mag(vec)^2.
 
   using Vector3 = typename WorldCoordVector::ComponentType;
   using T = typename Vector3::ComponentType;
 
   Vector3 vec = pointWCoords[1] - pointWCoords[0];
-  T numerator = vtkm::dot(vec, wcoords - pointWCoords[0]);
+  T numerator = vtkm::Dot(vec, wcoords - pointWCoords[0]);
   T denominator = vtkm::MagnitudeSquared(vec);
 
   return Vector3(numerator / denominator, 0, 0);
@@ -848,8 +848,8 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   {
     WCoordType vecInPlane = pointWCoords[firstPointIndex] - wcoordCenter;
     WCoordType planeNormal = vtkm::Cross(polygonNormal, vecInPlane);
-    typename WCoordType::ComponentType planeOffset = vtkm::dot(planeNormal, wcoordCenter);
-    if (vtkm::dot(planeNormal, wcoords) < planeOffset)
+    typename WCoordType::ComponentType planeOffset = vtkm::Dot(planeNormal, wcoordCenter);
+    if (vtkm::Dot(planeNormal, wcoords) < planeOffset)
     {
       // wcoords on wrong side of plane, thus outside of triangle
       continue;
@@ -858,8 +858,8 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
     secondPointIndex = firstPointIndex + 1;
     vecInPlane = pointWCoords[secondPointIndex] - wcoordCenter;
     planeNormal = vtkm::Cross(polygonNormal, vecInPlane);
-    planeOffset = vtkm::dot(planeNormal, wcoordCenter);
-    if (vtkm::dot(planeNormal, wcoords) > planeOffset)
+    planeOffset = vtkm::Dot(planeNormal, wcoordCenter);
+    if (vtkm::Dot(planeNormal, wcoords) > planeOffset)
     {
       // wcoords on wrong side of plane, thus outside of triangle
       continue;
@@ -931,7 +931,7 @@ WorldCoordinatesToParametricCoordinatesTetra(
   // from p0 to the adjacent point (which is itself the parametric coordinate
   // we are after), we get the following definition for the intersection.
   //
-  // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
+  // d = Dot((wcoords - p0), planeNormal)/Dot((p1-p0), planeNormal)
   //
 
   const auto vec0 = pointWCoords[1] - pointWCoords[0];
@@ -941,13 +941,13 @@ WorldCoordinatesToParametricCoordinatesTetra(
 
   typename WorldCoordVector::ComponentType pcoords;
   auto planeNormal = vtkm::Cross(vec1, vec2);
-  pcoords[0] = vtkm::dot(coordVec, planeNormal) / vtkm::dot(vec0, planeNormal);
+  pcoords[0] = vtkm::Dot(coordVec, planeNormal) / vtkm::Dot(vec0, planeNormal);
 
   planeNormal = vtkm::Cross(vec0, vec2);
-  pcoords[1] = vtkm::dot(coordVec, planeNormal) / vtkm::dot(vec1, planeNormal);
+  pcoords[1] = vtkm::Dot(coordVec, planeNormal) / vtkm::Dot(vec1, planeNormal);
 
   planeNormal = vtkm::Cross(vec0, vec1);
-  pcoords[2] = vtkm::dot(coordVec, planeNormal) / vtkm::dot(vec2, planeNormal);
+  pcoords[2] = vtkm::Dot(coordVec, planeNormal) / vtkm::Dot(vec2, planeNormal);
 
   return pcoords;
 }

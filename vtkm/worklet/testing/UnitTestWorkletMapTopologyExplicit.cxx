@@ -37,11 +37,11 @@ namespace test_explicit
 class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(FieldInCell<Scalar> inCells,
+  using ControlSignature = void(FieldInCell<Scalar> inCells,
                                 FieldInPoint<Scalar> inPoints,
                                 CellSetIn topology,
                                 FieldOutCell<Scalar> outCells);
-  typedef void ExecutionSignature(_1, _4, _2, PointCount, CellShape, PointIndices);
+  using ExecutionSignature = void(_1, _4, _2, PointCount, CellShape, PointIndices);
   using InputDomain = _3;
 
   VTKM_CONT

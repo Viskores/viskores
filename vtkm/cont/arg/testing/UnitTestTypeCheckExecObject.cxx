@@ -27,7 +27,7 @@
 namespace
 {
 
-struct TestExecutionObject : vtkm::exec::ExecutionObjectBase
+struct TestExecutionObject : vtkm::cont::ExecutionObjectBase
 {
 };
 struct TestNotExecutionObject

@@ -233,13 +233,12 @@ void mouseMove(int x, int y)
 
   if (mouse_state == 0)
   {
-    vtkm::Float32 pi = static_cast<float>(vtkm::Pi());
     Quaternion newRotX;
-    newRotX.setEulerAngles(-0.2f * dx * pi / 180.0f, 0.0f, 0.0f);
+    newRotX.setEulerAngles(-0.2f * dx * vtkm::Pi_180f(), 0.0f, 0.0f);
     qrot.mul(newRotX);
 
     Quaternion newRotY;
-    newRotY.setEulerAngles(0.0f, 0.0f, -0.2f * dy * pi / 180.0f);
+    newRotY.setEulerAngles(0.0f, 0.0f, -0.2f * dy * vtkm::Pi_180f());
     qrot.mul(newRotY);
   }
   lastx = x;

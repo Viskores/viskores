@@ -29,8 +29,8 @@
 class TestMapFieldWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldInOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
+  using ControlSignature = void(FieldIn<>, FieldOut<>, FieldInOut<>);
+  using ExecutionSignature = void(_1, _2, _3, WorkIndex);
 
   template <typename T>
   VTKM_EXEC void operator()(const T& in, T& out, T& inout, vtkm::Id workIndex) const
@@ -57,8 +57,8 @@ public:
 class TestMapFieldWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>, FieldInOut<ScalarAll>);
-  typedef _2 ExecutionSignature(_1, _3, WorkIndex);
+  using ControlSignature = void(FieldIn<ScalarAll>, FieldOut<ScalarAll>, FieldInOut<ScalarAll>);
+  using ExecutionSignature = _2(_1, _3, WorkIndex);
 
   template <typename T1, typename T3>
   VTKM_EXEC T1 operator()(const T1& in, T3& inout, vtkm::Id workIndex) const

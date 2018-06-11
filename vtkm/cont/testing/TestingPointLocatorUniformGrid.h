@@ -54,11 +54,11 @@ VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, C
 class NearestNeighborSearchBruteForce3DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<> qcIn,
+  using ControlSignature = void(FieldIn<> qcIn,
                                 WholeArrayIn<> treeCoordiIn,
                                 FieldOut<> nnIdOut,
                                 FieldOut<> nnDisOut);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
   VTKM_CONT
   NearestNeighborSearchBruteForce3DWorklet() {}
@@ -79,7 +79,7 @@ template <typename DeviceAdapter>
 class TestingPointLocatorUniformGrid
 {
 public:
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   void TestTest() const
   {
     vtkm::Int32 nTrainingPoints = 1000;
@@ -99,7 +99,7 @@ public:
 
     vtkm::worklet::PointLocatorUniformGrid<vtkm::Float32> uniformGrid(
       { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    uniformGrid.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    uniformGrid.Build(coordi_Handle, DeviceAdapter());
 
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
@@ -112,13 +112,13 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
 
     uniformGrid.FindNearestPoint(
-      coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, DeviceAdapter());
 
     vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;
     NearestNeighborSearchBruteForce3DWorklet nnsbf3dWorklet;
-    vtkm::worklet::DispatcherMapField<NearestNeighborSearchBruteForce3DWorklet> nnsbf3DDispatcher(
-      nnsbf3dWorklet);
+    vtkm::worklet::DispatcherMapField<NearestNeighborSearchBruteForce3DWorklet, DeviceAdapter>
+      nnsbf3DDispatcher(nnsbf3dWorklet);
     nnsbf3DDispatcher.Invoke(
       qc_Handle, vtkm::cont::make_ArrayHandle(coordi), bfnnId_Handle, bfnnDis_Handle);
 

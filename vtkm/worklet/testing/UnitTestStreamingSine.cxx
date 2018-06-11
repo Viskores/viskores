@@ -33,8 +33,8 @@ namespace worklet
 class SineWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef _2 ExecutionSignature(_1, WorkIndex);
+  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ExecutionSignature = _2(_1, WorkIndex);
 
   template <typename T>
   VTKM_EXEC T operator()(T x, vtkm::Id& index) const

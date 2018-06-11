@@ -35,8 +35,8 @@ namespace colorconversion
 
 struct ShiftScaleToRGB : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> in, FieldOut<> out);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn<> in, FieldOut<> out);
+  using ExecutionSignature = _2(_1);
 
   ShiftScaleToRGB(vtkm::Float32 shift, vtkm::Float32 scale)
     : Shift(shift)

@@ -181,26 +181,26 @@ ParametricDerivative(const FieldVecType &field,
 namespace detail
 {
 
-template <typename FieldVecType,
+template <typename FieldType,
+          int NumPoints,
           typename WorldCoordType,
           typename ParametricCoordType,
           typename CellShapeTag>
-VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor3DCell(
-  const FieldVecType& field,
+VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor3DCell(
+  const vtkm::Vec<FieldType, NumPoints>& field,
   const WorldCoordType& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  CellShapeTag)
+  CellShapeTag tag)
 {
-  using FieldType = typename FieldVecType::ComponentType;
   using GradientType = vtkm::Vec<FieldType, 3>;
 
   // For reasons that should become apparent in a moment, we actually want
   // the transpose of the Jacobian.
   vtkm::Matrix<FieldType, 3, 3> jacobianTranspose;
-  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, jacobianTranspose, CellShapeTag());
+  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, jacobianTranspose, tag);
   jacobianTranspose = vtkm::MatrixTranspose(jacobianTranspose);
 
-  GradientType parametricDerivative = ParametricDerivative(field, pcoords, CellShapeTag());
+  GradientType parametricDerivative = ParametricDerivative(field, pcoords, tag);
 
   // If we write out the matrices below, it should become clear that the
   // Jacobian transpose times the field derivative in world space equals
@@ -219,6 +219,44 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor3D
 
   bool valid; // Ignored.
   return vtkm::SolveLinearSystem(jacobianTranspose, parametricDerivative, valid);
+}
+
+template <typename T,
+          int N,
+          int NumPoints,
+          typename WorldCoordType,
+          typename ParametricCoordType,
+          typename CellShapeTag>
+VTKM_EXEC vtkm::Vec<vtkm::Vec<T, N>, 3> CellDerivativeFor3DCell(
+  const vtkm::Vec<vtkm::Vec<T, N>, NumPoints>& field,
+  const WorldCoordType& wCoords,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  CellShapeTag tag)
+{
+  //We have been given a vector field so we need to solve for each
+  //component of the vector. For explanation of the logic used see the
+  //scalar version of CellDerivativeFor3DCell.
+  vtkm::Matrix<T, 3, 3> perComponentJacobianTranspose;
+  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, perComponentJacobianTranspose, tag);
+  perComponentJacobianTranspose = vtkm::MatrixTranspose(perComponentJacobianTranspose);
+
+  bool valid; // Ignored.
+  vtkm::Vec<vtkm::Vec<T, N>, 3> result(vtkm::Vec<T, N>(0.0f));
+  vtkm::Vec<T, NumPoints> perPoint;
+  for (vtkm::IdComponent i = 0; i < N; ++i)
+  {
+    for (vtkm::IdComponent c = 0; c < NumPoints; ++c)
+    {
+      perPoint[c] = field[c][i];
+    }
+    vtkm::Vec<T, 3> p = ParametricDerivative(perPoint, pcoords, tag);
+    vtkm::Vec<T, 3> grad = vtkm::SolveLinearSystem(perComponentJacobianTranspose, p, valid);
+
+    result[0][i] += grad[0];
+    result[1][i] += grad[1];
+    result[2][i] += grad[2];
+  }
+  return result;
 }
 
 template <typename FieldType, typename LUType, typename ParametricCoordType, typename CellShapeTag>
@@ -518,7 +556,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
 
   using T = typename FieldVecType::ComponentType;
 
-  return vtkm::Vec<T, 3>((field[1] - field[0]) / wCoords.GetSpacing()[0], T(0), T(0));
+  return vtkm::Vec<T, 3>(
+    static_cast<T>((field[1] - field[0]) / wCoords.GetSpacing()[0]), T(0), T(0));
 }
 
 //-----------------------------------------------------------------------------
@@ -596,19 +635,19 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivative(const vtkm::Vec<ValueType, 
   // gradient g and scalar value s_origin, can be found with this set of 4
   // equations and 4 unknowns.
   //
-  // dot(p0, g) + s_origin = s0
-  // dot(p1, g) + s_origin = s1
-  // dot(p2, g) + s_origin = s2
-  // dot(n, g)             = 0
+  // Dot(p0, g) + s_origin = s0
+  // Dot(p1, g) + s_origin = s1
+  // Dot(p2, g) + s_origin = s2
+  // Dot(n, g)             = 0
   //
   // Where the p's are point coordinates and n is the normal vector. But we
   // don't really care about s_origin. We just want to find the gradient g.
   // With some simple elimination we, we can get rid of s_origin and be left
   // with 3 equations and 3 unknowns.
   //
-  // dot(p1-p0, g) = s1 - s0
-  // dot(p2-p0, g) = s2 - s0
-  // dot(n, g)     = 0
+  // Dot(p1-p0, g) = s1 - s0
+  // Dot(p2-p0, g) = s2 - s0
+  // Dot(n, g)     = 0
   //
   // We'll solve this by putting this in matrix form Ax = b where the rows of A
   // are the differences in points and normal, b has the scalar differences,
@@ -819,7 +858,9 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   sum = sum + field[2] * VecT(pc[1], pc[0]);
   sum = sum + field[3] * VecT(-pc[1], rc[0]);
 
-  return vtkm::Vec<T, 3>(sum[0] / wCoords.GetSpacing()[0], sum[1] / wCoords.GetSpacing()[1], T(0));
+  return vtkm::Vec<T, 3>(static_cast<T>(sum[0] / wCoords.GetSpacing()[0]),
+                         static_cast<T>(sum[1] / wCoords.GetSpacing()[1]),
+                         T(0));
 }
 
 //-----------------------------------------------------------------------------
@@ -896,19 +937,19 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivative(const vtkm::Vec<ValueType, 4>&
   // gradient g and scalar value s_origin, can be found with this set of 4
   // equations and 4 unknowns.
   //
-  // dot(p0, g) + s_origin = s0
-  // dot(p1, g) + s_origin = s1
-  // dot(p2, g) + s_origin = s2
-  // dot(p3, g) + s_origin = s3
+  // Dot(p0, g) + s_origin = s0
+  // Dot(p1, g) + s_origin = s1
+  // Dot(p2, g) + s_origin = s2
+  // Dot(p3, g) + s_origin = s3
   //
   // Where the p's are point coordinates. But we don't really care about
   // s_origin. We just want to find the gradient g. With some simple
   // elimination we, we can get rid of s_origin and be left with 3 equations
   // and 3 unknowns.
   //
-  // dot(p1-p0, g) = s1 - s0
-  // dot(p2-p0, g) = s2 - s0
-  // dot(p3-p0, g) = s3 - s0
+  // Dot(p1-p0, g) = s1 - s0
+  // Dot(p2-p0, g) = s2 - s0
+  // Dot(p3-p0, g) = s3 - s0
   //
   // We'll solve this by putting this in matrix form Ax = b where the rows of A
   // are the differences in points and normal, b has the scalar differences,

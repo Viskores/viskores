@@ -72,12 +72,12 @@ public:
   class ProbeUniformPoints : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<Vec3> coords,
                                   WholeArrayIn<Vec3> points,
                                   WholeArrayOut<IdType> cellIds,
                                   WholeArrayOut<Vec3> parametricCoords);
-    typedef void ExecutionSignature(InputIndex, CellShape, _2, _3, _4, _5);
+    using ExecutionSignature = void(InputIndex, CellShape, _2, _3, _4, _5);
     using InputDomain = _1;
 
     template <typename CellShapeTag,
@@ -181,12 +181,12 @@ public:
   class InterpolatePointField : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> cellIds,
+    using ControlSignature = void(FieldIn<IdType> cellIds,
                                   FieldIn<Vec3> parametricCoords,
                                   WholeCellSetIn<> inputCells,
                                   WholeArrayIn<> inputField,
                                   FieldOut<> result);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
     template <typename ParametricCoordType, typename CellSetType, typename InputFieldPortalType>
     VTKM_EXEC void operator()(vtkm::Id cellId,
@@ -229,10 +229,10 @@ public:
   class MapCellField : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> cellIds,
+    using ControlSignature = void(FieldIn<IdType> cellIds,
                                   WholeArrayIn<> inputField,
                                   FieldOut<> result);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ExecutionSignature = void(_1, _2, _3);
 
     template <typename InputFieldPortalType>
     VTKM_EXEC void operator()(vtkm::Id cellId,
@@ -263,9 +263,9 @@ public:
   //============================================================================
   struct HiddenPointsWorklet : public WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<IdType> cellids,
+    using ControlSignature = void(FieldIn<IdType> cellids,
                                   FieldOut<vtkm::ListTagBase<vtkm::UInt8>> hfield);
-    typedef _2 ExecutionSignature(_1);
+    using ExecutionSignature = _2(_1);
 
     VTKM_EXEC vtkm::UInt8 operator()(vtkm::Id cellId) const { return (cellId == -1) ? HIDDEN : 0; }
   };
@@ -285,10 +285,10 @@ public:
   //============================================================================
   struct HiddenCellsWorklet : public WorkletMapPointToCell
   {
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<IdType> cellids,
                                   FieldOutCell<vtkm::ListTagBase<vtkm::UInt8>>);
-    typedef _3 ExecutionSignature(_2, PointCount);
+    using ExecutionSignature = _3(_2, PointCount);
 
     template <typename CellIdsVecType>
     VTKM_EXEC vtkm::UInt8 operator()(const CellIdsVecType& cellIds,

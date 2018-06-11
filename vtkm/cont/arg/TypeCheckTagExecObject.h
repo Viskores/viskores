@@ -24,7 +24,7 @@
 
 #include <vtkm/cont/arg/TypeCheck.h>
 
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <type_traits>
 
@@ -46,7 +46,7 @@ struct TypeCheckTagExecObject
 template <typename Type>
 struct TypeCheck<TypeCheckTagExecObject, Type>
 {
-  static constexpr bool value = std::is_base_of<vtkm::exec::ExecutionObjectBase, Type>::value;
+  static constexpr bool value = std::is_base_of<vtkm::cont::ExecutionObjectBase, Type>::value;
 };
 }
 }

@@ -21,6 +21,7 @@
 #ifndef vtk_m_worklet_particleadvection_Integrators_h
 #define vtk_m_worklet_particleadvection_Integrators_h
 
+#include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/DataSet.h>
@@ -39,28 +40,41 @@ template <typename FieldEvaluateType,
 class Integrator
 {
 protected:
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   Integrator()
     : StepLength(0)
+    , MinimizeError(false)
   {
   }
 
   VTKM_EXEC_CONT
-  Integrator(const FieldEvaluateType& evaluator, FieldType stepLength)
+  Integrator(const FieldEvaluateType evaluator, const FieldType stepLength)
     : Evaluator(evaluator)
     , StepLength(stepLength)
+    , MinimizeError(false)
   {
   }
 
 public:
   VTKM_EXEC
-  ParticleStatus Step(const vtkm::Vec<FieldType, 3>& inpos, vtkm::Vec<FieldType, 3>& outpos) const
+  ParticleStatus Step(const vtkm::Vec<FieldType, 3>& inpos,
+                      FieldType& time,
+                      vtkm::Vec<FieldType, 3>& outpos) const
   {
+    // If without taking the step the particle is out of either spatial
+    // or temporal boundary, then return the corresponding status.
+    if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
+      return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
+    if (!this->Evaluator.IsWithinTemporalBoundary(time))
+      return ParticleStatus::EXITED_TEMPORAL_BOUNDARY;
+
     vtkm::Vec<FieldType, 3> velocity;
-    ParticleStatus status = this->CheckStep(inpos, this->StepLength, velocity);
+    ParticleStatus status = CheckStep(inpos, this->StepLength, time, velocity);
     if (status == ParticleStatus::STATUS_OK)
     {
-      outpos = inpos + this->StepLength * velocity;
+      outpos = inpos + StepLength * velocity;
+      time += StepLength;
     }
     else
     {
@@ -69,116 +83,133 @@ public:
     return status;
   }
 
+
+  VTKM_EXEC
+  ParticleStatus PushOutOfBoundary(vtkm::Vec<FieldType, 3>& inpos,
+                                   vtkm::Id numSteps,
+                                   FieldType& time,
+                                   ParticleStatus status,
+                                   vtkm::Vec<FieldType, 3>& outpos) const
+  {
+    FieldType stepLength = StepLength;
+    vtkm::Vec<FieldType, 3> velocity, currentVelocity;
+    CheckStep(inpos, 0.0f, time, currentVelocity);
+    numSteps = numSteps == 0 ? 1 : numSteps;
+    if (MinimizeError)
+    {
+      //Take short steps and minimize error
+      FieldType threshold = StepLength / static_cast<FieldType>(numSteps);
+      do
+      {
+        stepLength /= static_cast<FieldType>(2.0);
+        status = CheckStep(inpos, stepLength, time, velocity);
+        if (status == ParticleStatus::STATUS_OK)
+        {
+          outpos = inpos + stepLength * velocity;
+          inpos = outpos;
+          currentVelocity[0] = velocity[0];
+          currentVelocity[1] = velocity[1];
+          currentVelocity[2] = velocity[2];
+          time += stepLength;
+        }
+      } while (stepLength > threshold);
+    }
+    // At this point we have push the point close enough to the boundary
+    // so as to minimize the domain switching error.
+    // Here we need to analyze if the particle is going out of tempotal bounds
+    // or spatial boundary to take the proper step to put the particle out
+    // of boundary and stop advecting.
+    if (status == AT_SPATIAL_BOUNDARY)
+    {
+      // Get the spatial boundary w.r.t the current
+      vtkm::Vec<FieldType, 3> spatialBoundary;
+      Evaluator.GetSpatialBoundary(currentVelocity, spatialBoundary);
+      FieldType hx = (vtkm::Abs(spatialBoundary[0] - inpos[0])) / vtkm::Abs(currentVelocity[0]);
+      FieldType hy = (vtkm::Abs(spatialBoundary[1] - inpos[1])) / vtkm::Abs(currentVelocity[1]);
+      FieldType hz = (vtkm::Abs(spatialBoundary[2] - inpos[2])) / vtkm::Abs(currentVelocity[2]);
+      stepLength = vtkm::Min(hx, vtkm::Min(hy, hz)) + Tolerance * stepLength;
+      // Calculate the final position of the particle which is supposed to be
+      // out of spatial boundary.
+      outpos = inpos + stepLength * currentVelocity;
+      time += stepLength;
+      return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
+    }
+    else if (status == AT_TEMPORAL_BOUNDARY)
+    {
+      FieldType temporalBoundary;
+      Evaluator.GetTemporalBoundary(temporalBoundary);
+      FieldType diff = temporalBoundary - time;
+      stepLength = diff + Tolerance * diff;
+      // Calculate the final position of the particle which is supposed to be
+      // out of temporal boundary.
+      outpos = inpos + stepLength * currentVelocity;
+      time += stepLength;
+      return ParticleStatus::EXITED_TEMPORAL_BOUNDARY;
+    }
+    //If the control reaches here, it is an invalid case.
+    return ParticleStatus::STATUS_ERROR;
+  }
+
   VTKM_EXEC
   ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
                            FieldType stepLength,
+                           FieldType time,
                            vtkm::Vec<FieldType, 3>& velocity) const
   {
     using ConcreteType = IntegratorType<FieldEvaluateType, FieldType>;
-    return static_cast<const ConcreteType*>(this)->CheckStep(inpos, stepLength, velocity);
+    return static_cast<const ConcreteType*>(this)->CheckStep(inpos, stepLength, time, velocity);
   }
 
-  VTKM_EXEC
-  ParticleStatus GetEscapeStepLength(const vtkm::Vec<FieldType, 3>& inpos,
-                                     FieldType& stepLength,
-                                     vtkm::Vec<FieldType, 3>& velocity) const
-  {
-    ParticleStatus status = this->CheckStep(inpos, stepLength, velocity);
-    if (status != ParticleStatus::STATUS_OK)
-    {
-      stepLength += this->Tolerance;
-      return status;
-    }
-    FieldType magnitude = vtkm::Magnitude(velocity);
-    vtkm::Vec<FieldType, 3> dir = velocity / magnitude;
-    vtkm::Vec<FieldType, 3> dirBounds;
-    this->Evaluator.GetBoundary(dir, dirBounds);
-    /*Add a fraction just push the particle beyond the bounds*/
-    FieldType hx = (vtkm::Abs(dirBounds[0] - inpos[0]) + this->Tolerance) / vtkm::Abs(velocity[0]);
-    FieldType hy = (vtkm::Abs(dirBounds[1] - inpos[1]) + this->Tolerance) / vtkm::Abs(velocity[1]);
-    FieldType hz = (vtkm::Abs(dirBounds[2] - inpos[2]) + this->Tolerance) / vtkm::Abs(velocity[2]);
-    stepLength = vtkm::Min(hx, vtkm::Min(hy, hz));
-    return status;
-  }
-
-  VTKM_EXEC
-  ParticleStatus PushOutOfDomain(const vtkm::Vec<FieldType, 3>& inpos,
-                                 vtkm::Id numSteps,
-                                 vtkm::Vec<FieldType, 3>& outpos) const
-  {
-    ParticleStatus status;
-    outpos = inpos;
-    numSteps = (numSteps == 0) ? 1 : numSteps;
-    FieldType totalTime = static_cast<FieldType>(numSteps) * this->StepLength;
-    FieldType timeFraction = totalTime * this->Tolerance;
-    FieldType stepLength = this->StepLength / 2;
-    vtkm::Vec<FieldType, 3> velocity, currentVelocity;
-    this->CheckStep(inpos, 0.0f, currentVelocity);
-    if (this->ShortStepsSupported)
-    {
-      do
-      {
-        status = this->CheckStep(inpos, stepLength, velocity);
-        if (status == ParticleStatus::STATUS_OK)
-        {
-          outpos = outpos + stepLength * velocity;
-          currentVelocity = velocity;
-        }
-        stepLength = stepLength / 2;
-      } while (stepLength > timeFraction);
-    }
-    status = GetEscapeStepLength(inpos, stepLength, velocity);
-    if (status != ParticleStatus::STATUS_OK)
-      outpos = outpos + stepLength * currentVelocity;
-    else
-      outpos = outpos + stepLength * velocity;
-    return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
-  }
+  VTKM_EXEC_CONT
+  FieldType SetMinimizeError(bool minimizeError) const { this->MinimizeError = minimizeError; }
 
 protected:
   FieldEvaluateType Evaluator;
   FieldType StepLength;
-  FieldType Tolerance = static_cast<FieldType>(1e-6);
-  bool ShortStepsSupported = false;
+  FieldType Tolerance = static_cast<FieldType>(1 / 100.0f);
+  bool MinimizeError;
 };
 
 template <typename FieldEvaluateType, typename FieldType>
 class RK4Integrator : public Integrator<FieldEvaluateType, FieldType, RK4Integrator>
 {
 public:
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   RK4Integrator()
     : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>()
   {
-    this->ShortStepsSupported = true;
   }
 
   VTKM_EXEC_CONT
-  RK4Integrator(const FieldEvaluateType& evaluator, FieldType stepLength)
+  RK4Integrator(const FieldEvaluateType& evaluator, const FieldType stepLength)
     : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>(
         evaluator,
         stepLength)
   {
-    this->ShortStepsSupported = true;
   }
 
   VTKM_EXEC
   ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
                            FieldType stepLength,
+                           FieldType time,
                            vtkm::Vec<FieldType, 3>& velocity) const
   {
-    if (!this->Evaluator.IsWithinBoundary(inpos))
+    FieldType var1 = (stepLength / static_cast<FieldType>(2));
+    FieldType var2 = time + var1;
+    FieldType var3 = time + stepLength;
+
+    vtkm::Vec<FieldType, 3> k1 = vtkm::TypeTraits<vtkm::Vec<FieldType, 3>>::ZeroInitialization();
+    vtkm::Vec<FieldType, 3> k2 = k1, k3 = k1, k4 = k1;
+
+    bool status1 = this->Evaluator.Evaluate(inpos, time, k1);
+    bool status2 = this->Evaluator.Evaluate(inpos + var1 * k1, var2, k2);
+    bool status3 = this->Evaluator.Evaluate(inpos + var1 * k2, var2, k3);
+    bool status4 = this->Evaluator.Evaluate(inpos + stepLength * k3, var3, k4);
+
+    if ((status1 & status2 & status3 & status4) == ParticleStatus::STATUS_OK)
     {
-      return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
-    }
-    vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
-    bool firstOrderValid = this->Evaluator.Evaluate(inpos, k1);
-    bool secondOrderValid = this->Evaluator.Evaluate(inpos + (stepLength / 2) * k1, k2);
-    bool thirdOrderValid = this->Evaluator.Evaluate(inpos + (stepLength / 2) * k2, k3);
-    bool fourthOrderValid = this->Evaluator.Evaluate(inpos + stepLength * k3, k4);
-    velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
-    if (firstOrderValid && secondOrderValid && thirdOrderValid && fourthOrderValid)
-    {
+      velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
       return ParticleStatus::STATUS_OK;
     }
     else
@@ -193,25 +224,30 @@ class EulerIntegrator : public Integrator<FieldEvaluateType, FieldType, EulerInt
 {
 public:
   VTKM_EXEC_CONT
-  EulerIntegrator(const FieldEvaluateType& evaluator, FieldType field)
+  EulerIntegrator()
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::EulerIntegrator>()
+  {
+  }
+
+  VTKM_EXEC_CONT
+  EulerIntegrator(const FieldEvaluateType& evaluator, const FieldType stepLength)
     : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::EulerIntegrator>(
         evaluator,
-        field)
+        stepLength)
   {
-    this->ShortStepsSupported = false;
   }
 
   VTKM_EXEC
   ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
-                           FieldType stepLength,
-                           vtkm::Vec<FieldType, 3>& velocity)
+                           FieldType vtkmNotUsed(stepLength),
+                           FieldType time,
+                           vtkm::Vec<FieldType, 3>& velocity) const
   {
-    stepLength = 0;
-    bool isValidPos = this->Evaluator.Evaluate(inpos, velocity);
-    if (isValidPos)
+    bool result = this->Evaluator.Evaluate(inpos, time, velocity);
+    if (result)
       return ParticleStatus::STATUS_OK;
     else
-      return ParticleStatus::AT_SPATIAL_BOUNDARY;
+      return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
   }
 }; //EulerIntegrator
 

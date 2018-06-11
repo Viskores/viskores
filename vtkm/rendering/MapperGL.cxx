@@ -42,7 +42,7 @@ namespace
 struct TypeListTagId4 : vtkm::ListTagBase<vtkm::Vec<Id, 4>>
 {
 };
-typedef TypeListTagId4 Id4Type;
+using Id4Type = TypeListTagId4;
 
 class MapColorAndVertices : public vtkm::worklet::WorkletMapField
 {
@@ -59,13 +59,13 @@ public:
     , SDiff(sDiff)
   {
   }
-  typedef void ControlSignature(FieldIn<IdType> vertexId,
+  using ControlSignature = void(FieldIn<IdType> vertexId,
                                 WholeArrayIn<Id4Type> indices,
                                 WholeArrayIn<Scalar> scalar,
                                 WholeArrayIn<Vec3> verts,
                                 WholeArrayOut<Scalar> out_color,
                                 WholeArrayOut<Scalar> out_vertices);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
   template <typename InputArrayIndexPortalType,
             typename InputArrayPortalType,

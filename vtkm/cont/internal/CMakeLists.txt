@@ -30,6 +30,7 @@ set(headers
   ArrayTransfer.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
+  DeviceAdapterAtomicArrayImplementation.h
   DeviceAdapterDefaultSelection.h
   DeviceAdapterError.h
   DeviceAdapterListHelpers.h
@@ -37,6 +38,9 @@ set(headers
   DynamicTransform.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
+  KXSort.h
+  ParallelRadixSort.h
+  ParallelRadixSortInterface.h
   SimplePolymorphicContainer.h
   StorageError.h
   VirtualObjectTransfer.h

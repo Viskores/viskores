@@ -88,27 +88,34 @@ inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagTBB>(vtkm::cont::
 }
 
 template <>
+inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagOpenMP>(
+  vtkm::cont::DeviceAdapterTagOpenMP)
+{
+  return "openmp";
+}
+
+template <>
 inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagCuda>(
   vtkm::cont::DeviceAdapterTagCuda)
 {
   return "cuda";
 }
 
-typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorBuffer4f;
-typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> ColorBuffer4b;
+using ColorBuffer4f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+using ColorBuffer4b = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>;
 
 //Defining types supported by the rendering
 
 //vec3s
-typedef vtkm::Vec<vtkm::Float32, 3> Vec3F;
-typedef vtkm::Vec<vtkm::Float64, 3> Vec3D;
+using Vec3F = vtkm::Vec<vtkm::Float32, 3>;
+using Vec3D = vtkm::Vec<vtkm::Float64, 3>;
 struct Vec3RenderingTypes : vtkm::ListTagBase<Vec3F, Vec3D>
 {
 };
 
 // Scalars Types
-typedef vtkm::Float32 ScalarF;
-typedef vtkm::Float64 ScalarD;
+using ScalarF = vtkm::Float32;
+using ScalarD = vtkm::Float64;
 
 struct RayStatusType : vtkm::ListTagBase<vtkm::UInt8>
 {
@@ -122,15 +129,15 @@ struct ScalarRenderingTypes : vtkm::ListTagBase<ScalarF, ScalarD>
 namespace detail
 {
 
-typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float32>>::type
-  ArrayHandleCompositeVectorFloat32_3Default;
+using ArrayHandleCompositeVectorFloat32_3Default =
+  vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                         vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                         vtkm::cont::ArrayHandle<vtkm::Float32>>;
 
-typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float64>>::type
-  ArrayHandleCompositeVectorFloat64_3Default;
+using ArrayHandleCompositeVectorFloat64_3Default =
+  vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                         vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                         vtkm::cont::ArrayHandle<vtkm::Float64>>;
 
 struct StructuredStorageListTagCoordinateSystem
   : vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
@@ -176,14 +183,14 @@ struct StorageListTagExplicitCoordinateSystem : vtkm::ListTagBase<vtkm::cont::St
 };
 
 
-typedef detail::StructuredStorageListTagCoordinateSystem StructuredStorage;
+using StructuredStorage = detail::StructuredStorageListTagCoordinateSystem;
 
-typedef vtkm::cont::DynamicArrayHandleBase<ExplicitCoordinatesType, StructuredStorage>
-  DynamicArrayHandleStructuredCoordinateSystem;
+using DynamicArrayHandleStructuredCoordinateSystem =
+  vtkm::cont::DynamicArrayHandleBase<ExplicitCoordinatesType, StructuredStorage>;
 
-typedef vtkm::cont::DynamicArrayHandleBase<ExplicitCoordinatesType,
-                                           StorageListTagExplicitCoordinateSystem>
-  DynamicArrayHandleExplicitCoordinateSystem;
+using DynamicArrayHandleExplicitCoordinateSystem =
+  vtkm::cont::DynamicArrayHandleBase<ExplicitCoordinatesType,
+                                     StorageListTagExplicitCoordinateSystem>;
 }
 }
 } //namespace vtkm::rendering::raytracing

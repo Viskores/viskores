@@ -31,8 +31,8 @@ namespace
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
@@ -100,7 +100,8 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
-  dataSet.AddField(vtkm::cont::Field("nodevar", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  dataSet.AddField(
+    vtkm::cont::Field("nodevar", vtkm::cont::Field::Association::POINTS, fieldArray));
 
   static constexpr vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");

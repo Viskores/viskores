@@ -170,32 +170,41 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
 
     // If it is managed, just return and let CUDA handle the migration for us.
     CudaAllocator::PrepareForControl(controlPtr, numBytes);
-    return;
+  }
+  else
+  {
+    VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
+                                   executionPtr,
+                                   static_cast<std::size_t>(numBytes),
+                                   cudaMemcpyDeviceToHost,
+                                   cudaStreamPerThread));
   }
 
-  VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
-                                 executionPtr,
-                                 static_cast<std::size_t>(numBytes),
-                                 cudaMemcpyDeviceToHost,
-                                 cudaStreamPerThread));
+  //In all cases we have possibly multiple async calls queued up in
+  //our stream. We need to block on the copy back to control since
+  //we don't wanting it accessing memory that hasn't finished
+  //being used by the GPU
+  cudaStreamSynchronize(cudaStreamPerThread);
 }
 
-void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(const void* controlPtr,
-                                                                      const void* executionPtr,
-                                                                      vtkm::UInt64 numBytes) const
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(
+  const void* vtkmNotUsed(controlPtr),
+  const void* executionPtr,
+  vtkm::UInt64 numBytes) const
 {
   CudaAllocator::PrepareForInput(executionPtr, static_cast<size_t>(numBytes));
 }
 
-void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForWrite(const void* controlPtr,
-                                                                       const void* executionPtr,
-                                                                       vtkm::UInt64 numBytes) const
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForWrite(
+  const void* vtkmNotUsed(controlPtr),
+  const void* executionPtr,
+  vtkm::UInt64 numBytes) const
 {
   CudaAllocator::PrepareForOutput(executionPtr, static_cast<size_t>(numBytes));
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForReadWrite(
-  const void* controlPtr,
+  const void* vtkmNotUsed(controlPtr),
   const void* executionPtr,
   vtkm::UInt64 numBytes) const
 {

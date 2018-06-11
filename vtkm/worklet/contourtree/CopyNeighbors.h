@@ -81,12 +81,12 @@ namespace contourtree
 class CopyNeighbors : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    FieldIn<IdType> activeSupernode,       // (input) index into supernodes
-    WholeArrayIn<IdType> activeSupernodes, // (input) active supernode vertex IDs
-    WholeArrayIn<IdType> arcs,             // (input) merge tree arcs
-    FieldOut<IdType> sortVector);          // (output) neighbors for active edge
-  typedef _4 ExecutionSignature(_1, _2, _3);
+  using ControlSignature =
+    void(FieldIn<IdType> activeSupernode,       // (input) index into supernodes
+         WholeArrayIn<IdType> activeSupernodes, // (input) active supernode vertex IDs
+         WholeArrayIn<IdType> arcs,             // (input) merge tree arcs
+         FieldOut<IdType> sortVector);          // (output) neighbors for active edge
+  using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 
   // Constructor

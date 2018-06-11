@@ -33,7 +33,7 @@ namespace cont
 //Coordinates builder??
 //Need a singlecellset handler.
 
-class DataSetBuilderExplicit
+class VTKM_CONT_EXPORT DataSetBuilderExplicit
 {
   template <typename T>
   VTKM_CONT static void CopyInto(const std::vector<T>& input, vtkm::cont::ArrayHandle<T>& output)
@@ -220,7 +220,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
 
   vtkm::cont::DataSet dataSet;
   dataSet.AddCoordinateSystem(
-    vtkm::cont::CoordinateSystem(coordsNm, make_ArrayHandleCompositeVector(X, 0, Y, 0, Z, 0)));
+    vtkm::cont::CoordinateSystem(coordsNm, make_ArrayHandleCompositeVector(X, Y, Z)));
   vtkm::Id nPts = X.GetNumberOfValues();
   vtkm::cont::CellSetExplicit<> cellSet(cellNm);
 
@@ -313,42 +313,24 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   return dataSet;
 }
 
-class DataSetBuilderExplicitIterative
+class VTKM_CONT_EXPORT DataSetBuilderExplicitIterative
 {
 public:
   VTKM_CONT
-  DataSetBuilderExplicitIterative() {}
+  DataSetBuilderExplicitIterative();
 
   VTKM_CONT
-  void Begin(const std::string& coordName = "coords", const std::string& cellName = "cells")
-  {
-    this->coordNm = coordName;
-    this->cellNm = cellName;
-    this->points.resize(0);
-    this->shapes.resize(0);
-    this->numIdx.resize(0);
-    this->connectivity.resize(0);
-  }
+  void Begin(const std::string& coordName = "coords", const std::string& cellName = "cells");
 
   //Define points.
   VTKM_CONT
   vtkm::cont::DataSet Create();
 
   VTKM_CONT
-  vtkm::Id AddPoint(const vtkm::Vec<vtkm::Float32, 3>& pt)
-  {
-    points.push_back(pt);
-    vtkm::Id id = static_cast<vtkm::Id>(points.size());
-    return id;
-  }
+  vtkm::Id AddPoint(const vtkm::Vec<vtkm::Float32, 3>& pt);
 
   VTKM_CONT
-  vtkm::Id AddPoint(const vtkm::Float32& x, const vtkm::Float32& y, const vtkm::Float32& z = 0)
-  {
-    points.push_back(vtkm::make_Vec(x, y, z));
-    vtkm::Id id = static_cast<vtkm::Id>(points.size());
-    return id;
-  }
+  vtkm::Id AddPoint(const vtkm::Float32& x, const vtkm::Float32& y, const vtkm::Float32& z = 0);
 
   template <typename T>
   VTKM_CONT vtkm::Id AddPoint(const T& x, const T& y, const T& z = 0)
@@ -365,38 +347,16 @@ public:
 
   //Define cells.
   VTKM_CONT
-  void AddCell(vtkm::UInt8 shape)
-  {
-    this->shapes.push_back(shape);
-    this->numIdx.push_back(0);
-  }
+  void AddCell(vtkm::UInt8 shape);
 
   VTKM_CONT
-  void AddCell(const vtkm::UInt8& shape, const std::vector<vtkm::Id>& conn)
-  {
-    this->shapes.push_back(shape);
-    this->numIdx.push_back(static_cast<vtkm::IdComponent>(conn.size()));
-    connectivity.insert(connectivity.end(), conn.begin(), conn.end());
-  }
+  void AddCell(const vtkm::UInt8& shape, const std::vector<vtkm::Id>& conn);
 
   VTKM_CONT
-  void AddCell(const vtkm::UInt8& shape, const vtkm::Id* conn, const vtkm::IdComponent& n)
-  {
-    this->shapes.push_back(shape);
-    this->numIdx.push_back(n);
-    for (int i = 0; i < n; i++)
-    {
-      connectivity.push_back(conn[i]);
-    }
-  }
+  void AddCell(const vtkm::UInt8& shape, const vtkm::Id* conn, const vtkm::IdComponent& n);
 
   VTKM_CONT
-  void AddCellPoint(vtkm::Id pointIndex)
-  {
-    VTKM_ASSERT(this->numIdx.size() > 0);
-    this->connectivity.push_back(pointIndex);
-    this->numIdx.back() += 1;
-  }
+  void AddCellPoint(vtkm::Id pointIndex);
 
 private:
   std::string coordNm, cellNm;
@@ -406,12 +366,6 @@ private:
   std::vector<vtkm::IdComponent> numIdx;
   std::vector<vtkm::Id> connectivity;
 };
-
-inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicitIterative::Create()
-{
-  DataSetBuilderExplicit dsb;
-  return dsb.Create(points, shapes, numIdx, connectivity, coordNm, cellNm);
-}
 }
 }
 

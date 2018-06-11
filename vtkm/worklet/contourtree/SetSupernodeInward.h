@@ -81,13 +81,13 @@ namespace contourtree
 class SetSupernodeInward : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> superID,            // (input) index into supernodes
+  using ControlSignature = void(FieldIn<IdType> superID,            // (input) index into supernodes
                                 WholeArrayIn<IdType> inbound,       // (input) join or split arc
                                 WholeArrayIn<IdType> outbound,      // (input) join or split arc
                                 WholeArrayIn<IdType> indegree,      // (input)
                                 WholeArrayIn<IdType> outdegree,     // (input)
                                 WholeArrayInOut<IdType> superarcs); // (in out)
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
   // Constructor

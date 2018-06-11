@@ -24,7 +24,8 @@
 
 #include <vtkm/cont/arg/Transport.h>
 
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
+
 
 namespace vtkm
 {
@@ -45,21 +46,19 @@ struct TransportTagExecObject
 template <typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagExecObject, ContObjectType, Device>
 {
-  // If you get a compile error here, it means you tried to use an object that
-  // is not an execution object as an argument that is expected to be one. All
-  // execution objects are expected to inherit from
-  // vtkm::exec::ExecutionObjectBase.
+  // If you get a compile error here, it means you tried to use an object that is not an execution
+  // object as an argument that is expected to be one. All execution objects are expected to
+  // inherit from vtkm::cont::ExecutionObjectBase.
   VTKM_STATIC_ASSERT_MSG(
-    (std::is_base_of<vtkm::exec::ExecutionObjectBase, ContObjectType>::value),
-    "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectBase");
+    (std::is_base_of<vtkm::cont::ExecutionObjectBase, ContObjectType>::value),
+    "All execution objects are expected to inherit from vtkm::cont::ExecutionObjectBase");
 
-  using ExecObjectType = ContObjectType;
-
+  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForExecution(Device()));
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType
   operator()(const ContObjectType& object, const InputDomainType&, vtkm::Id, vtkm::Id) const
   {
-    return object;
+    return object.PrepareForExecution(Device());
   }
 };
 }

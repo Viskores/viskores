@@ -47,9 +47,9 @@ public:
   VTKM_CONT
   CreateConnectivity() {}
 
-  typedef void ControlSignature(FieldIn<>, WholeArrayOut<>);
+  using ControlSignature = void(FieldIn<>, WholeArrayOut<>);
 
-  typedef void ExecutionSignature(_1, _2);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename ConnPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& i, ConnPortalType& connPortal) const
@@ -88,12 +88,12 @@ public:
   {
   }
 
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 FieldIn<vtkm::TypeListTagScalarAll>,
                                 FieldOut<>,
                                 FieldOut<>);
 
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   template <typename ScalarType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& inCoord,
                             const ScalarType& scalar,
@@ -149,8 +149,8 @@ struct ConvertFunctor
 #endif
 struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn cellSet, FieldOutCell<> numEdges);
-  typedef _2 ExecutionSignature(CellShape shape, PointCount numPoints);
+  using ControlSignature = void(CellSetIn cellSet, FieldOutCell<> numEdges);
+  using ExecutionSignature = _2(CellShape shape, PointCount numPoints);
   using InputDomain = _1;
 
   template <typename CellShapeTag>
@@ -170,19 +170,17 @@ struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
 
 struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn cellSet, FieldOutCell<> edgeIndices);
-  typedef void ExecutionSignature(CellShape, PointIndices, VisitIndex, _2);
+  using ControlSignature = void(CellSetIn cellSet, FieldOutCell<> edgeIndices);
+  using ExecutionSignature = void(CellShape, PointIndices, VisitIndex, _2);
   using InputDomain = _1;
   using ScatterType = vtkm::worklet::ScatterCounting;
 
   VTKM_CONT
   template <typename CountArrayType, typename DeviceTag>
-  EdgesExtracter(const CountArrayType& counts, DeviceTag device)
-    : Scatter(counts, device)
+  static ScatterType MakeScatter(const CountArrayType& counts, DeviceTag device)
   {
+    return ScatterType(counts, device);
   }
-
-  VTKM_CONT ScatterType GetScatter() const { return this->Scatter; }
 
   template <typename CellShapeTag, typename PointIndexVecType, typename EdgeIndexVecType>
   VTKM_EXEC void operator()(CellShapeTag shape,
@@ -209,9 +207,6 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
     edgeIndices[0] = p1 < p2 ? p1 : p2;
     edgeIndices[1] = p1 < p2 ? p2 : p1;
   }
-
-private:
-  ScatterType Scatter;
 }; // struct EdgesExtracter
 
 #if defined(VTKM_MSVC)
@@ -236,9 +231,8 @@ struct ExtractUniqueEdges
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
     vtkm::worklet::DispatcherMapTopology<EdgesCounter, DeviceTag>().Invoke(CellSet, counts);
-    EdgesExtracter extractWorklet(counts, DeviceTag());
     vtkm::worklet::DispatcherMapTopology<EdgesExtracter, DeviceTag> extractDispatcher(
-      extractWorklet);
+      EdgesExtracter::MakeScatter(counts, DeviceTag()));
     extractDispatcher.Invoke(CellSet, EdgeIndices);
     vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Sort<vtkm::Id2>(EdgeIndices);
     vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Unique<vtkm::Id2>(EdgeIndices);
@@ -334,7 +328,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   if (is1D)
   {
 
-    bool isSupportedField = inScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    bool isSupportedField =
+      inScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
     if (!isSupportedField)
     {
       throw vtkm::cont::ErrorBadValue(
@@ -354,8 +349,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
                            this->LogarithmX);
 
     actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
-    actualField =
-      vtkm::cont::Field(inScalarField.GetName(), vtkm::cont::Field::ASSOC_POINTS, newScalars);
+    actualField = vtkm::cont::Field(
+      inScalarField.GetName(), vtkm::cont::Field::Association::POINTS, newScalars);
 
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     vtkm::cont::ArrayHandle<vtkm::Id> conn;

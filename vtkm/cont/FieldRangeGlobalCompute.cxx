@@ -20,7 +20,6 @@
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
 
 #include <vtkm/cont/EnvironmentTracker.h>
-#include <vtkm/cont/diy/Serialization.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -32,6 +31,9 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
+#include <algorithm>
+#include <functional>
+
 namespace vtkm
 {
 namespace cont
@@ -39,10 +41,9 @@ namespace cont
 
 //-----------------------------------------------------------------------------
 VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
-  const vtkm::cont::DataSet& dataset,
-  const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc)
+vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(const vtkm::cont::DataSet& dataset,
+                                                             const std::string& name,
+                                                             vtkm::cont::Field::Association assoc)
 {
   return detail::FieldRangeGlobalComputeImpl(
     dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
@@ -53,7 +54,7 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::MultiBlock& multiblock,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc)
+  vtkm::cont::Field::Association assoc)
 {
   return detail::FieldRangeGlobalComputeImpl(
     multiblock, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
@@ -72,25 +73,30 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
     return ranges;
   }
 
-  using ArrayHandleT = vtkm::cont::ArrayHandle<vtkm::Range>;
+  std::vector<vtkm::Range> v_ranges(static_cast<size_t>(ranges.GetNumberOfValues()));
+  std::copy(vtkm::cont::ArrayPortalToIteratorBegin(ranges.GetPortalConstControl()),
+            vtkm::cont::ArrayPortalToIteratorEnd(ranges.GetPortalConstControl()),
+            v_ranges.begin());
+
+  using VectorOfRangesT = std::vector<vtkm::Range>;
 
   diy::Master master(comm,
                      1,
                      -1,
-                     []() -> void* { return new ArrayHandleT(); },
-                     [](void* ptr) { delete static_cast<ArrayHandleT*>(ptr); });
+                     []() -> void* { return new VectorOfRangesT(); },
+                     [](void* ptr) { delete static_cast<VectorOfRangesT*>(ptr); });
 
   diy::ContiguousAssigner assigner(/*num ranks*/ comm.size(), /*global-num-blocks*/ comm.size());
   diy::RegularDecomposer<diy::DiscreteBounds> decomposer(
     /*dim*/ 1, diy::interval(0, comm.size() - 1), comm.size());
   decomposer.decompose(comm.rank(), assigner, master);
   assert(master.size() == 1); // each rank will have exactly 1 block.
-  *master.block<ArrayHandleT>(0) = ranges;
+  *master.block<VectorOfRangesT>(0) = v_ranges;
 
   diy::RegularAllReducePartners all_reduce_partners(decomposer, /*k*/ 2);
 
   auto callback =
-    [](ArrayHandleT* data, const diy::ReduceProxy& srp, const diy::RegularMergePartners&) {
+    [](VectorOfRangesT* data, const diy::ReduceProxy& srp, const diy::RegularMergePartners&) {
       const auto selfid = srp.gid();
       // 1. dequeue.
       std::vector<int> incoming;
@@ -99,9 +105,17 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
       {
         if (gid != selfid)
         {
-          ArrayHandleT message;
+          VectorOfRangesT message;
           srp.dequeue(gid, message);
-          *data = vtkm::cont::detail::MergeRanges(*data, message);
+
+          // if the number of components we've seen so far is less than those
+          // in the received message, resize so we can accommodate all components
+          // in the message. If the message has fewer components, it has no
+          // effect.
+          data->resize(std::max(data->size(), message.size()));
+
+          std::transform(
+            message.begin(), message.end(), data->begin(), data->begin(), std::plus<vtkm::Range>());
         }
       }
       // 2. enqueue
@@ -117,7 +131,8 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
 
   diy::reduce(master, assigner, all_reduce_partners, callback);
   assert(master.size() == 1); // each rank will have exactly 1 block.
-  return *master.block<ArrayHandleT>(0);
+
+  return vtkm::cont::make_ArrayHandle(*master.block<VectorOfRangesT>(0), vtkm::CopyFlag::On);
 }
 } // namespace detail
 }

@@ -90,8 +90,8 @@ struct TestingArrayHandles
 
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>, FieldOut<>);
-    typedef _2 ExecutionSignature(_1);
+    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ExecutionSignature = _2(_1);
 
     template <class ValueType>
     VTKM_EXEC ValueType operator()(const ValueType& inValue) const
@@ -415,7 +415,7 @@ private:
       {
         vtkm::cont::ArrayHandle<T, StorageTagBasic> a1;
         vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageTagBasic> tmp;
-        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent<1>(tmp);
+        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent(tmp, 1);
 
         VTKM_TEST_ASSERT(a1 != a2, "Arrays with different storage type compared equal.");
         VTKM_TEST_ASSERT(!(a1 == a2), "Arrays with different storage type compared equal.");
@@ -434,7 +434,7 @@ private:
       {
         vtkm::cont::ArrayHandle<T, StorageTagBasic> a1;
         vtkm::cont::ArrayHandle<vtkm::Vec<typename OtherType<T>::Type, 3>, StorageTagBasic> tmp;
-        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent<1>(tmp);
+        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent(tmp, 1);
 
         VTKM_TEST_ASSERT(a1 != a2, "Arrays with different storage and value type compared equal.");
         VTKM_TEST_ASSERT(!(a1 == a2),

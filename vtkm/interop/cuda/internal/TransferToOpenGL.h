@@ -205,6 +205,7 @@ public:
                    vtkm::cont::cuda::internal::IteratorBegin(portal),
                    vtkm::cont::cuda::internal::IteratorEnd(portal),
                    thrust::cuda::pointer<ValueType>(beginPointer));
+    cudaStreamSynchronize(cudaStreamPerThread);
 
     //unmap the resource
     this->Resource->UnMap();

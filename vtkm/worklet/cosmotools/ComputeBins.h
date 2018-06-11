@@ -79,11 +79,11 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<TagType> xLoc,   // (input) x location in halo
+  using ControlSignature = void(FieldIn<TagType> xLoc,   // (input) x location in halo
                                 FieldIn<TagType> yLoc,   // (input) y location in halo
                                 FieldIn<TagType> zLoc,   // (input) z location in halo
                                 FieldOut<IdType> binId); // (output) bin Id
-  typedef _4 ExecutionSignature(_1, _2, _3);
+  using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 
   T xMin, xMax, yMin, yMax, zMin, zMax;

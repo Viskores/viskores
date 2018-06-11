@@ -68,7 +68,7 @@ inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
   }
 
   return internal::CreateResult(
-    input, outArray, outputName, vtkm::cont::Field::ASSOC_POINTS, cellSet.GetName());
+    input, outArray, outputName, vtkm::cont::Field::Association::POINTS, cellSet.GetName());
 }
 }
 } // namespace vtkm::filter

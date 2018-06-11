@@ -84,11 +84,6 @@ function(vtkm_find_gl)
 endfunction()
 
 #-----------------------------------------------------------------------------
-if(TARGET vtkm_rendering_gl_context)
-  return()
-endif()
-
-add_library(vtkm_rendering_gl_context INTERFACE)
 if(VTKm_ENABLE_GL_CONTEXT OR
    VTKm_ENABLE_OSMESA_CONTEXT OR
    VTKm_ENABLE_EGL_CONTEXT
@@ -96,6 +91,14 @@ if(VTKm_ENABLE_GL_CONTEXT OR
   vtkm_find_gl(REQUIRED GL GLEW
                OPTIONAL
                QUIET)
+endif()
+
+#-----------------------------------------------------------------------------
+if(VTKm_ENABLE_RENDERING)
+  if(TARGET vtkm_rendering_gl_context)
+    return()
+  endif()
+  add_library(vtkm_rendering_gl_context INTERFACE)
 endif()
 
 #-----------------------------------------------------------------------------

@@ -68,11 +68,12 @@ void ConnectivityTracerBase::SetVolumeData(const vtkm::cont::Field& scalarField,
   ScalarField = scalarField;
   ScalarBounds = scalarBounds;
 
-  bool isSupportedField = (ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
-                           ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+  bool isSupportedField =
+    (ScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+     ScalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
   if (!isSupportedField)
     throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
-  FieldAssocPoints = ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+  FieldAssocPoints = ScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
 
   this->Integrator = Volume;
 }
@@ -81,7 +82,7 @@ void ConnectivityTracerBase::SetEnergyData(const vtkm::cont::Field& absorption,
                                            const vtkm::Int32 numBins,
                                            const vtkm::cont::Field& emission)
 {
-  bool isSupportedField = absorption.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET;
+  bool isSupportedField = absorption.GetAssociation() == vtkm::cont::Field::Association::CELL_SET;
   if (!isSupportedField)
     throw vtkm::cont::ErrorBadValue("Absorption Field '" + absorption.GetName() +
                                     "' not accociated with cells");
@@ -89,9 +90,9 @@ void ConnectivityTracerBase::SetEnergyData(const vtkm::cont::Field& absorption,
   // Check for emission
   HasEmission = false;
 
-  if (emission.GetAssociation() != vtkm::cont::Field::ASSOC_ANY)
+  if (emission.GetAssociation() != vtkm::cont::Field::Association::ANY)
   {
-    if (emission.GetAssociation() != vtkm::cont::Field::ASSOC_CELL_SET)
+    if (emission.GetAssociation() != vtkm::cont::Field::Association::CELL_SET)
       throw vtkm::cont::ErrorBadValue("Emission Field '" + emission.GetName() +
                                       "' not accociated with cells");
     HasEmission = true;

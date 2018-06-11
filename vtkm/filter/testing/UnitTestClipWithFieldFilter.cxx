@@ -69,7 +69,7 @@ void TestClipExplicit()
   vtkm::filter::ClipWithField clip;
   clip.SetClipValue(0.5);
   clip.SetActiveField("scalars");
-  clip.SetFieldsToPass("scalars", vtkm::cont::Field::ASSOC_POINTS);
+  clip.SetFieldsToPass("scalars", vtkm::cont::Field::Association::POINTS);
 
   const vtkm::cont::DataSet outputData = clip.Execute(ds);
 

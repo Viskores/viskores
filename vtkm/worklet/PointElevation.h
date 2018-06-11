@@ -43,8 +43,8 @@ VTKM_EXEC T clamp(const T& val, const T& min, const T& max)
 class PointElevation : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ExecutionSignature = _2(_1);
 
   VTKM_CONT
   PointElevation()
@@ -72,9 +72,9 @@ public:
   vtkm::Float64 operator()(const vtkm::Vec<vtkm::Float64, 3>& vec) const
   {
     vtkm::Vec<vtkm::Float64, 3> direction = this->HighPoint - this->LowPoint;
-    vtkm::Float64 lengthSqr = vtkm::dot(direction, direction);
+    vtkm::Float64 lengthSqr = vtkm::Dot(direction, direction);
     vtkm::Float64 rangeLength = this->RangeHigh - this->RangeLow;
-    vtkm::Float64 s = vtkm::dot(vec - this->LowPoint, direction) / lengthSqr;
+    vtkm::Float64 s = vtkm::Dot(vec - this->LowPoint, direction) / lengthSqr;
     s = internal::clamp(s, 0.0, 1.0);
     return this->RangeLow + (s * rangeLength);
   }

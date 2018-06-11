@@ -120,7 +120,7 @@ private:
 } //namespace gradient
 
 template <typename T>
-struct GradientOutputFields : public vtkm::exec::ExecutionObjectBase
+struct GradientOutputFields : public vtkm::cont::ExecutionObjectBase
 {
 
   using ValueType = T;
@@ -129,7 +129,7 @@ struct GradientOutputFields : public vtkm::exec::ExecutionObjectBase
   template <typename DeviceAdapter>
   struct ExecutionTypes
   {
-    using Portal = vtkm::exec::GradientOutput<T, DeviceAdapter>;
+    using Portal = vtkm::exec::GradientOutput<T>;
   };
 
   GradientOutputFields()
@@ -181,18 +181,17 @@ struct GradientOutputFields : public vtkm::exec::ExecutionObjectBase
   bool GetComputeGradient() const { return StoreGradient; }
 
   //todo fix this for scalar
-  template <typename DeviceAdapter>
-  vtkm::exec::GradientOutput<T, DeviceAdapter> PrepareForOutput(vtkm::Id size, DeviceAdapter)
+  vtkm::exec::GradientOutput<T> PrepareForOutput(vtkm::Id size)
   {
-    vtkm::exec::GradientOutput<T, DeviceAdapter> portal(this->StoreGradient,
-                                                        this->ComputeDivergence,
-                                                        this->ComputeVorticity,
-                                                        this->ComputeQCriterion,
-                                                        this->Gradient,
-                                                        this->Divergence,
-                                                        this->Vorticity,
-                                                        this->QCriterion,
-                                                        size);
+    vtkm::exec::GradientOutput<T> portal(this->StoreGradient,
+                                         this->ComputeDivergence,
+                                         this->ComputeVorticity,
+                                         this->ComputeQCriterion,
+                                         this->Gradient,
+                                         this->Divergence,
+                                         this->Vorticity,
+                                         this->QCriterion,
+                                         size);
     return portal;
   }
 

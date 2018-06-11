@@ -32,7 +32,7 @@ namespace cont
 namespace internal
 {
 
-template <typename PortalType, vtkm::IdComponent Component>
+template <typename PortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalExtractComponent
 {
 public:
@@ -40,24 +40,24 @@ public:
   using Traits = vtkm::VecTraits<VectorType>;
   using ValueType = typename Traits::ComponentType;
 
-  static constexpr vtkm::IdComponent COMPONENT = Component;
-
   VTKM_EXEC_CONT
   ArrayPortalExtractComponent()
     : Portal()
+    , Component(0)
   {
   }
 
   VTKM_EXEC_CONT
-  ArrayPortalExtractComponent(const PortalType& portal)
+  ArrayPortalExtractComponent(const PortalType& portal, vtkm::IdComponent component)
     : Portal(portal)
+    , Component(component)
   {
   }
 
   // Copy constructor
-  VTKM_EXEC_CONT ArrayPortalExtractComponent(
-    const ArrayPortalExtractComponent<PortalType, Component>& src)
-    : Portal(src.GetPortal())
+  VTKM_EXEC_CONT ArrayPortalExtractComponent(const ArrayPortalExtractComponent<PortalType>& src)
+    : Portal(src.Portal)
+    , Component(src.Component)
   {
   }
 
@@ -67,14 +67,14 @@ public:
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
-    return Traits::GetComponent(this->Portal.Get(index), Component);
+    return Traits::GetComponent(this->Portal.Get(index), this->Component);
   }
 
   VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const
   {
     VectorType vec = this->Portal.Get(index);
-    Traits::SetComponent(vec, Component, value);
+    Traits::SetComponent(vec, this->Component, value);
     this->Portal.Set(index, vec);
   }
 
@@ -83,39 +83,40 @@ public:
 
 private:
   PortalType Portal;
+  vtkm::IdComponent Component;
 }; // class ArrayPortalExtractComponent
 
 } // namespace internal
 
-template <typename ArrayHandleType, vtkm::IdComponent Component>
+template <typename ArrayHandleType>
 class StorageTagExtractComponent
 {
-  static constexpr vtkm::IdComponent COMPONENT = Component;
 };
 
 namespace internal
 {
 
-template <typename ArrayHandleType, vtkm::IdComponent Component>
+template <typename ArrayHandleType>
 class Storage<typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType,
-              StorageTagExtractComponent<ArrayHandleType, Component>>
+              StorageTagExtractComponent<ArrayHandleType>>
 {
 public:
-  using PortalType =
-    ArrayPortalExtractComponent<typename ArrayHandleType::PortalControl, Component>;
-  using PortalConstType =
-    ArrayPortalExtractComponent<typename ArrayHandleType::PortalConstControl, Component>;
+  using PortalType = ArrayPortalExtractComponent<typename ArrayHandleType::PortalControl>;
+  using PortalConstType = ArrayPortalExtractComponent<typename ArrayHandleType::PortalConstControl>;
   using ValueType = typename PortalType::ValueType;
 
   VTKM_CONT
   Storage()
-    : Valid(false)
+    : Array()
+    , Component(0)
+    , Valid(false)
   {
   }
 
   VTKM_CONT
-  Storage(const ArrayHandleType& array)
+  Storage(const ArrayHandleType& array, vtkm::IdComponent component)
     : Array(array)
+    , Component(component)
     , Valid(true)
   {
   }
@@ -124,14 +125,14 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.GetPortalConstControl());
+    return PortalConstType(this->Array.GetPortalConstControl(), this->Component);
   }
 
   VTKM_CONT
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl());
+    return PortalType(this->Array.GetPortalControl(), this->Component);
   }
 
   VTKM_CONT
@@ -169,21 +170,29 @@ public:
     return this->Array;
   }
 
+  VTKM_CONT
+  vtkm::IdComponent GetComponent() const
+  {
+    VTKM_ASSERT(this->Valid);
+    return this->Component;
+  }
+
 private:
   ArrayHandleType Array;
+  vtkm::IdComponent Component;
   bool Valid;
 }; // class Storage
 
-template <typename ArrayHandleType, vtkm::IdComponent Component, typename Device>
+template <typename ArrayHandleType, typename Device>
 class ArrayTransfer<typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType,
-                    StorageTagExtractComponent<ArrayHandleType, Component>,
+                    StorageTagExtractComponent<ArrayHandleType>,
                     Device>
 {
 public:
   using ValueType = typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType;
 
 private:
-  using StorageTag = StorageTagExtractComponent<ArrayHandleType, Component>;
+  using StorageTag = StorageTagExtractComponent<ArrayHandleType>;
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
   using ArrayValueType = typename ArrayHandleType::ValueType;
   using ArrayStorageTag = typename ArrayHandleType::StorageTag;
@@ -195,13 +204,13 @@ public:
   using PortalConstControl = typename StorageType::PortalConstType;
 
   using ExecutionTypes = typename ArrayHandleType::template ExecutionTypes<Device>;
-  using PortalExecution = ArrayPortalExtractComponent<typename ExecutionTypes::Portal, Component>;
-  using PortalConstExecution =
-    ArrayPortalExtractComponent<typename ExecutionTypes::PortalConst, Component>;
+  using PortalExecution = ArrayPortalExtractComponent<typename ExecutionTypes::Portal>;
+  using PortalConstExecution = ArrayPortalExtractComponent<typename ExecutionTypes::PortalConst>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
     : Array(storage->GetArray())
+    , Component(storage->GetComponent())
   {
   }
 
@@ -211,19 +220,19 @@ public:
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()));
+    return PortalConstExecution(this->Array.PrepareForInput(Device()), this->Component);
   }
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    return PortalExecution(this->Array.PrepareForInPlace(Device()));
+    return PortalExecution(this->Array.PrepareForInPlace(Device()), this->Component);
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
-    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device()));
+    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device()), this->Component);
   }
 
   VTKM_CONT
@@ -242,6 +251,7 @@ public:
 
 private:
   ArrayHandleType Array;
+  vtkm::IdComponent Component;
 };
 }
 }
@@ -263,40 +273,39 @@ namespace cont
 /// the index array and reads or writes to the specified component, leave all
 /// other components unmodified. This is done on the fly rather than creating a
 /// copy of the array.
-template <typename ArrayHandleType, vtkm::IdComponent Component>
+template <typename ArrayHandleType>
 class ArrayHandleExtractComponent
   : public vtkm::cont::ArrayHandle<
       typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType,
-      StorageTagExtractComponent<ArrayHandleType, Component>>
+      StorageTagExtractComponent<ArrayHandleType>>
 {
 public:
-  static constexpr vtkm::IdComponent COMPONENT = Component;
-
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleExtractComponent,
-    (ArrayHandleExtractComponent<ArrayHandleType, Component>),
+    (ArrayHandleExtractComponent<ArrayHandleType>),
     (vtkm::cont::ArrayHandle<
       typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType,
-      StorageTagExtractComponent<ArrayHandleType, Component>>));
+      StorageTagExtractComponent<ArrayHandleType>>));
 
 protected:
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   VTKM_CONT
-  ArrayHandleExtractComponent(const ArrayHandleType& array)
-    : Superclass(StorageType(array))
+  ArrayHandleExtractComponent(const ArrayHandleType& array, vtkm::IdComponent component)
+    : Superclass(StorageType(array, component))
   {
   }
 };
 
 /// make_ArrayHandleExtractComponent is convenience function to generate an
 /// ArrayHandleExtractComponent.
-template <vtkm::IdComponent Component, typename ArrayHandleType>
-VTKM_CONT ArrayHandleExtractComponent<ArrayHandleType, Component> make_ArrayHandleExtractComponent(
-  const ArrayHandleType& array)
+template <typename ArrayHandleType>
+VTKM_CONT ArrayHandleExtractComponent<ArrayHandleType> make_ArrayHandleExtractComponent(
+  const ArrayHandleType& array,
+  vtkm::IdComponent component)
 {
-  return ArrayHandleExtractComponent<ArrayHandleType, Component>(array);
+  return ArrayHandleExtractComponent<ArrayHandleType>(array, component);
 }
 }
 } // namespace vtkm::cont

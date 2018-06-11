@@ -28,10 +28,20 @@
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+namespace vtkm
+{
+namespace worklet
+{
+namespace connectivity
+{
+namespace detail
+{
 struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn, FieldOutCell<> numEdgesInCell);
-  typedef _2 ExecutionSignature(CellShape, PointCount);
+  using ControlSignature = void(CellSetIn, FieldOutCell<> numEdgesInCell);
+
+  using ExecutionSignature = _2(CellShape, PointCount);
+
   using InputDomain = _1;
 
   template <typename CellShapeTag>
@@ -43,18 +53,13 @@ struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
 
 struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn, FieldOutCell<> cellIndices, FieldOutCell<> edgeIndices);
+  using ControlSignature = void(CellSetIn, FieldOutCell<> cellIndices, FieldOutCell<> edgeIndices);
 
-  typedef void ExecutionSignature(CellShape, InputIndex, PointIndices, VisitIndex, _2, _3);
+  using ExecutionSignature = void(CellShape, InputIndex, PointIndices, VisitIndex, _2, _3);
+
   using InputDomain = _1;
 
   using ScatterType = vtkm::worklet::ScatterCounting;
-  VTKM_CONT ScatterType GetScatter() const { return this->Scatter; }
-
-  VTKM_CONT EdgeExtract(const ScatterType& scatter)
-    : Scatter(scatter)
-  {
-  }
 
   template <typename CellShapeTag,
             typename CellIndexType,
@@ -71,19 +76,17 @@ struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
     edgeIndices = vtkm::exec::CellEdgeCanonicalId(
       pointIndices.GetNumberOfComponents(), visitIndex, cellShape, pointIndices, *this);
   }
-
-private:
-  ScatterType Scatter;
 };
 
 struct CellToCellConnectivity : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> index,
+  using ControlSignature = void(FieldIn<> index,
                                 WholeArrayIn<> cells,
                                 WholeArrayOut<> from,
                                 WholeArrayOut<> to);
 
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
+  using ExecutionSignature = void(_1, InputIndex, _2, _3, _4);
+
   using InputDomain = _1;
 
   template <typename ConnectivityPortalType, typename CellIdPortalType>
@@ -99,6 +102,7 @@ struct CellToCellConnectivity : public vtkm::worklet::WorkletMapField
     to.Set(index * 2 + 1, cells.Get(offset));
   }
 };
+} // vtkm::worklet::connectivity::detail
 
 template <typename DeviceAdapter>
 class CellSetDualGraph
@@ -119,12 +123,14 @@ public:
   {
     // Get number of edges for each cell and use it as scatter count.
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numEdgesPerCell;
-    vtkm::worklet::DispatcherMapTopology<EdgeCount, DeviceAdapter> edgesPerCellDisp;
+    vtkm::worklet::DispatcherMapTopology<detail::EdgeCount, DeviceAdapter> edgesPerCellDisp;
     edgesPerCellDisp.Invoke(cellSet, numEdgesPerCell);
 
     // Get uncompress Cell to Edge mapping
     vtkm::worklet::ScatterCounting scatter{ numEdgesPerCell, DeviceAdapter() };
-    vtkm::worklet::DispatcherMapTopology<EdgeExtract, DeviceAdapter> edgeExtractDisp{ scatter };
+    vtkm::worklet::DispatcherMapTopology<detail::EdgeExtract, DeviceAdapter> edgeExtractDisp{
+      scatter
+    };
     edgeExtractDisp.Invoke(cellSet, cellIds, cellEdges);
   }
 
@@ -166,7 +172,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> connTo;
     connFrom.Allocate(sharedEdges.GetNumberOfValues() * 2);
     connTo.Allocate(sharedEdges.GetNumberOfValues() * 2);
-    vtkm::worklet::DispatcherMapField<CellToCellConnectivity, DeviceAdapter> c2cDisp;
+    vtkm::worklet::DispatcherMapField<detail::CellToCellConnectivity, DeviceAdapter> c2cDisp;
     c2cDisp.Invoke(lb, cellIds, connFrom, connTo);
 
     // Turn dual graph into Compressed Sparse Row format
@@ -183,4 +189,8 @@ public:
     Algorithm::ScanExclusive(numIndicesArray, indexOffsetArray);
   }
 };
+}
+}
+}
+
 #endif //vtk_m_worklet_CellSetDualGraph_h

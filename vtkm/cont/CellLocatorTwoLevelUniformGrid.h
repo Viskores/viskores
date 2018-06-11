@@ -128,18 +128,6 @@ private:
     FloatVec3 BinSize;
   };
 
-  struct TwoLevelUniformGrid
-  {
-    Grid TopLevel;
-
-    vtkm::cont::ArrayHandle<DimVec3> LeafDimensions;
-    vtkm::cont::ArrayHandle<vtkm::Id> LeafStartIndex;
-
-    vtkm::cont::ArrayHandle<vtkm::Id> CellStartIndex;
-    vtkm::cont::ArrayHandle<vtkm::Id> CellCount;
-    vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
-  };
-
   VTKM_EXEC_CONT static DimVec3 ComputeGridDimension(vtkm::Id numberOfCells,
                                                      const FloatVec3& size,
                                                      vtkm::FloatDefault density)
@@ -294,10 +282,10 @@ public:
   class CountBinsL1 : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<Vec3> coords,
                                   FieldOutCell<IdType> bincount);
-    typedef void ExecutionSignature(_2, _3);
+    using ExecutionSignature = void(_2, _3);
 
     CountBinsL1(const Grid& grid)
       : L1Grid(grid)
@@ -319,11 +307,11 @@ public:
   class FindBinsL1 : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<Vec3> coords,
                                   FieldInCell<IdType> offsets,
                                   WholeArrayOut<IdType> binIds);
-    typedef void ExecutionSignature(_2, _3, _4);
+    using ExecutionSignature = void(_2, _3, _4);
 
     FindBinsL1(const Grid& grid)
       : L1Grid(grid)
@@ -352,10 +340,10 @@ public:
   class GenerateBinsL1 : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> binIds,
+    using ControlSignature = void(FieldIn<IdType> binIds,
                                   FieldIn<IdType> cellCounts,
                                   WholeArrayOut<vtkm::ListTagBase<DimVec3>> dimensions);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ExecutionSignature = void(_1, _2, _3);
 
     using InputDomain = _1;
 
@@ -381,11 +369,11 @@ public:
   class CountBinsL2 : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<Vec3> coords,
                                   WholeArrayIn<vtkm::ListTagBase<DimVec3>> binDimensions,
                                   FieldOutCell<IdType> bincount);
-    typedef void ExecutionSignature(_2, _3, _4);
+    using ExecutionSignature = void(_2, _3, _4);
 
     CountBinsL2(const Grid& grid)
       : L1Grid(grid)
@@ -416,14 +404,14 @@ public:
   class FindBinsL2 : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<Vec3> coords,
                                   WholeArrayIn<vtkm::ListTagBase<DimVec3>> binDimensions,
                                   WholeArrayIn<IdType> binStarts,
                                   FieldInCell<IdType> offsets,
                                   WholeArrayOut<IdType> binIds,
                                   WholeArrayOut<IdType> cellIds);
-    typedef void ExecutionSignature(InputIndex, _2, _3, _4, _5, _6, _7);
+    using ExecutionSignature = void(InputIndex, _2, _3, _4, _5, _6, _7);
 
     FindBinsL2(const Grid& grid)
       : L1Grid(grid)
@@ -468,12 +456,12 @@ public:
   class GenerateBinsL2 : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> binIds,
+    using ControlSignature = void(FieldIn<IdType> binIds,
                                   FieldIn<IdType> startsIn,
                                   FieldIn<IdType> countsIn,
                                   WholeArrayOut<IdType> startsOut,
                                   WholeArrayOut<IdType> countsOut);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
     using InputDomain = _1;
 
@@ -503,7 +491,7 @@ public:
 
     auto cellset = this->CellSet.ResetCellSetList(cellSetTypes);
     const auto& coords = this->Coordinates;
-    TwoLevelUniformGrid ls;
+    TwoLevelUniformGridExecutionObjectFactory ls;
 
     // 1: Compute the top level grid
     auto bounds = this->Coordinates.GetBounds();
@@ -605,12 +593,12 @@ public:
     std::swap(this->LookupStructure, ls);
   }
 
-  template <typename DeviceAdapter>
-  struct TwoLevelUniformGridExecution : public vtkm::exec::ExecutionObjectBase
+  template <typename Device>
+  struct TwoLevelUniformGridExecution
   {
     template <typename T>
     using ArrayPortalConst =
-      typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+      typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<Device>::PortalConst;
 
     Grid TopLevel;
 
@@ -622,16 +610,42 @@ public:
     ArrayPortalConst<vtkm::Id> CellIds;
   };
 
+  struct TwoLevelUniformGridExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
+  {
+    template <typename DeviceAdapter>
+    VTKM_CONT TwoLevelUniformGridExecution<DeviceAdapter> PrepareForExecution(
+      DeviceAdapter device) const
+    {
+      TwoLevelUniformGridExecution<DeviceAdapter> deviceObject;
+      deviceObject.TopLevel = this->TopLevel;
+      deviceObject.LeafDimensions = this->LeafDimensions.PrepareForInput(device);
+      deviceObject.LeafStartIndex = this->LeafStartIndex.PrepareForInput(device);
+      deviceObject.CellStartIndex = this->CellStartIndex.PrepareForInput(device);
+      deviceObject.CellCount = this->CellCount.PrepareForInput(device);
+      deviceObject.CellIds = this->CellIds.PrepareForInput(device);
+      return deviceObject;
+    }
+
+    Grid TopLevel;
+
+    vtkm::cont::ArrayHandle<DimVec3> LeafDimensions;
+    vtkm::cont::ArrayHandle<vtkm::Id> LeafStartIndex;
+
+    vtkm::cont::ArrayHandle<vtkm::Id> CellStartIndex;
+    vtkm::cont::ArrayHandle<vtkm::Id> CellCount;
+    vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
+  };
+
   class FindCellWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<Vec3> points,
+    using ControlSignature = void(FieldIn<Vec3> points,
                                   WholeCellSetIn<> cellSet,
                                   WholeArrayIn<Vec3> coordinates,
                                   ExecObject lookupStruct,
                                   FieldOut<IdType> cellIds,
                                   FieldOut<Vec3> parametricCoordinates);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
     using InputDomain = _1;
 
@@ -708,38 +722,24 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& points,
     vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
     vtkm::cont::ArrayHandle<FloatVec3>& parametricCoords,
-    DeviceAdapter device,
+    DeviceAdapter,
     CellSetList cellSetTypes = CellSetList()) const
   {
     vtkm::worklet::DispatcherMapField<FindCellWorklet, DeviceAdapter>().Invoke(
       points,
       this->CellSet.ResetCellSetList(cellSetTypes),
       this->Coordinates,
-      this->PrepareForDevice(device),
+      this->LookupStructure,
       cellIds,
       parametricCoords);
   }
 
 private:
-  template <typename DeviceAdapter>
-  TwoLevelUniformGridExecution<DeviceAdapter> PrepareForDevice(DeviceAdapter device) const
-  {
-    TwoLevelUniformGridExecution<DeviceAdapter> deviceObject;
-    deviceObject.TopLevel = this->LookupStructure.TopLevel;
-    deviceObject.LeafDimensions = this->LookupStructure.LeafDimensions.PrepareForInput(device);
-    deviceObject.LeafStartIndex = this->LookupStructure.LeafStartIndex.PrepareForInput(device);
-    deviceObject.CellStartIndex = this->LookupStructure.CellStartIndex.PrepareForInput(device);
-    deviceObject.CellCount = this->LookupStructure.CellCount.PrepareForInput(device);
-    deviceObject.CellIds = this->LookupStructure.CellIds.PrepareForInput(device);
-    return deviceObject;
-  }
-
   vtkm::FloatDefault DensityL1, DensityL2;
 
   vtkm::cont::DynamicCellSet CellSet;
   vtkm::cont::CoordinateSystem Coordinates;
-
-  TwoLevelUniformGrid LookupStructure;
+  TwoLevelUniformGridExecutionObjectFactory LookupStructure;
 };
 }
 }

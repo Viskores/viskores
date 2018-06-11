@@ -66,19 +66,19 @@ public:
   /// The total number of values in the array. They are index from 0 to
   /// GetNumberOfValues()-1.
   ///
-  VTKM_CONT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const;
 
   /// Gets a value from the array.
   ///
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const;
 
   /// Sets a value in the array. If it is not possible to set a value in the
   /// array, this method may error out (for example with a VTKM_ASSERT). In
   /// this case the behavior is undefined.
   ///
-  VTKM_CONT
+  VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const;
 };
 

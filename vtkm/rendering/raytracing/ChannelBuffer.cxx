@@ -64,8 +64,8 @@ class BufferAddition : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   BufferAddition() {}
-  typedef void ControlSignature(FieldIn<>, FieldInOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, FieldInOut<>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename ValueType>
   VTKM_EXEC void operator()(const ValueType& value1, ValueType& value2) const
@@ -79,8 +79,8 @@ class BufferMultiply : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   BufferMultiply() {}
-  typedef void ControlSignature(FieldIn<>, FieldInOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, FieldInOut<>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename ValueType>
   VTKM_EXEC void operator()(const ValueType& value1, ValueType& value2) const
@@ -188,8 +188,8 @@ public:
     , ChannelNum(channel)
   {
   }
-  typedef void ControlSignature(FieldOut<>, WholeArrayIn<>);
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ControlSignature = void(FieldOut<>, WholeArrayIn<>);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename T, typename BufferPortalType>
   VTKM_EXEC void operator()(T& outValue,
                             const BufferPortalType& inBuffer,
@@ -257,8 +257,8 @@ public:
     : NumChannels(numChannels)
   {
   }
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, WholeArrayOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
+  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, WholeArrayOut<>);
+  using ExecutionSignature = void(_1, _2, _3, WorkIndex);
   template <typename T, typename IndexPortalType, typename BufferPortalType>
   VTKM_EXEC void operator()(const T& inValue,
                             const IndexPortalType& sparseIndexes,
@@ -377,8 +377,8 @@ public:
       InvDeltaScalar = 1.f / (maxScalar - minScalar);
     }
   }
-  typedef void ControlSignature(FieldInOut<>);
-  typedef void ExecutionSignature(_1);
+  using ControlSignature = void(FieldInOut<>);
+  using ExecutionSignature = void(_1);
 
   VTKM_EXEC
   void operator()(Precision& value) const
@@ -405,7 +405,7 @@ struct NormalizeFunctor
   template <typename Device>
   bool operator()(Device vtkmNotUsed(device))
   {
-    vtkm::cont::Field asField("name meaningless", vtkm::cont::Field::ASSOC_POINTS, Input);
+    vtkm::cont::Field asField("name meaningless", vtkm::cont::Field::Association::POINTS, Input);
     vtkm::Range range;
     asField.GetRange(&range);
     Precision minScalar = static_cast<Precision>(range.Min);

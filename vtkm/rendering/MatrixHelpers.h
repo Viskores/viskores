@@ -77,9 +77,9 @@ struct MatrixHelpers
     matrix(2, 1) = viewDir[1];
     matrix(2, 2) = viewDir[2];
 
-    matrix(0, 3) = -vtkm::dot(right, position);
-    matrix(1, 3) = -vtkm::dot(ru, position);
-    matrix(2, 3) = -vtkm::dot(viewDir, position);
+    matrix(0, 3) = -vtkm::Dot(right, position);
+    matrix(1, 3) = -vtkm::Dot(ru, position);
+    matrix(2, 3) = -vtkm::Dot(viewDir, position);
 
     return matrix;
   }

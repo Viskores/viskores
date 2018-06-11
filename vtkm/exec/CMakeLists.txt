@@ -25,11 +25,11 @@ set(headers
   CellFace.h
   CellInside.h
   CellInterpolate.h
+  CellMeasure.h
   ColorTable.h
   ConnectivityExplicit.h
   ConnectivityPermuted.h
   ConnectivityStructured.h
-  ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
   Jacobian.h
@@ -52,6 +52,7 @@ vtkm_declare_headers(${header_impls} TESTABLE OFF)
 #-----------------------------------------------------------------------------
 add_subdirectory(serial)
 add_subdirectory(tbb)
+add_subdirectory(openmp)
 add_subdirectory(cuda)
 
 #-----------------------------------------------------------------------------

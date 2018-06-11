@@ -33,7 +33,7 @@ namespace
 template <typename T>
 VTKM_EXEC_CONT vtkm::Vec<T, 3> Normalize(vtkm::Vec<T, 3> v)
 {
-  T magnitude = static_cast<T>(sqrt(vtkm::dot(v, v)));
+  T magnitude = static_cast<T>(sqrt(vtkm::Dot(v, v)));
   T zero = static_cast<T>(0.0);
   T one = static_cast<T>(1.0);
   if (magnitude == zero)
@@ -142,7 +142,8 @@ void TestStreamLineUniformGrid()
   vtkm::cont::DataSet inDataSet;
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
   inDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
-  inDataSet.AddField(vtkm::cont::Field("vecData", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  inDataSet.AddField(
+    vtkm::cont::Field("vecData", vtkm::cont::Field::Association::POINTS, fieldArray));
 
   vtkm::cont::CellSetStructured<3> inCellSet("cells");
   inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));

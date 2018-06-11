@@ -146,7 +146,7 @@ void TestCellGradientUniform3DWithVectorField()
 
     //compute QCriterion
     vtkm::Float64 qcriterion =
-      ((vtkm::dot(v, v) / 2.0f) - (vtkm::dot(d, d) + (vtkm::dot(s, s) / 2.0f))) / 2.0f;
+      ((vtkm::Dot(v, v) / 2.0f) - (vtkm::Dot(d, d) + (vtkm::Dot(s, s) / 2.0f))) / 2.0f;
 
     vtkm::Float64 q = extraOutput.QCriterion.GetPortalConstControl().Get(i);
 

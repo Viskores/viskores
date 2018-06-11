@@ -20,6 +20,7 @@
 #ifndef vtk_m_cont_tbb_DeviceAdapterTBB_h
 #define vtk_m_cont_tbb_DeviceAdapterTBB_h
 
+#include <vtkm/cont/tbb/internal/DeviceAdapterRuntimeDetectorTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 
 #ifdef VTKM_ENABLE_TBB

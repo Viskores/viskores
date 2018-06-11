@@ -47,20 +47,19 @@ std::default_random_engine RandomGenerator;
 class ParametricToWorldCoordinates : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset,
+  using ControlSignature = void(CellSetIn cellset,
                                 FieldInPoint<Vec3> coords,
                                 FieldInOutCell<Vec3> pcs,
                                 FieldOutCell<Vec3> wcs);
-  typedef void ExecutionSignature(CellShape, _2, _3, _4);
+  using ExecutionSignature = void(CellShape, _2, _3, _4);
 
   using ScatterType = vtkm::worklet::ScatterPermutation<>;
 
-  explicit ParametricToWorldCoordinates(const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds)
-    : Scatter(cellIds)
+  VTKM_CONT
+  static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds)
   {
+    return ScatterType(cellIds);
   }
-
-  const ScatterType& GetScatter() const { return this->Scatter; }
 
   template <typename CellShapeTagType, typename PointsVecType>
   VTKM_EXEC void operator()(CellShapeTagType cellShape,
@@ -70,9 +69,6 @@ public:
   {
     wc = vtkm::exec::CellInterpolate(points, pc, cellShape, *this);
   }
-
-private:
-  ScatterType Scatter;
 };
 
 template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
@@ -152,7 +148,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
   return out;
 }
 
-template <vtkm::IdComponent DIMENSIONS>
+template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
 void GenerateRandomInput(const vtkm::cont::DataSet& ds,
                          vtkm::Id count,
                          vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
@@ -185,9 +181,9 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
     pcoords.GetPortalControl().Set(i, pc);
   }
 
-  ParametricToWorldCoordinates pc2wc(cellIds);
-  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates>(pc2wc).Invoke(
-    ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
+  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates, DeviceAdapter> dispatcher(
+    ParametricToWorldCoordinates::MakeScatter(cellIds));
+  dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
 }
 
 template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
@@ -210,7 +206,8 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim,
   vtkm::cont::ArrayHandle<vtkm::Id> expCellIds;
   vtkm::cont::ArrayHandle<PointType> expPCoords;
   vtkm::cont::ArrayHandle<PointType> points;
-  GenerateRandomInput<DIMENSIONS>(ds, numberOfPoints, expCellIds, expPCoords, points);
+  GenerateRandomInput<DIMENSIONS, DeviceAdapter>(
+    ds, numberOfPoints, expCellIds, expPCoords, points);
 
   std::cout << "Finding cells for " << numberOfPoints << " points\n";
   vtkm::cont::ArrayHandle<vtkm::Id> cellIds;

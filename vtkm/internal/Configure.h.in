@@ -229,6 +229,10 @@
 #ifndef VTKM_ENABLE_TBB
 #cmakedefine VTKM_ENABLE_TBB
 #endif
+//Mark if we are building with OpenMP enabled
+#ifndef VTKM_ENABLE_OPENMP
+#cmakedefine VTKM_ENABLE_OPENMP
+#endif
 
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI
@@ -310,6 +314,25 @@
 //
 #pragma warning(disable:4251)
 
+#endif
+
+//----------------------------------------------------------------------------
+// Switch case fall-through policy.
+
+// Use "VTKM_FALLTHROUGH;" to annotate deliberate fall-through in switches,
+// use it analogously to "break;".  The trailing semi-colon is required.
+#if !defined(VTKM_FALLTHROUGH) && defined(__has_cpp_attribute)
+# if __cplusplus >= 201703L && __has_cpp_attribute(fallthrough)
+#  define VTKM_FALLTHROUGH [[fallthrough]]
+# elif __cplusplus >= 201103L && __has_cpp_attribute(gnu::fallthrough)
+#  define VTKM_FALLTHROUGH [[gnu::fallthrough]]
+# elif __cplusplus >= 201103L && __has_cpp_attribute(clang::fallthrough)
+#  define VTKM_FALLTHROUGH [[clang::fallthrough]]
+# endif
+#endif
+
+#ifndef VTKM_FALLTHROUGH
+# define VTKM_FALLTHROUGH ((void)0)
 #endif
 
 #endif //vtkm_internal_Configure_h

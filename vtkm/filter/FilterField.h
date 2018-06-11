@@ -55,15 +55,16 @@ public:
   /// Choose the field to operate on. Note, if
   /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
   VTKM_CONT
-  void SetActiveField(const std::string& name,
-                      vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+  void SetActiveField(
+    const std::string& name,
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
     this->ActiveFieldName = name;
     this->ActiveFieldAssociation = association;
   }
 
   VTKM_CONT const std::string& GetActiveFieldName() const { return this->ActiveFieldName; }
-  VTKM_CONT vtkm::cont::Field::AssociationEnum GetActiveFieldAssociation() const
+  VTKM_CONT vtkm::cont::Field::Association GetActiveFieldAssociation() const
   {
     return this->ActiveFieldAssociation;
   }
@@ -89,16 +90,7 @@ public:
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
   //@}
 
-private:
   /// These are provided to satisfy the Filter API requirements.
-
-  /// They simply pass the field to the result dataset as there's no mapping
-  /// needed for FilterField.
-  template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                    const vtkm::cont::Field& field,
-                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
     const vtkm::cont::DataSet& input,
@@ -116,11 +108,11 @@ private:
     const vtkm::cont::CoordinateSystem& field,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-
+private:
   std::string OutputFieldName;
   vtkm::Id CoordinateSystemIndex;
   std::string ActiveFieldName;
-  vtkm::cont::Field::AssociationEnum ActiveFieldAssociation;
+  vtkm::cont::Field::Association ActiveFieldAssociation;
   bool UseCoordinateSystemAsField;
 
   friend class vtkm::filter::Filter<Derived>;

@@ -58,10 +58,10 @@ struct ExternalFaces
   class NumExternalFacesPerStructuredCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn inCellSet,
+    using ControlSignature = void(CellSetIn inCellSet,
                                   FieldOut<> numFacesInCell,
                                   FieldInPoint<Vec3> pointCoordinates);
-    typedef _2 ExecutionSignature(CellShape, _3);
+    using ExecutionSignature = _2(CellShape, _3);
     using InputDomain = _1;
 
     VTKM_CONT
@@ -130,39 +130,29 @@ struct ExternalFaces
   class BuildConnectivityStructured : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn inCellSet,
+    using ControlSignature = void(CellSetIn inCellSet,
                                   WholeCellSetIn<> inputCell,
                                   FieldOut<> faceShapes,
                                   FieldOut<> facePointCount,
                                   FieldOut<> faceConnectivity,
                                   FieldInPoint<Vec3> pointCoordinates);
-    typedef void ExecutionSignature(CellShape, VisitIndex, InputIndex, _2, _3, _4, _5, _6);
+    using ExecutionSignature = void(CellShape, VisitIndex, InputIndex, _2, _3, _4, _5, _6);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
     template <typename CountArrayType, typename Device>
-    VTKM_CONT BuildConnectivityStructured(const vtkm::Vec<vtkm::Float64, 3>& min_point,
-                                          const vtkm::Vec<vtkm::Float64, 3>& max_point,
-                                          const CountArrayType& countArray,
-                                          Device)
-      : MinPoint(min_point)
-      , MaxPoint(max_point)
-      , Scatter(countArray, Device())
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray, Device)
     {
       VTKM_IS_ARRAY_HANDLE(CountArrayType);
+      return ScatterType(countArray, Device());
     }
 
     VTKM_CONT
     BuildConnectivityStructured(const vtkm::Vec<vtkm::Float64, 3>& min_point,
-                                const vtkm::Vec<vtkm::Float64, 3>& max_point,
-                                const ScatterType& scatter)
+                                const vtkm::Vec<vtkm::Float64, 3>& max_point)
       : MinPoint(min_point)
       , MaxPoint(max_point)
-      , Scatter(scatter)
     {
     }
 
@@ -325,15 +315,14 @@ struct ExternalFaces
   private:
     vtkm::Vec<vtkm::Float64, 3> MinPoint;
     vtkm::Vec<vtkm::Float64, 3> MaxPoint;
-    ScatterType Scatter;
   };
 
   //Worklet that returns the number of faces for each cell/shape
   class NumFacesPerCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> numFacesInCell);
-    typedef _2 ExecutionSignature(CellShape);
+    using ControlSignature = void(CellSetIn inCellSet, FieldOut<> numFacesInCell);
+    using ExecutionSignature = _2(CellShape);
     using InputDomain = _1;
 
     template <typename CellShapeTag>
@@ -347,30 +336,14 @@ struct ExternalFaces
   class FaceHash : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldOut<> faceHashes,
                                   FieldOut<> originCells,
                                   FieldOut<> originFaces);
-    typedef void ExecutionSignature(_2, _3, _4, CellShape, FromIndices, InputIndex, VisitIndex);
+    using ExecutionSignature = void(_2, _3, _4, CellShape, FromIndices, InputIndex, VisitIndex);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
-
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
-    template <typename CountArrayType, typename Device>
-    VTKM_CONT FaceHash(const CountArrayType& countArray, Device)
-      : Scatter(countArray, Device())
-    {
-      VTKM_IS_ARRAY_HANDLE(CountArrayType);
-    }
-
-    VTKM_CONT
-    FaceHash(const ScatterType& scatter)
-      : Scatter(scatter)
-    {
-    }
 
     template <typename CellShapeTag, typename CellNodeVecType>
     VTKM_EXEC void operator()(vtkm::HashType& faceHash,
@@ -386,9 +359,6 @@ struct ExternalFaces
       cellIndex = inputIndex;
       faceIndex = visitIndex;
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   // Worklet that identifies the number of cells written out per face.
@@ -398,12 +368,12 @@ struct ExternalFaces
   class FaceCounts : public vtkm::worklet::WorkletReduceByKey
   {
   public:
-    typedef void ControlSignature(KeysIn keys,
+    using ControlSignature = void(KeysIn keys,
                                   WholeCellSetIn<> inputCells,
                                   ValuesIn<> originCells,
                                   ValuesIn<> originFaces,
                                   ReducedValuesOut<> numOutputCells);
-    typedef _5 ExecutionSignature(_2, _3, _4);
+    using ExecutionSignature = _5(_2, _3, _4);
     using InputDomain = _1;
 
     template <typename CellSetType, typename OriginCellsType, typename OriginFacesType>
@@ -515,30 +485,21 @@ public:
   class NumPointsPerFace : public vtkm::worklet::WorkletReduceByKey
   {
   public:
-    typedef void ControlSignature(KeysIn keys,
+    using ControlSignature = void(KeysIn keys,
                                   WholeCellSetIn<> inputCells,
                                   ValuesIn<> originCells,
                                   ValuesIn<> originFaces,
                                   ReducedValuesOut<> numPointsInFace);
-    typedef _5 ExecutionSignature(_2, _3, _4, VisitIndex);
+    using ExecutionSignature = _5(_2, _3, _4, VisitIndex);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
     template <typename CountArrayType, typename Device>
-    VTKM_CONT NumPointsPerFace(const CountArrayType& countArray, Device)
-      : Scatter(countArray, Device())
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray, Device)
     {
       VTKM_IS_ARRAY_HANDLE(CountArrayType);
-    }
-
-    VTKM_CONT
-    NumPointsPerFace(const ScatterType& scatter)
-      : Scatter(scatter)
-    {
+      return ScatterType(countArray, Device());
     }
 
     template <typename CellSetType, typename OriginCellsType, typename OriginFacesType>
@@ -553,42 +514,23 @@ public:
       return vtkm::exec::CellFaceNumberOfPoints(
         originFaces[myIndex], cellSet.GetCellShape(originCells[myIndex]), *this);
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   // Worklet that returns the shape and connectivity for each external face
   class BuildConnectivity : public vtkm::worklet::WorkletReduceByKey
   {
   public:
-    typedef void ControlSignature(KeysIn keys,
+    using ControlSignature = void(KeysIn keys,
                                   WholeCellSetIn<> inputCells,
                                   ValuesIn<> originCells,
                                   ValuesIn<> originFaces,
                                   ReducedValuesOut<> shapesOut,
                                   ReducedValuesOut<> connectivityOut,
                                   ReducedValuesOut<> cellIdMapOut);
-    typedef void ExecutionSignature(_2, _3, _4, VisitIndex, _5, _6, _7);
+    using ExecutionSignature = void(_2, _3, _4, VisitIndex, _5, _6, _7);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
-
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
-    template <typename CountArrayType, typename Device>
-    VTKM_CONT BuildConnectivity(const CountArrayType& countArray, Device)
-      : Scatter(countArray, Device())
-    {
-      VTKM_IS_ARRAY_HANDLE(CountArrayType);
-    }
-
-    VTKM_CONT
-    BuildConnectivity(const ScatterType& scatter)
-      : Scatter(scatter)
-    {
-    }
 
     template <typename CellSetType,
               typename OriginCellsType,
@@ -624,16 +566,13 @@ public:
           inCellIndices[vtkm::exec::CellFaceLocalIndex(facePointIndex, myFace, shapeIn, *this)];
       }
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   class IsPolyDataCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> isPolyDataCell);
-    typedef _2 ExecutionSignature(CellShape);
+    using ControlSignature = void(CellSetIn inCellSet, FieldOut<> isPolyDataCell);
+    using ExecutionSignature = _2(CellShape);
     using InputDomain = _1;
 
     template <typename CellShapeTag>
@@ -648,29 +587,11 @@ public:
   public:
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
-    template <typename CountArrayType, typename Device>
-    VTKM_CONT CountPolyDataCellPoints(const CountArrayType& countArray, Device)
-      : Scatter(countArray, Device())
-    {
-      VTKM_IS_ARRAY_HANDLE(CountArrayType);
-    }
-
-    VTKM_CONT
-    CountPolyDataCellPoints(const ScatterType& scatter)
-      : Scatter(scatter)
-    {
-    }
-
-    typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> numPoints);
-    typedef _2 ExecutionSignature(PointCount);
+    using ControlSignature = void(CellSetIn inCellSet, FieldOut<> numPoints);
+    using ExecutionSignature = _2(PointCount);
     using InputDomain = _1;
 
     VTKM_EXEC vtkm::Id operator()(vtkm::Id count) const { return count; }
-  private:
-    ScatterType Scatter;
   };
 
   class PassPolyDataCells : public vtkm::worklet::WorkletMapPointToCell
@@ -678,27 +599,11 @@ public:
   public:
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
-    template <typename CountArrayType, typename Device>
-    VTKM_CONT PassPolyDataCells(const CountArrayType& countArray, Device)
-      : Scatter(countArray, Device())
-    {
-      VTKM_IS_ARRAY_HANDLE(CountArrayType);
-    }
-
-    VTKM_CONT
-    PassPolyDataCells(const ScatterType& scatter)
-      : Scatter(scatter)
-    {
-    }
-
-    typedef void ControlSignature(CellSetIn inputTopology,
+    using ControlSignature = void(CellSetIn inputTopology,
                                   FieldOut<> shapes,
                                   FieldOut<> pointIndices,
                                   FieldOut<> cellIdMapOut);
-    typedef void ExecutionSignature(CellShape, PointIndices, InputIndex, _2, _3, _4);
+    using ExecutionSignature = void(CellShape, PointIndices, InputIndex, _2, _3, _4);
 
     template <typename CellShape, typename InPointIndexType, typename OutPointIndexType>
     VTKM_EXEC void operator()(const CellShape& inShape,
@@ -718,9 +623,6 @@ public:
         outPoints[pointIndex] = inPoints[pointIndex];
       }
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   template <typename T>
@@ -843,7 +745,8 @@ public:
     using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     vtkm::Id numberOfExternalFaces = DeviceAlgorithms::Reduce(numExternalFaces, 0, vtkm::Sum());
 
-    vtkm::worklet::ScatterCounting scatterCellToExternalFace(numExternalFaces, DeviceAdapter());
+    auto scatterCellToExternalFace =
+      BuildConnectivityStructured::MakeScatter(numExternalFaces, DeviceAdapter());
 
     // Maps output cells to input cells. Store this for cell field mapping.
     this->CellIdMap = scatterCellToExternalFace.GetOutputToInputMap();
@@ -859,8 +762,8 @@ public:
     faceConnectivity.Allocate(connectivitySize);
 
     vtkm::worklet::DispatcherMapTopology<BuildConnectivityStructured, DeviceAdapter>
-      buildConnectivityStructuredDispatcher(
-        (BuildConnectivityStructured(MinPoint, MaxPoint, scatterCellToExternalFace)));
+      buildConnectivityStructuredDispatcher(BuildConnectivityStructured(MinPoint, MaxPoint),
+                                            scatterCellToExternalFace);
 
     buildConnectivityStructuredDispatcher.Invoke(
       inCellSet,
@@ -921,7 +824,7 @@ public:
       if (scatterPolyDataCells.GetOutputRange(inCellSet.GetNumberOfCells()) != 0)
       {
         vtkm::worklet::DispatcherMapTopology<CountPolyDataCellPoints, DeviceAdapter>
-          countPolyDataCellPointsDispatcher((CountPolyDataCellPoints(scatterPolyDataCells)));
+          countPolyDataCellPointsDispatcher(scatterPolyDataCells);
 
         countPolyDataCellPointsDispatcher.Invoke(inCellSet, polyDataPointCount);
 
@@ -929,7 +832,7 @@ public:
           polyDataPointCount, polyDataOffsets, polyDataConnectivitySize);
 
         vtkm::worklet::DispatcherMapTopology<PassPolyDataCells, DeviceAdapter>
-          passPolyDataCellsDispatcher((PassPolyDataCells(scatterPolyDataCells)));
+          passPolyDataCellsDispatcher(scatterPolyDataCells);
 
         polyDataConnectivity.Allocate(polyDataConnectivitySize);
 
@@ -967,7 +870,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> originCells;
     vtkm::cont::ArrayHandle<vtkm::IdComponent> originFaces;
     vtkm::worklet::DispatcherMapTopology<FaceHash, DeviceAdapter> faceHashDispatcher(
-      (FaceHash(scatterCellToFace)));
+      scatterCellToFace);
 
     faceHashDispatcher.Invoke(inCellSet, faceHashes, originCells, originFaces);
 
@@ -978,7 +881,7 @@ public:
 
     faceCountDispatcher.Invoke(faceKeys, inCellSet, originCells, originFaces, faceOutputCount);
 
-    vtkm::worklet::ScatterCounting scatterCullInternalFaces(faceOutputCount, DeviceAdapter());
+    auto scatterCullInternalFaces = NumPointsPerFace::MakeScatter(faceOutputCount, DeviceAdapter());
 
     PointCountArrayType facePointCount;
     vtkm::worklet::DispatcherReduceByKey<NumPointsPerFace, DeviceAdapter> pointsPerFaceDispatcher(

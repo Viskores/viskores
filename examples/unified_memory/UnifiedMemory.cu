@@ -39,8 +39,8 @@ namespace
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
@@ -107,7 +107,8 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
-  dataSet.AddField(vtkm::cont::Field("nodevar", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  dataSet.AddField(
+    vtkm::cont::Field("nodevar", vtkm::cont::Field::Association::POINTS, fieldArray));
 
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
@@ -125,11 +126,14 @@ namespace worklet
 class SineWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef _2 ExecutionSignature(_1, WorkIndex);
+  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ExecutionSignature = _2(_1, WorkIndex);
 
   VTKM_EXEC
-  vtkm::Float32 operator()(vtkm::Int64 x, vtkm::Id& index) const { return (vtkm::Sin(1.0 * x)); }
+  vtkm::Float32 operator()(vtkm::Int64 x, vtkm::Id&) const
+  {
+    return (vtkm::Sin(static_cast<vtkm::Float32>(x)));
+  }
 };
 }
 }

@@ -162,17 +162,15 @@ public:
   class MakeStreamLines : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> seedId,
+    using ControlSignature = void(FieldIn<IdType> seedId,
                                   FieldIn<> position,
                                   WholeArrayOut<IdComponentType> numIndices,
                                   WholeArrayOut<IdComponentType> validPoint,
                                   WholeArrayOut<Vec3> streamLines);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, VisitIndex);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, VisitIndex);
     using InputDomain = _1;
 
-    using ScatterType = vtkm::worklet::ScatterUniform;
-    VTKM_CONT
-    ScatterType GetScatter() const { return ScatterType(2); }
+    using ScatterType = vtkm::worklet::ScatterUniform<2>;
 
     FieldPortalConstType field;
     const vtkm::Id3 vdims;
@@ -398,7 +396,8 @@ public:
     // Worklet to make the streamlines
     MakeStreamLines makeStreamLines(
       timeStep, streamMode, maxSteps, vdims, fieldArray.PrepareForInput(DeviceAdapter()));
-    using MakeStreamLinesDispatcher = typename vtkm::worklet::DispatcherMapField<MakeStreamLines>;
+    using MakeStreamLinesDispatcher =
+      typename vtkm::worklet::DispatcherMapField<MakeStreamLines, DeviceAdapter>;
     MakeStreamLinesDispatcher makeStreamLinesDispatcher(makeStreamLines);
     makeStreamLinesDispatcher.Invoke(
       seedIdArray, seedPosArray, numIndices, validPoint, streamArray);

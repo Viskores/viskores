@@ -100,30 +100,32 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     set(ext "cu")
   endif()
 
-  set(valid_hfiles )
   set(srcs)
   foreach (header ${hfiles})
     get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
-    if( cant_be_tested )
+    if( NOT cant_be_tested )
       get_filename_component(headername ${header} NAME_WE)
+      get_filename_component(headerextension ${header} EXT)
+      string(SUBSTRING ${headerextension} 1 -1 headerextension)
+      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}_${headerextension}.${ext})
 
       #By using file generate we will not trigger CMake execution when
       #a header gets touched
       file(GENERATE
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext}
+        OUTPUT ${src}
         CONTENT "
 //mark that we are including headers as test for completeness.
 //This is used by headers that include thrust to properly define a proper
 //device backend / system
 #define VTKM_TEST_HEADER_BUILD
-#include <${dir_prefix}/${headername}.h>"
+#include <${dir_prefix}/${headername}.${headerextension}>
+int ${headername}_${headerextension}_testbuild_symbol;"
         )
       list(APPEND srcs ${src})
-      list(APPEND valid_hfiles ${header})
     endif()
   endforeach()
 
-  set_source_files_properties(${valid_hfiles}
+  set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
 
@@ -138,13 +140,13 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     #If the target already exists just add more sources to it
     target_sources(TestBuild_${name} PRIVATE ${srcs})
   else()
-    add_library(TestBuild_${name} STATIC ${srcs} ${valid_hfiles})
+    add_library(TestBuild_${name} STATIC ${srcs} ${hfiles})
     # Send the libraries created for test builds to their own directory so as to
     # not pollute the directory with useful libraries.
     set_property(TARGET TestBuild_${name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
     set_property(TARGET TestBuild_${name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
 
-    target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags)
+    target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags vtkm_taotuple)
 
     if(TARGET vtkm::tbb)
       #make sure that we have the tbb include paths when tbb is enabled.
@@ -153,6 +155,10 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
 
     if(TARGET vtkm_diy)
       target_link_libraries(TestBuild_${name} PRIVATE vtkm_diy)
+    endif()
+
+    if(TARGET vtkm_rendering_gl_context)
+      target_link_libraries(TestBuild_${name} PRIVATE vtkm_rendering_gl_context)
     endif()
 
 
@@ -287,9 +293,14 @@ function(vtkm_library)
   set_property(TARGET ${lib_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${lib_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
-  if(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
     set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
     set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
+  endif()
+
+  # allow the static cuda runtime find the driver (libcuda.dyllib) at runtime.
+  if(APPLE)
+    set_property(TARGET ${lib_name} PROPERTY BUILD_RPATH ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
   endif()
 
   # Setup the SOVERSION and VERSION information for this vtkm library
@@ -377,12 +388,12 @@ function(vtkm_unit_tests)
     set(test_prog "UnitTests_${kit}")
   endif()
   if(VTKm_UT_BACKEND)
-    string(APPEND test_prog "_${backend}")
+    set(test_prog "${test_prog}_${backend}")
   endif()
 
   if(VTKm_UT_MPI)
     # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
-    string(APPEND "test_prog" "_mpi")
+    set(test_prog "${test_prog}_mpi")
     set(extraArgs EXTRA_INCLUDE "vtkm/cont/testing/Testing.h"
                   FUNCTION "vtkm::cont::testing::Environment env")
   else()
@@ -403,9 +414,8 @@ function(vtkm_unit_tests)
   set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
   target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
-
-  if(VTKm_UT_NO_TESTS)
-    return()
+  if(backend)
+    target_compile_definitions(${test_prog} PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_${backend}")
   endif()
 
   #determine the timeout for all the tests based on the backend. CUDA tests

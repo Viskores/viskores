@@ -61,8 +61,8 @@ namespace internal
 /// in a cluster.
 struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn clusterIds, ValuesIn<> points, ReducedValuesOut<> repPoints);
-  typedef _3 ExecutionSignature(_2);
+  using ControlSignature = void(KeysIn clusterIds, ValuesIn<> points, ReducedValuesOut<> repPoints);
+  using ExecutionSignature = _3(_2);
   using InputDomain = _1;
 
   template <typename PointsInVecType>
@@ -154,8 +154,8 @@ struct VertexClustering
     GridInfo Grid;
 
   public:
-    typedef void ControlSignature(FieldIn<Vec3>, FieldOut<IdType>);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<Vec3>, FieldOut<IdType>);
+    using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
     MapPointsWorklet(const GridInfo& grid)
@@ -192,10 +192,10 @@ struct VertexClustering
   class MapCellsWorklet : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<IdType> pointClusterIds,
                                   FieldOutCell<Id3Type> cellClusterIds);
-    typedef void ExecutionSignature(_2, _3);
+    using ExecutionSignature = void(_2, _3);
 
     VTKM_CONT
     MapCellsWorklet() {}
@@ -215,8 +215,8 @@ struct VertexClustering
   class IndexingWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType>, WholeArrayOut<IdType>);
-    typedef void ExecutionSignature(WorkIndex, _1, _2); // WorkIndex: use vtkm indexing
+    using ControlSignature = void(FieldIn<IdType>, WholeArrayOut<IdType>);
+    using ExecutionSignature = void(WorkIndex, _1, _2); // WorkIndex: use vtkm indexing
 
     template <typename OutPortalType>
     VTKM_EXEC void operator()(const vtkm::Id& counter,
@@ -241,8 +241,8 @@ struct VertexClustering
     }
 
   public:
-    typedef void ControlSignature(FieldIn<Id3Type>, FieldOut<Id3Type>, WholeArrayIn<IdType>);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn<Id3Type>, FieldOut<Id3Type>, WholeArrayIn<IdType>);
+    using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
     Cid2PointIdWorklet(vtkm::Id nPoints)
@@ -289,8 +289,8 @@ struct VertexClustering
     vtkm::Int64 NPoints;
 
   public:
-    typedef void ControlSignature(FieldIn<Id3Type>, FieldOut<TypeInt64>);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<Id3Type>, FieldOut<TypeInt64>);
+    using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
     Cid3HashWorklet(vtkm::Id nPoints)
@@ -312,8 +312,8 @@ struct VertexClustering
     vtkm::Int64 NPoints;
 
   public:
-    typedef void ControlSignature(FieldIn<TypeInt64>, FieldOut<Id3Type>);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<TypeInt64>, FieldOut<Id3Type>);
+    using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
     Cid3UnhashWorklet(vtkm::Id nPoints)

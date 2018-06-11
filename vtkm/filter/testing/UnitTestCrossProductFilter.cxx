@@ -87,11 +87,13 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>
                  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field2,
                  const vtkm::cont::DataSet& result)
 {
-  VTKM_TEST_ASSERT(result.HasField("crossproduct", vtkm::cont::Field::ASSOC_POINTS),
+  VTKM_TEST_ASSERT(result.HasField("crossproduct", vtkm::cont::Field::Association::POINTS),
                    "Output field is missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> outputArray;
-  result.GetField("crossproduct", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(outputArray);
+  result.GetField("crossproduct", vtkm::cont::Field::Association::POINTS)
+    .GetData()
+    .CopyTo(outputArray);
 
   auto v1Portal = field1.GetPortalConstControl();
   auto v2Portal = field2.GetPortalConstControl();
@@ -111,14 +113,14 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>
     //Make sure result is orthogonal each input vector. Need to normalize to compare with zero.
     vtkm::Vec<vtkm::FloatDefault, 3> v1N(vtkm::Normal(v1)), v2N(vtkm::Normal(v1)),
       resN(vtkm::Normal(res));
-    VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v1N), vtkm::FloatDefault(0.0)),
+    VTKM_TEST_ASSERT(test_equal(vtkm::Dot(resN, v1N), vtkm::FloatDefault(0.0)),
                      "Wrong result for cross product");
-    VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v2N), vtkm::FloatDefault(0.0)),
+    VTKM_TEST_ASSERT(test_equal(vtkm::Dot(resN, v2N), vtkm::FloatDefault(0.0)),
                      "Wrong result for cross product");
 
     vtkm::FloatDefault sinAngle =
       vtkm::Magnitude(res) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
-    vtkm::FloatDefault cosAngle = vtkm::dot(v1, v2) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
+    vtkm::FloatDefault cosAngle = vtkm::Dot(v1, v2) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
     VTKM_TEST_ASSERT(test_equal(sinAngle * sinAngle + cosAngle * cosAngle, vtkm::FloatDefault(1.0)),
                      "Bad cross product length.");
   }

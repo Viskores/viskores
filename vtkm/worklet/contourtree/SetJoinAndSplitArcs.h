@@ -81,13 +81,13 @@ namespace contourtree
 class SetJoinAndSplitArcs : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> regularID,              // (input)
+  using ControlSignature = void(FieldIn<IdType> regularID,              // (input)
                                 WholeArrayIn<IdType> joinMergeArcs,     // (input)
                                 WholeArrayIn<IdType> splitMergeArcs,    // (input)
                                 WholeArrayIn<IdType> regularToCritical, // (input)
                                 FieldOut<IdType> joinArc,               // (output)
                                 FieldOut<IdType> splitArc);             // (output)
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
   // Constructor

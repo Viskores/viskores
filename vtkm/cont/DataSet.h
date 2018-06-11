@@ -49,7 +49,7 @@ public:
 
   VTKM_CONT
   bool HasField(const std::string& name,
-                vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY) const
+                vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const
   {
     bool found;
     this->FindFieldIndex(name, assoc, found);
@@ -59,12 +59,12 @@ public:
   VTKM_CONT
   vtkm::Id GetFieldIndex(
     const std::string& name,
-    vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY) const;
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const;
 
   VTKM_CONT
   const vtkm::cont::Field& GetField(
     const std::string& name,
-    vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY) const
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const
   {
     return this->GetField(this->GetFieldIndex(name, assoc));
   }
@@ -72,13 +72,13 @@ public:
   VTKM_CONT
   const vtkm::cont::Field& GetCellField(const std::string& name) const
   {
-    return this->GetField(name, vtkm::cont::Field::ASSOC_CELL_SET);
+    return this->GetField(name, vtkm::cont::Field::Association::CELL_SET);
   }
 
   VTKM_CONT
   const vtkm::cont::Field& GetPointField(const std::string& name) const
   {
-    return this->GetField(name, vtkm::cont::Field::ASSOC_POINTS);
+    return this->GetField(name, vtkm::cont::Field::Association::POINTS);
   }
 
   VTKM_CONT
@@ -159,6 +159,11 @@ public:
     return static_cast<vtkm::IdComponent>(this->CoordSystems.size());
   }
 
+  /// Copies the structure i.e. coordinates systems and cellsets from the source
+  /// dataset. The fields are left unchanged.
+  VTKM_CONT
+  void CopyStructure(const vtkm::cont::DataSet& source);
+
   VTKM_CONT
   void PrintSummary(std::ostream& out) const;
 
@@ -169,7 +174,7 @@ private:
 
   VTKM_CONT
   vtkm::Id FindFieldIndex(const std::string& name,
-                          vtkm::cont::Field::AssociationEnum association,
+                          vtkm::cont::Field::Association association,
                           bool& found) const;
 
   VTKM_CONT

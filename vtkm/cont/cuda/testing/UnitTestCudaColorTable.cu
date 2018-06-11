@@ -29,5 +29,7 @@
 
 int UnitTestCudaColorTable(int, char* [])
 {
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   return vtkm::cont::testing::TestingColorTable<vtkm::cont::DeviceAdapterTagCuda>::Run();
 }

@@ -54,11 +54,11 @@ public:
   using IteratorType = IteratorT;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ArrayPortalFromIterators() {}
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ArrayPortalFromIterators(IteratorT begin, IteratorT end)
     : BeginIterator(begin)
   {
@@ -81,7 +81,7 @@ public:
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   template <class OtherIteratorT>
-  VTKM_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
+  VTKM_EXEC_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
     : BeginIterator(src.GetIteratorBegin())
     , NumberOfValues(src.GetNumberOfValues())
   {
@@ -128,7 +128,7 @@ public:
   using IteratorType = IteratorT;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ArrayPortalFromIterators()
     : BeginIterator(nullptr)
     , NumberOfValues(0)
@@ -136,7 +136,7 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ArrayPortalFromIterators(IteratorT begin, IteratorT end)
     : BeginIterator(begin)
   {
@@ -159,7 +159,7 @@ public:
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   template <class OtherIteratorT>
-  VTKM_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
+  VTKM_EXEC_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
     : BeginIterator(src.GetIteratorBegin())
     , NumberOfValues(src.GetNumberOfValues())
   {

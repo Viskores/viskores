@@ -190,7 +190,8 @@ if(TARGET vtkm::cuda AND flags AND NOT CMAKE_CUDA_HOST_COMPILER)
   # Also propagate down these optimizations when building host side code
   # with cuda. To be safe we only do this when we know the C++ and CUDA
   # host compiler are from the same vendor
+  string(REGEX REPLACE ";" "," cuda_flags "${flags}")
   target_compile_options(vtkm_vectorization_flags
-    INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="${flags}">
+    INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=${cuda_flags}>
     )
 endif()

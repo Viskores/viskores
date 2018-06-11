@@ -23,7 +23,7 @@
 #include <vtkm/ListTag.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -51,7 +51,7 @@ struct AtomicArrayTypeListTag : vtkm::ListTagBase<vtkm::Int32, vtkm::Int64>
 ///
 ///
 template <typename T, typename DeviceAdapterTag>
-class AtomicArray : public vtkm::exec::ExecutionObjectBase
+class AtomicArray : public vtkm::cont::ExecutionObjectBase
 {
 public:
   using ValueType = T;

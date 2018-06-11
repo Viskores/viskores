@@ -65,12 +65,12 @@ public:
   class CalculatePowers : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> value,
+    using ControlSignature = void(FieldIn<> value,
                                   FieldOut<> pow1Array,
                                   FieldOut<> pow2Array,
                                   FieldOut<> pow3Array,
                                   FieldOut<> pow4Array);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
     using InputDomain = _1;
 
     vtkm::Id numPowers;
@@ -98,8 +98,8 @@ public:
   class SubtractConst : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> value, FieldOut<> diff);
-    typedef _2 ExecutionSignature(_1);
+    using ControlSignature = void(FieldIn<> value, FieldOut<> diff);
+    using ExecutionSignature = _2(_1);
     using InputDomain = _1;
 
     FieldType constant;
@@ -152,7 +152,7 @@ public:
     pow4Array.Allocate(dataSize);
 
     // Raw moments via Worklet
-    vtkm::worklet::DispatcherMapField<CalculatePowers> calculatePowersDispatcher(
+    vtkm::worklet::DispatcherMapField<CalculatePowers, DeviceAdapter> calculatePowersDispatcher(
       CalculatePowers(4));
     calculatePowersDispatcher.Invoke(fieldArray, pow1Array, pow2Array, pow3Array, pow4Array);
 
@@ -163,7 +163,7 @@ public:
     statinfo.rawMoment[FOURTH] = DeviceAlgorithms::ScanInclusive(pow4Array, pow4Array) / numValues;
 
     // Subtract the mean from every value and leave in tempArray
-    vtkm::worklet::DispatcherMapField<SubtractConst> subtractConstDispatcher(
+    vtkm::worklet::DispatcherMapField<SubtractConst, DeviceAdapter> subtractConstDispatcher(
       SubtractConst(statinfo.mean));
     subtractConstDispatcher.Invoke(fieldArray, tempArray);
 

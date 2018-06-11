@@ -34,13 +34,15 @@ namespace internal
 //@{
 /// These are utility functions defined to use in filters when creating an
 /// output dataset to return from `DoExecute` methods. The various overloads
-/// provides different ways of creating the output dataset (copying the input)
-/// and optionally adding additional field(s).
+/// provides different ways of creating the output dataset (copying the input
+/// without any of the fields) and optionally adding additional field(s).
 
 /// Use this for DataSet filters (not Field filters).
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& dataSet)
 {
-  return dataSet;
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(dataSet);
+  return clone;
 }
 
 /// Use this if the field has already been added to the data set.
@@ -49,7 +51,7 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& dat
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(
   const vtkm::cont::DataSet& dataSet,
   const std::string& fieldName,
-  vtkm::cont::Field::AssociationEnum fieldAssociation = vtkm::cont::Field::ASSOC_ANY)
+  vtkm::cont::Field::Association fieldAssociation = vtkm::cont::Field::Association::ANY)
 {
   VTKM_ASSERT(fieldName != "");
   VTKM_ASSERT(dataSet.HasField(fieldName, fieldAssociation));
@@ -61,7 +63,8 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
                                                   const vtkm::cont::Field& field)
 {
-  vtkm::cont::DataSet clone(inDataSet);
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
   clone.AddField(field);
   VTKM_ASSERT(field.GetName() != "");
   VTKM_ASSERT(clone.HasField(field.GetName(), field.GetAssociation()));
@@ -73,22 +76,23 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inD
 /// field. If the field is associated with a particular element set (for
 /// example, a cell association is associated with a cell set), the name of
 /// that associated set must also be given. The element set name is ignored
-/// for \c ASSOC_WHOLE_MESH and \c ASSOC_POINTS associations.
+/// for \c Association::WHOLE_MESH and \c Association::POINTS associations.
 template <typename T, typename Storage>
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
   const std::string& fieldName,
-  vtkm::cont::Field::AssociationEnum fieldAssociation,
+  vtkm::cont::Field::Association fieldAssociation,
   const std::string& elementSetName = "")
 {
   VTKM_ASSERT(fieldName != "");
-  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_ANY);
-  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_LOGICAL_DIM);
+  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::Association::ANY);
+  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::Association::LOGICAL_DIM);
 
-  vtkm::cont::DataSet clone(inDataSet);
-  if ((fieldAssociation == vtkm::cont::Field::ASSOC_WHOLE_MESH) ||
-      (fieldAssociation == vtkm::cont::Field::ASSOC_POINTS))
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
+  if ((fieldAssociation == vtkm::cont::Field::Association::WHOLE_MESH) ||
+      (fieldAssociation == vtkm::cont::Field::Association::POINTS))
   {
     vtkm::cont::Field field(fieldName, fieldAssociation, fieldArray);
     clone.AddField(field);
@@ -109,22 +113,22 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(
 /// field. If the field is associated with a particular element set (for
 /// example, a cell association is associated with a cell set), the name of
 /// that associated set must also be given. The element set name is ignored
-/// for \c ASSOC_WHOLE_MESH and \c ASSOC_POINTS associations.
+/// for \c Association::WHOLE_MESH and \c Association::POINTS associations.
 ///
-inline VTKM_CONT vtkm::cont::DataSet CreateResult(
-  const vtkm::cont::DataSet& inDataSet,
-  const vtkm::cont::DynamicArrayHandle& fieldArray,
-  const std::string& fieldName,
-  vtkm::cont::Field::AssociationEnum fieldAssociation,
-  const std::string& elementSetName = "")
+inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
+                                                  const vtkm::cont::DynamicArrayHandle& fieldArray,
+                                                  const std::string& fieldName,
+                                                  vtkm::cont::Field::Association fieldAssociation,
+                                                  const std::string& elementSetName = "")
 {
   VTKM_ASSERT(fieldName != "");
-  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_ANY);
-  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_LOGICAL_DIM);
+  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::Association::ANY);
+  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::Association::LOGICAL_DIM);
 
-  vtkm::cont::DataSet clone(inDataSet);
-  if ((fieldAssociation == vtkm::cont::Field::ASSOC_WHOLE_MESH) ||
-      (fieldAssociation == vtkm::cont::Field::ASSOC_POINTS))
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
+  if ((fieldAssociation == vtkm::cont::Field::Association::WHOLE_MESH) ||
+      (fieldAssociation == vtkm::cont::Field::Association::POINTS))
   {
     vtkm::cont::Field field(fieldName, fieldAssociation, fieldArray);
     clone.AddField(field);

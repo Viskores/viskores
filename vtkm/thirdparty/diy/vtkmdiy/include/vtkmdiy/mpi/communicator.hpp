@@ -63,6 +63,10 @@ namespace mpi
 #endif
       }
 
+      //! Non-blocking version of `ssend()`.
+      template<class T>
+      request   issend(int dest, int tag, const T& x) const  { return detail::issend<T>()(comm_, dest, tag, x); }
+
       //! Non-blocking version of `recv()`.
       //! If `T` is an `std::vector<...>`, its size must be big enough to accommodate the sent values.
       template <class T>
@@ -88,6 +92,10 @@ namespace mpi
       //! barrier
       inline
       void      barrier() const;
+
+      //! Nonblocking version of barrier
+      inline
+      request   ibarrier() const;
 
                 operator MPI_Comm() const                   { return comm_; }
 
@@ -179,5 +187,21 @@ split(int color, int key) const
     return communicator(newcomm, true);
 #else
     return communicator();
+#endif
+}
+
+diy::mpi::request
+diy::mpi::communicator::
+ibarrier() const
+{
+#ifndef DIY_NO_MPI
+    request r_;
+    MPI_Ibarrier(comm_, &r_.r);
+    return r_;
+#else
+    // this is not the ideal fix; in principle we should just return a status
+    // that tests true, but this requires redesigning some parts of our no-mpi
+    // handling
+    DIY_UNSUPPORTED_MPI_CALL(MPI_Ibarrier);
 #endif
 }

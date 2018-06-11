@@ -20,6 +20,7 @@
 
 set(unit_tests
   UnitTestCellAverageFilter.cxx
+  UnitTestCellMeasuresFilter.cxx
   UnitTestCleanGrid.cxx
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
@@ -40,6 +41,7 @@ set(unit_tests
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMultiBlockFilters.cxx
+  UnitTestMultiBlockHistogramFilter.cxx
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
