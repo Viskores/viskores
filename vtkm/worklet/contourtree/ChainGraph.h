@@ -96,7 +96,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
-#define DEBUG_PRINT 1
+//#define DEBUG_PRINT 1
 //#define DEBUG_FUNCTION_ENTRY 1
 //#define DEBUG_TIMING 1
 
@@ -255,7 +255,10 @@ void ChainGraph<T, StorageType, DeviceAdapter>::Compute(vtkm::cont::ArrayHandle<
   std::cout << "===================" << std::endl;
   std::cout << std::endl;
 #endif
+
+#ifdef DEBUG_PRINT
   DebugPrint("Chain Graph Computation Starting");
+#endif
 
   // loop until we run out of active edges
   nIterations = 0;
