@@ -159,7 +159,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#define DEBUG_PRINT 1
+//#define DEBUG_PRINT 1
 //#define DEBUG_TIMING 1
 
 namespace vtkm
