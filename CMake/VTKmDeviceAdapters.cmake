@@ -32,31 +32,46 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   set_target_properties(vtkm::tbb PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${TBB_INCLUDE_DIRS}")
 
-    if(TBB_LIBRARY_RELEASE)
+    if(EXISTS "${TBB_LIBRARY}")
+      set_target_properties(vtkm::tbb PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION "${TBB_LIBRARY}"
+        )
+    endif()
+
+    if(EXISTS "${TBB_LIBRARY_RELEASE}")
       set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-      set_target_properties(vtkm::tbb PROPERTIES IMPORTED_LOCATION_RELEASE "${TBB_LIBRARY_RELEASE}")
+      set_target_properties(vtkm::tbb PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION_RELEASE "${TBB_LIBRARY_RELEASE}"
+        )
     endif()
 
-    if(TBB_LIBRARY_DEBUG)
+    if(EXISTS "${TBB_LIBRARY_DEBUG}")
       set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
-      set_target_properties(vtkm::tbb PROPERTIES IMPORTED_LOCATION_DEBUG "${TBB_LIBRARY_DEBUG}")
-    endif()
-
-    if(NOT TBB_LIBRARY_RELEASE AND NOT TBB_LIBRARY_DEBUG)
-      set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_LOCATION "${TBB_LIBRARY}")
+      set_target_properties(vtkm::tbb PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION_DEBUG "${TBB_LIBRARY_DEBUG}"
+        )
     endif()
 endif()
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
-  add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
+  if (CMAKE_VERSION VERSION_LESS 3.10)
+    add_library(vtkm::openmp SHARED IMPORTED GLOBAL)
+  else()
+    add_library(vtkm::openmp UNKNOWN IMPORTED GLOBAL)
+  endif()
+
   if(OpenMP_CXX_FLAGS)
     set_target_properties(vtkm::openmp PROPERTIES
       INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>")
   endif()
   if(OpenMP_CXX_LIBRARIES)
     set_target_properties(vtkm::openmp PROPERTIES
+      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
       INTERFACE_LINK_LIBRARIES "${OpenMP_CXX_LIBRARIES}")
   endif()
 endif()
@@ -88,24 +103,29 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   if("x${CMAKE_CUDA_SIMULATE_ID}" STREQUAL "xMSVC")
     get_filename_component(VTKM_CUDA_BIN_DIR "${CMAKE_CUDA_COMPILER}" DIRECTORY)
 
-    set_property(TARGET vtkm::cuda APPEND PROPERTY IMPORTED_LOCATION "${VTKM_CUDA_BIN_DIR}/../lib/x64/cudadevrt.lib")
+    set_property(TARGET vtkm::cuda APPEND PROPERTY )
 
-    set_target_properties(vtkm::cuda PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${VTKM_CUDA_BIN_DIR}/../include/")
+    set_target_properties(vtkm::cuda PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION "${VTKM_CUDA_BIN_DIR}/../lib/x64/cudadevrt.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "${VTKM_CUDA_BIN_DIR}/../include/"
+        )
 
   else()
     list(GET CMAKE_CUDA_IMPLICIT_LINK_LIBRARIES 0 VTKM_CUDA_LIBRARY)
     if(IS_ABSOLUTE "${VTKM_CUDA_LIBRARY}")
-      set_property(TARGET vtkm::cuda APPEND PROPERTY IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
+      set_target_properties(vtkm::cuda PROPERTIES IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
     else()
       find_library(cuda_lib
               NAME ${VTKM_CUDA_LIBRARY}
               PATHS ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES}
               )
       set(VTKM_CUDA_LIBRARY ${cuda_lib})
-      set_property(TARGET vtkm::cuda APPEND PROPERTY IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
+      set_target_properties(vtkm::cuda PROPERTIES IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
       unset(cuda_lib CACHE)
     endif()
     set_target_properties(vtkm::cuda PROPERTIES
+            IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
   endif()
 
