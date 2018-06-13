@@ -55,13 +55,16 @@ public:
 
   Thisclass& operator=(const Thisclass& src);
 
-  virtual vtkm::Id GetNumberOfCells() const { return this->Structure.GetNumberOfCells(); }
+  virtual vtkm::Id GetNumberOfCells() const override { return this->Structure.GetNumberOfCells(); }
 
-  virtual vtkm::Id GetNumberOfPoints() const { return this->Structure.GetNumberOfPoints(); }
+  virtual vtkm::Id GetNumberOfPoints() const override
+  {
+    return this->Structure.GetNumberOfPoints();
+  }
 
-  virtual vtkm::Id GetNumberOfFaces() const { return -1; }
+  virtual vtkm::Id GetNumberOfFaces() const override { return -1; }
 
-  virtual vtkm::Id GetNumberOfEdges() const { return -1; }
+  virtual vtkm::Id GetNumberOfEdges() const override { return -1; }
 
   // Since the entire topology is defined by by three integers, nothing to do here.
   virtual void ReleaseResourcesExecution() override {}
