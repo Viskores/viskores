@@ -19,12 +19,12 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleConcatenate.h>
+#include <vtkm/cont/BoundingIntervalHierarchy.h>
+#include <vtkm/cont/BoundingIntervalHierarchyExec.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchy.h>
-#include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchyBuilder.h>
 
 namespace
 {
@@ -47,25 +47,17 @@ struct CellCentroidCalculator : public vtkm::worklet::WorkletMapPointToCell
 
 struct BoundingIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>,
-                                ExecObject,
-                                WholeCellSetIn<>,
-                                WholeArrayIn<>,
-                                FieldIn<>,
-                                FieldOut<>);
-  typedef _6 ExecutionSignature(_1, _2, _3, _4, _5);
+  typedef void ControlSignature(FieldIn<>, ExecObject, FieldIn<>, FieldOut<>);
+  typedef _4 ExecutionSignature(_1, _2, _3);
 
-  template <typename Point,
-            typename BoundingIntervalHierarchyExecObject,
-            typename CellSet,
-            typename CoordsPortal>
+  template <typename Point, typename BoundingIntervalHierarchyExecObject>
   VTKM_EXEC vtkm::IdComponent operator()(const Point& point,
                                          const BoundingIntervalHierarchyExecObject& bih,
-                                         const CellSet& cellSet,
-                                         const CoordsPortal& coords,
                                          const vtkm::Id expectedId) const
   {
-    vtkm::Id cellId = bih.Find(point, cellSet, coords, *this);
+    vtkm::Vec<vtkm::FloatDefault, 3> parametric;
+    vtkm::Id cellId;
+    bih->FindCell(point, cellId, parametric, *this);
     return (1 - static_cast<vtkm::IdComponent>(expectedId == cellId));
   }
 }; // struct BoundingIntervalHierarchyTester
@@ -80,23 +72,21 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Algorithms = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   using Timer = vtkm::cont::Timer<DeviceAdapter>;
-  namespace spatial = vtkm::worklet::spatialstructure;
 
   vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
-  vtkm::cont::DynamicArrayHandleCoordinateSystem vertices = dataSet.GetCoordinateSystem().GetData();
+  vtkm::cont::ArrayHandleVirtualCoordinates vertices = dataSet.GetCoordinateSystem().GetData();
 
   std::cout << "Using numPlanes: " << numPlanes << "\n";
-  spatial::BoundingIntervalHierarchy bih = spatial::BoundingIntervalHierarchyBuilder(numPlanes, 5)
-                                             .Build(cellSet, vertices, DeviceAdapter());
+  vtkm::cont::BoundingIntervalHierarchy bih = vtkm::cont::BoundingIntervalHierarchy(numPlanes, 5);
+  bih.SetCellSet(cellSet);
+  bih.SetCoords(dataSet.GetCoordinateSystem());
+  bih.Build();
 
   Timer centroidsTimer;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> centroids;
   vtkm::worklet::DispatcherMapTopology<CellCentroidCalculator>().Invoke(
     cellSet, vertices, centroids);
   std::cout << "Centroids calculation time: " << centroidsTimer.GetElapsedTime() << "\n";
-
-  vtkm::worklet::spatialstructure::BoundingIntervalHierarchyExecutionObject<DeviceAdapter>
-    bihExecObject = bih.PrepareForInput<DeviceAdapter>();
 
   vtkm::cont::ArrayHandleCounting<vtkm::Id> expectedCellIds(0, 1, cellSet.GetNumberOfCells());
 
@@ -108,8 +98,15 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
   cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 200);
 #endif
+
+  /*vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
+    std::unique_ptr<vtkm::exec::CellLocator> temp = bih.PrepareForExecution(deviceId);
+    vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter>& bihExec
+      = dynamic_cast<vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter>&>(*temp);*/
+
   vtkm::worklet::DispatcherMapField<BoundingIntervalHierarchyTester>().Invoke(
-    centroids, bihExecObject, cellSet, vertices, expectedCellIds, results);
+    centroids, bih, expectedCellIds, results);
+
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
   cudaDeviceSetLimit(cudaLimitStackSize, stackSizeBackup);
 #endif

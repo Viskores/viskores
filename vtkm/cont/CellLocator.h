@@ -20,11 +20,11 @@ namespace exec
 class CellLocator
 {
 public:
-  VTKM_EXEC void FindCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
-                          vtkm::Id& cellId,
-                          vtkm::Vec<vtkm::FloatDefault, 3>& parametric)
-  {
-  } //const = 0;
+  VTKM_EXEC
+  virtual void FindCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                        vtkm::Id& cellId,
+                        vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
+                        const vtkm::exec::FunctorBase& worklet) const = 0;
 };
 
 } // namespace exec
@@ -68,14 +68,15 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT std::unique_ptr<vtkm::exec::CellLocator> PrepareForExecution(DeviceAdapter device)
+  VTKM_CONT std::shared_ptr<vtkm::exec::CellLocator> PrepareForExecution(DeviceAdapter) const
   {
     vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    return PrepareForExecution(deviceId);
+    return PrepareForExecutionOnDevice(deviceId);
   }
 
-  VTKM_CONT virtual std::unique_ptr<vtkm::exec::CellLocator> PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) = 0;
+protected:
+  VTKM_CONT virtual std::shared_ptr<vtkm::exec::CellLocator> PrepareForExecutionOnDevice(
+    vtkm::cont::DeviceAdapterId& device) const = 0;
 
 private:
   vtkm::cont::DynamicCellSet CellSet;

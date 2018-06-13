@@ -38,7 +38,7 @@ using CellIdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
 
 } // namespace
 
-template <typename DeviceAdapter>
+template <typename DeviceAdapter, typename CellSetType>
 class BoundingIntervalHierarchyExec : public vtkm::exec::CellLocator
 {
 public:
@@ -48,33 +48,35 @@ public:
   VTKM_CONT
   BoundingIntervalHierarchyExec(const NodeArrayHandle& nodes,
                                 const CellIdArrayHandle& cellIds,
+                                const CellSetType& cellSet,
+                                const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
                                 DeviceAdapter)
     : Nodes(nodes.PrepareForInput(DeviceAdapter()))
     , CellIds(cellIds.PrepareForInput(DeviceAdapter()))
   {
+    CellSet = cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType());
+    Coords = coords.PrepareForInput(DeviceAdapter());
   }
 
-  template <typename CellSetType, typename PointPortal>
-  VTKM_EXEC vtkm::Id Find(const vtkm::Vec<vtkm::Float64, 3>& point,
-                          const CellSetType& cellSet,
-                          const PointPortal& points,
-                          const vtkm::exec::FunctorBase& worklet) const
+  VTKM_EXEC
+  void FindCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                vtkm::Id& cellId,
+                vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
+                const vtkm::exec::FunctorBase& worklet) const override
   {
-    return Find(0, point, cellSet, points, worklet);
+    cellId = Find(0, point, parametric, worklet);
   }
 
 private:
-  template <typename CellSetType, typename PointPortal>
   VTKM_EXEC vtkm::Id Find(vtkm::Id index,
-                          const vtkm::Vec<vtkm::Float64, 3>& point,
-                          const CellSetType& cellSet,
-                          const PointPortal& points,
+                          const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                          vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
                           const vtkm::exec::FunctorBase& worklet) const
   {
     const vtkm::cont::BoundingIntervalHierarchyNode& node = Nodes.Get(index);
     if (node.ChildIndex < 0)
     {
-      return FindInLeaf(point, node, cellSet, points, worklet);
+      return FindInLeaf(point, parametric, node, worklet);
     }
     else
     {
@@ -83,11 +85,11 @@ private:
       vtkm::Id id2 = -1;
       if (c <= node.Node.LMax)
       {
-        id1 = Find(node.ChildIndex, point, cellSet, points, worklet);
+        id1 = Find(node.ChildIndex, point, parametric, worklet);
       }
       if (id1 == -1 && c >= node.Node.RMin)
       {
-        id2 = Find(node.ChildIndex + 1, point, cellSet, points, worklet);
+        id2 = Find(node.ChildIndex + 1, point, parametric, worklet);
       }
       if (id1 == -1 && id2 == -1)
       {
@@ -104,20 +106,18 @@ private:
     }
   }
 
-  template <typename CellSetType, typename PointPortal>
-  VTKM_EXEC vtkm::Id FindInLeaf(const vtkm::Vec<vtkm::Float64, 3>& point,
+  VTKM_EXEC vtkm::Id FindInLeaf(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                                vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
                                 const vtkm::cont::BoundingIntervalHierarchyNode& node,
-                                const CellSetType& cellSet,
-                                const PointPortal& points,
                                 const vtkm::exec::FunctorBase& worklet) const
   {
-    using IndicesType = typename CellSetType::IndicesType;
+    using IndicesType = typename CellSetPortal::IndicesType;
     for (vtkm::Id i = node.Leaf.Start; i < node.Leaf.Start + node.Leaf.Size; ++i)
     {
       vtkm::Id cellId = CellIds.Get(i);
-      IndicesType cellPointIndices = cellSet.GetIndices(cellId);
-      vtkm::VecFromPortalPermute<IndicesType, PointPortal> cellPoints(&cellPointIndices, points);
-      if (IsPointInCell(point, cellSet.GetCellShape(cellId), cellPoints, worklet))
+      IndicesType cellPointIndices = CellSet.GetIndices(cellId);
+      vtkm::VecFromPortalPermute<IndicesType, CoordsPortal> cellPoints(&cellPointIndices, Coords);
+      if (IsPointInCell(point, parametric, CellSet.GetCellShape(cellId), cellPoints, worklet))
       {
         return cellId;
       }
@@ -126,24 +126,32 @@ private:
   }
 
   template <typename CoordsType, typename CellShapeTag>
-  VTKM_EXEC static bool IsPointInCell(const vtkm::Vec<vtkm::Float64, 3>& point,
+  VTKM_EXEC static bool IsPointInCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                                      vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
                                       CellShapeTag cellShape,
                                       const CoordsType& cellPoints,
                                       const vtkm::exec::FunctorBase& worklet)
   {
     bool success = false;
-    vtkm::Vec<vtkm::Float64, 3> parametricCoords =
-      vtkm::exec::WorldCoordinatesToParametricCoordinates(
-        cellPoints, point, cellShape, success, worklet);
-    return success && vtkm::exec::CellInside(parametricCoords, cellShape);
+    parametric = vtkm::exec::WorldCoordinatesToParametricCoordinates(
+      cellPoints, point, cellShape, success, worklet);
+    return success && vtkm::exec::CellInside(parametric, cellShape);
   }
 
+  using FromType = vtkm::TopologyElementTagPoint;
+  using ToType = vtkm::TopologyElementTagCell;
   using NodePortal = typename NodeArrayHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
   using CellIdPortal =
     typename CellIdArrayHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using CellSetPortal =
+    typename CellSetType::template ExecutionTypes<DeviceAdapter, FromType, ToType>::ExecObjectType;
+  using CoordsPortal = typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
+    DeviceAdapter>::PortalConst;
 
   NodePortal Nodes;
   CellIdPortal CellIds;
+  CellSetPortal CellSet;
+  CoordsPortal Coords;
 }; // class BoundingIntervalHierarchyExec
 
 } // namespace exec
