@@ -115,7 +115,7 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
   const bool runOnCuda = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{});
 
   //Note currently the virtual implementation has some issues
-  //In a multi-threaded enviornment only cuda can be used or
+  //In a multi-threaded environment only cuda can be used or
   //all SMP backends ( Serial, TBB, OpenMP ).
   //Once this issue is resolved we can enable CUDA + TBB in
   //this example

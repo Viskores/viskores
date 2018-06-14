@@ -186,7 +186,7 @@ void TestArrayHandleTransform()
   vtkm::testing::Testing::TryTypes(TryInputType());
 }
 
-} // annonymous namespace
+} // anonymous namespace
 
 int UnitTestArrayHandleTransform(int, char* [])
 {

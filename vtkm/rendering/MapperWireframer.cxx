@@ -105,7 +105,7 @@ public:
     // where only the x coord matters. It creates a y based on
     // the scalar values and connects all the points with lines.
     // So, we need to convert it back to something that can
-    // actuall be rendered.
+    // actually be rendered.
     //
     outCoord[0] = inCoord[0];
     outCoord[1] = static_cast<vtkm::Float32>(scalar);

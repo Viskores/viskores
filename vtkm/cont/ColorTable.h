@@ -605,7 +605,7 @@ public:
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -620,7 +620,7 @@ public:
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -635,7 +635,7 @@ public:
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -650,7 +650,7 @@ public:
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples

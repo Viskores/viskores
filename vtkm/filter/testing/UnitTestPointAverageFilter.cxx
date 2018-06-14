@@ -55,7 +55,7 @@ void TestPointAverageUniform3D()
 
 void TestPointAverageRegular3D()
 {
-  std::cout << "Testing PointAverage Filter on 2D strucutred data" << std::endl;
+  std::cout << "Testing PointAverage Filter on 2D structured data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DRectilinearDataSet0();
