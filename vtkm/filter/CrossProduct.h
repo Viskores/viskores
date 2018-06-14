@@ -46,10 +46,10 @@ public:
     this->SetActiveField(name, association);
   }
 
-  VTKM_CONT const std::string& GetPrimaryFieldName() const { return this->SecondaryFieldName; }
+  VTKM_CONT const std::string& GetPrimaryFieldName() const { return this->GetActiveFieldName(); }
   VTKM_CONT vtkm::cont::Field::Association GetPrimaryFieldAssociation() const
   {
-    return this->SecondaryFieldAssociation;
+    return this->GetActiveFieldAssociation();
   }
   //@}
 
@@ -92,10 +92,10 @@ public:
     this->SecondaryFieldAssociation = association;
   }
 
-  VTKM_CONT const std::string& GetSecondaryFieldName() const { return this->GetActiveFieldName(); }
+  VTKM_CONT const std::string& GetSecondaryFieldName() const { return this->SecondaryFieldName; }
   VTKM_CONT vtkm::cont::Field::Association GetSecondaryFieldAssociation() const
   {
-    return this->GetActiveFieldAssociation();
+    return this->SecondaryFieldAssociation;
   }
   //@}
 
