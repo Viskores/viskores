@@ -54,7 +54,7 @@ public:
     }
   }
 
-  // Returns length of approximation coefficients from a decompostition pass.
+  // Returns length of approximation coefficients from a decomposition pass.
   vtkm::Id GetApproxLength(vtkm::Id sigInLen)
   {
     if (sigInLen % 2 != 0)
@@ -67,7 +67,7 @@ public:
     }
   }
 
-  // Returns length of detail coefficients from a decompostition pass
+  // Returns length of detail coefficients from a decomposition pass
   vtkm::Id GetDetailLength(vtkm::Id sigInLen)
   {
     if (sigInLen % 2 != 0)
@@ -80,7 +80,7 @@ public:
     }
   }
 
-  // Returns length of coefficients generated in a decompostition pass
+  // Returns length of coefficients generated in a decomposition pass
   vtkm::Id GetCoeffLength(vtkm::Id sigInLen)
   {
     return (GetApproxLength(sigInLen) + GetDetailLength(sigInLen));
@@ -94,7 +94,7 @@ public:
     return (GetCoeffLength(sigInX) * GetCoeffLength(sigInY) * GetCoeffLength(sigInZ));
   }
 
-  // Returns maximum wavelet decompostion level
+  // Returns maximum wavelet decomposition level
   vtkm::Id GetWaveletMaxLevel(vtkm::Id sigInLen)
   {
     vtkm::Id filterLen = this->filter.GetFilterLength();

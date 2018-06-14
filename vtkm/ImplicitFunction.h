@@ -625,7 +625,7 @@ private:
 #ifdef VTKM_CUDA
 
 // Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
-// to be instantiated in a consitent order among all the translation units of an
+// to be instantiated in a consistent order among all the translation units of an
 // executable. Failing to do so results in random crashes and incorrect results.
 // We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
 // all the implicit functions here.

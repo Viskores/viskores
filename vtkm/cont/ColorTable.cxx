@@ -197,7 +197,7 @@ void ColorTable::SetColorSpace(ColorSpace space)
         break;
       }
       default:
-        throw vtkm::cont::ErrorBadType("unkown vtkm::cont::ColorType requested");
+        throw vtkm::cont::ErrorBadType("unknown vtkm::cont::ColorType requested");
     }
   }
 }

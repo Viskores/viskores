@@ -61,7 +61,7 @@ endfunction(vtkm_pyexpander_generated_file)
 
 #-----------------------------------------------------------------------------
 function(vtkm_compile_as_cuda output)
-  # We cant use set_source_files_properties(<> PROPERTIES LANGUAGE "CUDA")
+  # We can't use set_source_files_properties(<> PROPERTIES LANGUAGE "CUDA")
   # for the following reasons:
   #
   # 1. As of CMake 3.10 MSBuild cuda language support has a bug where files

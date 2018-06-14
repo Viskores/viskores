@@ -271,7 +271,7 @@ struct UpperBoundsFunctor
     return true;
   }
 };
-} // annonymous namespace
+} // anonymous namespace
 
 struct Algorithm
 {

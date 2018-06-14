@@ -92,7 +92,7 @@ public:
     Steps.Set(idx, ++nSteps);
 
     // Check if the particle has completed the maximum steps required.
-    // If yes, set it to teminated.
+    // If yes, set it to terminated.
     if (nSteps == MaxSteps)
       SetTerminated(idx);
   }
@@ -300,7 +300,7 @@ public:
     Steps.Set(idx, ++nSteps);
 
     // Check if the particle has completed the maximum steps required.
-    // If yes, set it to teminated.
+    // If yes, set it to terminated.
     if (nSteps == MaxSteps)
       SetTerminated(idx);
   }

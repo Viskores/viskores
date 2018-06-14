@@ -21,7 +21,7 @@
 if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   find_package(TBB REQUIRED)
 
-  # Workaround a bug in older versions of cmake prevents linking with UNKOWN IMPORTED libraries
+  # Workaround a bug in older versions of cmake prevents linking with UNKNOWN IMPORTED libraries
   # refer to CMake issue #17245
   if (CMAKE_VERSION VERSION_LESS 3.10)
     add_library(vtkm::tbb SHARED IMPORTED GLOBAL)
@@ -71,7 +71,7 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     list(APPEND CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
   endif()
 
-  # Workaround a bug in older versions of cmake prevents linking with UNKOWN IMPORTED libraries
+  # Workaround a bug in older versions of cmake prevents linking with UNKNOWN IMPORTED libraries
   # refer to CMake issue #17245
   if (CMAKE_VERSION VERSION_LESS 3.10)
     add_library(vtkm::cuda STATIC IMPORTED GLOBAL)
@@ -153,7 +153,7 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
   set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta all none)
 
-  #detect what the propery is set too
+  #detect what the property is set too
   if(VTKm_CUDA_Architecture STREQUAL "native")
 
     if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)

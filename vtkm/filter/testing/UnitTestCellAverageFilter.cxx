@@ -81,7 +81,7 @@ void TestCellAverageRegular3D()
 
 void TestCellAverageRegular2D()
 {
-  std::cout << "Testing CellAverage Filter on 2D strucutred data" << std::endl;
+  std::cout << "Testing CellAverage Filter on 2D structured data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();

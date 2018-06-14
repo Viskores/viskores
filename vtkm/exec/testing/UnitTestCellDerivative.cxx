@@ -38,7 +38,7 @@ namespace
 std::mt19937 g_RandomGenerator;
 
 // Establish simple mapping between world and parametric coordinates.
-// Actuall world/parametric coordinates are in a different test.
+// Actual world/parametric coordinates are in a different test.
 template <typename T>
 vtkm::Vec<T, 3> ParametricToWorld(const vtkm::Vec<T, 3>& pcoord)
 {

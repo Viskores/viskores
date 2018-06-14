@@ -121,7 +121,7 @@ set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 # This flag can be used to prevent VTK-m from exporting its warning flags in its
 # build interface. This is useful when building VTK-m as a thirdparty library
 # and the warnings are too strict for the parent project.
-vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are usefull while developing VTK-m" ON)
+vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful while developing VTK-m" ON)
 
 mark_as_advanced(
   VTKm_NO_ASSERT
