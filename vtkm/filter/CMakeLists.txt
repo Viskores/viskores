@@ -50,6 +50,7 @@ set(headers
   NDHistogram.h
   PointAverage.h
   PointElevation.h
+  PointTransform.h
   PolicyBase.h
   PolicyDefault.h
   Probe.h
@@ -92,6 +93,7 @@ set(header_template_sources
   NDHistogram.hxx
   PointAverage.hxx
   PointElevation.hxx
+  PointTransform.hxx
   Probe.hxx
   Streamline.hxx
   SurfaceNormals.hxx
@@ -111,4 +113,3 @@ add_subdirectory(internal)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
-

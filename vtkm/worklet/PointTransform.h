@@ -62,7 +62,7 @@ public:
   }
 
   template <typename S>
-  VTKM_CONT void SetRotationX(const S& angleDegrees, const S& rx, const S& ry, const S& rz)
+  VTKM_CONT void SetRotation(const S& angleDegrees, const S& rx, const S& ry, const S& rz)
   {
     SetRotation(angleDegrees, vtkm::Vec<S, 3>(rx, ry, rz));
   }
