@@ -55,7 +55,6 @@ set(unit_tests
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayPortalToIterators.cxx
-  UnitTestBoundingIntervalHierarchy.cxx
   UnitTestCellLocator.cxx
   UnitTestCellSetExplicit.cxx
   UnitTestCellSetPermutation.cxx
