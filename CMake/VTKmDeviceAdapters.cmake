@@ -18,6 +18,39 @@
 ##  this software.
 ##============================================================================
 
+#
+function(vtkm_extract_real_library library real_library)
+  if(NOT UNIX)
+    set(${real_library} "${library}" PARENT_SCOPE)
+    return()
+  endif()
+
+  #Read in the first 4 bytes and see if they are the ELF magic number
+  set(_elf_magic "7f454c46")
+  file(READ ${library} _hex_data OFFSET 0 LIMIT 4 HEX)
+  if(_hex_data STREQUAL _elf_magic)
+    #we have opened a elf binary so this is what
+    #we should link too
+    set(${real_library} "${library}" PARENT_SCOPE)
+    return()
+  endif()
+
+  file(READ ${library} _data OFFSET 0 LIMIT 1024)
+  if("${_data}" MATCHES "INPUT \\(([^(]+)\\)")
+    #extract out the so name from REGEX MATCh command
+    set(_proper_so_name "${CMAKE_MATCH_1}")
+
+    #construct path to the real .so which is presumed to be in the same directory
+    #as the input file
+    get_filename_component(_so_dir "${library}" DIRECTORY)
+    set(${real_library} "${_so_dir}/${_proper_so_name}" PARENT_SCOPE)
+  else()
+    #unable to determine what this library is so just hope everything works
+    #add pass it unmodified.
+    set(${real_library} "${library}" PARENT_SCOPE)
+  endif()
+endfunction()
+
 if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   find_package(TBB REQUIRED)
 
@@ -32,28 +65,23 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   set_target_properties(vtkm::tbb PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${TBB_INCLUDE_DIRS}")
 
-    if(EXISTS "${TBB_LIBRARY}")
-      set_target_properties(vtkm::tbb PROPERTIES
-        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-        IMPORTED_LOCATION "${TBB_LIBRARY}"
-        )
-    endif()
+  if(EXISTS "${TBB_LIBRARY_RELEASE}")
+    vtkm_extract_real_library("${TBB_LIBRARY_RELEASE}" real_path)
+    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+    set_target_properties(vtkm::tbb PROPERTIES
+      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+      IMPORTED_LOCATION_RELEASE "${real_path}"
+      )
+  endif()
 
-    if(EXISTS "${TBB_LIBRARY_RELEASE}")
-      set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-      set_target_properties(vtkm::tbb PROPERTIES
-        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-        IMPORTED_LOCATION_RELEASE "${TBB_LIBRARY_RELEASE}"
-        )
-    endif()
-
-    if(EXISTS "${TBB_LIBRARY_DEBUG}")
-      set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
-      set_target_properties(vtkm::tbb PROPERTIES
-        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-        IMPORTED_LOCATION_DEBUG "${TBB_LIBRARY_DEBUG}"
-        )
-    endif()
+  if(EXISTS "${TBB_LIBRARY_DEBUG}")
+    vtkm_extract_real_library("${TBB_LIBRARY_DEBUG}" real_path)
+    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+    set_target_properties(vtkm::tbb PROPERTIES
+      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+      IMPORTED_LOCATION_DEBUG "${real_path}"
+      )
+  endif()
 endif()
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
@@ -102,8 +130,6 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   # valid and will have no effect on compilation
   if("x${CMAKE_CUDA_SIMULATE_ID}" STREQUAL "xMSVC")
     get_filename_component(VTKM_CUDA_BIN_DIR "${CMAKE_CUDA_COMPILER}" DIRECTORY)
-
-    set_property(TARGET vtkm::cuda APPEND PROPERTY )
 
     set_target_properties(vtkm::cuda PROPERTIES
         IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
