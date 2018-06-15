@@ -146,7 +146,7 @@ public:
 
   VTKM_EXEC_CONT const Vector& GetMaxPoint() const { return this->MaxPoint; }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const override
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
   {
     Scalar minDistance = vtkm::NegativeInfinity32();
     Scalar diff, t, dist;
@@ -214,7 +214,7 @@ public:
     }
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const override
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const final
   {
     vtkm::IdComponent minAxis = 0;
     Scalar dist = 0.0;
@@ -343,7 +343,7 @@ private:
 
 //============================================================================
 /// \brief Implicit function for a cylinder
-class VTKM_ALWAYS_EXPORT Cylinder : public vtkm::ImplicitFunction
+class VTKM_ALWAYS_EXPORT Cylinder final : public vtkm::ImplicitFunction
 {
 public:
   VTKM_EXEC_CONT Cylinder()
@@ -385,14 +385,14 @@ public:
     this->Modified();
   }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const override
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
   {
     Vector x2c = point - this->Center;
     FloatDefault proj = vtkm::Dot(this->Axis, x2c);
     return vtkm::Dot(x2c, x2c) - (proj * proj) - (this->Radius * this->Radius);
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const override
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const final
   {
     Vector x2c = point - this->Center;
     FloatDefault t = this->Axis[0] * x2c[0] + this->Axis[1] * x2c[1] + this->Axis[2] * x2c[2];
@@ -409,7 +409,7 @@ private:
 
 //============================================================================
 /// \brief Implicit function for a frustum
-class VTKM_ALWAYS_EXPORT Frustum : public vtkm::ImplicitFunction
+class VTKM_ALWAYS_EXPORT Frustum final : public vtkm::ImplicitFunction
 {
 public:
   Frustum() = default;
@@ -480,7 +480,7 @@ public:
     this->Modified();
   }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const override
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
     for (vtkm::Id index : { 0, 1, 2, 3, 4, 5 })
@@ -493,7 +493,7 @@ public:
     return maxVal;
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const override
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const final
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
     vtkm::Id maxValIdx = 0;
@@ -518,7 +518,7 @@ private:
 
 //============================================================================
 /// \brief Implicit function for a plane
-class VTKM_ALWAYS_EXPORT Plane : public vtkm::ImplicitFunction
+class VTKM_ALWAYS_EXPORT Plane final : public vtkm::ImplicitFunction
 {
 public:
   VTKM_EXEC_CONT Plane()
@@ -554,12 +554,12 @@ public:
   VTKM_EXEC_CONT const Vector& GetOrigin() const { return this->Origin; }
   VTKM_EXEC_CONT const Vector& GetNormal() const { return this->Normal; }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const override
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
   {
     return vtkm::Dot(point - this->Origin, this->Normal);
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector&) const override { return this->Normal; }
+  VTKM_EXEC_CONT Vector Gradient(const Vector&) const final { return this->Normal; }
 
 private:
   Vector Origin;
@@ -568,7 +568,7 @@ private:
 
 //============================================================================
 /// \brief Implicit function for a sphere
-class VTKM_ALWAYS_EXPORT Sphere : public vtkm::ImplicitFunction
+class VTKM_ALWAYS_EXPORT Sphere final : public vtkm::ImplicitFunction
 {
 public:
   VTKM_EXEC_CONT Sphere()
@@ -605,12 +605,12 @@ public:
 
   VTKM_EXEC_CONT const Vector& GetCenter() const { return this->Center; }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const override
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
   {
     return vtkm::MagnitudeSquared(point - this->Center) - (this->Radius * this->Radius);
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const override
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const final
   {
     return Scalar(2) * (point - this->Center);
   }
