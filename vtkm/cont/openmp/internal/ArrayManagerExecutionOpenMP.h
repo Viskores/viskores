@@ -86,7 +86,7 @@ struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagOpenMP>
 };
 
 template <>
-struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagOpenMP>
+struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagOpenMP> final
   : public ExecutionArrayInterfaceBasicShareWithControl
 {
   using Superclass = ExecutionArrayInterfaceBasicShareWithControl;
