@@ -25,6 +25,7 @@
 
 #include <vtkm/cont/CellSetListTag.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
@@ -107,7 +108,47 @@ ApplyPolicyUnstructured(const vtkm::cont::DynamicCellSet& cellset,
   using CellSetList = typename DerivedPolicy::UnstructuredCellSetList;
   return cellset.ResetCellSetList(CellSetList());
 }
+
+//-----------------------------------------------------------------------------
+template <typename DerivedPolicy>
+VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList,
+                                        typename DerivedPolicy::FieldStorageList>
+MakeSerializableField(const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return {};
+}
+
+template <typename DerivedPolicy>
+VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList,
+                                        typename DerivedPolicy::FieldStorageList>
+MakeSerializableField(const vtkm::cont::Field& field,
+                      const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList,
+                                       typename DerivedPolicy::FieldStorageList>{ field };
+}
+
+template <typename DerivedPolicy>
+VTKM_CONT vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
+                                          typename DerivedPolicy::FieldStorageList,
+                                          typename DerivedPolicy::AllCellSetList>
+MakeSerializableDataSet(const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return {};
+}
+
+template <typename DerivedPolicy>
+VTKM_CONT vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
+                                          typename DerivedPolicy::FieldStorageList,
+                                          typename DerivedPolicy::AllCellSetList>
+MakeSerializableDataSet(const vtkm::cont::DataSet& dataset,
+                        const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
+                                         typename DerivedPolicy::FieldStorageList,
+                                         typename DerivedPolicy::AllCellSetList>{ dataset };
 }
 }
+} // vtkm::filter
 
 #endif //vtk_m_filter_PolicyBase_h

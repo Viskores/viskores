@@ -357,4 +357,79 @@ struct DynamicCellSetCheck<vtkm::cont::DynamicCellSetBase<CellSetList>>
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace diy
+{
+
+namespace internal
+{
+
+struct DynamicCellSetSerializeFunctor
+{
+  template <typename CellSetType>
+  void operator()(const CellSetType& cs, BinaryBuffer& bb) const
+  {
+    diy::save(bb, vtkm::cont::TypeString<CellSetType>::Get());
+    diy::save(bb, cs);
+  }
+};
+
+template <typename CellSetTypes>
+struct DynamicCellSetDeserializeFunctor
+{
+  template <typename CellSetType>
+  void operator()(CellSetType,
+                  vtkm::cont::DynamicCellSetBase<CellSetTypes>& dh,
+                  const std::string& typeString,
+                  bool& success,
+                  BinaryBuffer& bb) const
+  {
+    if (!success && (typeString == vtkm::cont::TypeString<CellSetType>::Get()))
+    {
+      CellSetType cs;
+      diy::load(bb, cs);
+      dh = vtkm::cont::DynamicCellSetBase<CellSetTypes>(cs);
+      success = true;
+    }
+  }
+};
+
+} // internal
+
+template <typename CellSetTypes>
+struct Serialization<vtkm::cont::DynamicCellSetBase<CellSetTypes>>
+{
+private:
+  using Type = vtkm::cont::DynamicCellSetBase<CellSetTypes>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& obj)
+  {
+    obj.CastAndCall(internal::DynamicCellSetSerializeFunctor{}, bb);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& obj)
+  {
+    std::string typeString;
+    diy::load(bb, typeString);
+
+    bool success = false;
+    vtkm::ListForEach(internal::DynamicCellSetDeserializeFunctor<CellSetTypes>{},
+                      CellSetTypes{},
+                      obj,
+                      typeString,
+                      success,
+                      bb);
+
+    if (!success)
+    {
+      throw vtkm::cont::ErrorBadType("Error deserializing DynamicCellSet. Message TypeString: " +
+                                     typeString);
+    }
+  }
+};
+
+} // diy
+
 #endif //vtk_m_cont_DynamicCellSet_h

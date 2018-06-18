@@ -89,5 +89,6 @@ vtkm_unit_tests(SOURCES ${unit_tests})
 set(mpi_unit_tests
   UnitTestFieldRangeGlobalCompute.cxx
   UnitTestSerializationArrayHandle.cxx
+  UnitTestSerializationDataSet.cxx
   )
 vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests})
