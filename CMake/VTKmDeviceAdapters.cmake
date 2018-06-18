@@ -48,6 +48,7 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
 endif()
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
+  cmake_minimum_required(VERSION 3.9...3.12 FATAL_ERROR)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
   add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
@@ -62,7 +63,7 @@ if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
 endif()
 
 if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
-  cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.9...3.12 FATAL_ERROR)
   enable_language(CUDA)
 
   #To work around https://gitlab.kitware.com/cmake/cmake/issues/17512

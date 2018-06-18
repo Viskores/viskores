@@ -53,7 +53,13 @@
 #
 #
 
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+if (CMAKE_VERSION VERSION_LESS "3.3")
+  message(FATAL_ERROR "VTK-m requires CMake 3.3+")
+endif()
+if("${CMAKE_GENERATOR}" MATCHES "Visual Studio" AND
+   CMAKE_VERSION VERSION_LESS "3.11")
+  message(FATAL_ERROR "VTK-m requires CMake 3.11+ when using the Visual Studio Generators")
+endif()
 
 @PACKAGE_INIT@
 
