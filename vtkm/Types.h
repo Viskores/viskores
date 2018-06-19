@@ -1008,9 +1008,10 @@ VTKM_EXEC_CONT vtkm::Vec<T, Size> make_Vec(std::initializer_list<T> values)
 /// same type or compile issues will occur.
 ///
 template <typename T, typename... Ts>
-VTKM_EXEC_CONT vtkm::Vec<T, sizeof...(Ts) + 1> make_Vec(const T& value0, const Ts&... values)
+VTKM_EXEC_CONT vtkm::Vec<T, vtkm::IdComponent(sizeof...(Ts) + 1)> make_Vec(const T& value0,
+                                                                           const Ts&... values)
 {
-  return vtkm::Vec<T, sizeof...(Ts) + 1>({ value0, values... });
+  return vtkm::Vec<T, vtkm::IdComponent(sizeof...(Ts) + 1)>({ value0, values... });
 }
 
 /// \brief A Vec-like representation for short arrays.
