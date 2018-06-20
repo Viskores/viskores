@@ -25,6 +25,7 @@ set(headers
   CellMeasure.h
   Clip.h
   ContourTreeUniform.h
+  CoordinateSystemTransform.h
   CosmoTools.h
   CrossProduct.h
   DispatcherMapField.h
