@@ -613,16 +613,24 @@ public:
   using ComponentType = T;
   static constexpr vtkm::IdComponent NUM_COMPONENTS = Size;
 
-protected:
   VecBase() = default;
 
-  VTKM_EXEC_CONT
-  explicit VecBase(const ComponentType& value)
+  // The enable_if predicate will disable this constructor for Size=1 so that
+  // the variadic constructor constexpr VecBase(T, Ts&&...) is called instead.
+  template <vtkm::IdComponent Size2 = Size, typename std::enable_if<Size2 != 1, int>::type = 0>
+  VTKM_EXEC_CONT explicit VecBase(const ComponentType& value)
   {
     for (vtkm::IdComponent i = 0; i < Size; ++i)
     {
       this->Components[i] = value;
     }
+  }
+
+  template <typename... Ts>
+  VTKM_EXEC_CONT constexpr VecBase(ComponentType value0, Ts&&... values)
+    : Components{ value0, values... }
+  {
+    VTKM_STATIC_ASSERT(sizeof...(Ts) + 1 == Size);
   }
 
   VTKM_EXEC_CONT
@@ -812,21 +820,15 @@ public:
   static constexpr vtkm::IdComponent NUM_COMPONENTS = Size;
 #endif
 
+  using Superclass::Superclass;
   Vec() = default;
-  VTKM_EXEC_CONT explicit Vec(const T& value)
-    : Superclass(value)
+#if defined(_MSC_VER) && _MSC_VER < 1910
+  template <typename... Ts>
+  constexpr Vec(T value, Ts&&... values)
+    : Superclass(value, std::forward<Ts>(values)...)
   {
   }
-  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
-    : Superclass(values)
-  {
-  }
-
-  template <typename OtherType>
-  VTKM_EXEC_CONT explicit Vec(const Vec<OtherType, Size>& src)
-    : Superclass(src)
-  {
-  }
+#endif
 
   inline VTKM_EXEC_CONT void CopyInto(Vec<T, Size>& dest) const { dest = *this; }
 };
@@ -876,12 +878,8 @@ class VTKM_ALWAYS_EXPORT Vec<T, 1> : public detail::VecBase<T, 1, Vec<T, 1>>
 
 public:
   Vec() = default;
-  VTKM_EXEC_CONT explicit Vec(const T& value)
+  VTKM_EXEC_CONT constexpr Vec(const T& value)
     : Superclass(value)
-  {
-  }
-  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
-    : Superclass(values)
   {
   }
 
@@ -902,12 +900,8 @@ class VTKM_ALWAYS_EXPORT Vec<T, 2> : public detail::VecBase<T, 2, Vec<T, 2>>
 
 public:
   Vec() = default;
-  VTKM_EXEC_CONT explicit Vec(const T& value)
+  VTKM_EXEC_CONT Vec(const T& value)
     : Superclass(value)
-  {
-  }
-  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
-    : Superclass(values)
   {
   }
 
@@ -918,10 +912,9 @@ public:
   }
 
   VTKM_EXEC_CONT
-  Vec(const T& x, const T& y)
+  constexpr Vec(const T& x, const T& y)
+    : Superclass(x, y)
   {
-    this->Components[0] = x;
-    this->Components[1] = y;
   }
 };
 
@@ -935,12 +928,8 @@ class VTKM_ALWAYS_EXPORT Vec<T, 3> : public detail::VecBase<T, 3, Vec<T, 3>>
 
 public:
   Vec() = default;
-  VTKM_EXEC_CONT explicit Vec(const T& value)
+  VTKM_EXEC_CONT Vec(const T& value)
     : Superclass(value)
-  {
-  }
-  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
-    : Superclass(values)
   {
   }
 
@@ -951,11 +940,9 @@ public:
   }
 
   VTKM_EXEC_CONT
-  Vec(const T& x, const T& y, const T& z)
+  constexpr Vec(const T& x, const T& y, const T& z)
+    : Superclass(x, y, z)
   {
-    this->Components[0] = x;
-    this->Components[1] = y;
-    this->Components[2] = z;
   }
 };
 
@@ -970,12 +957,8 @@ class VTKM_ALWAYS_EXPORT Vec<T, 4> : public detail::VecBase<T, 4, Vec<T, 4>>
 
 public:
   Vec() = default;
-  VTKM_EXEC_CONT explicit Vec(const T& value)
+  VTKM_EXEC_CONT Vec(const T& value)
     : Superclass(value)
-  {
-  }
-  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
-    : Superclass(values)
   {
   }
 
@@ -986,32 +969,20 @@ public:
   }
 
   VTKM_EXEC_CONT
-  Vec(const T& x, const T& y, const T& z, const T& w)
+  constexpr Vec(const T& x, const T& y, const T& z, const T& w)
+    : Superclass(x, y, z, w)
   {
-    this->Components[0] = x;
-    this->Components[1] = y;
-    this->Components[2] = z;
-    this->Components[3] = w;
   }
 };
-
-/// Initializes and returns a Vec initialized by the given intializer_list. Due to limitations in
-/// C++11, you also have to specify the length of the Vec.
-///
-template <vtkm::IdComponent Size, typename T>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> make_Vec(std::initializer_list<T> values)
-{
-  return vtkm::Vec<T, Size>(values);
-}
 
 /// Initializes and returns a Vec containing all the arguments. The arguments should all be the
 /// same type or compile issues will occur.
 ///
 template <typename T, typename... Ts>
-VTKM_EXEC_CONT vtkm::Vec<T, vtkm::IdComponent(sizeof...(Ts) + 1)> make_Vec(const T& value0,
-                                                                           const Ts&... values)
+VTKM_EXEC_CONT constexpr vtkm::Vec<T, vtkm::IdComponent(sizeof...(Ts) + 1)> make_Vec(T value0,
+                                                                                     Ts&&... args)
 {
-  return vtkm::Vec<T, vtkm::IdComponent(sizeof...(Ts) + 1)>({ value0, values... });
+  return vtkm::Vec<T, vtkm::IdComponent(sizeof...(Ts) + 1)>(value0, T(args)...);
 }
 
 /// \brief A Vec-like representation for short arrays.
