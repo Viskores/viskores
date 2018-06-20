@@ -18,33 +18,33 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_WarpVector_h
-#define vtk_m_filter_WarpVector_h
+#ifndef vtk_m_filter_WarpScalar_h
+#define vtk_m_filter_WarpScalar_h
 
 #include <vtkm/filter/FilterField.h>
-#include <vtkm/worklet/WarpVector.h>
+#include <vtkm/worklet/WarpScalar.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief Modify points by moving points along a vector then timing
-/// the scale factor
+/// \brief Modify points by moving points along point normals by the scalar
+/// amount times the scalar factor.
 ///
-/// A filter that modifies point coordinates by moving points along a vector
-/// then timing a scale factor. It's a VTK-m version of the vtkWarpVector in VTK.
-/// Useful for showing flow profiles or mechanical deformation.
-/// This worklet does not modify the input points but generate new point
-/// coordinate instance that has been warped.
-class WarpVector : public vtkm::filter::FilterField<WarpVector>
+/// A filter that modifies point coordinates by moving points along point normals
+/// by the scalar amount times the scalar factor.
+/// It's a VTK-m version of the vtkWarpScalar in VTK.
+/// Useful for creating carpet or x-y-z plots.
+/// It doesn't modify the point coordinates, but creates a new point coordinates that have been warped.
+class WarpScalar : public vtkm::filter::FilterField<WarpScalar>
 {
 public:
   VTKM_CONT
-  WarpVector(vtkm::FloatDefault scale);
+  WarpScalar(vtkm::FloatDefault scaleAmount);
 
   //@{
-  /// Choose the primary field to operate on. In the warp op A + B *scale, A is
-  /// the primary field
+  /// Choose the primary field to operate on. In the warp op A + B *
+  /// scaleAmount * scalarFactor, A is the primary field
   VTKM_CONT
   void SetPrimaryField(
     const std::string& name,
@@ -89,22 +89,45 @@ public:
   //@}
 
   //@{
-  /// Choose the vector field to operate on. In the warp op A + B *scale, B is
-  /// the vector field
+  /// Choose the secondary field to operate on. In the warp op A + B *
+  /// scaleAmount * scalarFactor, B is the secondary field
   VTKM_CONT
-  void SetVectorField(
+  void SetNormalField(
     const std::string& name,
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
-    this->VectorFieldName = name;
-    this->VectorFieldAssociation = association;
+    this->NormalFieldName = name;
+    this->NormalFieldAssociation = association;
   }
 
-  VTKM_CONT const std::string& GetVectorFieldName() const { return this->VectorFieldName; }
+  VTKM_CONT const std::string& GetNormalFieldName() const { return this->NormalFieldName; }
 
-  VTKM_CONT vtkm::cont::Field::Association GetVectorFieldAssociation() const
+  VTKM_CONT vtkm::cont::Field::Association GetNormalFieldAssociation() const
   {
-    return this->VectorFieldAssociation;
+    return this->NormalFieldAssociation;
+  }
+  //@}
+
+  //@{
+  /// Choose the scalar factor field to operate on. In the warp op A + B *
+  /// scaleAmount * scalarFactor, scalarFactor is the scalar factor field.
+  VTKM_CONT
+  void SetScarlarFactorField(
+    const std::string& name,
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+  {
+    this->ScalarFactorFieldName = name;
+    this->ScalarFactorFieldAssociation = association;
+  }
+
+  VTKM_CONT const std::string& GetScalarFactorFieldName() const
+  {
+    return this->ScalarFactorFieldName;
+  }
+
+  VTKM_CONT vtkm::cont::Field::Association GetScalarFactorFieldAssociation() const
+  {
+    return this->ScalarFactorFieldAssociation;
   }
   //@}
 
@@ -117,22 +140,24 @@ public:
     const DeviceAdapter& tag);
 
 private:
-  vtkm::worklet::WarpVector Worklet;
-  std::string VectorFieldName;
-  vtkm::cont::Field::Association VectorFieldAssociation;
-  vtkm::FloatDefault Scale;
+  vtkm::worklet::WarpScalar Worklet;
+  std::string NormalFieldName;
+  vtkm::cont::Field::Association NormalFieldAssociation;
+  std::string ScalarFactorFieldName;
+  vtkm::cont::Field::Association ScalarFactorFieldAssociation;
+  vtkm::FloatDefault ScaleAmount;
 };
 
 template <>
-class FilterTraits<WarpVector>
+class FilterTraits<WarpScalar>
 {
 public:
-  // WarpVector can only applies to Float and Double Vec3 arrays
+  // WarpScalar can only applies to Float and Double Vec3 arrays
   using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 }
 
-#include <vtkm/filter/WarpVector.hxx>
+#include <vtkm/filter/WarpScalar.hxx>
 
-#endif // vtk_m_filter_WarpVector_h
+#endif // vtk_m_filter_WarpScalar_h

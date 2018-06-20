@@ -63,6 +63,7 @@ set(headers
   Triangulate.h
   VectorMagnitude.h
   VertexClustering.h
+  WarpScalar.h
   WarpVector.h
 )
 
@@ -106,6 +107,7 @@ set(header_template_sources
   Triangulate.hxx
   VectorMagnitude.hxx
   VertexClustering.hxx
+  WarpScalar.hxx
   WarpVector.hxx
 )
 

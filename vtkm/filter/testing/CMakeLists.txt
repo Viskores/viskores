@@ -57,6 +57,7 @@ set(unit_tests
   UnitTestTriangulateFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
+  UnitTestWarpScalarFilter.cxx
   UnitTestWarpVectorFilter.cxx
  )
 
