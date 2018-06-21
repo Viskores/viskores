@@ -27,15 +27,15 @@
 
 namespace
 {
-vtkm::Id deterine_cuda_gpu_count()
+int determine_cuda_gpu_count()
 {
-  vtkm::Id count = 0;
+  int count = 0;
 #if defined(VTKM_ENABLE_CUDA)
   int numberOfDevices = 0;
   auto res = cudaGetDeviceCount(&numberOfDevices);
   if (res == cudaSuccess)
   {
-    count = static_cast<vtkm::Id>(numberOfDevices);
+    count = numberOfDevices;
   }
 #endif
   return count;
@@ -126,16 +126,16 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
   if (runOnCuda)
   {
     std::cout << "adding cuda workers" << std::endl;
-    const vtkm::Id gpu_count = deterine_cuda_gpu_count();
-    for (vtkm::Id i = 0; i < gpu_count; ++i)
+    const int gpu_count = determine_cuda_gpu_count();
+    for (int i = 0; i < gpu_count; ++i)
     {
       //The number of workers per GPU is purely arbitrary currently,
       //but in general we want multiple of them so we can overlap compute
       //and transfer
-      this->Workers.emplace_back(process_block_cuda, std::ref(this->Queue), i);
-      this->Workers.emplace_back(process_block_cuda, std::ref(this->Queue), i);
-      this->Workers.emplace_back(process_block_cuda, std::ref(this->Queue), i);
-      this->Workers.emplace_back(process_block_cuda, std::ref(this->Queue), i);
+      this->Workers.emplace_back(std::bind(process_block_cuda, std::ref(this->Queue), i));
+      this->Workers.emplace_back(std::bind(process_block_cuda, std::ref(this->Queue), i));
+      this->Workers.emplace_back(std::bind(process_block_cuda, std::ref(this->Queue), i));
+      this->Workers.emplace_back(std::bind(process_block_cuda, std::ref(this->Queue), i));
     }
   }
   //Step 3. Launch a worker that will use tbb (if enabled).
@@ -144,7 +144,7 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
   else if (runOnTbb)
   {
     std::cout << "adding a tbb worker" << std::endl;
-    this->Workers.emplace_back(process_block_tbb, std::ref(this->Queue));
+    this->Workers.emplace_back(std::bind(process_block_tbb, std::ref(this->Queue)));
   }
 }
 
@@ -174,7 +174,7 @@ inline VTKM_CONT vtkm::cont::MultiBlock MultiDeviceGradient::PrepareForExecution
   //Step 2. Construct the multi-block we are going to fill. The size signature
   //to MultiBlock just reserves size
   vtkm::cont::MultiBlock output;
-  output.AddBlocks(std::vector<vtkm::cont::DataSet>(mb.GetNumberOfBlocks()));
+  output.AddBlocks(std::vector<vtkm::cont::DataSet>(static_cast<size_t>(mb.GetNumberOfBlocks())));
   vtkm::cont::MultiBlock* outPtr = &output;
 
 
