@@ -2,6 +2,7 @@
 #define vtk_m_cont_CellLocator_h
 
 #include <vtkm/Types.h>
+#include <vtkm/VirtualObjectBase.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -17,7 +18,7 @@ namespace exec
 // the CellLocator we need it to be covarient, and this acts
 // like a base class.
 
-class CellLocator
+class CellLocator : public vtkm::VirtualObjectBase
 {
 public:
   VTKM_EXEC
@@ -32,7 +33,7 @@ public:
 namespace cont
 {
 
-class CellLocator : public ExecutionObjectBase
+class CellLocator : public vtkm::cont::ExecutionObjectBase
 {
 
 public:
@@ -68,15 +69,15 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT std::shared_ptr<vtkm::exec::CellLocator> PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(DeviceAdapter) const
   {
     vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    return PrepareForExecutionOnDevice(deviceId);
+    return PrepareForExecutionImpl(deviceId);
   }
 
 protected:
-  VTKM_CONT virtual std::shared_ptr<vtkm::exec::CellLocator> PrepareForExecutionOnDevice(
-    vtkm::cont::DeviceAdapterId& device) const = 0;
+  VTKM_CONT virtual const vtkm::exec::CellLocator* PrepareForExecutionImpl(
+    const vtkm::Int8 device) const = 0;
 
 private:
   vtkm::cont::DynamicCellSet CellSet;

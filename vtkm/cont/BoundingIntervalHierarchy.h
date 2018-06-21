@@ -21,6 +21,8 @@
 #ifndef vtk_m_cont_BoundingIntervalHierarchy_h
 #define vtk_m_cont_BoundingIntervalHierarchy_h
 
+#include <type_traits>
+
 #include <vtkm/Bounds.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
@@ -34,7 +36,9 @@
 #include <vtkm/cont/BoundingIntervalHierarchyNode.h>
 #include <vtkm/cont/CellLocator.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -870,101 +874,6 @@ private:
     }
   };
 
-  struct PrepareForExecutionFunctor
-  {
-  public:
-    template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter,
-                              const vtkm::cont::BoundingIntervalHierarchy* bih,
-                              std::shared_ptr<vtkm::exec::CellLocator>& bihExec) const
-    {
-
-      vtkm::cont::DynamicCellSet cellSet = bih->GetCellSet();
-      if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
-      {
-        using CellSetType = vtkm::cont::CellSetExplicit<>;
-        using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
-        bihExec = make_shared<ExecutionType>(bih->Nodes,
-                                             bih->ProcessedCellIds,
-                                             cellSet.Cast<CellSetType>(),
-                                             bih->GetCoords().GetData(),
-                                             DeviceAdapter());
-      }
-      else if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
-      {
-        using CellSetType = vtkm::cont::CellSetStructured<2>;
-        using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
-        bihExec = make_shared<ExecutionType>(bih->Nodes,
-                                             bih->ProcessedCellIds,
-                                             cellSet.Cast<CellSetType>(),
-                                             bih->GetCoords().GetData(),
-                                             DeviceAdapter());
-      }
-      else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
-      {
-        using CellSetType = vtkm::cont::CellSetStructured<3>;
-        using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
-        bihExec = make_shared<ExecutionType>(bih->Nodes,
-                                             bih->ProcessedCellIds,
-                                             cellSet.Cast<CellSetType>(),
-                                             bih->GetCoords().GetData(),
-                                             DeviceAdapter());
-      }
-      else if (cellSet.IsType<vtkm::cont::CellSetSingleType<>>())
-      {
-        using CellSetType = vtkm::cont::CellSetSingleType<>;
-        using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
-        bihExec = make_shared<ExecutionType>(bih->Nodes,
-                                             bih->ProcessedCellIds,
-                                             cellSet.Cast<CellSetType>(),
-                                             bih->GetCoords().GetData(),
-                                             DeviceAdapter());
-      }
-      else
-      {
-        throw vtkm::cont::ErrorBadType("Could not determine type to write out.");
-      }
-    }
-
-    template <typename T, typename... Ts>
-    std::shared_ptr<T> make_shared(Ts&&... args) const
-    {
-      return std::shared_ptr<T>(new T(std::forward<Ts>(args)...));
-    }
-  };
-
-public:
-  VTKM_CONT
-  BoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4, vtkm::IdComponent maxLeafSize = 5)
-    : NumPlanes(numPlanes)
-    , MaxLeafSize(maxLeafSize)
-  {
-  }
-
-  VTKM_CONT
-  void Build() override
-  {
-    BuildFunctor functor(this);
-    vtkm::cont::TryExecute(functor);
-  }
-
-protected:
-  VTKM_CONT
-  std::shared_ptr<vtkm::exec::CellLocator> PrepareForExecutionOnDevice(
-    vtkm::cont::DeviceAdapterId& device) const override
-  {
-    using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
-                                         vtkm::cont::DeviceAdapterTagTBB,
-                                         vtkm::cont::DeviceAdapterTagSerial>;
-    //vtkm::exec::CellLocator* toReturn;
-    std::shared_ptr<vtkm::exec::CellLocator> toReturn;
-    vtkm::cont::internal::FindDeviceAdapterTagAndCall(
-      device, DeviceList(), PrepareForExecutionFunctor(), this, toReturn);
-    //return make_unique<vtkm::exec::CellLocator>(*toReturn);
-    return toReturn;
-  }
-
-private:
   template <typename DeviceAdapter>
   VTKM_CONT IdArrayHandle CalculateSegmentSizes(const IdArrayHandle& segmentIds, vtkm::Id numCells)
   {
@@ -1116,12 +1025,102 @@ private:
     return scatterIndices;
   }
 
+  struct PrepareForExecutionFunctor
+  {
+  public:
+    template <typename DeviceAdapter>
+    VTKM_CONT void operator()(DeviceAdapter,
+                              const vtkm::cont::BoundingIntervalHierarchy* bih,
+                              const vtkm::exec::CellLocator** bihExec) const
+    {
+      using LocatorHandle = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
+      vtkm::cont::DynamicCellSet cellSet = bih->GetCellSet();
+      if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
+      {
+        using CellSetType = vtkm::cont::CellSetExplicit<>;
+        using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
+        ExecutionType* execObject = new ExecutionType(bih->Nodes,
+                                                      bih->ProcessedCellIds,
+                                                      bih->GetCellSet().Cast<CellSetType>(),
+                                                      bih->GetCoords().GetData(),
+                                                      DeviceAdapter());
+        *bihExec = (new LocatorHandle(execObject, false))->PrepareForExecution(DeviceAdapter());
+      }
+      else if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
+      {
+        using CellSetType = vtkm::cont::CellSetStructured<2>;
+        using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
+        ExecutionType* execObject = new ExecutionType(bih->Nodes,
+                                                      bih->ProcessedCellIds,
+                                                      bih->GetCellSet().Cast<CellSetType>(),
+                                                      bih->GetCoords().GetData(),
+                                                      DeviceAdapter());
+        *bihExec = (new LocatorHandle(execObject, false))->PrepareForExecution(DeviceAdapter());
+      }
+      else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
+      {
+        using CellSetType = vtkm::cont::CellSetStructured<3>;
+        using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
+        ExecutionType* execObject = new ExecutionType(bih->Nodes,
+                                                      bih->ProcessedCellIds,
+                                                      bih->GetCellSet().Cast<CellSetType>(),
+                                                      bih->GetCoords().GetData(),
+                                                      DeviceAdapter());
+        *bihExec = (new LocatorHandle(execObject, false))->PrepareForExecution(DeviceAdapter());
+      }
+      else if (cellSet.IsType<vtkm::cont::CellSetSingleType<>>())
+      {
+        using CellSetType = vtkm::cont::CellSetSingleType<>;
+        using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
+        ExecutionType* execObject = new ExecutionType(bih->Nodes,
+                                                      bih->ProcessedCellIds,
+                                                      bih->GetCellSet().Cast<CellSetType>(),
+                                                      bih->GetCoords().GetData(),
+                                                      DeviceAdapter());
+        *bihExec = (new LocatorHandle(execObject, false))->PrepareForExecution(DeviceAdapter());
+      }
+      else
+      {
+        throw vtkm::cont::ErrorBadType("Could not determine type to write out.");
+      }
+    }
+  };
+
+public:
+  VTKM_CONT
+  BoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4, vtkm::IdComponent maxLeafSize = 5)
+    : NumPlanes(numPlanes)
+    , MaxLeafSize(maxLeafSize)
+  {
+  }
+
+  VTKM_CONT
+  void Build() override
+  {
+    BuildFunctor functor(this);
+    vtkm::cont::TryExecute(functor);
+  }
+
+protected:
+  VTKM_CONT
+  const vtkm::exec::CellLocator* PrepareForExecutionImpl(const vtkm::Int8 device) const override
+  {
+    using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
+                                         vtkm::cont::DeviceAdapterTagTBB,
+                                         vtkm::cont::DeviceAdapterTagSerial>;
+    const vtkm::exec::CellLocator* toReturn;
+    vtkm::cont::internal::FindDeviceAdapterTagAndCall(
+      device, DeviceList(), PrepareForExecutionFunctor(), this, &toReturn);
+    return toReturn;
+  }
+
+private:
   vtkm::IdComponent NumPlanes;
   vtkm::IdComponent MaxLeafSize;
   vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> Nodes;
   IdArrayHandle ProcessedCellIds;
 };
 }
-} // namespace vtkm::worklet::spatialstructure
+} // namespace vtkm::cont
 
 #endif // vtk_m_cont_BoundingIntervalHierarchy_h
