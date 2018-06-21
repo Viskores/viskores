@@ -84,9 +84,10 @@ public:
   VTKM_CONT void SetCartesianToCylindrical() { cartesianToCylindrical = true; }
   VTKM_CONT void SetCylindricalToCartesian() { cartesianToCylindrical = false; }
 
-  template <typename CoordsStorageType>
+  template <typename CoordsStorageType, typename DeviceAdapterTag>
   void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints)
+           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints,
+           DeviceAdapterTag) const
   {
     if (cartesianToCylindrical)
     {
@@ -100,9 +101,10 @@ public:
     }
   }
 
-  template <typename CoordsStorageType>
+  template <typename CoordsStorageType, typename DeviceAdapterTag>
   void Run(const vtkm::cont::CoordinateSystem& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints)
+           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints,
+           DeviceAdapterTag) const
   {
     if (cartesianToCylindrical)
     {
@@ -183,34 +185,36 @@ public:
   VTKM_CONT void SetCartesianToSpherical() { CartesianToSpherical = true; }
   VTKM_CONT void SetSphericalToCartesian() { CartesianToSpherical = false; }
 
-  template <typename CoordsStorageType>
+  template <typename CoordsStorageType, typename DeviceAdapterTag>
   void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints)
+           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints,
+           DeviceAdapterTag) const
   {
     if (CartesianToSpherical)
     {
-      vtkm::worklet::DispatcherMapField<CarToSphere> dispatcher;
+      vtkm::worklet::DispatcherMapField<CarToSphere, DeviceAdapterTag> dispatcher;
       dispatcher.Invoke(inPoints, outPoints);
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<SphereToCar> dispatcher;
+      vtkm::worklet::DispatcherMapField<SphereToCar, DeviceAdapterTag> dispatcher;
       dispatcher.Invoke(inPoints, outPoints);
     }
   }
 
-  template <typename CoordsStorageType>
+  template <typename CoordsStorageType, typename DeviceAdapterTag>
   void Run(const vtkm::cont::CoordinateSystem& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints)
+           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints,
+           DeviceAdapterTag) const
   {
     if (CartesianToSpherical)
     {
-      vtkm::worklet::DispatcherMapField<CarToSphere> dispatcher;
+      vtkm::worklet::DispatcherMapField<CarToSphere, DeviceAdapterTag> dispatcher;
       dispatcher.Invoke(inPoints, outPoints);
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<SphereToCar> dispatcher;
+      vtkm::worklet::DispatcherMapField<SphereToCar, DeviceAdapterTag> dispatcher;
       dispatcher.Invoke(inPoints, outPoints);
     }
   }
