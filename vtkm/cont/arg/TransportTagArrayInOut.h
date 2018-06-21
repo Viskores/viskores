@@ -50,7 +50,7 @@ struct Transport<vtkm::cont::arg::TransportTagArrayInOut, ContObjectType, Device
   // is not an array handle as an argument that is expected to be one.
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  using ExecObjectType = typename ContObjectType::template ExecutionTypes<Device>::Portal;
+  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInPlace(Device()));
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(ContObjectType object,
