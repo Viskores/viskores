@@ -73,6 +73,22 @@ struct ListTagJoin : detail::ListRoot
   using list = typename detail::ListJoin<typename ListTag1::list, typename ListTag2::list>::type;
 };
 
+
+/// A tag that is constructed by appending \c Type to \c ListTag.
+template <typename ListTag, typename Type>
+struct ListTagAppend : detail::ListRoot
+{
+  using list = typename detail::ListJoin<typename ListTag::list, detail::ListBase<Type>>::type;
+};
+
+/// Append \c Type to \c ListTag only if \c ListTag does not already contain \c Type.
+/// No checks are performed to see if \c ListTag itself has only unqiue elements.
+template <typename ListTag, typename Type>
+struct ListTagAppendUnique : detail::ListRoot
+{
+  using list = typename detail::ListAppendUniqueImpl<typename ListTag::list, Type>::type;
+};
+
 /// A tag that consists of elements that are found in both tags. This struct
 /// can be subclassed and still behave like a list tag.
 template <typename ListTag1, typename ListTag2>
