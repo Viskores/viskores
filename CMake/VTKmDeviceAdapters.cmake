@@ -91,13 +91,13 @@ if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
 
   add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
   if(OpenMP_CXX_FLAGS)
-    set_target_properties(vtkm::openmp PROPERTIES
-      INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>)
+    set_property(TARGET vtkm::openmp
+      APPEND PROPERTY INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>)
 
     if(VTKm_ENABLE_CUDA)
       string(REPLACE ";" "," openmp_cuda_flags "-Xcompiler=${OpenMP_CXX_FLAGS}")
-      set_target_properties(vtkm::openmp PROPERTIES
-        INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:${openmp_cuda_flags}>)
+      set_property(TARGET vtkm::openmp
+        APPEND PROPERTY INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:${openmp_cuda_flags}>)
     endif()
   endif()
   if(OpenMP_CXX_LIBRARIES)
