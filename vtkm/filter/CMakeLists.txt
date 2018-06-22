@@ -25,6 +25,7 @@ set(headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   ContourTreeUniform.h
+  CoordinateSystemTransform.h
   CrossProduct.h
   DotProduct.h
   Entropy.h
@@ -71,6 +72,7 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
+  CoordinateSystemTransform.hxx  
   CrossProduct.hxx
   DotProduct.hxx
   Entropy.hxx

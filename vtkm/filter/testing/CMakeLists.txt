@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
+  UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
   UnitTestDotProductFilter.cxx
   UnitTestEntropyFilter.cxx
