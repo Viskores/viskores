@@ -850,7 +850,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   using T = typename FieldVecType::ComponentType;
   using VecT = vtkm::Vec<T, 2>;
 
-  VecT pc(static_cast<T>(pcoords[0]), static_cast<T>(pcoords[1]));
+  VecT pc(static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[0]),
+          static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[1]));
   VecT rc = VecT(T(1)) - pc;
 
   VecT sum = field[0] * VecT(-rc[1], -rc[0]);
@@ -1043,7 +1044,9 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   using T = typename FieldVecType::ComponentType;
   using VecT = vtkm::Vec<T, 3>;
 
-  VecT pc(static_cast<T>(pcoords[0]), static_cast<T>(pcoords[1]), static_cast<T>(pcoords[2]));
+  VecT pc(static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[0]),
+          static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[1]),
+          static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[2]));
   VecT rc = VecT(T(1)) - pc;
 
   VecT sum = field[0] * VecT(-rc[1] * rc[2], -rc[0] * rc[2], -rc[0] * rc[1]);
