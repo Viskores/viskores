@@ -84,28 +84,30 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   endif()
 endif()
 
+
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
+  cmake_minimum_required(VERSION 3.9...3.12 FATAL_ERROR)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
-  if (CMAKE_VERSION VERSION_LESS 3.10)
-    add_library(vtkm::openmp SHARED IMPORTED GLOBAL)
-  else()
-    add_library(vtkm::openmp UNKNOWN IMPORTED GLOBAL)
-  endif()
-
+  add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
   if(OpenMP_CXX_FLAGS)
     set_target_properties(vtkm::openmp PROPERTIES
-      INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>")
+      INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>)
+
+    if(VTKm_ENABLE_CUDA)
+      string(REPLACE ";" "," openmp_cuda_flags "-Xcompiler=${OpenMP_CXX_FLAGS}")
+      set_target_properties(vtkm::openmp PROPERTIES
+        INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:${openmp_cuda_flags}>)
+    endif()
   endif()
   if(OpenMP_CXX_LIBRARIES)
     set_target_properties(vtkm::openmp PROPERTIES
-      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
       INTERFACE_LINK_LIBRARIES "${OpenMP_CXX_LIBRARIES}")
   endif()
 endif()
 
 if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
-  cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.9...3.12 FATAL_ERROR)
   enable_language(CUDA)
 
   #To work around https://gitlab.kitware.com/cmake/cmake/issues/17512

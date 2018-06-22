@@ -67,6 +67,18 @@ struct TestListTagUniversal : vtkm::ListTagUniversal
 {
 };
 
+struct TestListTagAppend : vtkm::ListTagAppend<TestListTag3, TestClass<34>>
+{
+};
+
+struct TestListTagAppendUnique1 : vtkm::ListTagAppendUnique<TestListTag3, TestClass<32>>
+{
+};
+
+struct TestListTagAppendUnique2 : vtkm::ListTagAppendUnique<TestListTagAppendUnique1, TestClass<34>>
+{
+};
+
 template <int N, int M>
 std::pair<int, int> test_number(brigand::list<TestClass<N>, TestClass<M>>)
 {
@@ -238,6 +250,15 @@ void TestLists()
   std::cout << "ListTagCrossProduct" << std::endl;
   TryList(vtkm::Vec<std::pair<int, int>, 3>({ 31, 11 }, { 32, 11 }, { 33, 11 }),
           TestListTagCrossProduct());
+
+  std::cout << "ListTagAppend" << std::endl;
+  TryList(vtkm::Vec<int, 4>(31, 32, 33, 34), TestListTagAppend());
+
+  std::cout << "ListTagAppendUnique1" << std::endl;
+  TryList(vtkm::Vec<int, 3>(31, 32, 33), TestListTagAppendUnique1());
+
+  std::cout << "ListTagAppendUnique2" << std::endl;
+  TryList(vtkm::Vec<int, 4>(31, 32, 33, 34), TestListTagAppendUnique2());
 
 
 
