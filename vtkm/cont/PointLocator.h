@@ -55,16 +55,18 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(DeviceAdapter device)
+  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(DeviceAdapter device) const
   {
-    return PrepareForExecution(GetDeviceId(device));
+    vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
+    return PrepareForExecutionImp(deviceId);
   }
 
-  VTKM_CONT virtual const vtkm::exec::PointLocator* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId deviceId) = 0;
+  VTKM_CONT virtual const vtkm::exec::PointLocator* PrepareForExecutionImp(
+    vtkm::cont::DeviceAdapterId deviceId) const = 0;
 
 private:
   vtkm::cont::CoordinateSystem coordinates;
+
   bool dirty;
 };
 }

@@ -82,8 +82,6 @@ public:
   /// \param coords An ArrayHandle of x, y, z coordinates of input points.
   /// \param device Tag for selecting device adapter
 
-  //template <typename DeviceAdapter>
-  //void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& coords, DeviceAdapter)
   struct BuildFunctor
   {
     BuildFunctor(vtkm::cont::PointLocatorUniformGrid _self)
@@ -106,17 +104,17 @@ public:
 
       // bin points into cells and give each of them the cell id.
       BinPointsWorklet cellIdWorklet(self.Min, self.Max, self.Dims);
-      vtkm::worklet::DispatcherMapField<BinPointsWorklet> dispatchCellId(cellIdWorklet);
-      dispatchCellId.Invoke(self.coords, self._CellIds);
+      vtkm::worklet::DispatcherMapField<BinPointsWorklet, Device> dispatchCellId(cellIdWorklet);
+      dispatchCellId.Invoke(self.coords, self.cellIds);
 
       // Group points of the same cell together by sorting them according to the cell ids
-      Algorithm::SortByKey(self._CellIds, self.pointIds);
+      Algorithm::SortByKey(self.cellIds, self.pointIds);
 
       // for each cell, find the lower and upper bound of indices to the sorted point ids.
       vtkm::cont::ArrayHandleCounting<vtkm::Id> cell_ids_counting(
         0, 1, self.Dims[0] * self.Dims[1] * self.Dims[2]);
-      Algorithm::UpperBounds(self._CellIds, cell_ids_counting, self._CellUpper);
-      Algorithm::LowerBounds(self._CellIds, cell_ids_counting, self._CellLower);
+      Algorithm::UpperBounds(self.cellIds, cell_ids_counting, self.cellUpper);
+      Algorithm::LowerBounds(self.cellIds, cell_ids_counting, self.cellLower);
 
       return true;
     }
@@ -139,22 +137,41 @@ public:
 
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;
 
+  struct PrepareForExecutionFunctor
+  {
+    template <typename DeviceAdapter>
+    VTKM_CONT void operator()(DeviceAdapter,
+                              const vtkm::cont::PointLocatorUniformGrid& self,
+                              HandleType handle) const
+    {
+      vtkm::exec::PointLocatorUniformGrid* locator =
+        new vtkm::exec::PointLocatorUniformGrid(self.Min,
+                                                self.Max,
+                                                self.Dims,
+                                                self.coords.PrepareForInput(DeviceAdapter()),
+                                                self.pointIds.PrepareForInput(DeviceAdapter()),
+                                                self.cellLower.PrepareForInput(DeviceAdapter()),
+                                                self.cellUpper.PrepareForInput(DeviceAdapter()));
+      handle.Reset(locator);
+    }
+  };
+
   VTKM_CONT
-  const vtkm::exec::PointLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) override
+  const vtkm::exec::PointLocator* PrepareForExecutionImp(
+    vtkm::cont::DeviceAdapterId deviceId) const override
   {
     // TODO: call VirtualObjectHandle::PrepareForExecution() and return vtkm::exec::PointLocator
     // TODO: how to convert deviceId back to DeviceAdapter tag?
     using DeviceAdapter = vtkm::cont::DeviceAdapterTagSerial;
-    vtkm::exec::PointLocatorUniformGrid* locator =
-      new vtkm::exec::PointLocatorUniformGrid(Min,
-                                              Max,
-                                              Dims,
-                                              coords.PrepareForInput(DeviceAdapter()),
-                                              pointIds.PrepareForInput(DeviceAdapter()),
-                                              _CellLower.PrepareForInput(DeviceAdapter()),
-                                              _CellUpper.PrepareForInput(DeviceAdapter()));
-    ExecHandle = new HandleType(locator, false);
-    return ExecHandle->PrepareForExecution(DeviceAdapter());
+    using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
+                                         vtkm::cont::DeviceAdapterTagTBB,
+                                         vtkm::cont::DeviceAdapterTagSerial>;
+
+    //HandleType ExecHandle; // = new HandleType(locator, false);
+    vtkm::cont::internal::FindDeviceAdapterTagAndCall(
+      deviceId, DeviceList(), PrepareForExecutionFunctor(), *this, ExecHandle);
+
+    return ExecHandle.PrepareForExecution(DeviceAdapter());
   }
 
 private:
@@ -165,12 +182,12 @@ private:
   // TODO: how to convert CoordinateSystem to ArrayHandle<Vec<Float, 3>>?
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> coords;
   vtkm::cont::ArrayHandle<vtkm::Id> pointIds;
-  vtkm::cont::ArrayHandle<vtkm::Id> _CellIds;
-  vtkm::cont::ArrayHandle<vtkm::Id> _CellLower;
-  vtkm::cont::ArrayHandle<vtkm::Id> _CellUpper;
+  vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
+  vtkm::cont::ArrayHandle<vtkm::Id> cellLower;
+  vtkm::cont::ArrayHandle<vtkm::Id> cellUpper;
 
   // TODO: std::unique_ptr/std::shared_ptr?
-  HandleType* ExecHandle;
+  HandleType ExecHandle;
 };
 }
 }

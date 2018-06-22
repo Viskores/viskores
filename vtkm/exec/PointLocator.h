@@ -30,9 +30,9 @@ namespace exec
 class PointLocator : public vtkm::VirtualObjectBase
 {
 public:
-  VTKM_EXEC virtual void FindNeareastNeighbor(vtkm::Vec<vtkm::FloatDefault, 3> queryPoint,
-                                              vtkm::Id& pointId,
-                                              FloatDefault& distanceSquared) = 0;
+  VTKM_EXEC virtual void FindNearestNeighbor(vtkm::Vec<vtkm::FloatDefault, 3> queryPoint,
+                                             vtkm::Id& pointId,
+                                             FloatDefault& distanceSquared) const = 0;
 };
 }
 }

@@ -21,13 +21,14 @@
 #ifndef vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
 #define vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
 
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
+//#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 
 #include <random>
 
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/cont/PointLocatorUniformGrid.h>
+#include <vtkm/exec/PointLocatorUniformGrid.h>
 
 ////brute force method /////
 template <typename CoordiVecT, typename CoordiPortalT, typename CoordiT>
@@ -77,7 +78,7 @@ public:
   }
 };
 
-#if 0
+#if 1
 class PointLocatorUniformGridWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -98,7 +99,7 @@ public:
                             IdType& nnIdOut,
                             CoordiType& nnDis) const
   {
-    locator.FindNearestPoint(qc, nnIdOut, nnDis);
+    locator->FindNearestNeighbor(qc, nnIdOut, nnDis);
   };
 };
 #endif
@@ -110,7 +111,15 @@ public:
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   void TestTest() const
   {
-#if 0
+
+    // TODO: locator needs to be a point to have runtime polymorphism.
+    //vtkm::cont::PointLocator * locator = new vtkm::cont::PointLocatorUniformGrid(
+    //  { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
+    vtkm::cont::PointLocatorUniformGrid locator(
+      { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
+    // TODO: generate training points
+    locator.Build();
+
     vtkm::Int32 nTrainingPoints = 1000;
     vtkm::Int32 nTestingPoint = 1000;
 
@@ -126,10 +135,12 @@ public:
     }
     auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi);
 
+#if 0
     vtkm::cont::PointLocatorUniformGrid<vtkm::Float32> uniformGrid(
       { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
     uniformGrid.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     auto locator = uniformGrid.PrepareForExecution(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+#endif
 
     ///// randomly generate training points/////
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
@@ -141,12 +152,14 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
-
+#if 1
     PointLocatorUniformGridWorklet pointLocatorUniformGridWorklet;
-    vtkm::worklet::DispatcherMapField<PointLocatorUniformGridWorklet> locatorDispatcher(
-      pointLocatorUniformGridWorklet);
+    vtkm::worklet::DispatcherMapField<PointLocatorUniformGridWorklet, DeviceAdapter>
+      locatorDispatcher(pointLocatorUniformGridWorklet);
     locatorDispatcher.Invoke(qc_Handle, locator, nnId_Handle, nnDis_Handle);
+#endif
 
+#if 0
     // brute force
     vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;

@@ -77,10 +77,12 @@ public:
   /// \param nearestNeighborId Neareast neighbor in the training dataset for each points in
   ///                            the test set
   /// \param distance Distance between query points and their nearest neighbors.
-  VTKM_EXEC virtual void FindNeareastNeighbor(vtkm::Vec<vtkm::FloatDefault, 3> queryPoint,
-                                              vtkm::Id& nearestNeighborId,
-                                              FloatDefault& distance) override
+  VTKM_EXEC virtual void FindNearestNeighbor(vtkm::Vec<vtkm::FloatDefault, 3> queryPoint,
+                                             vtkm::Id& nearestNeighborId,
+                                             FloatDefault& distance) const override
   {
+    std::cout << "FindNeareastNeighbor: " << queryPoint << std::endl;
+#if 0
     auto nlayers = vtkm::Max(vtkm::Max(Dims[0], Dims[1]), Dims[2]);
 
     vtkm::Vec<vtkm::Id, 3> xyz = (queryPoint - Min) / Dxdydz;
@@ -104,7 +106,7 @@ public:
           for (auto k = minz; k <= maxz; k++)
           {
             if (i == (xyz[0] + layer) || i == (xyz[0] - layer) || j == (xyz[1] + layer) ||
-                j == (xyz[1] - layer) || k == (xyz[2] + layer) || k == (xyz[2] - layer))
+              j == (xyz[1] - layer) || k == (xyz[2] + layer) || k == (xyz[2] - layer))
             {
               auto cellid = i + j * Dims[0] + k * Dims[0] * Dims[1];
               auto lower = cellLower.Get(cellid);
@@ -133,6 +135,7 @@ public:
 
     nearestNeighborId = neareast;
     distance = vtkm::Sqrt(min_distance);
+#endif
   }
 
 private:
