@@ -693,24 +693,24 @@ private:
       vtkm::cont::CoordinateSystem coords = Self->GetCoords();
       vtkm::cont::ArrayHandleVirtualCoordinates points = coords.GetData();
 
-      std::cout << "No of cells: " << numCells << "\n";
-      std::cout.precision(3);
-      START_TIMER(s11);
+      //std::cout << "No of cells: " << numCells << "\n";
+      //std::cout.precision(3);
+      //START_TIMER(s11);
       IdArrayHandle cellIds;
       Algorithms::Copy(CountingIdArrayHandle(0, 1, numCells), cellIds);
       IdArrayHandle segmentIds;
       Algorithms::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numCells), segmentIds);
-      PRINT_TIMER("1.1", s11);
+      //PRINT_TIMER("1.1", s11);
 
-      START_TIMER(s12);
+      //START_TIMER(s12);
       CoordsArrayHandle centerXs, centerYs, centerZs;
       RangeArrayHandle xRanges, yRanges, zRanges;
       vtkm::worklet::DispatcherMapTopology<CellRangesExtracter, DeviceAdapter>().Invoke(
         cellSet, points, xRanges, yRanges, zRanges, centerXs, centerYs, centerZs);
-      PRINT_TIMER("1.2", s12);
+      //PRINT_TIMER("1.2", s12);
 
       bool done = false;
-      vtkm::IdComponent iteration = 0;
+      //vtkm::IdComponent iteration = 0;
       vtkm::Id nodesIndexOffset = 0;
       vtkm::Id numSegments = 1;
       IdArrayHandle discardKeys;
@@ -723,24 +723,24 @@ private:
 
       while (!done)
       {
-        std::cout << "**** Iteration " << (++iteration) << " ****\n";
+        //std::cout << "**** Iteration " << (++iteration) << " ****\n";
         Timer iterationTimer;
 
         //Output(segmentSizes);
-        START_TIMER(s21);
+        //START_TIMER(s21);
         // Calculate the X, Y, Z bounding ranges for each segment
         RangeArrayHandle perSegmentXRanges, perSegmentYRanges, perSegmentZRanges;
         Algorithms::ReduceByKey(segmentIds, xRanges, discardKeys, perSegmentXRanges, vtkm::Add());
         Algorithms::ReduceByKey(segmentIds, yRanges, discardKeys, perSegmentYRanges, vtkm::Add());
         Algorithms::ReduceByKey(segmentIds, zRanges, discardKeys, perSegmentZRanges, vtkm::Add());
-        PRINT_TIMER("2.1", s21);
+        //PRINT_TIMER("2.1", s21);
 
         // Expand the per segment bounding ranges, to per cell;
         RangePermutationArrayHandle segmentXRanges(segmentIds, perSegmentXRanges);
         RangePermutationArrayHandle segmentYRanges(segmentIds, perSegmentYRanges);
         RangePermutationArrayHandle segmentZRanges(segmentIds, perSegmentZRanges);
 
-        START_TIMER(s22);
+        //START_TIMER(s22);
         // Calculate split costs for NumPlanes split planes, across X, Y and Z dimensions
         vtkm::Id numSplitPlanes = numSegments * (Self->NumPlanes + 1);
         vtkm::cont::ArrayHandle<SplitProperties> xSplits, ySplits, zSplits;
@@ -753,9 +753,9 @@ private:
           segmentYRanges, yRanges, centerYs, segmentIds, ySplits, DeviceAdapter());
         Self->CalculateSplitCosts(
           segmentZRanges, zRanges, centerZs, segmentIds, zSplits, DeviceAdapter());
-        PRINT_TIMER("2.2", s22);
+        //PRINT_TIMER("2.2", s22);
 
-        START_TIMER(s23);
+        //START_TIMER(s23);
         // Select best split plane and dimension across X, Y, Z dimension, per segment
         SplitArrayHandle segmentSplits;
         vtkm::cont::ArrayHandle<vtkm::Float64> segmentPlanes;
@@ -771,28 +771,28 @@ private:
                                        segmentSplits,
                                        segmentPlanes,
                                        splitChoices);
-        PRINT_TIMER("2.3", s23);
+        //PRINT_TIMER("2.3", s23);
 
         // Expand the per segment split plane to per cell
         SplitPermutationArrayHandle splits(segmentIds, segmentSplits);
         CoordsPermutationArrayHandle planes(segmentIds, segmentPlanes);
 
-        START_TIMER(s31);
+        //START_TIMER(s31);
         IdArrayHandle leqFlags;
         vtkm::worklet::DispatcherMapField<CalculateSplitDirectionFlag> computeFlagDispatcher;
         computeFlagDispatcher.Invoke(centerXs, centerYs, centerZs, splits, planes, leqFlags);
-        PRINT_TIMER("3.1", s31);
+        //PRINT_TIMER("3.1", s31);
 
-        START_TIMER(s32);
+        //START_TIMER(s32);
         IdArrayHandle scatterIndices =
           Self->CalculateSplitScatterIndices(cellIds, leqFlags, segmentIds, DeviceAdapter());
         IdArrayHandle newSegmentIds;
         IdPermutationArrayHandle sizes(segmentIds, segmentSizes);
         vtkm::worklet::DispatcherMapField<SegmentSplitter>(SegmentSplitter(Self->MaxLeafSize))
           .Invoke(segmentIds, leqFlags, sizes, newSegmentIds);
-        PRINT_TIMER("3.2", s32);
+        //PRINT_TIMER("3.2", s32);
 
-        START_TIMER(s33);
+        //START_TIMER(s33);
         vtkm::cont::ArrayHandle<vtkm::Id> choices;
         Algorithms::Copy(IdPermutationArrayHandle(segmentIds, splitChoices), choices);
         cellIds = ScatterArray(cellIds, scatterIndices);
@@ -805,10 +805,10 @@ private:
         centerYs = ScatterArray(centerYs, scatterIndices);
         centerZs = ScatterArray(centerZs, scatterIndices);
         choices = ScatterArray(choices, scatterIndices);
-        PRINT_TIMER("3.3", s33);
+        //PRINT_TIMER("3.3", s33);
 
         // Move the cell ids at leafs to the processed cellids list
-        START_TIMER(s41);
+        //START_TIMER(s41);
         IdArrayHandle nonSplitSegmentSizes;
         vtkm::worklet::DispatcherMapField<NonSplitIndexCalculator>(
           NonSplitIndexCalculator(Self->MaxLeafSize))
@@ -817,9 +817,9 @@ private:
         Algorithms::ScanExclusive(nonSplitSegmentSizes, nonSplitSegmentIndices);
         IdArrayHandle runningSplitSegmentCounts;
         Algorithms::ScanExclusive(splitChoices, runningSplitSegmentCounts);
-        PRINT_TIMER("4.1", s41);
+        //PRINT_TIMER("4.1", s41);
 
-        START_TIMER(s42);
+        //START_TIMER(s42);
         IdArrayHandle doneCellIds;
         Algorithms::CopyIf(cellIds, choices, doneCellIds, Invert());
         Algorithms::CopySubRange(
@@ -833,9 +833,9 @@ private:
         centerXs = CopyIfArray(centerXs, choices, DeviceAdapter());
         centerYs = CopyIfArray(centerYs, choices, DeviceAdapter());
         centerZs = CopyIfArray(centerZs, choices, DeviceAdapter());
-        PRINT_TIMER("4.2", s42);
+        //PRINT_TIMER("4.2", s42);
 
-        START_TIMER(s43);
+        //START_TIMER(s43);
         // Make a new nodes with enough nodes for the currnt level, copying over the old one
         vtkm::Id nodesSize = Self->Nodes.GetNumberOfValues() + numSegments;
         vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> newTree;
@@ -854,8 +854,8 @@ private:
         nodesIndexOffset = nodesSize;
         cellIdsOffset += doneCellIds.GetNumberOfValues();
         Self->Nodes = newTree;
-        PRINT_TIMER("4.3", s43);
-        START_TIMER(s51);
+        //PRINT_TIMER("4.3", s43);
+        //START_TIMER(s51);
         segmentIds = newSegmentIds;
         segmentSizes =
           Self->CalculateSegmentSizes<DeviceAdapter>(segmentIds, segmentIds.GetNumberOfValues());
@@ -866,10 +866,10 @@ private:
         Algorithms::Unique(uniqueSegmentIds);
         numSegments = uniqueSegmentIds.GetNumberOfValues();
         done = segmentIds.GetNumberOfValues() == 0;
-        PRINT_TIMER("5.1", s51);
-        std::cout << "Iteration time: " << iterationTimer.GetElapsedTime() << "\n";
+        //PRINT_TIMER("5.1", s51);
+        //std::cout << "Iteration time: " << iterationTimer.GetElapsedTime() << "\n";
       }
-      std::cout << "Total time: " << totalTimer.GetElapsedTime() << "\n";
+      //std::cout << "Total time: " << totalTimer.GetElapsedTime() << "\n";
       return true;
     }
   };

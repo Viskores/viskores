@@ -86,7 +86,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> centroids;
   vtkm::worklet::DispatcherMapTopology<CellCentroidCalculator>().Invoke(
     cellSet, vertices, centroids);
-  std::cout << "Centroids calculation time: " << centroidsTimer.GetElapsedTime() << "\n";
+  //std::cout << "Centroids calculation time: " << centroidsTimer.GetElapsedTime() << "\n";
 
   vtkm::cont::ArrayHandleCounting<vtkm::Id> expectedCellIds(0, 1, cellSet.GetNumberOfCells());
 
@@ -98,11 +98,6 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
   cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 200);
 #endif
-
-  /*vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    std::unique_ptr<vtkm::exec::CellLocator> temp = bih.PrepareForExecution(deviceId);
-    vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter>& bihExec
-      = dynamic_cast<vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter>&>(*temp);*/
 
   vtkm::worklet::DispatcherMapField<BoundingIntervalHierarchyTester>().Invoke(
     centroids, bih, expectedCellIds, results);
@@ -117,17 +112,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   std::cout << "Average interpolation rate: "
             << (static_cast<vtkm::Float64>(results.GetNumberOfValues()) / timeDiff) << "\n";
   std::cout << "No of diffs: " << numDiffs << "\n";
-}
-
-vtkm::cont::DataSet LoadFromFile(const char* file)
-{
-  vtkm::io::reader::VTKDataSetReader reader(file);
-  return reader.ReadDataSet();
-}
-
-void TestBoundingIntervalHierarchyFromFile(const char* file, vtkm::IdComponent numPlanes)
-{
-  TestBoundingIntervalHierarchy(LoadFromFile(file), numPlanes);
+  VTKM_TEST_ASSERT(numDiffs == 0, "Calculated cell Ids not the same as expected cell Ids");
 }
 
 void RunTest()
@@ -136,10 +121,6 @@ void RunTest()
   TestBoundingIntervalHierarchy(ConstructDataSet(145), 4);
   TestBoundingIntervalHierarchy(ConstructDataSet(145), 6);
   TestBoundingIntervalHierarchy(ConstructDataSet(145), 9);
-  TestBoundingIntervalHierarchyFromFile("buoyancy.vtk", 3);
-  TestBoundingIntervalHierarchyFromFile("buoyancy.vtk", 4);
-  TestBoundingIntervalHierarchyFromFile("buoyancy.vtk", 6);
-  TestBoundingIntervalHierarchyFromFile("buoyancy.vtk", 9);
 }
 
 } // anonymous namespace
