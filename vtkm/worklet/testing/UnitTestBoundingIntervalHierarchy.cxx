@@ -117,10 +117,10 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
 
 void RunTest()
 {
-  TestBoundingIntervalHierarchy(ConstructDataSet(145), 3);
-  TestBoundingIntervalHierarchy(ConstructDataSet(145), 4);
-  TestBoundingIntervalHierarchy(ConstructDataSet(145), 6);
-  TestBoundingIntervalHierarchy(ConstructDataSet(145), 9);
+  TestBoundingIntervalHierarchy(ConstructDataSet(10), 3);
+  TestBoundingIntervalHierarchy(ConstructDataSet(10), 4);
+  TestBoundingIntervalHierarchy(ConstructDataSet(10), 6);
+  TestBoundingIntervalHierarchy(ConstructDataSet(10), 9);
 }
 
 } // anonymous namespace
