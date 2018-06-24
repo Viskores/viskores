@@ -108,7 +108,7 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
   return dataSet;
 }
 
-#if 0    
+#if 0
 void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
                             const std::string fieldName,
                             const vtkm::cont::DataSet& result,
@@ -189,7 +189,7 @@ void TestCoordinateSystemTransform()
 
   //Test cartesian to cyl
   vtkm::cont::DataSet dsCart = MakeTestDataSet(CART);
-  vtkm::filter::CylindricalCoordinateTransform<vtkm::FloatDefault> cylTrn;
+  vtkm::filter::CylindricalCoordinateTransform cylTrn;
 
   cylTrn.SetOutputFieldName("cylindricalCoords");
   cylTrn.SetUseCoordinateSystemAsField(true);

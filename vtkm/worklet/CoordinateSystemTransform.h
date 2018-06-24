@@ -123,7 +123,6 @@ struct CarToSphere : public vtkm::worklet::WorkletMapField
 };
 };
 
-template <typename T>
 class CylindricalCoordinateTransform
 {
 public:
@@ -136,9 +135,9 @@ public:
   VTKM_CONT void SetCartesianToCylindrical() { cartesianToCylindrical = true; }
   VTKM_CONT void SetCylindricalToCartesian() { cartesianToCylindrical = false; }
 
-  template <typename CoordsStorageType, typename DeviceAdapterTag>
-  void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints,
+  template <typename T, typename InStorageType, typename OutStorageType, typename DeviceAdapterTag>
+  void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, InStorageType>& inPoints,
+           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, OutStorageType>& outPoints,
            DeviceAdapterTag) const
   {
     if (cartesianToCylindrical)
@@ -153,7 +152,7 @@ public:
     }
   }
 
-  template <typename CoordsStorageType, typename DeviceAdapterTag>
+  template <typename T, typename CoordsStorageType, typename DeviceAdapterTag>
   void Run(const vtkm::cont::CoordinateSystem& inPoints,
            vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints,
            DeviceAdapterTag) const

@@ -31,9 +31,8 @@ namespace filter
 /// \brief
 ///
 /// Generate a coordinate transformation on coordiantes from a dataset.
-template <typename S>
 class CylindricalCoordinateTransform
-  : public vtkm::filter::FilterField<CylindricalCoordinateTransform<S>>
+  : public vtkm::filter::FilterField<CylindricalCoordinateTransform>
 {
 public:
   VTKM_CONT
@@ -50,11 +49,11 @@ public:
                                           const DeviceAdapter& tag);
 
 private:
-  vtkm::worklet::CylindricalCoordinateTransform<S> Worklet;
+  vtkm::worklet::CylindricalCoordinateTransform Worklet;
 };
 
-template <typename S>
-class FilterTraits<CylindricalCoordinateTransform<S>>
+template <>
+class FilterTraits<CylindricalCoordinateTransform>
 {
 public:
   //Point Elevation can only convert Float and Double Vec3 arrays

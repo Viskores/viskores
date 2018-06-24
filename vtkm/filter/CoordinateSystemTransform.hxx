@@ -27,17 +27,15 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-template <typename S>
-inline VTKM_CONT CylindricalCoordinateTransform<S>::CylindricalCoordinateTransform()
+inline VTKM_CONT CylindricalCoordinateTransform::CylindricalCoordinateTransform()
   : Worklet()
 {
   this->SetOutputFieldName("cylindricalCoordinateSystemTransform");
 }
 
 //-----------------------------------------------------------------------------
-template <typename S>
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::cont::DataSet CylindricalCoordinateTransform<S>::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
@@ -45,9 +43,7 @@ inline VTKM_CONT vtkm::cont::DataSet CylindricalCoordinateTransform<S>::DoExecut
   const DeviceAdapter& device)
 {
   vtkm::cont::ArrayHandle<T> outArray;
-  vtkm::cont::ArrayHandle<T> inArray;
-
-  Worklet.Run(inDataSet.GetCoordinateSystem().GetData(), outArray, device);
+  Worklet.Run(field, outArray, device);
 
   /*
   vtkm::worklet::DispatcherMapField<vtkm::worklet::CylindricalCoordinateTransform<T>, DeviceAdapter> dispatcher(
@@ -82,7 +78,7 @@ inline VTKM_CONT vtkm::cont::DataSet SphericalCoordinateTransform<T>::DoExecute(
   const DeviceAdapter&)
 {
   vtkm::cont::ArrayHandle<T> outArray;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::CylindricalCoordinateTransform<T>, DeviceAdapter>
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::SphericalCoordinateTransform<T>, DeviceAdapter>
     dispatcher(this->Worklet);
 
   dispatcher.Invoke(field, outArray);

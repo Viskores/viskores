@@ -153,7 +153,7 @@ void TestCoordinateSystemTransform()
 
   //Test cartesian to cyl
   vtkm::cont::DataSet dsCart = MakeTestDataSet(CART);
-  vtkm::worklet::CylindricalCoordinateTransform<vtkm::FloatDefault> cylTrn;
+  vtkm::worklet::CylindricalCoordinateTransform cylTrn;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> carToCylPts;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> revResult;

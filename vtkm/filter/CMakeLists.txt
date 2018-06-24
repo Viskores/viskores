@@ -72,7 +72,7 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
-  CoordinateSystemTransform.hxx  
+  CoordinateSystemTransform.hxx
   CrossProduct.hxx
   DotProduct.hxx
   Entropy.hxx
