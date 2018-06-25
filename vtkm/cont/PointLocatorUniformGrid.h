@@ -95,7 +95,7 @@ public:
       using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
       // Save training data points.
-      //Algorithm::Copy(coords, _Coords);
+      Algorithm::Copy(self.GetCoords().GetData(), self.coords);
 
       // generate unique id for each input point
       vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(

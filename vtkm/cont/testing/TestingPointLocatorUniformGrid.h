@@ -78,7 +78,6 @@ public:
   }
 };
 
-#if 1
 class PointLocatorUniformGridWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -102,7 +101,6 @@ public:
     locator->FindNearestNeighbor(qc, nnIdOut, nnDis);
   };
 };
-#endif
 
 template <typename DeviceAdapter>
 class TestingPointLocatorUniformGrid
@@ -111,17 +109,8 @@ public:
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   void TestTest() const
   {
-
-    // TODO: locator needs to be a point to have runtime polymorphism.
-    //vtkm::cont::PointLocator * locator = new vtkm::cont::PointLocatorUniformGrid(
-    //  { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    vtkm::cont::PointLocatorUniformGrid locator(
-      { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    // TODO: generate training points
-    locator.Build();
-
-    vtkm::Int32 nTrainingPoints = 1000;
-    vtkm::Int32 nTestingPoint = 1000;
+    vtkm::Int32 nTrainingPoints = 5;
+    vtkm::Int32 nTestingPoint = 1;
 
     std::vector<vtkm::Vec<vtkm::Float32, 3>> coordi;
 
@@ -135,14 +124,17 @@ public:
     }
     auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi);
 
-#if 0
-    vtkm::cont::PointLocatorUniformGrid<vtkm::Float32> uniformGrid(
-      { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    uniformGrid.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    auto locator = uniformGrid.PrepareForExecution(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-#endif
+    vtkm::cont::CoordinateSystem coord("points", coordi_Handle);
 
-    ///// randomly generate training points/////
+    // TODO: locator needs to be a pointer to have runtime polymorphism.
+    //vtkm::cont::PointLocator * locator = new vtkm::cont::PointLocatorUniformGrid(
+    //  { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
+    vtkm::cont::PointLocatorUniformGrid locator(
+      { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
+    locator.SetCoords(coord);
+    locator.Build();
+
+    ///// randomly generate testing points/////
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
     {
@@ -152,14 +144,12 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
-#if 1
+
     PointLocatorUniformGridWorklet pointLocatorUniformGridWorklet;
     vtkm::worklet::DispatcherMapField<PointLocatorUniformGridWorklet, DeviceAdapter>
       locatorDispatcher(pointLocatorUniformGridWorklet);
     locatorDispatcher.Invoke(qc_Handle, locator, nnId_Handle, nnDis_Handle);
-#endif
 
-#if 0
     // brute force
     vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;
@@ -169,7 +159,7 @@ public:
     nnsbf3DDispatcher.Invoke(
       qc_Handle, vtkm::cont::make_ArrayHandle(coordi), bfnnId_Handle, bfnnDis_Handle);
 
-    ///// verfity search result /////
+    ///// verify search result /////
     bool passTest = true;
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
     {
@@ -185,9 +175,7 @@ public:
         passTest = false;
       }
     }
-
     VTKM_TEST_ASSERT(passTest, "Uniform Grid NN search result incorrect.");
-#endif
   }
 
   void operator()() const { this->TestTest(); }

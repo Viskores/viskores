@@ -82,7 +82,7 @@ public:
                                              FloatDefault& distance) const override
   {
     std::cout << "FindNeareastNeighbor: " << queryPoint << std::endl;
-#if 0
+#if 1
     auto nlayers = vtkm::Max(vtkm::Max(Dims[0], Dims[1]), Dims[2]);
 
     vtkm::Vec<vtkm::Id, 3> xyz = (queryPoint - Min) / Dxdydz;
@@ -106,7 +106,7 @@ public:
           for (auto k = minz; k <= maxz; k++)
           {
             if (i == (xyz[0] + layer) || i == (xyz[0] - layer) || j == (xyz[1] + layer) ||
-              j == (xyz[1] - layer) || k == (xyz[2] + layer) || k == (xyz[2] - layer))
+                j == (xyz[1] - layer) || k == (xyz[2] + layer) || k == (xyz[2] - layer))
             {
               auto cellid = i + j * Dims[0] + k * Dims[0] * Dims[1];
               auto lower = cellLower.Get(cellid);
