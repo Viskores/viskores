@@ -21,34 +21,14 @@
 #define vtk_m_cont_CellLocator_h
 
 #include <vtkm/Types.h>
-#include <vtkm/VirtualObjectBase.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/exec/CellLocator.h>
 
 namespace vtkm
 {
-
-namespace exec
-{
-// This will actually be used in the Execution Environment.
-// As this object is returned by the PrepareForExecution on
-// the CellLocator we need it to be covarient, and this acts
-// like a base class.
-
-class CellLocator : public vtkm::VirtualObjectBase
-{
-public:
-  VTKM_EXEC
-  virtual void FindCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
-                        vtkm::Id& cellId,
-                        vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
-                        const vtkm::exec::FunctorBase& worklet) const = 0;
-};
-
-} // namespace exec
-
 namespace cont
 {
 
@@ -66,19 +46,16 @@ public:
   void SetCellSet(const vtkm::cont::DynamicCellSet& cellSet)
   {
     CellSet = cellSet;
-    Dirty = true;
+    SetDirty();
   }
 
-  vtkm::cont::CoordinateSystem GetCoords() const { return Coords; }
+  vtkm::cont::CoordinateSystem GetCoordinates() const { return Coords; }
 
-  void SetCoords(const vtkm::cont::CoordinateSystem& coords)
+  void SetCoordinates(const vtkm::cont::CoordinateSystem& coords)
   {
     Coords = coords;
-    Dirty = true;
+    SetDirty();
   }
-
-  //This is going to need a TryExecute
-  virtual void Build() = 0;
 
   void Update()
   {
@@ -95,6 +72,11 @@ public:
   }
 
 protected:
+  void SetDirty() { Dirty = true; }
+
+  //This is going to need a TryExecute
+  VTKM_CONT virtual void Build() = 0;
+
   VTKM_CONT virtual const vtkm::exec::CellLocator* PrepareForExecutionImpl(
     const vtkm::Int8 device) const = 0;
 

@@ -32,7 +32,6 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/BoundingIntervalHierarchyExec.h>
 #include <vtkm/cont/BoundingIntervalHierarchyNode.h>
 #include <vtkm/cont/CellLocator.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -40,6 +39,7 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
+#include <vtkm/exec/BoundingIntervalHierarchyExec.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -49,7 +49,7 @@ namespace vtkm
 {
 namespace cont
 {
-namespace
+namespace detail
 {
 
 #define START_TIMER(x) Timer x;
@@ -645,7 +645,7 @@ struct RangeAdd
   }
 }; // struct RangeAdd
 
-} // namespace
+} // namespace detail
 
 
 class BoundingIntervalHierarchy : public vtkm::cont::CellLocator
@@ -661,10 +661,10 @@ private:
   using RangeArrayHandle = vtkm::cont::ArrayHandle<vtkm::Range>;
   using RangePermutationArrayHandle =
     vtkm::cont::ArrayHandlePermutation<IdArrayHandle, RangeArrayHandle>;
-  using SplitArrayHandle = vtkm::cont::ArrayHandle<TreeNode>;
+  using SplitArrayHandle = vtkm::cont::ArrayHandle<detail::TreeNode>;
   using SplitPermutationArrayHandle =
     vtkm::cont::ArrayHandlePermutation<IdArrayHandle, SplitArrayHandle>;
-  using SplitPropertiesArrayHandle = vtkm::cont::ArrayHandle<SplitProperties>;
+  using SplitPropertiesArrayHandle = vtkm::cont::ArrayHandle<detail::SplitProperties>;
 
   class BuildFunctor
   {
@@ -690,7 +690,7 @@ private:
 
       vtkm::cont::DynamicCellSet cellSet = Self->GetCellSet();
       vtkm::Id numCells = cellSet.GetNumberOfCells();
-      vtkm::cont::CoordinateSystem coords = Self->GetCoords();
+      vtkm::cont::CoordinateSystem coords = Self->GetCoordinates();
       vtkm::cont::ArrayHandleVirtualCoordinates points = coords.GetData();
 
       //std::cout << "No of cells: " << numCells << "\n";
@@ -705,7 +705,7 @@ private:
       //START_TIMER(s12);
       CoordsArrayHandle centerXs, centerYs, centerZs;
       RangeArrayHandle xRanges, yRanges, zRanges;
-      vtkm::worklet::DispatcherMapTopology<CellRangesExtracter, DeviceAdapter>().Invoke(
+      vtkm::worklet::DispatcherMapTopology<detail::CellRangesExtracter, DeviceAdapter>().Invoke(
         cellSet, points, xRanges, yRanges, zRanges, centerXs, centerYs, centerZs);
       //PRINT_TIMER("1.2", s12);
 
@@ -743,7 +743,7 @@ private:
         //START_TIMER(s22);
         // Calculate split costs for NumPlanes split planes, across X, Y and Z dimensions
         vtkm::Id numSplitPlanes = numSegments * (Self->NumPlanes + 1);
-        vtkm::cont::ArrayHandle<SplitProperties> xSplits, ySplits, zSplits;
+        vtkm::cont::ArrayHandle<detail::SplitProperties> xSplits, ySplits, zSplits;
         xSplits.Allocate(numSplitPlanes);
         ySplits.Allocate(numSplitPlanes);
         zSplits.Allocate(numSplitPlanes);
@@ -760,8 +760,8 @@ private:
         SplitArrayHandle segmentSplits;
         vtkm::cont::ArrayHandle<vtkm::Float64> segmentPlanes;
         vtkm::cont::ArrayHandle<vtkm::Id> splitChoices;
-        SplitSelector worklet(Self->NumPlanes, Self->MaxLeafSize, Self->NumPlanes + 1);
-        vtkm::worklet::DispatcherMapField<SplitSelector> splitSelectorDispatcher(worklet);
+        detail::SplitSelector worklet(Self->NumPlanes, Self->MaxLeafSize, Self->NumPlanes + 1);
+        vtkm::worklet::DispatcherMapField<detail::SplitSelector> splitSelectorDispatcher(worklet);
         CountingIdArrayHandle indices(0, 1, numSegments);
         splitSelectorDispatcher.Invoke(indices,
                                        xSplits,
@@ -779,7 +779,8 @@ private:
 
         //START_TIMER(s31);
         IdArrayHandle leqFlags;
-        vtkm::worklet::DispatcherMapField<CalculateSplitDirectionFlag> computeFlagDispatcher;
+        vtkm::worklet::DispatcherMapField<detail::CalculateSplitDirectionFlag>
+          computeFlagDispatcher;
         computeFlagDispatcher.Invoke(centerXs, centerYs, centerZs, splits, planes, leqFlags);
         //PRINT_TIMER("3.1", s31);
 
@@ -788,30 +789,31 @@ private:
           Self->CalculateSplitScatterIndices(cellIds, leqFlags, segmentIds, DeviceAdapter());
         IdArrayHandle newSegmentIds;
         IdPermutationArrayHandle sizes(segmentIds, segmentSizes);
-        vtkm::worklet::DispatcherMapField<SegmentSplitter>(SegmentSplitter(Self->MaxLeafSize))
+        vtkm::worklet::DispatcherMapField<detail::SegmentSplitter>(
+          detail::SegmentSplitter(Self->MaxLeafSize))
           .Invoke(segmentIds, leqFlags, sizes, newSegmentIds);
         //PRINT_TIMER("3.2", s32);
 
         //START_TIMER(s33);
         vtkm::cont::ArrayHandle<vtkm::Id> choices;
         Algorithms::Copy(IdPermutationArrayHandle(segmentIds, splitChoices), choices);
-        cellIds = ScatterArray(cellIds, scatterIndices);
-        segmentIds = ScatterArray(segmentIds, scatterIndices);
-        newSegmentIds = ScatterArray(newSegmentIds, scatterIndices);
-        xRanges = ScatterArray(xRanges, scatterIndices);
-        yRanges = ScatterArray(yRanges, scatterIndices);
-        zRanges = ScatterArray(zRanges, scatterIndices);
-        centerXs = ScatterArray(centerXs, scatterIndices);
-        centerYs = ScatterArray(centerYs, scatterIndices);
-        centerZs = ScatterArray(centerZs, scatterIndices);
-        choices = ScatterArray(choices, scatterIndices);
+        cellIds = detail::ScatterArray(cellIds, scatterIndices);
+        segmentIds = detail::ScatterArray(segmentIds, scatterIndices);
+        newSegmentIds = detail::ScatterArray(newSegmentIds, scatterIndices);
+        xRanges = detail::ScatterArray(xRanges, scatterIndices);
+        yRanges = detail::ScatterArray(yRanges, scatterIndices);
+        zRanges = detail::ScatterArray(zRanges, scatterIndices);
+        centerXs = detail::ScatterArray(centerXs, scatterIndices);
+        centerYs = detail::ScatterArray(centerYs, scatterIndices);
+        centerZs = detail::ScatterArray(centerZs, scatterIndices);
+        choices = detail::ScatterArray(choices, scatterIndices);
         //PRINT_TIMER("3.3", s33);
 
         // Move the cell ids at leafs to the processed cellids list
         //START_TIMER(s41);
         IdArrayHandle nonSplitSegmentSizes;
-        vtkm::worklet::DispatcherMapField<NonSplitIndexCalculator>(
-          NonSplitIndexCalculator(Self->MaxLeafSize))
+        vtkm::worklet::DispatcherMapField<detail::NonSplitIndexCalculator>(
+          detail::NonSplitIndexCalculator(Self->MaxLeafSize))
           .Invoke(segmentSizes, nonSplitSegmentSizes);
         IdArrayHandle nonSplitSegmentIndices;
         Algorithms::ScanExclusive(nonSplitSegmentSizes, nonSplitSegmentIndices);
@@ -821,18 +823,18 @@ private:
 
         //START_TIMER(s42);
         IdArrayHandle doneCellIds;
-        Algorithms::CopyIf(cellIds, choices, doneCellIds, Invert());
+        Algorithms::CopyIf(cellIds, choices, doneCellIds, detail::Invert());
         Algorithms::CopySubRange(
           doneCellIds, 0, doneCellIds.GetNumberOfValues(), Self->ProcessedCellIds, cellIdsOffset);
 
-        cellIds = CopyIfArray(cellIds, choices, DeviceAdapter());
-        newSegmentIds = CopyIfArray(newSegmentIds, choices, DeviceAdapter());
-        xRanges = CopyIfArray(xRanges, choices, DeviceAdapter());
-        yRanges = CopyIfArray(yRanges, choices, DeviceAdapter());
-        zRanges = CopyIfArray(zRanges, choices, DeviceAdapter());
-        centerXs = CopyIfArray(centerXs, choices, DeviceAdapter());
-        centerYs = CopyIfArray(centerYs, choices, DeviceAdapter());
-        centerZs = CopyIfArray(centerZs, choices, DeviceAdapter());
+        cellIds = detail::CopyIfArray(cellIds, choices, DeviceAdapter());
+        newSegmentIds = detail::CopyIfArray(newSegmentIds, choices, DeviceAdapter());
+        xRanges = detail::CopyIfArray(xRanges, choices, DeviceAdapter());
+        yRanges = detail::CopyIfArray(yRanges, choices, DeviceAdapter());
+        zRanges = detail::CopyIfArray(zRanges, choices, DeviceAdapter());
+        centerXs = detail::CopyIfArray(centerXs, choices, DeviceAdapter());
+        centerYs = detail::CopyIfArray(centerYs, choices, DeviceAdapter());
+        centerZs = detail::CopyIfArray(centerZs, choices, DeviceAdapter());
         //PRINT_TIMER("4.2", s42);
 
         //START_TIMER(s43);
@@ -843,8 +845,8 @@ private:
         Algorithms::CopySubRange(Self->Nodes, 0, Self->Nodes.GetNumberOfValues(), newTree);
 
         CountingIdArrayHandle nodesIndices(nodesIndexOffset, 1, numSegments);
-        TreeLevelAdder nodesAdder(cellIdsOffset, nodesSize, Self->MaxLeafSize);
-        vtkm::worklet::DispatcherMapField<TreeLevelAdder>(nodesAdder)
+        detail::TreeLevelAdder nodesAdder(cellIdsOffset, nodesSize, Self->MaxLeafSize);
+        vtkm::worklet::DispatcherMapField<detail::TreeLevelAdder>(nodesAdder)
           .Invoke(nodesIndices,
                   segmentSplits,
                   nonSplitSegmentIndices,
@@ -908,7 +910,7 @@ private:
                                      RangeArrayHandle ranges,
                                      CoordsArrayHandle& coords,
                                      IdArrayHandle& segmentIds,
-                                     vtkm::cont::ArrayHandle<SplitProperties>& splits,
+                                     vtkm::cont::ArrayHandle<detail::SplitProperties>& splits,
                                      DeviceAdapter)
   {
     for (vtkm::IdComponent planeIndex = 0; planeIndex < NumPlanes; ++planeIndex)
@@ -935,21 +937,21 @@ private:
                                          RangeArrayHandle ranges,
                                          CoordsArrayHandle& coords,
                                          IdArrayHandle& segmentIds,
-                                         vtkm::cont::ArrayHandle<SplitProperties>& splits,
+                                         vtkm::cont::ArrayHandle<detail::SplitProperties>& splits,
                                          vtkm::IdComponent index,
                                          DeviceAdapter)
   {
     using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     // Make candidate split plane array
     vtkm::cont::ArrayHandle<vtkm::Float64> splitPlanes;
-    SplitPlaneCalculatorWorklet splitPlaneCalcWorklet(planeIndex, numPlanes);
-    vtkm::worklet::DispatcherMapField<SplitPlaneCalculatorWorklet, DeviceAdapter> splitDispatcher(
-      splitPlaneCalcWorklet);
+    detail::SplitPlaneCalculatorWorklet splitPlaneCalcWorklet(planeIndex, numPlanes);
+    vtkm::worklet::DispatcherMapField<detail::SplitPlaneCalculatorWorklet, DeviceAdapter>
+      splitDispatcher(splitPlaneCalcWorklet);
     splitDispatcher.Invoke(segmentRanges, splitPlanes);
 
     // Check if a point is to the left of the split plane or right
     vtkm::cont::ArrayHandle<vtkm::Id> isLEQOfSplitPlane, isROfSplitPlane;
-    vtkm::worklet::DispatcherMapField<LEQWorklet, DeviceAdapter>().Invoke(
+    vtkm::worklet::DispatcherMapField<detail::LEQWorklet, DeviceAdapter>().Invoke(
       coords, splitPlanes, isLEQOfSplitPlane, isROfSplitPlane);
 
     // Count of points to the left
@@ -964,23 +966,23 @@ private:
     // Calculate Lmax and Rmin
     vtkm::cont::ArrayHandle<vtkm::Range> leqRanges;
     vtkm::cont::ArrayHandle<vtkm::Range> rRanges;
-    vtkm::worklet::DispatcherMapField<FilterRanges<true>>().Invoke(
+    vtkm::worklet::DispatcherMapField<detail::FilterRanges<true>>().Invoke(
       coords, splitPlanes, ranges, leqRanges);
-    vtkm::worklet::DispatcherMapField<FilterRanges<false>>().Invoke(
+    vtkm::worklet::DispatcherMapField<detail::FilterRanges<false>>().Invoke(
       coords, splitPlanes, ranges, rRanges);
 
     vtkm::cont::ArrayHandle<vtkm::Range> lMaxRanges;
     vtkm::cont::ArrayHandle<vtkm::Range> rMinRanges;
-    Algorithms::ReduceByKey(segmentIds, leqRanges, discardKeys, lMaxRanges, RangeAdd());
-    Algorithms::ReduceByKey(segmentIds, rRanges, discardKeys, rMinRanges, RangeAdd());
+    Algorithms::ReduceByKey(segmentIds, leqRanges, discardKeys, lMaxRanges, detail::RangeAdd());
+    Algorithms::ReduceByKey(segmentIds, rRanges, discardKeys, rMinRanges, detail::RangeAdd());
 
     vtkm::cont::ArrayHandle<vtkm::Float64> segmentedSplitPlanes;
     Algorithms::ReduceByKey(
       segmentIds, splitPlanes, discardKeys, segmentedSplitPlanes, vtkm::Minimum());
 
     // Calculate costs
-    SplitPropertiesCalculator splitPropertiesCalculator(index, NumPlanes + 1);
-    vtkm::worklet::DispatcherMapField<SplitPropertiesCalculator>(splitPropertiesCalculator)
+    detail::SplitPropertiesCalculator splitPropertiesCalculator(index, NumPlanes + 1);
+    vtkm::worklet::DispatcherMapField<detail::SplitPropertiesCalculator>(splitPropertiesCalculator)
       .Invoke(pointsToLeft, pointsToRight, lMaxRanges, rMinRanges, segmentedSplitPlanes, splits);
   }
 
@@ -1003,12 +1005,13 @@ private:
     Algorithms::ScanInclusiveByKey(segmentIds, counts, countPreviousSegments, vtkm::Minimum());
 
     // Total number of false flags so far in segment
-    vtkm::cont::ArrayHandleTransform<IdArrayHandle, Invert> flagsInverse(leqFlags, Invert());
+    vtkm::cont::ArrayHandleTransform<IdArrayHandle, detail::Invert> flagsInverse(leqFlags,
+                                                                                 detail::Invert());
     vtkm::cont::ArrayHandle<vtkm::Id> runningFalseFlagCount;
     Algorithms::ScanInclusiveByKey(segmentIds, flagsInverse, runningFalseFlagCount, vtkm::Add());
 
     // Total number of false flags in segment
-    IdArrayHandle totalFalseFlagSegmentCount = ReverseScanInclusiveByKey(
+    IdArrayHandle totalFalseFlagSegmentCount = detail::ReverseScanInclusiveByKey(
       segmentIds, runningFalseFlagCount, vtkm::Maximum(), DeviceAdapter());
 
     // if point is to the left,
@@ -1016,12 +1019,13 @@ private:
     // else
     //    index = total number in previous segments + number of falses preceeding it in the segment.
     IdArrayHandle scatterIndices;
-    vtkm::worklet::DispatcherMapField<SplitIndicesCalculator>().Invoke(leqFlags,
-                                                                       trueFlagCounts,
-                                                                       countPreviousSegments,
-                                                                       runningFalseFlagCount,
-                                                                       totalFalseFlagSegmentCount,
-                                                                       scatterIndices);
+    vtkm::worklet::DispatcherMapField<detail::SplitIndicesCalculator>().Invoke(
+      leqFlags,
+      trueFlagCounts,
+      countPreviousSegments,
+      runningFalseFlagCount,
+      totalFalseFlagSegmentCount,
+      scatterIndices);
     return scatterIndices;
   }
 
@@ -1042,7 +1046,7 @@ private:
         ExecutionType* execObject = new ExecutionType(bih->Nodes,
                                                       bih->ProcessedCellIds,
                                                       bih->GetCellSet().Cast<CellSetType>(),
-                                                      bih->GetCoords().GetData(),
+                                                      bih->GetCoordinates().GetData(),
                                                       DeviceAdapter());
         *bihExec = (new LocatorHandle(execObject, false))->PrepareForExecution(DeviceAdapter());
       }
@@ -1053,7 +1057,7 @@ private:
         ExecutionType* execObject = new ExecutionType(bih->Nodes,
                                                       bih->ProcessedCellIds,
                                                       bih->GetCellSet().Cast<CellSetType>(),
-                                                      bih->GetCoords().GetData(),
+                                                      bih->GetCoordinates().GetData(),
                                                       DeviceAdapter());
         *bihExec = (new LocatorHandle(execObject, false))->PrepareForExecution(DeviceAdapter());
       }
@@ -1064,7 +1068,7 @@ private:
         ExecutionType* execObject = new ExecutionType(bih->Nodes,
                                                       bih->ProcessedCellIds,
                                                       bih->GetCellSet().Cast<CellSetType>(),
-                                                      bih->GetCoords().GetData(),
+                                                      bih->GetCoordinates().GetData(),
                                                       DeviceAdapter());
         *bihExec = (new LocatorHandle(execObject, false))->PrepareForExecution(DeviceAdapter());
       }
@@ -1075,7 +1079,7 @@ private:
         ExecutionType* execObject = new ExecutionType(bih->Nodes,
                                                       bih->ProcessedCellIds,
                                                       bih->GetCellSet().Cast<CellSetType>(),
-                                                      bih->GetCoords().GetData(),
+                                                      bih->GetCoordinates().GetData(),
                                                       DeviceAdapter());
         *bihExec = (new LocatorHandle(execObject, false))->PrepareForExecution(DeviceAdapter());
       }
@@ -1095,19 +1099,38 @@ public:
   }
 
   VTKM_CONT
+  void SetNumberOfSplittingPlanes(vtkm::IdComponent numPlanes)
+  {
+    NumPlanes = numPlanes;
+    SetDirty();
+  }
+
+  VTKM_CONT
+  vtkm::IdComponent GetNumberOfSplittingPlanes() { return NumPlanes; }
+
+  VTKM_CONT
+  void SetMaxLeafSize(vtkm::IdComponent maxLeafSize)
+  {
+    MaxLeafSize = maxLeafSize;
+    SetDirty();
+  }
+
+  VTKM_CONT
+  vtkm::Id GetMaxLeafSize() { return MaxLeafSize; }
+
+
+protected:
+  VTKM_CONT
   void Build() override
   {
     BuildFunctor functor(this);
     vtkm::cont::TryExecute(functor);
   }
 
-protected:
   VTKM_CONT
   const vtkm::exec::CellLocator* PrepareForExecutionImpl(const vtkm::Int8 device) const override
   {
-    using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
-                                         vtkm::cont::DeviceAdapterTagTBB,
-                                         vtkm::cont::DeviceAdapterTagSerial>;
+    using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
     const vtkm::exec::CellLocator* toReturn;
     vtkm::cont::internal::FindDeviceAdapterTagAndCall(
       device, DeviceList(), PrepareForExecutionFunctor(), this, &toReturn);
@@ -1120,7 +1143,8 @@ private:
   vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> Nodes;
   IdArrayHandle ProcessedCellIds;
 };
-}
-} // namespace vtkm::cont
+
+} // namespace cont
+} // namespace vtkm
 
 #endif // vtk_m_cont_BoundingIntervalHierarchy_h

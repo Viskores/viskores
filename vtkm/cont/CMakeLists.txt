@@ -47,7 +47,6 @@ set(headers
   ArrayRangeCompute.h
   AssignerMultiBlock.h
   BoundingIntervalHierarchyNode.h
-  BoundingIntervalHierarchyExec.h
   BoundingIntervalHierarchy.h
   BoundsCompute.h
   BoundsGlobalCompute.h

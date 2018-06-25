@@ -20,7 +20,6 @@
 
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/BoundingIntervalHierarchy.h>
-#include <vtkm/cont/BoundingIntervalHierarchyExec.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -79,8 +78,8 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   std::cout << "Using numPlanes: " << numPlanes << "\n";
   vtkm::cont::BoundingIntervalHierarchy bih = vtkm::cont::BoundingIntervalHierarchy(numPlanes, 5);
   bih.SetCellSet(cellSet);
-  bih.SetCoords(dataSet.GetCoordinateSystem());
-  bih.Build();
+  bih.SetCoordinates(dataSet.GetCoordinateSystem());
+  bih.Update();
 
   Timer centroidsTimer;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> centroids;
@@ -96,7 +95,10 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   //set up stack size for cuda envinroment
   size_t stackSizeBackup;
   cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
-  cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 200);
+
+  std::cout << "Default stack size" << stackSizeBackup << "\n";
+
+  cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 50);
 #endif
 
   vtkm::worklet::DispatcherMapField<BoundingIntervalHierarchyTester>().Invoke(
@@ -117,10 +119,10 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
 
 void RunTest()
 {
-  TestBoundingIntervalHierarchy(ConstructDataSet(10), 3);
-  TestBoundingIntervalHierarchy(ConstructDataSet(10), 4);
-  TestBoundingIntervalHierarchy(ConstructDataSet(10), 6);
-  TestBoundingIntervalHierarchy(ConstructDataSet(10), 9);
+  TestBoundingIntervalHierarchy(ConstructDataSet(16), 3);
+  TestBoundingIntervalHierarchy(ConstructDataSet(16), 4);
+  TestBoundingIntervalHierarchy(ConstructDataSet(16), 6);
+  TestBoundingIntervalHierarchy(ConstructDataSet(16), 9);
 }
 
 } // anonymous namespace

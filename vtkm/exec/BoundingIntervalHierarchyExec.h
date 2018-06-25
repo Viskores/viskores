@@ -20,11 +20,13 @@
 #ifndef vtk_m_cont_BoundingIntervalHierarchyExec_h
 #define vtk_m_cont_BoundingIntervalHierarchyExec_h
 
+#include <vtkm/TopologyElementTag.h>
 #include <vtkm/VecFromPortalPermute.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 #include <vtkm/cont/BoundingIntervalHierarchyNode.h>
-#include <vtkm/cont/CellLocator.h>
 #include <vtkm/exec/CellInside.h>
+#include <vtkm/exec/CellLocator.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
 namespace vtkm

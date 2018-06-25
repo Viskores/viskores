@@ -24,23 +24,10 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/exec/PointLocator.h>
 
 namespace vtkm
 {
-
-namespace exec
-{
-
-class PointLocator
-{
-public:
-  VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
-                                             vtkm::Id& pointId,
-                                             vtkm::FloatDefault& distanceSquared) const = 0;
-};
-
-} // namespace exec
-
 namespace cont
 {
 
@@ -53,15 +40,13 @@ public:
   {
   }
 
-  vtkm::cont::CoordinateSystem GetCoords() const { return Coords; }
+  vtkm::cont::CoordinateSystem GetCoordinates() const { return Coords; }
 
-  void SetCoords(const vtkm::cont::CoordinateSystem& coords)
+  void SetCoordinates(const vtkm::cont::CoordinateSystem& coords)
   {
     Coords = coords;
     Dirty = true;
   }
-
-  virtual void Build() = 0;
 
   void Update()
   {
@@ -76,6 +61,11 @@ public:
     vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
     return PrepareForExecution(deviceId);
   }
+
+protected:
+  void SetDirty() { Dirty = true; }
+
+  VTKM_CONT virtual void Build() = 0;
 
   VTKM_CONT virtual const vtkm::exec::PointLocator* PrepareForExecutionImpl(
     const vtkm::Int8 device) = 0;
