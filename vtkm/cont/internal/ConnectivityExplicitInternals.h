@@ -73,8 +73,7 @@ void buildIndexOffsets(const ArrayHandleIndices& numIndices,
                        ArrayHandleOffsets offsets,
                        DeviceAdapterTag tag)
 {
-  using IsWriteable =
-    vtkm::cont::internal::IsWriteableArrayHandle<ArrayHandleOffsets, DeviceAdapterTag>;
+  using IsWriteable = vtkm::cont::internal::IsWriteableArrayHandle<ArrayHandleOffsets>;
   buildIndexOffsets(numIndices, offsets, tag, typename IsWriteable::type());
 }
 
