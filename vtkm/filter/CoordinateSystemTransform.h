@@ -74,7 +74,7 @@ public:
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag);
+                                          const DeviceAdapter& tag) const;
 
 private:
   vtkm::worklet::SphericalCoordinateTransform Worklet;

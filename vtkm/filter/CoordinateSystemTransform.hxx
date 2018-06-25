@@ -44,7 +44,6 @@ inline VTKM_CONT vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(
 {
   vtkm::cont::ArrayHandle<T> outArray;
   Worklet.Run(field, outArray, device);
-
   return internal::CreateResult(inDataSet,
                                 outArray,
                                 this->GetOutputFieldName(),
@@ -66,11 +65,10 @@ inline VTKM_CONT vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  const DeviceAdapter& device) const
 {
   vtkm::cont::ArrayHandle<T> outArray;
   Worklet.Run(field, outArray, device);
-
   return internal::CreateResult(inDataSet,
                                 outArray,
                                 this->GetOutputFieldName(),
