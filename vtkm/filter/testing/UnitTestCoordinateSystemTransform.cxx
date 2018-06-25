@@ -108,84 +108,39 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
   return dataSet;
 }
 
-#if 0
-void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
-                            const std::string fieldName,
-                            const vtkm::cont::DataSet& result,
-                            const vtkm::Matrix<vtkm::FloatDefault, 4, 4>& matrix)
+void ValidateCoordTransform(const vtkm::cont::DataSet& ds,
+                            const vtkm::cont::DataSet& dsTrn,
+                            const std::vector<bool>& isAngle)
 {
-  //verify the result
-  VTKM_TEST_ASSERT(result.HasField(fieldName, vtkm::cont::Field::Association::POINTS),
-                   "Output field missing.");
-
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> resultArrayHandle;
-  result.GetField(fieldName, vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(resultArrayHandle);
-
-  auto points = coords.GetData();
-  VTKM_TEST_ASSERT(points.GetNumberOfValues() == resultArrayHandle.GetNumberOfValues(),
+  auto points = ds.GetCoordinateSystem().GetData();
+  auto pointsTrn = dsTrn.GetCoordinateSystem().GetData();
+  VTKM_TEST_ASSERT(points.GetNumberOfValues() == pointsTrn.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 
-  auto pointsPortal = points.GetPortalControl();
-  auto resultsPortal = resultArrayHandle.GetPortalControl();
+  auto pointsPortal = points.GetPortalConstControl();
+  auto pointsTrnPortal = pointsTrn.GetPortalConstControl();
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
-    VTKM_TEST_ASSERT(
-      test_equal(resultsPortal.Get(i), vtkm::Transform3DPoint(matrix, pointsPortal.Get(i))),
-      "Wrong result for PointTransform worklet");
+  {
+    vtkm::Vec<vtkm::FloatDefault, 3> p = pointsPortal.Get(i);
+    vtkm::Vec<vtkm::FloatDefault, 3> r = pointsTrnPortal.Get(i);
+    bool isEqual = true;
+    for (vtkm::IdComponent j = 0; j < 3; j++)
+    {
+      if (isAngle[static_cast<std::size_t>(j)])
+        isEqual &= (test_equal(p[j], r[j]) || test_equal(p[j] + vtkm::TwoPif(), r[j]) ||
+                    test_equal(p[j], r[j] + vtkm::TwoPif()));
+      else
+        isEqual &= test_equal(p[j], r[j]);
+    }
+    VTKM_TEST_ASSERT(isEqual, "Wrong result for PointTransform worklet");
+  }
 }
-
-
-void TestPointTransformTranslation(const vtkm::cont::DataSet& ds,
-                                   const vtkm::Vec<vtkm::FloatDefault, 3>& trans)
-{
-  vtkm::filter::PointTransform<vtkm::FloatDefault> filter;
-
-  filter.SetOutputFieldName("translation");
-  filter.SetUseCoordinateSystemAsField(true);
-  filter.SetTranslation(trans);
-  auto result = filter.Execute(ds);
-
-  ValidatePointTransform(
-    ds.GetCoordinateSystem(), "translation", result, Transform3DTranslate(trans));
-}
-
-void TestPointTransformScale(const vtkm::cont::DataSet& ds,
-                             const vtkm::Vec<vtkm::FloatDefault, 3>& scale)
-{
-  vtkm::filter::PointTransform<vtkm::FloatDefault> filter;
-
-  filter.SetOutputFieldName("scale");
-  filter.SetUseCoordinateSystemAsField(true);
-  filter.SetScale(scale);
-  auto result = filter.Execute(ds);
-
-  ValidatePointTransform(ds.GetCoordinateSystem(), "scale", result, Transform3DScale(scale));
-}
-
-void TestPointTransformRotation(const vtkm::cont::DataSet& ds,
-                                const vtkm::FloatDefault& angle,
-                                const vtkm::Vec<vtkm::FloatDefault, 3>& axis)
-{
-  vtkm::filter::PointTransform<vtkm::FloatDefault> filter;
-
-  filter.SetOutputFieldName("rotation");
-  filter.SetUseCoordinateSystemAsField(true);
-  filter.SetRotation(angle, axis);
-  auto result = filter.Execute(ds);
-
-  ValidatePointTransform(
-    ds.GetCoordinateSystem(), "rotation", result, Transform3DRotate(angle, axis));
-}
-#endif
 }
 
 void TestCoordinateSystemTransform()
 {
   std::cout << "Testing CylindricalCoordinateTransform Filter" << std::endl;
-
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
   //Test cartesian to cyl
   vtkm::cont::DataSet dsCart = MakeTestDataSet(CART);
@@ -194,128 +149,52 @@ void TestCoordinateSystemTransform()
   cylTrn.SetOutputFieldName("cylindricalCoords");
   cylTrn.SetUseCoordinateSystemAsField(true);
   cylTrn.SetCartesianToCylindrical();
-  auto result = cylTrn.Execute(dsCart);
-
-
-
-#if 0
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> carToCylPts;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> revResult;
-
-  cylTrn.SetCartesianToCylindrical();
-  cylTrn.Execute(dsCart.GetCoordinateSystem(), carToCylPts, DeviceAdapter());
+  vtkm::cont::DataSet carToCylDataSet = cylTrn.Execute(dsCart);
 
   cylTrn.SetCylindricalToCartesian();
-  cylTrn.Run(carToCylPts, revResult, DeviceAdapter());
-  ValidateCoordTransform(
-    dsCart.GetCoordinateSystem(), carToCylPts, revResult, { false, false, false });
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  cylTrn.SetOutputFieldName("cartesianCoords");
+  vtkm::cont::DataSet cylToCarDataSet = cylTrn.Execute(carToCylDataSet);
+  ValidateCoordTransform(dsCart, cylToCarDataSet, { false, false, false });
 
-  //Test cylindrical to cartesian
+  //Test cyl to cart.
   vtkm::cont::DataSet dsCyl = MakeTestDataSet(CYL);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> cylToCarPts;
   cylTrn.SetCylindricalToCartesian();
-  cylTrn.Run(dsCyl.GetCoordinateSystem(), cylToCarPts, DeviceAdapter());
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  cylTrn.SetOutputFieldName("cartesianCoords");
+  cylToCarDataSet = cylTrn.Execute(dsCyl);
 
   cylTrn.SetCartesianToCylindrical();
-  cylTrn.Run(cylToCarPts, revResult, DeviceAdapter());
-  ValidateCoordTransform(
-    dsCyl.GetCoordinateSystem(), cylToCarPts, revResult, { false, true, false });
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  cylTrn.SetOutputFieldName("cylindricalCoords");
+  carToCylDataSet = cylTrn.Execute(cylToCarDataSet);
+  ValidateCoordTransform(dsCyl, carToCylDataSet, { false, true, false });
 
-  //Spherical transform
-  //Test cartesian to sph
-  vtkm::filter::SphericalCoordinateTransform<vtkm::FloatDefault> sphTrn;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> carToSphPts;
+  std::cout << "Testing SphericalCoordinateTransform Filter" << std::endl;
 
+  vtkm::filter::SphericalCoordinateTransform sphTrn;
+  sphTrn.SetOutputFieldName("sphericalCoords");
+  sphTrn.SetUseCoordinateSystemAsField(true);
   sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(dsCart.GetCoordinateSystem(), carToSphPts, DeviceAdapter());
+  vtkm::cont::DataSet carToSphDataSet = sphTrn.Execute(dsCart);
 
+  sphTrn.SetOutputFieldName("cartesianCoords");
+  sphTrn.SetUseCoordinateSystemAsField(true);
   sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(carToSphPts, revResult, DeviceAdapter());
-  ValidateCoordTransform(
-    dsCart.GetCoordinateSystem(), carToSphPts, revResult, { false, true, true });
+  vtkm::cont::DataSet sphToCarDataSet = sphTrn.Execute(carToSphDataSet);
+  ValidateCoordTransform(dsCart, sphToCarDataSet, { false, true, true });
 
-  //Test spherical to cartesian
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> sphToCarPts;
   vtkm::cont::DataSet dsSph = MakeTestDataSet(SPH);
-
   sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts, DeviceAdapter());
+  sphTrn.SetUseCoordinateSystemAsField(true);
+  sphTrn.SetOutputFieldName("sphericalCoords");
+  sphToCarDataSet = sphTrn.Execute(dsSph);
 
   sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(sphToCarPts, revResult, DeviceAdapter());
-
-  ValidateCoordTransform(
-    dsSph.GetCoordinateSystem(), sphToCarPts, revResult, { false, true, true });
-  sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts, DeviceAdapter());
-  sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(sphToCarPts, revResult, DeviceAdapter());
-  ValidateCoordTransform(
-    dsSph.GetCoordinateSystem(), sphToCarPts, revResult, { false, true, true });
-#endif
-
-
-
-
-#if 0
-  std::cout << "Testing PointTransform Worklet" << std::endl;
-
-  vtkm::cont::DataSet ds = MakePointTransformTestDataSet();
-  int N = 41;
-
-  //Test translation
-  TestPointTransformTranslation(ds, vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 0));
-  TestPointTransformTranslation(ds, vtkm::Vec<vtkm::FloatDefault, 3>(1, 1, 1));
-  TestPointTransformTranslation(ds, vtkm::Vec<vtkm::FloatDefault, 3>(-1, -1, -1));
-
-  std::uniform_real_distribution<vtkm::FloatDefault> transDist(-100, 100);
-  for (int i = 0; i < N; i++)
-    TestPointTransformTranslation(ds,
-                                  vtkm::Vec<vtkm::FloatDefault, 3>(transDist(randGenerator),
-                                                                   transDist(randGenerator),
-                                                                   transDist(randGenerator)));
-
-  //Test scaling
-  TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(1, 1, 1));
-  TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(.23f, .23f, .23f));
-  TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(1, 2, 3));
-  TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(3.23f, 9.23f, 4.23f));
-
-  std::uniform_real_distribution<vtkm::FloatDefault> scaleDist(0.0001f, 100);
-  for (int i = 0; i < N; i++)
-  {
-    TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(scaleDist(randGenerator)));
-    TestPointTransformScale(ds,
-                            vtkm::Vec<vtkm::FloatDefault, 3>(scaleDist(randGenerator),
-                                                             scaleDist(randGenerator),
-                                                             scaleDist(randGenerator)));
-  }
-
-  //Test rotation
-  std::vector<vtkm::FloatDefault> angles;
-  std::uniform_real_distribution<vtkm::FloatDefault> angleDist(0, 360);
-  for (int i = 0; i < N; i++)
-    angles.push_back(angleDist(randGenerator));
-
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> axes;
-  axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(1, 0, 0));
-  axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(0, 1, 0));
-  axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 1));
-  axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(1, 1, 1));
-  axes.push_back(-axes[0]);
-  axes.push_back(-axes[1]);
-  axes.push_back(-axes[2]);
-  axes.push_back(-axes[3]);
-
-  std::uniform_real_distribution<vtkm::FloatDefault> axisDist(-1, 1);
-  for (int i = 0; i < N; i++)
-    axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(
-      axisDist(randGenerator), axisDist(randGenerator), axisDist(randGenerator)));
-
-  for (std::size_t i = 0; i < angles.size(); i++)
-    for (std::size_t j = 0; j < axes.size(); j++)
-      TestPointTransformRotation(ds, angles[i], axes[j]);
-#endif
+  sphTrn.SetUseCoordinateSystemAsField(true);
+  sphTrn.SetOutputFieldName("sphericalCoords");
+  carToSphDataSet = cylTrn.Execute(sphToCarDataSet);
+  ValidateCoordTransform(dsSph, carToSphDataSet, { false, true, true });
 }
 
 

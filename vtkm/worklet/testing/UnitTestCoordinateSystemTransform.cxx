@@ -179,7 +179,7 @@ void TestCoordinateSystemTransform()
 
   //Spherical transform
   //Test cartesian to sph
-  vtkm::worklet::SphericalCoordinateTransform<vtkm::FloatDefault> sphTrn;
+  vtkm::worklet::SphericalCoordinateTransform sphTrn;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> carToSphPts;
 
   sphTrn.SetCartesianToSpherical();

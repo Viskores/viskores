@@ -173,7 +173,6 @@ private:
   bool cartesianToCylindrical;
 };
 
-template <typename T>
 class SphericalCoordinateTransform
 {
 public:
@@ -186,9 +185,9 @@ public:
   VTKM_CONT void SetCartesianToSpherical() { CartesianToSpherical = true; }
   VTKM_CONT void SetSphericalToCartesian() { CartesianToSpherical = false; }
 
-  template <typename CoordsStorageType, typename DeviceAdapterTag>
-  void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints,
+  template <typename T, typename InStorageType, typename OutStorageType, typename DeviceAdapterTag>
+  void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, InStorageType>& inPoints,
+           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, OutStorageType>& outPoints,
            DeviceAdapterTag) const
   {
     if (CartesianToSpherical)
@@ -203,7 +202,7 @@ public:
     }
   }
 
-  template <typename CoordsStorageType, typename DeviceAdapterTag>
+  template <typename T, typename CoordsStorageType, typename DeviceAdapterTag>
   void Run(const vtkm::cont::CoordinateSystem& inPoints,
            vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints,
            DeviceAdapterTag) const

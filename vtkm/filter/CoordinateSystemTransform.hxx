@@ -39,18 +39,11 @@ inline VTKM_CONT vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
   vtkm::cont::ArrayHandle<T> outArray;
   Worklet.Run(field, outArray, device);
-
-  /*
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::CylindricalCoordinateTransform<T>, DeviceAdapter> dispatcher(
-    this->Worklet);
-
-  dispatcher.Invoke(field, outArray);
-  */
 
   return internal::CreateResult(inDataSet,
                                 outArray,
@@ -60,28 +53,23 @@ inline VTKM_CONT vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T>
-inline VTKM_CONT SphericalCoordinateTransform<T>::SphericalCoordinateTransform()
+inline VTKM_CONT SphericalCoordinateTransform::SphericalCoordinateTransform()
   : Worklet()
 {
   this->SetOutputFieldName("sphericalCoordinateSystemTransform");
 }
 
 //-----------------------------------------------------------------------------
-template <typename T>
-template <typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::cont::DataSet SphericalCoordinateTransform<T>::DoExecute(
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter&)
+  const DeviceAdapter& device)
 {
   vtkm::cont::ArrayHandle<T> outArray;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::SphericalCoordinateTransform<T>, DeviceAdapter>
-    dispatcher(this->Worklet);
-
-  dispatcher.Invoke(field, outArray);
+  Worklet.Run(field, outArray, device);
 
   return internal::CreateResult(inDataSet,
                                 outArray,

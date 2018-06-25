@@ -60,9 +60,7 @@ public:
   using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 
-template <typename T>
-class SphericalCoordinateTransform
-  : public vtkm::filter::FilterField<SphericalCoordinateTransform<T>>
+class SphericalCoordinateTransform : public vtkm::filter::FilterField<SphericalCoordinateTransform>
 {
 public:
   VTKM_CONT
@@ -71,7 +69,7 @@ public:
   VTKM_CONT void SetCartesianToSpherical() { Worklet.SetCartesianToSpherical(); }
   VTKM_CONT void SetSphericalToCartesian() { Worklet.SetSphericalToCartesian(); }
 
-  template <typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
@@ -79,11 +77,11 @@ public:
                                           const DeviceAdapter& tag);
 
 private:
-  vtkm::worklet::SphericalCoordinateTransform<T> Worklet;
+  vtkm::worklet::SphericalCoordinateTransform Worklet;
 };
 
-template <typename T>
-class FilterTraits<SphericalCoordinateTransform<T>>
+template <>
+class FilterTraits<SphericalCoordinateTransform>
 {
 public:
   //Point Elevation can only convert Float and Double Vec3 arrays
