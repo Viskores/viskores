@@ -165,10 +165,11 @@ public:
   {
     // TODO: call VirtualObjectHandle::PrepareForExecution() and return vtkm::exec::PointLocator
     // TODO: how to convert deviceId back to DeviceAdapter tag?
-    using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
-                                         vtkm::cont::DeviceAdapterTagTBB,
-                                         vtkm::cont::DeviceAdapterTagSerial>;
+    //using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
+    //                                     vtkm::cont::DeviceAdapterTagTBB,
+    //                                     vtkm::cont::DeviceAdapterTagSerial>;
 
+    using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
     //HandleType ExecHandle; // = new HandleType(locator, false);
     vtkm::cont::internal::FindDeviceAdapterTagAndCall(
       deviceId, DeviceList(), PrepareForExecutionFunctor(), *this, ExecHandle);
