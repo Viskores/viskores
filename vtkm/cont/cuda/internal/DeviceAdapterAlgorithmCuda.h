@@ -432,7 +432,6 @@ private:
     {
       cuda::internal::throwAsVTKmException();
     }
-    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
     return sum[2];
   }
 
@@ -1101,13 +1100,24 @@ public:
                              ::thrust::equal_to<T>(),
                              binary_functor);
   }
+
   // we use cuda pinned memory to reduce the amount of synchronization
   // and mem copies between the host and device.
-  VTKM_CONT_EXPORT
-  static char* GetPinnedErrorArray(vtkm::Id& arraySize, char** hostPointer);
+  struct VTKM_CONT_EXPORT PinnedErrorArray
+  {
+    char* HostPtr = nullptr;
+    char* DevicePtr = nullptr;
+    vtkm::Id Size = 0;
+  };
 
   VTKM_CONT_EXPORT
-  static char* SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
+  static const PinnedErrorArray& GetPinnedErrorArray();
+
+  VTKM_CONT_EXPORT
+  static void CheckForErrors(); // throws vtkm::cont::ErrorExecution
+
+  VTKM_CONT_EXPORT
+  static void SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
 
   VTKM_CONT_EXPORT
   static void GetGridsAndBlocks(vtkm::UInt32& grid, vtkm::UInt32& blocks, vtkm::Id size);
@@ -1126,25 +1136,15 @@ public:
       // No instances means nothing to run. Just return.
       return;
     }
-    char* hostErrorPtr = SetupErrorBuffer(functor);
+
+    CheckForErrors();
+    SetupErrorBuffer(functor);
 
     vtkm::UInt32 grids, blocks;
     GetGridsAndBlocks(grids, blocks, numInstances);
 
     cuda::internal::TaskStrided1DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor,
                                                                                    numInstances);
-
-    //sync so that we can check the results of the call.
-    //In the future I want move this before the schedule call, and throwing
-    //an exception if the previous schedule wrote an error. This would help
-    //cuda to run longer before we hard sync.
-    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
-
-    //check what the value is
-    if (hostErrorPtr[0] != '\0')
-    {
-      throw vtkm::cont::ErrorExecution(hostErrorPtr);
-    }
 
 #ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_1D
     parameter_sweep_1d_schedule(functor, numInstances);
@@ -1161,7 +1161,9 @@ public:
       // No instances means nothing to run. Just return.
       return;
     }
-    char* hostErrorPtr = SetupErrorBuffer(functor);
+
+    CheckForErrors();
+    SetupErrorBuffer(functor);
 
     const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
                       static_cast<vtkm::UInt32>(rangeMax[1]),
@@ -1172,18 +1174,6 @@ public:
     GetGridsAndBlocks(grids, blocks, ranges);
 
     cuda::internal::TaskStrided3DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor, ranges);
-
-    //sync so that we can check the results of the call.
-    //In the future I want move this before the schedule call, and throwing
-    //an exception if the previous schedule wrote an error. This would help
-    //cuda to run longer before we hard sync.
-    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
-
-    //check what the value is
-    if (hostErrorPtr[0] != '\0')
-    {
-      throw vtkm::cont::ErrorExecution(hostErrorPtr);
-    }
 
 #ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_3D
     parameter_sweep_3d_schedule(functor, rangeMax);
@@ -1288,6 +1278,7 @@ public:
   VTKM_CONT static void Synchronize()
   {
     VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
+    CheckForErrors();
   }
 };
 

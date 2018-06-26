@@ -364,10 +364,14 @@ public:
   VTKM_CONT const StorageType& GetStorage() const;
 
   /// Get the array portal of the control array.
+  /// Since worklet invocations are asynchronous and this routine is a synchronization point,
+  /// exceptions maybe thrown for errors from previously executed worklets.
   ///
   VTKM_CONT PortalControl GetPortalControl();
 
   /// Get the array portal of the control array.
+  /// Since worklet invocations are asynchronous and this routine is a synchronization point,
+  /// exceptions maybe thrown for errors from previously executed worklets.
   ///
   VTKM_CONT PortalConstControl GetPortalConstControl() const;
 

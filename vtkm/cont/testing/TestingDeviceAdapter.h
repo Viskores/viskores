@@ -45,9 +45,11 @@
 #include <vtkm/exec/AtomicArray.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <ctime>
 #include <random>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -1919,6 +1921,7 @@ private:
     try
     {
       Algorithm::Schedule(OneErrorKernel(), ARRAY_SIZE);
+      Algorithm::Synchronize();
     }
     catch (vtkm::cont::ErrorExecution& error)
     {
@@ -1932,12 +1935,48 @@ private:
     try
     {
       Algorithm::Schedule(AllErrorKernel(), ARRAY_SIZE);
+      Algorithm::Synchronize();
     }
     catch (vtkm::cont::ErrorExecution& error)
     {
       std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
     }
+    VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
+
+    // This is spcifically to test the cuda-backend but should pass for all backends
+    std::cout << "Testing if execution errors are eventually propogated to the host "
+              << "without explicit synchronization\n";
+    message = "";
+    int nkernels = 0;
+    try
+    {
+      IdArrayHandle idArray;
+      idArray.Allocate(ARRAY_SIZE);
+      auto portal = idArray.PrepareForInPlace(DeviceAdapterTag{});
+
+      Algorithm::Schedule(OneErrorKernel(), ARRAY_SIZE);
+      for (; nkernels < 100; ++nkernels)
+      {
+        Algorithm::Schedule(AddArrayKernel(portal), ARRAY_SIZE);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      }
+      Algorithm::Synchronize();
+    }
+    catch (vtkm::cont::ErrorExecution& error)
+    {
+      std::cout << "Got expected error: \"" << error.GetMessage() << "\" ";
+      if (nkernels < 100)
+      {
+        std::cout << "after " << nkernels << " invocations of other kernel" << std::endl;
+      }
+      else
+      {
+        std::cout << "only after explicit synchronization" << std::endl;
+      }
+      message = error.GetMessage();
+    }
+    std::cout << "\n";
     VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
   }
 

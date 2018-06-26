@@ -184,7 +184,7 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
   //our stream. We need to block on the copy back to control since
   //we don't wanting it accessing memory that hasn't finished
   //being used by the GPU
-  cudaStreamSynchronize(cudaStreamPerThread);
+  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTagCuda>::Synchronize();
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(
