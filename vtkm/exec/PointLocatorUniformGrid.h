@@ -34,11 +34,12 @@ namespace exec
 {
 
 // TODO: remove template T
+template <typename DeviceAdapter>
 class PointLocatorUniformGrid : public vtkm::exec::PointLocator
 {
 public:
   // TODO: figure hout how to parametize/passing DeviceAdapter.
-  using DeviceAdapter = vtkm::cont::DeviceAdapterTagSerial;
+  //using DeviceAdapter = vtkm::cont::DeviceAdapterTagSerial;
   using CoordPortalType = typename vtkm::cont::ArrayHandle<
     vtkm::Vec<vtkm::FloatDefault, 3>>::template ExecutionTypes<DeviceAdapter>::PortalConst;
   using IdPortalType =
@@ -81,7 +82,7 @@ public:
                                              vtkm::Id& nearestNeighborId,
                                              FloatDefault& distance) const override
   {
-    std::cout << "FindNeareastNeighbor: " << queryPoint << std::endl;
+//std::cout << "FindNeareastNeighbor: " << queryPoint << std::endl;
 #if 1
     auto nlayers = vtkm::Max(vtkm::Max(Dims[0], Dims[1]), Dims[2]);
 

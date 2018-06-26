@@ -99,7 +99,7 @@ public:
                             CoordiType& nnDis) const
   {
     locator->FindNearestNeighbor(qc, nnIdOut, nnDis);
-  };
+  }
 };
 
 template <typename DeviceAdapter>

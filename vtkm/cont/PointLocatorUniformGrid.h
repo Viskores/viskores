@@ -142,27 +142,29 @@ public:
     template <typename DeviceAdapter>
     VTKM_CONT void operator()(DeviceAdapter,
                               const vtkm::cont::PointLocatorUniformGrid& self,
-                              HandleType handle) const
+                              HandleType& handle) const
     {
-      vtkm::exec::PointLocatorUniformGrid* locator =
-        new vtkm::exec::PointLocatorUniformGrid(self.Min,
-                                                self.Max,
-                                                self.Dims,
-                                                self.coords.PrepareForInput(DeviceAdapter()),
-                                                self.pointIds.PrepareForInput(DeviceAdapter()),
-                                                self.cellLower.PrepareForInput(DeviceAdapter()),
-                                                self.cellUpper.PrepareForInput(DeviceAdapter()));
-      handle.Reset(locator);
+      //vtkm::exec::PointLocatorUniformGrid* locator =
+      vtkm::exec::PointLocatorUniformGrid<DeviceAdapter>* h =
+        new vtkm::exec::PointLocatorUniformGrid<DeviceAdapter>(
+          self.Min,
+          self.Max,
+          self.Dims,
+          self.coords.PrepareForInput(DeviceAdapter()),
+          self.pointIds.PrepareForInput(DeviceAdapter()),
+          self.cellLower.PrepareForInput(DeviceAdapter()),
+          self.cellUpper.PrepareForInput(DeviceAdapter()));
+      handle.Reset(h);
+      //return handle.PrepareForExecution(DeviceAdapter());
     }
   };
 
   VTKM_CONT
-  const vtkm::exec::PointLocator* PrepareForExecutionImp(
-    vtkm::cont::DeviceAdapterId deviceId) const override
+  //const vtkm::exec::PointLocator *
+  const HandleType PrepareForExecutionImp(vtkm::cont::DeviceAdapterId deviceId) const override
   {
     // TODO: call VirtualObjectHandle::PrepareForExecution() and return vtkm::exec::PointLocator
     // TODO: how to convert deviceId back to DeviceAdapter tag?
-    using DeviceAdapter = vtkm::cont::DeviceAdapterTagSerial;
     using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
                                          vtkm::cont::DeviceAdapterTagTBB,
                                          vtkm::cont::DeviceAdapterTagSerial>;
@@ -170,8 +172,9 @@ public:
     //HandleType ExecHandle; // = new HandleType(locator, false);
     vtkm::cont::internal::FindDeviceAdapterTagAndCall(
       deviceId, DeviceList(), PrepareForExecutionFunctor(), *this, ExecHandle);
+    return ExecHandle;
 
-    return ExecHandle.PrepareForExecution(DeviceAdapter());
+    //return ExecHandle.PrepareForExecution(DeviceAdapter());
   }
 
 private:
@@ -187,7 +190,7 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> cellUpper;
 
   // TODO: std::unique_ptr/std::shared_ptr?
-  HandleType ExecHandle;
+  mutable HandleType ExecHandle;
 };
 }
 }
