@@ -28,6 +28,8 @@
 
 #include <vtkm/exec/PointLocator.h>
 
+#include <vtkm/VectorAnalysis.h>
+
 namespace vtkm
 {
 namespace exec
@@ -47,10 +49,10 @@ public:
 
 
   // TODO: should constructor be VTKM_CONT or VTKM_EXEC?
-  VTKM_CONT
+  VTKM_EXEC_CONT
   PointLocatorUniformGrid() = default;
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   PointLocatorUniformGrid(const vtkm::Vec<vtkm::FloatDefault, 3>& _min,
                           const vtkm::Vec<vtkm::FloatDefault, 3>& _max,
                           const vtkm::Vec<vtkm::Id, 3>& _dims,
@@ -78,65 +80,26 @@ public:
   /// \param nearestNeighborId Neareast neighbor in the training dataset for each points in
   ///                            the test set
   /// \param distance Distance between query points and their nearest neighbors.
-  VTKM_EXEC virtual void FindNearestNeighbor(vtkm::Vec<vtkm::FloatDefault, 3> queryPoint,
+  VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
                                              vtkm::Id& nearestNeighborId,
-                                             FloatDefault& distance) const override
+                                             vtkm::FloatDefault& distance2) const override
   {
-//std::cout << "FindNeareastNeighbor: " << queryPoint << std::endl;
-#if 1
-    auto nlayers = vtkm::Max(vtkm::Max(Dims[0], Dims[1]), Dims[2]);
+    //std::cout << "FindNeareastNeighbor: " << queryPoint << std::endl;
+    vtkm::Id3 ijk = (queryPoint - Min) / this->Dxdydz;
+    ijk = vtkm::Max(ijk, vtkm::Id3(0));
+    ijk = vtkm::Min(ijk, this->Dims - vtkm::Id3(1));
 
-    vtkm::Vec<vtkm::Id, 3> xyz = (queryPoint - Min) / Dxdydz;
+    nearestNeighborId = -1;
+    distance2 = vtkm::Infinity<vtkm::FloatDefault>();
 
-    float min_distance = std::numeric_limits<float>::max();
-    vtkm::Id neareast = -1;
+    this->FindInCell(queryPoint, ijk, nearestNeighborId, distance2);
 
-    for (vtkm::Id layer = 0; layer < nlayers; layer++)
+    // TODO: This might stop looking before the absolute nearest neighbor is found.
+    vtkm::Id maxLevel = vtkm::Max(vtkm::Max(this->Dims[0], this->Dims[1]), this->Dims[2]);
+    for (vtkm::Id level = 1; (nearestNeighborId < 0) && (level < maxLevel); ++level)
     {
-      vtkm::Id minx = vtkm::Max(vtkm::Id(), xyz[0] - layer);
-      vtkm::Id maxx = vtkm::Min(Dims[0] - 1, xyz[0] + layer);
-      vtkm::Id miny = vtkm::Max(vtkm::Id(), xyz[1] - layer);
-      vtkm::Id maxy = vtkm::Min(Dims[1] - 1, xyz[1] + layer);
-      vtkm::Id minz = vtkm::Max(vtkm::Id(), xyz[2] - layer);
-      vtkm::Id maxz = vtkm::Min(Dims[2] - 1, xyz[2] + layer);
-
-      for (auto i = minx; i <= maxx; i++)
-      {
-        for (auto j = miny; j <= maxy; j++)
-        {
-          for (auto k = minz; k <= maxz; k++)
-          {
-            if (i == (xyz[0] + layer) || i == (xyz[0] - layer) || j == (xyz[1] + layer) ||
-                j == (xyz[1] - layer) || k == (xyz[2] + layer) || k == (xyz[2] - layer))
-            {
-              auto cellid = i + j * Dims[0] + k * Dims[0] * Dims[1];
-              auto lower = cellLower.Get(cellid);
-              auto upper = cellUpper.Get(cellid);
-              for (auto index = lower; index < upper; index++)
-              {
-                auto pointid = pointIds.Get(index);
-                auto point = coords.Get(pointid);
-                auto dx = point[0] - queryPoint[0];
-                auto dy = point[1] - queryPoint[1];
-                auto dz = point[2] - queryPoint[2];
-
-                auto distance2 = dx * dx + dy * dy + dz * dz;
-                if (distance2 < min_distance)
-                {
-                  neareast = pointid;
-                  min_distance = distance2;
-                  nlayers = layer + 2;
-                }
-              }
-            }
-          }
-        }
-      }
+      this->FindInBox(queryPoint, ijk, level, nearestNeighborId, distance2);
     }
-
-    nearestNeighborId = neareast;
-    distance = vtkm::Sqrt(min_distance);
-#endif
   }
 
 private:
@@ -150,6 +113,136 @@ private:
   IdPortalType cellIds;
   IdPortalType cellLower;
   IdPortalType cellUpper;
+
+  VTKM_EXEC void FindInCell(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+                            const vtkm::Id3& ijk,
+                            vtkm::Id& nearestNeighborId,
+                            vtkm::FloatDefault& nearestDistance2) const
+  {
+    vtkm::Id cellId = ijk[0] + (ijk[1] * this->Dims[0]) + (ijk[2] * this->Dims[0] * this->Dims[1]);
+    vtkm::Id lower = cellLower.Get(cellId);
+    vtkm::Id upper = cellUpper.Get(cellId);
+    for (vtkm::Id index = lower; index < upper; index++)
+    {
+      vtkm::Id pointid = pointIds.Get(index);
+      vtkm::Vec<vtkm::FloatDefault, 3> point = coords.Get(pointid);
+      vtkm::FloatDefault distance2 = vtkm::MagnitudeSquared(point - queryPoint);
+      if (distance2 < nearestDistance2)
+      {
+        nearestNeighborId = pointid;
+        nearestDistance2 = distance2;
+      }
+    }
+  }
+
+  VTKM_EXEC void FindInBox(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+                           const vtkm::Id3& boxCenter,
+                           vtkm::Id level,
+                           vtkm::Id& nearestNeighborId,
+                           vtkm::FloatDefault& nearestDistance2) const
+  {
+    if ((boxCenter[0] - level) >= 0)
+    {
+      this->FindInXPlane(
+        queryPoint, boxCenter - vtkm::Id3(level, 0, 0), level, nearestNeighborId, nearestDistance2);
+    }
+    if ((boxCenter[0] + level) < this->Dims[0])
+    {
+      this->FindInXPlane(
+        queryPoint, boxCenter + vtkm::Id3(level, 0, 0), level, nearestNeighborId, nearestDistance2);
+    }
+
+    if ((boxCenter[1] - level) >= 0)
+    {
+      this->FindInYPlane(
+        queryPoint, boxCenter - vtkm::Id3(0, level, 0), level, nearestNeighborId, nearestDistance2);
+    }
+    if ((boxCenter[1] + level) < this->Dims[1])
+    {
+      this->FindInYPlane(
+        queryPoint, boxCenter - vtkm::Id3(0, level, 0), level, nearestNeighborId, nearestDistance2);
+    }
+
+    if ((boxCenter[2] - level) >= 0)
+    {
+      this->FindInZPlane(
+        queryPoint, boxCenter - vtkm::Id3(0, 0, level), level, nearestNeighborId, nearestDistance2);
+    }
+    if ((boxCenter[2] + level) < this->Dims[2])
+    {
+      this->FindInZPlane(
+        queryPoint, boxCenter - vtkm::Id3(0, 0, level), level, nearestNeighborId, nearestDistance2);
+    }
+  }
+
+  VTKM_EXEC void FindInPlane(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+                             const vtkm::Id3& planeCenter,
+                             const vtkm::Id3& div,
+                             const vtkm::Id3& mod,
+                             const vtkm::Id3& origin,
+                             vtkm::Id numInPlane,
+                             vtkm::Id& nearestNeighborId,
+                             vtkm::FloatDefault& nearestDistance2) const
+  {
+    for (vtkm::Id index = 0; index < numInPlane; ++index)
+    {
+      vtkm::Id3 ijk = planeCenter + vtkm::Id3(index) / div +
+        vtkm::Id3(index % mod[0], index % mod[1], index % mod[2]) + origin;
+      if ((ijk[0] >= 0) && (ijk[0] < this->Dims[0]) && (ijk[1] >= 0) && (ijk[1] < this->Dims[1]) &&
+          (ijk[2] >= 0) && (ijk[2] < this->Dims[2]))
+      {
+        this->FindInCell(queryPoint, ijk, nearestNeighborId, nearestDistance2);
+      }
+    }
+  }
+
+  VTKM_EXEC void FindInXPlane(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+                              const vtkm::Id3& planeCenter,
+                              vtkm::Id level,
+                              vtkm::Id& nearestNeighborId,
+                              vtkm::FloatDefault& nearestDistance2) const
+  {
+    vtkm::Id yWidth = (2 * level) + 1;
+    vtkm::Id zWidth = (2 * level) + 1;
+    vtkm::Id3 div = { yWidth * zWidth, yWidth * zWidth, yWidth };
+    vtkm::Id3 mod = { 1, yWidth, 1 };
+    vtkm::Id3 origin = { 0, -level, -level };
+    vtkm::Id numInPlane = yWidth * zWidth;
+    this->FindInPlane(
+      queryPoint, planeCenter, div, mod, origin, numInPlane, nearestNeighborId, nearestDistance2);
+  }
+
+  VTKM_EXEC void FindInYPlane(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+                              vtkm::Id3 planeCenter,
+                              vtkm::Id level,
+                              vtkm::Id& nearestNeighborId,
+                              vtkm::FloatDefault& nearestDistance2) const
+  {
+    vtkm::Id xWidth = (2 * level) - 1;
+    vtkm::Id zWidth = (2 * level) + 1;
+    vtkm::Id3 div = { xWidth * zWidth, xWidth * zWidth, xWidth };
+    vtkm::Id3 mod = { xWidth, 1, 1 };
+    vtkm::Id3 origin = { -level + 1, 0, -level };
+    vtkm::Id numInPlane = xWidth * zWidth;
+    this->FindInPlane(
+      queryPoint, planeCenter, div, mod, origin, numInPlane, nearestNeighborId, nearestDistance2);
+  }
+
+  VTKM_EXEC void FindInZPlane(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+                              vtkm::Id3 planeCenter,
+                              vtkm::Id level,
+                              vtkm::Id& nearestNeighborId,
+                              vtkm::FloatDefault& nearestDistance2) const
+  {
+    vtkm::Id xWidth = (2 * level) - 1;
+    vtkm::Id yWidth = (2 * level) - 1;
+    vtkm::Id3 div = { xWidth * yWidth, xWidth, xWidth * yWidth };
+    vtkm::Id3 mod = { xWidth, 1, 1 };
+    vtkm::Id3 origin = { -level + 1, -level + 1, 0 };
+    vtkm::Id numInPlane = xWidth * yWidth;
+    this->FindInPlane(
+      queryPoint, planeCenter, div, mod, origin, numInPlane, nearestNeighborId, nearestDistance2);
+  }
 };
 }
 }

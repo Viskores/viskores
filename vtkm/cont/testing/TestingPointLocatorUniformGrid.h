@@ -32,9 +32,9 @@
 
 ////brute force method /////
 template <typename CoordiVecT, typename CoordiPortalT, typename CoordiT>
-VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, CoordiT& dis)
+VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, CoordiT& dis2)
 {
-  dis = std::numeric_limits<CoordiT>::max();
+  dis2 = std::numeric_limits<CoordiT>::max();
   vtkm::Id nnpIdx = -1;
 
   for (vtkm::Int32 i = 0; i < coordiPortal.GetNumberOfValues(); i++)
@@ -42,12 +42,11 @@ VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, C
     CoordiT splitX = coordiPortal.Get(i)[0];
     CoordiT splitY = coordiPortal.Get(i)[1];
     CoordiT splitZ = coordiPortal.Get(i)[2];
-    CoordiT _dis =
-      vtkm::Sqrt((splitX - qc[0]) * (splitX - qc[0]) + (splitY - qc[1]) * (splitY - qc[1]) +
-                 (splitZ - qc[2]) * (splitZ - qc[2]));
-    if (_dis < dis)
+    CoordiT _dis2 = (splitX - qc[0]) * (splitX - qc[0]) + (splitY - qc[1]) * (splitY - qc[1]) +
+      (splitZ - qc[2]) * (splitZ - qc[2]);
+    if (_dis2 < dis2)
     {
-      dis = _dis;
+      dis2 = _dis2;
       nnpIdx = i;
     }
   }
