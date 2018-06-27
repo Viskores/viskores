@@ -178,7 +178,11 @@ public:
     VTKM_TEST_ASSERT(passTest, "Uniform Grid NN search result incorrect.");
   }
 
-  void operator()() const { this->TestTest(); }
+  void operator()() const
+  {
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+    this->TestTest();
+  }
 };
 
 #endif // vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
