@@ -84,8 +84,8 @@ public:
 
   struct BuildFunctor
   {
-    BuildFunctor(vtkm::cont::PointLocatorUniformGrid _self)
-      : self(_self)
+    BuildFunctor(vtkm::cont::PointLocatorUniformGrid* self)
+      : Self(self)
     {
     }
 
@@ -95,37 +95,37 @@ public:
       using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
       // Save training data points.
-      Algorithm::Copy(self.GetCoords().GetData(), self.coords);
+      Algorithm::Copy(this->Self->GetCoords().GetData(), this->Self->coords);
 
       // generate unique id for each input point
       vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(
-        0, 1, self.coords.GetNumberOfValues());
-      Algorithm::Copy(pointCounting, self.pointIds);
+        0, 1, this->Self->coords.GetNumberOfValues());
+      Algorithm::Copy(pointCounting, this->Self->pointIds);
 
       // bin points into cells and give each of them the cell id.
-      BinPointsWorklet cellIdWorklet(self.Min, self.Max, self.Dims);
+      BinPointsWorklet cellIdWorklet(this->Self->Min, this->Self->Max, this->Self->Dims);
       vtkm::worklet::DispatcherMapField<BinPointsWorklet, Device> dispatchCellId(cellIdWorklet);
-      dispatchCellId.Invoke(self.coords, self.cellIds);
+      dispatchCellId.Invoke(this->Self->coords, this->Self->cellIds);
 
       // Group points of the same cell together by sorting them according to the cell ids
-      Algorithm::SortByKey(self.cellIds, self.pointIds);
+      Algorithm::SortByKey(this->Self->cellIds, this->Self->pointIds);
 
       // for each cell, find the lower and upper bound of indices to the sorted point ids.
       vtkm::cont::ArrayHandleCounting<vtkm::Id> cell_ids_counting(
-        0, 1, self.Dims[0] * self.Dims[1] * self.Dims[2]);
-      Algorithm::UpperBounds(self.cellIds, cell_ids_counting, self.cellUpper);
-      Algorithm::LowerBounds(self.cellIds, cell_ids_counting, self.cellLower);
+        0, 1, this->Self->Dims[0] * this->Self->Dims[1] * this->Self->Dims[2]);
+      Algorithm::UpperBounds(this->Self->cellIds, cell_ids_counting, this->Self->cellUpper);
+      Algorithm::LowerBounds(this->Self->cellIds, cell_ids_counting, this->Self->cellLower);
 
       return true;
     }
 
   private:
-    vtkm::cont::PointLocatorUniformGrid& self;
+    vtkm::cont::PointLocatorUniformGrid* Self;
   };
 
   void Build() override
   {
-    BuildFunctor functor(*this);
+    BuildFunctor functor(this);
 
     bool success = vtkm::cont::TryExecute(functor);
     if (!success)
