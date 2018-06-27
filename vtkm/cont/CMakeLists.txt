@@ -84,6 +84,7 @@ set(headers
   FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
   MultiBlock.h
+  PointLocator.h
   PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
