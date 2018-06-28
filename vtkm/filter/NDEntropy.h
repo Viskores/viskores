@@ -26,19 +26,9 @@ namespace vtkm
 {
 namespace filter
 {
-/// \brief Clean a mesh to an unstructured grid
+/// \brief Calculate the entropy of input N-Dims fields
 ///
-/// This filter takes a data set and essentially copies it into a new data set.
-/// The newly constructed data set will have the same cells as the input and
-/// the topology will be stored in a \c CellSetExplicit<>. The filter will also
-/// optionally remove all unused points.
-///
-/// Note that the result of \c CleanGrid is not necessarily smaller than the
-/// input. For example, "cleaning" a data set with a \c CellSetStructured
-/// topology will actually result in a much larger data set.
-///
-/// \todo Add a feature to merge points that are coincident or within a
-/// tolerance.
+/// This filter calculate the entropy of input N-Dims fields.
 ///
 class NDEntropy : public vtkm::filter::FilterDataSet<NDEntropy>
 {

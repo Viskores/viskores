@@ -18,18 +18,14 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/worklet/CoordinateSystemTransform.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/filter/CoordinateSystemTransform.h>
 
-#include <random>
+#include <string>
 #include <vector>
 
 namespace
 {
-std::mt19937 randGenerator;
 
 enum CoordinateType
 {
@@ -112,25 +108,22 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
   return dataSet;
 }
 
-void ValidateCoordTransform(
-  const vtkm::cont::CoordinateSystem& coords,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& transform,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& doubleTransform,
-  const std::vector<bool>& isAngle)
+void ValidateCoordTransform(const vtkm::cont::DataSet& ds,
+                            const vtkm::cont::DataSet& dsTrn,
+                            const std::vector<bool>& isAngle)
 {
-  auto points = coords.GetData();
-  VTKM_TEST_ASSERT(points.GetNumberOfValues() == transform.GetNumberOfValues() &&
-                     points.GetNumberOfValues() == doubleTransform.GetNumberOfValues(),
+  auto points = ds.GetCoordinateSystem().GetData();
+  auto pointsTrn = dsTrn.GetCoordinateSystem().GetData();
+  VTKM_TEST_ASSERT(points.GetNumberOfValues() == pointsTrn.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 
-  //The double transform should produce the same result.
   auto pointsPortal = points.GetPortalConstControl();
-  auto resultsPortal = doubleTransform.GetPortalConstControl();
+  auto pointsTrnPortal = pointsTrn.GetPortalConstControl();
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
   {
     vtkm::Vec<vtkm::FloatDefault, 3> p = pointsPortal.Get(i);
-    vtkm::Vec<vtkm::FloatDefault, 3> r = resultsPortal.Get(i);
+    vtkm::Vec<vtkm::FloatDefault, 3> r = pointsTrnPortal.Get(i);
     bool isEqual = true;
     for (vtkm::IdComponent j = 0; j < 3; j++)
     {
@@ -147,68 +140,63 @@ void ValidateCoordTransform(
 
 void TestCoordinateSystemTransform()
 {
-  std::cout << "Testing CylindricalCoordinateTransform Worklet" << std::endl;
-
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  std::cout << "Testing CylindricalCoordinateTransform Filter" << std::endl;
 
   //Test cartesian to cyl
   vtkm::cont::DataSet dsCart = MakeTestDataSet(CART);
-  vtkm::worklet::CylindricalCoordinateTransform cylTrn;
+  vtkm::filter::CylindricalCoordinateTransform cylTrn;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> carToCylPts;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> revResult;
-
+  cylTrn.SetOutputFieldName("cylindricalCoords");
+  cylTrn.SetUseCoordinateSystemAsField(true);
   cylTrn.SetCartesianToCylindrical();
-  cylTrn.Run(dsCart.GetCoordinateSystem(), carToCylPts, DeviceAdapter());
+  vtkm::cont::DataSet carToCylDataSet = cylTrn.Execute(dsCart);
 
   cylTrn.SetCylindricalToCartesian();
-  cylTrn.Run(carToCylPts, revResult, DeviceAdapter());
-  ValidateCoordTransform(
-    dsCart.GetCoordinateSystem(), carToCylPts, revResult, { false, false, false });
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  cylTrn.SetOutputFieldName("cartesianCoords");
+  vtkm::cont::DataSet cylToCarDataSet = cylTrn.Execute(carToCylDataSet);
+  ValidateCoordTransform(dsCart, cylToCarDataSet, { false, false, false });
 
-  //Test cylindrical to cartesian
+  //Test cyl to cart.
   vtkm::cont::DataSet dsCyl = MakeTestDataSet(CYL);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> cylToCarPts;
   cylTrn.SetCylindricalToCartesian();
-  cylTrn.Run(dsCyl.GetCoordinateSystem(), cylToCarPts, DeviceAdapter());
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  cylTrn.SetOutputFieldName("cartesianCoords");
+  cylToCarDataSet = cylTrn.Execute(dsCyl);
 
   cylTrn.SetCartesianToCylindrical();
-  cylTrn.Run(cylToCarPts, revResult, DeviceAdapter());
-  ValidateCoordTransform(
-    dsCyl.GetCoordinateSystem(), cylToCarPts, revResult, { false, true, false });
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  cylTrn.SetOutputFieldName("cylindricalCoords");
+  carToCylDataSet = cylTrn.Execute(cylToCarDataSet);
+  ValidateCoordTransform(dsCyl, carToCylDataSet, { false, true, false });
 
-  //Spherical transform
-  //Test cartesian to sph
-  vtkm::worklet::SphericalCoordinateTransform sphTrn;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> carToSphPts;
+  std::cout << "Testing SphericalCoordinateTransform Filter" << std::endl;
 
+  vtkm::filter::SphericalCoordinateTransform sphTrn;
+  sphTrn.SetOutputFieldName("sphericalCoords");
+  sphTrn.SetUseCoordinateSystemAsField(true);
   sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(dsCart.GetCoordinateSystem(), carToSphPts, DeviceAdapter());
+  vtkm::cont::DataSet carToSphDataSet = sphTrn.Execute(dsCart);
 
+  sphTrn.SetOutputFieldName("cartesianCoords");
+  sphTrn.SetUseCoordinateSystemAsField(true);
   sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(carToSphPts, revResult, DeviceAdapter());
-  ValidateCoordTransform(
-    dsCart.GetCoordinateSystem(), carToSphPts, revResult, { false, true, true });
+  vtkm::cont::DataSet sphToCarDataSet = sphTrn.Execute(carToSphDataSet);
+  ValidateCoordTransform(dsCart, sphToCarDataSet, { false, true, true });
 
-  //Test spherical to cartesian
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> sphToCarPts;
   vtkm::cont::DataSet dsSph = MakeTestDataSet(SPH);
-
   sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts, DeviceAdapter());
+  sphTrn.SetUseCoordinateSystemAsField(true);
+  sphTrn.SetOutputFieldName("sphericalCoords");
+  sphToCarDataSet = sphTrn.Execute(dsSph);
 
   sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(sphToCarPts, revResult, DeviceAdapter());
-
-  ValidateCoordTransform(
-    dsSph.GetCoordinateSystem(), sphToCarPts, revResult, { false, true, true });
-  sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts, DeviceAdapter());
-  sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(sphToCarPts, revResult, DeviceAdapter());
-  ValidateCoordTransform(
-    dsSph.GetCoordinateSystem(), sphToCarPts, revResult, { false, true, true });
+  sphTrn.SetUseCoordinateSystemAsField(true);
+  sphTrn.SetOutputFieldName("sphericalCoords");
+  carToSphDataSet = cylTrn.Execute(sphToCarDataSet);
+  ValidateCoordTransform(dsSph, carToSphDataSet, { false, true, true });
 }
+
 
 int UnitTestCoordinateSystemTransform(int, char* [])
 {
