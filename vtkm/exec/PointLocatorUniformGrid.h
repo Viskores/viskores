@@ -48,8 +48,6 @@ public:
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
 
-  // TODO: should constructor be VTKM_CONT or VTKM_EXEC?
-  VTKM_EXEC_CONT
   PointLocatorUniformGrid() = default;
 
   VTKM_EXEC_CONT
