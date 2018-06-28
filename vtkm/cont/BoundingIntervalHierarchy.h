@@ -75,6 +75,13 @@ struct TreeNode
   vtkm::Float64 LMax;
   vtkm::Float64 RMin;
   vtkm::IdComponent Dimension;
+
+  TreeNode()
+    : LMax()
+    , RMin()
+    , Dimension()
+  {
+  }
 }; // struct TreeNode
 
 template <typename S>
@@ -93,6 +100,7 @@ void OutputArray(const vtkm::cont::ArrayHandle<TreeNode, S>& outputArray, const 
   }
   std::cout << "]\n";
 }
+
 template <typename S>
 void OutputArray(const vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode, S>& outputArray,
                  const char* name = "")
@@ -127,6 +135,16 @@ struct SplitProperties
   vtkm::Float64 LMax;
   vtkm::Float64 RMin;
   vtkm::Float64 Cost;
+
+  SplitProperties()
+    : Plane()
+    , NumLeftPoints()
+    , NumRightPoints()
+    , LMax()
+    , RMin()
+    , Cost()
+  {
+  }
 }; // struct SplitProperties
 
 struct CellRangesExtracter : public vtkm::worklet::WorkletMapPointToCell
@@ -1095,6 +1113,8 @@ public:
   BoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4, vtkm::IdComponent maxLeafSize = 5)
     : NumPlanes(numPlanes)
     , MaxLeafSize(maxLeafSize)
+    , Nodes()
+    , ProcessedCellIds()
   {
   }
 
