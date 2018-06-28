@@ -64,10 +64,11 @@ public:
   }
 
   template <typename Invocation>
-  VTKM_CONT void DoInvoke(const Invocation& invocation) const
+  VTKM_CONT void DoInvoke(Invocation& invocation) const
   {
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
+    using SchedulingRangeType = typename WorkletType::ToTopologyType;
 
     // If you get a compile error on this line, then you have tried to use
     // something that is not a vtkm::cont::CellSet as the input domain to a
@@ -76,12 +77,12 @@ public:
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    const InputDomainType& inputDomain = invocation.GetInputDomain();
+    const auto& inputDomain = invocation.GetInputDomain();
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BadicInvoke.
     this->BasicInvoke(
-      invocation, inputDomain.GetSchedulingRange(typename WorkletType::ToTopologyType()), Device());
+      invocation, internal::scheduling_range(inputDomain, SchedulingRangeType{}), Device());
   }
 };
 }

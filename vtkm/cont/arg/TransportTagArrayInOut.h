@@ -53,7 +53,7 @@ struct Transport<vtkm::cont::arg::TransportTagArrayInOut, ContObjectType, Device
   using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInPlace(Device()));
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType operator()(ContObjectType object,
+  VTKM_CONT ExecObjectType operator()(ContObjectType& object,
                                       const InputDomainType& vtkmNotUsed(inputDomain),
                                       vtkm::Id vtkmNotUsed(inputRange),
                                       vtkm::Id outputRange) const

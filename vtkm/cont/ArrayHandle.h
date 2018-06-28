@@ -120,7 +120,8 @@ public:
 template <typename T>
 struct ArrayHandleCheck
 {
-  using type = typename std::is_base_of<::vtkm::cont::internal::ArrayHandleBase, T>::type;
+  using U = typename std::remove_pointer<T>::type;
+  using type = typename std::is_base_of<::vtkm::cont::internal::ArrayHandleBase, U>::type;
 };
 
 #define VTKM_IS_ARRAY_HANDLE(T)                                                                    \
