@@ -173,9 +173,10 @@ public:
   /// \param coords An ArrayHandle of x, y, z coordinates of input points.
   /// \param device Tag for selecting device adapter
   template <typename DeviceAdapter>
-  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
-             DeviceAdapter vtkmNotUsed(device))
+  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords, DeviceAdapter device)
   {
+    (void)device;
+
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     // generate unique id for each input point
     vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(0, 1, coords.GetNumberOfValues());
@@ -213,8 +214,10 @@ public:
                         const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& queryPoints,
                         vtkm::cont::ArrayHandle<vtkm::Id>& nearestNeighborIds,
                         vtkm::cont::ArrayHandle<T>& distances,
-                        DeviceAdapter)
+                        DeviceAdapter device)
   {
+    (void)device;
+
     UniformGridSearch uniformGridSearch(Min, Max, Dims);
 
     vtkm::worklet::DispatcherMapField<UniformGridSearch, DeviceAdapter> searchDispatcher(
