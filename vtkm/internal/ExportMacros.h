@@ -61,7 +61,9 @@
 //  by the visibility of both T and S.
 //
 // Solution:
-// The solution is fairly simple, but annoying. You need to mark
+// The solution is fairly simple, but annoying. You need to mark every single
+// header only class that is tempgit lated on non value types to be marked as
+// always exported ( or never pass fvisibility=hidden ).
 //
 // TL;DR:
 // This markup is used when we want to make sure:
