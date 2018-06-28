@@ -82,7 +82,7 @@ private:
     }
     else
     {
-      const vtkm::Float64& c = point[node.Dimension];
+      const vtkm::FloatDefault& c = point[node.Dimension];
       vtkm::Id id1 = -1;
       vtkm::Id id2 = -1;
       if (c <= node.Node.LMax)

@@ -35,8 +35,8 @@ struct BoundingIntervalHierarchyNode
   union {
     struct
     {
-      vtkm::Float64 LMax;
-      vtkm::Float64 RMin;
+      vtkm::FloatDefault LMax;
+      vtkm::FloatDefault RMin;
     } Node;
     struct
     {

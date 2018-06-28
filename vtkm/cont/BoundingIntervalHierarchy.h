@@ -72,8 +72,8 @@ void OutputArray(const vtkm::cont::ArrayHandle<T, S>& outputArray, const char* n
 
 struct TreeNode
 {
-  vtkm::Float64 LMax;
-  vtkm::Float64 RMin;
+  vtkm::FloatDefault LMax;
+  vtkm::FloatDefault RMin;
   vtkm::IdComponent Dimension;
 
   TreeNode()
@@ -129,12 +129,12 @@ void OutputArray(const vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode, S>
 
 struct SplitProperties
 {
-  vtkm::Float64 Plane;
+  vtkm::FloatDefault Plane;
   vtkm::Id NumLeftPoints;
   vtkm::Id NumRightPoints;
-  vtkm::Float64 LMax;
-  vtkm::Float64 RMin;
-  vtkm::Float64 Cost;
+  vtkm::FloatDefault LMax;
+  vtkm::FloatDefault RMin;
+  vtkm::FloatDefault Cost;
 
   SplitProperties()
     : Plane()
@@ -166,9 +166,9 @@ struct CellRangesExtracter : public vtkm::worklet::WorkletMapPointToCell
                             vtkm::Range& rangeX,
                             vtkm::Range& rangeY,
                             vtkm::Range& rangeZ,
-                            vtkm::Float64& centerX,
-                            vtkm::Float64& centerY,
-                            vtkm::Float64& centerZ) const
+                            vtkm::FloatDefault& centerX,
+                            vtkm::FloatDefault& centerY,
+                            vtkm::FloatDefault& centerZ) const
   {
     vtkm::Bounds bounds;
     vtkm::VecFromPortalPermute<PointIndicesVec, PointsPortal> cellPoints(&pointIndices, points);
@@ -180,7 +180,7 @@ struct CellRangesExtracter : public vtkm::worklet::WorkletMapPointToCell
     rangeX = bounds.X;
     rangeY = bounds.Y;
     rangeZ = bounds.Z;
-    vtkm::Vec<vtkm::Float64, 3> center = bounds.Center();
+    vtkm::Vec<vtkm::FloatDefault, 3> center = bounds.Center();
     centerX = center[0];
     centerY = center[1];
     centerZ = center[2];
@@ -195,8 +195,8 @@ public:
   using InputDomain = _1;
 
   VTKM_EXEC
-  void operator()(const vtkm::Float64& value,
-                  const vtkm::Float64& planeValue,
+  void operator()(const vtkm::FloatDefault& value,
+                  const vtkm::FloatDefault& planeValue,
                   vtkm::Id& leq,
                   vtkm::Id& r) const
   {
@@ -214,8 +214,8 @@ public:
   using InputDomain = _1;
 
   VTKM_EXEC
-  void operator()(const vtkm::Float64& value,
-                  const vtkm::Float64& planeValue,
+  void operator()(const vtkm::FloatDefault& value,
+                  const vtkm::FloatDefault& planeValue,
                   const vtkm::Range& cellBounds,
                   vtkm::Range& outBounds) const
   {
@@ -239,17 +239,18 @@ public:
 
   VTKM_CONT
   SplitPlaneCalculatorWorklet(vtkm::IdComponent planeIdx, vtkm::IdComponent numPlanes)
-    : Scale(static_cast<vtkm::Float64>(planeIdx + 1) / static_cast<vtkm::Float64>(numPlanes + 1))
+    : Scale(static_cast<vtkm::FloatDefault>(planeIdx + 1) /
+            static_cast<vtkm::FloatDefault>(numPlanes + 1))
   {
   }
 
   VTKM_EXEC
-  void operator()(const vtkm::Range& range, vtkm::Float64& splitPlane) const
+  void operator()(const vtkm::Range& range, vtkm::FloatDefault& splitPlane) const
   {
     splitPlane = range.Min + Scale * (range.Max - range.Min);
   }
 
-  vtkm::Float64 Scale;
+  vtkm::FloatDefault Scale;
 };
 
 struct SplitPropertiesCalculator : public vtkm::worklet::WorkletMapField
@@ -276,7 +277,7 @@ public:
                             const vtkm::Id& pointsToRight,
                             const vtkm::Range& lMaxRanges,
                             const vtkm::Range& rMinRanges,
-                            const vtkm::Float64& planeValue,
+                            const vtkm::FloatDefault& planeValue,
                             SplitPropertiesPortal& splits,
                             vtkm::Id inputIndex) const
   {
@@ -286,8 +287,8 @@ public:
     split.NumRightPoints = pointsToRight;
     split.LMax = lMaxRanges.Max;
     split.RMin = rMinRanges.Min;
-    split.Cost = vtkm::Abs(split.LMax * static_cast<vtkm::Float64>(pointsToLeft) -
-                           split.RMin * static_cast<vtkm::Float64>(pointsToRight));
+    split.Cost = vtkm::Abs(split.LMax * static_cast<vtkm::FloatDefault>(pointsToLeft) -
+                           split.RMin * static_cast<vtkm::FloatDefault>(pointsToRight));
     if (vtkm::IsNan(split.Cost))
     {
       split.Cost = vtkm::Infinity64();
@@ -331,7 +332,7 @@ public:
                             const SplitPropertiesPortal& zSplits,
                             const vtkm::Id& segmentSize,
                             TreeNode& node,
-                            vtkm::Float64& plane,
+                            vtkm::FloatDefault& plane,
                             vtkm::Id& choice) const
   {
     if (segmentSize <= MaxLeafSize)
@@ -342,7 +343,7 @@ public:
     }
     choice = 1;
     using Split = SplitProperties;
-    vtkm::Float64 minCost = vtkm::Infinity64();
+    vtkm::FloatDefault minCost = vtkm::Infinity64();
     const Split& xSplit = xSplits[ArgMin(xSplits, index * Stride, Stride)];
     bool found = false;
     if (xSplit.Cost < minCost && xSplit.NumLeftPoints != 0 && xSplit.NumRightPoints != 0)
@@ -430,17 +431,17 @@ struct CalculateSplitDirectionFlag : public vtkm::worklet::WorkletMapField
   using InputDomain = _1;
 
   VTKM_EXEC
-  void operator()(const vtkm::Float64& x,
-                  const vtkm::Float64& y,
-                  const vtkm::Float64& z,
+  void operator()(const vtkm::FloatDefault& x,
+                  const vtkm::FloatDefault& y,
+                  const vtkm::FloatDefault& z,
                   const TreeNode& split,
-                  const vtkm::Float64& plane,
+                  const vtkm::FloatDefault& plane,
                   vtkm::Id& flag) const
   {
     if (split.Dimension >= 0)
     {
-      const vtkm::Vec<vtkm::Float64, 3> point(x, y, z);
-      const vtkm::Float64& c = point[split.Dimension];
+      const vtkm::Vec<vtkm::FloatDefault, 3> point(x, y, z);
+      const vtkm::FloatDefault& c = point[split.Dimension];
       // We use 0 to signify left child, 1 for right child
       flag = 1 - static_cast<vtkm::Id>(c <= plane);
     }
@@ -672,7 +673,7 @@ private:
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
   using IdPermutationArrayHandle = vtkm::cont::ArrayHandlePermutation<IdArrayHandle, IdArrayHandle>;
   using BoundsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Bounds>;
-  using CoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Float64>;
+  using CoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using CoordsPermutationArrayHandle =
     vtkm::cont::ArrayHandlePermutation<IdArrayHandle, CoordsArrayHandle>;
   using CountingIdArrayHandle = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
@@ -776,7 +777,7 @@ private:
         //START_TIMER(s23);
         // Select best split plane and dimension across X, Y, Z dimension, per segment
         SplitArrayHandle segmentSplits;
-        vtkm::cont::ArrayHandle<vtkm::Float64> segmentPlanes;
+        vtkm::cont::ArrayHandle<vtkm::FloatDefault> segmentPlanes;
         vtkm::cont::ArrayHandle<vtkm::Id> splitChoices;
         detail::SplitSelector worklet(Self->NumPlanes, Self->MaxLeafSize, Self->NumPlanes + 1);
         vtkm::worklet::DispatcherMapField<detail::SplitSelector> splitSelectorDispatcher(worklet);
@@ -961,7 +962,7 @@ private:
   {
     using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     // Make candidate split plane array
-    vtkm::cont::ArrayHandle<vtkm::Float64> splitPlanes;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> splitPlanes;
     detail::SplitPlaneCalculatorWorklet splitPlaneCalcWorklet(planeIndex, numPlanes);
     vtkm::worklet::DispatcherMapField<detail::SplitPlaneCalculatorWorklet, DeviceAdapter>
       splitDispatcher(splitPlaneCalcWorklet);
@@ -994,7 +995,7 @@ private:
     Algorithms::ReduceByKey(segmentIds, leqRanges, discardKeys, lMaxRanges, detail::RangeAdd());
     Algorithms::ReduceByKey(segmentIds, rRanges, discardKeys, rMinRanges, detail::RangeAdd());
 
-    vtkm::cont::ArrayHandle<vtkm::Float64> segmentedSplitPlanes;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> segmentedSplitPlanes;
     Algorithms::ReduceByKey(
       segmentIds, splitPlanes, discardKeys, segmentedSplitPlanes, vtkm::Minimum());
 
