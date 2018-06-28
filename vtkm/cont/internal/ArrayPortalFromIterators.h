@@ -54,11 +54,11 @@ public:
   using IteratorType = IteratorT;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalFromIterators() {}
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalFromIterators(IteratorT begin, IteratorT end)
     : BeginIterator(begin)
   {
@@ -80,8 +80,9 @@ public:
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <class OtherIteratorT>
-  VTKM_EXEC_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
+  VTKM_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
     : BeginIterator(src.GetIteratorBegin())
     , NumberOfValues(src.GetNumberOfValues())
   {
@@ -128,7 +129,7 @@ public:
   using IteratorType = IteratorT;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalFromIterators()
     : BeginIterator(nullptr)
     , NumberOfValues(0)
@@ -136,7 +137,7 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalFromIterators(IteratorT begin, IteratorT end)
     : BeginIterator(begin)
   {
@@ -158,8 +159,9 @@ public:
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <class OtherIteratorT>
-  VTKM_EXEC_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
+  VTKM_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
     : BeginIterator(src.GetIteratorBegin())
     , NumberOfValues(src.GetNumberOfValues())
   {
@@ -223,7 +225,7 @@ public:
   using IteratorType = _IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalToIterators(const PortalType& portal)
     : Iterator(portal.GetIteratorBegin())
     , NumberOfValues(portal.GetNumberOfValues())
@@ -237,7 +239,7 @@ public:
   using IteratorType = stdext::checked_array_iterator<_IteratorType>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalToIterators(const PortalType& portal)
     : Iterator(portal.GetIteratorBegin(), static_cast<size_t>(portal.GetNumberOfValues()))
     , NumberOfValues(portal.GetNumberOfValues())
