@@ -72,16 +72,19 @@ private:
       vtkm::cont::DeviceAdapterTagCuda>::Portal;
   PortalType Portal;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   __device__ vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const
   {
     return atomicAdd((unsigned long long*)address, (unsigned long long)value);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   __device__ vtkm::Int32 vtkmAtomicAdd(vtkm::Int32* address, const vtkm::Int32& value) const
   {
     return atomicAdd(address, value);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   __device__ vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
                                             const vtkm::Int32& newValue,
                                             const vtkm::Int32& oldValue) const
@@ -89,6 +92,7 @@ private:
     return atomicCAS(address, oldValue, newValue);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   __device__ vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
                                             const vtkm::Int64& newValue,
                                             const vtkm::Int64& oldValue) const
