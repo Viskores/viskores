@@ -6,8 +6,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
@@ -17,14 +17,23 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#ifndef vtk_m_exec_PointLocator_h
+#define vtk_m_exec_PointLocator_h
 
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
+#include <vtkm/VirtualObjectBase.h>
 
-#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
-#include <vtkm/cont/testing/TestingPointLocatorUniformGrid.h>
-
-int UnitTestOpenMPPointLocatorUniformGrid(int, char* [])
+namespace vtkm
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagOpenMP>());
+namespace exec
+{
+
+class PointLocator : public vtkm::VirtualObjectBase
+{
+public:
+  VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+                                             vtkm::Id& pointId,
+                                             FloatDefault& distanceSquared) const = 0;
+};
 }
+}
+#endif // vtk_m_exec_PointLocator_h

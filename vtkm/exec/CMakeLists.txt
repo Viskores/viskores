@@ -34,6 +34,8 @@ set(headers
   FunctorBase.h
   Jacobian.h
   ParametricCoordinates.h
+  PointLocator.h
+  PointLocatorUniformGrid.h
   TaskBase.h
   )
 

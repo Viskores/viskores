@@ -27,8 +27,6 @@
 
 int UnitTestSerialPointLocatorUniformGrid(int, char* [])
 {
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(
     TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagSerial>());
 }

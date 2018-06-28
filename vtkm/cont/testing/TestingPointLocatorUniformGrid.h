@@ -21,17 +21,20 @@
 #ifndef vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
 #define vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
 
+//#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
+
 #include <random>
 
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/cont/PointLocatorUniformGrid.h>
+#include <vtkm/exec/PointLocatorUniformGrid.h>
 
 ////brute force method /////
 template <typename CoordiVecT, typename CoordiPortalT, typename CoordiT>
-VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, CoordiT& dis)
+VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, CoordiT& dis2)
 {
-  dis = std::numeric_limits<CoordiT>::max();
+  dis2 = std::numeric_limits<CoordiT>::max();
   vtkm::Id nnpIdx = -1;
 
   for (vtkm::Int32 i = 0; i < coordiPortal.GetNumberOfValues(); i++)
@@ -39,12 +42,11 @@ VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, C
     CoordiT splitX = coordiPortal.Get(i)[0];
     CoordiT splitY = coordiPortal.Get(i)[1];
     CoordiT splitZ = coordiPortal.Get(i)[2];
-    CoordiT _dis =
-      vtkm::Sqrt((splitX - qc[0]) * (splitX - qc[0]) + (splitY - qc[1]) * (splitY - qc[1]) +
-                 (splitZ - qc[2]) * (splitZ - qc[2]));
-    if (_dis < dis)
+    CoordiT _dis2 = (splitX - qc[0]) * (splitX - qc[0]) + (splitY - qc[1]) * (splitY - qc[1]) +
+      (splitZ - qc[2]) * (splitZ - qc[2]);
+    if (_dis2 < dis2)
     {
-      dis = _dis;
+      dis2 = _dis2;
       nnpIdx = i;
     }
   }
@@ -75,6 +77,30 @@ public:
   }
 };
 
+class PointLocatorUniformGridWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<> qcIn,
+                                ExecObject locator,
+                                FieldOut<> nnIdOut,
+                                FieldOut<> nnDistOut);
+
+  typedef void ExecutionSignature(_1, _2, _3, _4);
+
+  VTKM_CONT
+  PointLocatorUniformGridWorklet() {}
+
+  // TODO: change IdType, it is used for other purpose.
+  template <typename CoordiVecType, typename Locator, typename IdType, typename CoordiType>
+  VTKM_EXEC void operator()(const CoordiVecType& qc,
+                            const Locator& locator,
+                            IdType& nnIdOut,
+                            CoordiType& nnDis) const
+  {
+    locator->FindNearestNeighbor(qc, nnIdOut, nnDis);
+  }
+};
+
 template <typename DeviceAdapter>
 class TestingPointLocatorUniformGrid
 {
@@ -82,8 +108,8 @@ public:
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   void TestTest() const
   {
-    vtkm::Int32 nTrainingPoints = 1000;
-    vtkm::Int32 nTestingPoint = 1000;
+    vtkm::Int32 nTrainingPoints = 5;
+    vtkm::Int32 nTestingPoint = 1;
 
     std::vector<vtkm::Vec<vtkm::Float32, 3>> coordi;
 
@@ -97,10 +123,17 @@ public:
     }
     auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi);
 
-    vtkm::worklet::PointLocatorUniformGrid<vtkm::Float32> uniformGrid(
-      { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    uniformGrid.Build(coordi_Handle, DeviceAdapter());
+    vtkm::cont::CoordinateSystem coord("points", coordi_Handle);
 
+    // TODO: locator needs to be a pointer to have runtime polymorphism.
+    //vtkm::cont::PointLocator * locator = new vtkm::cont::PointLocatorUniformGrid(
+    //  { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
+    vtkm::cont::PointLocatorUniformGrid locator(
+      { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
+    locator.SetCoords(coord);
+    locator.Build();
+
+    ///// randomly generate testing points/////
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
     {
@@ -111,9 +144,12 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
 
-    uniformGrid.FindNearestPoint(
-      coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, DeviceAdapter());
+    PointLocatorUniformGridWorklet pointLocatorUniformGridWorklet;
+    vtkm::worklet::DispatcherMapField<PointLocatorUniformGridWorklet, DeviceAdapter>
+      locatorDispatcher(pointLocatorUniformGridWorklet);
+    locatorDispatcher.Invoke(qc_Handle, locator, nnId_Handle, nnDis_Handle);
 
+    // brute force
     vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;
     NearestNeighborSearchBruteForce3DWorklet nnsbf3dWorklet;
@@ -122,7 +158,7 @@ public:
     nnsbf3DDispatcher.Invoke(
       qc_Handle, vtkm::cont::make_ArrayHandle(coordi), bfnnId_Handle, bfnnDis_Handle);
 
-    ///// verfity search result /////
+    ///// verify search result /////
     bool passTest = true;
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
     {
@@ -138,11 +174,14 @@ public:
         passTest = false;
       }
     }
-
     VTKM_TEST_ASSERT(passTest, "Uniform Grid NN search result incorrect.");
   }
 
-  void operator()() const { this->TestTest(); }
+  void operator()() const
+  {
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+    this->TestTest();
+  }
 };
 
 #endif // vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
