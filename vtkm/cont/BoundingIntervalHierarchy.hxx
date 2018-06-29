@@ -511,5 +511,28 @@ public:
   }
 };
 
+VTKM_CONT
+void BoundingIntervalHierarchy::Build()
+{
+  BuildFunctor functor(this);
+  vtkm::cont::TryExecute(functor);
+}
+
+VTKM_CONT
+const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(const vtkm::Int8 deviceId) const
+{
+  /*using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
+  const vtkm::exec::CellLocator* toReturn;
+  vtkm::cont::internal::FindDeviceAdapterTagAndCall(
+    device, DeviceList(), PrepareForExecutionFunctor(), *this, &toReturn);
+  return toReturn;*/
+
+  using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
+  //HandleType ExecHandle; // = new HandleType(locator, false);
+  vtkm::cont::internal::FindDeviceAdapterTagAndCall(
+    deviceId, DeviceList(), PrepareForExecutionFunctor(), *this, this->ExecHandle);
+  return this->ExecHandle;
+}
+
 } //namespace cont
 } //namespace vtkm

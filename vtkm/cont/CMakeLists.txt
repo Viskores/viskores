@@ -135,7 +135,6 @@ set(sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   ArrayRangeCompute.cxx
-  BoundingIntervalHierarchy.cxx
   CellSetExplicit.cxx
   ColorTable.cxx
   CoordinateSystem.cxx
