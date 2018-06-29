@@ -76,10 +76,12 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   vtkm::cont::ArrayHandleVirtualCoordinates vertices = dataSet.GetCoordinateSystem().GetData();
 
   std::cout << "Using numPlanes: " << numPlanes << "\n";
+  std::cout << "Building Bounding Interval Hierarchy Tree" << std::endl;
   vtkm::cont::BoundingIntervalHierarchy bih = vtkm::cont::BoundingIntervalHierarchy(numPlanes, 5);
   bih.SetCellSet(cellSet);
   bih.SetCoordinates(dataSet.GetCoordinateSystem());
   bih.Update();
+  std::cout << "Built Bounding Interval Hierarchy Tree" << std::endl;
 
   Timer centroidsTimer;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> centroids;
@@ -96,7 +98,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   size_t stackSizeBackup;
   cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
 
-  std::cout << "Default stack size" << stackSizeBackup << "\n";
+  std::cout << "Default stack size " << stackSizeBackup << "\n";
 
   cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 50);
 #endif
