@@ -77,7 +77,7 @@ public:
   /// \param queryPoint Point coordinates to query for nearest neighbor.
   /// \param nearestNeighborId Neareast neighbor in the training dataset for each points in
   ///                            the test set
-  /// \param distance Distance between query points and their nearest neighbors.
+  /// \param distance2 Squared distance between query points and their nearest neighbors.
   VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
                                              vtkm::Id& nearestNeighborId,
                                              vtkm::FloatDefault& distance2) const override
