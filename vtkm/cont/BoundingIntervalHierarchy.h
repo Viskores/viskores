@@ -83,8 +83,6 @@ public:
   BoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4, vtkm::IdComponent maxLeafSize = 5)
     : NumPlanes(numPlanes)
     , MaxLeafSize(maxLeafSize)
-    , Nodes()
-    , ProcessedCellIds()
   {
   }
 
