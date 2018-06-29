@@ -179,7 +179,7 @@ public:
   VTKM_EXEC
   void operator()(const vtkm::Range& range, vtkm::FloatDefault& splitPlane) const
   {
-    splitPlane = range.Min + Scale * (range.Max - range.Min);
+    splitPlane = static_cast<vtkm::FloatDefault>(range.Min + Scale * (range.Max - range.Min));
   }
 
   vtkm::FloatDefault Scale;
@@ -217,13 +217,13 @@ public:
     split.Plane = planeValue;
     split.NumLeftPoints = pointsToLeft;
     split.NumRightPoints = pointsToRight;
-    split.LMax = lMaxRanges.Max;
-    split.RMin = rMinRanges.Min;
+    split.LMax = static_cast<vtkm::FloatDefault>(lMaxRanges.Max);
+    split.RMin = static_cast<vtkm::FloatDefault>(rMinRanges.Min);
     split.Cost = vtkm::Abs(split.LMax * static_cast<vtkm::FloatDefault>(pointsToLeft) -
                            split.RMin * static_cast<vtkm::FloatDefault>(pointsToRight));
     if (vtkm::IsNan(split.Cost))
     {
-      split.Cost = vtkm::Infinity64();
+      split.Cost = vtkm::Infinity<vtkm::FloatDefault>();
     }
     splits.Set(inputIndex * Stride + Index, split);
     //printf("Plane = %lf, NL = %lld, NR = %lld, LM = %lf, RM = %lf, C = %lf\n", split.Plane, split.NumLeftPoints, split.NumRightPoints, split.LMax, split.RMin, split.Cost);
@@ -275,7 +275,7 @@ public:
     }
     choice = 1;
     using Split = SplitProperties;
-    vtkm::FloatDefault minCost = vtkm::Infinity64();
+    vtkm::FloatDefault minCost = vtkm::Infinity<vtkm::FloatDefault>();
     const Split& xSplit = xSplits[ArgMin(xSplits, index * Stride, Stride)];
     bool found = false;
     if (xSplit.Cost < minCost && xSplit.NumLeftPoints != 0 && xSplit.NumRightPoints != 0)
@@ -518,8 +518,7 @@ struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
                             const vtkm::Id& numPreviousSplits,
                             BoundingIntervalHierarchyPortal& treePortal) const
   {
-  vtkm:
-    cont::BoundingIntervalHierarchyNode node;
+    vtkm::cont::BoundingIntervalHierarchyNode node;
     if (count > MaxLeafSize)
     {
       node.Dimension = split.Dimension;

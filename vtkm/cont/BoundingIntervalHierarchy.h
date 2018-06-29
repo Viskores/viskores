@@ -33,7 +33,7 @@ namespace vtkm
 namespace cont
 {
 
-class BoundingIntervalHierarchy : public vtkm::cont::CellLocator
+class VTKM_CONT_EXPORT BoundingIntervalHierarchy : public vtkm::cont::CellLocator
 {
 private:
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
@@ -94,7 +94,7 @@ public:
   }
 
   VTKM_CONT
-  const vtkm::IdComponent GetNumberOfSplittingPlanes() const { return NumPlanes; }
+  vtkm::IdComponent GetNumberOfSplittingPlanes() { return NumPlanes; }
 
   VTKM_CONT
   void SetMaxLeafSize(vtkm::IdComponent maxLeafSize)
@@ -104,7 +104,7 @@ public:
   }
 
   VTKM_CONT
-  const vtkm::Id GetMaxLeafSize() const { return MaxLeafSize; }
+  vtkm::Id GetMaxLeafSize() { return MaxLeafSize; }
 
 protected:
   VTKM_CONT
