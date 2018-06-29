@@ -19,7 +19,7 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleConcatenate.h>
-#include <vtkm/cont/BoundingIntervalHierarchy.h>
+#include <vtkm/cont/BoundingIntervalHierarchy.hxx>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>

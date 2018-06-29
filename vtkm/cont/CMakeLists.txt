@@ -103,6 +103,7 @@ set(headers
 set(template_sources
   ArrayHandle.hxx
   ArrayRangeCompute.hxx
+  BoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
   CoordinateSystem.hxx
@@ -114,6 +115,7 @@ set(template_sources
 set(sources
   ArrayHandle.cxx
   AssignerMultiBlock.cxx
+  BoundingIntervalHierarchy.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
   CellSet.cxx
