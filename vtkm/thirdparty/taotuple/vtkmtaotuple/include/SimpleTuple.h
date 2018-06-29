@@ -37,6 +37,20 @@
 #endif // __CUDACC__
 #endif // TAOCPP_ANNOTATION
 
+// Ignore "calling a __host__ function from a __host__ _device__ function is not allowed" warnings
+#ifndef TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
+#ifdef __CUDACC__
+#if __CUDAVER__ >= 75000
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN #pragma nv_exec_check_disable
+#else
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN #pragma hd_warning_disable
+#endif
+#else
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
+#endif
+#endif
+
+
 namespace simple_tuple
 {
 namespace detail
@@ -49,26 +63,31 @@ protected:
   Head Value;
 
 public:
+  TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
   TAOCPP_ANNOTATION constexpr tuple_leaf()
     : Value()
   {
   }
 
+  TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
   TAOCPP_ANNOTATION constexpr tuple_leaf(const Head& value)
     : Value(value)
   {
   }
 
+  TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
   TAOCPP_ANNOTATION constexpr tuple_leaf(const tuple_leaf& o)
     : Value(o.Value)
   {
   }
 
+  TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
   TAOCPP_ANNOTATION constexpr tuple_leaf(tuple_leaf&& o)
     : Value(std::move(o.Value))
   {
   }
 
+  TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
   template <typename Other>
   TAOCPP_ANNOTATION constexpr tuple_leaf(Other&& o)
     : Value(std::forward<Other>(o))
@@ -82,6 +101,7 @@ public:
     return o.Value;
   }
 
+  TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
   TAOCPP_ANNOTATION
   tuple_leaf& operator=(tuple_leaf& o)
   {
