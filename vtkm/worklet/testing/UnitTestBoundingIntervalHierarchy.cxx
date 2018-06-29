@@ -100,7 +100,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
 
   std::cout << "Default stack size " << stackSizeBackup << "\n";
 
-  cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 200);
+  cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 50);
 #endif
 
   vtkm::worklet::DispatcherMapField<BoundingIntervalHierarchyTester>().Invoke(

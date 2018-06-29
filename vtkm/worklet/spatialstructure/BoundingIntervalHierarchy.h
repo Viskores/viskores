@@ -51,6 +51,7 @@ struct TreeNode
   vtkm::FloatDefault RMin;
   vtkm::IdComponent Dimension;
 
+  VTKM_EXEC
   TreeNode()
     : LMax()
     , RMin()
@@ -68,6 +69,7 @@ struct SplitProperties
   vtkm::FloatDefault RMin;
   vtkm::FloatDefault Cost;
 
+  VTKM_EXEC
   SplitProperties()
     : Plane()
     , NumLeftPoints()
@@ -138,7 +140,10 @@ public:
 }; // struct LEQWorklet
 
 template <bool LEQ>
-struct FilterRanges : public vtkm::worklet::WorkletMapField
+struct FilterRanges;
+
+template <>
+struct FilterRanges<true> : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
@@ -151,14 +156,25 @@ public:
                   const vtkm::Range& cellBounds,
                   vtkm::Range& outBounds) const
   {
-    if (LEQ)
-    {
-      outBounds = (value <= planeValue) ? cellBounds : vtkm::Range();
-    }
-    else
-    {
-      outBounds = (value > planeValue) ? cellBounds : vtkm::Range();
-    }
+    outBounds = (value <= planeValue) ? cellBounds : vtkm::Range();
+  }
+}; // struct FilterRanges
+
+template <>
+struct FilterRanges<false> : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using InputDomain = _1;
+
+  VTKM_EXEC
+  void operator()(const vtkm::FloatDefault& value,
+                  const vtkm::FloatDefault& planeValue,
+                  const vtkm::Range& cellBounds,
+                  vtkm::Range& outBounds) const
+  {
+    outBounds = (value > planeValue) ? cellBounds : vtkm::Range();
   }
 }; // struct FilterRanges
 

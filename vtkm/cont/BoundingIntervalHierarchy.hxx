@@ -155,20 +155,27 @@ VTKM_CONT void BoundingIntervalHierarchy::CalculatePlaneSplitCost(
   vtkm::cont::ArrayHandle<vtkm::Id> pointsToRight;
   Algorithms::ReduceByKey(segmentIds, isROfSplitPlane, discardKeys, pointsToRight, vtkm::Add());
 
-  // Calculate Lmax and Rmin
-  vtkm::cont::ArrayHandle<vtkm::Range> leqRanges;
-  vtkm::cont::ArrayHandle<vtkm::Range> rRanges;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::FilterRanges<true>>().Invoke(
-    coords, splitPlanes, ranges, leqRanges);
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::FilterRanges<false>>().Invoke(
-    coords, splitPlanes, ranges, rRanges);
+  isLEQOfSplitPlane.ReleaseResourcesExecution();
+  isROfSplitPlane.ReleaseResourcesExecution();
 
+  // Calculate Lmax and Rmin
   vtkm::cont::ArrayHandle<vtkm::Range> lMaxRanges;
+  {
+    vtkm::cont::ArrayHandle<vtkm::Range> leqRanges;
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::FilterRanges<true>>().Invoke(
+      coords, splitPlanes, ranges, leqRanges);
+    Algorithms::ReduceByKey(
+      segmentIds, leqRanges, discardKeys, lMaxRanges, vtkm::worklet::spatialstructure::RangeAdd());
+  }
+
   vtkm::cont::ArrayHandle<vtkm::Range> rMinRanges;
-  Algorithms::ReduceByKey(
-    segmentIds, leqRanges, discardKeys, lMaxRanges, vtkm::worklet::spatialstructure::RangeAdd());
-  Algorithms::ReduceByKey(
-    segmentIds, rRanges, discardKeys, rMinRanges, vtkm::worklet::spatialstructure::RangeAdd());
+  {
+    vtkm::cont::ArrayHandle<vtkm::Range> rRanges;
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::FilterRanges<false>>()
+      .Invoke(coords, splitPlanes, ranges, rRanges);
+    Algorithms::ReduceByKey(
+      segmentIds, rRanges, discardKeys, rMinRanges, vtkm::worklet::spatialstructure::RangeAdd());
+  }
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> segmentedSplitPlanes;
   Algorithms::ReduceByKey(
@@ -177,6 +184,7 @@ VTKM_CONT void BoundingIntervalHierarchy::CalculatePlaneSplitCost(
   // Calculate costs
   vtkm::worklet::spatialstructure::SplitPropertiesCalculator splitPropertiesCalculator(
     index, NumPlanes + 1);
+
   vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::SplitPropertiesCalculator>(
     splitPropertiesCalculator)
     .Invoke(pointsToLeft, pointsToRight, lMaxRanges, rMinRanges, segmentedSplitPlanes, splits);
@@ -312,6 +320,10 @@ public:
       Self->CalculateSplitCosts(
         segmentZRanges, zRanges, centerZs, segmentIds, zSplits, DeviceAdapter());
       //PRINT_TIMER("2.2", s22);
+
+      segmentXRanges.ReleaseResourcesExecution();
+      segmentYRanges.ReleaseResourcesExecution();
+      segmentZRanges.ReleaseResourcesExecution();
 
       //START_TIMER(s23);
       // Select best split plane and dimension across X, Y, Z dimension, per segment
