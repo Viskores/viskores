@@ -1,84 +1,90 @@
-// The Art of C++ / Sequences
-// Copyright (c) 2015 Daniel Frey
+// Copyright (c) 2015-2018 Daniel Frey
+// Please see LICENSE for license or visit https://github.com/taocpp/sequences/
 
-#ifndef TAOCPP_SEQUENCES_INCLUDE_MAKE_INTEGER_SEQUENCE_HPP
-#define TAOCPP_SEQUENCES_INCLUDE_MAKE_INTEGER_SEQUENCE_HPP
+#ifndef TAO_SEQ_MAKE_INTEGER_SEQUENCE_HPP
+#define TAO_SEQ_MAKE_INTEGER_SEQUENCE_HPP
 
 #include <cstddef>
-#include <utility>
 #include <type_traits>
+#include <utility>
 
 #include "config.hpp"
 #include "integer_sequence.hpp"
 
 namespace tao
 {
-  namespace seq
-  {
+   namespace seq
+   {
 
-#ifdef TAOCPP_USE_STD_MAKE_INTEGER_SEQUENCE
+#ifdef TAO_SEQ_USE_STD_MAKE_INTEGER_SEQUENCE
 
-    using std::make_integer_sequence;
-    using std::make_index_sequence;
-    using std::index_sequence_for;
+      using std::index_sequence_for;
+      using std::make_index_sequence;
+      using std::make_integer_sequence;
 
 #else
 
-    // idea from http://stackoverflow.com/a/13073076
-
-    namespace impl
-    {
-      template< typename, std::size_t, bool >
-      struct double_up;
-
-      template< typename T, T... Ns, std::size_t N >
-      struct double_up< integer_sequence< T, Ns... >, N, false >
+      namespace impl
       {
-        using type = integer_sequence< T, Ns..., ( N + Ns )... >;
-      };
+         // we have four instantiations of generate_sequence<>, independent of T or N.
+         // V is the current bit, E is the end marker - if true, this is the last step.
+         template< bool V, bool E >
+         struct generate_sequence;
 
-      template< typename T, T... Ns, std::size_t N >
-      struct double_up< integer_sequence< T, Ns... >, N, true >
-      {
-        using type = integer_sequence< T, Ns..., ( N + Ns )..., 2 * N >;
-      };
+         // last step: generate final integer sequence
+         template<>
+         struct generate_sequence< false, true >
+         {
+            template< typename T, T M, T N, std::size_t S, T... Ns >
+            using f = integer_sequence< T, Ns... >;
+         };
 
-      template< typename T, T N, typename = void >
-      struct generate;
+         template<>
+         struct generate_sequence< true, true >
+         {
+            template< typename T, T M, T N, std::size_t S, T... Ns >
+            using f = integer_sequence< T, Ns..., S >;
+         };
+
+         // intermediate step: double existing values, append one more if V is set.
+         template<>
+         struct generate_sequence< false, false >
+         {
+            template< typename T, T M, T N, std::size_t S, T... Ns >
+            using f = typename generate_sequence< ( N & ( M / 2 ) ) != 0, ( M / 2 ) == 0 >::template f< T, M / 2, N, 2 * S, Ns..., ( Ns + S )... >;
+         };
+
+         template<>
+         struct generate_sequence< true, false >
+         {
+            template< typename T, T M, T N, std::size_t S, T... Ns >
+            using f = typename generate_sequence< ( N & ( M / 2 ) ) != 0, ( M / 2 ) == 0 >::template f< T, M / 2, N, 2 * S + 1, Ns..., ( Ns + S )..., 2 * S >;
+         };
+
+         // the final sequence per T/N should be memoized, it will probably be used multiple times.
+         // also checks the limit and starts the above generator properly.
+         template< typename T, T N >
+         struct memoize_sequence
+         {
+            static_assert( N < T( 1 << 20 ), "N too large" );
+            using type = typename generate_sequence< false, false >::template f< T, ( N < T( 1 << 1 ) ) ? T( 1 << 1 ) : ( N < T( 1 << 2 ) ) ? T( 1 << 2 ) : ( N < T( 1 << 3 ) ) ? T( 1 << 3 ) : ( N < T( 1 << 4 ) ) ? T( 1 << 4 ) : ( N < T( 1 << 5 ) ) ? T( 1 << 5 ) : ( N < T( 1 << 6 ) ) ? T( 1 << 6 ) : ( N < T( 1 << 7 ) ) ? T( 1 << 7 ) : ( N < T( 1 << 8 ) ) ? T( 1 << 8 ) : ( N < T( 1 << 9 ) ) ? T( 1 << 9 ) : ( N < T( 1 << 10 ) ) ? T( 1 << 10 ) : T( 1 << 20 ), N, 0 >;
+         };
+
+      }  // namespace impl
 
       template< typename T, T N >
-      using generate_t = typename generate< T, N >::type;
+      using make_integer_sequence = typename impl::memoize_sequence< T, N >::type;
 
-      template< typename T, T N, typename >
-      struct generate
-        : double_up< generate_t< T, N / 2 >, N / 2, N % 2 == 1 >
-      {};
+      template< std::size_t N >
+      using make_index_sequence = make_integer_sequence< std::size_t, N >;
 
-      template< typename T, T N >
-      struct generate< T, N, typename std::enable_if< ( N == 0 ) >::type >
-      {
-        using type = integer_sequence< T >;
-      };
-
-      template< typename T, T N >
-      struct generate< T, N, typename std::enable_if< ( N == 1 ) >::type >
-      {
-        using type = integer_sequence< T, 0 >;
-      };
-    }
-
-    template< typename T, T N >
-    using make_integer_sequence = impl::generate_t< T, N >;
-
-    template< std::size_t N >
-    using make_index_sequence = make_integer_sequence< std::size_t, N >;
-
-    template< typename... Ts >
-    using index_sequence_for = make_index_sequence< sizeof...( Ts ) >;
+      template< typename... Ts >
+      using index_sequence_for = make_index_sequence< sizeof...( Ts ) >;
 
 #endif
 
-  }
-}
+   }  // namespace seq
 
-#endif // TAOCPP_SEQUENCES_INCLUDE_MAKE_INTEGER_SEQUENCE_HPP
+}  // namespace tao
+
+#endif
