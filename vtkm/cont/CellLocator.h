@@ -32,8 +32,10 @@ namespace vtkm
 namespace cont
 {
 
-class CellLocator : public vtkm::cont::ExecutionObjectBase
+class VTKM_CONT_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
 {
+private:
+  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
 
 public:
   CellLocator()
@@ -68,7 +70,7 @@ public:
   VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(DeviceAdapter) const
   {
     vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    return PrepareForExecutionImpl(deviceId);
+    return PrepareForExecutionImpl(deviceId).PrepareForExecution(DeviceAdapter());
   }
 
 protected:
@@ -77,8 +79,7 @@ protected:
   //This is going to need a TryExecute
   VTKM_CONT virtual void Build() = 0;
 
-  VTKM_CONT virtual const vtkm::exec::CellLocator* PrepareForExecutionImpl(
-    const vtkm::Int8 device) const = 0;
+  VTKM_CONT virtual const HandleType PrepareForExecutionImpl(const vtkm::Int8 device) const = 0;
 
 private:
   vtkm::cont::DynamicCellSet CellSet;

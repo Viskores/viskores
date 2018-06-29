@@ -26,6 +26,8 @@ namespace vtkm
 namespace cont
 {
 
+using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
+
 VTKM_CONT
 void BoundingIntervalHierarchy::Build()
 {
@@ -34,14 +36,19 @@ void BoundingIntervalHierarchy::Build()
 }
 
 VTKM_CONT
-const vtkm::exec::CellLocator* BoundingIntervalHierarchy::PrepareForExecutionImpl(
-  const vtkm::Int8 device) const
+const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(const vtkm::Int8 deviceId) const
 {
-  using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
+  /*using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
   const vtkm::exec::CellLocator* toReturn;
   vtkm::cont::internal::FindDeviceAdapterTagAndCall(
-    device, DeviceList(), PrepareForExecutionFunctor(), this, &toReturn);
-  return toReturn;
+    device, DeviceList(), PrepareForExecutionFunctor(), *this, &toReturn);
+  return toReturn;*/
+
+  using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
+  //HandleType ExecHandle; // = new HandleType(locator, false);
+  vtkm::cont::internal::FindDeviceAdapterTagAndCall(
+    deviceId, DeviceList(), PrepareForExecutionFunctor(), *this, this->ExecHandle);
+  return this->ExecHandle;
 }
 }
 }

@@ -43,6 +43,7 @@ private:
     vtkm::cont::ArrayHandlePermutation<IdArrayHandle, RangeArrayHandle>;
   using SplitPropertiesArrayHandle =
     vtkm::cont::ArrayHandle<vtkm::worklet::spatialstructure::SplitProperties>;
+  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
 
   class BuildFunctor;
   class PrepareForExecutionFunctor;
@@ -111,13 +112,14 @@ protected:
   void Build() override;
 
   VTKM_CONT
-  const vtkm::exec::CellLocator* PrepareForExecutionImpl(const vtkm::Int8 device) const override;
+  virtual const HandleType PrepareForExecutionImpl(const vtkm::Int8 device) const override;
 
 private:
   vtkm::IdComponent NumPlanes;
   vtkm::IdComponent MaxLeafSize;
   vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> Nodes;
   IdArrayHandle ProcessedCellIds;
+  mutable HandleType ExecHandle;
 };
 
 } // namespace cont
