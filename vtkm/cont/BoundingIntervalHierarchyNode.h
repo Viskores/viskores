@@ -44,6 +44,14 @@ struct BoundingIntervalHierarchyNode
       vtkm::Id Size;
     } Leaf;
   };
+
+  VTKM_EXEC_CONT
+  BoundingIntervalHierarchyNode()
+    : Dimension()
+    , ChildIndex()
+    , Node{ 0, 0 }
+  {
+  }
 }; // struct BoundingIntervalHierarchyNode
 
 } // namespace cont
