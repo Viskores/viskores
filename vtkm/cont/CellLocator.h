@@ -32,7 +32,7 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_CONT_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
+class CellLocator : public vtkm::cont::ExecutionObjectBase
 {
 private:
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;

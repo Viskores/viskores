@@ -33,7 +33,7 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_CONT_EXPORT BoundingIntervalHierarchy : public vtkm::cont::CellLocator
+class BoundingIntervalHierarchy : public vtkm::cont::CellLocator
 {
 private:
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
