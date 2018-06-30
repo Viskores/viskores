@@ -46,9 +46,12 @@ set(headers
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
   AssignerMultiBlock.h
+  BoundingIntervalHierarchyNode.h
+  BoundingIntervalHierarchy.h
   BoundsCompute.h
   BoundsGlobalCompute.h
   CellLocator.h
+  CellLocatorHelper.h
   CellLocatorTwoLevelUniformGrid.h
   CellSet.h
   CellSetExplicit.h
@@ -100,6 +103,7 @@ set(headers
 set(template_sources
   ArrayHandle.hxx
   ArrayRangeCompute.hxx
+  BoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
   CoordinateSystem.hxx

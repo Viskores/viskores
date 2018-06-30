@@ -42,4 +42,7 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # We explicitly only suppress specific worklets so we can see when new recursive
   # worklets are added
   "ptxas warning : Stack size for entry function.*NearestNeighborSearch3DWorklet.*"
+  "ptxas warning : Stack size for entry function.*BoundingIntervalHierarchy.*"
+  "ptxas warning : Stack size for entry function.*CoordinatesPortal.*"
+  "ptxas warning : Stack size for entry function.*CellRangesExtracter.*"
 )

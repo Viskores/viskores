@@ -21,7 +21,7 @@
 #define vtk_m_worklet_Probe_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellLocator.h>
+#include <vtkm/cont/CellLocatorHelper.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -59,7 +59,7 @@ private:
   {
     this->InputCellSet = vtkm::cont::DynamicCellSet(cells);
 
-    vtkm::cont::CellLocator locator;
+    vtkm::cont::CellLocatorHelper locator;
     locator.SetCellSet(this->InputCellSet);
     locator.SetCoordinates(coords);
     locator.Build(device);
