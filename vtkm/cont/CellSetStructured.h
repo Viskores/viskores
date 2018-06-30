@@ -34,7 +34,7 @@ namespace cont
 {
 
 template <vtkm::IdComponent DIMENSION>
-class VTKM_ALWAYS_EXPORT CellSetStructured : public CellSet
+class VTKM_ALWAYS_EXPORT CellSetStructured final : public CellSet
 {
 private:
   using Thisclass = vtkm::cont::CellSetStructured<DIMENSION>;
@@ -55,13 +55,16 @@ public:
 
   Thisclass& operator=(const Thisclass& src);
 
-  virtual vtkm::Id GetNumberOfCells() const { return this->Structure.GetNumberOfCells(); }
+  vtkm::Id GetNumberOfCells() const override { return this->Structure.GetNumberOfCells(); }
 
-  virtual vtkm::Id GetNumberOfPoints() const { return this->Structure.GetNumberOfPoints(); }
+  vtkm::Id GetNumberOfPoints() const override { return this->Structure.GetNumberOfPoints(); }
 
-  virtual vtkm::Id GetNumberOfFaces() const { return -1; }
+  vtkm::Id GetNumberOfFaces() const override { return -1; }
 
-  virtual vtkm::Id GetNumberOfEdges() const { return -1; }
+  vtkm::Id GetNumberOfEdges() const override { return -1; }
+
+  // Since the entire topology is defined by by three integers, nothing to do here.
+  void ReleaseResourcesExecution() override {}
 
   void SetPointDimensions(SchedulingRangeType dimensions)
   {
@@ -95,7 +98,7 @@ public:
   typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType
     PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const;
 
-  virtual void PrintSummary(std::ostream& out) const;
+  void PrintSummary(std::ostream& out) const override;
 
 private:
   InternalsType Structure;

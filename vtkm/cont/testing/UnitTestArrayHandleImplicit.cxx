@@ -82,7 +82,7 @@ void TestArrayHandleImplicit()
   vtkm::testing::Testing::TryTypes(ImplicitTests(), vtkm::TypeListTagCommon());
 }
 
-} // annonymous namespace
+} // anonymous namespace
 
 int UnitTestArrayHandleImplicit(int, char* [])
 {

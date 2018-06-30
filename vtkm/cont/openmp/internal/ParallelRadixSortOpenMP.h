@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -18,9 +18,27 @@
 //  this software.
 //============================================================================
 
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_TBB
+#ifndef vtk_m_cont_openmp_internal_ParallelRadixSortOpenMP_h
+#define vtk_m_cont_openmp_internal_ParallelRadixSortOpenMP_h
 
-#define __BUILDING_TBB_VERSION__
+#include <vtkm/cont/internal/ParallelRadixSortInterface.h>
 
-#include "ParticleAdvection.cxx"
-#include <tbb/task_scheduler_init.h>
+namespace vtkm
+{
+namespace cont
+{
+namespace openmp
+{
+namespace sort
+{
+namespace radix
+{
+
+VTKM_DECLARE_RADIX_SORT()
+}
+}
+}
+}
+} // end namespace vtkm::cont::openmp::sort::radix
+
+#endif // vtk_m_cont_openmp_internal_ParallelRadixSortOpenMP_h

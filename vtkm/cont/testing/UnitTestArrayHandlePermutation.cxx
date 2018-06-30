@@ -258,7 +258,7 @@ void TestArrayHandlePermutation()
   vtkm::testing::Testing::TryTypes(TryInputType(), vtkm::TypeListTagCommon());
 }
 
-} // annonymous namespace
+} // anonymous namespace
 
 int UnitTestArrayHandlePermutation(int, char* [])
 {

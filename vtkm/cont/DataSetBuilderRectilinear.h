@@ -31,7 +31,7 @@ namespace vtkm
 namespace cont
 {
 
-class DataSetBuilderRectilinear
+class VTKM_CONT_EXPORT DataSetBuilderRectilinear
 {
   template <typename T, typename U>
   VTKM_CONT static void CopyInto(const std::vector<T>& input, vtkm::cont::ArrayHandle<U>& output)
@@ -55,7 +55,7 @@ class DataSetBuilderRectilinear
 
 public:
   VTKM_CONT
-  DataSetBuilderRectilinear() {}
+  DataSetBuilderRectilinear();
 
   //1D grids.
   template <typename T>
@@ -220,7 +220,7 @@ private:
     vtkm::cont::CoordinateSystem cs(coordNm, coords);
     dataSet.AddCoordinateSystem(cs);
 
-    // compute the dimensions of the cellset by counting the number of axises
+    // compute the dimensions of the cellset by counting the number of axes
     // with >1 dimension
     int ndims = 0;
     vtkm::Id dims[3];

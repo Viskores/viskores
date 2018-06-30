@@ -8,9 +8,9 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2015 UT-Battelle, LLC.
-##  Copyright 2015 Los Alamos National Security.
+##  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+##  Copyright 2018 UT-Battelle, LLC.
+##  Copyright 2018 Los Alamos National Security.
 ##
 ##  Under the terms of Contract DE-NA0003525 with NTESS,
 ##  the U.S. Government retains certain rights in this software.
@@ -20,22 +20,8 @@
 ##
 ##=============================================================================
 
-#Find the VTK-m package
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
-project(ParticleAdvection CXX)
+set(unit_tests
+  UnitTestTaskTilingOpenMP.cxx
+  )
 
-#Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
-
-add_executable(exeserial ParticleAdvection.cxx)
-target_link_libraries(exeserial PRIVATE vtkm_cont)
-
-if(TARGET vtkm::tbb)
-  add_executable(exetbb ParticleAdvectionTBB.cxx)
-  target_link_libraries(exetbb PRIVATE vtkm_cont)
-endif()
-
-if(TARGET vtkm::cuda)
-  add_executable(execuda ParticleAdvection.cu)
-  target_link_libraries(execuda PRIVATE vtkm_cont)
-endif()
+vtkm_unit_tests(SOURCES ${unit_tests})

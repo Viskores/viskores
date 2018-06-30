@@ -25,6 +25,7 @@ set(headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   ContourTreeUniform.h
+  CoordinateSystemTransform.h
   CrossProduct.h
   DotProduct.h
   Entropy.h
@@ -50,6 +51,7 @@ set(headers
   NDHistogram.h
   PointAverage.h
   PointElevation.h
+  PointTransform.h
   PolicyBase.h
   PolicyDefault.h
   Probe.h
@@ -70,6 +72,7 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
+  CoordinateSystemTransform.hxx
   CrossProduct.hxx
   DotProduct.hxx
   Entropy.hxx
@@ -92,6 +95,7 @@ set(header_template_sources
   NDHistogram.hxx
   PointAverage.hxx
   PointElevation.hxx
+  PointTransform.hxx
   Probe.hxx
   Streamline.hxx
   SurfaceNormals.hxx
@@ -111,4 +115,3 @@ add_subdirectory(internal)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
-

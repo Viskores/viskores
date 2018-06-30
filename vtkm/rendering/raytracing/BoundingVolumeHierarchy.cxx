@@ -453,7 +453,7 @@ private:
   IdPortalType ParentPortal;
   vtkm::Id LeafCount;
   vtkm::Id InnerCount;
-  //TODO: get instrinsic support
+  //TODO: get intrinsic support
   VTKM_EXEC
   inline vtkm::Int32 CountLeadingZeros(vtkm::UInt32& x) const
   {
@@ -555,7 +555,7 @@ public:
     vtkm::Int32 deltaNode = delta(idx, j);
     vtkm::Int32 s = 0;
     vtkm::Float32 divFactor = 2.f;
-    //find the split postition using a binary search
+    //find the split position using a binary search
     for (vtkm::Int32 t = (vtkm::Int32)ceil(vtkm::Float32(l) / divFactor);;
          divFactor *= 2, t = (vtkm::Int32)ceil(vtkm::Float32(l) / divFactor))
     {
@@ -904,6 +904,10 @@ template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<
 #ifdef VTKM_ENABLE_TBB
 template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
   vtkm::cont::DeviceAdapterTagTBB);
+#endif
+#ifdef VTKM_ENABLE_OPENMP
+template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagOpenMP>(
+  vtkm::cont::DeviceAdapterTagOpenMP);
 #endif
 #ifdef VTKM_ENABLE_CUDA
 template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(

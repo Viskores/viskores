@@ -35,6 +35,7 @@ set(headers
   CellShape.h
   CellTraits.h
   Flags.h
+  Geometry.h
   Hash.h
   ImplicitFunction.h
   ListTag.h
@@ -46,6 +47,7 @@ set(headers
   RangeId.h
   RangeId3.h
   StaticAssert.h
+  Swap.h
   TopologyElementTag.h
   Transform3D.h
   TypeListTag.h
@@ -59,11 +61,20 @@ set(headers
   VecVariable.h
   VirtualObjectBase.h
   UnaryPredicates.h
-  )
+)
+
+set(template_sources
+  Geometry.hxx
+)
 
 vtkm_pyexpander_generated_file(Math.h)
 
-vtkm_declare_headers(${headers})
+vtkm_declare_headers(
+  ${headers}
+  ${template_sources}
+  EXCLUDE_FROM_TESTING
+    ${template_sources}
+)
 
 #-----------------------------------------------------------------------------
 #first add all the components vtkm that are shared between control and exec

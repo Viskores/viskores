@@ -18,10 +18,43 @@
 ##  this software.
 ##============================================================================
 
+#
+function(vtkm_extract_real_library library real_library)
+  if(NOT UNIX)
+    set(${real_library} "${library}" PARENT_SCOPE)
+    return()
+  endif()
+
+  #Read in the first 4 bytes and see if they are the ELF magic number
+  set(_elf_magic "7f454c46")
+  file(READ ${library} _hex_data OFFSET 0 LIMIT 4 HEX)
+  if(_hex_data STREQUAL _elf_magic)
+    #we have opened a elf binary so this is what
+    #we should link too
+    set(${real_library} "${library}" PARENT_SCOPE)
+    return()
+  endif()
+
+  file(READ ${library} _data OFFSET 0 LIMIT 1024)
+  if("${_data}" MATCHES "INPUT \\(([^(]+)\\)")
+    #extract out the so name from REGEX MATCh command
+    set(_proper_so_name "${CMAKE_MATCH_1}")
+
+    #construct path to the real .so which is presumed to be in the same directory
+    #as the input file
+    get_filename_component(_so_dir "${library}" DIRECTORY)
+    set(${real_library} "${_so_dir}/${_proper_so_name}" PARENT_SCOPE)
+  else()
+    #unable to determine what this library is so just hope everything works
+    #add pass it unmodified.
+    set(${real_library} "${library}" PARENT_SCOPE)
+  endif()
+endfunction()
+
 if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   find_package(TBB REQUIRED)
 
-  # Workaround a bug in older versions of cmake prevents linking with UNKOWN IMPORTED libraries
+  # Workaround a bug in older versions of cmake prevents linking with UNKNOWN IMPORTED libraries
   # refer to CMake issue #17245
   if (CMAKE_VERSION VERSION_LESS 3.10)
     add_library(vtkm::tbb SHARED IMPORTED GLOBAL)
@@ -32,24 +65,49 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   set_target_properties(vtkm::tbb PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${TBB_INCLUDE_DIRS}")
 
-    if(TBB_LIBRARY_RELEASE)
-      set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-      set_target_properties(vtkm::tbb PROPERTIES IMPORTED_LOCATION_RELEASE "${TBB_LIBRARY_RELEASE}")
-    endif()
+  if(EXISTS "${TBB_LIBRARY_RELEASE}")
+    vtkm_extract_real_library("${TBB_LIBRARY_RELEASE}" real_path)
+    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+    set_target_properties(vtkm::tbb PROPERTIES
+      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+      IMPORTED_LOCATION_RELEASE "${real_path}"
+      )
+  endif()
 
-    if(TBB_LIBRARY_DEBUG)
-      set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
-      set_target_properties(vtkm::tbb PROPERTIES IMPORTED_LOCATION_DEBUG "${TBB_LIBRARY_DEBUG}")
-    endif()
-
-    if(NOT TBB_LIBRARY_RELEASE AND NOT TBB_LIBRARY_DEBUG)
-      set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_LOCATION "${TBB_LIBRARY}")
-    endif()
+  if(EXISTS "${TBB_LIBRARY_DEBUG}")
+    vtkm_extract_real_library("${TBB_LIBRARY_DEBUG}" real_path)
+    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+    set_target_properties(vtkm::tbb PROPERTIES
+      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+      IMPORTED_LOCATION_DEBUG "${real_path}"
+      )
+  endif()
 endif()
 
 
+if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
+  cmake_minimum_required(VERSION 3.9...3.12 FATAL_ERROR)
+  find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
+
+  add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
+  if(OpenMP_CXX_FLAGS)
+    set_property(TARGET vtkm::openmp
+      APPEND PROPERTY INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>)
+
+    if(VTKm_ENABLE_CUDA)
+      string(REPLACE ";" "," openmp_cuda_flags "-Xcompiler=${OpenMP_CXX_FLAGS}")
+      set_property(TARGET vtkm::openmp
+        APPEND PROPERTY INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:${openmp_cuda_flags}>)
+    endif()
+  endif()
+  if(OpenMP_CXX_LIBRARIES)
+    set_target_properties(vtkm::openmp PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${OpenMP_CXX_LIBRARIES}")
+  endif()
+endif()
+
 if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
-  cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.9...3.12 FATAL_ERROR)
   enable_language(CUDA)
 
   #To work around https://gitlab.kitware.com/cmake/cmake/issues/17512
@@ -58,7 +116,7 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     list(APPEND CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
   endif()
 
-  # Workaround a bug in older versions of cmake prevents linking with UNKOWN IMPORTED libraries
+  # Workaround a bug in older versions of cmake prevents linking with UNKNOWN IMPORTED libraries
   # refer to CMake issue #17245
   if (CMAKE_VERSION VERSION_LESS 3.10)
     add_library(vtkm::cuda STATIC IMPORTED GLOBAL)
@@ -75,24 +133,27 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   if("x${CMAKE_CUDA_SIMULATE_ID}" STREQUAL "xMSVC")
     get_filename_component(VTKM_CUDA_BIN_DIR "${CMAKE_CUDA_COMPILER}" DIRECTORY)
 
-    set_property(TARGET vtkm::cuda APPEND PROPERTY IMPORTED_LOCATION "${VTKM_CUDA_BIN_DIR}/../lib/x64/cudadevrt.lib")
-
-    set_target_properties(vtkm::cuda PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${VTKM_CUDA_BIN_DIR}/../include/")
+    set_target_properties(vtkm::cuda PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION "${VTKM_CUDA_BIN_DIR}/../lib/x64/cudadevrt.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "${VTKM_CUDA_BIN_DIR}/../include/"
+        )
 
   else()
     list(GET CMAKE_CUDA_IMPLICIT_LINK_LIBRARIES 0 VTKM_CUDA_LIBRARY)
     if(IS_ABSOLUTE "${VTKM_CUDA_LIBRARY}")
-      set_property(TARGET vtkm::cuda APPEND PROPERTY IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
+      set_target_properties(vtkm::cuda PROPERTIES IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
     else()
       find_library(cuda_lib
               NAME ${VTKM_CUDA_LIBRARY}
               PATHS ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES}
               )
       set(VTKM_CUDA_LIBRARY ${cuda_lib})
-      set_property(TARGET vtkm::cuda APPEND PROPERTY IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
+      set_target_properties(vtkm::cuda PROPERTIES IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
       unset(cuda_lib CACHE)
     endif()
     set_target_properties(vtkm::cuda PROPERTIES
+            IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
   endif()
 
@@ -140,7 +201,7 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
   set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta all none)
 
-  #detect what the propery is set too
+  #detect what the property is set too
   if(VTKm_CUDA_Architecture STREQUAL "native")
 
     if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)

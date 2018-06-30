@@ -34,7 +34,7 @@ namespace internal
 {
 
 template <>
-struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB>
+struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB> final
   : public ExecutionArrayInterfaceBasicShareWithControl
 {
   using Superclass = ExecutionArrayInterfaceBasicShareWithControl;

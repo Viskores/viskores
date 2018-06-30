@@ -27,6 +27,9 @@
 #   vtkm::tbb       Target that contains tbb related link information
 #                   implicitly linked to by `vtkm_cont` if tbb is enabled
 #
+#   vtkm::openmp    Target that contains openmp related link information
+#                   implicitly linked to by `vtkm_cont` if openmp is enabled
+#
 #   vtkm::cuda      Target that contains cuda related link information
 #                   implicitly linked to by `vtkm_cont` if cuda is enabled
 #
@@ -41,6 +44,7 @@
 #  VTKm_BUILD_SHARED_LIBS     Will be enabled if VTK-m was built shared/dynamic
 #  VTKm_ENABLE_CUDA           Will be enabled if VTK-m was built with CUDA support
 #  VTKm_ENABLE_TBB            Will be enabled if VTK-m was built with TBB support
+#  VTKm_ENABLE_OPENMP         Will be enabled if VTK-m was built with OpenMP support
 #  VTKm_ENABLE_MPI            Will be enabled if VTK-m was built with MPI support
 #  VTKm_ENABLE_RENDERING      Will be enabled if VTK-m was built with rendering support
 #  VTKm_ENABLE_GL_CONTEXT     Will be enabled if VTK-m rendering was built with a GL context
@@ -49,7 +53,13 @@
 #
 #
 
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+if (CMAKE_VERSION VERSION_LESS "3.3")
+  message(FATAL_ERROR "VTK-m requires CMake 3.3+")
+endif()
+if("${CMAKE_GENERATOR}" MATCHES "Visual Studio" AND
+   CMAKE_VERSION VERSION_LESS "3.11")
+  message(FATAL_ERROR "VTK-m requires CMake 3.11+ when using the Visual Studio Generators")
+endif()
 
 @PACKAGE_INIT@
 
@@ -63,6 +73,7 @@ set(VTKm_VERSION "@VTKm_VERSION@")
 set(VTKm_BUILD_SHARED_LIBS "@VTKm_BUILD_SHARED_LIBS@")
 set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
 set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
+set(VTKm_ENABLE_OPENMP "@VTKm_ENABLE_OPENMP@")
 set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
 set(VTKm_ENABLE_GL_CONTEXT "@VTKm_ENABLE_GL_CONTEXT@")
 set(VTKm_ENABLE_OSMESA_CONTEXT "@VTKm_ENABLE_OSMESA_CONTEXT@")

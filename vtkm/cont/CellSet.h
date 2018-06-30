@@ -70,6 +70,8 @@ public:
 
   virtual void PrintSummary(std::ostream&) const = 0;
 
+  virtual void ReleaseResourcesExecution() = 0;
+
 protected:
   std::string Name;
 };

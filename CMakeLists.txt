@@ -25,11 +25,11 @@
 # If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX.
 # We require CMake 3.11 with the MSVC generator as the $<COMPILE_LANGUAGE:>
 # generator expression is not supported on older versions.
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.3...3.12)
 project (VTKm)
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-  cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.11...3.12 FATAL_ERROR)
 endif()
 
 # Update module path
@@ -86,6 +86,7 @@ endmacro ()
 # Configurable Options
 vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
+vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
@@ -120,7 +121,7 @@ set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 # This flag can be used to prevent VTK-m from exporting its warning flags in its
 # build interface. This is useful when building VTK-m as a thirdparty library
 # and the warnings are too strict for the parent project.
-vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are usefull while developing VTK-m" ON)
+vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful while developing VTK-m" ON)
 
 mark_as_advanced(
   VTKm_NO_ASSERT
@@ -165,7 +166,16 @@ endif()
 #-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)
   enable_testing()
-  include(CTest)
+  # Only include CTest if it has not been included by a superproject. The
+  # variable DEFAULT_CTEST_CONFIGURATION_TYPE is a non-cached variable set by
+  # CTest.cmake, so we'll use that to determine if it's already included.
+  if(NOT DEFINED DEFAULT_CTEST_CONFIGURATION_TYPE)
+    include(CTest)
+    # Mark this as advanced to avoid confusion, since we actually rely on
+    # VTKm_ENABLE_TESTING.
+    mark_as_advanced(BUILD_TESTING)
+  endif()
+
   configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
 
@@ -266,6 +276,7 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     FILES
       ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindOpenGL.cmake
+      ${VTKm_SOURCE_DIR}/CMake/FindOpenMP.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
     )
 

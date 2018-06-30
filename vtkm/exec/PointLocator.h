@@ -7,8 +7,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //
 //  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -20,7 +20,6 @@
 #ifndef vtk_m_exec_PointLocator_h
 #define vtk_m_exec_PointLocator_h
 
-#include <vtkm/Types.h>
 #include <vtkm/VirtualObjectBase.h>
 
 namespace vtkm
@@ -33,10 +32,8 @@ class PointLocator : public vtkm::VirtualObjectBase
 public:
   VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
                                              vtkm::Id& pointId,
-                                             vtkm::FloatDefault& distanceSquared) const = 0;
+                                             FloatDefault& distanceSquared) const = 0;
 };
-
-} // namespace exec
-} // namespace vtkm
-
+}
+}
 #endif // vtk_m_exec_PointLocator_h

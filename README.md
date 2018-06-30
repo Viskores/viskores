@@ -64,15 +64,17 @@ VTK-m Requires:
       + MSVC 2015+
   + [CMake](http://www.cmake.org/download/)
       + CMake 3.3+ (for any build)
-      + CMake 3.9+ (for CUDA build)
+      + CMake 3.9+ (for CUDA build or OpenMP build)
       + CMake 3.11+ (for Visual Studio generator)
 
 Optional dependencies are:
 
   + CUDA Device Adapter
-      + [Cuda Toolkit 7+](https://developer.nvidia.com/cuda-toolkit)
+      + [Cuda Toolkit 7.5+](https://developer.nvidia.com/cuda-toolkit)
   + TBB Device Adapter
       + [TBB](https://www.threadingbuildingblocks.org/)
+  + OpenMP Device Adapter
+      + Requires a compiler that supports OpenMP >= 4.0.
   + OpenGL Rendering
       + The rendering module contains multiple rendering implementations
         including standalone rendering code. The rendering module also

@@ -229,6 +229,10 @@
 #ifndef VTKM_ENABLE_TBB
 #cmakedefine VTKM_ENABLE_TBB
 #endif
+//Mark if we are building with OpenMP enabled
+#ifndef VTKM_ENABLE_OPENMP
+#cmakedefine VTKM_ENABLE_OPENMP
+#endif
 
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI

@@ -38,6 +38,9 @@ set(headers
   DynamicTransform.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
+  KXSort.h
+  ParallelRadixSort.h
+  ParallelRadixSortInterface.h
   SimplePolymorphicContainer.h
   StorageError.h
   VirtualObjectTransfer.h

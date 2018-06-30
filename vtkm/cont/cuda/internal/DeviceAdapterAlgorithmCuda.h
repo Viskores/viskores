@@ -432,6 +432,7 @@ private:
     {
       cuda::internal::throwAsVTKmException();
     }
+    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
     return sum[2];
   }
 

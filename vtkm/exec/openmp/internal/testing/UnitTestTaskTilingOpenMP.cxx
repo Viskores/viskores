@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -18,6 +18,13 @@
 //  this software.
 //============================================================================
 
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
-#include "ParticleAdvection.cxx"
+#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
+#include <vtkm/exec/internal/testing/TestingTaskTiling.h>
+
+int UnitTestTaskTilingOpenMP(int, char* [])
+{
+  return vtkm::cont::testing::Testing::Run(
+    vtkm::exec::internal::testing::TestTaskTiling<vtkm::cont::DeviceAdapterTagOpenMP>);
+}

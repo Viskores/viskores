@@ -38,6 +38,7 @@ if (VTKm_ENABLE_TBB)
 endif()
 
 vtkm_declare_headers(ParallelSortTBB.hxx
+                     parallel_sort.h
                      TESTABLE OFF)
 
 vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})

@@ -276,6 +276,14 @@ public:
   VTKM_CONT
   virtual void PrintSummary(std::ostream& out) const;
 
+  VTKM_CONT
+  virtual void ReleaseResourcesExecution()
+  {
+    // TODO: Call ReleaseResourcesExecution on the data when
+    // the DynamicArrayHandle class is able to do so.
+    this->Range.ReleaseResourcesExecution();
+  }
+
 private:
   std::string Name; ///< name of field
 

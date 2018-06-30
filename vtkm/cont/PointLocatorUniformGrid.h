@@ -23,21 +23,25 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/TryExecute.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/cont/PointLocator.h>
+#include <vtkm/exec/PointLocatorUniformGrid.h>
+
 namespace vtkm
 {
-namespace worklet
+namespace cont
 {
-template <typename T>
-class PointLocatorUniformGrid
+class PointLocatorUniformGrid : public vtkm::cont::PointLocator
 {
 public:
-  PointLocatorUniformGrid(const vtkm::Vec<T, 3>& _min,
-                          const vtkm::Vec<T, 3>& _max,
+  PointLocatorUniformGrid(const vtkm::Vec<vtkm::FloatDefault, 3>& _min,
+                          const vtkm::Vec<vtkm::FloatDefault, 3>& _max,
                           const vtkm::Vec<vtkm::Id, 3>& _dims)
-    : Min(_min)
+    : PointLocator()
+    , Min(_min)
     , Max(_max)
     , Dims(_dims)
   {
@@ -51,7 +55,9 @@ public:
     using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
-    BinPointsWorklet(vtkm::Vec<T, 3> _min, vtkm::Vec<T, 3> _max, vtkm::Vec<vtkm::Id, 3> _dims)
+    BinPointsWorklet(vtkm::Vec<vtkm::FloatDefault, 3> _min,
+                     vtkm::Vec<vtkm::FloatDefault, 3> _max,
+                     vtkm::Vec<vtkm::Id, 3> _dims)
       : Min(_min)
       , Dims(_dims)
       , Dxdydz((_max - Min) / Dims)
@@ -66,172 +72,126 @@ public:
     }
 
   private:
-    vtkm::Vec<T, 3> Min;
+    vtkm::Vec<vtkm::FloatDefault, 3> Min;
     vtkm::Vec<vtkm::Id, 3> Dims;
-    vtkm::Vec<T, 3> Dxdydz;
-  };
-
-  class UniformGridSearch : public vtkm::worklet::WorkletMapField
-  {
-  public:
-    using ControlSignature = void(FieldIn<> query,
-                                  WholeArrayIn<> coordIn,
-                                  WholeArrayIn<IdType> pointId,
-                                  WholeArrayIn<IdType> cellLower,
-                                  WholeArrayIn<IdType> cellUpper,
-                                  FieldOut<IdType> neighborId,
-                                  FieldOut<> distance);
-
-    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
-
-    VTKM_CONT
-    UniformGridSearch(const vtkm::Vec<T, 3>& _min,
-                      const vtkm::Vec<T, 3>& _max,
-                      const vtkm::Vec<vtkm::Id, 3>& _dims)
-      : Min(_min)
-      , Dims(_dims)
-      , Dxdydz((_max - _min) / _dims)
-    {
-    }
-
-
-    template <typename CoordiVecType,
-              typename IdPortalType,
-              typename CoordiPortalType,
-              typename IdType,
-              typename CoordiType>
-    VTKM_EXEC void operator()(const CoordiVecType& queryCoord,
-                              const CoordiPortalType& coordi_Handle,
-                              const IdPortalType& pointId,
-                              const IdPortalType& cellLower,
-                              const IdPortalType& cellUpper,
-                              IdType& nnId,
-                              CoordiType& nnDis) const
-    {
-      auto nlayers = vtkm::Max(vtkm::Max(Dims[0], Dims[1]), Dims[2]);
-
-      vtkm::Vec<vtkm::Id, 3> xyz = (queryCoord - Min) / Dxdydz;
-
-      float min_distance = std::numeric_limits<float>::max();
-      vtkm::Id neareast = -1;
-
-      for (vtkm::Id layer = 0; layer < nlayers; layer++)
-      {
-        vtkm::Id minx = vtkm::Max(vtkm::Id(), xyz[0] - layer);
-        vtkm::Id maxx = vtkm::Min(Dims[0] - 1, xyz[0] + layer);
-        vtkm::Id miny = vtkm::Max(vtkm::Id(), xyz[1] - layer);
-        vtkm::Id maxy = vtkm::Min(Dims[1] - 1, xyz[1] + layer);
-        vtkm::Id minz = vtkm::Max(vtkm::Id(), xyz[2] - layer);
-        vtkm::Id maxz = vtkm::Min(Dims[2] - 1, xyz[2] + layer);
-
-        for (auto i = minx; i <= maxx; i++)
-        {
-          for (auto j = miny; j <= maxy; j++)
-          {
-            for (auto k = minz; k <= maxz; k++)
-            {
-              if (i == (xyz[0] + layer) || i == (xyz[0] - layer) || j == (xyz[1] + layer) ||
-                  j == (xyz[1] - layer) || k == (xyz[2] + layer) || k == (xyz[2] - layer))
-              {
-                auto cellid = i + j * Dims[0] + k * Dims[0] * Dims[1];
-                auto lower = cellLower.Get(cellid);
-                auto upper = cellUpper.Get(cellid);
-                for (auto index = lower; index < upper; index++)
-                {
-                  auto pointid = pointId.Get(index);
-                  auto point = coordi_Handle.Get(pointid);
-                  auto dx = point[0] - queryCoord[0];
-                  auto dy = point[1] - queryCoord[1];
-                  auto dz = point[2] - queryCoord[2];
-
-                  auto distance2 = dx * dx + dy * dy + dz * dz;
-                  if (distance2 < min_distance)
-                  {
-                    neareast = pointid;
-                    min_distance = distance2;
-                    nlayers = layer + 2;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      nnId = neareast;
-      nnDis = vtkm::Sqrt(min_distance);
-    }
-
-  private:
-    vtkm::Vec<T, 3> Min;
-    vtkm::Vec<vtkm::Id, 3> Dims;
-    vtkm::Vec<T, 3> Dxdydz;
+    vtkm::Vec<vtkm::FloatDefault, 3> Dxdydz;
   };
 
   /// \brief Construct a 3D uniform grid for nearest neighbor search.
   ///
   /// \param coords An ArrayHandle of x, y, z coordinates of input points.
   /// \param device Tag for selecting device adapter
-  template <typename DeviceAdapter>
-  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
-             DeviceAdapter vtkmNotUsed(device))
+
+  struct BuildFunctor
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-    // generate unique id for each input point
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(0, 1, coords.GetNumberOfValues());
-    Algorithm::Copy(pointCounting, PointIds);
+    BuildFunctor(vtkm::cont::PointLocatorUniformGrid* self)
+      : Self(self)
+    {
+    }
 
-    // bin points into cells and give each of them the cell id.
-    BinPointsWorklet cellIdWorklet(Min, Max, Dims);
-    vtkm::worklet::DispatcherMapField<BinPointsWorklet, DeviceAdapter> dispatchCellId(
-      cellIdWorklet);
-    dispatchCellId.Invoke(coords, CellIds);
+    template <typename Device>
+    bool operator()(Device)
+    {
+      using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
-    // Group points of the same cell together by sorting them according to the cell ids
-    Algorithm::SortByKey(CellIds, PointIds);
+      // Save training data points.
+      Algorithm::Copy(this->Self->GetCoords().GetData(), this->Self->coords);
 
-    // for each cell, find the lower and upper bound of indices to the sorted point ids.
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> cell_ids_counting(0, 1, Dims[0] * Dims[1] * Dims[2]);
-    Algorithm::UpperBounds(CellIds, cell_ids_counting, CellUpper);
-    Algorithm::LowerBounds(CellIds, cell_ids_counting, CellLower);
-  }
+      // generate unique id for each input point
+      vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(
+        0, 1, this->Self->coords.GetNumberOfValues());
+      Algorithm::Copy(pointCounting, this->Self->pointIds);
 
-  /// \brief Nearest neighbor search using a Uniform Grid
-  ///
-  /// Parallel search of nearesat neighbor for each point in the \c queryPoints in the set of
-  /// \c coords. Returns neareast neighbot in \c nearestNeighborIds and distances to nearest
-  /// neighbor in \c distances.
-  ///
-  /// \param coords Point coordinates for training dataset.
-  /// \param queryPoints Point coordinates to query for nearest neighbors.
-  /// \param nearestNeighborIds Neareast neighbor in the training dataset for each points in
-  ///                            the test set
-  /// \param distances Distance between query points and their nearest neighbors.
-  /// \param device Tag for selecting device adapter.
-  template <typename DeviceAdapter>
-  void FindNearestPoint(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
-                        const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& queryPoints,
-                        vtkm::cont::ArrayHandle<vtkm::Id>& nearestNeighborIds,
-                        vtkm::cont::ArrayHandle<T>& distances,
-                        DeviceAdapter)
+      // bin points into cells and give each of them the cell id.
+      BinPointsWorklet cellIdWorklet(this->Self->Min, this->Self->Max, this->Self->Dims);
+      vtkm::worklet::DispatcherMapField<BinPointsWorklet, Device> dispatchCellId(cellIdWorklet);
+      dispatchCellId.Invoke(this->Self->coords, this->Self->cellIds);
+
+      // Group points of the same cell together by sorting them according to the cell ids
+      Algorithm::SortByKey(this->Self->cellIds, this->Self->pointIds);
+
+      // for each cell, find the lower and upper bound of indices to the sorted point ids.
+      vtkm::cont::ArrayHandleCounting<vtkm::Id> cell_ids_counting(
+        0, 1, this->Self->Dims[0] * this->Self->Dims[1] * this->Self->Dims[2]);
+      Algorithm::UpperBounds(this->Self->cellIds, cell_ids_counting, this->Self->cellUpper);
+      Algorithm::LowerBounds(this->Self->cellIds, cell_ids_counting, this->Self->cellLower);
+
+      return true;
+    }
+
+  private:
+    vtkm::cont::PointLocatorUniformGrid* Self;
+  };
+
+  void Build() override
   {
-    UniformGridSearch uniformGridSearch(Min, Max, Dims);
+    BuildFunctor functor(this);
 
-    vtkm::worklet::DispatcherMapField<UniformGridSearch, DeviceAdapter> searchDispatcher(
-      uniformGridSearch);
-    searchDispatcher.Invoke(
-      queryPoints, coords, PointIds, CellLower, CellUpper, nearestNeighborIds, distances);
+    bool success = vtkm::cont::TryExecute(functor);
+    if (!success)
+    {
+      throw vtkm::cont::ErrorExecution("Could not build point locator structure");
+    }
+  };
+
+
+  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;
+
+  struct PrepareForExecutionFunctor
+  {
+    template <typename DeviceAdapter>
+    VTKM_CONT void operator()(DeviceAdapter,
+                              const vtkm::cont::PointLocatorUniformGrid& self,
+                              HandleType& handle) const
+    {
+      //vtkm::exec::PointLocatorUniformGrid* locator =
+      vtkm::exec::PointLocatorUniformGrid<DeviceAdapter>* h =
+        new vtkm::exec::PointLocatorUniformGrid<DeviceAdapter>(
+          self.Min,
+          self.Max,
+          self.Dims,
+          self.coords.PrepareForInput(DeviceAdapter()),
+          self.pointIds.PrepareForInput(DeviceAdapter()),
+          self.cellLower.PrepareForInput(DeviceAdapter()),
+          self.cellUpper.PrepareForInput(DeviceAdapter()));
+      handle.Reset(h);
+      //return handle.PrepareForExecution(DeviceAdapter());
+    }
+  };
+
+  VTKM_CONT
+  //const vtkm::exec::PointLocator *
+  const HandleType PrepareForExecutionImp(vtkm::cont::DeviceAdapterId deviceId) const override
+  {
+    // TODO: call VirtualObjectHandle::PrepareForExecution() and return vtkm::exec::PointLocator
+    // TODO: how to convert deviceId back to DeviceAdapter tag?
+    //using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
+    //                                     vtkm::cont::DeviceAdapterTagTBB,
+    //                                     vtkm::cont::DeviceAdapterTagSerial>;
+
+    using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
+    //HandleType ExecHandle; // = new HandleType(locator, false);
+    vtkm::cont::internal::FindDeviceAdapterTagAndCall(
+      deviceId, DeviceList(), PrepareForExecutionFunctor(), *this, ExecHandle);
+    return ExecHandle;
+
+    //return ExecHandle.PrepareForExecution(DeviceAdapter());
   }
 
 private:
-  vtkm::Vec<T, 3> Min;
-  vtkm::Vec<T, 3> Max;
+  vtkm::Vec<vtkm::FloatDefault, 3> Min;
+  vtkm::Vec<vtkm::FloatDefault, 3> Max;
   vtkm::Vec<vtkm::Id, 3> Dims;
 
-  vtkm::cont::ArrayHandle<vtkm::Id> PointIds;
-  vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
-  vtkm::cont::ArrayHandle<vtkm::Id> CellLower;
-  vtkm::cont::ArrayHandle<vtkm::Id> CellUpper;
+  // TODO: how to convert CoordinateSystem to ArrayHandle<Vec<Float, 3>>?
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> coords;
+  vtkm::cont::ArrayHandle<vtkm::Id> pointIds;
+  vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
+  vtkm::cont::ArrayHandle<vtkm::Id> cellLower;
+  vtkm::cont::ArrayHandle<vtkm::Id> cellUpper;
+
+  // TODO: std::unique_ptr/std::shared_ptr?
+  mutable HandleType ExecHandle;
 };
 }
 }

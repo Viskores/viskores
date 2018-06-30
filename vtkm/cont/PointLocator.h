@@ -7,8 +7,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //
 //  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -20,9 +20,7 @@
 #ifndef vtk_m_cont_PointLocator_h
 #define vtk_m_cont_PointLocator_h
 
-#include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/exec/PointLocator.h>
 
@@ -33,49 +31,46 @@ namespace cont
 
 class PointLocator : public vtkm::cont::ExecutionObjectBase
 {
-
 public:
   PointLocator()
-    : Dirty(true)
+    : dirty(true)
   {
   }
 
-  vtkm::cont::CoordinateSystem GetCoordinates() const { return Coords; }
+  vtkm::cont::CoordinateSystem GetCoords() const { return coordinates; }
 
-  void SetCoordinates(const vtkm::cont::CoordinateSystem& coords)
+  void SetCoords(const vtkm::cont::CoordinateSystem& coords)
   {
-    Coords = coords;
-    Dirty = true;
+    coordinates = coords;
+    dirty = true;
   }
+
+  virtual void Build() = 0;
 
   void Update()
   {
-    if (Dirty)
+    if (dirty)
       Build();
-    Dirty = false;
+    dirty = false;
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(DeviceAdapter)
+  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(DeviceAdapter) const
   {
     vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    return PrepareForExecution(deviceId);
+    return PrepareForExecutionImp(deviceId).PrepareForExecution(DeviceAdapter());
   }
 
-protected:
-  void SetDirty() { Dirty = true; }
-
-  VTKM_CONT virtual void Build() = 0;
-
-  VTKM_CONT virtual const vtkm::exec::PointLocator* PrepareForExecutionImpl(
-    const vtkm::Int8 device) = 0;
+  //VTKM_CONT virtual const vtkm::exec::PointLocator*
+  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;
+  VTKM_CONT virtual const HandleType PrepareForExecutionImp(
+    vtkm::cont::DeviceAdapterId deviceId) const = 0;
 
 private:
-  vtkm::cont::CoordinateSystem Coords;
-  bool Dirty;
+  vtkm::cont::CoordinateSystem coordinates;
+
+  bool dirty;
 };
-
-} // namespace cont
-} // namespace vtkm
-
+}
+}
 #endif // vtk_m_cont_PointLocator_h
