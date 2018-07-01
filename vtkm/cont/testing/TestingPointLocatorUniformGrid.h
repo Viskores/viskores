@@ -90,12 +90,11 @@ public:
   VTKM_CONT
   PointLocatorUniformGridWorklet() {}
 
-  // TODO: change IdType, it is used for other purpose.
-  template <typename CoordiVecType, typename Locator, typename IdType, typename CoordiType>
+  template <typename CoordiVecType, typename Locator>
   VTKM_EXEC void operator()(const CoordiVecType& qc,
                             const Locator& locator,
-                            IdType& nnIdOut,
-                            CoordiType& nnDis) const
+                            vtkm::Id& nnIdOut,
+                            vtkm::FloatDefault& nnDis) const
   {
     locator->FindNearestNeighbor(qc, nnIdOut, nnDis);
   }
@@ -142,7 +141,7 @@ public:
     auto qc_Handle = vtkm::cont::make_ArrayHandle(qcVec);
 
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
-    vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> nnDis_Handle;
 
     PointLocatorUniformGridWorklet pointLocatorUniformGridWorklet;
     vtkm::worklet::DispatcherMapField<PointLocatorUniformGridWorklet, DeviceAdapter>
@@ -163,9 +162,9 @@ public:
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
     {
       vtkm::Id workletIdx = nnId_Handle.GetPortalControl().Get(i);
-      vtkm::Float32 workletDis = nnDis_Handle.GetPortalConstControl().Get(i);
+      vtkm::FloatDefault workletDis = nnDis_Handle.GetPortalConstControl().Get(i);
       vtkm::Id bfworkletIdx = bfnnId_Handle.GetPortalControl().Get(i);
-      vtkm::Float32 bfworkletDis = bfnnDis_Handle.GetPortalConstControl().Get(i);
+      vtkm::FloatDefault bfworkletDis = bfnnDis_Handle.GetPortalConstControl().Get(i);
 
       if (workletIdx != bfworkletIdx)
       {
