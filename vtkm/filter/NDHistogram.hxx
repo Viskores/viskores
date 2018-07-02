@@ -48,10 +48,9 @@ vtkm::Range NDHistogram::GetDataRange(size_t fieldIdx)
 }
 
 template <typename Policy, typename Device>
-inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(
-  const vtkm::cont::DataSet& inData,
-  vtkm::filter::PolicyBase<Policy> vtkmNotUsed(policy),
-  Device device)
+inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::DataSet& inData,
+                                                            vtkm::filter::PolicyBase<Policy> policy,
+                                                            Device device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
@@ -66,8 +65,11 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(
   {
     vtkm::Range rangeField;
     vtkm::Float64 deltaField;
-    ndHistogram.AddField(
-      inData.GetField(FieldNames[i]).GetData(), NumOfBins[i], rangeField, deltaField, device);
+    ndHistogram.AddField(vtkm::filter::ApplyPolicy(inData.GetField(FieldNames[i]), policy),
+                         NumOfBins[i],
+                         rangeField,
+                         deltaField,
+                         device);
     DataRanges.push_back(rangeField);
     BinDeltas.push_back(deltaField);
   }
