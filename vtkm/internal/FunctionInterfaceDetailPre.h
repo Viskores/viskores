@@ -7017,7 +7017,7 @@ template <typename Transform,
           typename TransformedR>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR()>& originalParameters,
+  ParameterContainer<OriginalR()>& originalParameters,
   ParameterContainer<TransformedR()>& transformedParameters)
 {
   (void)transform;
@@ -7031,7 +7031,7 @@ template <typename Transform,
           typename TransformedR>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR()>& originalParameters,
+  ParameterContainer<OriginalR()>& originalParameters,
   ParameterContainer<TransformedR()>& transformedParameters)
 {
   (void)transform;
@@ -7047,7 +7047,7 @@ template <typename Transform,
           typename TransformedP1>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7062,7 +7062,7 @@ template <typename Transform,
           typename TransformedP1>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7079,7 +7079,7 @@ template <typename Transform,
           typename TransformedP2>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7098,7 +7098,7 @@ template <typename Transform,
           typename TransformedP2>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7119,7 +7119,7 @@ template <typename Transform,
           typename TransformedP3>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7142,7 +7142,7 @@ template <typename Transform,
           typename TransformedP3>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7167,7 +7167,7 @@ template <typename Transform,
           typename TransformedP4>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7194,7 +7194,7 @@ template <typename Transform,
           typename TransformedP4>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7223,7 +7223,7 @@ template <typename Transform,
           typename TransformedP5>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7254,7 +7254,7 @@ template <typename Transform,
           typename TransformedP5>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7287,7 +7287,7 @@ template <typename Transform,
           typename TransformedP6>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7322,7 +7322,7 @@ template <typename Transform,
           typename TransformedP6>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7359,7 +7359,7 @@ template <typename Transform,
           typename TransformedP7>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7398,7 +7398,7 @@ template <typename Transform,
           typename TransformedP7>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7439,7 +7439,7 @@ template <typename Transform,
           typename TransformedP8>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7482,7 +7482,7 @@ template <typename Transform,
           typename TransformedP8>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7527,7 +7527,7 @@ template <typename Transform,
           typename TransformedP9>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7574,7 +7574,7 @@ template <typename Transform,
           typename TransformedP9>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7623,7 +7623,7 @@ template <typename Transform,
           typename TransformedP10>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7674,7 +7674,7 @@ template <typename Transform,
           typename TransformedP10>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7727,7 +7727,7 @@ template <typename Transform,
           typename TransformedP11>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7782,7 +7782,7 @@ template <typename Transform,
           typename TransformedP11>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7839,7 +7839,7 @@ template <typename Transform,
           typename TransformedP12>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7898,7 +7898,7 @@ template <typename Transform,
           typename TransformedP12>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -7959,7 +7959,7 @@ template <typename Transform,
           typename TransformedP13>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8022,7 +8022,7 @@ template <typename Transform,
           typename TransformedP13>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8087,7 +8087,7 @@ template <typename Transform,
           typename TransformedP14>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8154,7 +8154,7 @@ template <typename Transform,
           typename TransformedP14>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8223,7 +8223,7 @@ template <typename Transform,
           typename TransformedP15>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8294,7 +8294,7 @@ template <typename Transform,
           typename TransformedP15>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8367,7 +8367,7 @@ template <typename Transform,
           typename TransformedP16>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8442,7 +8442,7 @@ template <typename Transform,
           typename TransformedP16>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8519,7 +8519,7 @@ template <typename Transform,
           typename TransformedP17>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8598,7 +8598,7 @@ template <typename Transform,
           typename TransformedP17>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8679,7 +8679,7 @@ template <typename Transform,
           typename TransformedP18>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8762,7 +8762,7 @@ template <typename Transform,
           typename TransformedP18>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8847,7 +8847,7 @@ template <typename Transform,
           typename TransformedP19>
 VTKM_CONT void DoStaticTransformCont(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18, OriginalP19)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18, OriginalP19)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18, TransformedP19)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
@@ -8934,7 +8934,7 @@ template <typename Transform,
           typename TransformedP19>
 VTKM_EXEC void DoStaticTransformExec(
   const Transform& transform,
-  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18, OriginalP19)>& originalParameters,
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18, OriginalP19)>& originalParameters,
   ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18, TransformedP19)>& transformedParameters)
 {
   transformedParameters.Parameter1 =
