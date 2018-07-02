@@ -32,7 +32,7 @@ class PointLocator : public vtkm::VirtualObjectBase
 public:
   VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
                                              vtkm::Id& pointId,
-                                             FloatDefault& distanceSquared) const = 0;
+                                             vtkm::FloatDefault& distanceSquared) const = 0;
 };
 }
 }
