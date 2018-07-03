@@ -23,6 +23,7 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/Math.h>
+#include <vtkm/Swap.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -221,16 +222,16 @@ public:
     bool transposed = vtkm::Abs(y2 - y1) > vtkm::Abs(x2 - x1);
     if (transposed)
     {
-      std::swap(x1, y1);
-      std::swap(x2, y2);
+      vtkm::Swap(x1, y1);
+      vtkm::Swap(x2, y2);
     }
 
     // Ensure we are always going from left to right
     if (x1 > x2)
     {
-      std::swap(x1, x2);
-      std::swap(y1, y2);
-      std::swap(z1, z2);
+      vtkm::Swap(x1, x2);
+      vtkm::Swap(y1, y2);
+      vtkm::Swap(z1, z2);
     }
 
     vtkm::Float32 dx = x2 - x1;
