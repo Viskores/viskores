@@ -50,7 +50,6 @@ public:
 
   PointLocatorUniformGrid() = default;
 
-  VTKM_EXEC_CONT
   PointLocatorUniformGrid(const vtkm::Vec<vtkm::FloatDefault, 3>& _min,
                           const vtkm::Vec<vtkm::FloatDefault, 3>& _max,
                           const vtkm::Vec<vtkm::Id, 3>& _dims,
