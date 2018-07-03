@@ -27,6 +27,8 @@
 
 int UnitTestTBBPointLocatorUniformGrid(int, char* [])
 {
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
   return vtkm::cont::testing::Testing::Run(
     TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagTBB>());
 }
