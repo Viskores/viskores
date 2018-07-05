@@ -73,6 +73,7 @@ set(headers
   Triangulate.h
   VertexClustering.h
   WaveletCompressor.h
+  WaveletGenerator.h
   WorkletMapField.h
   WorkletMapTopology.h
   WorkletPointNeighborhood.h

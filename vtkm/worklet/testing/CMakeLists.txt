@@ -78,6 +78,7 @@ set(unit_tests
   UnitTestWorkletReduceByKey.cxx
   UnitTestVertexClustering.cxx
   UnitTestWaveletCompressor.cxx
+  UnitTestWaveletGenerator.cxx
  )
 
 
