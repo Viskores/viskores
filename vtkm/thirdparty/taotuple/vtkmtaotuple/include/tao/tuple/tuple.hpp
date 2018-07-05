@@ -204,14 +204,14 @@ namespace tao
 
          TAO_TUPLE_CONSTEXPR
          TAO_TUPLE_CUDA_ANNOTATE_COMMON
-         T& get() noexcept
+         T& get_value() noexcept
          {
             return value;
          }
 
          TAO_TUPLE_CONSTEXPR
          TAO_TUPLE_CUDA_ANNOTATE_COMMON
-         const T& get() const noexcept
+         const T& get_value() const noexcept
          {
             return value;
          }
@@ -304,14 +304,14 @@ namespace tao
 
          TAO_TUPLE_CONSTEXPR
          TAO_TUPLE_CUDA_ANNOTATE_COMMON
-         T& get() noexcept
+         T& get_value() noexcept
          {
             return static_cast< T& >( *this );
          }
 
          TAO_TUPLE_CONSTEXPR
          TAO_TUPLE_CUDA_ANNOTATE_COMMON
-         const T& get() const noexcept
+         const T& get_value() const noexcept
          {
             return static_cast< const T& >( *this );
          }
@@ -345,9 +345,9 @@ namespace tao
          tuple_base& operator=( const tuple_base& v ) noexcept( seq::is_all< std::is_nothrow_copy_assignable< Ts >::value... >::value )
          {
 #ifdef TAO_SEQ_FOLD_EXPRESSIONS
-            ( tuple_value< Is, Ts >::operator=( static_cast< tuple_value< Is, Ts >& >( v ).get() ), ... );
+            ( tuple_value< Is, Ts >::operator=( static_cast< tuple_value< Is, Ts >& >( v ).get_value() ), ... );
 #else
-            (void)swallow{ ( tuple_value< Is, Ts >::operator=( static_cast< tuple_value< Is, Ts >& >( v ).get() ), true )..., true };
+            (void)swallow{ ( tuple_value< Is, Ts >::operator=( static_cast< tuple_value< Is, Ts >& >( v ).get_value() ), true )..., true };
 #endif
             return *this;
          }
@@ -356,7 +356,7 @@ namespace tao
          tuple_base& operator=( tuple_base&& v ) noexcept( seq::is_all< std::is_nothrow_move_assignable< Ts >::value... >::value )
          {
 #ifdef TAO_SEQ_FOLD_EXPRESSIONS
-            ( tuple_value< Is, Ts >::operator=( std::forward< Ts >( static_cast< tuple_value< Is, Ts >& >( v ).get() ) ), ... );
+            ( tuple_value< Is, Ts >::operator=( std::forward< Ts >( static_cast< tuple_value< Is, Ts >& >( v ).get_value() ) ), ... );
 #else
             (void)swallow{ ( tuple_value< Is, Ts >::operator=( static_cast< tuple_value< Is, Ts >& >( v ) ), true )..., true };
 #endif
@@ -719,20 +719,20 @@ namespace tao
    template< std::size_t I, typename... Ts >
    TAO_TUPLE_CONSTEXPR TAO_TUPLE_CUDA_ANNOTATE_COMMON const seq::type_by_index_t< I, Ts... >& get( const tuple< Ts... >& v ) noexcept
    {
-      return static_cast< const impl::tuple_value< I, seq::type_by_index_t< I, Ts... > >& >( v.base ).get();
+      return static_cast< const impl::tuple_value< I, seq::type_by_index_t< I, Ts... > >& >( v.base ).get_value();
    }
 
    template< std::size_t I, typename... Ts >
    TAO_TUPLE_CONSTEXPR TAO_TUPLE_CUDA_ANNOTATE_COMMON seq::type_by_index_t< I, Ts... >& get( tuple< Ts... >& v ) noexcept
    {
-      return static_cast< impl::tuple_value< I, seq::type_by_index_t< I, Ts... > >& >( v.base ).get();
+      return static_cast< impl::tuple_value< I, seq::type_by_index_t< I, Ts... > >& >( v.base ).get_value();
    }
 
    template< std::size_t I, typename... Ts >
    TAO_TUPLE_CONSTEXPR TAO_TUPLE_CUDA_ANNOTATE_COMMON seq::type_by_index_t< I, Ts... >&& get( tuple< Ts... >&& v ) noexcept
    {
       using type = seq::type_by_index_t< I, Ts... >;
-      return static_cast< type&& >( static_cast< impl::tuple_value< I, type >& >( v.base ).get() );
+      return static_cast< type&& >( static_cast< impl::tuple_value< I, type >& >( v.base ).get_value() );
    }
 
    // get<T> helper
