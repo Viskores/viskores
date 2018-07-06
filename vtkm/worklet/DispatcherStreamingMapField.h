@@ -200,7 +200,7 @@ public:
   void SetNumberOfBlocks(vtkm::Id numberOfBlocks) { NumberOfBlocks = numberOfBlocks; }
 
   template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+  VTKM_CONT void BasicInvoke(Invocation& invocation,
                              vtkm::Id numInstances,
                              vtkm::Id globalIndexOffset,
                              DeviceAdapter device) const
@@ -213,7 +213,7 @@ public:
   }
 
   template <typename Invocation>
-  VTKM_CONT void DoInvoke(const Invocation& invocation) const
+  VTKM_CONT void DoInvoke(Invocation& invocation) const
   {
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
@@ -226,7 +226,7 @@ public:
     // a DynamicArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    vtkm::Id fullSize = inputDomain.GetNumberOfValues();
+    vtkm::Id fullSize = internal::scheduling_range(inputDomain);
     vtkm::Id blockSize = fullSize / NumberOfBlocks;
     if (fullSize % NumberOfBlocks != 0)
       blockSize += 1;
@@ -259,7 +259,7 @@ public:
 
       // Loop over parameters again to sync results for this block into control array
       using ParameterInterfaceType2 = typename ChangedType::ParameterInterface;
-      const ParameterInterfaceType2& parameters2 = changedParams.Parameters;
+      ParameterInterfaceType2& parameters2 = changedParams.Parameters;
       parameters2.StaticTransformCont(TransferFunctorType());
     }
   }
@@ -269,14 +269,14 @@ private:
             typename InputRangeType,
             typename OutputRangeType,
             typename DeviceAdapter>
-  VTKM_CONT void InvokeTransportParameters(const Invocation& invocation,
+  VTKM_CONT void InvokeTransportParameters(Invocation& invocation,
                                            const InputRangeType& inputRange,
                                            const InputRangeType& globalIndexOffset,
                                            const OutputRangeType& outputRange,
                                            DeviceAdapter device) const
   {
     using ParameterInterfaceType = typename Invocation::ParameterInterface;
-    const ParameterInterfaceType& parameters = invocation.Parameters;
+    ParameterInterfaceType& parameters = invocation.Parameters;
 
     using TransportFunctorType = vtkm::worklet::internal::detail::DispatcherBaseTransportFunctor<
       typename Invocation::ControlInterface,

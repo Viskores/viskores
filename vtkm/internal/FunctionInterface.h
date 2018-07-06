@@ -600,7 +600,7 @@ public:
   ///
   template <typename Transform>
   VTKM_CONT typename StaticTransformType<Transform>::type StaticTransformCont(
-    const Transform& transform) const
+    const Transform& transform)
   {
     typename StaticTransformType<Transform>::type newFuncInterface;
     detail::DoStaticTransformCont(transform, this->Parameters, newFuncInterface.Parameters);
@@ -608,7 +608,7 @@ public:
   }
   template <typename Transform>
   VTKM_EXEC typename StaticTransformType<Transform>::type StaticTransformExec(
-    const Transform& transform) const
+    const Transform& transform)
   {
     typename StaticTransformType<Transform>::type newFuncInterface;
     detail::DoStaticTransformExec(transform, this->Parameters, newFuncInterface.Parameters);

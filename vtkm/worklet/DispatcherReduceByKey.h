@@ -65,7 +65,7 @@ public:
   }
 
   template <typename Invocation>
-  void DoInvoke(const Invocation& invocation) const
+  void DoInvoke(Invocation& invocation) const
   {
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;

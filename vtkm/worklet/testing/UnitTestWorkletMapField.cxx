@@ -97,18 +97,22 @@ struct DoStaticTestWorklet
     }
 
     vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
-    vtkm::cont::ArrayHandle<T> outputHandle;
-    vtkm::cont::ArrayHandle<T> inoutHandle;
+    vtkm::cont::ArrayHandle<T> outputHandle, outputHandleAsPtr;
+    vtkm::cont::ArrayHandle<T> inoutHandle, inoutHandleAsPtr;
 
     vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    vtkm::cont::ArrayCopy(inputHandle, inoutHandleAsPtr, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
-    std::cout << "Create and run dispatcher." << std::endl;
+    std::cout << "Create and run dispatchers." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
     dispatcher.Invoke(inputHandle, outputHandle, inoutHandle);
+    dispatcher.Invoke(&inputHandle, &outputHandleAsPtr, &inoutHandleAsPtr);
 
-    std::cout << "Check result." << std::endl;
+    std::cout << "Check results." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());
     CheckPortal(inoutHandle.GetPortalConstControl());
+    CheckPortal(outputHandleAsPtr.GetPortalConstControl());
+    CheckPortal(inoutHandleAsPtr.GetPortalConstControl());
 
     std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
     inputHandle.Shrink(ARRAY_SIZE / 2);
@@ -144,19 +148,29 @@ struct DoDynamicTestWorklet
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
-    vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
     std::cout << "Create and run dispatcher with dynamic arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
 
     vtkm::cont::DynamicArrayHandle inputDynamic(inputHandle);
-    vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
-    vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
 
-    dispatcher.Invoke(inputDynamic, outputDynamic, inoutDynamic);
+    { //Verify we can pass by value
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
+      vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
+      dispatcher.Invoke(inputDynamic, outputDynamic, inoutDynamic);
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+    }
 
-    CheckPortal(outputHandle.GetPortalConstControl());
-    CheckPortal(inoutHandle.GetPortalConstControl());
+    { //Verify we can pass by pointer
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
+      vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
+      dispatcher.Invoke(&inputDynamic, &outputDynamic, &inoutDynamic);
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+    }
   }
 };
 

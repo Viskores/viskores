@@ -329,7 +329,7 @@ template <typename Transform,
           $template_params(num_params,0,'Transformed')>
 VTKM_$(environment.upper()) void DoStaticTransform$(environment)(
   const Transform& transform,
-  const ParameterContainer<$signature(num_params,ptype(0,'Original'),'Original')>& originalParameters,
+  ParameterContainer<$signature(num_params,ptype(0,'Original'),'Original')>& originalParameters,
   ParameterContainer<$signature(num_params,ptype(0,'Transformed'),'Transformed')>& transformedParameters)
 {
 $if(num_params < 1)\
