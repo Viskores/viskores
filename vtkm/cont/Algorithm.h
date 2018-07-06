@@ -22,6 +22,7 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
@@ -31,15 +32,55 @@ namespace vtkm
 namespace cont
 {
 
-namespace
+namespace detail
 {
+template <typename T, typename Device, typename IsExecObject>
+struct PrepareArgForExecDetail;
+
+template <typename T, typename Device>
+struct PrepareArgForExecDetail<T, Device, std::false_type>
+{
+  using ExecType = T;
+
+  static VTKM_CONT ExecType DoPrepare(T&& object) { return std::forward<T>(object); }
+};
+
+template <typename T, typename Device>
+struct PrepareArgForExecDetail<T, Device, std::true_type>
+{
+  using ExecType = decltype(std::declval<T>().PrepareForExecution(Device()));
+
+  static VTKM_CONT ExecType DoPrepare(T&& object) { return object.PrepareForExecution(Device()); }
+};
+
+template <typename T, typename Device>
+struct PrepareArgForExecHelper
+{
+  using IsExecObject =
+    typename std::is_base_of<vtkm::cont::ExecutionObjectBase, typename std::decay<T>::type>::type;
+
+  using ExecType = typename PrepareArgForExecDetail<T, Device, IsExecObject>::ExecType;
+
+  static VTKM_CONT ExecType DoPrepare(T&& object)
+  {
+    return PrepareArgForExecDetail<T, Device, IsExecObject>::DoPrepare(object);
+  }
+};
+
+template <typename Device, typename T>
+VTKM_CONT typename PrepareArgForExecHelper<T, Device>::ExecType PrepareArgForExec(T&& object)
+{
+  return PrepareArgForExecHelper<T, Device>::DoPrepare(object);
+}
+
 struct CopyFunctor
 {
   template <typename Device, typename... Args>
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -51,7 +92,8 @@ struct CopyIfFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -64,7 +106,8 @@ struct CopySubRangeFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    valid = vtkm::cont::DeviceAdapterAlgorithm<Device>::CopySubRange(std::forward<Args>(args)...);
+    valid = vtkm::cont::DeviceAdapterAlgorithm<Device>::CopySubRange(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -76,7 +119,8 @@ struct LowerBoundsFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::LowerBounds(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::LowerBounds(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -95,7 +139,8 @@ struct ReduceFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(std::forward<Args>(args)...);
+    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -106,7 +151,8 @@ struct ReduceByKeyFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::ReduceByKey(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::ReduceByKey(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -124,7 +170,8 @@ struct ScanInclusiveResultFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanInclusive(std::forward<Args>(args)...);
+    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanInclusive(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -159,7 +206,8 @@ struct ScanInclusiveByKeyFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanInclusiveByKey(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanInclusiveByKey(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -177,7 +225,8 @@ struct ScanExclusiveFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(std::forward<Args>(args)...);
+    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -190,7 +239,8 @@ struct ScanExclusiveByKeyFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusiveByKey(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusiveByKey(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -201,7 +251,8 @@ struct ScheduleFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -212,7 +263,8 @@ struct SortFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Sort(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Sort(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -223,7 +275,8 @@ struct SortByKeyFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::SortByKey(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::SortByKey(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -245,7 +298,8 @@ struct TransformFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Transform(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Transform(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -256,7 +310,8 @@ struct UniqueFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Unique(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Unique(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
@@ -267,11 +322,12 @@ struct UpperBoundsFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::UpperBounds(std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::UpperBounds(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
     return true;
   }
 };
-} // anonymous namespace
+} // namespace detail
 
 struct Algorithm
 {
@@ -280,7 +336,7 @@ struct Algorithm
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
                              vtkm::cont::ArrayHandle<U, COut>& output)
   {
-    vtkm::cont::TryExecute(CopyFunctor(), input, output);
+    vtkm::cont::TryExecute(detail::CopyFunctor(), input, output);
   }
 
   template <typename T, typename U, class CIn, class CStencil, class COut>
@@ -288,7 +344,7 @@ struct Algorithm
                                const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
                                vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    vtkm::cont::TryExecute(CopyIfFunctor(), input, stencil, output);
+    vtkm::cont::TryExecute(detail::CopyIfFunctor(), input, stencil, output);
   }
 
   template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
@@ -297,7 +353,7 @@ struct Algorithm
                                vtkm::cont::ArrayHandle<T, COut>& output,
                                UnaryPredicate unary_predicate)
   {
-    vtkm::cont::TryExecute(CopyIfFunctor(), input, stencil, output, unary_predicate);
+    vtkm::cont::TryExecute(detail::CopyIfFunctor(), input, stencil, output, unary_predicate);
   }
 
   template <typename T, typename U, class CIn, class COut>
@@ -307,7 +363,7 @@ struct Algorithm
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0)
   {
-    CopySubRangeFunctor functor;
+    detail::CopySubRangeFunctor functor;
     vtkm::cont::TryExecute(
       functor, input, inputStartIndex, numberOfElementsToCopy, output, outputIndex);
     return functor.valid;
@@ -318,7 +374,7 @@ struct Algorithm
                                     const vtkm::cont::ArrayHandle<T, CVal>& values,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output)
   {
-    vtkm::cont::TryExecute(LowerBoundsFunctor(), input, values, output);
+    vtkm::cont::TryExecute(detail::LowerBoundsFunctor(), input, values, output);
   }
 
   template <typename T, class CIn, class CVal, class COut, class BinaryCompare>
@@ -327,20 +383,20 @@ struct Algorithm
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output,
                                     BinaryCompare binary_compare)
   {
-    vtkm::cont::TryExecute(LowerBoundsFunctor(), input, values, output, binary_compare);
+    vtkm::cont::TryExecute(detail::LowerBoundsFunctor(), input, values, output, binary_compare);
   }
 
   template <class CIn, class COut>
   VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<vtkm::Id, CIn>& input,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& values_output)
   {
-    vtkm::cont::TryExecute(LowerBoundsFunctor(), input, values_output);
+    vtkm::cont::TryExecute(detail::LowerBoundsFunctor(), input, values_output);
   }
 
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
-    ReduceFunctor<U> functor;
+    detail::ReduceFunctor<U> functor;
     vtkm::cont::TryExecute(functor, input, initialValue);
     return functor.result;
   }
@@ -350,7 +406,7 @@ struct Algorithm
                             U initialValue,
                             BinaryFunctor binary_functor)
   {
-    ReduceFunctor<U> functor;
+    detail::ReduceFunctor<U> functor;
     vtkm::cont::TryExecute(functor, input, initialValue, binary_functor);
     return functor.result;
   }
@@ -369,14 +425,14 @@ struct Algorithm
                                     BinaryFunctor binary_functor)
   {
     vtkm::cont::TryExecute(
-      ReduceByKeyFunctor(), keys, values, keys_output, values_output, binary_functor);
+      detail::ReduceByKeyFunctor(), keys, values, keys_output, values_output, binary_functor);
   }
 
   template <typename T, class CIn, class COut>
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    ScanInclusiveResultFunctor<T> functor;
+    detail::ScanInclusiveResultFunctor<T> functor;
     vtkm::cont::TryExecute(functor, input, output);
     return functor.result;
   }
@@ -386,7 +442,7 @@ struct Algorithm
                                             const vtkm::cont::ArrayHandle<T, CIn>& input,
                                             vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    StreamingScanExclusiveFunctor<T> functor;
+    detail::StreamingScanExclusiveFunctor<T> functor;
     vtkm::cont::TryExecute(functor, numBlocks, input, output);
     return functor.result;
   }
@@ -396,7 +452,7 @@ struct Algorithm
                                    vtkm::cont::ArrayHandle<T, COut>& output,
                                    BinaryFunctor binary_functor)
   {
-    ScanInclusiveResultFunctor<T> functor;
+    detail::ScanInclusiveResultFunctor<T> functor;
     vtkm::cont::TryExecute(functor, input, output, binary_functor);
     return functor.result;
   }
@@ -413,7 +469,7 @@ struct Algorithm
                                            BinaryFunctor binary_functor)
   {
     vtkm::cont::TryExecute(
-      ScanInclusiveByKeyFunctor(), keys, values, values_output, binary_functor);
+      detail::ScanInclusiveByKeyFunctor(), keys, values, values_output, binary_functor);
   }
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
@@ -421,14 +477,14 @@ struct Algorithm
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& values_output)
   {
-    vtkm::cont::TryExecute(ScanInclusiveByKeyFunctor(), keys, values, values_output);
+    vtkm::cont::TryExecute(detail::ScanInclusiveByKeyFunctor(), keys, values, values_output);
   }
 
   template <typename T, class CIn, class COut>
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    ScanExclusiveFunctor<T> functor;
+    detail::ScanExclusiveFunctor<T> functor;
     vtkm::cont::TryExecute(functor, input, output);
     return functor.result;
   }
@@ -439,7 +495,7 @@ struct Algorithm
                                    BinaryFunctor binaryFunctor,
                                    const T& initialValue)
   {
-    ScanExclusiveFunctor<T> functor;
+    detail::ScanExclusiveFunctor<T> functor;
     vtkm::cont::TryExecute(functor, input, output, binaryFunctor, initialValue);
     return functor.result;
   }
@@ -452,7 +508,7 @@ struct Algorithm
                                            BinaryFunctor binaryFunctor)
   {
     vtkm::cont::TryExecute(
-      ScanExclusiveByKeyFunctor(), keys, values, output, initialValue, binaryFunctor);
+      detail::ScanExclusiveByKeyFunctor(), keys, values, output, initialValue, binaryFunctor);
   }
 
   template <typename T, typename U, class KIn, typename VIn, typename VOut>
@@ -460,39 +516,39 @@ struct Algorithm
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output)
   {
-    vtkm::cont::TryExecute(ScanExclusiveByKeyFunctor(), keys, values, output);
+    vtkm::cont::TryExecute(detail::ScanExclusiveByKeyFunctor(), keys, values, output);
   }
 
   template <class Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
-    vtkm::cont::TryExecute(ScheduleFunctor(), functor, numInstances);
+    vtkm::cont::TryExecute(detail::ScheduleFunctor(), functor, numInstances);
   }
 
   template <class Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id3 rangeMax)
   {
-    vtkm::cont::TryExecute(ScheduleFunctor(), functor, rangeMax);
+    vtkm::cont::TryExecute(detail::ScheduleFunctor(), functor, rangeMax);
   }
 
   template <typename T, class Storage>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
-    vtkm::cont::TryExecute(SortFunctor(), values);
+    vtkm::cont::TryExecute(detail::SortFunctor(), values);
   }
 
   template <typename T, class Storage, class BinaryCompare>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
                              BinaryCompare binary_compare)
   {
-    vtkm::cont::TryExecute(SortFunctor(), values, binary_compare);
+    vtkm::cont::TryExecute(detail::SortFunctor(), values, binary_compare);
   }
 
   template <typename T, typename U, class StorageT, class StorageU>
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
-    vtkm::cont::TryExecute(SortByKeyFunctor(), keys, values);
+    vtkm::cont::TryExecute(detail::SortByKeyFunctor(), keys, values);
   }
 
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
@@ -500,10 +556,10 @@ struct Algorithm
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   BinaryCompare binary_compare)
   {
-    vtkm::cont::TryExecute(SortByKeyFunctor(), keys, values, binary_compare);
+    vtkm::cont::TryExecute(detail::SortByKeyFunctor(), keys, values, binary_compare);
   }
 
-  VTKM_CONT static void Synchronize() { vtkm::cont::TryExecute(SynchronizeFunctor()); }
+  VTKM_CONT static void Synchronize() { vtkm::cont::TryExecute(detail::SynchronizeFunctor()); }
 
   template <typename T,
             typename U,
@@ -517,20 +573,20 @@ struct Algorithm
                                   vtkm::cont::ArrayHandle<V, StorageV>& output,
                                   BinaryFunctor binaryFunctor)
   {
-    vtkm::cont::TryExecute(TransformFunctor(), input1, input2, output, binaryFunctor);
+    vtkm::cont::TryExecute(detail::TransformFunctor(), input1, input2, output, binaryFunctor);
   }
 
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
-    vtkm::cont::TryExecute(UniqueFunctor(), values);
+    vtkm::cont::TryExecute(detail::UniqueFunctor(), values);
   }
 
   template <typename T, class Storage, class BinaryCompare>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
-    vtkm::cont::TryExecute(UniqueFunctor(), values, binary_compare);
+    vtkm::cont::TryExecute(detail::UniqueFunctor(), values, binary_compare);
   }
 
   template <typename T, class CIn, class CVal, class COut>
@@ -538,7 +594,7 @@ struct Algorithm
                                     const vtkm::cont::ArrayHandle<T, CVal>& values,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output)
   {
-    vtkm::cont::TryExecute(UpperBoundsFunctor(), input, values, output);
+    vtkm::cont::TryExecute(detail::UpperBoundsFunctor(), input, values, output);
   }
 
   template <typename T, class CIn, class CVal, class COut, class BinaryCompare>
@@ -547,14 +603,14 @@ struct Algorithm
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output,
                                     BinaryCompare binary_compare)
   {
-    vtkm::cont::TryExecute(UpperBoundsFunctor(), input, values, output, binary_compare);
+    vtkm::cont::TryExecute(detail::UpperBoundsFunctor(), input, values, output, binary_compare);
   }
 
   template <class CIn, class COut>
   VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<vtkm::Id, CIn>& input,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& values_output)
   {
-    vtkm::cont::TryExecute(UpperBoundsFunctor(), input, values_output);
+    vtkm::cont::TryExecute(detail::UpperBoundsFunctor(), input, values_output);
   }
 };
 }
