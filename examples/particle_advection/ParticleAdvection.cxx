@@ -79,7 +79,7 @@ void RunTest(const std::string& fname,
   using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
                                                                            FieldType,
                                                                            DeviceAdapter>;
-  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType>;
+  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType>;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
   ds.GetField(0).GetData().CopyTo(fieldArray);

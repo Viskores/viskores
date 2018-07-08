@@ -77,7 +77,7 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
     vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldPortalConstType,
                                                             FieldType,
                                                             DeviceAdapter>;
-  using Integrator = vtkm::worklet::particleadvection::EulerIntegrator<GridEvaluator, FieldType>;
+  using Integrator = vtkm::worklet::particleadvection::EulerIntegrator<GridEvaluator>;
 
   GridEvaluator eval(ds1.GetCoordinateSystem(),
                      ds1.GetCellSet(0),

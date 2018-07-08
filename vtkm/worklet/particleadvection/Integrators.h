@@ -34,11 +34,11 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename FieldEvaluateType,
-          typename FieldType,
-          template <typename, typename> class IntegratorType>
-class Integrator
+class Integrator : public vtkm::VirtualObjectBase
 {
+public:
+  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
+
 protected:
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -49,18 +49,51 @@ protected:
   }
 
   VTKM_EXEC_CONT
-  Integrator(const FieldEvaluateType evaluator, const FieldType stepLength)
-    : Evaluator(evaluator)
-    , StepLength(stepLength)
-    , MinimizeError(false)
+  Integrator(const ScalarType stepLength, bool minimizeError = false)
+    : StepLength(stepLength)
+    , MinimizeError(minimizeError)
   {
   }
 
 public:
   VTKM_EXEC
-  ParticleStatus Step(const vtkm::Vec<FieldType, 3>& inpos,
-                      FieldType& time,
-                      vtkm::Vec<FieldType, 3>& outpos) const
+  virtual ParticleStatus Step(const vtkm::Vec<ScalarType, 3>& inpos,
+                              ScalarType& time,
+                              vtkm::Vec<ScalarType, 3>& outpos) const = 0;
+
+  VTKM_EXEC
+  virtual ParticleStatus PushOutOfBoundary(vtkm::Vec<ScalarType, 3>& inpos,
+                                           vtkm::Id numSteps,
+                                           ScalarType& time,
+                                           ParticleStatus status,
+                                           vtkm::Vec<ScalarType, 3>& outpos) const = 0;
+
+protected:
+  ScalarType StepLength;
+  ScalarType Tolerance = static_cast<ScalarType>(1 / 100.0f);
+  bool MinimizeError;
+};
+
+template <typename FieldEvaluateType, template <typename> class IntegratorType>
+class IntegratorBaseImpl : public Integrator
+{
+protected:
+  IntegratorBaseImpl() = default;
+
+  VTKM_EXEC_CONT
+  IntegratorBaseImpl(const FieldEvaluateType evaluator,
+                     const ScalarType stepLength,
+                     bool minimizeError = false)
+    : Integrator(stepLength, minimizeError)
+    , Evaluator(evaluator)
+  {
+  }
+
+public:
+  VTKM_EXEC
+  ParticleStatus Step(const vtkm::Vec<ScalarType, 3>& inpos,
+                      ScalarType& time,
+                      vtkm::Vec<ScalarType, 3>& outpos) const override
   {
     // If without taking the step the particle is out of either spatial
     // or temporal boundary, then return the corresponding status.
@@ -69,7 +102,7 @@ public:
     if (!this->Evaluator.IsWithinTemporalBoundary(time))
       return ParticleStatus::EXITED_TEMPORAL_BOUNDARY;
 
-    vtkm::Vec<FieldType, 3> velocity;
+    vtkm::Vec<ScalarType, 3> velocity;
     ParticleStatus status = CheckStep(inpos, this->StepLength, time, velocity);
     if (status == ParticleStatus::STATUS_OK)
     {
@@ -85,23 +118,23 @@ public:
 
 
   VTKM_EXEC
-  ParticleStatus PushOutOfBoundary(vtkm::Vec<FieldType, 3>& inpos,
+  ParticleStatus PushOutOfBoundary(vtkm::Vec<ScalarType, 3>& inpos,
                                    vtkm::Id numSteps,
-                                   FieldType& time,
+                                   ScalarType& time,
                                    ParticleStatus status,
-                                   vtkm::Vec<FieldType, 3>& outpos) const
+                                   vtkm::Vec<ScalarType, 3>& outpos) const override
   {
-    FieldType stepLength = StepLength;
-    vtkm::Vec<FieldType, 3> velocity, currentVelocity;
+    ScalarType stepLength = StepLength;
+    vtkm::Vec<ScalarType, 3> velocity, currentVelocity;
     CheckStep(inpos, 0.0f, time, currentVelocity);
     numSteps = numSteps == 0 ? 1 : numSteps;
     if (MinimizeError)
     {
       //Take short steps and minimize error
-      FieldType threshold = StepLength / static_cast<FieldType>(numSteps);
+      ScalarType threshold = StepLength / static_cast<ScalarType>(numSteps);
       do
       {
-        stepLength /= static_cast<FieldType>(2.0);
+        stepLength /= static_cast<ScalarType>(2.0);
         status = CheckStep(inpos, stepLength, time, velocity);
         if (status == ParticleStatus::STATUS_OK)
         {
@@ -122,11 +155,11 @@ public:
     if (status == AT_SPATIAL_BOUNDARY)
     {
       // Get the spatial boundary w.r.t the current
-      vtkm::Vec<FieldType, 3> spatialBoundary;
+      vtkm::Vec<ScalarType, 3> spatialBoundary;
       Evaluator.GetSpatialBoundary(currentVelocity, spatialBoundary);
-      FieldType hx = (vtkm::Abs(spatialBoundary[0] - inpos[0])) / vtkm::Abs(currentVelocity[0]);
-      FieldType hy = (vtkm::Abs(spatialBoundary[1] - inpos[1])) / vtkm::Abs(currentVelocity[1]);
-      FieldType hz = (vtkm::Abs(spatialBoundary[2] - inpos[2])) / vtkm::Abs(currentVelocity[2]);
+      ScalarType hx = (vtkm::Abs(spatialBoundary[0] - inpos[0])) / vtkm::Abs(currentVelocity[0]);
+      ScalarType hy = (vtkm::Abs(spatialBoundary[1] - inpos[1])) / vtkm::Abs(currentVelocity[1]);
+      ScalarType hz = (vtkm::Abs(spatialBoundary[2] - inpos[2])) / vtkm::Abs(currentVelocity[2]);
       stepLength = vtkm::Min(hx, vtkm::Min(hy, hz)) + Tolerance * stepLength;
       // Calculate the final position of the particle which is supposed to be
       // out of spatial boundary.
@@ -136,9 +169,9 @@ public:
     }
     else if (status == AT_TEMPORAL_BOUNDARY)
     {
-      FieldType temporalBoundary;
+      ScalarType temporalBoundary;
       Evaluator.GetTemporalBoundary(temporalBoundary);
-      FieldType diff = temporalBoundary - time;
+      ScalarType diff = temporalBoundary - time;
       stepLength = diff + Tolerance * diff;
       // Calculate the final position of the particle which is supposed to be
       // out of temporal boundary.
@@ -151,56 +184,50 @@ public:
   }
 
   VTKM_EXEC
-  ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
-                           FieldType stepLength,
-                           FieldType time,
-                           vtkm::Vec<FieldType, 3>& velocity) const
+  ParticleStatus CheckStep(const vtkm::Vec<ScalarType, 3>& inpos,
+                           ScalarType stepLength,
+                           ScalarType time,
+                           vtkm::Vec<ScalarType, 3>& velocity) const
   {
-    using ConcreteType = IntegratorType<FieldEvaluateType, FieldType>;
+    using ConcreteType = IntegratorType<FieldEvaluateType>;
     return static_cast<const ConcreteType*>(this)->CheckStep(inpos, stepLength, time, velocity);
   }
 
-  VTKM_EXEC_CONT
-  FieldType SetMinimizeError(bool minimizeError) const { this->MinimizeError = minimizeError; }
-
 protected:
   FieldEvaluateType Evaluator;
-  FieldType StepLength;
-  FieldType Tolerance = static_cast<FieldType>(1 / 100.0f);
-  bool MinimizeError;
 };
 
-template <typename FieldEvaluateType, typename FieldType>
-class RK4Integrator : public Integrator<FieldEvaluateType, FieldType, RK4Integrator>
+template <typename FieldEvaluateType>
+class RK4Integrator : public IntegratorBaseImpl<FieldEvaluateType, RK4Integrator>
 {
 public:
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  RK4Integrator()
-    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>()
-  {
-  }
+  using ScalarType = Integrator::ScalarType;
+
+  RK4Integrator() = default;
 
   VTKM_EXEC_CONT
-  RK4Integrator(const FieldEvaluateType& evaluator, const FieldType stepLength)
-    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>(
+  RK4Integrator(const FieldEvaluateType& evaluator,
+                const ScalarType stepLength,
+                bool minimizeError = false)
+    : IntegratorBaseImpl<FieldEvaluateType, vtkm::worklet::particleadvection::RK4Integrator>(
         evaluator,
-        stepLength)
+        stepLength,
+        minimizeError)
   {
   }
 
   VTKM_EXEC
-  ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
-                           FieldType stepLength,
-                           FieldType time,
-                           vtkm::Vec<FieldType, 3>& velocity) const
+  ParticleStatus CheckStep(const vtkm::Vec<ScalarType, 3>& inpos,
+                           ScalarType stepLength,
+                           ScalarType time,
+                           vtkm::Vec<ScalarType, 3>& velocity) const
   {
-    FieldType var1 = (stepLength / static_cast<FieldType>(2));
-    FieldType var2 = time + var1;
-    FieldType var3 = time + stepLength;
+    ScalarType var1 = (stepLength / static_cast<ScalarType>(2));
+    ScalarType var2 = time + var1;
+    ScalarType var3 = time + stepLength;
 
-    vtkm::Vec<FieldType, 3> k1 = vtkm::TypeTraits<vtkm::Vec<FieldType, 3>>::ZeroInitialization();
-    vtkm::Vec<FieldType, 3> k2 = k1, k3 = k1, k4 = k1;
+    vtkm::Vec<ScalarType, 3> k1 = vtkm::TypeTraits<vtkm::Vec<ScalarType, 3>>::ZeroInitialization();
+    vtkm::Vec<ScalarType, 3> k2 = k1, k3 = k1, k4 = k1;
 
     bool status1 = this->Evaluator.Evaluate(inpos, time, k1);
     bool status2 = this->Evaluator.Evaluate(inpos + var1 * k1, var2, k2);
@@ -219,29 +246,30 @@ public:
   }
 };
 
-template <typename FieldEvaluateType, typename FieldType>
-class EulerIntegrator : public Integrator<FieldEvaluateType, FieldType, EulerIntegrator>
+template <typename FieldEvaluateType>
+class EulerIntegrator : public IntegratorBaseImpl<FieldEvaluateType, EulerIntegrator>
 {
 public:
-  VTKM_EXEC_CONT
-  EulerIntegrator()
-    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::EulerIntegrator>()
-  {
-  }
+  using ScalarType = Integrator::ScalarType;
+
+  EulerIntegrator() = default;
 
   VTKM_EXEC_CONT
-  EulerIntegrator(const FieldEvaluateType& evaluator, const FieldType stepLength)
-    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::EulerIntegrator>(
+  EulerIntegrator(const FieldEvaluateType& evaluator,
+                  const ScalarType stepLength,
+                  bool minimizeError = false)
+    : IntegratorBaseImpl<FieldEvaluateType, vtkm::worklet::particleadvection::EulerIntegrator>(
         evaluator,
-        stepLength)
+        stepLength,
+        minimizeError)
   {
   }
 
   VTKM_EXEC
-  ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
-                           FieldType vtkmNotUsed(stepLength),
-                           FieldType time,
-                           vtkm::Vec<FieldType, 3>& velocity) const
+  ParticleStatus CheckStep(const vtkm::Vec<ScalarType, 3>& inpos,
+                           ScalarType vtkmNotUsed(stepLength),
+                           ScalarType time,
+                           vtkm::Vec<ScalarType, 3>& velocity) const
   {
     bool result = this->Evaluator.Evaluate(inpos, time, velocity);
     if (result)

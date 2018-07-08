@@ -29,6 +29,8 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
+#include <vtkm/worklet/particleadvection/Integrators.h>
+
 namespace vtkm
 {
 namespace worklet
@@ -37,19 +39,20 @@ namespace particleadvection
 {
 
 // Constant vector
-template <typename FieldType>
 class ConstantField
 {
 public:
+  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
+
   VTKM_CONT
-  ConstantField(const vtkm::Bounds& bb, const vtkm::Vec<FieldType, 3>& v)
+  ConstantField(const vtkm::Bounds& bb, const vtkm::Vec<ScalarType, 3>& v)
     : bounds{ bb }
     , vector{ v }
   {
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinSpatialBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  bool IsWithinSpatialBoundary(const vtkm::Vec<ScalarType, 3>& position) const
   {
     if (!bounds.Contains(position))
       return false;
@@ -57,35 +60,35 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinTemporalBoundary(const FieldType vtkmNotUsed(time)) const { return true; }
+  bool IsWithinTemporalBoundary(const ScalarType vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC_CONT
-  void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
+  void GetSpatialBoundary(vtkm::Vec<ScalarType, 3>& dir, vtkm::Vec<ScalarType, 3>& boundary) const
   {
     // Based on the direction of the velocity we need to be able to tell where
     // the particle will exit the domain from to actually push it out of domain.
-    boundary[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
-    boundary[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
-    boundary[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+    boundary[0] = static_cast<ScalarType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    boundary[1] = static_cast<ScalarType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    boundary[2] = static_cast<ScalarType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
   VTKM_EXEC_CONT
-  void GetTemporalBoundary(FieldType& boundary) const
+  void GetTemporalBoundary(ScalarType& boundary) const
   {
     // Return the time of the newest time slice
     boundary = 0;
   }
 
   VTKM_EXEC
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                FieldType vtkmNotUsed(time),
-                vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<ScalarType, 3>& pos,
+                ScalarType vtkmNotUsed(time),
+                vtkm::Vec<ScalarType, 3>& out) const
   {
     return Evaluate(pos, out);
   }
 
   VTKM_EXEC
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<ScalarType, 3>& pos, vtkm::Vec<ScalarType, 3>& out) const
   {
     if (!bounds.Contains(pos))
       return false;
@@ -98,14 +101,15 @@ public:
 
 private:
   vtkm::Bounds bounds;
-  vtkm::Vec<FieldType, 3> vector;
+  vtkm::Vec<ScalarType, 3> vector;
 };
 
 // Circular Orbit
-template <typename FieldType>
 class AnalyticalOrbitEvaluate
 {
 public:
+  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
+
   VTKM_CONT
   AnalyticalOrbitEvaluate(const vtkm::Bounds& bb)
     : bounds{ bb }
@@ -113,7 +117,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinSpatialBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  bool IsWithinSpatialBoundary(const vtkm::Vec<ScalarType, 3>& position) const
   {
     if (!bounds.Contains(position))
       return false;
@@ -121,41 +125,41 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinTemporalBoundary(const FieldType vtkmNotUsed(time)) const { return true; }
+  bool IsWithinTemporalBoundary(const ScalarType vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC_CONT
-  void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
+  void GetSpatialBoundary(vtkm::Vec<ScalarType, 3>& dir, vtkm::Vec<ScalarType, 3>& boundary) const
   {
     // Based on the direction of the velocity we need to be able to tell where
     // the particle will exit the domain from to actually push it out of domain.
-    boundary[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
-    boundary[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
-    boundary[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+    boundary[0] = static_cast<ScalarType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    boundary[1] = static_cast<ScalarType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    boundary[2] = static_cast<ScalarType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
   VTKM_EXEC_CONT
-  void GetTemporalBoundary(FieldType& boundary) const
+  void GetTemporalBoundary(ScalarType& boundary) const
   {
     // Return the time of the newest time slice
     boundary = 0;
   }
 
   VTKM_EXEC
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                FieldType vtkmNotUsed(time),
-                vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<ScalarType, 3>& pos,
+                ScalarType vtkmNotUsed(time),
+                vtkm::Vec<ScalarType, 3>& out) const
   {
     return Evaluate(pos, out);
   }
 
 
-  VTKM_EXEC bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
+  VTKM_EXEC bool Evaluate(const vtkm::Vec<ScalarType, 3>& pos, vtkm::Vec<ScalarType, 3>& out) const
   {
     if (!bounds.Contains(pos))
       return false;
 
     //statically return a value which is orthogonal to the input pos in the xy plane.
-    FieldType oneDivLen = 1.0f / Magnitude(pos);
+    ScalarType oneDivLen = 1.0f / Magnitude(pos);
     out[0] = -1.0f * pos[1] * oneDivLen;
     out[1] = pos[0] * oneDivLen;
     out[2] = pos[2] * oneDivLen;
@@ -173,6 +177,7 @@ template <typename PortalType,
           typename StorageTag = VTKM_DEFAULT_STORAGE_TAG>
 class UniformGridEvaluate
 {
+  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, StorageTag>;
 
 public:
@@ -210,11 +215,11 @@ public:
     //
     // In our case output_min is 0
     scale[0] =
-      static_cast<FieldType>(dims[0] - 1) / static_cast<FieldType>(bounds.X.Max - bounds.X.Min);
+      static_cast<ScalarType>(dims[0] - 1) / static_cast<ScalarType>(bounds.X.Max - bounds.X.Min);
     scale[1] =
-      static_cast<FieldType>(dims[1] - 1) / static_cast<FieldType>(bounds.Y.Max - bounds.Y.Min);
+      static_cast<ScalarType>(dims[1] - 1) / static_cast<ScalarType>(bounds.Y.Max - bounds.Y.Min);
     scale[2] =
-      static_cast<FieldType>(dims[2] - 1) / static_cast<FieldType>(bounds.Z.Max - bounds.Z.Min);
+      static_cast<ScalarType>(dims[2] - 1) / static_cast<ScalarType>(bounds.Z.Max - bounds.Z.Min);
 
     planeSize = dims[0] * dims[1];
     rowSize = dims[0];
@@ -244,18 +249,18 @@ public:
     //
     // In our case output_min is 0
     scale[0] =
-      static_cast<FieldType>(dims[0] - 1) / static_cast<FieldType>(bounds.X.Max - bounds.X.Min);
+      static_cast<ScalarType>(dims[0] - 1) / static_cast<ScalarType>(bounds.X.Max - bounds.X.Min);
     scale[1] =
-      static_cast<FieldType>(dims[1] - 1) / static_cast<FieldType>(bounds.Y.Max - bounds.Y.Min);
+      static_cast<ScalarType>(dims[1] - 1) / static_cast<ScalarType>(bounds.Y.Max - bounds.Y.Min);
     scale[2] =
-      static_cast<FieldType>(dims[2] - 1) / static_cast<FieldType>(bounds.Z.Max - bounds.Z.Min);
+      static_cast<ScalarType>(dims[2] - 1) / static_cast<ScalarType>(bounds.Z.Max - bounds.Z.Min);
 
     planeSize = dims[0] * dims[1];
     rowSize = dims[0];
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinSpatialBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  bool IsWithinSpatialBoundary(const vtkm::Vec<ScalarType, 3>& position) const
   {
     if (!bounds.Contains(position))
       return false;
@@ -263,35 +268,35 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinTemporalBoundary(const FieldType vtkmNotUsed(time)) const { return true; }
+  bool IsWithinTemporalBoundary(const ScalarType vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC_CONT
-  void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
+  void GetSpatialBoundary(vtkm::Vec<ScalarType, 3>& dir, vtkm::Vec<ScalarType, 3>& boundary) const
   {
     // Based on the direction of the velocity we need to be able to tell where
     // the particle will exit the domain from to actually push it out of domain.
-    boundary[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
-    boundary[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
-    boundary[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+    boundary[0] = static_cast<ScalarType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    boundary[1] = static_cast<ScalarType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    boundary[2] = static_cast<ScalarType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
   VTKM_EXEC_CONT
-  void GetTemporalBoundary(FieldType& boundary) const
+  void GetTemporalBoundary(ScalarType& boundary) const
   {
     // Return the time of the newest time slice
     boundary = 0;
   }
 
   VTKM_EXEC
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                FieldType vtkmNotUsed(time),
-                vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<ScalarType, 3>& pos,
+                ScalarType vtkmNotUsed(time),
+                vtkm::Vec<ScalarType, 3>& out) const
   {
     return Evaluate(pos, out);
   }
 
   VTKM_EXEC
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<ScalarType, 3>& pos, vtkm::Vec<ScalarType, 3>& out) const
   {
     if (!bounds.Contains(pos))
       return false;
@@ -302,10 +307,10 @@ public:
     // The normalized point is the result of mapping the input point of the volume
     // to a unit spacing volume with origin as (0,0,0)
     // The method used is described in the constructor.
-    vtkm::Vec<FieldType, 3> normalizedPos;
-    normalizedPos[0] = static_cast<FieldType>((pos[0] - bounds.X.Min) * scale[0]);
-    normalizedPos[1] = static_cast<FieldType>((pos[1] - bounds.Y.Min) * scale[1]);
-    normalizedPos[2] = static_cast<FieldType>((pos[2] - bounds.Z.Min) * scale[2]);
+    vtkm::Vec<ScalarType, 3> normalizedPos;
+    normalizedPos[0] = static_cast<ScalarType>((pos[0] - bounds.X.Min) * scale[0]);
+    normalizedPos[1] = static_cast<ScalarType>((pos[1] - bounds.Y.Min) * scale[1]);
+    normalizedPos[2] = static_cast<ScalarType>((pos[2] - bounds.Z.Min) * scale[2]);
 
     idx000[0] = static_cast<vtkm::IdComponent>(floor(normalizedPos[0]));
     idx000[1] = static_cast<vtkm::IdComponent>(floor(normalizedPos[1]));
@@ -327,7 +332,7 @@ public:
     idx111[0] = (idx111[0] + 1) <= dims[0] - 1 ? idx111[0] + 1 : dims[0] - 1;
 
     // Get the vecdata at the eight corners
-    vtkm::Vec<FieldType, 3> v000, v001, v010, v011, v100, v101, v110, v111;
+    vtkm::Vec<ScalarType, 3> v000, v001, v010, v011, v100, v101, v110, v111;
     v000 = vectors.Get(idx000[2] * planeSize + idx000[1] * rowSize + idx000[0]);
     v001 = vectors.Get(idx001[2] * planeSize + idx001[1] * rowSize + idx001[0]);
     v010 = vectors.Get(idx010[2] * planeSize + idx010[1] * rowSize + idx010[0]);
@@ -338,9 +343,9 @@ public:
     v111 = vectors.Get(idx111[2] * planeSize + idx111[1] * rowSize + idx111[0]);
 
     // Interpolation in X
-    vtkm::Vec<FieldType, 3> v00, v01, v10, v11;
+    vtkm::Vec<ScalarType, 3> v00, v01, v10, v11;
 
-    FieldType a = normalizedPos[0] - static_cast<FieldType>(floor(normalizedPos[0]));
+    ScalarType a = normalizedPos[0] - static_cast<ScalarType>(floor(normalizedPos[0]));
     v00[0] = (1.0f - a) * v000[0] + a * v001[0];
     v00[1] = (1.0f - a) * v000[1] + a * v001[1];
     v00[2] = (1.0f - a) * v000[2] + a * v001[2];
@@ -358,9 +363,9 @@ public:
     v11[2] = (1.0f - a) * v110[2] + a * v111[2];
 
     // Interpolation in Y
-    vtkm::Vec<FieldType, 3> v0, v1;
+    vtkm::Vec<ScalarType, 3> v0, v1;
 
-    a = normalizedPos[1] - static_cast<FieldType>(floor(normalizedPos[1]));
+    a = normalizedPos[1] - static_cast<ScalarType>(floor(normalizedPos[1]));
     v0[0] = (1.0f - a) * v00[0] + a * v01[0];
     v0[1] = (1.0f - a) * v00[1] + a * v01[1];
     v0[2] = (1.0f - a) * v00[2] + a * v01[2];
@@ -369,7 +374,7 @@ public:
     v1[1] = (1.0f - a) * v10[1] + a * v11[1];
     v1[2] = (1.0f - a) * v10[2] + a * v11[2];
 
-    a = normalizedPos[2] - static_cast<FieldType>(floor(normalizedPos[2]));
+    a = normalizedPos[2] - static_cast<ScalarType>(floor(normalizedPos[2]));
     out[0] = (1.0f - a) * v0[0] + a * v1[0];
     out[1] = (1.0f - a) * v0[1] + a * v1[1];
     out[2] = (1.0f - a) * v0[2] + a * v1[2];
@@ -382,7 +387,7 @@ private:
   PortalType vectors;
   vtkm::Id planeSize;
   vtkm::Id rowSize;
-  vtkm::Vec<FieldType, 3> scale;
+  vtkm::Vec<ScalarType, 3> scale;
 };
 
 template <typename PortalType,
@@ -391,6 +396,7 @@ template <typename PortalType,
           typename StorageTag = VTKM_DEFAULT_STORAGE_TAG>
 class RectilinearGridEvaluate
 {
+  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, StorageTag>;
 
 public:
@@ -451,7 +457,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinSpatialBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  bool IsWithinSpatialBoundary(const vtkm::Vec<ScalarType, 3>& position) const
   {
     if (!bounds.Contains(position))
       return false;
@@ -459,35 +465,35 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinTemporalBoundary(const FieldType vtkmNotUsed(time)) const { return true; }
+  bool IsWithinTemporalBoundary(const ScalarType vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC_CONT
-  void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
+  void GetSpatialBoundary(vtkm::Vec<ScalarType, 3>& dir, vtkm::Vec<ScalarType, 3>& boundary) const
   {
     // Based on the direction of the velocity we need to be able to tell where
     // the particle will exit the domain from to actually push it out of domain.
-    boundary[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
-    boundary[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
-    boundary[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+    boundary[0] = static_cast<ScalarType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    boundary[1] = static_cast<ScalarType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    boundary[2] = static_cast<ScalarType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
   VTKM_EXEC_CONT
-  void GetTemporalBoundary(FieldType& boundary) const
+  void GetTemporalBoundary(ScalarType& boundary) const
   {
     // Return the time of the newest time slice
     boundary = 0;
   }
 
   VTKM_EXEC
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                FieldType vtkmNotUsed(time),
-                vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<ScalarType, 3>& pos,
+                ScalarType vtkmNotUsed(time),
+                vtkm::Vec<ScalarType, 3>& out) const
   {
     return Evaluate(pos, out);
   }
 
   VTKM_EXEC
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<ScalarType, 3>& pos, vtkm::Vec<ScalarType, 3>& out) const
   {
     if (!bounds.Contains(pos))
       return false;
@@ -543,7 +549,7 @@ public:
     idx111[0] = (idx111[0] + 1) <= dims[0] - 1 ? idx111[0] + 1 : dims[0] - 1;
 
     // Get the vecdata at the eight corners
-    vtkm::Vec<FieldType, 3> v000, v001, v010, v011, v100, v101, v110, v111;
+    vtkm::Vec<ScalarType, 3> v000, v001, v010, v011, v100, v101, v110, v111;
     v000 = vectors.Get(idx000[2] * planeSize + idx000[1] * rowSize + idx000[0]);
     v001 = vectors.Get(idx001[2] * planeSize + idx001[1] * rowSize + idx001[0]);
     v010 = vectors.Get(idx010[2] * planeSize + idx010[1] * rowSize + idx010[0]);
@@ -554,8 +560,8 @@ public:
     v111 = vectors.Get(idx111[2] * planeSize + idx111[1] * rowSize + idx111[0]);
 
     // Interpolation in X
-    vtkm::Vec<FieldType, 3> v00, v01, v10, v11;
-    FieldType a = pos[0] - static_cast<FieldType>(floor(pos[0]));
+    vtkm::Vec<ScalarType, 3> v00, v01, v10, v11;
+    ScalarType a = pos[0] - static_cast<ScalarType>(floor(pos[0]));
 
     v00[0] = (1.0f - a) * v000[0] + a * v001[0];
     v00[1] = (1.0f - a) * v000[1] + a * v001[1];
@@ -574,8 +580,8 @@ public:
     v11[2] = (1.0f - a) * v110[2] + a * v111[2];
 
     // Interpolation in Y
-    vtkm::Vec<FieldType, 3> v0, v1;
-    a = pos[1] - static_cast<FieldType>(floor(pos[1]));
+    vtkm::Vec<ScalarType, 3> v0, v1;
+    a = pos[1] - static_cast<ScalarType>(floor(pos[1]));
     v0[0] = (1.0f - a) * v00[0] + a * v01[0];
     v0[1] = (1.0f - a) * v00[1] + a * v01[1];
     v0[2] = (1.0f - a) * v00[2] + a * v01[2];
@@ -585,7 +591,7 @@ public:
     v1[2] = (1.0f - a) * v10[2] + a * v11[2];
 
     // Interpolation in Z
-    a = pos[2] - static_cast<FieldType>(floor(pos[2]));
+    a = pos[2] - static_cast<ScalarType>(floor(pos[2]));
     out[0] = (1.0f - a) * v0[0] + a * v1[0];
     out[1] = (1.0f - a) * v0[1] + a * v1[1];
     out[2] = (1.0f - a) * v0[2] + a * v1[2];
