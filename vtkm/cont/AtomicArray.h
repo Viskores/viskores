@@ -61,32 +61,21 @@ public:
   template <typename Device>
   VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device) const
   {
-    vtkm::exec::AtomicArrayExecutionObject<T, Device> execObject;
-    if (isHandle)
-    {
-      execObject = vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle);
-    }
-    else
-    {
-      execObject = vtkm::exec::AtomicArrayExecutionObject<T, Device>();
-    }
-    return execObject;
+    return vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle);
   }
   VTKM_CONT
   AtomicArray()
-    : isHandle(false)
+    : Handle(vtkm::cont::ArrayHandle<T>())
   {
   }
 
   template <typename StorageType>
   VTKM_CONT AtomicArray(vtkm::cont::ArrayHandle<T, StorageType> handle)
-    : isHandle(true)
-    , Handle(handle)
+    : Handle(handle)
   {
   }
 
 private:
-  bool isHandle;
   vtkm::cont::ArrayHandle<T> Handle;
 };
 }
