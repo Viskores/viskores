@@ -905,6 +905,10 @@ template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<
 template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
   vtkm::cont::DeviceAdapterTagTBB);
 #endif
+#ifdef VTKM_ENABLE_OPENMP
+template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagOpenMP>(
+  vtkm::cont::DeviceAdapterTagOpenMP);
+#endif
 #ifdef VTKM_ENABLE_CUDA
 template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(
   vtkm::cont::DeviceAdapterTagCuda);
