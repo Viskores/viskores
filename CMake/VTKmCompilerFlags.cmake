@@ -87,7 +87,6 @@ target_include_directories(vtkm_compiler_flags INTERFACE
 # vtkm_developer_flags is used ONLY BY libraries that are built as part of this
 # repository
 add_library(vtkm_developer_flags INTERFACE)
-target_link_libraries(vtkm_developer_flags INTERFACE vtkm_compiler_flags)
 
 # Additional warnings just for Clang 3.5+, and AppleClang 7+
 # about failures to vectorize.
