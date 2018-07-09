@@ -72,6 +72,7 @@ set(headers
   ThresholdPoints.h
   Triangulate.h
   VertexClustering.h
+  WarpVector.h
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h

@@ -77,6 +77,7 @@ set(unit_tests
   UnitTestWorkletMapTopologyUniform.cxx
   UnitTestWorkletReduceByKey.cxx
   UnitTestVertexClustering.cxx
+  UnitTestWarpVector.cxx
   UnitTestWaveletCompressor.cxx
  )
 

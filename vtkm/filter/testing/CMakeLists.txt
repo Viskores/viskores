@@ -57,6 +57,7 @@ set(unit_tests
   UnitTestTriangulateFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
+  UnitTestWarpVectorFilter.cxx
  )
 
 vtkm_unit_tests(SOURCES ${unit_tests})
