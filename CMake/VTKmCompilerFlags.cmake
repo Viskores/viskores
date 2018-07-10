@@ -121,7 +121,7 @@ elseif(VTKM_COMPILER_IS_ICC)
   # Likewise to suppress failures about being unable to apply vectorization
   # to loops, the #pragma warning(disable seems to not work so we add a
   # a compile define.
-  target_compile_definitions(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd1478 -wd13379>)
+  target_compile_options(vtkm_developer_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd1478 -wd13379>)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   set(cxx_flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
