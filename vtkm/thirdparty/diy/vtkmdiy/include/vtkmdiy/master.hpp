@@ -938,8 +938,15 @@ rcomm_exchange(ToSendList& to_send, int out_queues_limit)
         {
             if (to_send.empty() && inflight_sends_.empty())
             {
+            #ifndef DIY_NO_MPI
                 ibarr_req = comm_.ibarrier();
                 ibarr_act = true;
+            #else
+              // ibarrier() in communicator.hpp does not support MPI right now. For now it's
+              // trying to throw an std::runtime_error in a function with return value which
+              // would cause nvcc refuses to build. So here we just simply set it to be done.
+              done = true;
+            #endif
             }
         }
     }                                                 // while !done
