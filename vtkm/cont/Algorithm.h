@@ -34,43 +34,28 @@ namespace cont
 
 namespace detail
 {
-template <typename T, typename Device, typename IsExecObject>
-struct PrepareArgForExecDetail;
-
-template <typename T, typename Device>
-struct PrepareArgForExecDetail<T, Device, std::false_type>
+template <typename Device, typename T>
+inline auto DoPrepareArgForExec(T&& object, std::true_type)
+  -> decltype(std::declval<T>().PrepareForExecution(Device()))
 {
-  using ExecType = T;
-
-  static VTKM_CONT ExecType DoPrepare(T&& object) { return std::forward<T>(object); }
-};
-
-template <typename T, typename Device>
-struct PrepareArgForExecDetail<T, Device, std::true_type>
-{
-  using ExecType = decltype(std::declval<T>().PrepareForExecution(Device()));
-
-  static VTKM_CONT ExecType DoPrepare(T&& object) { return object.PrepareForExecution(Device()); }
-};
-
-template <typename T, typename Device>
-struct PrepareArgForExecHelper
-{
-  using IsExecObject =
-    typename std::is_base_of<vtkm::cont::ExecutionObjectBase, typename std::decay<T>::type>::type;
-
-  using ExecType = typename PrepareArgForExecDetail<T, Device, IsExecObject>::ExecType;
-
-  static VTKM_CONT ExecType DoPrepare(T&& object)
-  {
-    return PrepareArgForExecDetail<T, Device, IsExecObject>::DoPrepare(object);
-  }
-};
+  return object.PrepareForExecution(Device{});
+}
 
 template <typename Device, typename T>
-VTKM_CONT typename PrepareArgForExecHelper<T, Device>::ExecType PrepareArgForExec(T&& object)
+inline T&& DoPrepareArgForExec(T&& object, std::false_type)
 {
-  return PrepareArgForExecHelper<T, Device>::DoPrepare(object);
+  return std::forward<T>(object);
+}
+
+template <typename Device, typename T>
+auto PrepareArgForExec(T&& object) -> decltype(DoPrepareArgForExec<Device>(
+  std::forward<T>(object),
+  typename std::is_base_of<vtkm::cont::ExecutionObjectBase, typename std::decay<T>::type>::type{}))
+{
+  return DoPrepareArgForExec<Device>(
+    std::forward<T>(object),
+    typename std::is_base_of<vtkm::cont::ExecutionObjectBase,
+                             typename std::decay<T>::type>::type{});
 }
 
 struct CopyFunctor
