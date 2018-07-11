@@ -65,7 +65,7 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using
     // the array.
-    ExecType obj = ExecType(array);
+    ExecType obj(array);
     return obj.PrepareForExecution(Device());
   }
 };
