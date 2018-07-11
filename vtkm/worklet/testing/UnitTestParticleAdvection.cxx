@@ -170,27 +170,25 @@ void CreateConstantVectorField(vtkm::Id num,
   DeviceAlgorithm::Copy(vecConst, vecField);
 }
 
-template <typename ScalarType, typename Evaluator>
+template <typename ScalarType>
 class TestEvaluatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  TestEvaluatorWorklet(Evaluator e)
-    : evaluator(e){};
+  using ControlSignature = void(FieldIn<> inputPoint,
+                                ExecObject evaluator,
+                                FieldOut<> validity,
+                                FieldOut<> outputPoint);
 
-  using ControlSignature = void(FieldIn<> inputPoint, FieldOut<> validity, FieldOut<> outputPoint);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  using ExecutionSignature = void(_1, _2, _3);
-
-  VTKM_EXEC
-  void operator()(vtkm::Vec<ScalarType, 3>& pointIn,
-                  bool& validity,
-                  vtkm::Vec<ScalarType, 3>& pointOut) const
+  template <typename EvaluatorType>
+  VTKM_EXEC void operator()(vtkm::Vec<ScalarType, 3>& pointIn,
+                            const EvaluatorType& evaluator,
+                            bool& validity,
+                            vtkm::Vec<ScalarType, 3>& pointOut) const
   {
     validity = evaluator.Evaluate(pointIn, pointOut);
   }
-
-private:
-  Evaluator evaluator;
 };
 
 template <typename EvalType, typename ScalarType>
@@ -200,9 +198,9 @@ void ValidateEvaluator(const EvalType& eval,
                        const std::string& msg)
 {
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using EvalTester = TestEvaluatorWorklet<ScalarType, EvalType>;
+  using EvalTester = TestEvaluatorWorklet<ScalarType>;
   using EvalTesterDispatcher = vtkm::worklet::DispatcherMapField<EvalTester>;
-  EvalTester evalTester(eval);
+  EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
@@ -212,7 +210,7 @@ void ValidateEvaluator(const EvalType& eval,
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> evalResults;
   evalStatus.PrepareForOutput(numPoints, DeviceAdapter());
   evalResults.PrepareForOutput(numPoints, DeviceAdapter());
-  evalTesterDispatcher.Invoke(pointsHandle, evalStatus, evalResults);
+  evalTesterDispatcher.Invoke(pointsHandle, eval, evalStatus, evalResults);
   auto statusPortal = evalStatus.GetPortalConstControl();
   auto resultsPortal = evalResults.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
@@ -227,28 +225,26 @@ void ValidateEvaluator(const EvalType& eval,
   evalResults.ReleaseResources();
 }
 
-template <typename ScalarType, typename Integrator>
+template <typename ScalarType>
 class TestIntegratorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  TestIntegratorWorklet(Integrator i)
-    : integrator(i){};
+  using ControlSignature = void(FieldIn<> inputPoint,
+                                ExecObject integrator,
+                                FieldOut<> validity,
+                                FieldOut<> outputPoint);
 
-  using ControlSignature = void(FieldIn<> inputPoint, FieldOut<> validity, FieldOut<> outputPoint);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  using ExecutionSignature = void(_1, _2, _3);
-
-  VTKM_EXEC
-  void operator()(vtkm::Vec<ScalarType, 3>& pointIn,
-                  vtkm::worklet::particleadvection::ParticleStatus& status,
-                  vtkm::Vec<ScalarType, 3>& pointOut) const
+  template <typename IntegratorType>
+  VTKM_EXEC void operator()(vtkm::Vec<ScalarType, 3>& pointIn,
+                            const IntegratorType* integrator,
+                            vtkm::worklet::particleadvection::ParticleStatus& status,
+                            vtkm::Vec<ScalarType, 3>& pointOut) const
   {
     ScalarType time = 0;
-    status = integrator.Step(pointIn, time, pointOut);
+    status = integrator->Step(pointIn, time, pointOut);
   }
-
-private:
-  Integrator integrator;
 };
 
 
@@ -259,11 +255,10 @@ void ValidateIntegrator(const IntegratorType& integrator,
                         const std::string& msg)
 {
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using IntegratorTester = TestIntegratorWorklet<ScalarType, IntegratorType>;
+  using IntegratorTester = TestIntegratorWorklet<ScalarType>;
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
   using Status = vtkm::worklet::particleadvection::ParticleStatus;
-  IntegratorTester integratorTester(integrator);
-  IntegratorTesterDispatcher integratorTesterDispatcher(integratorTester);
+  IntegratorTesterDispatcher integratorTesterDispatcher;
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
@@ -272,7 +267,7 @@ void ValidateIntegrator(const IntegratorType& integrator,
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> stepResults;
   stepStatus.PrepareForOutput(numPoints, DeviceAdapter());
   stepResults.PrepareForOutput(numPoints, DeviceAdapter());
-  integratorTesterDispatcher.Invoke(pointsHandle, stepStatus, stepResults);
+  integratorTesterDispatcher.Invoke(pointsHandle, integrator, stepStatus, stepResults);
   auto statusPortal = stepStatus.GetPortalConstControl();
   auto resultsPortal = stepResults.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
@@ -292,28 +287,20 @@ void ValidateIntegrator(const IntegratorType& integrator,
 
 void TestEvaluators()
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
   //Constant field evaluator and RK4 integrator.
   using CEvalType = vtkm::worklet::particleadvection::ConstantField;
   using RK4CType = vtkm::worklet::particleadvection::RK4Integrator<CEvalType>;
 
   using ScalarType = vtkm::worklet::particleadvection::ScalarType;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>;
-  using FieldPortalConstType = FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   //Uniform grid evaluator and RK4 integrator.
-  using UniformEvalType =
-    vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
-                                                          ScalarType,
-                                                          DeviceAdapter>;
+  using UniformEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
   using RK4UniformType = vtkm::worklet::particleadvection::RK4Integrator<UniformEvalType>;
 
   //Rectilinear grid evaluator and RK4 integrator.
   using RectilinearEvalType =
-    vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldPortalConstType,
-                                                              ScalarType,
-                                                              DeviceAdapter>;
+    vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldHandle>;
   using RK4RectilinearType = vtkm::worklet::particleadvection::RK4Integrator<RectilinearEvalType>;
 
   std::vector<vtkm::Vec<ScalarType, 3>> vecs;
@@ -413,7 +400,6 @@ void TestParticleWorklets()
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using ScalarType = vtkm::Float32;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>;
-  using FieldPortalConstType = FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   ScalarType stepSize = 0.01f;
 
@@ -433,9 +419,7 @@ void TestParticleWorklets()
   }
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims);
 
-  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
-                                                                           ScalarType,
-                                                                           DeviceAdapter>;
+  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
   using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType>;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> fieldArray;

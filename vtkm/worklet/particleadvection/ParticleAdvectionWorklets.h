@@ -39,35 +39,36 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename IntegratorType>
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> idx, ExecObject ic);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> idx,
+                                ExecObject integrator,
+                                ExecObject integralCurve);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
-  template <typename IntegralCurveType>
-  VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
+  template <typename IntegratorType, typename IntegralCurveType>
+  VTKM_EXEC void operator()(const vtkm::Id& idx,
+                            const IntegratorType* integrator,
+                            IntegralCurveType& integralCurve) const
   {
-    using ScalarType = typename vtkm::worklet::particleadvection::ScalarType;
-
-    vtkm::Vec<ScalarType, 3> inpos = ic.GetPos(idx);
+    vtkm::Vec<ScalarType, 3> inpos = integralCurve.GetPos(idx);
     vtkm::Vec<ScalarType, 3> outpos;
-    ScalarType time = ic.GetTime(idx);
+    ScalarType time = integralCurve.GetTime(idx);
     ParticleStatus status;
-    while (!ic.Done(idx))
+    while (!integralCurve.Done(idx))
     {
-      status = integrator.Step(inpos, time, outpos);
+      status = integrator->Step(inpos, time, outpos);
       // If the status is OK, we only need to check if the particle
       // has completed the maximum steps required.
       if (status == ParticleStatus::STATUS_OK)
       {
-        ic.TakeStep(idx, outpos, status);
+        integralCurve.TakeStep(idx, outpos, status);
         // This is to keep track of the particle's time.
         // This is what the Evaluator uses to determine if the particle
         // has exited temporal boundary.
-        ic.SetTime(idx, time);
+        integralCurve.SetTime(idx, time);
         inpos = outpos;
       }
       // If the particle is at spatial or temporal  boundary, take steps to just
@@ -77,36 +78,29 @@ public:
       if (status == ParticleStatus::AT_SPATIAL_BOUNDARY ||
           status == ParticleStatus::AT_TEMPORAL_BOUNDARY)
       {
-        vtkm::Id numSteps = ic.GetStep(idx);
-        status = integrator.PushOutOfBoundary(inpos, numSteps, time, status, outpos);
-        ic.TakeStep(idx, outpos, status);
-        ic.SetTime(idx, time);
+        vtkm::Id numSteps = integralCurve.GetStep(idx);
+        status = integrator->PushOutOfBoundary(inpos, numSteps, time, status, outpos);
+        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.SetTime(idx, time);
         if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
-          ic.SetExitedSpatialBoundary(idx);
+          integralCurve.SetExitedSpatialBoundary(idx);
         if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
-          ic.SetExitedTemporalBoundary(idx);
+          integralCurve.SetExitedTemporalBoundary(idx);
       }
       // If the particle has exited spatial boundary, set corresponding status.
       else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
       {
-        ic.TakeStep(idx, outpos, status);
-        ic.SetExitedSpatialBoundary(idx);
+        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.SetExitedSpatialBoundary(idx);
       }
       // If the particle has exited temporal boundary, set corresponding status.
       else if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
       {
-        ic.TakeStep(idx, outpos, status);
-        ic.SetExitedTemporalBoundary(idx);
+        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.SetExitedTemporalBoundary(idx);
       }
     }
   }
-
-  ParticleAdvectWorklet(const IntegratorType& it)
-    : integrator(it)
-  {
-  }
-
-  IntegratorType integrator;
 };
 
 
@@ -114,8 +108,6 @@ template <typename IntegratorType>
 class ParticleAdvectionWorklet
 {
 public:
-  using ScalarType = typename vtkm::worklet::particleadvection::ScalarType;
-
   VTKM_EXEC_CONT ParticleAdvectionWorklet() {}
 
   ~ParticleAdvectionWorklet() {}
@@ -129,8 +121,7 @@ public:
            vtkm::cont::ArrayHandle<ScalarType>& timeArray,
            DeviceAdapterTag)
   {
-    using ParticleAdvectWorkletType =
-      vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType>;
+    using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorklet;
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
     using ParticleType = vtkm::worklet::particleadvection::Particles;
@@ -141,10 +132,9 @@ public:
     ParticleType particles(seedArray, stepsTaken, statusArray, timeArray, maxSteps);
 
     //Invoke particle advection worklet
-    ParticleAdvectWorkletType particleWorklet(integrator);
-    ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
+    ParticleWorkletDispatchType particleWorkletDispatch;
     particleWorkletDispatch.SetDevice(DeviceAdapterTag());
-    particleWorkletDispatch.Invoke(idxArray, particles);
+    particleWorkletDispatch.Invoke(idxArray, integrator, particles);
   }
 };
 
@@ -162,14 +152,12 @@ public:
     res = x - y;
   }
 };
-};
+} // namespace detail
 
 template <typename IntegratorType>
 class StreamlineWorklet
 {
 public:
-  using ScalarType = typename vtkm::worklet::particleadvection::ScalarType;
-
   VTKM_EXEC_CONT StreamlineWorklet() {}
 
   template <typename PointStorage, typename FieldStorage, typename DeviceAdapterTag>
@@ -211,10 +199,8 @@ private:
   {
 
     using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
-    using ParticleAdvectWorkletType =
-      vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType>;
-    using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
+    using ParticleWorkletDispatchType = typename vtkm::worklet::DispatcherMapField<
+      vtkm::worklet::particleadvection::ParticleAdvectWorklet>;
     using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles;
 
     vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
@@ -222,8 +208,7 @@ private:
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
 
-    ParticleAdvectWorkletType particleWorklet(integrator);
-    ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
+    ParticleWorkletDispatchType particleWorkletDispatch;
     particleWorkletDispatch.SetDevice(DeviceAdapterTag());
 
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
@@ -237,7 +222,7 @@ private:
     StreamlineType streamlines(
       seedArray, history, stepsTaken, status, timeArray, validPoint, maxSteps);
 
-    particleWorkletDispatch.Invoke(idxArray, streamlines);
+    particleWorkletDispatch.Invoke(idxArray, integrator, streamlines);
     DeviceAlgorithm::CopyIf(history, validPoint, positions, IsOne());
 
     vtkm::cont::ArrayHandle<vtkm::Id> stepsTakenNow;
@@ -272,6 +257,6 @@ private:
 };
 }
 }
-}
+} // namespace vtkm::worklet::particleadvection
 
 #endif // vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h
