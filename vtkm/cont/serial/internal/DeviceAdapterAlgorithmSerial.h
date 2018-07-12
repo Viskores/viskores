@@ -57,7 +57,7 @@ private:
   // back to a iterative casting approach. Since std::copy can only really
   // optimize same-type copies, this shouldn't affect performance.
   template <typename InIter, typename OutIter>
-  VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type)
+  static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type)
   {
     using OutputType = typename std::iterator_traits<OutIter>::value_type;
     while (src != srcEnd)
@@ -68,9 +68,8 @@ private:
     }
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename InIter, typename OutIter>
-  VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
+  static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
   {
     std::copy(src, srcEnd, dst);
   }
