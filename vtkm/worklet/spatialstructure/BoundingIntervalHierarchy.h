@@ -504,8 +504,15 @@ struct NonSplitIndexCalculator : public vtkm::worklet::WorkletMapField
 
 struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  typedef void ControlSignature(FieldIn nodeIndices,
+                                FieldIn segmentSplits,
+                                FieldIn nonSplitSegmentIndices,
+                                FieldIn segmentSizes,
+                                FieldIn runningSplitSegmentCounts,
+                                FieldIn parentIndices,
+                                WholeArrayInOut newTree,
+                                WholeArrayOut nextParentIndices);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
 
   VTKM_CONT
@@ -516,26 +523,31 @@ struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
   {
   }
 
-  template <typename BoundingIntervalHierarchyPortal>
-  VTKM_EXEC void operator()(const vtkm::Id& index,
+  template <typename BoundingIntervalHierarchyPortal, typename NextParentPortal>
+  VTKM_EXEC void operator()(vtkm::Id index,
                             const TreeNode& split,
-                            const vtkm::Id& start,
-                            const vtkm::Id& count,
-                            const vtkm::Id& numPreviousSplits,
-                            BoundingIntervalHierarchyPortal& treePortal) const
+                            vtkm::Id start,
+                            vtkm::Id count,
+                            vtkm::Id numPreviousSplits,
+                            vtkm::Id parentIndex,
+                            BoundingIntervalHierarchyPortal& treePortal,
+                            NextParentPortal& nextParentPortal) const
   {
     vtkm::cont::BoundingIntervalHierarchyNode node;
-    if (count > MaxLeafSize)
+    node.ParentIndex = parentIndex;
+    if (count > this->MaxLeafSize)
     {
       node.Dimension = split.Dimension;
-      node.ChildIndex = TreeOffset + 2 * numPreviousSplits;
+      node.ChildIndex = this->TreeOffset + 2 * numPreviousSplits;
       node.Node.LMax = split.LMax;
       node.Node.RMin = split.RMin;
+      nextParentPortal.Set(2 * numPreviousSplits, index);
+      nextParentPortal.Set(2 * numPreviousSplits + 1, index);
     }
     else
     {
       node.ChildIndex = -1;
-      node.Leaf.Start = CellIdsOffset + start;
+      node.Leaf.Start = this->CellIdsOffset + start;
       node.Leaf.Size = count;
     }
     treePortal.Set(index, node);

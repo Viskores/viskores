@@ -31,6 +31,7 @@ namespace cont
 struct BoundingIntervalHierarchyNode
 {
   vtkm::IdComponent Dimension;
+  vtkm::Id ParentIndex;
   vtkm::Id ChildIndex;
   union {
     struct
@@ -48,6 +49,7 @@ struct BoundingIntervalHierarchyNode
   VTKM_EXEC_CONT
   BoundingIntervalHierarchyNode()
     : Dimension()
+    , ParentIndex()
     , ChildIndex()
     , Node{ 0, 0 }
   {

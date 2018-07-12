@@ -87,10 +87,12 @@ private:
       vtkm::Id id2 = -1;
       if (c <= node.Node.LMax)
       {
+        VTKM_ASSERT(Nodes.Get(node.ChildIndex).ParentIndex == index);
         id1 = Find(node.ChildIndex, point, parametric, worklet);
       }
       if (id1 == -1 && c >= node.Node.RMin)
       {
+        VTKM_ASSERT(Nodes.Get(node.ChildIndex + 1).ParentIndex == index);
         id2 = Find(node.ChildIndex + 1, point, parametric, worklet);
       }
       if (id1 == -1 && id2 == -1)

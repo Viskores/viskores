@@ -296,12 +296,15 @@ public:
     vtkm::Id nodesIndexOffset = 0;
     vtkm::Id numSegments = 1;
     IdArrayHandle discardKeys;
-    IdArrayHandle segmentStarts;
     IdArrayHandle segmentSizes;
     segmentSizes.Allocate(1);
     segmentSizes.GetPortalControl().Set(0, numCells);
     Self->ProcessedCellIds.Allocate(numCells);
     vtkm::Id cellIdsOffset = 0;
+
+    IdArrayHandle parentIndices;
+    parentIndices.Allocate(1);
+    parentIndices.GetPortalControl().Set(0, -1);
 
     while (!done)
     {
@@ -411,7 +414,7 @@ public:
       IdArrayHandle nonSplitSegmentIndices;
       Algorithms::ScanExclusive(nonSplitSegmentSizes, nonSplitSegmentIndices);
       IdArrayHandle runningSplitSegmentCounts;
-      Algorithms::ScanExclusive(splitChoices, runningSplitSegmentCounts);
+      vtkm::Id numNewSegments = Algorithms::ScanExclusive(splitChoices, runningSplitSegmentCounts);
       //PRINT_TIMER("4.1", s41);
 
       //START_TIMER(s42);
@@ -438,6 +441,9 @@ public:
       newTree.Allocate(nodesSize);
       Algorithms::CopySubRange(Self->Nodes, 0, Self->Nodes.GetNumberOfValues(), newTree);
 
+      IdArrayHandle nextParentIndices;
+      nextParentIndices.Allocate(2 * numNewSegments);
+
       CountingIdArrayHandle nodesIndices(nodesIndexOffset, 1, numSegments);
       vtkm::worklet::spatialstructure::TreeLevelAdder nodesAdder(
         cellIdsOffset, nodesSize, Self->MaxLeafSize);
@@ -447,7 +453,9 @@ public:
               nonSplitSegmentIndices,
               segmentSizes,
               runningSplitSegmentCounts,
-              newTree);
+              parentIndices,
+              newTree,
+              nextParentIndices);
       nodesIndexOffset = nodesSize;
       cellIdsOffset += doneCellIds.GetNumberOfValues();
       Self->Nodes = newTree;
@@ -463,6 +471,7 @@ public:
       Algorithms::Unique(uniqueSegmentIds);
       numSegments = uniqueSegmentIds.GetNumberOfValues();
       done = segmentIds.GetNumberOfValues() == 0;
+      parentIndices = nextParentIndices;
       //PRINT_TIMER("5.1", s51);
       //std::cout << "Iteration time: " << iterationTimer.GetElapsedTime() << "\n";
     }
