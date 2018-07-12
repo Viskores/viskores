@@ -83,7 +83,7 @@ struct transfer_color_table_to_device
   template <typename DeviceAdapter, typename ColorTableInternals>
   bool operator()(DeviceAdapter device,
                   vtkm::exec::ColorTableBase* portal,
-                  ColorTableInternals* internals)
+                  ColorTableInternals* internals) const
   {
     auto p1 = internals->ColorPosHandle.PrepareForInput(device);
     auto p2 = internals->ColorRGBHandle.PrepareForInput(device);
@@ -102,6 +102,7 @@ struct transfer_color_table_to_device
     portal->ONodes = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p3));
     portal->Alpha = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p4));
     portal->MidSharp = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p5));
+    portal->Modified();
     return true;
   }
 };
@@ -184,16 +185,14 @@ template <typename T, typename S>
 bool ColorTable::Map(const vtkm::cont::ArrayHandle<T, S>& values,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const
 {
-  return vtkm::cont::TryExecute(
-    detail::map_color_table{}, this->GetHandleForExecution(), values, rgbaOut);
+  return vtkm::cont::TryExecute(detail::map_color_table{}, this, values, rgbaOut);
 }
 //---------------------------------------------------------------------------
 template <typename T, typename S>
 bool ColorTable::Map(const vtkm::cont::ArrayHandle<T, S>& values,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const
 {
-  return vtkm::cont::TryExecute(
-    detail::map_color_table{}, this->GetHandleForExecution(), values, rgbOut);
+  return vtkm::cont::TryExecute(detail::map_color_table{}, this, values, rgbOut);
 }
 //---------------------------------------------------------------------------
 template <typename T, int N, typename S>

@@ -114,29 +114,26 @@ public:
   /// Release all the execution side resources
   VTKM_CONT void ReleaseExecutionResources() { this->Internals->ReleaseExecutionResources(); }
 
-  /// Get a valid \c VirtualBaseType* with the current control side state for \c DeviceAdapter.
+
+  /// Get a valid \c VirtualBaseType* with the current control side state for \c deviceId.
   /// VirtualObjectHandle and the returned pointer are analogous to ArrayHandle and Portal
   /// The returned pointer will be invalidated if:
-  /// 1. A new pointer is requested for a different DeviceAdapter
+  /// 1. A new pointer is requested for a different deviceId
   /// 2. VirtualObjectHandle is destroyed
   /// 3. Reset or ReleaseResources is called
   ///
-  template <typename DeviceAdapter>
-  VTKM_CONT const VirtualBaseType* PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT const VirtualBaseType* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const
   {
-    using DeviceInfo = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
-
     if (!this->GetValid())
     {
       throw vtkm::cont::ErrorBadValue("No target object bound");
     }
 
-    vtkm::cont::DeviceAdapterId deviceId = DeviceInfo::GetId();
     if (deviceId < 0 || deviceId >= VTKM_MAX_DEVICE_ADAPTER_ID)
     {
-      std::string msg = "Device '" + DeviceInfo::GetName() + "' has invalid ID of " +
-        std::to_string(deviceId) + "(VTKM_MAX_DEVICE_ADAPTER_ID = " +
-        std::to_string(VTKM_MAX_DEVICE_ADAPTER_ID) + ")";
+      std::string msg = "An invalid device adapter ID of " + std::to_string(deviceId) +
+        "was used when trying to construct a virtual object. The valid range is between " +
+        "0 and " + std::to_string(VTKM_MAX_DEVICE_ADAPTER_ID) + ")";
       throw vtkm::cont::ErrorBadType(msg);
     }
 
@@ -144,7 +141,9 @@ public:
     {
       if (!this->Internals->Transfers[static_cast<std::size_t>(deviceId)])
       {
-        std::string msg = DeviceInfo::GetName() + " was not in the list specified in Bind";
+        std::string msg = "The device adapter ID of " + std::to_string(deviceId) +
+          " was not part of the set of valid adapters when this virtual object was constructed " +
+          "or last binded to a set of device adapters.";
         throw vtkm::cont::ErrorBadType(msg);
       }
 
@@ -157,6 +156,20 @@ public:
     }
 
     return this->Internals->Current->PrepareForExecution();
+  }
+
+  /// Get a valid \c VirtualBaseType* with the current control side state for \c DeviceAdapter.
+  /// VirtualObjectHandle and the returned pointer are analogous to ArrayHandle and Portal
+  /// The returned pointer will be invalidated if:
+  /// 1. A new pointer is requested for a different DeviceAdapter
+  /// 2. VirtualObjectHandle is destroyed
+  /// 3. Reset or ReleaseResources is called
+  ///
+  template <typename DeviceAdapter>
+  VTKM_CONT const VirtualBaseType* PrepareForExecution(DeviceAdapter) const
+  {
+    using DeviceInfo = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
+    return this->PrepareForExecution(DeviceInfo::GetId());
   }
 
 private:

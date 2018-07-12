@@ -381,6 +381,21 @@ public:
       VTKM_TEST_ASSERT(result == correct_hsv_values[i],
                        "incorrect value when interpolating between values");
     }
+
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors_rgb;
+    table.SetColorSpace(vtkm::cont::ColorSpace::RGB);
+    table.Map(field, colors_rgb);
+
+    const vtkm::Vec<vtkm::UInt8, 3> correct_rgb_values[nvals] = { { 0, 0, 255 },   { 51, 0, 204 },
+                                                                  { 102, 0, 153 }, { 153, 0, 102 },
+                                                                  { 204, 0, 51 },  { 255, 0, 0 } };
+    auto rgb_portal = colors_rgb.GetPortalConstControl();
+    for (std::size_t i = 0; i < nvals; ++i)
+    {
+      auto result = rgb_portal.Get(static_cast<vtkm::Id>(i));
+      VTKM_TEST_ASSERT(result == correct_rgb_values[i],
+                       "incorrect value when interpolating between values");
+    }
   }
 
   static void TestOpacityOnlyPoints()
@@ -427,6 +442,38 @@ public:
       auto result = portal.Get(static_cast<vtkm::Id>(i));
       VTKM_TEST_ASSERT(result == correct_opacity_values[i],
                        "incorrect value when interpolating between opacity values");
+    }
+  }
+
+  static void TestWorkletTransport()
+  {
+    using namespace vtkm::worklet::colorconversion;
+
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::LINEAR_GREEN);
+    VTKM_TEST_ASSERT((table.GetRange() == vtkm::Range{ 0.0, 1.0 }),
+                     "loading linear green table failed with wrong range");
+    VTKM_TEST_ASSERT((table.GetNumberOfPoints() == 21),
+                     "loading linear green table failed with number of control points");
+
+    constexpr vtkm::Id nvals = 3;
+    constexpr double data[3] = { 0.0f, 0.5f, 1.0f };
+    auto samples = vtkm::cont::make_ArrayHandle(data, nvals);
+
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+    TransferFunction transfer(table.PrepareForExecution(DeviceAdapterTag{}));
+    vtkm::worklet::DispatcherMapField<TransferFunction, DeviceAdapterTag> dispatcher(transfer);
+    dispatcher.Invoke(samples, colors);
+
+    const vtkm::Vec<vtkm::UInt8, 4> correct_sampling_points[nvals] = { { 14, 28, 31, 255 },
+                                                                       { 21, 150, 21, 255 },
+                                                                       { 255, 251, 230, 255 } };
+
+    auto portal = colors.GetPortalConstControl();
+    for (std::size_t i = 0; i < nvals; ++i)
+    {
+      auto result = portal.Get(static_cast<vtkm::Id>(i));
+      VTKM_TEST_ASSERT(result == correct_sampling_points[i],
+                       "incorrect value when interpolating in linear green preset");
     }
   }
 
@@ -498,7 +545,7 @@ public:
     {
       TestConstructors();
       TestLoadPresets();
-      TestClamping(); //this needs to also verify default opacity
+      TestClamping();
       TestRangeColors();
 
       TestRescaleRange(); //uses Lab
@@ -508,6 +555,7 @@ public:
 
       TestOpacityOnlyPoints();
 
+      TestWorkletTransport();
       TestSampling();
       TestLookupTable();
     }
