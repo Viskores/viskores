@@ -661,10 +661,20 @@ public:
               double tolerance = 0.002) const;
 
 
-  /// \brief returns a virtual object handle of the exec color table
+  /// \brief returns a virtual object pointer of the exec color table
   ///
-  /// This object is only valid as long as the ColorTable is unmodified
-  vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* GetHandleForExecution() const;
+  /// This pointer is only valid as long as the ColorTable is unmodified
+  const vtkm::exec::ColorTableBase* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const;
+
+  /// \brief returns a virtual object pointer of the exec color table
+  ///
+  /// This pointer is only valid as long as the ColorTable is unmodified
+  template <typename DeviceAdapter>
+  const vtkm::exec::ColorTableBase* PrepareForExecution(DeviceAdapter) const
+  {
+    auto deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
+    return this->PrepareForExecution(deviceId);
+  }
 
 
   /// \brief returns the modified count for the virtual object handle of the exec color table

@@ -155,6 +155,7 @@ void ColorTable::SetColorSpace(ColorSpace space)
 {
   if (this->Impl->CSpace != space || this->Impl->HostSideCache.get() == nullptr)
   {
+    this->Impl->HostSideCacheChanged = true;
     this->Impl->CSpace = space;
     //Remove any existing host and execution data
 
@@ -841,8 +842,8 @@ bool ColorTable::Sample(vtkm::Int32 numSamples,
 }
 
 //---------------------------------------------------------------------------
-vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* ColorTable::GetHandleForExecution()
-  const
+const vtkm::exec::ColorTableBase* ColorTable::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId deviceId) const
 {
   //Only rebuild the array handles that have changed since the last time
   //we have modified or color / opacity information
@@ -859,17 +860,20 @@ vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* ColorTable::GetHand
     this->Impl->OpacityMidSharpHandle = vtkm::cont::make_ArrayHandle(this->Impl->OpacityMidSharp);
   }
 
-  if (this->Impl->ColorArraysChanged || this->Impl->OpacityArraysChanged)
+  if (this->Impl->ColorArraysChanged || this->Impl->OpacityArraysChanged ||
+      this->Impl->HostSideCacheChanged)
   {
-    vtkm::cont::TryExecute(
-      detail::transfer_color_table_to_device{}, this->Impl->HostSideCache.get(), this->Impl.get());
-
-    this->Impl->HostSideCache->Modified();
+    vtkm::cont::internal::FindDeviceAdapterTagAndCall(deviceId,
+                                                      VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(),
+                                                      detail::transfer_color_table_to_device{},
+                                                      this->Impl->HostSideCache.get(),
+                                                      this->Impl.get());
   }
 
   this->Impl->ColorArraysChanged = false;
   this->Impl->OpacityArraysChanged = false;
-  return this->Impl->ExecHandle.get();
+  this->Impl->HostSideCacheChanged = false;
+  return this->Impl->ExecHandle->PrepareForExecution(deviceId);
 }
 
 //---------------------------------------------------------------------------

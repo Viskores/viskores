@@ -47,7 +47,7 @@ struct ColorTableInternals
   //  BelowRangeColor
   //  AboveRangeColor
   //Note the pointers inside the host side portal are not valid, as they
-  //are execution
+  //are execution pointers
   std::unique_ptr<vtkm::exec::ColorTableBase> HostSideCache;
   //Execution side version of the ColorTableBase.
   std::unique_ptr<vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>> ExecHandle;
@@ -66,6 +66,7 @@ struct ColorTableInternals
   vtkm::cont::ArrayHandle<vtkm::Vec<float, 2>> OpacityMidSharpHandle;
   bool ColorArraysChanged = true;
   bool OpacityArraysChanged = true;
+  bool HostSideCacheChanged = true;
 
   void RecalculateRange()
   {
