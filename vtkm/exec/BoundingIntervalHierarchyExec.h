@@ -66,47 +66,126 @@ public:
                 vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
                 const vtkm::exec::FunctorBase& worklet) const override
   {
-    cellId = Find(0, point, parametric, worklet);
+    cellId = -1;
+    vtkm::Id nodeIndex = 0;
+    FindCellState state = FindCellState::EnterNode;
+
+    while ((cellId < 0) && !((nodeIndex == 0) && (state == FindCellState::AscendFromNode)))
+    {
+      switch (state)
+      {
+        case FindCellState::EnterNode:
+          this->EnterNode(state, point, cellId, nodeIndex, parametric, worklet);
+          break;
+        case FindCellState::AscendFromNode:
+          this->AscendFromNode(state, nodeIndex);
+          break;
+        case FindCellState::DescendLeftChild:
+          this->DescendLeftChild(state, point, nodeIndex);
+          break;
+        case FindCellState::DescendRightChild:
+          this->DescendRightChild(state, point, nodeIndex);
+          break;
+      }
+    }
   }
 
 private:
-  VTKM_EXEC vtkm::Id Find(vtkm::Id index,
-                          const vtkm::Vec<vtkm::FloatDefault, 3>& point,
-                          vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
-                          const vtkm::exec::FunctorBase& worklet) const
+  enum struct FindCellState
   {
-    const vtkm::cont::BoundingIntervalHierarchyNode& node = Nodes.Get(index);
+    EnterNode,
+    AscendFromNode,
+    DescendLeftChild,
+    DescendRightChild
+  };
+
+  VTKM_EXEC
+  void EnterNode(FindCellState& state,
+                 const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                 vtkm::Id& cellId,
+                 vtkm::Id nodeIndex,
+                 vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
+                 const vtkm::exec::FunctorBase& worklet) const
+  {
+    VTKM_ASSERT(state == FindCellState::EnterNode);
+
+    const vtkm::cont::BoundingIntervalHierarchyNode& node = this->Nodes.Get(nodeIndex);
+
     if (node.ChildIndex < 0)
     {
-      return FindInLeaf(point, parametric, node, worklet);
+      // In a leaf node. Look for a containing cell.
+      cellId = this->FindInLeaf(point, parametric, node, worklet);
+      state = FindCellState::AscendFromNode;
     }
     else
     {
-      const vtkm::FloatDefault& c = point[node.Dimension];
-      vtkm::Id id1 = -1;
-      vtkm::Id id2 = -1;
-      if (c <= node.Node.LMax)
-      {
-        VTKM_ASSERT(Nodes.Get(node.ChildIndex).ParentIndex == index);
-        id1 = Find(node.ChildIndex, point, parametric, worklet);
-      }
-      if (id1 == -1 && c >= node.Node.RMin)
-      {
-        VTKM_ASSERT(Nodes.Get(node.ChildIndex + 1).ParentIndex == index);
-        id2 = Find(node.ChildIndex + 1, point, parametric, worklet);
-      }
-      if (id1 == -1 && id2 == -1)
-      {
-        return -1;
-      }
-      else if (id1 == -1)
-      {
-        return id2;
-      }
-      else
-      {
-        return id1;
-      }
+      state = FindCellState::DescendLeftChild;
+    }
+  }
+
+  VTKM_EXEC
+  void AscendFromNode(FindCellState& state, vtkm::Id& nodeIndex) const
+  {
+    VTKM_ASSERT(state == FindCellState::AscendFromNode);
+
+    vtkm::Id childNodeIndex = nodeIndex;
+    const vtkm::cont::BoundingIntervalHierarchyNode& childNode = this->Nodes.Get(childNodeIndex);
+    nodeIndex = childNode.ParentIndex;
+    const vtkm::cont::BoundingIntervalHierarchyNode& parentNode = this->Nodes.Get(nodeIndex);
+
+    if (parentNode.ChildIndex == childNodeIndex)
+    {
+      // Ascending from left child. Descend into the right child.
+      state = FindCellState::DescendRightChild;
+    }
+    else
+    {
+      VTKM_ASSERT(parentNode.ChildIndex + 1 == childNodeIndex);
+      // Ascending from right child. Ascend again. (Don't need to change state.)
+    }
+  }
+
+  VTKM_EXEC
+  void DescendLeftChild(FindCellState& state,
+                        const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                        vtkm::Id& nodeIndex) const
+  {
+    VTKM_ASSERT(state == FindCellState::DescendLeftChild);
+
+    const vtkm::cont::BoundingIntervalHierarchyNode& node = this->Nodes.Get(nodeIndex);
+    const vtkm::FloatDefault& coordinate = point[node.Dimension];
+    if (coordinate <= node.Node.LMax)
+    {
+      // Left child does contain the point. Do the actual descent.
+      nodeIndex = node.ChildIndex;
+      state = FindCellState::EnterNode;
+    }
+    else
+    {
+      // Left child does not contain the point. Skip to the right child.
+      state = FindCellState::DescendRightChild;
+    }
+  }
+
+  VTKM_EXEC
+  void DescendRightChild(FindCellState& state,
+                         const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                         vtkm::Id& nodeIndex) const
+  {
+    VTKM_ASSERT(state == FindCellState::DescendRightChild);
+
+    const vtkm::cont::BoundingIntervalHierarchyNode& node = this->Nodes.Get(nodeIndex);
+    const vtkm::FloatDefault& coordinate = point[node.Dimension];
+    if (coordinate >= node.Node.RMin)
+    {
+      // Right child does contain the point. Do the actual descent.
+      nodeIndex = node.ChildIndex + 1;
+      state = FindCellState::EnterNode;
+    }
+    else
+    {
+      // Right child does not contain the point. Skip to ascent
+      state = FindCellState::AscendFromNode;
     }
   }
 
