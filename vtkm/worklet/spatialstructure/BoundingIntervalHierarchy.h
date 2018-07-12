@@ -31,9 +31,9 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/BoundingIntervalHierarchyNode.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -533,7 +533,7 @@ struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
                             BoundingIntervalHierarchyPortal& treePortal,
                             NextParentPortal& nextParentPortal) const
   {
-    vtkm::cont::BoundingIntervalHierarchyNode node;
+    vtkm::exec::CellLocatorBoundingIntervalHierarchyNode node;
     node.ParentIndex = parentIndex;
     if (count > this->MaxLeafSize)
     {

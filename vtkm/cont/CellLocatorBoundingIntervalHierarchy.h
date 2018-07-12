@@ -18,14 +18,12 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_cont_BoundingIntervalHierarchy_h
-#define vtk_m_cont_BoundingIntervalHierarchy_h
+#ifndef vtk_m_cont_CellLocatorBoundingIntervalHierarchy_h
+#define vtk_m_cont_CellLocatorBoundingIntervalHierarchy_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-
-#include <vtkm/cont/BoundingIntervalHierarchyNode.h>
 #include <vtkm/cont/CellLocator.h>
 
 #include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchy.h>
@@ -35,7 +33,7 @@ namespace vtkm
 namespace cont
 {
 
-class BoundingIntervalHierarchy : public vtkm::cont::CellLocator
+class CellLocatorBoundingIntervalHierarchy : public vtkm::cont::CellLocator
 {
 private:
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
@@ -83,7 +81,8 @@ private:
 
 public:
   VTKM_CONT
-  BoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4, vtkm::IdComponent maxLeafSize = 5)
+  CellLocatorBoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4,
+                                       vtkm::IdComponent maxLeafSize = 5)
     : NumPlanes(numPlanes)
     , MaxLeafSize(maxLeafSize)
     , Nodes()
@@ -122,7 +121,7 @@ protected:
 private:
   vtkm::IdComponent NumPlanes;
   vtkm::IdComponent MaxLeafSize;
-  vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> Nodes;
+  vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode> Nodes;
   IdArrayHandle ProcessedCellIds;
   mutable HandleType ExecHandle;
 };
@@ -130,4 +129,4 @@ private:
 } // namespace cont
 } // namespace vtkm
 
-#endif // vtk_m_cont_BoundingIntervalHierarchy_h
+#endif // vtk_m_cont_CellLocatorBoundingIntervalHierarchy_h

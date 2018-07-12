@@ -17,14 +17,13 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_BoundingIntervalHierarchyExec_h
-#define vtk_m_cont_BoundingIntervalHierarchyExec_h
+#ifndef vtk_m_cont_CellLocatorBoundingIntervalHierarchyExec_h
+#define vtk_m_cont_CellLocatorBoundingIntervalHierarchyExec_h
 
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/VecFromPortalPermute.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
-#include <vtkm/cont/BoundingIntervalHierarchyNode.h>
 #include <vtkm/exec/CellInside.h>
 #include <vtkm/exec/CellLocator.h>
 #include <vtkm/exec/ParametricCoordinates.h>
@@ -33,31 +32,57 @@ namespace vtkm
 {
 namespace exec
 {
-namespace
-{
-using NodeArrayHandle = vtkm::cont::ArrayHandle<vtkm::cont::BoundingIntervalHierarchyNode>;
-using CellIdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
 
-} // namespace
+struct CellLocatorBoundingIntervalHierarchyNode
+{
+  vtkm::IdComponent Dimension;
+  vtkm::Id ParentIndex;
+  vtkm::Id ChildIndex;
+  union {
+    struct
+    {
+      vtkm::FloatDefault LMax;
+      vtkm::FloatDefault RMin;
+    } Node;
+    struct
+    {
+      vtkm::Id Start;
+      vtkm::Id Size;
+    } Leaf;
+  };
+
+  VTKM_EXEC_CONT
+  CellLocatorBoundingIntervalHierarchyNode()
+    : Dimension()
+    , ParentIndex()
+    , ChildIndex()
+    , Node{ 0, 0 }
+  {
+  }
+}; // struct CellLocatorBoundingIntervalHierarchyNode
 
 template <typename DeviceAdapter, typename CellSetType>
-class BoundingIntervalHierarchyExec : public vtkm::exec::CellLocator
+class CellLocatorBoundingIntervalHierarchyExec : public vtkm::exec::CellLocator
 {
+  using NodeArrayHandle =
+    vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode>;
+  using CellIdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
+
 public:
   VTKM_CONT
-  BoundingIntervalHierarchyExec() {}
+  CellLocatorBoundingIntervalHierarchyExec() {}
 
   VTKM_CONT
-  BoundingIntervalHierarchyExec(const NodeArrayHandle& nodes,
-                                const CellIdArrayHandle& cellIds,
-                                const CellSetType& cellSet,
-                                const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
-                                DeviceAdapter)
+  CellLocatorBoundingIntervalHierarchyExec(const NodeArrayHandle& nodes,
+                                           const CellIdArrayHandle& cellIds,
+                                           const CellSetType& cellSet,
+                                           const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
+                                           DeviceAdapter)
     : Nodes(nodes.PrepareForInput(DeviceAdapter()))
     , CellIds(cellIds.PrepareForInput(DeviceAdapter()))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType()))
+    , Coords(coords.PrepareForInput(DeviceAdapter()))
   {
-    CellSet = cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType());
-    Coords = coords.PrepareForInput(DeviceAdapter());
   }
 
   VTKM_EXEC
@@ -109,7 +134,7 @@ private:
   {
     VTKM_ASSERT(state == FindCellState::EnterNode);
 
-    const vtkm::cont::BoundingIntervalHierarchyNode& node = this->Nodes.Get(nodeIndex);
+    const vtkm::exec::CellLocatorBoundingIntervalHierarchyNode& node = this->Nodes.Get(nodeIndex);
 
     if (node.ChildIndex < 0)
     {
@@ -129,9 +154,11 @@ private:
     VTKM_ASSERT(state == FindCellState::AscendFromNode);
 
     vtkm::Id childNodeIndex = nodeIndex;
-    const vtkm::cont::BoundingIntervalHierarchyNode& childNode = this->Nodes.Get(childNodeIndex);
+    const vtkm::exec::CellLocatorBoundingIntervalHierarchyNode& childNode =
+      this->Nodes.Get(childNodeIndex);
     nodeIndex = childNode.ParentIndex;
-    const vtkm::cont::BoundingIntervalHierarchyNode& parentNode = this->Nodes.Get(nodeIndex);
+    const vtkm::exec::CellLocatorBoundingIntervalHierarchyNode& parentNode =
+      this->Nodes.Get(nodeIndex);
 
     if (parentNode.ChildIndex == childNodeIndex)
     {
@@ -152,7 +179,7 @@ private:
   {
     VTKM_ASSERT(state == FindCellState::DescendLeftChild);
 
-    const vtkm::cont::BoundingIntervalHierarchyNode& node = this->Nodes.Get(nodeIndex);
+    const vtkm::exec::CellLocatorBoundingIntervalHierarchyNode& node = this->Nodes.Get(nodeIndex);
     const vtkm::FloatDefault& coordinate = point[node.Dimension];
     if (coordinate <= node.Node.LMax)
     {
@@ -174,7 +201,7 @@ private:
   {
     VTKM_ASSERT(state == FindCellState::DescendRightChild);
 
-    const vtkm::cont::BoundingIntervalHierarchyNode& node = this->Nodes.Get(nodeIndex);
+    const vtkm::exec::CellLocatorBoundingIntervalHierarchyNode& node = this->Nodes.Get(nodeIndex);
     const vtkm::FloatDefault& coordinate = point[node.Dimension];
     if (coordinate >= node.Node.RMin)
     {
@@ -191,16 +218,17 @@ private:
 
   VTKM_EXEC vtkm::Id FindInLeaf(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
                                 vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
-                                const vtkm::cont::BoundingIntervalHierarchyNode& node,
+                                const vtkm::exec::CellLocatorBoundingIntervalHierarchyNode& node,
                                 const vtkm::exec::FunctorBase& worklet) const
   {
     using IndicesType = typename CellSetPortal::IndicesType;
     for (vtkm::Id i = node.Leaf.Start; i < node.Leaf.Start + node.Leaf.Size; ++i)
     {
-      vtkm::Id cellId = CellIds.Get(i);
-      IndicesType cellPointIndices = CellSet.GetIndices(cellId);
-      vtkm::VecFromPortalPermute<IndicesType, CoordsPortal> cellPoints(&cellPointIndices, Coords);
-      if (IsPointInCell(point, parametric, CellSet.GetCellShape(cellId), cellPoints, worklet))
+      vtkm::Id cellId = this->CellIds.Get(i);
+      IndicesType cellPointIndices = this->CellSet.GetIndices(cellId);
+      vtkm::VecFromPortalPermute<IndicesType, CoordsPortal> cellPoints(&cellPointIndices,
+                                                                       this->Coords);
+      if (IsPointInCell(point, parametric, this->CellSet.GetCellShape(cellId), cellPoints, worklet))
       {
         return cellId;
       }
@@ -235,10 +263,10 @@ private:
   CellIdPortal CellIds;
   CellSetPortal CellSet;
   CoordsPortal Coords;
-}; // class BoundingIntervalHierarchyExec
+}; // class CellLocatorBoundingIntervalHierarchyExec
 
 } // namespace exec
 
 } // namespace vtkm
 
-#endif //vtk_m_cont_BoundingIntervalHierarchyExec_h
+#endif //vtk_m_cont_CellLocatorBoundingIntervalHierarchyExec_h
