@@ -80,6 +80,7 @@ set(unit_tests
   UnitTestWarpScalar.cxx
   UnitTestWarpVector.cxx
   UnitTestWaveletCompressor.cxx
+  UnitTestWaveletGenerator.cxx
  )
 
 
