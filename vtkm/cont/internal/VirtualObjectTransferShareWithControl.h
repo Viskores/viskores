@@ -23,8 +23,6 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/VirtualObjectBase.h>
 
-#include <typeinfo>
-
 namespace vtkm
 {
 namespace cont
