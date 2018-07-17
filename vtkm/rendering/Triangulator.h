@@ -20,7 +20,6 @@
 #ifndef vtk_m_rendering_Triangulator_h
 #define vtk_m_rendering_Triangulator_h
 
-#include <typeinfo>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>

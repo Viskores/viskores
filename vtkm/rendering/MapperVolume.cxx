@@ -31,7 +31,6 @@
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 
 #include <sstream>
-#include <typeinfo>
 
 #define DEFAULT_SAMPLE_DISTANCE -1.f
 

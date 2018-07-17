@@ -20,9 +20,7 @@
 #ifndef vtk_m_rendering_ConnectivityProxy_h
 #define vtk_m_rendering_ConnectivityProxy_h
 
-#include <cstdlib>
 #include <memory>
-#include <typeinfo>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/Mapper.h>

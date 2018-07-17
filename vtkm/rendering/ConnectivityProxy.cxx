@@ -17,8 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <cstdlib>
-#include <typeinfo>
+
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/ConnectivityProxy.h>
 #include <vtkm/rendering/Mapper.h>
