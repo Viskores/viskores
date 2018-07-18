@@ -49,6 +49,7 @@ set(headers
   MaskPoints.h
   NDEntropy.h
   NDHistogram.h
+  OscillatorSource.h
   PointAverage.h
   PointElevation.h
   PointTransform.h
@@ -95,6 +96,7 @@ set(header_template_sources
   MaskPoints.hxx
   NDEntropy.hxx
   NDHistogram.hxx
+  OscillatorSource.hxx
   PointAverage.hxx
   PointElevation.hxx
   PointTransform.hxx
