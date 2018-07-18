@@ -27,7 +27,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
 
-#include <vtkm/exec/AtomicArray.h>
+#include <vtkm/cont/AtomicArray.h>
 
 namespace vtkm
 {
@@ -40,7 +40,7 @@ namespace arg
 /// that is valid for atomic access. There are many restrictions on the
 /// type of data that can be used for an atomic array.
 ///
-template <typename TypeList = vtkm::exec::AtomicArrayTypeListTag>
+template <typename TypeList = vtkm::cont::AtomicArrayTypeListTag>
 struct TypeCheckTagAtomicArray
 {
   VTKM_IS_LIST_TAG(TypeList);
@@ -57,7 +57,7 @@ struct TypeCheck<TypeCheckTagAtomicArray<TypeList>,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
 {
   static constexpr bool value = (vtkm::ListContains<TypeList, T>::value &&
-                                 vtkm::ListContains<vtkm::exec::AtomicArrayTypeListTag, T>::value);
+                                 vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value);
 };
 }
 }
