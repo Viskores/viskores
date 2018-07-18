@@ -623,6 +623,9 @@ private:
   VTKM_CONT
   static void TestVirtualObjectTransfer()
   {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing VirtualObjectTransfer" << std::endl;
+
     using BaseType = typename VirtualObjectTransferKernel::Interface;
     using TargetType = typename VirtualObjectTransferKernel::Concrete;
     using Transfer = vtkm::cont::internal::VirtualObjectTransfer<TargetType, DeviceAdapterTag>;
@@ -635,16 +638,13 @@ private:
     target.Value = 5;
 
     Transfer transfer(&target);
-    const BaseType* base = transfer.PrepareForExecution(false);
-
-    std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing VirtualObjectTransfer" << std::endl;
+    const BaseType* base = static_cast<const BaseType*>(transfer.PrepareForExecution(false));
 
     Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 5, "Did not get expected result");
 
     target.Value = 10;
-    base = transfer.PrepareForExecution(true);
+    base = static_cast<const BaseType*>(transfer.PrepareForExecution(true));
     Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 10, "Did not get expected result");
 

@@ -213,8 +213,8 @@ public:
     handle.Reset(&sqr, false, DeviceAdapterList());
     vtkm::ListForEach(TestStage1(input, handle), DeviceAdapterList());
 
-    std::cout << "Reset..." << std::endl;
-    handle.Reset();
+    std::cout << "ReleaseResources..." << std::endl;
+    handle.ReleaseResources();
 
     std::cout << "Testing with concrete type 2 (Multiply)..." << std::endl;
     virtual_object_detail::Multiply mul;

@@ -32,13 +32,11 @@ namespace internal
 {
 
 template <typename VirtualDerivedType>
-struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagSerial>
+struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagSerial> final
   : VirtualObjectTransferShareWithControl<VirtualDerivedType>
 {
-  VTKM_CONT VirtualObjectTransfer(const VirtualDerivedType* virtualObject)
-    : VirtualObjectTransferShareWithControl<VirtualDerivedType>(virtualObject)
-  {
-  }
+  using VirtualObjectTransferShareWithControl<
+    VirtualDerivedType>::VirtualObjectTransferShareWithControl;
 };
 }
 }
