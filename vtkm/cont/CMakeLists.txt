@@ -120,6 +120,7 @@ set(sources
   BoundsGlobalCompute.cxx
   CellSet.cxx
   CellSetStructured.cxx
+  DataSet.cxx
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
@@ -128,11 +129,14 @@ set(sources
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
-  internal/SimplePolymorphicContainer.cxx
-  internal/ArrayManagerExecutionShareWithControl.cxx
   internal/ArrayHandleBasicImpl.cxx
+  internal/ArrayManagerExecutionShareWithControl.cxx
+  internal/SimplePolymorphicContainer.cxx
+  MultiBlock.cxx
   PresetColorTables.cxx
+  RuntimeDeviceTracker.cxx
   StorageBasic.cxx
+  TryExecute.cxx
   )
 
 # This list of sources has code that uses devices and so might need to be
@@ -142,10 +146,6 @@ set(device_sources
   CellSetExplicit.cxx
   ColorTable.cxx
   CoordinateSystem.cxx
-  DataSet.cxx
-  MultiBlock.cxx
-  RuntimeDeviceTracker.cxx
-  TryExecute.cxx
   )
 
 #-----------------------------------------------------------------------------
