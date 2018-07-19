@@ -251,16 +251,16 @@ void ComputeCellToPointConnectivity(ConnectivityExplicitInternals<C2PShapeStorag
   PassThrough idxCalc{};
   ConnIdxToCellIdCalc<decltype(offInPortal)> cellIdCalc{ offInPortal };
 
-  using ConnTag = typename decltype(point2Cell.Connectivity)::StorageTag;
-
-  using RConnBuilder =
-    vtkm::cont::internal::ReverseConnectivityBuilder<PassThrough,
-                                                     ConnIdxToCellIdCalc<decltype(offInPortal)>,
-                                                     ConnTag,
-                                                     Device>;
-
-  RConnBuilder::Run(
-    conn, rConn, rNumIndices, rIndexOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize);
+  vtkm::cont::internal::ReverseConnectivityBuilder builder;
+  builder.Run(conn,
+              rConn,
+              rNumIndices,
+              rIndexOffsets,
+              idxCalc,
+              cellIdCalc,
+              numberOfPoints,
+              rConnSize,
+              Device());
 
   // Set the CellToPoint information
   cell2Point.Shapes = vtkm::cont::make_ArrayHandleConstant(

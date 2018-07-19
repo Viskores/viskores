@@ -25,7 +25,7 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-#include <vtkm/exec/AtomicArray.h>
+#include <vtkm/cont/AtomicArray.h>
 #include <vtkm/exec/FunctorBase.h>
 
 #include <utility>
@@ -37,6 +37,89 @@ namespace cont
 namespace internal
 {
 
+namespace rcb
+{
+
+template <typename AtomicHistogram, typename ConnInPortal, typename RConnToConnIdxCalc>
+struct BuildHistogram : public vtkm::exec::FunctorBase
+{
+  AtomicHistogram Histo;
+  ConnInPortal Conn;
+  RConnToConnIdxCalc IdxCalc;
+
+  VTKM_CONT
+  BuildHistogram(const AtomicHistogram& histo,
+                 const ConnInPortal& conn,
+                 const RConnToConnIdxCalc& idxCalc)
+    : Histo(histo)
+    , Conn(conn)
+    , IdxCalc(idxCalc)
+  {
+  }
+
+  VTKM_EXEC
+  void operator()(vtkm::Id rconnIdx) const
+  {
+    // Compute the connectivity array index (skipping cell length entries)
+    const vtkm::Id connIdx = this->IdxCalc(rconnIdx);
+    const vtkm::Id ptId = this->Conn.Get(connIdx);
+    this->Histo.Add(ptId, 1);
+  }
+};
+
+template <typename AtomicHistogram,
+          typename ConnInPortal,
+          typename ROffsetInPortal,
+          typename RConnOutPortal,
+          typename RConnToConnIdxCalc,
+          typename ConnIdxToCellIdxCalc>
+struct GenerateRConn : public vtkm::exec::FunctorBase
+{
+  AtomicHistogram Histo;
+  ConnInPortal Conn;
+  ROffsetInPortal ROffsets;
+  RConnOutPortal RConn;
+  RConnToConnIdxCalc IdxCalc;
+  ConnIdxToCellIdxCalc CellIdCalc;
+
+  VTKM_CONT
+  GenerateRConn(const AtomicHistogram& histo,
+                const ConnInPortal& conn,
+                const ROffsetInPortal& rOffsets,
+                const RConnOutPortal& rconn,
+                const RConnToConnIdxCalc& idxCalc,
+                const ConnIdxToCellIdxCalc& cellIdCalc)
+    : Histo(histo)
+    , Conn(conn)
+    , ROffsets(rOffsets)
+    , RConn(rconn)
+    , IdxCalc(idxCalc)
+    , CellIdCalc(cellIdCalc)
+  {
+  }
+
+  VTKM_EXEC
+  void operator()(vtkm::Id inputIdx) const
+  {
+    // Compute the connectivity array index (skipping cell length entries)
+    const vtkm::Id connIdx = this->IdxCalc(inputIdx);
+    const vtkm::Id ptId = this->Conn.Get(connIdx);
+
+    // Compute the cell id:
+    const vtkm::Id cellId = this->CellIdCalc(connIdx);
+
+    // Find the base offset for this point id:
+    const vtkm::Id baseOffset = this->ROffsets.Get(ptId);
+
+    // Find the next unused index for this point id
+    const vtkm::Id nextAvailable = this->Histo.Add(ptId, 1);
+
+    // Update the final location in the RConn table with the cellId
+    const vtkm::Id rconnIdx = baseOffset + nextAvailable;
+    this->RConn.Set(rconnIdx, cellId);
+  }
+};
+}
 /// Takes a connectivity array handle (conn) and constructs a reverse
 /// connectivity table suitable for use by VTK-m (rconn).
 ///
@@ -52,103 +135,26 @@ namespace internal
 /// @param ConnTag is the StorageTag for the input connectivity array.
 ///
 /// See usages in vtkmCellSetExplicit and vtkmCellSetSingleType for examples.
-template <typename RConnToConnIdxCalc,
-          typename ConnIdxToCellIdxCalc,
-          typename ConnTag,
-          typename Device>
 class ReverseConnectivityBuilder
 {
 public:
-  using AtomicHistogram = vtkm::exec::AtomicArray<vtkm::IdComponent, Device>;
-  using ConnArray = vtkm::cont::ArrayHandle<vtkm::Id, ConnTag>;
-  using ConnInPortal = decltype(std::declval<ConnArray>().PrepareForInput(Device()));
   using IdArray = vtkm::cont::ArrayHandle<vtkm::Id>;
   using IdComponentArray = vtkm::cont::ArrayHandle<vtkm::IdComponent>;
-  using ROffsetInPortal = decltype(std::declval<IdArray>().PrepareForInput(Device()));
-  using RConnOutPortal = decltype(std::declval<IdArray>().PrepareForOutput(0, Device()));
-
-  struct BuildHistogram : public vtkm::exec::FunctorBase
-  {
-    AtomicHistogram Histo;
-    ConnInPortal Conn;
-    RConnToConnIdxCalc IdxCalc;
-
-    VTKM_CONT
-    BuildHistogram(const AtomicHistogram& histo,
-                   const ConnInPortal& conn,
-                   const RConnToConnIdxCalc& idxCalc)
-      : Histo(histo)
-      , Conn(conn)
-      , IdxCalc(idxCalc)
-    {
-    }
-
-    VTKM_EXEC
-    void operator()(vtkm::Id rconnIdx) const
-    {
-      // Compute the connectivity array index (skipping cell length entries)
-      const vtkm::Id connIdx = this->IdxCalc(rconnIdx);
-      const vtkm::Id ptId = this->Conn.Get(connIdx);
-      this->Histo.Add(ptId, 1);
-    }
-  };
-
-  struct GenerateRConn : public vtkm::exec::FunctorBase
-  {
-    AtomicHistogram Histo;
-    ConnInPortal Conn;
-    ROffsetInPortal ROffsets;
-    RConnOutPortal RConn;
-    RConnToConnIdxCalc IdxCalc;
-    ConnIdxToCellIdxCalc CellIdCalc;
-
-    VTKM_CONT
-    GenerateRConn(const AtomicHistogram& histo,
-                  const ConnInPortal& conn,
-                  const ROffsetInPortal& rOffsets,
-                  const RConnOutPortal& rconn,
-                  const RConnToConnIdxCalc& idxCalc,
-                  const ConnIdxToCellIdxCalc& cellIdCalc)
-      : Histo(histo)
-      , Conn(conn)
-      , ROffsets(rOffsets)
-      , RConn(rconn)
-      , IdxCalc(idxCalc)
-      , CellIdCalc(cellIdCalc)
-    {
-    }
-
-    VTKM_EXEC
-    void operator()(vtkm::Id inputIdx) const
-    {
-      // Compute the connectivity array index (skipping cell length entries)
-      const vtkm::Id connIdx = this->IdxCalc(inputIdx);
-      const vtkm::Id ptId = this->Conn.Get(connIdx);
-
-      // Compute the cell id:
-      const vtkm::Id cellId = this->CellIdCalc(connIdx);
-
-      // Find the base offset for this point id:
-      const vtkm::Id baseOffset = this->ROffsets.Get(ptId);
-
-      // Find the next unused index for this point id
-      const vtkm::Id nextAvailable = this->Histo.Add(ptId, 1);
-
-      // Update the final location in the RConn table with the cellId
-      const vtkm::Id rconnIdx = baseOffset + nextAvailable;
-      this->RConn.Set(rconnIdx, cellId);
-    }
-  };
 
   VTKM_CONT
-  static void Run(const ConnArray& conn,
+  template <typename ConnArray,
+            typename RConnToConnIdxCalc,
+            typename ConnIdxToCellIdxCalc,
+            typename Device>
+  inline void Run(const ConnArray& conn,
                   IdArray& rConn,
                   IdComponentArray& rNumIndices,
                   IdArray& rIndexOffsets,
                   const RConnToConnIdxCalc& rConnToConnCalc,
                   const ConnIdxToCellIdxCalc& cellIdCalc,
                   vtkm::Id numberOfPoints,
-                  vtkm::Id rConnSize)
+                  vtkm::Id rConnSize,
+                  Device)
   {
     using Algo = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
@@ -167,9 +173,11 @@ public:
     }
 
     { // Build histogram:
-      vtkm::exec::AtomicArray<vtkm::IdComponent, Device> atomicCounter{ rNumIndices };
-
-      BuildHistogram histoGen{ atomicCounter, connPortal, rConnToConnCalc };
+      vtkm::cont::AtomicArray<vtkm::IdComponent> atomicCounter{ rNumIndices };
+      auto ac = atomicCounter.PrepareForExecution(Device());
+      rcb::BuildHistogram<decltype(ac), decltype(connPortal), RConnToConnIdxCalc> histoGen{
+        ac, connPortal, rConnToConnCalc
+      };
 
       Algo::Schedule(histoGen, rConnSize);
     }
@@ -197,12 +205,18 @@ public:
     // (in)    RIdxOffsets:  0  3  5  6  9  11
     // (out)   RConn: | 0  1  2  |  0  1  |  0  |  1  2  3  |  2  3  |  3  |
     {
-      vtkm::exec::AtomicArray<vtkm::IdComponent, Device> atomicCounter{ rNumIndices };
+      vtkm::cont::AtomicArray<vtkm::IdComponent> atomicCounter{ rNumIndices };
+      auto ac = atomicCounter.PrepareForExecution(Device());
       auto rOffsetPortal = rIndexOffsets.PrepareForInput(Device());
       auto rConnPortal = rConn.PrepareForOutput(rConnSize, Device());
 
-      GenerateRConn rConnGen{ atomicCounter, connPortal,      rOffsetPortal,
-                              rConnPortal,   rConnToConnCalc, cellIdCalc };
+      rcb::GenerateRConn<decltype(ac),
+                         decltype(connPortal),
+                         decltype(rOffsetPortal),
+                         decltype(rConnPortal),
+                         RConnToConnIdxCalc,
+                         ConnIdxToCellIdxCalc>
+        rConnGen{ ac, connPortal, rOffsetPortal, rConnPortal, rConnToConnCalc, cellIdCalc };
 
       Algo::Schedule(rConnGen, rConnSize);
     }
