@@ -1,5 +1,3 @@
-Here is what I plan to put in the change log
-
 Changed how Execution objects are created and passed from the cont environment to the execution environment. See chapter 13.9 on worklets in the user manual for details.
 ----
 Example of new execution object:
