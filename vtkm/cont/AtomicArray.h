@@ -58,11 +58,6 @@ class AtomicArray : public vtkm::cont::ExecutionObjectBase
 public:
   using ValueType = T;
 
-  template <typename Device>
-  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device) const
-  {
-    return vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle);
-  }
   VTKM_CONT
   AtomicArray()
     : Handle(vtkm::cont::ArrayHandle<T>())
@@ -73,6 +68,12 @@ public:
   VTKM_CONT AtomicArray(vtkm::cont::ArrayHandle<T, StorageType> handle)
     : Handle(handle)
   {
+  }
+
+  template <typename Device>
+  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device) const
+  {
+    return vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle);
   }
 
 private:
