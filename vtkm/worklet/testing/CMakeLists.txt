@@ -83,6 +83,7 @@ set(unit_tests
   UnitTestWarpVector.cxx
   UnitTestWaveletCompressor.cxx
   UnitTestWaveletGenerator.cxx
+  UnitTestZFPCompressor.cxx
  )
 
 
