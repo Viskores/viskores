@@ -28,6 +28,9 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # disable doxygen warning about not generating graph
   ".*warning: Included by graph for"
 
+  # Doxygen warns when creating output directory:
+  "Notice: Output directory.*does not exist. I have created it for you."
+
   # disable doxygen warnings from CONTRIBUTING.md, CodingConventions.md.
   # these files are really intended for Gitlab, hence we don't want to use
   # doxygen tags in them.
@@ -39,4 +42,7 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # We explicitly only suppress specific worklets so we can see when new recursive
   # worklets are added
   "ptxas warning : Stack size for entry function.*NearestNeighborSearch3DWorklet.*"
+  "ptxas warning : Stack size for entry function.*BoundingIntervalHierarchy.*"
+  "ptxas warning : Stack size for entry function.*CoordinatesPortal.*"
+  "ptxas warning : Stack size for entry function.*CellRangesExtracter.*"
 )

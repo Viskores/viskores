@@ -1,33 +1,33 @@
-// The Art of C++ / Sequences
-// Copyright (c) 2015 Daniel Frey
+// Copyright (c) 2015-2018 Daniel Frey
+// Please see LICENSE for license or visit https://github.com/taocpp/sequences/
 
-#ifndef TAOCPP_SEQUENCES_INCLUDE_CONFIG_HPP
-#define TAOCPP_SEQUENCES_INCLUDE_CONFIG_HPP
+#ifndef TAO_SEQ_CONFIG_HPP
+#define TAO_SEQ_CONFIG_HPP
 
-#if __cplusplus >= 201402L
-# define TAOCPP_USE_STD_INTEGER_SEQUENCE
+#include <utility>
+
+#ifndef TAO_SEQ_USE_STD_INTEGER_SEQUENCE
+#if defined( __cpp_lib_integer_sequence )
+#define TAO_SEQ_USE_STD_INTEGER_SEQUENCE
+#elif defined( _LIBCPP_VERSION ) && ( __cplusplus >= 201402L )
+#define TAO_SEQ_USE_STD_INTEGER_SEQUENCE
+#elif defined( _MSC_VER )
+#define TAO_SEQ_USE_STD_INTEGER_SEQUENCE
+#endif
 #endif
 
-#if (__cplusplus >= 201402L) && defined(_LIBCPP_VERSION)
-# define TAOCPP_USE_STD_MAKE_INTEGER_SEQUENCE
+#ifndef TAO_SEQ_USE_STD_MAKE_INTEGER_SEQUENCE
+#if defined( _GLIBCXX_RELEASE ) && ( _GLIBCXX_RELEASE >= 8 ) && ( __cplusplus >= 201402L )
+#define TAO_SEQ_USE_STD_MAKE_INTEGER_SEQUENCE
+#elif defined( _LIBCPP_VERSION ) && ( __cplusplus >= 201402L )
+#define TAO_SEQ_USE_STD_MAKE_INTEGER_SEQUENCE
+#elif defined( _MSC_VER ) && ( _MSC_FULL_VER >= 190023918 )
+#define TAO_SEQ_USE_STD_MAKE_INTEGER_SEQUENCE
+#endif
 #endif
 
-#if defined(__cpp_fold_expressions)
-# define TAOCPP_FOLD_EXPRESSIONS
-#elif __cplusplus > 201402L
-# if defined(__apple_build_version__) && (__clang_major__ >= 7)
-#  define TAOCPP_FOLD_EXPRESSIONS
-# elif defined(__clang__) && ((__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ >= 6)))
-#  define TAOCPP_FOLD_EXPRESSIONS
-# endif
+#if defined( __cpp_fold_expressions ) && ( !defined( __GNUC__ ) || ( __GNUC__ >= 8 ) )
+#define TAO_SEQ_FOLD_EXPRESSIONS
 #endif
 
-#ifndef TAOCPP_ANNOTATION
-#ifdef __CUDACC__
-#define TAOCPP_ANNOTATION __host__ __device__
-#else
-#define TAOCPP_ANNOTATION
-#endif // __CUDACC__
-#endif // TAOCPP_ANNOTATION
-
-#endif // TAOCPP_SEQUENCES_INCLUDE_CONFIG_HPP
+#endif

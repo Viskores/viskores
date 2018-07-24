@@ -87,7 +87,8 @@ struct Transport<vtkm::cont::arg::TransportTagTopologyFieldIn<TopologyElementTag
 {
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  using ExecObjectType = typename ContObjectType::template ExecutionTypes<Device>::PortalConst;
+
+  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInput(Device()));
 
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType& object,

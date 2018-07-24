@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
+  UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
   UnitTestDotProductFilter.cxx
   UnitTestEntropyFilter.cxx
@@ -46,6 +47,7 @@ set(unit_tests
   UnitTestNDHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
+  UnitTestPointTransform.cxx
   UnitTestProbe.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
@@ -55,6 +57,8 @@ set(unit_tests
   UnitTestTriangulateFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
+  UnitTestWarpScalarFilter.cxx
+  UnitTestWarpVectorFilter.cxx
  )
 
 vtkm_unit_tests(SOURCES ${unit_tests})

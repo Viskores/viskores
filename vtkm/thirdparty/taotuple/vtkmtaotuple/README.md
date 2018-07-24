@@ -1,11 +1,10 @@
 # The Art of C++ / Tuple
 
 [![Release](https://img.shields.io/github/release/taocpp/tuple.svg)](https://github.com/taocpp/tuple/releases/latest)
-[![License](https://img.shields.io/github/license/taocpp/tuple.svg)](#license)
 [![TravisCI](https://travis-ci.org/taocpp/tuple.svg)](https://travis-ci.org/taocpp/tuple)
-[![Issues](https://img.shields.io/github/issues/taocpp/tuple.svg)](https://github.com/taocpp/tuple/issues)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/9opt30ae579kw19b/branch/master?svg=true)](https://ci.appveyor.com/project/taocpp/tuple)
 
-The Art of C++ / Tuple is a C++11 header-only reference implementation of
+[The Art of C++](https://taocpp.github.io/) / Tuple is a C++11 header-only reference implementation of
 [`std::tuple`](http://en.cppreference.com/w/cpp/utility/tuple).
 
 ## Rationale
@@ -35,7 +34,7 @@ of 15 on the same system.
 
 The Art of C++ is certified [Open Source](http://www.opensource.org/docs/definition.html) software. It may be used for any purpose, including commercial purposes, at absolutely no cost. It is distributed under the terms of the [MIT license](http://www.opensource.org/licenses/mit-license.html) reproduced here.
 
-> Copyright (c) 2015 Daniel Frey
+> Copyright (c) 2015-2018 Daniel Frey
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >

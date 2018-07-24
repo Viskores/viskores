@@ -32,7 +32,7 @@ namespace internal
 /// \brief Class that manages data in the execution environment.
 ///
 /// This templated class must be partially specialized for each
-/// DeviceAdapterTag crated, which will define the implementation for that tag.
+/// DeviceAdapterTag created, which will define the implementation for that tag.
 ///
 /// This is a class that is responsible for allocating data in the execution
 /// environment and copying data back and forth between control and

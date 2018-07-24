@@ -220,7 +220,7 @@ private:
     vtkm::cont::CoordinateSystem cs(coordNm, coords);
     dataSet.AddCoordinateSystem(cs);
 
-    // compute the dimensions of the cellset by counting the number of axises
+    // compute the dimensions of the cellset by counting the number of axes
     // with >1 dimension
     int ndims = 0;
     vtkm::Id dims[3];

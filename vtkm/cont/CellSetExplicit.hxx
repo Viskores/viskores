@@ -101,6 +101,19 @@ void CellSetExplicit<ShapeStorageTag,
   this->CellToPoint.PrintSummary(out);
 }
 
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetStorageTag>
+void CellSetExplicit<ShapeStorageTag,
+                     NumIndicesStorageTag,
+                     ConnectivityStorageTag,
+                     OffsetStorageTag>::ReleaseResourcesExecution()
+{
+  this->PointToCell.ReleaseResourcesExecution();
+  this->CellToPoint.ReleaseResourcesExecution();
+}
+
 //----------------------------------------------------------------------------
 
 template <typename ShapeStorageTag,

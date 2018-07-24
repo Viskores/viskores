@@ -33,6 +33,8 @@
 namespace
 {
 
+const vtkm::Id ARRAY_SIZE = 10;
+
 template <typename T>
 struct TestImplicitStorage
 {
@@ -46,13 +48,11 @@ struct TestImplicitStorage
   }
 
   VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfValues() const { return 1; }
+  vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id vtkmNotUsed(index)) const { return Temp; }
 };
-
-const vtkm::Id ARRAY_SIZE = 1;
 
 template <typename T>
 struct TemplatedTests
@@ -68,39 +68,46 @@ struct TemplatedTests
   {
     StorageType arrayStorage;
 
-    // The implicit portal defined for this test always returns 1 for the
+    // The implicit portal defined for this test always returns ARRAY_SIZE for the
     // number of values. We should get that.
-    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 1,
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE,
                      "Implicit Storage GetNumberOfValues returned wrong size.");
 
-    try
-    {
-      arrayStorage.Allocate(ARRAY_SIZE);
-      VTKM_TEST_ASSERT(false == true, "Implicit Storage Allocate method didn't throw error.");
-    }
-    catch (vtkm::cont::ErrorBadValue&)
-    {
-    }
+    // Make sure you can allocate and shrink to any value <= the reported portal size.
+    arrayStorage.Allocate(ARRAY_SIZE / 2);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE / 2,
+                     "Cannot re-Allocate array to half size.");
 
-    try
-    {
-      arrayStorage.Shrink(ARRAY_SIZE);
-      VTKM_TEST_ASSERT(true == false,
-                       "Array shrink do a larger size was possible. This can't be allowed.");
-    }
-    catch (vtkm::cont::ErrorBadValue&)
-    {
-    }
+    arrayStorage.Allocate(0);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 0, "Cannot re-Allocate array to zero.");
+
+    arrayStorage.Allocate(ARRAY_SIZE);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE,
+                     "Cannot re-Allocate array to original size.");
+
+    arrayStorage.Shrink(ARRAY_SIZE / 2);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE / 2,
+                     "Cannot Shrink array to half size.");
+
+    arrayStorage.Shrink(0);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 0, "Cannot Shrink array to zero.");
+
+    arrayStorage.Shrink(ARRAY_SIZE);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE,
+                     "Cannot Shrink array to original size.");
 
     //verify that calling ReleaseResources doesn't throw an exception
     arrayStorage.ReleaseResources();
+
+    //verify that you can allocate after releasing resources.
+    arrayStorage.Allocate(ARRAY_SIZE);
   }
 
   void BasicAccess()
   {
     TestImplicitStorage<T> portal;
     vtkm::cont::ArrayHandle<T, StorageTagType> implictHandle(portal);
-    VTKM_TEST_ASSERT(implictHandle.GetNumberOfValues() == 1, "handle should have size 1");
+    VTKM_TEST_ASSERT(implictHandle.GetNumberOfValues() == ARRAY_SIZE, "handle has wrong size");
     VTKM_TEST_ASSERT(implictHandle.GetPortalConstControl().Get(0) == T(1),
                      "portals first values should be 1");
   }

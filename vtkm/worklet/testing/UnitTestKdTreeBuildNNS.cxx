@@ -81,7 +81,7 @@ void TestKdTreeBuildNNS()
 
   std::vector<vtkm::Vec<vtkm::Float32, 3>> coordi;
 
-  ///// randomly genarate training points/////
+  ///// randomly generate training points/////
   std::default_random_engine dre;
   std::uniform_real_distribution<vtkm::Float32> dr(0.0f, 10.0f);
 

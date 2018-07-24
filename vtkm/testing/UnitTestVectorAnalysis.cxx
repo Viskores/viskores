@@ -158,6 +158,21 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
                    "Triangle normal is not really normal.");
 }
 
+template <typename VectorBasisType>
+void TestOrthonormalize(const VectorBasisType& inputs, int expectedRank)
+{
+  VectorBasisType outputs;
+  int actualRank = vtkm::Orthonormalize(inputs, outputs);
+  std::cout << "Testing orthonormalize\n"
+            << "  Rank " << actualRank << " expected " << expectedRank << "\n"
+            << "  Basis vectors:\n";
+  for (int i = 0; i < actualRank; ++i)
+  {
+    std::cout << "    " << i << "  " << outputs[i] << "\n";
+  }
+  VTKM_TEST_ASSERT(test_equal(actualRank, expectedRank), "Orthonormalized rank is unexpected.");
+}
+
 struct TestLinearFunctor
 {
   template <typename T>
@@ -208,10 +223,43 @@ struct TestCrossFunctor
   }
 };
 
+struct TestVectorFunctor
+{
+  template <typename VectorType>
+  void operator()(const VectorType&) const
+  {
+    constexpr int NUM_COMPONENTS = VectorType::NUM_COMPONENTS;
+    using Traits = vtkm::VecTraits<VectorType>;
+    using ComponentType = typename Traits::ComponentType;
+    vtkm::Vec<VectorType, NUM_COMPONENTS> basis;
+    VectorType normalizedVector = VectorType(vtkm::RSqrt(ComponentType(NUM_COMPONENTS)));
+    VectorType zeroVector = VectorType(ComponentType(0));
+    // Test with a degenerate set of inputs:
+    basis[0] = zeroVector;
+    basis[1] = normalizedVector;
+    for (int ii = 2; ii < NUM_COMPONENTS; ++ii)
+    {
+      basis[ii] = zeroVector;
+    }
+    TestOrthonormalize(basis, 1);
+    // Now test with a valid set of inputs:
+    for (int ii = 0; ii < NUM_COMPONENTS; ++ii)
+    {
+      for (int jj = 0; jj < NUM_COMPONENTS; ++jj)
+      {
+        basis[ii][jj] =
+          ComponentType(jj == ii ? 1.0 : 0.0) + ComponentType(0.05) * ComponentType(jj);
+      }
+    }
+    TestOrthonormalize(basis, NUM_COMPONENTS);
+  }
+};
+
 void TestVectorAnalysis()
 {
   vtkm::testing::Testing::TryTypes(TestLinearFunctor(), vtkm::TypeListTagField());
   vtkm::testing::Testing::TryTypes(TestCrossFunctor(), vtkm::TypeListTagFieldVec3());
+  vtkm::testing::Testing::TryTypes(TestVectorFunctor(), vtkm::TypeListTagFloatVec());
 }
 
 } // anonymous namespace

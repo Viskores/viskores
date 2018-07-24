@@ -29,7 +29,7 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
 
-#include <vtkm/exec/AtomicArray.h>
+#include <vtkm/cont/AtomicArray.h>
 
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Logger.h>
@@ -297,7 +297,7 @@ private:
   vtkm::Int32 LeafCount;
   //Int8Handle Counters;
   //Int8ArrayPortal CountersPortal;
-  vtkm::exec::AtomicArray<vtkm::Int32, Device> Counters;
+  vtkm::exec::AtomicArrayExecutionObject<vtkm::Int32, Device> Counters;
 
 public:
   VTKM_CONT
@@ -306,12 +306,12 @@ public:
                  IdArrayHandle& rightChildren,
                  vtkm::Int32 leafCount,
                  Float4ArrayHandle flatBVH,
-                 const vtkm::exec::AtomicArray<vtkm::Int32, Device>& counters)
+                 const vtkm::cont::AtomicArray<vtkm::Int32>& counters)
     : Parents(parents.PrepareForInput(Device()))
     , LeftChildren(leftChildren.PrepareForInput(Device()))
     , RightChildren(rightChildren.PrepareForInput(Device()))
     , LeafCount(leafCount)
-    , Counters(counters)
+    , Counters(counters.PrepareForExecution(Device()))
 
   {
     this->FlatBVH = flatBVH.PrepareForOutput((LeafCount - 1) * 4, Device());
@@ -453,7 +453,7 @@ private:
   IdPortalType ParentPortal;
   vtkm::Id LeafCount;
   vtkm::Id InnerCount;
-  //TODO: get instrinsic support
+  //TODO: get intrinsic support
   VTKM_EXEC
   inline vtkm::Int32 CountLeadingZeros(vtkm::UInt32& x) const
   {
@@ -555,7 +555,7 @@ public:
     vtkm::Int32 deltaNode = delta(idx, j);
     vtkm::Int32 s = 0;
     vtkm::Float32 divFactor = 2.f;
-    //find the split postition using a binary search
+    //find the split position using a binary search
     for (vtkm::Int32 t = (vtkm::Int32)ceil(vtkm::Float32(l) / divFactor);;
          divFactor *= 2, t = (vtkm::Int32)ceil(vtkm::Float32(l) / divFactor))
     {
@@ -774,7 +774,7 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   vtkm::Int32 zero = 0;
   vtkm::worklet::DispatcherMapField<MemSet<vtkm::Int32>, Device>(MemSet<vtkm::Int32>(zero))
     .Invoke(counters);
-  vtkm::exec::AtomicArray<vtkm::Int32, Device> atomicCounters(counters);
+  vtkm::cont::AtomicArray<vtkm::Int32> atomicCounters(counters);
 
 
   vtkm::worklet::DispatcherMapField<PropagateAABBs<Device>, Device>(

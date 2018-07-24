@@ -17,53 +17,32 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_AtomicArray_h
-#define vtk_m_exec_AtomicArray_h
+#ifndef vtk_m_exec_AtomicArrayExecutionObject_h
+#define vtk_m_exec_AtomicArrayExecutionObject_h
 
 #include <vtkm/ListTag.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
 namespace exec
 {
 
-/// \brief A type list containing types that can be used with an AtomicArray.
-///
-struct AtomicArrayTypeListTag : vtkm::ListTagBase<vtkm::Int32, vtkm::Int64>
-{
-};
-
-/// A class that can be used to atomically operate on an array of values safely
-/// across multiple instances of the same worklet. This is useful when you have
-/// an algorithm that needs to accumulate values in parallel, but writing out a
-/// value per worklet might be memory prohibitive.
-///
-/// To construct an AtomicArray you will need to pass in an
-/// vtkm::cont::ArrayHandle that is used as the underlying storage for the
-/// AtomicArray
-///
-/// Supported Operations: add / compare and swap (CAS)
-///
-/// Supported Types: 32 / 64 bit signed integers
-///
-///
-template <typename T, typename DeviceAdapterTag>
-class AtomicArray : public vtkm::cont::ExecutionObjectBase
+template <typename T, typename Device>
+class AtomicArrayExecutionObject
 {
 public:
   using ValueType = T;
 
   VTKM_CONT
-  AtomicArray()
+  AtomicArrayExecutionObject()
     : AtomicImplementation((vtkm::cont::ArrayHandle<T>()))
   {
   }
 
   template <typename StorageType>
-  VTKM_CONT AtomicArray(vtkm::cont::ArrayHandle<T, StorageType> handle)
+  VTKM_CONT AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T, StorageType> handle)
     : AtomicImplementation(handle)
   {
   }
@@ -88,9 +67,9 @@ public:
   }
 
 private:
-  vtkm::cont::DeviceAdapterAtomicArrayImplementation<T, DeviceAdapterTag> AtomicImplementation;
+  vtkm::cont::DeviceAdapterAtomicArrayImplementation<T, Device> AtomicImplementation;
 };
 }
 } // namespace vtkm::exec
 
-#endif //vtk_m_exec_AtomicArray_h
+#endif //vtk_m_exec_AtomicArrayExecutionObject_h

@@ -208,6 +208,84 @@ TriangleNormal(const vtkm::Vec<T, 3>& a, const vtkm::Vec<T, 3>& b, const vtkm::V
   return vtkm::Cross(b - a, c - a);
 }
 
+//-----------------------------------------------------------------------------
+/// \brief Project a vector onto another vector.
+///
+/// This method computes the orthogonal projection of the vector v onto u;
+/// that is, it projects its first argument onto its second.
+///
+/// Note that if the vector \a u has zero length, the output
+/// vector will have all its entries equal to NaN.
+template <typename T, int N>
+VTKM_EXEC_CONT vtkm::Vec<T, N> Project(const vtkm::Vec<T, N>& v, const vtkm::Vec<T, N>& u)
+{
+  T uu = vtkm::Dot(u, u);
+  T uv = vtkm::Dot(u, v);
+  T factor = uv / uu;
+  vtkm::Vec<T, N> result = factor * u;
+  return result;
+}
+
+//-----------------------------------------------------------------------------
+/// \brief Project a vector onto another vector, returning only the projected distance.
+///
+/// This method computes the orthogonal projection of the vector v onto u;
+/// that is, it projects its first argument onto its second.
+///
+/// Note that if the vector \a u has zero length, the output will be NaN.
+template <typename T, int N>
+VTKM_EXEC_CONT T ProjectedDistance(const vtkm::Vec<T, N>& v, const vtkm::Vec<T, N>& u)
+{
+  T uu = vtkm::Dot(u, u);
+  T uv = vtkm::Dot(u, v);
+  T factor = uv / uu;
+  return factor;
+}
+
+//-----------------------------------------------------------------------------
+/// \brief Perform Gram-Schmidt orthonormalization for 3-D vectors.
+///
+/// See https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process for details.
+/// The first output vector will always be parallel to the first input vector.
+/// The remaining output vectors will be orthogonal and unit length and have
+/// the same handedness as their corresponding input vectors.
+///
+/// This method is geometric.
+/// It does not require a matrix solver.
+/// However, unlike the algebraic eigensolver techniques which do use matrix
+/// inversion, this method may return zero-length output vectors if some input
+/// vectors are collinear. The number of non-zero (to within the specified
+/// tolerance, \a tol ) output vectors is the return value.
+template <typename T, int N>
+VTKM_EXEC_CONT int Orthonormalize(const vtkm::Vec<vtkm::Vec<T, N>, N>& inputs,
+                                  vtkm::Vec<vtkm::Vec<T, N>, N>& outputs,
+                                  T tol = static_cast<T>(1e-6))
+{
+  int j = 0; // j is the number of non-zero-length, non-collinear inputs encountered.
+  vtkm::Vec<vtkm::Vec<T, N>, N> u;
+  for (int i = 0; i < N; ++i)
+  {
+    u[j] = inputs[i];
+    for (int k = 0; k < j; ++k)
+    {
+      u[j] -= vtkm::Project(inputs[i], u[k]);
+    }
+    T rmag = vtkm::RMagnitude(u[j]);
+    if (rmag * tol > 1.0)
+    {
+      // skip this vector, it is zero-length or collinear with others.
+      continue;
+    }
+    outputs[j] = rmag * u[j];
+    ++j;
+  }
+  for (int i = j; i < N; ++i)
+  {
+    outputs[j] = Vec<T, N>{ 0. };
+  }
+  return j;
+}
+
 } // namespace vtkm
 
 #endif //vtk_m_VectorAnalysis_h

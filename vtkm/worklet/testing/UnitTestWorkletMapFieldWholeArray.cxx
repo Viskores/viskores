@@ -163,7 +163,7 @@ void TestWorkletMapFieldExecArg()
 
   std::cout << "--- Worklet accepting atomics." << std::endl;
   vtkm::testing::Testing::TryTypes(map_whole_array::DoTestAtomicArrayWorklet(),
-                                   vtkm::exec::AtomicArrayTypeListTag());
+                                   vtkm::cont::AtomicArrayTypeListTag());
 }
 
 } // anonymous namespace

@@ -70,6 +70,8 @@ public:
 
   virtual void PrintSummary(std::ostream&) const = 0;
 
+  virtual void ReleaseResourcesExecution() = 0;
+
 protected:
   std::string Name;
 };
@@ -85,7 +87,8 @@ namespace internal
 template <typename T>
 struct CellSetCheck
 {
-  using type = typename std::is_base_of<vtkm::cont::CellSet, T>;
+  using U = typename std::remove_pointer<T>::type;
+  using type = typename std::is_base_of<vtkm::cont::CellSet, U>;
 };
 
 #define VTKM_IS_CELL_SET(T) VTKM_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value)

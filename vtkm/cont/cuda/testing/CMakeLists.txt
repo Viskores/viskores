@@ -28,6 +28,7 @@ set(unit_tests
   UnitTestCudaDataSetExplicit.cu
   UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu
+  UnitTestCudaGeometry.cu
   UnitTestCudaImplicitFunction.cu
   UnitTestCudaMath.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu

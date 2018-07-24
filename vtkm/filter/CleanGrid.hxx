@@ -85,7 +85,7 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
   // TODO: This is very awkward. First of all, there is no support for dealing
   // with coordinate systems at all. That is fine if you are computing a new
   // coordinate system, but a pain if you are deriving the coordinate system
-  // array. Second, why is it that coordinate systems are automtically mapped
+  // array. Second, why is it that coordinate systems are automatically mapped
   // but other fields are not? Why shouldn't the Execute of a filter also set
   // up all the fields of the output data set?
   for (vtkm::IdComponent coordSystemIndex = 0;

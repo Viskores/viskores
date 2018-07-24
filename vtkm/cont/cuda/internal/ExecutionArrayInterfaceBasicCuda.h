@@ -29,7 +29,7 @@ namespace cont
 namespace internal
 {
 template <>
-struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>
+struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda> final
   : public ExecutionArrayInterfaceBasicBase
 {
   using Superclass = ExecutionArrayInterfaceBasicBase;

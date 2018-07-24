@@ -26,19 +26,17 @@ namespace vtkm
 {
 namespace filter
 {
-/// \brief Clean a mesh to an unstructured grid
+/// \brief Generate a N-Dims histogram from input fields
 ///
-/// This filter takes a data set and essentially copies it into a new data set.
-/// The newly constructed data set will have the same cells as the input and
-/// the topology will be stored in a \c CellSetExplicit<>. The filter will also
-/// optionally remove all unused points.
-///
-/// Note that the result of \c CleanGrid is not necessarily smaller than the
-/// input. For example, "cleaning" a data set with a \c CellSetStructured
-/// topology will actually result in a much larger data set.
-///
-/// \todo Add a feature to merge points that are coincident or within a
-/// tolerance.
+/// This filter takes a data set and with target fields and bins defined,
+/// it would generate a N-Dims histogram from input fields. The result is stored
+/// in a field named as "Frequency". This filed contains all the frequencies of
+/// the N-Dims histogram in sparse representation. That being said, the result
+/// field does not store 0 frequency bins. Meanwhile all input fileds now
+/// would have the same length and store bin ids instead.
+/// E.g. (FieldA[i], FieldB[i], FieldC[i], Frequency[i]) is a bin in the histogram.
+/// The first three numbers are binIDs for FieldA, FieldB and FieldC. Frequency[i] stores
+/// the frequency for this bin (FieldA[i], FieldB[i], FieldC[i]).
 ///
 class NDHistogram : public vtkm::filter::FilterDataSet<NDHistogram>
 {

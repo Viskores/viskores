@@ -1,4 +1,5 @@
 # Add a common API for CoordinateSystem to unload execution resources
+
 We now offer the ability to unload execution memory from ArrayHandleVirtualCoordinate
 and CoordinateSystem using the ReleaseResourcesExecution method.
 

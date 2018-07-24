@@ -111,6 +111,7 @@ public:
   vtkm::Id GetNumberOfFaces() const override;
   vtkm::Id GetNumberOfEdges() const override;
   void PrintSummary(std::ostream& out) const override;
+  void ReleaseResourcesExecution() override;
 
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const;
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagPoint) const;

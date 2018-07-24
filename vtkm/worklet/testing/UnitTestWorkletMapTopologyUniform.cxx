@@ -145,13 +145,15 @@ static void TestAvgPointToCell()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
+  auto cellset = dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D());
+
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(
     // We know that the cell set is a structured 2D grid and
     // The worklet does not work with general types because
     // of the way we get cell indices. We need to make that
     // part more flexible.
-    dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    &cellset,
     dataSet.GetField("pointvar"),
     result);
 

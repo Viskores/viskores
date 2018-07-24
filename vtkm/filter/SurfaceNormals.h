@@ -57,11 +57,11 @@ public:
   void SetGeneratePointNormals(bool value) { this->GeneratePointNormals = value; }
   bool GetGeneratePointNormals() const { return this->GeneratePointNormals; }
 
-  /// Set/Get the name of the cell normals field. Defaul is "Normals".
+  /// Set/Get the name of the cell normals field. Default is "Normals".
   void SetCellNormalsName(const std::string& name) { this->CellNormalsName = name; }
   const std::string& GetCellNormalsName() const { return this->CellNormalsName; }
 
-  /// Set/Get the name of the point normals field. Defaul is "Normals".
+  /// Set/Get the name of the point normals field. Default is "Normals".
   void SetPointNormalsName(const std::string& name) { this->PointNormalsName = name; }
   const std::string& GetPointNormalsName() const { return this->PointNormalsName; }
 

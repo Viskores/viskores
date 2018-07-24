@@ -54,7 +54,7 @@ void TestCellGradientUniform2D()
 template <typename DeviceAdapter>
 void TestCellGradientUniform3D()
 {
-  std::cout << "Testing CellGradient Worklet on 3D strucutred data" << std::endl;
+  std::cout << "Testing CellGradient Worklet on 3D structured data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
@@ -85,7 +85,7 @@ template <typename DeviceAdapter>
 void TestCellGradientUniform3DWithVectorField()
 {
   std::cout
-    << "Testing CellGradient and QCriterion Worklet with a vector field on 3D strucutred data"
+    << "Testing CellGradient and QCriterion Worklet with a vector field on 3D structured data"
     << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
@@ -162,7 +162,7 @@ void TestCellGradientUniform3DWithVectorField()
 template <typename DeviceAdapter>
 void TestCellGradientUniform3DWithVectorField2()
 {
-  std::cout << "Testing CellGradient Worklet with a vector field on 3D strucutred data" << std::endl
+  std::cout << "Testing CellGradient Worklet with a vector field on 3D structured data" << std::endl
             << "Disabling Gradient computation and enabling Divergence, and Vorticity" << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();

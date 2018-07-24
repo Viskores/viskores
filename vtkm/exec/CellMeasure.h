@@ -19,7 +19,9 @@
 //============================================================================
 #ifndef vtk_m_exec_CellMeasure_h
 #define vtk_m_exec_CellMeasure_h
-/*!\file Functions that provide integral measures over cells. */
+/*!\file
+ * Functions that provide integral measures over cells.
+*/
 
 #include "vtkm/CellShape.h"
 #include "vtkm/CellTraits.h"

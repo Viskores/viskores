@@ -106,7 +106,7 @@ void TestNDimsHistogram()
   // (we do not keep the 0 frequency entities)
   // e.g. we have three variable(data arrays) in this example
   // binIds[0, 1, 2][j] is a combination of bin ID of three variable,
-  // freqs[j] is the freqncy of this bin IDs combination
+  // freqs[j] is the frequency of this bin IDs combination
   std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> binIds;
   vtkm::cont::ArrayHandle<vtkm::Id> freqs;
   ndHistogram.Run(binIds, freqs, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());

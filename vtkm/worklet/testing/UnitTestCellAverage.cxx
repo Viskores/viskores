@@ -29,7 +29,7 @@ namespace
 
 void TestCellAverageUniform3D()
 {
-  std::cout << "Testing CellAverage Worklet on 3D strucutred data" << std::endl;
+  std::cout << "Testing CellAverage Worklet on 3D structured data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();

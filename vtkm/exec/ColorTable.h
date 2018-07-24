@@ -63,44 +63,44 @@ private:
                                    float& weight) const;
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableRGB : public ColorTableBase
+class VTKM_ALWAYS_EXPORT ColorTableRGB final : public ColorTableBase
 {
 public:
   inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
                                                             const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const final;
+                                                            float weight) const;
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableHSV : public ColorTableBase
+class VTKM_ALWAYS_EXPORT ColorTableHSV final : public ColorTableBase
 {
 public:
   inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
                                                             const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const final;
+                                                            float weight) const;
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableHSVWrap : public ColorTableBase
+class VTKM_ALWAYS_EXPORT ColorTableHSVWrap final : public ColorTableBase
 {
 public:
   inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
                                                             const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const final;
+                                                            float weight) const;
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableLab : public ColorTableBase
+class VTKM_ALWAYS_EXPORT ColorTableLab final : public ColorTableBase
 {
 public:
   inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
                                                             const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const final;
+                                                            float weight) const;
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableDiverging : public ColorTableBase
+class VTKM_ALWAYS_EXPORT ColorTableDiverging final : public ColorTableBase
 {
 public:
   inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
                                                             const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const final;
+                                                            float weight) const;
 };
 }
 }

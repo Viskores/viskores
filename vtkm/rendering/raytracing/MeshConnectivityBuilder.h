@@ -238,7 +238,7 @@ public:
     }
 
     //this means that this cell is responsible for both itself and the other cell
-    //set the connecttion for the other cell
+    //set the connection for the other cell
     if (isInternal)
     {
       BOUNDS_CHECK(faceIdPairs, index);
@@ -425,8 +425,8 @@ public:
     dir2 = SegmentDirections[segment][1];
 
     // For each face, we will have a relative offset to
-    // the "bottom corner of the face. Three are at the
-    // origin. and we have to ajust for the other faces.
+    // the "bottom corner" of the face. Three are at the
+    // origin and we have to adjust for the other faces.
     vtkm::Id3 cellIndex(0, 0, 0);
     if (cellFace == 1)
       cellIndex[0] = CellDims[0] - 1;

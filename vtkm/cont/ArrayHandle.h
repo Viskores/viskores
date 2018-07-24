@@ -82,21 +82,18 @@ struct IsInValidArrayHandle
 {
 };
 
-/// Checks to see if the ArrayHandle for the given DeviceAdatper allows
+/// Checks to see if the ArrayHandle allows
 /// writing, as some ArrayHandles (Implicit) don't support writing.
 /// This check is compatible with the C++11 type_traits.
 /// It contains a typedef named type that is either
 /// std::true_type or std::false_type.
 /// Both of these have a typedef named value with the respective boolean value.
 ///
-template <typename ArrayHandle, typename DeviceAdapterTag>
+template <typename ArrayHandle>
 struct IsWriteableArrayHandle
 {
 private:
-  template <typename T>
-  using ExecutionTypes = typename ArrayHandle::template ExecutionTypes<T>;
-
-  using ValueType = typename ExecutionTypes<DeviceAdapterTag>::Portal::ValueType;
+  using ValueType = typename ArrayHandle::PortalControl::ValueType;
 
   //All ArrayHandles that use ImplicitStorage as the final writable location
   //will have a value type of void*, which is what we are trying to detect
@@ -123,7 +120,8 @@ public:
 template <typename T>
 struct ArrayHandleCheck
 {
-  using type = typename std::is_base_of<::vtkm::cont::internal::ArrayHandleBase, T>::type;
+  using U = typename std::remove_pointer<T>::type;
+  using type = typename std::is_base_of<::vtkm::cont::internal::ArrayHandleBase, U>::type;
 };
 
 #define VTKM_IS_ARRAY_HANDLE(T)                                                                    \

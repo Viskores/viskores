@@ -20,6 +20,7 @@
 
 set(unit_tests
   UnitTestAverageByKey.cxx
+  UnitTestBoundingIntervalHierarchy.cxx
   UnitTestCellAverage.cxx
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
@@ -28,6 +29,7 @@ set(unit_tests
   UnitTestCellMeasure.cxx
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
+  UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
   UnitTestCrossProduct.cxx
   UnitTestDotProduct.cxx
@@ -75,13 +77,19 @@ set(unit_tests
   UnitTestWorkletMapTopologyUniform.cxx
   UnitTestWorkletReduceByKey.cxx
   UnitTestVertexClustering.cxx
+  UnitTestWarpScalar.cxx
+  UnitTestWarpVector.cxx
   UnitTestWaveletCompressor.cxx
+  UnitTestWaveletGenerator.cxx
  )
 
 
 vtkm_unit_tests(NAME Worklets BACKEND SERIAL SOURCES ${unit_tests})
 if (TARGET vtkm::tbb)
   vtkm_unit_tests(NAME Worklets BACKEND TBB SOURCES ${unit_tests})
+endif()
+if (TARGET vtkm::openmp)
+  vtkm_unit_tests(NAME Worklets BACKEND OPENMP SOURCES ${unit_tests})
 endif()
 if (TARGET vtkm::cuda)
   vtkm_unit_tests(NAME Worklets BACKEND CUDA SOURCES ${unit_tests})

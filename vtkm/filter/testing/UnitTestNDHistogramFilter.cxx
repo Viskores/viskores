@@ -80,7 +80,7 @@ void RunTest()
   //The first "fieldNames.size()"" fields are the binId arrays for inputs field
   //And their order and field names are the same as the order and name in fieldNames
   //The name of last fields in the dataset is "Frequency"
-  //This field contains the all freqncys of the N-Dims histogram
+  //This field contains all the frequencies of the N-Dims histogram
   //The result histogram is stored in sparse representation
   //(Do not store and return zero frequency bins)
   //All fields in return dataset must have the same length

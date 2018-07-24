@@ -27,8 +27,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/AtomicArray.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/exec/AtomicArray.h>
 #include <vtkm/rendering/MatrixHelpers.h>
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -158,7 +158,9 @@ template <typename DeviceTag>
 class EdgePlotter : public vtkm::worklet::WorkletMapField
 {
 public:
-  using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArray<vtkm::Int64, DeviceTag>;
+  using AtomicPackedFrameBufferHandle =
+    vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64, DeviceTag>;
+  using AtomicPackedFrameBuffer = vtkm::cont::AtomicArray<vtkm::Int64>;
 
   using ControlSignature = void(FieldIn<Id2Type>, WholeArrayIn<Vec3>, WholeArrayIn<Scalar>);
   using ExecutionSignature = void(_1, _2, _3);
@@ -175,7 +177,7 @@ public:
               bool assocPoints,
               const vtkm::Range& fieldRange,
               const ColorMapHandle& colorMap,
-              const AtomicPackedFrameBufferHandle& frameBuffer,
+              const AtomicPackedFrameBuffer& frameBuffer,
               const vtkm::Range& clippingRange)
     : WorldToProjection(worldToProjection)
     , Width(width)
@@ -187,7 +189,7 @@ public:
     , AssocPoints(assocPoints)
     , ColorMap(colorMap.PrepareForInput(DeviceTag()))
     , ColorMapSize(vtkm::Float32(colorMap.GetNumberOfValues() - 1))
-    , FrameBuffer(frameBuffer)
+    , FrameBuffer(frameBuffer.PrepareForExecution(DeviceTag()))
     , FieldMin(vtkm::Float32(fieldRange.Min))
   {
     InverseFieldDelta = 1.0f / vtkm::Float32(fieldRange.Length());

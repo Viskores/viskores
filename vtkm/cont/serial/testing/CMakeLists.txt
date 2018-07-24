@@ -28,6 +28,7 @@ set(unit_tests
   UnitTestSerialDataSetExplicit.cxx
   UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx
+  UnitTestSerialGeometry.cxx
   UnitTestSerialImplicitFunction.cxx
   UnitTestSerialPointLocatorUniformGrid.cxx
   UnitTestSerialVirtualObjectHandle.cxx

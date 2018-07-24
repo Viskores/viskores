@@ -102,7 +102,7 @@ namespace filter
 ///
 /// As the name suggests, these are called and the beginning and before the end
 /// of an `Filter::Execute` call. Most filters that don't need to handle
-/// mutliblock datasets specially, e.g. clip, cut, iso-contour, need not worry
+/// multiblock datasets specially, e.g. clip, cut, iso-contour, need not worry
 /// about these methods or provide any implementation. If, however, your filter
 /// needs do to some initialization e.g. allocation buffers to accumulate
 /// results, or finalization e.g. reduce results across all blocks, then these

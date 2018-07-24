@@ -25,6 +25,7 @@ set(headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   ContourTreeUniform.h
+  CoordinateSystemTransform.h
   CrossProduct.h
   DotProduct.h
   Entropy.h
@@ -48,8 +49,10 @@ set(headers
   MaskPoints.h
   NDEntropy.h
   NDHistogram.h
+  OscillatorSource.h
   PointAverage.h
   PointElevation.h
+  PointTransform.h
   PolicyBase.h
   PolicyDefault.h
   Probe.h
@@ -61,6 +64,8 @@ set(headers
   Triangulate.h
   VectorMagnitude.h
   VertexClustering.h
+  WarpScalar.h
+  WarpVector.h
 )
 
 set(header_template_sources
@@ -70,6 +75,7 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
+  CoordinateSystemTransform.hxx
   CrossProduct.hxx
   DotProduct.hxx
   Entropy.hxx
@@ -90,8 +96,10 @@ set(header_template_sources
   MaskPoints.hxx
   NDEntropy.hxx
   NDHistogram.hxx
+  OscillatorSource.hxx
   PointAverage.hxx
   PointElevation.hxx
+  PointTransform.hxx
   Probe.hxx
   Streamline.hxx
   SurfaceNormals.hxx
@@ -101,6 +109,8 @@ set(header_template_sources
   Triangulate.hxx
   VectorMagnitude.hxx
   VertexClustering.hxx
+  WarpScalar.hxx
+  WarpVector.hxx
 )
 
 vtkm_declare_headers(${headers}
@@ -111,4 +121,3 @@ add_subdirectory(internal)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
-

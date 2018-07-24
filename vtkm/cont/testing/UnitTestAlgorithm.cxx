@@ -136,6 +136,15 @@ struct CompFunctor
   }
 };
 
+struct CompExecObject : vtkm::cont::ExecutionObjectBase
+{
+  template <typename Device>
+  VTKM_CONT CompFunctor PrepareForExecution(Device)
+  {
+    return CompFunctor();
+  }
+};
+
 void SortTest()
 {
   vtkm::cont::ArrayHandle<vtkm::Id> input;
@@ -146,8 +155,10 @@ void SortTest()
 
   vtkm::cont::Algorithm::Sort(input);
   vtkm::cont::Algorithm::Sort(input, CompFunctor());
+  vtkm::cont::Algorithm::Sort(input, CompExecObject());
   vtkm::cont::Algorithm::SortByKey(keys, input);
   vtkm::cont::Algorithm::SortByKey(keys, input, CompFunctor());
+  vtkm::cont::Algorithm::SortByKey(keys, input, CompExecObject());
 }
 
 void SynchronizeTest()
@@ -163,6 +174,7 @@ void UniqueTest()
 
   vtkm::cont::Algorithm::Unique(input);
   vtkm::cont::Algorithm::Unique(input, CompFunctor());
+  vtkm::cont::Algorithm::Unique(input, CompExecObject());
 }
 
 void TestAll()

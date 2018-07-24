@@ -605,7 +605,7 @@ public:
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -620,7 +620,7 @@ public:
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -635,7 +635,7 @@ public:
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -650,7 +650,7 @@ public:
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -661,10 +661,20 @@ public:
               double tolerance = 0.002) const;
 
 
-  /// \brief returns a virtual object handle of the exec color table
+  /// \brief returns a virtual object pointer of the exec color table
   ///
-  /// This object is only valid as long as the ColorTable is unmodified
-  vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* GetHandleForExecution() const;
+  /// This pointer is only valid as long as the ColorTable is unmodified
+  const vtkm::exec::ColorTableBase* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const;
+
+  /// \brief returns a virtual object pointer of the exec color table
+  ///
+  /// This pointer is only valid as long as the ColorTable is unmodified
+  template <typename DeviceAdapter>
+  const vtkm::exec::ColorTableBase* PrepareForExecution(DeviceAdapter) const
+  {
+    auto deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
+    return this->PrepareForExecution(deviceId);
+  }
 
 
   /// \brief returns the modified count for the virtual object handle of the exec color table

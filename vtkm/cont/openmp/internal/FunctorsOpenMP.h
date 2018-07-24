@@ -89,7 +89,7 @@ static void ComputeChunkSize(const vtkm::Id numVals,
 }
 
 template <typename T, typename U>
-VTKM_EXEC_CONT static void DoCopy(T src, U dst, vtkm::Id numVals, std::true_type)
+static void DoCopy(T src, U dst, vtkm::Id numVals, std::true_type)
 {
   if (numVals)
   {
@@ -99,10 +99,7 @@ VTKM_EXEC_CONT static void DoCopy(T src, U dst, vtkm::Id numVals, std::true_type
 
 // Don't use std::copy when type conversion is required because MSVC.
 template <typename InIterT, typename OutIterT>
-VTKM_EXEC_CONT static void DoCopy(InIterT inIter,
-                                  OutIterT outIter,
-                                  vtkm::Id numVals,
-                                  std::false_type)
+static void DoCopy(InIterT inIter, OutIterT outIter, vtkm::Id numVals, std::false_type)
 {
   using ValueType = typename std::iterator_traits<OutIterT>::value_type;
 
@@ -113,7 +110,7 @@ VTKM_EXEC_CONT static void DoCopy(InIterT inIter,
 }
 
 template <typename InIterT, typename OutIterT>
-VTKM_EXEC_CONT static void DoCopy(InIterT inIter, OutIterT outIter, vtkm::Id numVals)
+static void DoCopy(InIterT inIter, OutIterT outIter, vtkm::Id numVals)
 {
   using InValueType = typename std::iterator_traits<InIterT>::value_type;
   using OutValueType = typename std::iterator_traits<OutIterT>::value_type;
@@ -123,11 +120,11 @@ VTKM_EXEC_CONT static void DoCopy(InIterT inIter, OutIterT outIter, vtkm::Id num
 
 
 template <typename InPortalT, typename OutPortalT>
-VTKM_EXEC_CONT static void CopyHelper(InPortalT inPortal,
-                                      OutPortalT outPortal,
-                                      vtkm::Id inStart,
-                                      vtkm::Id outStart,
-                                      vtkm::Id numVals)
+static void CopyHelper(InPortalT inPortal,
+                       OutPortalT outPortal,
+                       vtkm::Id inStart,
+                       vtkm::Id outStart,
+                       vtkm::Id numVals)
 {
   using InValueT = typename InPortalT::ValueType;
   using OutValueT = typename OutPortalT::ValueType;

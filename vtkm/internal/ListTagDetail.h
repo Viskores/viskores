@@ -229,7 +229,14 @@ struct ListCrossProductImpl
           brigand::lazy::push_front<brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
 };
 
-
+//-----------------------------------------------------------------------------
+template <typename List, typename Type>
+struct ListAppendUniqueImpl
+{
+  using type = typename std::conditional<ListContainsImpl<Type, List>::value,
+                                         List,
+                                         typename ListJoin<List, ListBase<Type>>::type>::type;
+};
 
 } // namespace detail
 

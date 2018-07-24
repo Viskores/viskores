@@ -19,12 +19,14 @@
 ##============================================================================
 
 set(headers
-  AtomicArray.h
+  BoundingIntervalHierarchyExec.h
+  AtomicArrayExecutionObject.h
   CellDerivative.h
   CellEdge.h
   CellFace.h
   CellInside.h
   CellInterpolate.h
+  CellLocator.h
   CellMeasure.h
   ColorTable.h
   ConnectivityExplicit.h
@@ -34,6 +36,8 @@ set(headers
   FunctorBase.h
   Jacobian.h
   ParametricCoordinates.h
+  PointLocator.h
+  PointLocatorUniformGrid.h
   TaskBase.h
   )
 

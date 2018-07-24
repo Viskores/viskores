@@ -20,6 +20,7 @@
 
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/testing/TestingVirtualObjectHandle.h>
 

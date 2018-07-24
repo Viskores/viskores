@@ -156,7 +156,22 @@ void TestCrossProduct()
       std::cout << "  Both vectors as normal fields" << std::endl;
       vtkm::filter::CrossProduct filter;
       filter.SetPrimaryField("vec1");
-      filter.SetSecondaryField("vec2");
+      filter.SetSecondaryField("vec2", vtkm::cont::Field::Association::POINTS);
+
+      // Check to make sure the fields are reported as correct.
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldName() == "vec1", "Bad field name.");
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == vtkm::cont::Field::Association::ANY,
+                       "Bad field association.");
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == false,
+                       "Bad use coordinates.");
+
+      VTKM_TEST_ASSERT(filter.GetSecondaryFieldName() == "vec2", "Bad field name.");
+      VTKM_TEST_ASSERT(filter.GetSecondaryFieldAssociation() ==
+                         vtkm::cont::Field::Association::POINTS,
+                       "Bad field association.");
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == false,
+                       "Bad use coordinates.");
+
       vtkm::cont::DataSet result = filter.Execute(dataSet);
       CheckResult(field1, field2, result);
     }
@@ -167,6 +182,17 @@ void TestCrossProduct()
       filter.SetUseCoordinateSystemAsPrimaryField(true);
       filter.SetPrimaryCoordinateSystem(1);
       filter.SetSecondaryField("vec2");
+
+      // Check to make sure the fields are reported as correct.
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == true,
+                       "Bad use coordinates.");
+
+      VTKM_TEST_ASSERT(filter.GetSecondaryFieldName() == "vec2", "Bad field name.");
+      VTKM_TEST_ASSERT(filter.GetSecondaryFieldAssociation() == vtkm::cont::Field::Association::ANY,
+                       "Bad field association.");
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == false,
+                       "Bad use coordinates.");
+
       vtkm::cont::DataSet result = filter.Execute(dataSet);
       CheckResult(field1, field2, result);
     }
@@ -177,6 +203,17 @@ void TestCrossProduct()
       filter.SetPrimaryField("vec1");
       filter.SetUseCoordinateSystemAsSecondaryField(true);
       filter.SetSecondaryCoordinateSystem(2);
+
+      // Check to make sure the fields are reported as correct.
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldName() == "vec1", "Bad field name.");
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == vtkm::cont::Field::Association::ANY,
+                       "Bad field association.");
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == false,
+                       "Bad use coordinates.");
+
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == true,
+                       "Bad use coordinates.");
+
       vtkm::cont::DataSet result = filter.Execute(dataSet);
       CheckResult(field1, field2, result);
     }

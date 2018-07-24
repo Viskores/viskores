@@ -388,7 +388,7 @@ VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, OutSize> make_ArrayHandleSwizzle(
 }
 
 template <typename ArrayHandleType, typename... SwizzleIndexTypes>
-VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, sizeof...(SwizzleIndexTypes) + 1>
+VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, vtkm::IdComponent(sizeof...(SwizzleIndexTypes) + 1)>
 make_ArrayHandleSwizzle(const ArrayHandleType& array,
                         vtkm::IdComponent swizzleIndex0,
                         SwizzleIndexTypes... swizzleIndices)

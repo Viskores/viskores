@@ -24,6 +24,7 @@ set(headers
   ReduceByKeyLookup.h
   TaskSingular.h
   WorkletInvokeFunctorDetail.h
+  TwoLevelUniformGridExecutionObject.h
   )
 
 vtkm_declare_headers(${headers})

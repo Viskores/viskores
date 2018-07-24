@@ -92,12 +92,12 @@ static void TestMaxPointOrCell()
   std::cout << "Testing MaxPointOfCell worklet" << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
+  auto cellset = dataSet.GetCellSet(0).Cast<vtkm::cont::CellSetExplicit<>>();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<::test_explicit::MaxPointOrCellValue> dispatcher;
-  dispatcher.Invoke(
-    dataSet.GetField("cellvar"), dataSet.GetField("pointvar"), dataSet.GetCellSet(0), result);
+  dispatcher.Invoke(dataSet.GetField("cellvar"), dataSet.GetField("pointvar"), &cellset, result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
@@ -112,11 +112,12 @@ static void TestAvgPointToCell()
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
+  auto cellset = dataSet.GetCellSet();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetCellSet(), dataSet.GetField("pointvar"), result);
+  dispatcher.Invoke(&cellset, dataSet.GetField("pointvar"), &result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 20.1333f),
@@ -146,11 +147,12 @@ static void TestAvgCellToPoint()
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet1();
+  auto field = dataSet.GetField("cellvar");
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetCellSet(), dataSet.GetField("cellvar"), result);
+  dispatcher.Invoke(dataSet.GetCellSet(), &field, result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),

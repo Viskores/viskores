@@ -177,7 +177,7 @@ void TestClippingExplicit()
 }
 
 template <typename DeviceAdapter>
-void TestClippingStrucutred()
+void TestClippingStructured()
 {
   using CoordsValueType = vtkm::cont::ArrayHandleUniformPointCoordinates::ValueType;
   using CoordsOutType = vtkm::cont::ArrayHandle<CoordsValueType>;
@@ -364,7 +364,7 @@ void TestClipping()
   std::cout << "Testing explicit dataset:" << std::endl;
   TestClippingExplicit<DeviceAdapter>();
   std::cout << "Testing structured dataset:" << std::endl;
-  TestClippingStrucutred<DeviceAdapter>();
+  TestClippingStructured<DeviceAdapter>();
   std::cout << "Testing clipping with implicit function (sphere):" << std::endl;
   TestClippingWithImplicitFunction<DeviceAdapter>();
   TestClippingWithImplicitFunctionInverted<DeviceAdapter>();

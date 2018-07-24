@@ -45,7 +45,7 @@ by definition and thus always return values above or equal to 0.0.
 Negative values indicate either the order in which vertices appear in its connectivity
 array is improper or the relative locations of the vertices in world coordinates
 result in a cell with a negative Jacobian somewhere in its interior.
-Finaly, note that cell measures may return invalid (NaN) or infinite (Inf, -Inf)
+Finally, note that cell measures may return invalid (NaN) or infinite (Inf, -Inf)
 values if the cell is poorly defined, e.g., has coincident vertices
 or a parametric dimension larger than the space spanned by its world-coordinate
 vertices.

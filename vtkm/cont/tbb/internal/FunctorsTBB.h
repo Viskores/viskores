@@ -115,7 +115,7 @@ struct CopyBody
   // back to a iterative casting approach. Since std::copy can only really
   // optimize same-type copies, this shouldn't affect performance.
   template <typename InIter, typename OutIter>
-  VTKM_EXEC void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type) const
+  void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type) const
   {
     using OutputType = typename std::iterator_traits<OutIter>::value_type;
     while (src != srcEnd)
@@ -126,15 +126,15 @@ struct CopyBody
     }
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
+
   template <typename InIter, typename OutIter>
-  VTKM_EXEC void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type) const
+  void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type) const
   {
     std::copy(src, srcEnd, dst);
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+
+
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range) const
   {
     if (range.empty())
@@ -184,7 +184,7 @@ struct CopyIfBody
     vtkm::Id OutputBegin;
     vtkm::Id OutputEnd;
 
-    VTKM_EXEC_CONT
+
     Range()
       : InputBegin(-1)
       , InputEnd(-1)
@@ -193,7 +193,7 @@ struct CopyIfBody
     {
     }
 
-    VTKM_EXEC_CONT
+
     Range(vtkm::Id inputBegin, vtkm::Id inputEnd, vtkm::Id outputBegin, vtkm::Id outputEnd)
       : InputBegin(inputBegin)
       , InputEnd(inputEnd)
@@ -203,7 +203,7 @@ struct CopyIfBody
       this->AssertSane();
     }
 
-    VTKM_EXEC_CONT
+
     void AssertSane() const
     {
       VTKM_ASSERT("Input begin precedes end" && this->InputBegin <= this->InputEnd);
@@ -214,7 +214,7 @@ struct CopyIfBody
                   (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
     }
 
-    VTKM_EXEC_CONT
+
     bool IsNext(const Range& next) const { return this->InputEnd == next.InputBegin; }
   };
 
@@ -236,7 +236,7 @@ struct CopyIfBody
   {
   }
 
-  VTKM_EXEC_CONT
+
   CopyIfBody(const CopyIfBody& body, ::tbb::split)
     : InputPortal(body.InputPortal)
     , StencilPortal(body.StencilPortal)
@@ -245,8 +245,8 @@ struct CopyIfBody
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+
+
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range)
   {
     if (range.empty())
@@ -319,8 +319,8 @@ struct CopyIfBody
     this->Ranges.OutputEnd = writePos;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+
+
   void join(const CopyIfBody& rhs)
   {
     using OutputIteratorsType = vtkm::cont::ArrayPortalToIterators<OutputPortalType>;
@@ -352,7 +352,7 @@ struct CopyIfBody
   }
 };
 
-VTKM_SUPPRESS_EXEC_WARNINGS
+
 template <typename InputPortalType,
           typename StencilPortalType,
           typename OutputPortalType,
@@ -404,7 +404,7 @@ struct ReduceBody
   {
   }
 
-  VTKM_EXEC_CONT
+
   ReduceBody(const ReduceBody& body, ::tbb::split)
     : Sum(vtkm::TypeTraits<T>::ZeroInitialization())
     , InitialValue(body.InitialValue)
@@ -414,8 +414,8 @@ struct ReduceBody
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+
+
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range)
   {
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
@@ -454,8 +454,8 @@ struct ReduceBody
     this->FirstCall = false;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+
+
   void join(const ReduceBody& left)
   {
     // std::cout << "join" << std::endl;
@@ -463,7 +463,7 @@ struct ReduceBody
   }
 };
 
-VTKM_SUPPRESS_EXEC_WARNINGS
+
 template <class InputPortalType, typename T, class BinaryOperationType>
 VTKM_CONT static T ReducePortals(InputPortalType inputPortal,
                                  T initialValue,
@@ -514,7 +514,7 @@ struct ReduceByKeyBody
     vtkm::Id OutputBegin;
     vtkm::Id OutputEnd;
 
-    VTKM_EXEC_CONT
+
     Range()
       : InputBegin(-1)
       , InputEnd(-1)
@@ -523,7 +523,7 @@ struct ReduceByKeyBody
     {
     }
 
-    VTKM_EXEC_CONT
+
     Range(vtkm::Id inputBegin, vtkm::Id inputEnd, vtkm::Id outputBegin, vtkm::Id outputEnd)
       : InputBegin(inputBegin)
       , InputEnd(inputEnd)
@@ -533,7 +533,7 @@ struct ReduceByKeyBody
       this->AssertSane();
     }
 
-    VTKM_EXEC_CONT
+
     void AssertSane() const
     {
       VTKM_ASSERT("Input begin precedes end" && this->InputBegin <= this->InputEnd);
@@ -544,7 +544,7 @@ struct ReduceByKeyBody
                   (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
     }
 
-    VTKM_EXEC_CONT
+
     bool IsNext(const Range& next) const { return this->InputEnd == next.InputBegin; }
   };
 
@@ -577,7 +577,7 @@ struct ReduceByKeyBody
   {
   }
 
-  VTKM_EXEC_CONT
+
   ReduceByKeyBody(const ReduceByKeyBody& body, ::tbb::split)
     : KeysInPortal(body.KeysInPortal)
     , ValuesInPortal(body.ValuesInPortal)
@@ -591,8 +591,8 @@ struct ReduceByKeyBody
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+
+
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range)
   {
 #ifdef _VTKM_DEBUG_TBB_RBK
@@ -726,8 +726,8 @@ struct ReduceByKeyBody
 #endif
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+
+
   void join(const ReduceByKeyBody& rhs)
   {
     using KeysIteratorsType = vtkm::cont::ArrayPortalToIterators<KeysOutPortalType>;
@@ -788,7 +788,7 @@ struct ReduceByKeyBody
   }
 };
 
-VTKM_SUPPRESS_EXEC_WARNINGS
+
 template <typename KeysInPortalType,
           typename ValuesInPortalType,
           typename KeysOutPortalType,
@@ -865,7 +865,7 @@ struct ScanInclusiveBody
   {
   }
 
-  VTKM_EXEC_CONT
+
   ScanInclusiveBody(const ScanInclusiveBody& body, ::tbb::split)
     : Sum(vtkm::TypeTraits<ValueType>::ZeroInitialization())
     , FirstCall(true)
@@ -875,8 +875,8 @@ struct ScanInclusiveBody
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+
+
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::pre_scan_tag)
   {
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
@@ -894,8 +894,8 @@ struct ScanInclusiveBody
     this->Sum = temp;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+
+
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::final_scan_tag)
   {
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
@@ -919,15 +919,15 @@ struct ScanInclusiveBody
     this->Sum = temp;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+
+
   void reverse_join(const ScanInclusiveBody& left)
   {
     this->Sum = this->BinaryOperation(left.Sum, this->Sum);
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+
+
   void assign(const ScanInclusiveBody& src) { this->Sum = src.Sum; }
 };
 
@@ -955,7 +955,7 @@ struct ScanExclusiveBody
   {
   }
 
-  VTKM_EXEC_CONT
+
   ScanExclusiveBody(const ScanExclusiveBody& body, ::tbb::split)
     : Sum(body.Sum)
     , FirstCall(true)
@@ -965,8 +965,8 @@ struct ScanExclusiveBody
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+
+
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::pre_scan_tag)
   {
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
@@ -990,8 +990,8 @@ struct ScanExclusiveBody
     this->FirstCall = false;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+
+
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::final_scan_tag)
   {
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
@@ -1019,8 +1019,8 @@ struct ScanExclusiveBody
     this->FirstCall = false;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+
+
   void reverse_join(const ScanExclusiveBody& left)
   {
     //The contract we have with TBB is that they will only join
@@ -1033,12 +1033,12 @@ struct ScanExclusiveBody
     }
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+
+
   void assign(const ScanExclusiveBody& src) { this->Sum = src.Sum; }
 };
 
-VTKM_SUPPRESS_EXEC_WARNINGS
+
 template <class InputPortalType, class OutputPortalType, class BinaryOperationType>
 VTKM_CONT static typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanInclusivePortals(InputPortalType inputPortal,
@@ -1059,7 +1059,7 @@ ScanInclusivePortals(InputPortalType inputPortal,
   return body.Sum;
 }
 
-VTKM_SUPPRESS_EXEC_WARNINGS
+
 template <class InputPortalType, class OutputPortalType, class BinaryOperationType>
 VTKM_CONT static typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanExclusivePortals(
@@ -1133,7 +1133,7 @@ private:
   vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
 };
 
-VTKM_SUPPRESS_EXEC_WARNINGS
+
 template <typename InputPortalType, typename IndexPortalType, typename OutputPortalType>
 VTKM_CONT static void ScatterPortal(InputPortalType inputPortal,
                                     IndexPortalType indexPortal,
@@ -1161,8 +1161,8 @@ struct UniqueBody
     vtkm::Id OutputBegin;
     vtkm::Id OutputEnd;
 
-    VTKM_SUPPRESS_EXEC_WARNINGS
-    VTKM_EXEC_CONT
+
+
     Range()
       : InputBegin(-1)
       , InputEnd(-1)
@@ -1171,8 +1171,8 @@ struct UniqueBody
     {
     }
 
-    VTKM_SUPPRESS_EXEC_WARNINGS
-    VTKM_EXEC_CONT
+
+
     Range(vtkm::Id inputBegin, vtkm::Id inputEnd, vtkm::Id outputBegin, vtkm::Id outputEnd)
       : InputBegin(inputBegin)
       , InputEnd(inputEnd)
@@ -1182,8 +1182,8 @@ struct UniqueBody
       this->AssertSane();
     }
 
-    VTKM_SUPPRESS_EXEC_WARNINGS
-    VTKM_EXEC_CONT
+
+
     void AssertSane() const
     {
       VTKM_ASSERT("Input begin precedes end" && this->InputBegin <= this->InputEnd);
@@ -1194,8 +1194,8 @@ struct UniqueBody
                   (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
     }
 
-    VTKM_SUPPRESS_EXEC_WARNINGS
-    VTKM_EXEC_CONT
+
+
     bool IsNext(const Range& next) const { return this->InputEnd == next.InputBegin; }
   };
 
@@ -1217,8 +1217,8 @@ struct UniqueBody
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+
+
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range)
   {
     if (range.empty())
@@ -1326,8 +1326,8 @@ struct UniqueBody
     this->Ranges.OutputEnd = writePos;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+
+
   void join(const UniqueBody& rhs)
   {
     using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
@@ -1369,7 +1369,7 @@ struct UniqueBody
   }
 };
 
-VTKM_SUPPRESS_EXEC_WARNINGS
+
 template <typename PortalType, typename BinaryOperationType>
 VTKM_CONT vtkm::Id UniquePortals(PortalType portal, BinaryOperationType binaryOperation)
 {

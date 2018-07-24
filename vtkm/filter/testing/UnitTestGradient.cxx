@@ -28,7 +28,7 @@ namespace
 
 void TestCellGradientUniform3D()
 {
-  std::cout << "Testing Gradient Filter with cell output on 3D strucutred data" << std::endl;
+  std::cout << "Testing Gradient Filter with cell output on 3D structured data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
@@ -69,7 +69,7 @@ void TestCellGradientUniform3D()
 
 void TestCellGradientUniform3DWithVectorField()
 {
-  std::cout << "Testing Gradient Filter with vector cell output on 3D strucutred data" << std::endl;
+  std::cout << "Testing Gradient Filter with vector cell output on 3D structured data" << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
@@ -156,7 +156,7 @@ void TestCellGradientExplicit()
 
 void TestPointGradientUniform3DWithVectorField()
 {
-  std::cout << "Testing Gradient Filter with vector point output on 3D strucutred data"
+  std::cout << "Testing Gradient Filter with vector point output on 3D structured data"
             << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();

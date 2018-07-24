@@ -1,8 +1,8 @@
-// The Art of C++ / Sequences
-// Copyright (c) 2015 Daniel Frey
+// Copyright (c) 2015-2018 Daniel Frey
+// Please see LICENSE for license or visit https://github.com/taocpp/sequences/
 
-#ifndef TAOCPP_SEQUENCES_INCLUDE_EXCLUSIVE_SCAN_HPP
-#define TAOCPP_SEQUENCES_INCLUDE_EXCLUSIVE_SCAN_HPP
+#ifndef TAO_SEQ_EXCLUSIVE_SCAN_HPP
+#define TAO_SEQ_EXCLUSIVE_SCAN_HPP
 
 #include <utility>
 
@@ -11,33 +11,38 @@
 
 namespace tao
 {
-  namespace seq
-  {
-    namespace impl
-    {
-      template< typename S, typename = make_index_sequence< S::size() > >
-      struct exclusive_scan;
-
-      template< typename S, std::size_t... Is >
-      struct exclusive_scan< S, index_sequence< Is... > >
+   namespace seq
+   {
+      namespace impl
       {
-        using type = integer_sequence< typename S::value_type, partial_sum< Is, S >::value... >;
+         template< typename S, typename = make_index_sequence< S::size() > >
+         struct exclusive_scan;
+
+         template< typename S, std::size_t... Is >
+         struct exclusive_scan< S, index_sequence< Is... > >
+         {
+            using type = integer_sequence< typename S::value_type, partial_sum< Is, S >::value... >;
+         };
+
+      }  // namespace impl
+
+      template< typename T, T... Ns >
+      struct exclusive_scan
+         : impl::exclusive_scan< integer_sequence< T, Ns... > >
+      {
       };
-    }
 
-    template< typename T, T... Ns >
-    struct exclusive_scan
-      : impl::exclusive_scan< integer_sequence< T, Ns... > >
-    {};
+      template< typename T, T... Ns >
+      struct exclusive_scan< integer_sequence< T, Ns... > >
+         : impl::exclusive_scan< integer_sequence< T, Ns... > >
+      {
+      };
 
-    template< typename T, T... Ns >
-    struct exclusive_scan< integer_sequence< T, Ns... > >
-      : impl::exclusive_scan< integer_sequence< T, Ns... > >
-    {};
+      template< typename T, T... Ns >
+      using exclusive_scan_t = typename exclusive_scan< T, Ns... >::type;
 
-    template< typename T, T... Ns >
-    using exclusive_scan_t = typename exclusive_scan< T, Ns... >::type;
-  }
-}
+   }  // namespace seq
 
-#endif // TAOCPP_SEQUENCES_INCLUDE_EXCLUSIVE_SCAN_HPP
+}  // namespace tao
+
+#endif

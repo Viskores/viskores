@@ -57,6 +57,34 @@ namespace worklet
 {
 namespace internal
 {
+
+template <typename Domain>
+inline auto scheduling_range(const Domain& inputDomain) -> decltype(inputDomain.GetNumberOfValues())
+{
+  return inputDomain.GetNumberOfValues();
+}
+
+template <typename Domain>
+inline auto scheduling_range(const Domain* const inputDomain)
+  -> decltype(inputDomain->GetNumberOfValues())
+{
+  return inputDomain->GetNumberOfValues();
+}
+
+template <typename Domain, typename SchedulingRangeType>
+inline auto scheduling_range(const Domain& inputDomain, SchedulingRangeType type)
+  -> decltype(inputDomain.GetSchedulingRange(type))
+{
+  return inputDomain.GetSchedulingRange(type);
+}
+
+template <typename Domain, typename SchedulingRangeType>
+inline auto scheduling_range(const Domain* const inputDomain, SchedulingRangeType type)
+  -> decltype(inputDomain->GetSchedulingRange(type))
+{
+  return inputDomain->GetSchedulingRange(type);
+}
+
 namespace detail
 {
 
@@ -76,6 +104,47 @@ inline void PrintFailureMessage(int index)
   throw vtkm::cont::ErrorBadType(message.str());
 }
 
+inline void PrintNullPtrMessage(int index, int mode)
+{
+  std::stringstream message;
+  if (mode == 0)
+  {
+    message << "Encountered nullptr for parameter " << index;
+  }
+  else
+  {
+    message << "Encountered nullptr for " << index << " from last parameter ";
+  }
+  message << " when calling Invoke on a dispatcher.";
+  throw vtkm::cont::ErrorBadValue(message.str());
+}
+
+template <typename T>
+inline void not_nullptr(T* ptr, int index, int mode = 0)
+{
+  if (!ptr)
+  {
+    PrintNullPtrMessage(index, mode);
+  }
+}
+template <typename T>
+inline void not_nullptr(T&&, int, int mode = 0)
+{
+  (void)mode;
+}
+
+template <typename T>
+inline T& as_ref(T* ptr)
+{
+  return *ptr;
+}
+template <typename T>
+inline T&& as_ref(T&& t)
+{
+  return std::forward<T>(t);
+}
+
+
 template <typename T, bool noError>
 struct ReportTypeOnError;
 template <typename T>
@@ -90,10 +159,16 @@ struct ReportValueOnError<Value, true> : std::true_type
 {
 };
 
+template <typename T>
+struct remove_pointer_and_decay : std::remove_pointer<typename std::decay<T>::type>
+{
+};
+
 // Is designed as a brigand fold operation.
-template <typename T, typename State>
+template <typename Type, typename State>
 struct DetermineIfHasDynamicParameter
 {
+  using T = typename std::remove_pointer<Type>::type;
   using DynamicTag = typename vtkm::cont::internal::DynamicTransformTraits<T>::DynamicTag;
   using isDynamic =
     typename std::is_same<DynamicTag, vtkm::cont::internal::DynamicTransformTagCastAndCall>::type;
@@ -106,7 +181,7 @@ struct DetermineIfHasDynamicParameter
 template <typename WorkletType>
 struct DetermineHasCorrectParameters
 {
-  template <typename T, typename State, typename SigTypes>
+  template <typename Type, typename State, typename SigTypes>
   struct Functor
   {
     //T is the type of the Param at the current index
@@ -114,6 +189,7 @@ struct DetermineHasCorrectParameters
     using ControlSignatureTag = typename brigand::at_c<SigTypes, State::value>;
     using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
 
+    using T = typename std::remove_pointer<Type>::type;
     static constexpr bool isCorrect = vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value;
 
     // If you get an error on the line below, that means that your code has called the
@@ -224,26 +300,45 @@ struct DispatcherBaseTransportFunctor
   {
   }
 
+
   template <typename ControlParameter, vtkm::IdComponent Index>
   struct ReturnType
   {
     using TransportTag =
       typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-    using TransportType =
-      typename vtkm::cont::arg::Transport<TransportTag, ControlParameter, Device>;
+    using T = typename remove_pointer_and_decay<ControlParameter>::type;
+    using TransportType = typename vtkm::cont::arg::Transport<TransportTag, T, Device>;
     using type = typename TransportType::ExecObjectType;
   };
 
+  // template<typename ControlParameter, vtkm::IdComponent Index>
+  // VTKM_CONT typename ReturnType<ControlParameter, Index>::type operator()(
+  //   ControlParameter const& invokeData,
+  //   vtkm::internal::IndexTag<Index>) const
+  // {
+  //   using TransportTag =
+  //     typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
+  //   using T = typename remove_pointer_and_decay<ControlParameter>::type;
+  //   vtkm::cont::arg::Transport<TransportTag, T, Device> transport;
+  //   return transport(invokeData, as_ref(this->InputDomain), this->InputRange, this->OutputRange);
+  // }
+
   template <typename ControlParameter, vtkm::IdComponent Index>
   VTKM_CONT typename ReturnType<ControlParameter, Index>::type operator()(
-    const ControlParameter& invokeData,
+    ControlParameter&& invokeData,
     vtkm::internal::IndexTag<Index>) const
   {
     using TransportTag =
       typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-    vtkm::cont::arg::Transport<TransportTag, ControlParameter, Device> transport;
-    return transport(invokeData, this->InputDomain, this->InputRange, this->OutputRange);
+    using T = typename remove_pointer_and_decay<ControlParameter>::type;
+    vtkm::cont::arg::Transport<TransportTag, T, Device> transport;
+
+    not_nullptr(invokeData, Index);
+    return transport(
+      as_ref(invokeData), as_ref(this->InputDomain), this->InputRange, this->OutputRange);
   }
+
+
 
 private:
   void operator=(const DispatcherBaseTransportFunctor&) = delete;
@@ -306,7 +401,8 @@ inline void convert_arg(vtkm::cont::internal::DynamicTransformTagCastAndCall,
   using tag_check = typename brigand::at_c<ContParams, 0>::TypeCheckTag;
   using popped_sig = brigand::pop_front<ContParams>;
 
-  vtkm::cont::CastAndCall(t,
+  not_nullptr(t, LeftToProcess, 1);
+  vtkm::cont::CastAndCall(as_ref(t),
                           convert_arg_wrapper<LeftToProcess, tag_check>(),
                           trampoline,
                           popped_sig(),
@@ -319,8 +415,8 @@ struct for_each_dynamic_arg
   template <typename Trampoline, typename ContParams, typename T, typename... Args>
   void operator()(const Trampoline& trampoline, ContParams&& sig, T&& t, Args&&... args) const
   {
-    //Determine that state of T
-    using Type = typename std::decay<T>::type;
+    //Determine that state of T when it is either a `cons&` or a `* const&`
+    using Type = typename std::remove_pointer<typename std::decay<T>::type>::type;
     using tag = typename vtkm::cont::internal::DynamicTransformTraits<Type>::DynamicTag;
     //convert the first item to a known type
     convert_arg<LeftToProcess>(
@@ -456,7 +552,8 @@ private:
     // argument) and the ControlSignature tags (in the ControlInterface type).
     using ContParamsInfo =
       vtkm::internal::detail::FunctionSigInfo<typename WorkletType::ControlSignature>;
-    detail::deduce(*this, typename ContParamsInfo::Parameters(), std::forward<Args>(args)...);
+    typename ContParamsInfo::Parameters parameters;
+    detail::deduce(*this, parameters, std::forward<Args>(args)...);
   }
 
   template <typename... Args>
@@ -518,7 +615,7 @@ protected:
   }
 
   template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+  VTKM_CONT void BasicInvoke(Invocation& invocation,
                              vtkm::Id numInstances,
                              DeviceAdapter device) const
   {
@@ -527,7 +624,7 @@ protected:
   }
 
   template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+  VTKM_CONT void BasicInvoke(Invocation& invocation,
                              vtkm::Id2 dimensions,
                              DeviceAdapter device) const
   {
@@ -535,7 +632,7 @@ protected:
   }
 
   template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+  VTKM_CONT void BasicInvoke(Invocation& invocation,
                              vtkm::Id3 dimensions,
                              DeviceAdapter device) const
   {
@@ -555,7 +652,7 @@ private:
             typename InputRangeType,
             typename OutputRangeType,
             typename DeviceAdapter>
-  VTKM_CONT void InvokeTransportParameters(const Invocation& invocation,
+  VTKM_CONT void InvokeTransportParameters(Invocation& invocation,
                                            const InputRangeType& inputRange,
                                            OutputRangeType&& outputRange,
                                            DeviceAdapter device) const
@@ -570,7 +667,7 @@ private:
     // static transform of the FunctionInterface to call the transport on each
     // argument and return the corresponding execution environment object.
     using ParameterInterfaceType = typename Invocation::ParameterInterface;
-    const ParameterInterfaceType& parameters = invocation.Parameters;
+    ParameterInterfaceType& parameters = invocation.Parameters;
 
     using TransportFunctorType =
       detail::DispatcherBaseTransportFunctor<typename Invocation::ControlInterface,

@@ -72,7 +72,7 @@ public:
     // here using byte(254), /255 gives us .99608, which
     // *256 gives us 254.996, which is then rounded
     // back down to 254 below.  So it actually reverses
-    // correctly, even though the mutliplier and
+    // correctly, even though the multiplier and
     // divider don't match between these two methods.
     //
     // Of course, converting in GetComponentAsByte from

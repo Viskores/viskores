@@ -68,7 +68,7 @@
 #
 #
 
-# guard agaisnt building vectorization_flags more than once
+# guard against building vectorization_flags more than once
 if(TARGET vtkm_vectorization_flags)
   return()
 endif()

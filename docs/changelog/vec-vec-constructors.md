@@ -1,7 +1,7 @@
 # VTK-m Vec< Vec<T> > can't be constructed from Vec<U>
 
  
-When you have a Vec<Vec<float,3>> it was possible to incorrectly initalize
+When you have a Vec<Vec<float,3>> it was possible to incorrectly initialize
 it with the contents of a Vec<double,3>. An example of this is:
 ```cpp
 using Vec3d = vtkm::Vec<double, 3>;

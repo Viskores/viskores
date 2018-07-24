@@ -25,6 +25,7 @@ set(headers
   CellMeasure.h
   Clip.h
   ContourTreeUniform.h
+  CoordinateSystemTransform.h
   CosmoTools.h
   CrossProduct.h
   DispatcherMapField.h
@@ -52,6 +53,7 @@ set(headers
   NDimsHistogram.h
   NDimsHistMarginalization.h
   Normalize.h
+  OscillatorSource.h
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
@@ -71,7 +73,10 @@ set(headers
   ThresholdPoints.h
   Triangulate.h
   VertexClustering.h
+  WarpScalar.h
+  WarpVector.h
   WaveletCompressor.h
+  WaveletGenerator.h
   WorkletMapField.h
   WorkletMapTopology.h
   WorkletPointNeighborhood.h

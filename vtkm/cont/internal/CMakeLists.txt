@@ -41,6 +41,7 @@ set(headers
   KXSort.h
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
+  ReverseConnectivityBuilder.h
   SimplePolymorphicContainer.h
   StorageError.h
   VirtualObjectTransfer.h

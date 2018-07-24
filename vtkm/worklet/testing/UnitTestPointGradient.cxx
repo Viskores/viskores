@@ -53,7 +53,7 @@ void TestPointGradientUniform2D()
 template <typename DeviceAdapter>
 void TestPointGradientUniform3D()
 {
-  std::cout << "Testing PointGradient Worklet on 3D strucutred data" << std::endl;
+  std::cout << "Testing PointGradient Worklet on 3D structured data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
@@ -81,7 +81,7 @@ void TestPointGradientUniform3D()
 template <typename DeviceAdapter>
 void TestPointGradientUniform3DWithVectorField()
 {
-  std::cout << "Testing PointGradient Worklet with a vector field on 3D strucutred data"
+  std::cout << "Testing PointGradient Worklet with a vector field on 3D structured data"
             << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
@@ -125,7 +125,7 @@ void TestPointGradientUniform3DWithVectorField()
 template <typename DeviceAdapter>
 void TestPointGradientUniform3DWithVectorField2()
 {
-  std::cout << "Testing PointGradient Worklet with a vector field on 3D strucutred data"
+  std::cout << "Testing PointGradient Worklet with a vector field on 3D structured data"
             << std::endl
             << "Disabling Gradient computation and enabling Divergence, Vorticity, and QCriterion"
             << std::endl;

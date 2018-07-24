@@ -87,11 +87,11 @@ struct TestWholeCellSetIn
                       numberOfElements,
                       shapeIds,
                       numberOfIndices,
-                      connectionSum);
+                      &connectionSum);
   }
 
   template <typename CellSetType>
-  VTKM_CONT static void RunPoints(const CellSetType& cellSet,
+  VTKM_CONT static void RunPoints(const CellSetType* cellSet,
                                   vtkm::cont::ArrayHandle<vtkm::Id> numberOfElements,
                                   vtkm::cont::ArrayHandle<vtkm::UInt8> shapeIds,
                                   vtkm::cont::ArrayHandle<vtkm::IdComponent> numberOfIndices,
@@ -100,10 +100,10 @@ struct TestWholeCellSetIn
     using WorkletType =
       WholeCellSetWorklet<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(cellSet.GetNumberOfPoints()),
+    dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(cellSet->GetNumberOfPoints()),
                       cellSet,
                       numberOfElements,
-                      shapeIds,
+                      &shapeIds,
                       numberOfIndices,
                       connectionSum);
   }
@@ -169,7 +169,7 @@ VTKM_CONT void TryPointConnectivity(const CellSetType& cellSet,
   vtkm::cont::ArrayHandle<vtkm::Id> connectionSum;
 
   TestWholeCellSetIn::RunPoints(
-    cellSet, numberOfElements, shapeIds, numberOfIndices, connectionSum);
+    &cellSet, numberOfElements, shapeIds, numberOfIndices, connectionSum);
 
   std::cout << "    Number of elements: " << numberOfElements.GetPortalConstControl().Get(0)
             << std::endl;

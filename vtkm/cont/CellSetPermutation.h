@@ -206,6 +206,15 @@ public:
   vtkm::Id GetNumberOfEdges() const override { return -1; }
 
   VTKM_CONT
+  void ReleaseResourcesExecution() override
+  {
+    this->ValidCellIds.ReleaseResourcesExecution();
+    this->FullCellSet.ReleaseResourcesExecution();
+    this->CellToPoint.ReleaseResourcesExecution();
+  }
+
+
+  VTKM_CONT
   vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const
   {
     return this->FullCellSet.GetNumberOfPointsInCell(
