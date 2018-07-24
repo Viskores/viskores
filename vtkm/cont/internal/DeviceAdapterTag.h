@@ -44,12 +44,6 @@ using DeviceAdapterNameType = std::string;
 
 template <typename DeviceAdapter>
 struct DeviceAdapterTraits;
-
-template <typename DeviceAdapter>
-struct DeviceAdapterTagCheck
-{
-  static constexpr bool Valid = false;
-};
 }
 }
 
@@ -71,11 +65,6 @@ struct DeviceAdapterTagCheck
     static DeviceAdapterNameType GetName() { return DeviceAdapterNameType(#Name); }                \
     static constexpr bool Valid = true;                                                            \
   };                                                                                               \
-  template <>                                                                                      \
-  struct DeviceAdapterTagCheck<vtkm::cont::DeviceAdapterTag##Name>                                 \
-  {                                                                                                \
-    static constexpr bool Valid = true;                                                            \
-  };                                                                                               \
   }                                                                                                \
   }
 
@@ -87,7 +76,7 @@ struct DeviceAdapterTagCheck
   {                                                                                                \
   namespace cont                                                                                   \
   {                                                                                                \
-  struct DeviceAdapterTag##Name                                                                    \
+  struct VTKM_ALWAYS_EXPORT DeviceAdapterTag##Name                                                 \
   {                                                                                                \
   };                                                                                               \
   template <>                                                                                      \
@@ -95,11 +84,6 @@ struct DeviceAdapterTagCheck
   {                                                                                                \
     static DeviceAdapterId GetId() { return DeviceAdapterId(Id); }                                 \
     static DeviceAdapterNameType GetName() { return DeviceAdapterNameType(#Name); }                \
-    static constexpr bool Valid = false;                                                           \
-  };                                                                                               \
-  template <>                                                                                      \
-  struct DeviceAdapterTagCheck<vtkm::cont::DeviceAdapterTag##Name>                                 \
-  {                                                                                                \
     static constexpr bool Valid = false;                                                           \
   };                                                                                               \
   }                                                                                                \
@@ -111,7 +95,7 @@ struct DeviceAdapterTagCheck
 /// elsewhere in the code when a mistake is made.)
 ///
 #define VTKM_IS_DEVICE_ADAPTER_TAG(tag)                                                            \
-  VTKM_STATIC_ASSERT_MSG(::vtkm::cont::DeviceAdapterTagCheck<tag>::Valid,                          \
+  VTKM_STATIC_ASSERT_MSG(::vtkm::cont::DeviceAdapterTraits<tag>::Valid,                            \
                          "Provided type is not a valid VTK-m device adapter tag.")
 
 #endif //vtk_m_cont_internal_DeviceAdapterTag_h
