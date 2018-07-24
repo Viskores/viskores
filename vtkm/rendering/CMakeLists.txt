@@ -108,7 +108,6 @@ set(sources
   View3D.cxx
   WorldAnnotator.cxx
 
-  internal/RunTriangulator.cxx
   raytracing/ConnectivityBase.cxx
   raytracing/ConnectivityTracerBase.cxx
   raytracing/ConnectivityTracerFactory.cxx
@@ -157,6 +156,7 @@ set(device_sources
   MapperWireframer.cxx
   TextRenderer.cxx
 
+  internal/RunTriangulator.cxx
   raytracing/BoundingVolumeHierarchy.cxx
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
