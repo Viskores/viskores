@@ -30,9 +30,6 @@
 #include <vtkm/cont/openmp/internal/ParallelSortOpenMP.h>
 #include <vtkm/exec/openmp/internal/TaskTilingOpenMP.h>
 
-// For serial fallback:
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-
 #include <omp.h>
 
 #include <algorithm>
@@ -50,7 +47,6 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagOpenMP>
       vtkm::cont::DeviceAdapterTagOpenMP>
 {
   using DevTag = DeviceAdapterTagOpenMP;
-  using SerialAlgo = DeviceAdapterAlgorithm<DeviceAdapterTagSerial>;
 
 public:
   template <typename T, typename U, class CIn, class COut>
@@ -228,9 +224,9 @@ public:
                                    vtkm::cont::ArrayHandle<T, COut>& output,
                                    BinaryFunctor binaryFunctor)
   {
-    if (input.GetNumberOfValues() * sizeof(T) <= openmp::PAGE_SIZE)
+    if (input.GetNumberOfValues() <= 0)
     {
-      return SerialAlgo::ScanInclusive(input, output, binaryFunctor);
+      return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
     using InPortalT = decltype(input.PrepareForInput(DevTag()));
@@ -257,9 +253,9 @@ public:
                                    BinaryFunctor binaryFunctor,
                                    const T& initialValue)
   {
-    if (input.GetNumberOfValues() * sizeof(T) <= openmp::PAGE_SIZE)
+    if (input.GetNumberOfValues() <= 0)
     {
-      return SerialAlgo::ScanExclusive(input, output, binaryFunctor, initialValue);
+      return initialValue;
     }
 
     using InPortalT = decltype(input.PrepareForInput(DevTag()));
