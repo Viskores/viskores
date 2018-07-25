@@ -29,12 +29,13 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral, -3);
+VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral, 7);
 
 namespace vtkm
 {
@@ -130,7 +131,7 @@ struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
   using ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareWithControl;
 
   VTKM_CONT
-  DeviceAdapterId GetDeviceId() const final { return DeviceAdapterId(-3); }
+  DeviceAdapterId GetDeviceId() const final { return DeviceAdapterId(7); }
 };
 }
 }
@@ -138,6 +139,11 @@ struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
 
 int UnitTestDeviceAdapterAlgorithmGeneral(int, char* [])
 {
+  //need to enable DeviceAdapterTagTestAlgorithmGeneral as it
+  //is not part of the default set of devices
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ResetDevice(vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral{});
+
   return vtkm::cont::testing::TestingDeviceAdapter<
     vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>::Run();
 }
