@@ -79,7 +79,8 @@ protected:
   //This is going to need a TryExecute
   VTKM_CONT virtual void Build() = 0;
 
-  VTKM_CONT virtual const HandleType PrepareForExecutionImpl(const vtkm::Int8 device) const = 0;
+  VTKM_CONT virtual const HandleType PrepareForExecutionImpl(
+    const vtkm::cont::DeviceAdapterId device) const = 0;
 
 private:
   vtkm::cont::DynamicCellSet CellSet;

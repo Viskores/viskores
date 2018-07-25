@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 namespace vtkm
 {
@@ -31,7 +32,7 @@ namespace cont
 namespace detail
 {
 
-VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::Int8,
+VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::cont::DeviceAdapterId,
                                                 const std::string&,
                                                 vtkm::cont::RuntimeDeviceTracker&);
 
@@ -51,7 +52,7 @@ bool TryExecuteIfValid(std::true_type,
     catch (...)
     {
       using Traits = vtkm::cont::DeviceAdapterTraits<DeviceTag>;
-      HandleTryExecuteException(Traits::GetId(), Traits::GetName(), tracker);
+      detail::HandleTryExecuteException(Traits::GetId(), Traits::GetName(), tracker);
     }
   }
 
