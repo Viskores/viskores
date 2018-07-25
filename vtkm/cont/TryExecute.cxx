@@ -31,7 +31,7 @@ namespace cont
 namespace detail
 {
 
-void HandleTryExecuteException(vtkm::Int8 deviceId,
+void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
                                const std::string& name,
                                vtkm::cont::RuntimeDeviceTracker& tracker)
 {

@@ -83,7 +83,7 @@ public:
   /// device as being unusable for all future invocations of the instance of
   /// the filter.
   ///
-  VTKM_CONT void ReportAllocationFailure(vtkm::Int8 deviceId,
+  VTKM_CONT void ReportAllocationFailure(vtkm::cont::DeviceAdapterId deviceId,
                                          const std::string& name,
                                          const vtkm::cont::ErrorBadAllocation&)
   {
@@ -99,7 +99,7 @@ public:
     this->SetDeviceState(Traits::GetId(), Traits::GetName(), false);
   }
 
-  VTKM_CONT void ReportBadDeviceFailure(vtkm::Int8 deviceId,
+  VTKM_CONT void ReportBadDeviceFailure(vtkm::cont::DeviceAdapterId deviceId,
                                         const std::string& name,
                                         const vtkm::cont::ErrorBadDevice&)
   {
