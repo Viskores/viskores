@@ -345,19 +345,15 @@ void TestErrorFunctorInvoke()
 
   auto task = TaskTypes::MakeTask(worklet, invocation, vtkm::Id());
 
-  vtkm::Id errorArraySize = 0;
-  char* hostErrorPtr = nullptr;
-  char* deviceErrorPtr = Algorithm::GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
-
-  hostErrorPtr[0] = '\0';
-  vtkm::exec::internal::ErrorMessageBuffer errorMessage(deviceErrorPtr, errorArraySize);
+  auto errorArray = Algorithm::GetPinnedErrorArray();
+  vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorArray.DevicePtr, errorArray.Size);
   task.SetErrorMessageBuffer(errorMessage);
 
   ScheduleTaskStrided<decltype(task)><<<32, 256>>>(task, 1, 2);
   cudaDeviceSynchronize();
 
   VTKM_TEST_ASSERT(errorMessage.IsErrorRaised(), "Error not raised correctly.");
-  VTKM_TEST_ASSERT(hostErrorPtr == std::string(ERROR_MESSAGE), "Got wrong error message.");
+  VTKM_TEST_ASSERT(errorArray.HostPtr == std::string(ERROR_MESSAGE), "Got wrong error message.");
 }
 
 template <typename DeviceAdapter>
