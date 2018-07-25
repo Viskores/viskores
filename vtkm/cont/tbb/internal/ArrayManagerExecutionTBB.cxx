@@ -26,16 +26,6 @@ namespace vtkm
 {
 namespace cont
 {
-namespace internal
-{
-
-ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB>::ExecutionArrayInterfaceBasic(
-  StorageBasicBase& storage)
-  : Superclass(storage)
-{
-}
-
-} // end namespace internal
 
 VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagTBB)
 }

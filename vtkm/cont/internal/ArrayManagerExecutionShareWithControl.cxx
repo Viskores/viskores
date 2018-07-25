@@ -27,12 +27,6 @@ namespace cont
 namespace internal
 {
 
-ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareWithControl(
-  vtkm::cont::internal::StorageBasicBase& storage)
-  : Superclass(storage)
-{
-}
-
 void ExecutionArrayInterfaceBasicShareWithControl::Allocate(TypelessExecutionArray& execArray,
                                                             vtkm::Id numberOfValues,
                                                             vtkm::UInt64 sizeOfValue) const

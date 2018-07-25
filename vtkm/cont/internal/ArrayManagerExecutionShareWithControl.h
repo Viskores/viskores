@@ -135,9 +135,8 @@ struct ExecutionPortalFactoryBasicShareWithControl
 struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicShareWithControl
   : public ExecutionArrayInterfaceBasicBase
 {
-  using Superclass = ExecutionArrayInterfaceBasicBase;
-
-  VTKM_CONT ExecutionArrayInterfaceBasicShareWithControl(StorageBasicBase& storage);
+  //inherit our parents constructor
+  using ExecutionArrayInterfaceBasicBase::ExecutionArrayInterfaceBasicBase;
 
   VTKM_CONT void Allocate(TypelessExecutionArray& execArray,
                           vtkm::Id numberOfValues,

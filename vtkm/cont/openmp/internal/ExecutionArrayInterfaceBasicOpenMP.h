@@ -17,11 +17,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_serial_internal_ExecutionArrayInterfaceBasicSerial_h
-#define vtk_m_cont_serial_internal_ExecutionArrayInterfaceBasicSerial_h
+#ifndef vtk_m_cont_openmp_internal_ExecutionArrayInterfaceBasicOpenMP_h
+#define vtk_m_cont_openmp_internal_ExecutionArrayInterfaceBasicOpenMP_h
 
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
-#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
+#include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
 
 namespace vtkm
 {
@@ -31,7 +31,7 @@ namespace internal
 {
 
 template <>
-struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagSerial> final
+struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagOpenMP> final
   : public ExecutionArrayInterfaceBasicShareWithControl
 {
   //inherit our parents constructor
