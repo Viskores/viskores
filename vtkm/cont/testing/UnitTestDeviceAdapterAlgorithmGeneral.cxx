@@ -35,7 +35,7 @@
 
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral, -3);
+VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral, 7);
 
 namespace vtkm
 {
@@ -131,7 +131,7 @@ struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
   using ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareWithControl;
 
   VTKM_CONT
-  DeviceAdapterId GetDeviceId() const final { return DeviceAdapterId(-3); }
+  DeviceAdapterId GetDeviceId() const final { return DeviceAdapterId(7); }
 };
 }
 }
