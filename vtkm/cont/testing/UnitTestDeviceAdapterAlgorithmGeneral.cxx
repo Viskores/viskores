@@ -126,16 +126,11 @@ template <>
 struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
   : public ExecutionArrayInterfaceBasicShareWithControl
 {
-  using Superclass = ExecutionArrayInterfaceBasicShareWithControl;
+  //inherit our parents constructor
+  using ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareWithControl;
 
   VTKM_CONT
-  ExecutionArrayInterfaceBasic(StorageBasicBase& storage)
-    : Superclass(storage)
-  {
-  }
-
-  VTKM_CONT
-  DeviceAdapterId GetDeviceId() const final { return -3; }
+  DeviceAdapterId GetDeviceId() const final { return DeviceAdapterId(-3); }
 };
 }
 }

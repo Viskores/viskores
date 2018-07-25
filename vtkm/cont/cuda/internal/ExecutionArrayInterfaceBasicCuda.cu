@@ -29,15 +29,9 @@ namespace cont
 namespace internal
 {
 
-ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::ExecutionArrayInterfaceBasic(
-  StorageBasicBase& storage)
-  : Superclass(storage)
-{
-}
-
 DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::GetDeviceId() const
 {
-  return VTKM_DEVICE_ADAPTER_CUDA;
+  return DeviceAdapterId(VTKM_DEVICE_ADAPTER_CUDA);
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecutionArray& execArray,

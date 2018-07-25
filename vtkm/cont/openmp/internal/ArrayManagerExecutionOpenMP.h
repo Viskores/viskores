@@ -27,6 +27,7 @@
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
+#include <vtkm/cont/openmp/internal/ExecutionArrayInterfaceBasicOpenMP.h>
 
 namespace vtkm
 {
@@ -83,19 +84,6 @@ struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagOpenMP>
   using typename Superclass::PortalConstType;
   using Superclass::CreatePortal;
   using Superclass::CreatePortalConst;
-};
-
-template <>
-struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagOpenMP> final
-  : public ExecutionArrayInterfaceBasicShareWithControl
-{
-  using Superclass = ExecutionArrayInterfaceBasicShareWithControl;
-
-  VTKM_CONT
-  ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
-
-  VTKM_CONT
-  DeviceAdapterId GetDeviceId() const final { return VTKM_DEVICE_ADAPTER_OPENMP; }
 };
 
 } // namespace internal

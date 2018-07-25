@@ -26,16 +26,7 @@ namespace vtkm
 {
 namespace cont
 {
-namespace internal
-{
 
-ExecutionArrayInterfaceBasic<DeviceAdapterTagOpenMP>::ExecutionArrayInterfaceBasic(
-  StorageBasicBase& storage)
-  : Superclass(storage)
-{
-}
-
-} // end namespace internal
 
 VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagOpenMP)
 }
