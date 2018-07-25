@@ -37,10 +37,10 @@ class ExecuteIfValidDeviceTag
 {
 private:
   template <typename DeviceAdapter>
-  using EnableIfValid = std::enable_if<vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::Valid>;
+  using EnableIfValid = std::enable_if<DeviceAdapter::IsEnabled>;
 
   template <typename DeviceAdapter>
-  using EnableIfInvalid = std::enable_if<!vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::Valid>;
+  using EnableIfInvalid = std::enable_if<!DeviceAdapter::IsEnabled>;
 
 public:
   explicit ExecuteIfValidDeviceTag(const FunctorType& functor)
@@ -99,7 +99,7 @@ public:
                   bool& status,
                   Args&&... args) const
   {
-    if (vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId() == deviceId)
+    if (device == deviceId)
     {
       VTKM_ASSERT(status == false);
       this->Functor(device, std::forward<Args>(args)...);
@@ -126,8 +126,8 @@ VTKM_CONT void FindDeviceAdapterTagAndCall(vtkm::cont::DeviceAdapterId deviceId,
   ForEachValidDevice(devices, wrapped, deviceId, status, std::forward<Args>(args)...);
   if (!status)
   {
-    std::string msg =
-      "Device with id " + std::to_string(deviceId) + " is either not in the list or is invalid";
+    std::string msg = "Device with id " + std::to_string(deviceId.GetValue()) +
+      " is either not in the list or is invalid";
     throw vtkm::cont::ErrorBadDevice(msg);
   }
 }

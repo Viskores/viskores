@@ -34,8 +34,6 @@
 #include <sstream>
 #include <thread>
 
-#define VTKM_MAX_DEVICE_ADAPTER_ID 8
-
 namespace vtkm
 {
 namespace cont
@@ -66,10 +64,10 @@ VTKM_CONT
 void RuntimeDeviceTracker::CheckDevice(vtkm::cont::DeviceAdapterId deviceId,
                                        const vtkm::cont::DeviceAdapterNameType& deviceName) const
 {
-  if ((deviceId < 0) || (deviceId >= VTKM_MAX_DEVICE_ADAPTER_ID))
+  if (!deviceId.IsValueValid())
   {
     std::stringstream message;
-    message << "Device '" << deviceName << "' has invalid ID of " << deviceId;
+    message << "Device '" << deviceName << "' has invalid ID of " << (int)deviceId.GetValue();
     throw vtkm::cont::ErrorBadValue(message.str());
   }
 }
@@ -79,7 +77,7 @@ bool RuntimeDeviceTracker::CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId,
                                         const vtkm::cont::DeviceAdapterNameType& deviceName) const
 {
   this->CheckDevice(deviceId, deviceName);
-  return this->Internals->RuntimeValid[deviceId];
+  return this->Internals->RuntimeValid[deviceId.GetValue()];
 }
 
 VTKM_CONT
@@ -88,7 +86,7 @@ void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId,
                                           bool state)
 {
   this->CheckDevice(deviceId, deviceName);
-  this->Internals->RuntimeValid[deviceId] = state;
+  this->Internals->RuntimeValid[deviceId.GetValue()] = state;
 }
 
 namespace
@@ -105,9 +103,9 @@ struct VTKM_NEVER_EXPORT RuntimeDeviceTrackerResetFunctor
   }
 
   template <typename Device>
-  VTKM_CONT void operator()(Device)
+  VTKM_CONT void operator()(Device device)
   {
-    this->Tracker.ResetDevice(Device());
+    this->Tracker.ResetDevice(device);
   }
 };
 }
@@ -152,7 +150,7 @@ void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
 
   std::fill_n(this->Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, false);
 
-  this->Internals->RuntimeValid[deviceId] = runtimeExists;
+  this->Internals->RuntimeValid[deviceId.GetValue()] = runtimeExists;
 }
 
 VTKM_CONT

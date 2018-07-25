@@ -234,10 +234,9 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
 
 template <typename T>
 template <typename DeviceAdapterTag>
-void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag) const
+void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag device) const
 {
-  DeviceAdapterId devId = DeviceAdapterTraits<DeviceAdapterTag>::GetId();
-  bool needToRealloc = this->Internals->PrepareForDevice(devId, sizeof(T));
+  bool needToRealloc = this->Internals->PrepareForDevice(device, sizeof(T));
   if (needToRealloc)
   {
     this->Internals->ExecutionInterface =

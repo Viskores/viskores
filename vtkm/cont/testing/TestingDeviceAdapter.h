@@ -471,13 +471,16 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing device adapter tag" << std::endl;
 
+    constexpr DeviceAdapterTag deviceTag;
+    constexpr vtkm::cont::DeviceAdapterTagError errorTag;
+
+    VTKM_TEST_ASSERT(deviceTag.GetValue() == deviceTag.GetValue(),
+                     "Device adapter Id does not equal itself.");
+    VTKM_TEST_ASSERT(deviceTag.GetValue() != errorTag.GetValue(),
+                     "Device adapter Id not distinguishable from others.");
+
     using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
     using ErrorTraits = vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>;
-
-    VTKM_TEST_ASSERT(Traits::GetId() == Traits::GetId(),
-                     "Device adapter Id does not equal itself.");
-    VTKM_TEST_ASSERT(Traits::GetId() != ErrorTraits::GetId(),
-                     "Device adapter Id not distinguishable from others.");
 
     VTKM_TEST_ASSERT(Traits::GetName() == Traits::GetName(),
                      "Device adapter Name does not equal itself.");

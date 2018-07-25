@@ -666,17 +666,6 @@ public:
   /// This pointer is only valid as long as the ColorTable is unmodified
   const vtkm::exec::ColorTableBase* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const;
 
-  /// \brief returns a virtual object pointer of the exec color table
-  ///
-  /// This pointer is only valid as long as the ColorTable is unmodified
-  template <typename DeviceAdapter>
-  const vtkm::exec::ColorTableBase* PrepareForExecution(DeviceAdapter) const
-  {
-    auto deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    return this->PrepareForExecution(deviceId);
-  }
-
-
   /// \brief returns the modified count for the virtual object handle of the exec color table
   ///
   /// The modified count allows consumers of a shared color table to keep track

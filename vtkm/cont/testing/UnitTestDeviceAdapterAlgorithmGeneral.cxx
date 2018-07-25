@@ -116,11 +116,11 @@ struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagTestAlgorithmGeneral>
 {
   using Superclass = ExecutionPortalFactoryBasicShareWithControl<T>;
 
-  using typename Superclass::ValueType;
-  using typename Superclass::PortalType;
-  using typename Superclass::PortalConstType;
   using Superclass::CreatePortal;
   using Superclass::CreatePortalConst;
+  using typename Superclass::PortalConstType;
+  using typename Superclass::PortalType;
+  using typename Superclass::ValueType;
 };
 
 template <>

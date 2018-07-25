@@ -273,45 +273,46 @@ private:
   struct PrepareForInputFunctor
   {
     template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter,
+    VTKM_CONT void operator()(DeviceAdapter device,
                               CoordinatesArrayHandle* instance,
                               PortalConst& ret) const
     {
-      auto portal = instance->Array.PrepareForInput(DeviceAdapter());
+      auto portal = instance->Array.PrepareForInput(device);
       instance->DevicePortalHandle.Reset(new CoordinatesPortalConst<decltype(portal)>(portal),
                                          true,
                                          vtkm::ListTagBase<DeviceAdapter>());
       ret = PortalConst(portal.GetNumberOfValues(),
-                        instance->DevicePortalHandle.PrepareForExecution(DeviceAdapter()));
+                        instance->DevicePortalHandle.PrepareForExecution(device));
     }
   };
 
   struct PrepareForOutputFunctor
   {
     template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter,
+    VTKM_CONT void operator()(DeviceAdapter device,
                               CoordinatesArrayHandle* instance,
                               vtkm::Id numberOfValues,
                               Portal& ret) const
     {
-      auto portal = instance->Array.PrepareForOutput(numberOfValues, DeviceAdapter());
+      auto portal = instance->Array.PrepareForOutput(numberOfValues, device);
       instance->DevicePortalHandle.Reset(
         new CoordinatesPortal<decltype(portal)>(portal), true, vtkm::ListTagBase<DeviceAdapter>());
-      ret =
-        Portal(numberOfValues, instance->DevicePortalHandle.PrepareForExecution(DeviceAdapter()));
+      ret = Portal(numberOfValues, instance->DevicePortalHandle.PrepareForExecution(device));
     }
   };
 
   struct PrepareForInPlaceFunctor
   {
     template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter, CoordinatesArrayHandle* instance, Portal& ret) const
+    VTKM_CONT void operator()(DeviceAdapter device,
+                              CoordinatesArrayHandle* instance,
+                              Portal& ret) const
     {
-      auto portal = instance->Array.PrepareForInPlace(DeviceAdapter());
+      auto portal = instance->Array.PrepareForInPlace(device);
       instance->DevicePortalHandle.Reset(
         new CoordinatesPortal<decltype(portal)>(portal), true, vtkm::ListTagBase<DeviceAdapter>());
       ret = Portal(instance->Array.GetNumberOfValues(),
-                   instance->DevicePortalHandle.PrepareForExecution(DeviceAdapter()));
+                   instance->DevicePortalHandle.PrepareForExecution(device));
     }
   };
 
@@ -384,20 +385,19 @@ public:
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool)
   {
-    return this->Array->PrepareForInput(vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId());
+    return this->Array->PrepareForInput(DeviceAdapter());
   }
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool)
   {
-    return this->Array->PrepareForInPlace(vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId());
+    return this->Array->PrepareForInPlace(DeviceAdapter());
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
-    return this->Array->PrepareForOutput(numberOfValues,
-                                         vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId());
+    return this->Array->PrepareForOutput(numberOfValues, DeviceAdapter());
   }
 
   VTKM_CONT
