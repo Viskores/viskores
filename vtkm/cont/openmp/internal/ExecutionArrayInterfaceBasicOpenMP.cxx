@@ -28,7 +28,7 @@ namespace internal
 
 DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagOpenMP>::GetDeviceId() const
 {
-  return VTKM_DEVICE_ADAPTER_OPENMP;
+  return DeviceAdapterId(VTKM_DEVICE_ADAPTER_OPENMP);
 }
 
 } // namespace internal

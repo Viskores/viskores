@@ -31,7 +31,7 @@ namespace internal
 
 DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::GetDeviceId() const
 {
-  return VTKM_DEVICE_ADAPTER_CUDA;
+  return DeviceAdapterId(VTKM_DEVICE_ADAPTER_CUDA);
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecutionArray& execArray,
