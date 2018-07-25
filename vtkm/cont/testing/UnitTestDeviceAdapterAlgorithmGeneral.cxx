@@ -29,6 +29,7 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
@@ -138,6 +139,11 @@ struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
 
 int UnitTestDeviceAdapterAlgorithmGeneral(int, char* [])
 {
+  //need to enable DeviceAdapterTagTestAlgorithmGeneral as it
+  //is not part of the default set of devices
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ResetDevice(vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral{});
+
   return vtkm::cont::testing::TestingDeviceAdapter<
     vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>::Run();
 }
