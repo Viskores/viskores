@@ -112,7 +112,7 @@ public:
   /// Choose the scalar factor field to operate on. In the warp op A + B *
   /// scaleAmount * scalarFactor, scalarFactor is the scalar factor field.
   VTKM_CONT
-  void SetScarlarFactorField(
+  void SetScalarFactorField(
     const std::string& name,
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
