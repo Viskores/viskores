@@ -19,6 +19,7 @@ git config branch.master.rebase true
 # General aliases that could be global
 git config alias.pullall '!bash -c "git pull && git submodule update --init"' &&
 git config alias.prepush 'log --graph --stat origin/master..' &&
+git config alias.pull-master 'fetch origin master:master' &&
 
 # Alias to push the current topic branch to GitLab
 git config alias.gitlab-push '!bash Utilities/GitSetup/git-gitlab-push' &&
