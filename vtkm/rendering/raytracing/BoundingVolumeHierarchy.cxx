@@ -426,7 +426,7 @@ public:
         cThird4Vec[3] = vtkm::Max(cSecond4Vec[1], cThird4Vec[3]);
         FlatBVH.Set(currentNodeOffset + 2, cThird4Vec);
       }
-      vtkm::Vec<vtkm::Float32, 4> fourth4Vec;
+      vtkm::Vec<vtkm::Float32, 4> fourth4Vec(0.f, 0.f, 0.f, 0.f);
       vtkm::Int32 leftChild =
         static_cast<vtkm::Int32>((childVector[0] >= 0) ? childVector[0] * 4 : childVector[0]);
       memcpy(&fourth4Vec[0], &leftChild, 4);
