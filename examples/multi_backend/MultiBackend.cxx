@@ -54,7 +54,7 @@ int main(int, char**)
   //share a queue object so we need to explicitly pass it
   //by reference (the std::ref call)
   TaskQueue<vtkm::cont::MultiBlock> queue;
-  std::thread io(io_generator, std::ref(queue), 12);
+  std::thread io(io_generator, std::ref(queue), 6);
   std::thread worker(multiblock_processing, std::ref(queue));
 
   //Step N. Wait for the work to finish
