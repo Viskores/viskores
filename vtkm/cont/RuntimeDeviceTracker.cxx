@@ -158,6 +158,7 @@ void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
 VTKM_CONT
 vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker()
 {
+#if defined(VTKM_CLANG) && (__apple_build_version__ < 8000000)
   static std::mutex mtx;
   static std::map<std::thread::id, vtkm::cont::RuntimeDeviceTracker> globalTrackers;
   std::thread::id this_id = std::this_thread::get_id();
@@ -174,6 +175,9 @@ vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker()
     globalTrackers[this_id] = tracker;
     return tracker;
   }
+#else
+  return runtimeDeviceTracker;
+#endif
 }
 }
 } // namespace vtkm::cont
