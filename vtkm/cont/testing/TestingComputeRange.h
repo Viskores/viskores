@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <random>
 
 namespace vtkm
 {
@@ -59,7 +60,9 @@ private:
   {
     const vtkm::Id nvals = 11;
     T data[nvals] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1, 0 };
-    std::random_shuffle(data, data + nvals);
+    std::random_device rng;
+    std::mt19937 urng(rng());
+    std::shuffle(data, data + nvals, urng);
     auto field =
       vtkm::cont::make_Field("TestField", vtkm::cont::Field::Association::POINTS, data, nvals);
 
@@ -77,9 +80,11 @@ private:
     const vtkm::Id nvals = 11;
     T data[nvals] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1, 0 };
     vtkm::Vec<T, NumberOfComponents> fieldData[nvals];
+    std::random_device rng;
+    std::mt19937 urng(rng());
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
-      std::random_shuffle(data, data + nvals);
+      std::shuffle(data, data + nvals, urng);
       for (vtkm::Id j = 0; j < nvals; ++j)
       {
         fieldData[j][i] = data[j];

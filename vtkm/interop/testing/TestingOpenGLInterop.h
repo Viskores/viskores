@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <random>
 #include <vector>
 
 namespace vtkm
@@ -63,7 +64,9 @@ private:
       *i = TestValue(pos, T());
     }
 
-    std::random_shuffle(data.begin(), data.end());
+    std::random_device rng;
+    std::mt19937 urng(rng());
+    std::shuffle(data.begin(), data.end(), urng);
     return vtkm::cont::make_ArrayHandle(data);
   }
 
