@@ -393,6 +393,7 @@ struct VecTraits<vtkm::Pair<T, U>> : public vtkm::internal::VecTraitsBasic<vtkm:
 VTKM_BASIC_TYPE_VECTOR(float)
 VTKM_BASIC_TYPE_VECTOR(double)
 
+VTKM_BASIC_TYPE_VECTOR(bool)
 VTKM_BASIC_TYPE_VECTOR(char)
 VTKM_BASIC_TYPE_VECTOR(signed char)
 VTKM_BASIC_TYPE_VECTOR(unsigned char)
