@@ -54,7 +54,7 @@ struct WrappedBinaryOperator
   template <typename Argument1, typename Argument2>
   VTKM_CONT ResultType operator()(const Argument1& x, const Argument2& y) const
   {
-    return m_f(x, (Argument1)y); //needed cast for things like std::vector<bool>::reference
+    return m_f(x, y);
   }
 
   template <typename Argument1, typename Argument2>

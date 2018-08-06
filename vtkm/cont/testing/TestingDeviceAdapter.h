@@ -410,6 +410,61 @@ public:
     IdPortalType Result;
   };
 
+  struct CustomTForReduce
+  {
+    constexpr CustomTForReduce()
+      : Value(0.0f)
+    {
+    }
+
+    constexpr CustomTForReduce(float f)
+      : Value(f)
+    {
+    }
+
+    VTKM_EXEC_CONT
+    constexpr float value() const { return this->Value; }
+
+    //required due to how the CUDA::Reduction is implemented when
+    //the return Type of Reduction is different than the input type
+    VTKM_EXEC_CONT
+    constexpr explicit operator vtkm::Vec<float, 2>() const
+    {
+      return vtkm::Vec<float, 2>(this->Value);
+    }
+
+    float Value;
+  };
+
+  template <typename T>
+  struct CustomMinAndMax
+  {
+    VTKM_EXEC_CONT
+    vtkm::Vec<float, 2> operator()(const T& a, const T& b) const
+    {
+      return vtkm::make_Vec(vtkm::Min(a.value(), b.value()), vtkm::Max(a.value(), b.value()));
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Vec<float, 2> operator()(const vtkm::Vec<float, 2>& a, const vtkm::Vec<float, 2>& b) const
+    {
+      return vtkm::make_Vec(vtkm::Min(a[0], b[0]), vtkm::Max(a[1], b[1]));
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Vec<float, 2> operator()(const T& a, const vtkm::Vec<float, 2>& b) const
+    {
+      return vtkm::make_Vec(vtkm::Min(a.value(), b[0]), vtkm::Max(a.value(), b[1]));
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Vec<float, 2> operator()(const vtkm::Vec<float, 2>& a, const T& b) const
+    {
+      return vtkm::make_Vec(vtkm::Min(a[0], b.value()), vtkm::Max(a[1], b.value()));
+    }
+  };
+
+
 private:
   static VTKM_CONT void TestDeviceAdapterTag()
   {
@@ -1229,6 +1284,8 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce with comparison object " << std::endl;
 
+
+    std::cout << "  Reduce vtkm::Id array with vtkm::MinAndMax to compute range." << std::endl;
     //construct the index array. Assign an abnormally large value
     //to the middle of the array, that should be what we see as our sum.
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
@@ -1247,6 +1304,37 @@ private:
     VTKM_TEST_ASSERT(maxValue == range[1], "Got bad value from Reduce with comparison object");
 
     VTKM_TEST_ASSERT(0 == range[0], "Got bad value from Reduce with comparison object");
+
+
+    std::cout << "  Reduce bool array with vtkm::BitwiseAnd to see if all values are true."
+              << std::endl;
+    //construct an array of bools and verify that they aren't all true
+    constexpr vtkm::Id inputLength = 60;
+    constexpr bool inputValues[inputLength] = {
+      true, true, true, true, true, true, false, true, true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true
+    };
+    auto barray = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+    bool all_true = Algorithm::Reduce(barray, true, vtkm::BitwiseAnd());
+    VTKM_TEST_ASSERT(all_true == false, "reduction with vtkm::BitwiseAnd should return false");
+
+    std::cout << "  Reduce with custom value type and custom comparison operator." << std::endl;
+    //test with a custom value type with the reduction value being a vtkm::Vec<float,2>
+    constexpr CustomTForReduce inputFValues[inputLength] = {
+      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 413.1f, -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
+      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
+      13.1f, -2.1f, -11.0f, 13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
+      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -211.1f, -1.0f,
+      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 113.1f, -2.1f,   -1.0f
+    };
+    auto farray = vtkm::cont::make_ArrayHandle(inputFValues, inputLength);
+    vtkm::Vec<vtkm::Float32, 2> frange = Algorithm::Reduce(
+      farray, vtkm::Vec<vtkm::Float32, 2>(0.0f, 0.0f), CustomMinAndMax<CustomTForReduce>());
+    VTKM_TEST_ASSERT(-211.1f == frange[0],
+                     "Got bad float value from Reduce with comparison object");
+    VTKM_TEST_ASSERT(413.1f == frange[1], "Got bad float value from Reduce with comparison object");
   }
 
   static VTKM_CONT void TestReduceWithFancyArrays()
