@@ -41,15 +41,10 @@ VTKM_CONT_EXPORT vtkm::UInt32 getNumSMs(int dId)
   }
 
   //check
-  static bool lookupBuilt = false;
+  static std::once_flag lookupBuiltFlag;
   static std::vector<vtkm::UInt32> numSMs;
 
-  if (!lookupBuilt)
-  {
-    //lock the mutex
-    static std::mutex built_mutex;
-    std::lock_guard<std::mutex> lock(built_mutex);
-
+  std::call_once(lookupBuiltFlag, []() {
     //iterate over all devices
     int numberOfSMs = 0;
     int count = 0;
@@ -61,8 +56,7 @@ VTKM_CONT_EXPORT vtkm::UInt32 getNumSMs(int dId)
         cudaDeviceGetAttribute(&numberOfSMs, cudaDevAttrMultiProcessorCount, deviceId));
       numSMs.push_back(static_cast<vtkm::UInt32>(numberOfSMs));
     }
-    lookupBuilt = true;
-  }
+  });
   return numSMs[index];
 }
 }

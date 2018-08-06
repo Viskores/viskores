@@ -21,6 +21,8 @@
 
 #ifdef VTKM_CUDA
 
+#include <mutex>
+
 #include <cuda.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
@@ -43,27 +45,15 @@ static __global__ void DetermineIfValidCudaDevice()
 }
 }
 }
-
-#endif
-
-namespace vtkm
+namespace
 {
-namespace cont
+static std::once_flag deviceQueryFlag;
+static int numDevices = 0;
+static int archVersion = 0;
+
+void queryNumberOfDevicesandHighestArchSupported(vtkm::Int32& nod, vtkm::Int32& has)
 {
-
-DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>::DeviceAdapterRuntimeDetector()
-  : NumberOfDevices(0)
-  , HighestArchSupported(0)
-{
-#ifdef VTKM_CUDA
-  static bool deviceQueryInit = false;
-  static int numDevices = 0;
-  static int archVersion = 0;
-
-  if (!deviceQueryInit)
-  {
-    deviceQueryInit = true;
-
+  std::call_once(deviceQueryFlag, []() {
     //first query for the number of devices
     auto res = cudaGetDeviceCount(&numDevices);
     if (res != cudaSuccess)
@@ -98,10 +88,25 @@ DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>::DeviceAdapterRun
         archVersion = 0;
       }
     }
-  }
+  });
+  nod = numDevices;
+  has = archVersion;
+}
+} // anonymous namspace
 
-  this->NumberOfDevices = numDevices;
-  this->HighestArchSupported = archVersion;
+#endif
+
+namespace vtkm
+{
+namespace cont
+{
+
+DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>::DeviceAdapterRuntimeDetector()
+  : NumberOfDevices(0)
+  , HighestArchSupported(0)
+{
+#ifdef VTKM_CUDA
+  queryNumberOfDevicesandHighestArchSupported(this->NumberOfDevices, this->HighestArchSupported);
 #endif
 }
 
