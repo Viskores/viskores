@@ -28,7 +28,7 @@ namespace
 {
 // The goal of this unit test is not to verify the correctness
 // of the various algorithms. Since Algorithm is a header, we
-// need to ensure we instatiate each algorithm in a source
+// need to ensure we instantiate each algorithm in a source
 // file to verify compilation.
 //
 static constexpr vtkm::Id ARRAY_SIZE = 10;

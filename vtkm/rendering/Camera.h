@@ -472,7 +472,7 @@ public:
 
   /// \brief Move the camera toward or away from the focal point.
   ///
-  /// Specifically, this divides the camera's distnace from the focal point
+  /// Specifically, this divides the camera's distance from the focal point
   /// (LookAt) by the given value. Use a value greater than one to dolly in
   /// toward the focal point, and use a value less than one to dolly-out away
   /// from the focal point.

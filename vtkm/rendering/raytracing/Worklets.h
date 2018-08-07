@@ -144,7 +144,7 @@ public:
     else
       outValue = static_cast<O>(0);
   }
-}; //class doube mask
+}; //class double mask
 
 struct MaxValue
 {

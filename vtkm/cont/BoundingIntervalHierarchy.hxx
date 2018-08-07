@@ -223,7 +223,7 @@ BoundingIntervalHierarchy::CalculateSplitScatterIndices(const IdArrayHandle& cel
   // if point is to the left,
   //    index = total number in  previous segments + total number of false flags in this segment + total number of trues in previous segment
   // else
-  //    index = total number in previous segments + number of falses preceeding it in the segment.
+  //    index = total number in previous segments + number of falses preceding it in the segment.
   IdArrayHandle scatterIndices;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::SplitIndicesCalculator>()
     .Invoke(leqFlags,
@@ -251,7 +251,7 @@ public:
   VTKM_CONT bool operator()(DeviceAdapter)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-    // Accomodate into a Functor, so that this could be used with TryExecute
+    // Accommodate into a Functor, so that this could be used with TryExecute
     using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::cont::DynamicCellSet cellSet = Self->GetCellSet();
@@ -412,7 +412,7 @@ public:
       //PRINT_TIMER("4.2", s42);
 
       //START_TIMER(s43);
-      // Make a new nodes with enough nodes for the currnt level, copying over the old one
+      // Make a new nodes with enough nodes for the current level, copying over the old one
       vtkm::Id nodesSize = Self->Nodes.GetNumberOfValues() + numSegments;
       vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> newTree;
       newTree.Allocate(nodesSize);
