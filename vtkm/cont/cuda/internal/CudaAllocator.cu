@@ -18,8 +18,11 @@
 //  this software.
 //============================================================================
 
+#include <cstdlib>
+#include <mutex>
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
+#define NO_VTKM_MANAGED_MEMORY "NO_VTKM_MANAGED_MEMORY"
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <cuda_runtime.h>
@@ -29,12 +32,13 @@ VTKM_THIRDPARTY_POST_INCLUDE
 namespace
 {
 #if CUDART_VERSION >= 8000
-// Has CudaAllocator::Initialize been called?
-static bool IsInitialized = false;
+// Has CudaAllocator::Initialize been called by any thread?
+static std::once_flag IsInitialized;
 #endif
 
-// True if all devices support concurrent pagable managed memory.
-static bool ManagedMemorySupported = false;
+// True if concurrent pagable managed memory is not disabled by user via a system
+// environment variable and all devices support it.
+static bool ManagedMemoryEnabled = false;
 
 // Avoid overhead of cudaMemAdvise and cudaMemPrefetchAsync for small buffers.
 // This value should be > 0 or else these functions will error out.
@@ -53,7 +57,7 @@ namespace internal
 bool CudaAllocator::UsingManagedMemory()
 {
   CudaAllocator::Initialize();
-  return ManagedMemorySupported;
+  return ManagedMemoryEnabled;
 }
 
 bool CudaAllocator::IsDevicePointer(const void* ptr)
@@ -79,7 +83,7 @@ bool CudaAllocator::IsDevicePointer(const void* ptr)
 
 bool CudaAllocator::IsManagedPointer(const void* ptr)
 {
-  if (!ptr || !ManagedMemorySupported)
+  if (!ptr || !ManagedMemoryEnabled)
   {
     return false;
   }
@@ -108,7 +112,7 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
   }
 
   void* ptr = nullptr;
-  if (ManagedMemorySupported)
+  if (ManagedMemoryEnabled)
   {
     VTKM_CUDA_CALL(cudaMallocManaged(&ptr, numBytes));
   }
@@ -186,15 +190,13 @@ void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
 void CudaAllocator::Initialize()
 {
 #if CUDART_VERSION >= 8000
-  if (!IsInitialized)
-  {
+  std::call_once(IsInitialized, []() {
+    bool managedMemorySupported = true;
     int numDevices;
     VTKM_CUDA_CALL(cudaGetDeviceCount(&numDevices));
 
     if (numDevices == 0)
     {
-      ManagedMemorySupported = false;
-      IsInitialized = true;
       return;
     }
 
@@ -209,11 +211,21 @@ void CudaAllocator::Initialize()
       managed = managed && prop.concurrentManagedAccess;
     }
 
-    ManagedMemorySupported = managed;
-    IsInitialized = true;
-  }
-#else
-  ManagedMemorySupported = false;
+    managedMemorySupported = managed;
+
+// Check if users want to disable managed memory
+#pragma warning(push)
+// getenv is not thread safe on windows but since it's inside a call_once block so
+// it's fine to suppress the warning here.
+#pragma warning(disable : 4996)
+    const char* buf = std::getenv(NO_VTKM_MANAGED_MEMORY);
+#pragma warning(pop)
+    if (buf != nullptr)
+    {
+      ManagedMemoryEnabled = (std::string(buf) != "1");
+    }
+    ManagedMemoryEnabled = ManagedMemoryEnabled && managedMemorySupported;
+  });
 #endif
 }
 }
