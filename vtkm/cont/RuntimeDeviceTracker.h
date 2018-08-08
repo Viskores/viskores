@@ -62,10 +62,10 @@ public:
   /// machine.
   ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT bool CanRunOn(DeviceAdapterTag) const
+  VTKM_CONT bool CanRunOn(DeviceAdapterTag device) const
   {
     using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    return this->CanRunOnImpl(Traits::GetId(), Traits::GetName());
+    return this->CanRunOnImpl(device, Traits::GetName());
   }
 
   /// Report a failure to allocate memory on a device, this will flag the
@@ -73,10 +73,11 @@ public:
   /// the filter.
   ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT void ReportAllocationFailure(DeviceAdapterTag, const vtkm::cont::ErrorBadAllocation&)
+  VTKM_CONT void ReportAllocationFailure(DeviceAdapterTag device,
+                                         const vtkm::cont::ErrorBadAllocation&)
   {
     using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    this->SetDeviceState(Traits::GetId(), Traits::GetName(), false);
+    this->SetDeviceState(device, Traits::GetName(), false);
   }
 
   /// Report a failure to allocate memory on a device, this will flag the
@@ -93,10 +94,10 @@ public:
   //@{
   /// Report a ErrorBadDevice failure and flag the device as unusable.
   template <typename DeviceAdapterTag>
-  VTKM_CONT void ReportBadDeviceFailure(DeviceAdapterTag, const vtkm::cont::ErrorBadDevice&)
+  VTKM_CONT void ReportBadDeviceFailure(DeviceAdapterTag device, const vtkm::cont::ErrorBadDevice&)
   {
     using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    this->SetDeviceState(Traits::GetId(), Traits::GetName(), false);
+    this->SetDeviceState(device, Traits::GetName(), false);
   }
 
   VTKM_CONT void ReportBadDeviceFailure(vtkm::cont::DeviceAdapterId deviceId,
@@ -111,11 +112,11 @@ public:
   /// caused by reported failures
   ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT void ResetDevice(DeviceAdapterTag)
+  VTKM_CONT void ResetDevice(DeviceAdapterTag device)
   {
     using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
     vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
-    this->SetDeviceState(Traits::GetId(), Traits::GetName(), runtimeDevice.Exists());
+    this->SetDeviceState(device, Traits::GetName(), runtimeDevice.Exists());
   }
 
   /// Reset the tracker to its default state for default devices.
@@ -177,10 +178,10 @@ public:
   /// Use \c ResetDevice to turn the device back on (if it is supported).
   ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT void DisableDevice(DeviceAdapterTag)
+  VTKM_CONT void DisableDevice(DeviceAdapterTag device)
   {
     using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    this->SetDeviceState(Traits::GetId(), Traits::GetName(), false);
+    this->SetDeviceState(device, Traits::GetName(), false);
   }
 
   /// \brief Disable all devices except the specified one.
@@ -196,11 +197,11 @@ public:
   /// exist on the system.
   ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT void ForceDevice(DeviceAdapterTag)
+  VTKM_CONT void ForceDevice(DeviceAdapterTag device)
   {
     using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
     vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
-    this->ForceDeviceImpl(Traits::GetId(), Traits::GetName(), runtimeDevice.Exists());
+    this->ForceDeviceImpl(device, Traits::GetName(), runtimeDevice.Exists());
   }
 
 private:

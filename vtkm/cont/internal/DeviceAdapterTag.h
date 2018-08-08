@@ -33,13 +33,56 @@
 #define VTKM_DEVICE_ADAPTER_CUDA 2
 #define VTKM_DEVICE_ADAPTER_TBB 3
 #define VTKM_DEVICE_ADAPTER_OPENMP 4
+//VTKM_DEVICE_ADAPTER_TestAlgorithmGeneral 7
+#define VTKM_MAX_DEVICE_ADAPTER_ID 8
+#define VTKM_DEVICE_ADAPTER_ANY 127
 
 namespace vtkm
 {
 namespace cont
 {
 
-using DeviceAdapterId = vtkm::Int8;
+struct DeviceAdapterId
+{
+  constexpr explicit DeviceAdapterId(vtkm::Int8 id)
+    : Value(id)
+  {
+  }
+
+  constexpr bool operator==(DeviceAdapterId other) const { return this->Value == other.Value; }
+  constexpr bool operator!=(DeviceAdapterId other) const { return this->Value != other.Value; }
+  constexpr bool operator<(DeviceAdapterId other) const { return this->Value < other.Value; }
+
+  constexpr bool IsValueValid() const
+  {
+    return this->Value > 0 && this->Value < VTKM_MAX_DEVICE_ADAPTER_ID;
+  }
+
+  constexpr vtkm::Int8 GetValue() const { return this->Value; }
+
+private:
+  vtkm::Int8 Value;
+};
+
+// Represents when using TryExecute that the functor
+// can be executed on any device instead of a specific
+// one
+struct DeviceAdapterIdAny : DeviceAdapterId
+{
+  constexpr DeviceAdapterIdAny()
+    : DeviceAdapterId(127)
+  {
+  }
+};
+
+struct DeviceAdapterIdUndefined : DeviceAdapterId
+{
+  constexpr DeviceAdapterIdUndefined()
+    : DeviceAdapterId(VTKM_DEVICE_ADAPTER_UNDEFINED)
+  {
+  }
+};
+
 using DeviceAdapterNameType = std::string;
 
 template <typename DeviceAdapter>
@@ -55,15 +98,18 @@ struct DeviceAdapterTraits;
   {                                                                                                \
   namespace cont                                                                                   \
   {                                                                                                \
-  struct VTKM_ALWAYS_EXPORT DeviceAdapterTag##Name                                                 \
+  struct VTKM_ALWAYS_EXPORT DeviceAdapterTag##Name : DeviceAdapterId                               \
   {                                                                                                \
+    constexpr DeviceAdapterTag##Name()                                                             \
+      : DeviceAdapterId(Id)                                                                        \
+    {                                                                                              \
+    }                                                                                              \
+    static constexpr bool IsEnabled = true;                                                        \
   };                                                                                               \
   template <>                                                                                      \
   struct DeviceAdapterTraits<vtkm::cont::DeviceAdapterTag##Name>                                   \
   {                                                                                                \
-    static DeviceAdapterId GetId() { return DeviceAdapterId(Id); }                                 \
     static DeviceAdapterNameType GetName() { return DeviceAdapterNameType(#Name); }                \
-    static constexpr bool Valid = true;                                                            \
   };                                                                                               \
   }                                                                                                \
   }
@@ -76,15 +122,18 @@ struct DeviceAdapterTraits;
   {                                                                                                \
   namespace cont                                                                                   \
   {                                                                                                \
-  struct VTKM_ALWAYS_EXPORT DeviceAdapterTag##Name                                                 \
+  struct VTKM_ALWAYS_EXPORT DeviceAdapterTag##Name : DeviceAdapterId                               \
   {                                                                                                \
+    constexpr DeviceAdapterTag##Name()                                                             \
+      : DeviceAdapterId(Id)                                                                        \
+    {                                                                                              \
+    }                                                                                              \
+    static constexpr bool IsEnabled = false;                                                       \
   };                                                                                               \
   template <>                                                                                      \
   struct DeviceAdapterTraits<vtkm::cont::DeviceAdapterTag##Name>                                   \
   {                                                                                                \
-    static DeviceAdapterId GetId() { return DeviceAdapterId(Id); }                                 \
     static DeviceAdapterNameType GetName() { return DeviceAdapterNameType(#Name); }                \
-    static constexpr bool Valid = false;                                                           \
   };                                                                                               \
   }                                                                                                \
   }
@@ -95,7 +144,8 @@ struct DeviceAdapterTraits;
 /// elsewhere in the code when a mistake is made.)
 ///
 #define VTKM_IS_DEVICE_ADAPTER_TAG(tag)                                                            \
-  VTKM_STATIC_ASSERT_MSG(::vtkm::cont::DeviceAdapterTraits<tag>::Valid,                            \
-                         "Provided type is not a valid VTK-m device adapter tag.")
+  static_assert(std::is_base_of<vtkm::cont::DeviceAdapterId, tag>::value &&                        \
+                  !std::is_same<vtkm::cont::DeviceAdapterId, tag>::value,                          \
+                "Provided type is not a valid VTK-m device adapter tag.")
 
 #endif //vtk_m_cont_internal_DeviceAdapterTag_h

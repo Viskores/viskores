@@ -38,7 +38,7 @@ void detect_if_exists(DeviceAdapterTag tag)
 {
   using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
   std::cout << "testing runtime support for " << DeviceAdapterTraits::GetName() << std::endl;
-  DoesExist<DeviceAdapterTraits::Valid> exist;
+  DoesExist<tag.IsEnabled> exist;
   exist.Exist(tag);
 }
 

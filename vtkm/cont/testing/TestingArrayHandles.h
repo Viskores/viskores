@@ -27,7 +27,6 @@
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <algorithm>
@@ -406,7 +405,7 @@ private:
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
 
-        a1.PrepareForInPlace(DeviceAdapterTagSerial());
+        a1.PrepareForInPlace(DeviceAdapterTag());
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
       }

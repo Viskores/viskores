@@ -213,10 +213,10 @@ public:
 
 //set up stack size for cuda environment
 #ifdef VTKM_CUDA
-    using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
+    constexpr DeviceAdapter deviceId;
     std::size_t stackSizeBackup;
     (void)stackSizeBackup;
-    if (DeviceAdapterTraits::GetId() == VTKM_DEVICE_ADAPTER_CUDA)
+    if (deviceId.GetValue() == VTKM_DEVICE_ADAPTER_CUDA)
     {
       cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
       cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 16);
@@ -230,7 +230,7 @@ public:
       qc_Handle, pointId_Handle, splitId_Handle, coordi_Handle, nnId_Handle, nnDis_Handle);
 
 #ifdef VTKM_CUDA
-    if (DeviceAdapterTraits::GetId() == VTKM_DEVICE_ADAPTER_CUDA)
+    if (deviceId.GetValue() == VTKM_DEVICE_ADAPTER_CUDA)
     {
       cudaDeviceSetLimit(cudaLimitStackSize, stackSizeBackup);
     }

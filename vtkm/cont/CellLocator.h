@@ -67,10 +67,9 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(DeviceAdapter device) const
   {
-    vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    return PrepareForExecutionImpl(deviceId).PrepareForExecution(DeviceAdapter());
+    return PrepareForExecutionImpl(device).PrepareForExecution(device);
   }
 
 protected:

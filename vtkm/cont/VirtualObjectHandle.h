@@ -30,8 +30,6 @@
 #include <array>
 #include <type_traits>
 
-#define VTKM_MAX_DEVICE_ADAPTER_ID 8
-
 namespace vtkm
 {
 namespace cont
@@ -114,7 +112,6 @@ public:
   /// Release all the execution side resources
   VTKM_CONT void ReleaseExecutionResources() { this->Internals->ReleaseExecutionResources(); }
 
-
   /// Get a valid \c VirtualBaseType* with the current control side state for \c deviceId.
   /// VirtualObjectHandle and the returned pointer are analogous to ArrayHandle and Portal
   /// The returned pointer will be invalidated if:
@@ -129,21 +126,14 @@ public:
       throw vtkm::cont::ErrorBadValue("No target object bound");
     }
 
-    if (deviceId < 0 || deviceId >= VTKM_MAX_DEVICE_ADAPTER_ID)
-    {
-      std::string msg = "An invalid device adapter ID of " + std::to_string(deviceId) +
-        "was used when trying to construct a virtual object. The valid range is between " +
-        "0 and " + std::to_string(VTKM_MAX_DEVICE_ADAPTER_ID) + ")";
-      throw vtkm::cont::ErrorBadType(msg);
-    }
-
     if (!this->Internals->Current || this->Internals->Current->GetDeviceId() != deviceId)
     {
-      if (!this->Internals->Transfers[static_cast<std::size_t>(deviceId)])
+      if (!this->Internals->Transfers[static_cast<std::size_t>(deviceId.GetValue())])
       {
-        std::string msg = "The device adapter ID of " + std::to_string(deviceId) +
-          " was not part of the set of valid adapters when this virtual object was constructed " +
-          "or last binded to a set of device adapters.";
+        std::string msg = "VTK-m was asked to transfer an object for execution on DeviceAdapter " +
+          std::to_string(deviceId.GetValue()) +
+          ". It can't as this VirtualObjectHandle was not constructed/bound with this "
+          "DeviceAdapter in the list of valid DeviceAdapters.";
         throw vtkm::cont::ErrorBadType(msg);
       }
 
@@ -152,25 +142,12 @@ public:
         this->Internals->Current->ReleaseResources();
       }
       this->Internals->Current =
-        this->Internals->Transfers[static_cast<std::size_t>(deviceId)].get();
+        this->Internals->Transfers[static_cast<std::size_t>(deviceId.GetValue())].get();
     }
 
     return this->Internals->Current->PrepareForExecution();
   }
 
-  /// Get a valid \c VirtualBaseType* with the current control side state for \c DeviceAdapter.
-  /// VirtualObjectHandle and the returned pointer are analogous to ArrayHandle and Portal
-  /// The returned pointer will be invalidated if:
-  /// 1. A new pointer is requested for a different DeviceAdapter
-  /// 2. VirtualObjectHandle is destroyed
-  /// 3. Reset or ReleaseResources is called
-  ///
-  template <typename DeviceAdapter>
-  VTKM_CONT const VirtualBaseType* PrepareForExecution(DeviceAdapter) const
-  {
-    using DeviceInfo = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
-    return this->PrepareForExecution(DeviceInfo::GetId());
-  }
 
 private:
   class TransferInterface
@@ -194,10 +171,7 @@ private:
     {
     }
 
-    VTKM_CONT vtkm::cont::DeviceAdapterId GetDeviceId() const override
-    {
-      return vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    }
+    VTKM_CONT vtkm::cont::DeviceAdapterId GetDeviceId() const override { return DeviceAdapter(); }
 
     VTKM_CONT const VirtualBaseType* PrepareForExecution() override
     {
@@ -220,21 +194,24 @@ private:
   struct CreateTransferInterface
   {
     template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter,
+    VTKM_CONT void operator()(DeviceAdapter device,
                               std::unique_ptr<TransferInterface>* transfers,
                               const VirtualDerivedType* virtualObject) const
     {
       using DeviceInfo = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
-
-      if (DeviceInfo::GetId() < 0 || DeviceInfo::GetId() >= VTKM_MAX_DEVICE_ADAPTER_ID)
+      if (!device.IsValueValid())
       {
-        std::string msg = "Device '" + DeviceInfo::GetName() + "' has invalid ID of " +
-          std::to_string(DeviceInfo::GetId()) + "(VTKM_MAX_DEVICE_ADAPTER_ID = " +
-          std::to_string(VTKM_MAX_DEVICE_ADAPTER_ID) + ")";
+
+        std::string msg =
+          "VTK-m is unable to construct a VirtualObjectHandle for execution on DeviceAdapter" +
+          DeviceInfo::GetName() + "[id=" + std::to_string(device.GetValue()) +
+          "]. This is generally caused by either asking for execution on a DeviceAdapter that "
+          "wasn't compiled into VTK-m. In the case of CUDA it can also be caused by accidentally "
+          "compiling source files as C++ files instead of CUDA.";
         throw vtkm::cont::ErrorBadType(msg);
       }
       using TransferImpl = TransferInterfaceImpl<VirtualDerivedType, DeviceAdapter>;
-      transfers[DeviceInfo::GetId()].reset(new TransferImpl(virtualObject));
+      transfers[device.GetValue()].reset(new TransferImpl(virtualObject));
     }
   };
 
@@ -276,7 +253,5 @@ private:
 };
 }
 } // vtkm::cont
-
-#undef VTKM_MAX_DEVICE_ADAPTER_ID
 
 #endif // vtk_m_cont_VirtualObjectHandle_h
