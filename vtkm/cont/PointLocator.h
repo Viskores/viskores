@@ -60,7 +60,6 @@ public:
     return PrepareForExecutionImp(device).PrepareForExecution(device);
   }
 
-  //VTKM_CONT virtual const vtkm::exec::PointLocator*
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;
   VTKM_CONT virtual const HandleType PrepareForExecutionImp(
     vtkm::cont::DeviceAdapterId deviceId) const = 0;

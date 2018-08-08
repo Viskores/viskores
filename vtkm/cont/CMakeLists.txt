@@ -126,6 +126,7 @@ set(sources
   DataSetBuilderUniform.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
+  ErrorBadDevice.cxx
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx

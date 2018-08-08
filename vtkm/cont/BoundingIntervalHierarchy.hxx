@@ -31,7 +31,6 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/exec/BoundingIntervalHierarchyExec.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -455,7 +454,7 @@ class BoundingIntervalHierarchy::PrepareForExecutionFunctor
 {
 public:
   template <typename DeviceAdapter>
-  VTKM_CONT void operator()(DeviceAdapter,
+  VTKM_CONT bool operator()(DeviceAdapter,
                             const vtkm::cont::BoundingIntervalHierarchy& bih,
                             HandleType& bihExec) const
   {
@@ -508,6 +507,7 @@ public:
     {
       throw vtkm::cont::ErrorBadType("Could not determine type to write out.");
     }
+    return true;
   }
 };
 
@@ -522,9 +522,12 @@ VTKM_CONT
 const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(
   const vtkm::cont::DeviceAdapterId deviceId) const
 {
-  using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
-  vtkm::cont::internal::FindDeviceAdapterTagAndCall(
-    deviceId, DeviceList(), PrepareForExecutionFunctor(), *this, this->ExecHandle);
+  const bool success =
+    vtkm::cont::TryExecuteOnDevice(deviceId, PrepareForExecutionFunctor(), *this, this->ExecHandle);
+  if (!success)
+  {
+    throwFailedRuntimeDeviceTransfer("BoundingIntervalHierarchy", deviceId);
+  }
 
   return this->ExecHandle;
 }

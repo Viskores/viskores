@@ -130,11 +130,12 @@ public:
     {
       if (!this->Internals->Transfers[static_cast<std::size_t>(deviceId.GetValue())])
       {
-        std::string msg = "VTK-m was asked to transfer an object for execution on DeviceAdapter " +
+        std::string msg =
+          "VTK-m was asked to transfer a VirtualObjectHandle for execution on DeviceAdapter " +
           std::to_string(deviceId.GetValue()) +
           ". It can't as this VirtualObjectHandle was not constructed/bound with this "
           "DeviceAdapter in the list of valid DeviceAdapters.";
-        throw vtkm::cont::ErrorBadType(msg);
+        throw vtkm::cont::ErrorBadDevice(msg);
       }
 
       if (this->Internals->Current)
@@ -198,17 +199,9 @@ private:
                               std::unique_ptr<TransferInterface>* transfers,
                               const VirtualDerivedType* virtualObject) const
     {
-      using DeviceInfo = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
       if (!device.IsValueValid())
       {
-
-        std::string msg =
-          "VTK-m is unable to construct a VirtualObjectHandle for execution on DeviceAdapter" +
-          DeviceInfo::GetName() + "[id=" + std::to_string(device.GetValue()) +
-          "]. This is generally caused by either asking for execution on a DeviceAdapter that "
-          "wasn't compiled into VTK-m. In the case of CUDA it can also be caused by accidentally "
-          "compiling source files as C++ files instead of CUDA.";
-        throw vtkm::cont::ErrorBadType(msg);
+        throwFailedRuntimeDeviceTransfer("VirtualObjectHandle", device);
       }
       using TransferImpl = TransferInterfaceImpl<VirtualDerivedType, DeviceAdapter>;
       transfers[device.GetValue()].reset(new TransferImpl(virtualObject));
