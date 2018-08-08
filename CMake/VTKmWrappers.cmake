@@ -387,7 +387,7 @@ function(vtkm_unit_tests)
     vtkm_get_kit_name(kit)
     set(test_prog "UnitTests_${kit}")
   endif()
-  if(VTKm_UT_BACKEND)
+  if(backend)
     set(test_prog "${test_prog}_${backend}")
   endif()
 
@@ -421,9 +421,17 @@ function(vtkm_unit_tests)
   #determine the timeout for all the tests based on the backend. CUDA tests
   #generally require more time because of kernel generation.
   set(timeout 180)
+  set(run_serial False)
   if(backend STREQUAL "CUDA")
     set(timeout 1500)
+  elseif(backend STREQUAL "OPENMP")
+    #We need to have all OpenMP tests run serially as they
+    #will uses all the system cores, and we will cause a N*N thread
+    #explosion which causes the tests to run slower than when run
+    #serially
+    set(run_serial True)
   endif()
+
 
   foreach (test ${VTKm_UT_SOURCES})
     get_filename_component(tname ${test} NAME_WE)
@@ -438,7 +446,10 @@ function(vtkm_unit_tests)
         COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
         )
     endif()
-    set_tests_properties("${tname}${backend}" PROPERTIES TIMEOUT ${timeout})
+    set_tests_properties("${tname}${backend}" PROPERTIES
+      TIMEOUT ${timeout}
+      RUN_SERIAL ${run_serial}
+    )
   endforeach (test)
 
 endfunction(vtkm_unit_tests)
