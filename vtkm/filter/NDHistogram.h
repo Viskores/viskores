@@ -32,7 +32,7 @@ namespace filter
 /// it would generate a N-Dims histogram from input fields. The result is stored
 /// in a field named as "Frequency". This filed contains all the frequencies of
 /// the N-Dims histogram in sparse representation. That being said, the result
-/// field does not store 0 frequency bins. Meanwhile all input fileds now
+/// field does not store 0 frequency bins. Meanwhile all input fields now
 /// would have the same length and store bin ids instead.
 /// E.g. (FieldA[i], FieldB[i], FieldC[i], Frequency[i]) is a bin in the histogram.
 /// The first three numbers are binIDs for FieldA, FieldB and FieldC. Frequency[i] stores
