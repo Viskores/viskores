@@ -31,3 +31,14 @@ set(unit_tests
   UnitTestOpenMPVirtualObjectHandle.cxx
   )
 vtkm_unit_tests(OpenMP SOURCES ${unit_tests})
+
+#We need to have all OpenMP tests run serially as they
+#will uses all the system cores, and we will cause a N*N thread
+#explosion which causes the tests to run slower than when run
+#serially
+foreach (test ${unit_tests})
+  get_filename_component(tname ${test} NAME_WE)
+  set_tests_properties(${tname} PROPERTIES
+      RUN_SERIAL True
+  )
+endforeach()
