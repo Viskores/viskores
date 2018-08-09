@@ -59,11 +59,9 @@ public:
 // __host__ __device__, and nvcc 8.0.61 errors when calling the __device__
 // function vtkmAtomicAdd. VTKM_SUPPRESS_EXEC_WARNINGS does not fix this.
 // We work around this by calling the __device__ function inside of a
-// __CUDACC__ guard, as nvcc is smart enough to recognize that this is a
+// __CUDA_ARCH__ guard, as nvcc is smart enough to recognize that this is a
 // safe usage of a __device__ function in a __host__ __device__ context.
-// However, it is not smart enough to recognize that VTKM_CUDA is equivalent
-// to __CUDACC__, so we must use the lower-level define here.
-#ifdef __CUDACC__
+#ifdef __CUDA_ARCH__
     T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return this->vtkmAtomicAdd(lockedValue, value);
 #else
@@ -81,11 +79,9 @@ public:
 // __host__ __device__, and nvcc 8.0.61 errors when calling the __device__
 // function vtkmAtomicAdd. VTKM_SUPPRESS_EXEC_WARNINGS does not fix this.
 // We work around this by calling the __device__ function inside of a
-// __CUDACC__ guard, as nvcc is smart enough to recognize that this is a
+// __CUDA_ARCH__ guard, as nvcc is smart enough to recognize that this is a
 // safe usage of a __device__ function in a __host__ __device__ context.
-// However, it is not smart enough to recognize that VTKM_CUDA is equivalent
-// to __CUDACC__, so we must use the lower-level define here.
-#ifdef __CUDACC__
+#ifdef __CUDA_ARCH__
     T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return this->vtkmCompareAndSwap(lockedValue, newValue, oldValue);
 #else
