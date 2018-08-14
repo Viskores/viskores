@@ -24,10 +24,6 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/Lagrangian.h>
 
-namespace
-{
-}
-
 vtkm::cont::DataSet MakeTestUniformDataSet()
 {
   vtkm::Float64 xmin, xmax, ymin, ymax, zmin, zmax;
@@ -43,9 +39,9 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
 
   vtkm::cont::DataSetBuilderUniform dsb;
 
-  vtkm::Float64 xdiff = (xmax - xmin) / (DIMS[0] - 1);
-  vtkm::Float64 ydiff = (ymax - ymin) / (DIMS[1] - 1);
-  vtkm::Float64 zdiff = (zmax - zmin) / (DIMS[2] - 1);
+  vtkm::Float64 xdiff = (xmax - xmin) / (static_cast<vtkm::Float64>(DIMS[0] - 1));
+  vtkm::Float64 ydiff = (ymax - ymin) / (static_cast<vtkm::Float64>(DIMS[1] - 1));
+  vtkm::Float64 zdiff = (zmax - zmin) / (static_cast<vtkm::Float64>(DIMS[2] - 1));
 
   vtkm::Vec<vtkm::Float64, 3> ORIGIN(0, 0, 0);
   vtkm::Vec<vtkm::Float64, 3> SPACING(xdiff, ydiff, zdiff);
