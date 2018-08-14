@@ -44,6 +44,7 @@ set(headers
   FilterTraits.h
   Gradient.h
   Histogram.h
+  Lagrangian.h
   MarchingCubes.h
   Mask.h
   MaskPoints.h
@@ -91,6 +92,7 @@ set(header_template_sources
   FilterField.hxx
   Gradient.hxx
   Histogram.hxx
+  Lagrangian.hxx
   MarchingCubes.hxx
   Mask.hxx
   MaskPoints.hxx

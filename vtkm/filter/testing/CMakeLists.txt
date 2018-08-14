@@ -38,6 +38,7 @@ set(unit_tests
   UnitTestFieldToColors.cxx
   UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx
+  UnitTestLagrangianFilter.cxx
   UnitTestMarchingCubesFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
