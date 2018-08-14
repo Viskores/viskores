@@ -22,8 +22,8 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
-#include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/cont/internal/DynamicTransform.h>
 
 #include <vtkm/VecTraits.h>
@@ -246,9 +246,14 @@ public:
 
   VTKM_CONT PortalConst PrepareForInput(vtkm::cont::DeviceAdapterId deviceId) override
   {
+
     PortalConst portal;
-    vtkm::cont::internal::FindDeviceAdapterTagAndCall(
-      deviceId, DeviceList(), PrepareForInputFunctor(), this, portal);
+    bool success = vtkm::cont::TryExecuteOnDevice(
+      deviceId, PrepareForInputFunctor(), DeviceList(), this, portal);
+    if (!success)
+    {
+      throwFailedRuntimeDeviceTransfer("ArrayHandleVirtualCoordinates", deviceId);
+    }
     return portal;
   }
 
@@ -256,16 +261,24 @@ public:
                                     vtkm::cont::DeviceAdapterId deviceId) override
   {
     Portal portal;
-    vtkm::cont::internal::FindDeviceAdapterTagAndCall(
-      deviceId, DeviceList(), PrepareForOutputFunctor(), this, numberOfValues, portal);
+    bool success = vtkm::cont::TryExecuteOnDevice(
+      deviceId, PrepareForOutputFunctor(), DeviceList(), this, numberOfValues, portal);
+    if (!success)
+    {
+      throwFailedRuntimeDeviceTransfer("ArrayHandleVirtualCoordinates", deviceId);
+    }
     return portal;
   }
 
   VTKM_CONT Portal PrepareForInPlace(vtkm::cont::DeviceAdapterId deviceId) override
   {
     Portal portal;
-    vtkm::cont::internal::FindDeviceAdapterTagAndCall(
-      deviceId, DeviceList(), PrepareForInPlaceFunctor(), this, portal);
+    bool success = vtkm::cont::TryExecuteOnDevice(
+      deviceId, PrepareForInPlaceFunctor(), DeviceList(), this, portal);
+    if (!success)
+    {
+      throwFailedRuntimeDeviceTransfer("ArrayHandleVirtualCoordinates", deviceId);
+    }
     return portal;
   }
 
@@ -273,7 +286,7 @@ private:
   struct PrepareForInputFunctor
   {
     template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter device,
+    VTKM_CONT bool operator()(DeviceAdapter device,
                               CoordinatesArrayHandle* instance,
                               PortalConst& ret) const
     {
@@ -283,13 +296,14 @@ private:
                                          vtkm::ListTagBase<DeviceAdapter>());
       ret = PortalConst(portal.GetNumberOfValues(),
                         instance->DevicePortalHandle.PrepareForExecution(device));
+      return true;
     }
   };
 
   struct PrepareForOutputFunctor
   {
     template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter device,
+    VTKM_CONT bool operator()(DeviceAdapter device,
                               CoordinatesArrayHandle* instance,
                               vtkm::Id numberOfValues,
                               Portal& ret) const
@@ -298,13 +312,14 @@ private:
       instance->DevicePortalHandle.Reset(
         new CoordinatesPortal<decltype(portal)>(portal), true, vtkm::ListTagBase<DeviceAdapter>());
       ret = Portal(numberOfValues, instance->DevicePortalHandle.PrepareForExecution(device));
+      return true;
     }
   };
 
   struct PrepareForInPlaceFunctor
   {
     template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter device,
+    VTKM_CONT bool operator()(DeviceAdapter device,
                               CoordinatesArrayHandle* instance,
                               Portal& ret) const
     {
@@ -313,6 +328,7 @@ private:
         new CoordinatesPortal<decltype(portal)>(portal), true, vtkm::ListTagBase<DeviceAdapter>());
       ret = Portal(instance->Array.GetNumberOfValues(),
                    instance->DevicePortalHandle.PrepareForExecution(device));
+      return true;
     }
   };
 

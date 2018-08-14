@@ -860,15 +860,20 @@ const vtkm::exec::ColorTableBase* ColorTable::PrepareForExecution(
     this->Impl->OpacityMidSharpHandle = vtkm::cont::make_ArrayHandle(this->Impl->OpacityMidSharp);
   }
 
+  bool transfered = true;
   if (this->Impl->ColorArraysChanged || this->Impl->OpacityArraysChanged ||
       this->Impl->HostSideCacheChanged)
   {
-    vtkm::cont::internal::FindDeviceAdapterTagAndCall(deviceId,
-                                                      VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(),
-                                                      detail::transfer_color_table_to_device{},
-                                                      this->Impl->HostSideCache.get(),
-                                                      this->Impl.get());
+    transfered = vtkm::cont::TryExecuteOnDevice(deviceId,
+                                                detail::transfer_color_table_to_device{},
+                                                this->Impl->HostSideCache.get(),
+                                                this->Impl.get());
   }
+  if (!transfered)
+  {
+    throwFailedRuntimeDeviceTransfer("ColorTable", deviceId);
+  }
+
 
   this->Impl->ColorArraysChanged = false;
   this->Impl->OpacityArraysChanged = false;

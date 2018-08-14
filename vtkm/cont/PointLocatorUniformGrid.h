@@ -140,11 +140,10 @@ public:
   struct PrepareForExecutionFunctor
   {
     template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter,
+    VTKM_CONT bool operator()(DeviceAdapter,
                               const vtkm::cont::PointLocatorUniformGrid& self,
                               HandleType& handle) const
     {
-      //vtkm::exec::PointLocatorUniformGrid* locator =
       vtkm::exec::PointLocatorUniformGrid<DeviceAdapter>* h =
         new vtkm::exec::PointLocatorUniformGrid<DeviceAdapter>(
           self.Min,
@@ -155,27 +154,20 @@ public:
           self.cellLower.PrepareForInput(DeviceAdapter()),
           self.cellUpper.PrepareForInput(DeviceAdapter()));
       handle.Reset(h);
-      //return handle.PrepareForExecution(DeviceAdapter());
+      return true;
     }
   };
 
   VTKM_CONT
-  //const vtkm::exec::PointLocator *
   const HandleType PrepareForExecutionImp(vtkm::cont::DeviceAdapterId deviceId) const override
   {
-    // TODO: call VirtualObjectHandle::PrepareForExecution() and return vtkm::exec::PointLocator
-    // TODO: how to convert deviceId back to DeviceAdapter tag?
-    //using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
-    //                                     vtkm::cont::DeviceAdapterTagTBB,
-    //                                     vtkm::cont::DeviceAdapterTagSerial>;
-
-    using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
-    //HandleType ExecHandle; // = new HandleType(locator, false);
-    vtkm::cont::internal::FindDeviceAdapterTagAndCall(
-      deviceId, DeviceList(), PrepareForExecutionFunctor(), *this, ExecHandle);
+    const bool success =
+      vtkm::cont::TryExecuteOnDevice(deviceId, PrepareForExecutionFunctor(), *this, ExecHandle);
+    if (!success)
+    {
+      throwFailedRuntimeDeviceTransfer("PointLocatorUniformGrid", deviceId);
+    }
     return ExecHandle;
-
-    //return ExecHandle.PrepareForExecution(DeviceAdapter());
   }
 
 private:
