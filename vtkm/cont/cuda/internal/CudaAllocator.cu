@@ -21,6 +21,9 @@
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 
+#include <mutex>
+#include <vector>
+
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <cuda_runtime.h>
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -120,9 +123,42 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
   return ptr;
 }
 
+void* CudaAllocator::AllocateUnManaged(std::size_t numBytes)
+{
+  void* ptr = nullptr;
+  VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
+  return ptr;
+}
+
 void CudaAllocator::Free(void* ptr)
 {
   VTKM_CUDA_CALL(cudaFree(ptr));
+}
+
+void CudaAllocator::FreeDeferred(void* ptr, std::size_t numBytes)
+{
+  static std::mutex deferredMutex;
+  static std::vector<void*> deferredPointers;
+  static std::size_t deferredSize = 0;
+  constexpr std::size_t bufferLimit = 2 << 24; //16MB buffer
+
+  std::vector<void*> toFree;
+  // critical section
+  {
+    std::lock_guard<std::mutex> lock(deferredMutex);
+    deferredPointers.push_back(ptr);
+    deferredSize += numBytes;
+    if (deferredSize >= bufferLimit)
+    {
+      toFree.swap(deferredPointers);
+      deferredSize = 0;
+    }
+  }
+
+  for (auto&& p : toFree)
+  {
+    VTKM_CUDA_CALL(cudaFree(p));
+  }
 }
 
 void CudaAllocator::PrepareForControl(const void* ptr, std::size_t numBytes)

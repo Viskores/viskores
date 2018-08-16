@@ -119,7 +119,10 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Free(
 
   if (execArray.Array != nullptr)
   {
-    CudaAllocator::Free(execArray.Array);
+    const vtkm::UInt64 cap = static_cast<vtkm::UInt64>(static_cast<char*>(execArray.ArrayCapacity) -
+                                                       static_cast<char*>(execArray.Array));
+
+    CudaAllocator::FreeDeferred(execArray.Array, cap);
     execArray.Array = nullptr;
     execArray.ArrayEnd = nullptr;
     execArray.ArrayCapacity = nullptr;
