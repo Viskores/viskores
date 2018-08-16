@@ -169,6 +169,7 @@ vtkm_library( NAME vtkm_cont
               HEADERS ${headers}
               WRAP_FOR_CUDA ${device_sources}
             )
+
 add_subdirectory(internal)
 add_subdirectory(arg)
 add_subdirectory(serial)

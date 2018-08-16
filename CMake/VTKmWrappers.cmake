@@ -269,6 +269,7 @@ endfunction(vtkm_declare_headers)
 #   [WRAP_FOR_CUDA <source_list>]
 #   )
 function(vtkm_library)
+  set(options STATIC SHARED)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES WRAP_FOR_CUDA)
   cmake_parse_arguments(VTKm_LIB
@@ -286,13 +287,25 @@ function(vtkm_library)
     set(VTKm_LIB_WRAP_FOR_CUDA ${cu_srcs})
   endif()
 
+  if(VTKm_LIB_STATIC)
+    set(VTKm_LIB_type STATIC)
+  elseif(VTKm_LIB_SHARED)
+    set(VTKm_LIB_type SHARED)
+  endif()
 
   add_library(${lib_name}
+              ${VTKm_LIB_type}
               ${VTKm_LIB_SOURCES}
               ${VTKm_LIB_HEADERS}
               ${VTKm_LIB_TEMPLATE_SOURCES}
               ${VTKm_LIB_WRAP_FOR_CUDA}
               )
+
+  #when building either static or shared we want pic code
+  set_target_properties(${lib_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+  #specify when building with cuda we want separable compilation
+  set_property(TARGET ${lib_name} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
   #specify where to place the built library
   set_property(TARGET ${lib_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
@@ -446,6 +459,8 @@ function(vtkm_unit_tests)
   endif()
 
   add_executable(${test_prog} ${test_prog}.cxx ${VTKm_UT_SOURCES})
+  set_property(TARGET ${test_prog} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+
   set_property(TARGET ${test_prog} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${test_prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
