@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
+#include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
@@ -104,7 +105,8 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCud
       VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
 
       // Clean up intermediate copy
-      VTKM_CUDA_CALL(cudaFree(deviceTarget));
+      vtkm::cont::cuda::internal::CudaAllocator::FreeDeferred(deviceTarget,
+                                                              sizeof(VirtualDerivedType));
     }
     else if (updateData)
     {
@@ -124,7 +126,8 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCud
       VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
 
       // Clean up intermediate copy
-      VTKM_CUDA_CALL(cudaFree(deviceTarget));
+      vtkm::cont::cuda::internal::CudaAllocator::FreeDeferred(deviceTarget,
+                                                              sizeof(VirtualDerivedType));
     }
     else
     {
@@ -139,7 +142,8 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCud
     if (this->ExecutionObject != nullptr)
     {
       detail::DeleteVirtualObjectKernel<<<1, 1, 0, cudaStreamPerThread>>>(this->ExecutionObject);
-      VTKM_CUDA_CALL(cudaFree(this->ExecutionObject));
+      vtkm::cont::cuda::internal::CudaAllocator::FreeDeferred(this->ExecutionObject,
+                                                              sizeof(VirtualDerivedType));
       this->ExecutionObject = nullptr;
     }
   }

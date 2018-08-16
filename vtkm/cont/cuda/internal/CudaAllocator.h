@@ -49,8 +49,26 @@ struct VTKM_CONT_EXPORT CudaAllocator
   /// cudaMallocManaged.
   static VTKM_CONT bool IsManagedPointer(const void* ptr);
 
+  /// Will allocate memory that could be managed or unmanaged
   static VTKM_CONT void* Allocate(std::size_t numBytes);
+
+  /// Explicitly allocate unmanaged memory even when the device supports
+  /// managed memory
+  static VTKM_CONT void* AllocateUnManaged(std::size_t numBytes);
+
+  /// Explicitly deallocate memory immediately.
   static VTKM_CONT void Free(void* ptr);
+
+  /// \brief Defer deallocation of some memory
+  ///
+  /// Keeps a pool of pointers to free until such a time of as we have
+  /// meet a threshold in total memory or number of pointers.
+  /// Currently the threshold to free all the pointers is 16MB
+  ///
+  /// The reason for using this is that cudaFree causes a cudaSync call
+  /// to occur across all cuda devices and streams. This causes lots of stalls
+  /// when we are constructing small objects like virtuals and function pointers.
+  static VTKM_CONT void FreeDeferred(void* ptr, std::size_t numBytes);
 
   static VTKM_CONT void PrepareForControl(const void* ptr, std::size_t numBytes);
 
