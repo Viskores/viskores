@@ -38,6 +38,8 @@
 
 #include <vtkm/internal/brigand.hpp>
 
+#include <vtkm/worklet/internal/WorkletBase.h>
+
 #include <sstream>
 
 namespace vtkm
@@ -488,6 +490,31 @@ inline auto make_funcIFace(Args&&... args) -> decltype(
 
 } // namespace detail
 
+/// This is a help struct to detect out of bound placeholders defined in the
+/// execution signature at compile time
+template <vtkm::IdComponent MaxIndexAllowed>
+struct PlaceholderValidator
+{
+  PlaceholderValidator() {}
+
+  // An overload operator to detect possible out of bound placeholder
+  template <int N>
+  void operator()(brigand::type_<vtkm::placeholders::Arg<N>>) const
+  {
+    static_assert(N <= MaxIndexAllowed,
+                  "An argument in the execution signature"
+                  " (usually _2, _3, _4, etc.) refers to a control signature argument that"
+                  " does not exist. For example, you will get this error if you have _3 (or"
+                  " _4 or _5 or so on) as one of the execution signature arguments, but you"
+                  " have fewer than 3 (or 4 or 5 or so on) arguments in the control signature.");
+  }
+
+  template <typename DerivedType>
+  void operator()(brigand::type_<DerivedType>) const
+  {
+  }
+};
+
 /// Base class for all dispatcher classes. Every worklet type should have its
 /// own dispatcher.
 ///
@@ -527,6 +554,11 @@ private:
     static_assert(
       std::is_base_of<BaseWorkletType, WorkletType>::value,
       "The worklet being scheduled by this dispatcher doesn't match the type of the dispatcher");
+
+    // Check if the placeholders defined in the execution environment exceed the max bound
+    // defined in the control environment by throwing a nice compile error.
+    using ComponentSig = typename ExecutionInterface::ComponentSig;
+    brigand::for_each<ComponentSig>(PlaceholderValidator<NUM_INVOKE_PARAMS>{});
 
     //We need to determine if we have the need to do any dynamic
     //transforms. This is fairly simple of a query. We just need to check
