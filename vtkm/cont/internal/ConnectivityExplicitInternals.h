@@ -229,8 +229,23 @@ struct ConnIdxToCellIdCalc
   }
 };
 
-template <typename PointToCell, typename C2PShapeStorageTag, typename Device>
-void ComputeCellToPointConnectivity(ConnectivityExplicitInternals<C2PShapeStorageTag>& cell2Point,
+// Much easier for CellSetSingleType:
+struct ConnIdxToCellIdCalcSingleType
+{
+  vtkm::IdComponent CellSize;
+
+  VTKM_CONT
+  ConnIdxToCellIdCalcSingleType(vtkm::IdComponent cellSize)
+    : CellSize(cellSize)
+  {
+  }
+
+  VTKM_EXEC
+  vtkm::Id operator()(vtkm::Id inIdx) const { return inIdx / this->CellSize; }
+};
+
+template <typename PointToCell, typename CellToPoint, typename Device>
+void ComputeCellToPointConnectivity(CellToPoint& cell2Point,
                                     const PointToCell& point2Cell,
                                     vtkm::Id numberOfPoints,
                                     Device)
@@ -250,6 +265,57 @@ void ComputeCellToPointConnectivity(ConnectivityExplicitInternals<C2PShapeStorag
 
   PassThrough idxCalc{};
   ConnIdxToCellIdCalc<decltype(offInPortal)> cellIdCalc{ offInPortal };
+
+  vtkm::cont::internal::ReverseConnectivityBuilder builder;
+  builder.Run(conn,
+              rConn,
+              rNumIndices,
+              rIndexOffsets,
+              idxCalc,
+              cellIdCalc,
+              numberOfPoints,
+              rConnSize,
+              Device());
+
+  // Set the CellToPoint information
+  cell2Point.Shapes = vtkm::cont::make_ArrayHandleConstant(
+    static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
+  cell2Point.ElementsValid = true;
+  cell2Point.IndexOffsetsValid = true;
+}
+
+// Specialize for CellSetSingleType:
+template <typename ShapeStorageTag,
+          typename ConnectivityStorageTag,
+          typename IndexOffsetStorageTag,
+          typename CellToPoint,
+          typename Device>
+void ComputeCellToPointConnectivity(
+  CellToPoint& cell2Point,
+  const ConnectivityExplicitInternals<
+    ShapeStorageTag,
+    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag, // nIndices
+    ConnectivityStorageTag,
+    IndexOffsetStorageTag>& point2Cell,
+  vtkm::Id numberOfPoints,
+  Device)
+{
+  if (cell2Point.ElementsValid)
+  {
+    return;
+  }
+
+  auto& conn = point2Cell.Connectivity;
+  auto& rConn = cell2Point.Connectivity;
+  auto& rNumIndices = cell2Point.NumIndices;
+  auto& rIndexOffsets = cell2Point.IndexOffsets;
+  vtkm::Id rConnSize = conn.GetNumberOfValues();
+
+  auto sizesInPortal = point2Cell.NumIndices.GetPortalConstControl();
+  vtkm::IdComponent cellSize = sizesInPortal.GetNumberOfValues() > 0 ? sizesInPortal.Get(0) : 0;
+
+  PassThrough idxCalc{};
+  ConnIdxToCellIdCalcSingleType cellIdCalc{ cellSize };
 
   vtkm::cont::internal::ReverseConnectivityBuilder builder;
   builder.Run(conn,
