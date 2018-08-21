@@ -66,13 +66,20 @@ if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
 endif()
 if (NOT DEFINED VTKm_BUILD_CMAKE_BASE_DIR)
   set(VTKm_BUILD_CMAKE_BASE_DIR "${VTKm_BINARY_DIR}")
-endif ()
-
-set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include")
-
+endif()
+if(NOT DEFINED VTKm_EXECUTABLE_OUTPUT_PATH)
+  ## Set the directory where the binaries will be stored
+  set(VTKm_EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+endif()
+if(NOT DEFINED VTKm_LIBRARY_OUTPUT_PATH)
+  ## Set the directory where the libraries will be stored
+  set(VTKm_LIBRARY_OUTPUT_PATH  ${PROJECT_BINARY_DIR}/lib)
+endif()
 if (NOT DEFINED VTKm_EXPORT_NAME)
   set(VTKm_EXPORT_NAME "VTKmTargets")
 endif()
+
+set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include")
 
 #-----------------------------------------------------------------------------
 # vtkm_option(variable doc [initial])
@@ -133,7 +140,7 @@ mark_as_advanced(
 #-----------------------------------------------------------------------------
 # When using C++11 support make sure you use the standard C++ extensions rather
 # than compiler-specific versions of the extensions (to preserve portability).
-set(CMAKE_CXX_EXTENSIONS False)
+set(CMAKE_CXX_EXTENSIONS Off)
 
 # Setup default build types
 include(VTKmBuildType)
@@ -148,20 +155,7 @@ include(VTKmCompilerFlags)
 
 
 #-----------------------------------------------------------------------------
-# When building VTK-m it self we want to explicitly disable compiler extensions
-set(CMAKE_CXX_EXTENSIONS OFF)
 
-#-----------------------------------------------------------------------------
-
-## Set the directory where the binaries will be stored
-if(NOT VTKm_EXECUTABLE_OUTPUT_PATH)
-  set(VTKm_EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-endif()
-
-## Set the directory where the libraries will be stored
-if(NOT VTKm_LIBRARY_OUTPUT_PATH)
-  set(VTKm_LIBRARY_OUTPUT_PATH  ${PROJECT_BINARY_DIR}/lib)
-endif()
 
 #-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)
