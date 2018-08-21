@@ -195,7 +195,7 @@ ContourTree::ContourTree()
 template <typename DeviceAdapter>
 void ContourTree::Init(vtkm::Id dataSize)
 { // Init()
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray(NO_SUCH_ELEMENT, dataSize);
+  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT, dataSize);
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, arcs);
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, superparents);
 } // Init()

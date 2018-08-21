@@ -60,36 +60,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
+#ifndef vtkm_worklet_contourtree_ppp2_active_graph_build_chains_worklet_h
+#define vtkm_worklet_contourtree_ppp2_active_graph_build_chains_worklet_h
 
-#ifndef vtkm_worklet_contourtree_ppp2_types_h
-#define vtkm_worklet_contourtree_ppp2_types_h
-
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
-
-// macros for bit flags
-#ifndef VTKM_USE_64BIT_IDS // 32 bit Ids
-
-#define NO_SUCH_ELEMENT 0x80000000L
-#define TERMINAL_ELEMENT 0x40000000L
-#define IS_SUPERNODE 0x20000000L
-#define IS_HYPERNODE 0x10000000L
-#define IS_ASCENDING 0x08000000L
-#define INDEX_MASK 0x07FFFFFFL
-#define CV_OTHER_FLAG                                                                              \
-  0x10000000L // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
-
-#else // 64 bit Ids
-
-#define NO_SUCH_ELEMENT 0x8000000000000000LL
-#define TERMINAL_ELEMENT 0x4000000000000000LL
-#define IS_SUPERNODE 0x2000000000000000LL
-#define IS_HYPERNODE 0x1000000000000000LL
-#define IS_ASCENDING 0x0800000000000000LL
-#define INDEX_MASK 0x07FFFFFFFFFFFFFFLL
-#define CV_OTHER_FLAG                                                                              \
-  0x1000000000000000LL // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
-#endif
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_ppp2/Types.h>
 
 namespace vtkm
 {
@@ -97,77 +72,76 @@ namespace worklet
 {
 namespace contourtree_ppp2
 {
-
-
-typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
-
-typedef typename vtkm::Pair<vtkm::Id, vtkm::Id>
-  EdgePair; // here EdgePair.first=low and EdgePair.second=high
-typedef typename vtkm::cont::ArrayHandle<EdgePair> EdgePairArray; // Array of edge pairs
-
-// inline functions for retrieving flags or index
-VTKM_EXEC_CONT
-inline bool noSuchElement(vtkm::Id flaggedIndex)
-{ // noSuchElement()
-  return ((flaggedIndex & (vtkm::Id)NO_SUCH_ELEMENT) != 0);
-} // noSuchElement()
-
-VTKM_EXEC_CONT
-inline bool isTerminalElement(vtkm::Id flaggedIndex)
-{ // isTerminalElement()
-  return ((flaggedIndex & TERMINAL_ELEMENT) != 0);
-} // isTerminalElement()
-
-VTKM_EXEC_CONT
-inline bool isSupernode(vtkm::Id flaggedIndex)
-{ // isSupernode()
-  return ((flaggedIndex & IS_SUPERNODE) != 0);
-} // isSupernode()
-
-VTKM_EXEC_CONT
-inline bool isHypernode(vtkm::Id flaggedIndex)
-{ // isHypernode()
-  return ((flaggedIndex & IS_HYPERNODE) != 0);
-} // isHypernode()
-
-VTKM_EXEC_CONT
-inline bool isAscending(vtkm::Id flaggedIndex)
-{ // isAscending()
-  return ((flaggedIndex & IS_ASCENDING) != 0);
-} // isAscending()
-
-VTKM_EXEC_CONT
-inline vtkm::Id maskedIndex(vtkm::Id flaggedIndex)
-{ // maskedIndex()
-  return (flaggedIndex & INDEX_MASK);
-} // maskedIndex()
-
-template <typename T>
-struct MaskedIndexFunctor
+namespace active_graph_inc
 {
+
+// Worklet for computing the sort indices from the sort order
+class BuildChainsWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<IdType> activeVertices,      // (input) activeVertices
+                                WholeArrayInOut<IdType> hyperacrcs); // (input/output) hyperarcs
+  typedef void ExecutionSignature(_1, InputIndex, _2);
+  typedef _1 InputDomain;
+
+  // Default Constructor
   VTKM_EXEC_CONT
+  BuildChainsWorklet() {}
 
-  MaskedIndexFunctor() {}
+  template <typename InOutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& vertexId,
+                            const vtkm::Id /*vertex*/, // FIXME: Remove unused parameter?
+                            const InOutFieldPortalType& hyperarcsPortal) const
+  {
+    // retrieve neighbour's ID
+    vtkm::Id neighbour = hyperarcsPortal.Get(vertexId);
+    // test for terminal vertex
+    if (isTerminalElement(neighbour))
+    {
+      return;
+    }
+    // retrieve supernode flags
+    vtkm::Id supernodeFlag = neighbour & (IS_SUPERNODE | IS_HYPERNODE);
+    // remove the mask to get a raw index
+    neighbour = maskedIndex(neighbour);
+    // otherwise, retrieve the double neighbour
+    vtkm::Id doubleNeighbour = hyperarcsPortal.Get(neighbour);
+    // remove it's supernode & hypernode flags, but preserve the terminal flag
+    doubleNeighbour = doubleNeighbour & (TERMINAL_ELEMENT | INDEX_MASK);
+    // and add our own supernode flag in
+    hyperarcsPortal.Set(vertexId, doubleNeighbour | supernodeFlag);
 
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(T x) const { return maskedIndex(x); }
-};
+    // In serial this worklet implements the following operation
+    /*
+      for (indexType vertex = 0; vertex < activeVertices.size(); vertex++)
+        { // per vertex
+          // convert to vertex ID
+          indexType vertexID = activeVertices[vertex];
+          // retrieve neighbour's ID
+          indexType neighbour = hyperarcs[vertexID];
+          // test for terminal vertex
+          if (isTerminalElement(neighbour))
+            continue;
+          // retrieve supernode flags
+          indexType supernodeFlag = neighbour & (IS_SUPERNODE | IS_HYPERNODE);
+          // remove the mask to get a raw index
+          neighbour = maskedIndex(neighbour);
+          // otherwise, retrieve the double neighbour
+          indexType doubleNeighbour = hyperarcs[neighbour];
+          // remove it's supernode & hypernode flags, but preserve the terminal flag
+          doubleNeighbour = doubleNeighbour & (TERMINAL_ELEMENT | INDEX_MASK);
+          // and add our own supernode flag in
+          hyperarcs[vertexID] = doubleNeighbour | supernodeFlag;
+        } // per vertex
 
-inline std::string flagString(vtkm::Id flaggedIndex)
-{ // flagString()
-  std::string fString("");
-  fString += (noSuchElement(flaggedIndex) ? "n" : ".");
-  fString += (isTerminalElement(flaggedIndex) ? "t" : ".");
-  fString += (isSupernode(flaggedIndex) ? "s" : ".");
-  fString += (isHypernode(flaggedIndex) ? "h" : ".");
-  fString += (isAscending(flaggedIndex) ? "a" : ".");
-  return fString;
-} // flagString()
+      */
+  }
 
+}; // BuildChainsWorklet
 
-
+} // namespace active_graph_inc
 } // namespace contourtree_ppp2
-} // worklet
-} // vtkm
+} // namespace worklet
+} // namespace vtkm
 
 #endif

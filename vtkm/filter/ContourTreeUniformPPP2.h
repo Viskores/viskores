@@ -83,9 +83,7 @@ class ContourTreePPP2 : public vtkm::filter::FilterField<ContourTreePPP2>
 {
 public:
   VTKM_CONT
-  ContourTreePPP2(bool useMarchingCubes = false,
-                  bool computeRegularStructure = true,
-                  vtkm::Id cellSetId = 0);
+  ContourTreePPP2(bool useMarchingCubes = false, bool computeRegularStructure = true);
 
   // Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
@@ -101,17 +99,16 @@ public:
   const std::vector<std::pair<std::string, vtkm::Float64>>& GetTimings() const;
 
 private:
-  bool mUseMarchingCubes;
-  bool mComputeRegularStructure;
-  vtkm::Id mCellSetId;
-  std::vector<std::pair<std::string, vtkm::Float64>> mTimings;
+  bool UseMarchingCubes;
+  bool ComputeRegularStructure;
+  std::vector<std::pair<std::string, vtkm::Float64>> Timings;
 
   // TODO Should the additional fields below be addd to the vtkm::filter::ResultField and what is the best way to represent them
   // Additional result fields not included in the vtkm::filter::ResultField returned by DoExecute
-  vtkm::worklet::contourtree_ppp2::ContourTree mContourTree; // The contour tree
-  vtkm::Id nIterations; // Number of iterations used to compute the contour tree
+  vtkm::worklet::contourtree_ppp2::ContourTree ContourTreeData; // The contour tree
+  vtkm::Id NumIterations; // Number of iterations used to compute the contour tree
   vtkm::worklet::contourtree_ppp2::IdArrayType
-    mSortOrder; // Array with the sorted order of the mesh vertices
+    MeshSortOrder; // Array with the sorted order of the mesh vertices
 };
 
 template <>
@@ -119,6 +116,40 @@ class FilterTraits<ContourTreePPP2>
 {
 public:
   typedef TypeListTagScalarAll InputFieldTypeList;
+};
+
+// Helper struct to collect sizing information from the dataset
+struct GetRowsColsSlices
+{
+  void operator()(const vtkm::cont::CellSetStructured<2>& cells,
+                  vtkm::Id& nRows,
+                  vtkm::Id& nCols,
+                  vtkm::Id& nSlices) const
+  {
+    vtkm::Id2 pointDimensions = cells.GetPointDimensions();
+    nRows = pointDimensions[0];
+    nCols = pointDimensions[1];
+    nSlices = 1;
+  }
+  void operator()(const vtkm::cont::CellSetStructured<3>& cells,
+                  vtkm::Id& nRows,
+                  vtkm::Id& nCols,
+                  vtkm::Id& nSlices) const
+  {
+    vtkm::Id3 pointDimensions = cells.GetPointDimensions();
+    nRows = pointDimensions[0];
+    nCols = pointDimensions[1];
+    nSlices = pointDimensions[2];
+  }
+  template <typename T>
+  void operator()(const T& cells, vtkm::Id& nRows, vtkm::Id& nCols, vtkm::Id& nSlices) const
+  {
+    (void)nRows;
+    (void)nCols;
+    (void)nSlices;
+    (void)cells;
+    throw vtkm::cont::ErrorBadValue("Expected 2D or 3D structured cell cet! ");
+  }
 };
 }
 } // namespace vtkm::filter

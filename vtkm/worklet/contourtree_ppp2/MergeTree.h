@@ -164,7 +164,7 @@ MergeTree<DeviceAdapter>::MergeTree(vtkm::Id meshSize, bool IsJoinTree)
 
   // Initialize the superparents with NO_SUCH_ELEMENT
   superparents.Allocate(meshSize);
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray(NO_SUCH_ELEMENT, meshSize);
+  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT, meshSize);
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, superparents);
 
 

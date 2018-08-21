@@ -71,11 +71,11 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/contourtree_ppp2/MeshExtrema_Inc/SetStarts.h>
 #include <vtkm/worklet/contourtree_ppp2/PointerDoubling.h>
+#include <vtkm/worklet/contourtree_ppp2/meshextrema/SetStarts.h>
 
 
-#include <vtkm/worklet/contourtree_ppp2/Mesh_DEM_Inc/SortIndices.h>
+#include <vtkm/worklet/contourtree_ppp2/mesh_dem/SortIndices.h>
 
 namespace mesh_extrema_inc_ns = vtkm::worklet::contourtree_ppp2::mesh_extrema_inc;
 
@@ -147,7 +147,8 @@ void MeshExtrema<DeviceAdapter>::BuildRegularChains(bool isMaximal)
 
   // Create the PointerDoubling worklet and corresponding dispatcher
   PointerDoubling pointerDoubler;
-  vtkm::worklet::DispatcherMapField<PointerDoubling> pointerDoublerDispatcher(pointerDoubler);
+  vtkm::worklet::DispatcherMapField<PointerDoubling, DeviceAdapter> pointerDoublerDispatcher(
+    pointerDoubler);
 
   // Iterate to perform pointer-doubling to build chains to extrema (i.e., maxima or minima)
   // depending on whether we are computing a JoinTree or a SplitTree
@@ -166,8 +167,8 @@ void MeshExtrema<DeviceAdapter>::SetStarts(MeshType& mesh, bool isMaximal)
 {
   mesh.setPrepareForExecutionBehavior(isMaximal);
   mesh_extrema_inc_ns::SetStarts setStartsWorklet;
-  vtkm::worklet::DispatcherMapField<mesh_extrema_inc_ns::SetStarts> setStartsDispatcher(
-    setStartsWorklet);
+  vtkm::worklet::DispatcherMapField<mesh_extrema_inc_ns::SetStarts, DeviceAdapter>
+    setStartsDispatcher(setStartsWorklet);
   if (isMaximal)
   {
     setStartsDispatcher.Invoke(mesh.sortIndices, mesh, peaks);

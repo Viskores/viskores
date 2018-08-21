@@ -81,9 +81,9 @@
 #include <vtkm/worklet/contourtree_ppp2/ArrayTransforms.h>
 #include <vtkm/worklet/contourtree_ppp2/ContourTree.h>
 #include <vtkm/worklet/contourtree_ppp2/PrintVectors.h>
-#include <vtkm/worklet/contourtree_ppp2/ProcessContourTree_Inc/Branch.h>
-#include <vtkm/worklet/contourtree_ppp2/ProcessContourTree_Inc/SuperArcVolumetricComparator.h>
-#include <vtkm/worklet/contourtree_ppp2/ProcessContourTree_Inc/SuperNodeBranchComparator.h>
+#include <vtkm/worklet/contourtree_ppp2/processcontourtree/Branch.h>
+#include <vtkm/worklet/contourtree_ppp2/processcontourtree/SuperArcVolumetricComparator.h>
+#include <vtkm/worklet/contourtree_ppp2/processcontourtree/SuperNodeBranchComparator.h>
 
 
 
@@ -508,7 +508,8 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   downWeight.Allocate(nSuperarcs);
   auto downWeightPortal = downWeight.GetPortalControl();
   IdArrayType bestUpward;
-  auto noSuchElementArray = vtkm::cont::ArrayHandleConstant<vtkm::Id>(NO_SUCH_ELEMENT, nSupernodes);
+  auto noSuchElementArray =
+    vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nSupernodes);
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, bestUpward);
   IdArrayType bestDownward;
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, bestDownward);
@@ -687,7 +688,7 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
 
   // V B.  Create the arrays for the branches
   auto noSuchElementArrayNBranches =
-    vtkm::cont::ArrayHandleConstant<vtkm::Id>(NO_SUCH_ELEMENT, nBranches);
+    vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nBranches);
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArrayNBranches,
                                                           branchMinimum);
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArrayNBranches,

@@ -60,36 +60,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-
-#ifndef vtkm_worklet_contourtree_ppp2_types_h
-#define vtkm_worklet_contourtree_ppp2_types_h
+#ifndef vtkm_worklet_contourtree_ppp2_mesh_dem_inc_execution_object_mesh_3d_h
+#define vtkm_worklet_contourtree_ppp2_mesh_dem_inc_execution_object_mesh_3d_h
 
 #include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
 
-// macros for bit flags
-#ifndef VTKM_USE_64BIT_IDS // 32 bit Ids
-
-#define NO_SUCH_ELEMENT 0x80000000L
-#define TERMINAL_ELEMENT 0x40000000L
-#define IS_SUPERNODE 0x20000000L
-#define IS_HYPERNODE 0x10000000L
-#define IS_ASCENDING 0x08000000L
-#define INDEX_MASK 0x07FFFFFFL
-#define CV_OTHER_FLAG                                                                              \
-  0x10000000L // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
-
-#else // 64 bit Ids
-
-#define NO_SUCH_ELEMENT 0x8000000000000000LL
-#define TERMINAL_ELEMENT 0x4000000000000000LL
-#define IS_SUPERNODE 0x2000000000000000LL
-#define IS_HYPERNODE 0x1000000000000000LL
-#define IS_ASCENDING 0x0800000000000000LL
-#define INDEX_MASK 0x07FFFFFFFFFFFFFFLL
-#define CV_OTHER_FLAG                                                                              \
-  0x1000000000000000LL // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
-#endif
 
 namespace vtkm
 {
@@ -97,77 +72,56 @@ namespace worklet
 {
 namespace contourtree_ppp2
 {
-
-
-typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
-
-typedef typename vtkm::Pair<vtkm::Id, vtkm::Id>
-  EdgePair; // here EdgePair.first=low and EdgePair.second=high
-typedef typename vtkm::cont::ArrayHandle<EdgePair> EdgePairArray; // Array of edge pairs
-
-// inline functions for retrieving flags or index
-VTKM_EXEC_CONT
-inline bool noSuchElement(vtkm::Id flaggedIndex)
-{ // noSuchElement()
-  return ((flaggedIndex & (vtkm::Id)NO_SUCH_ELEMENT) != 0);
-} // noSuchElement()
-
-VTKM_EXEC_CONT
-inline bool isTerminalElement(vtkm::Id flaggedIndex)
-{ // isTerminalElement()
-  return ((flaggedIndex & TERMINAL_ELEMENT) != 0);
-} // isTerminalElement()
-
-VTKM_EXEC_CONT
-inline bool isSupernode(vtkm::Id flaggedIndex)
-{ // isSupernode()
-  return ((flaggedIndex & IS_SUPERNODE) != 0);
-} // isSupernode()
-
-VTKM_EXEC_CONT
-inline bool isHypernode(vtkm::Id flaggedIndex)
-{ // isHypernode()
-  return ((flaggedIndex & IS_HYPERNODE) != 0);
-} // isHypernode()
-
-VTKM_EXEC_CONT
-inline bool isAscending(vtkm::Id flaggedIndex)
-{ // isAscending()
-  return ((flaggedIndex & IS_ASCENDING) != 0);
-} // isAscending()
-
-VTKM_EXEC_CONT
-inline vtkm::Id maskedIndex(vtkm::Id flaggedIndex)
-{ // maskedIndex()
-  return (flaggedIndex & INDEX_MASK);
-} // maskedIndex()
-
-template <typename T>
-struct MaskedIndexFunctor
+namespace mesh_dem_inc
 {
+
+// Worklet for computing the sort indices from the sort order
+template <typename DeviceAdapter>
+class ExecutionObject_MeshStructure_3D
+{
+public:
   VTKM_EXEC_CONT
-
-  MaskedIndexFunctor() {}
+  ExecutionObject_MeshStructure_3D()
+    : nRows(0)
+    , nCols(0)
+    , nSlices(0)
+  {
+  }
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(T x) const { return maskedIndex(x); }
-};
+  ExecutionObject_MeshStructure_3D(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices)
+    : nRows(nrows)
+    , nCols(ncols)
+    , nSlices(nslices)
+  {
+  }
 
-inline std::string flagString(vtkm::Id flaggedIndex)
-{ // flagString()
-  std::string fString("");
-  fString += (noSuchElement(flaggedIndex) ? "n" : ".");
-  fString += (isTerminalElement(flaggedIndex) ? "t" : ".");
-  fString += (isSupernode(flaggedIndex) ? "s" : ".");
-  fString += (isHypernode(flaggedIndex) ? "h" : ".");
-  fString += (isAscending(flaggedIndex) ? "a" : ".");
-  return fString;
-} // flagString()
+  // vertex row - integer modulus by (nRows&nCols) and integer divide by columns
+  VTKM_EXEC
+  vtkm::Id vertexRow(vtkm::Id v) const { return (v % (nRows * nCols)) / nCols; }
 
+  // vertex column -- interger modulus by columns
+  VTKM_EXEC
+  vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
 
+  // vertex slice -- integer divide by (nRows*nCols)
+  VTKM_EXEC
+  vtkm::Id vertexSlice(vtkm::Id v) const { return v / (nRows * nCols); }
 
+  //vertex ID - row * ncols + col
+  VTKM_EXEC
+  vtkm::Id vertexId(vtkm::Id s, vtkm::Id r, vtkm::Id c) const
+  {
+    return (s * nRows + r) * nCols + c;
+  }
+
+  vtkm::Id nRows, nCols, nSlices;
+
+}; // Mesh_DEM_2D_ExecutionObject
+
+} // namespace mesh_dem_triangulation_worklets
 } // namespace contourtree_ppp2
-} // worklet
-} // vtkm
+} // namespace worklet
+} // namespace vtkm
 
 #endif

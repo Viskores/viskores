@@ -72,42 +72,32 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-ContourTreePPP2::ContourTreePPP2(bool useMarchingCubes,
-                                 bool computeRegularStructure,
-                                 vtkm::Id cellSetId)
-  : mUseMarchingCubes(useMarchingCubes)
-  , mComputeRegularStructure(computeRegularStructure)
-  , mCellSetId(cellSetId)
-  , mTimings()
+ContourTreePPP2::ContourTreePPP2(bool useMarchingCubes, bool computeRegularStructure)
+  : UseMarchingCubes(useMarchingCubes)
+  , ComputeRegularStructure(computeRegularStructure)
+  , Timings()
 {
   this->SetOutputFieldName("arcs");
 }
 
-template <typename Base, typename T>
-inline bool instanceof (const T* ptr)
-{
-  return dynamic_cast<const Base*>(ptr) != nullptr;
-}
-
-
 const vtkm::worklet::contourtree_ppp2::ContourTree& ContourTreePPP2::GetContourTree() const
 {
-  return this->mContourTree;
+  return this->ContourTreeData;
 }
 
 const vtkm::worklet::contourtree_ppp2::IdArrayType& ContourTreePPP2::GetSortOrder() const
 {
-  return this->mSortOrder;
+  return this->MeshSortOrder;
 }
 
 vtkm::Id ContourTreePPP2::GetNumIterations() const
 {
-  return this->nIterations;
+  return this->NumIterations;
 }
 
 const std::vector<std::pair<std::string, vtkm::Float64>>& ContourTreePPP2::GetTimings() const
 {
-  return this->mTimings;
+  return this->Timings;
 }
 
 //-----------------------------------------------------------------------------
@@ -121,7 +111,7 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(
 {
   // Start the timer
   vtkm::cont::Timer<DeviceAdapter> timer;
-  mTimings.clear();
+  Timings.clear();
 
   // Check that the field is Ok
   if (fieldMeta.IsPointField() == false)
@@ -129,79 +119,44 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
-  //vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > saddlePeak;
-  // Create the worklet
+  // Use the GetRowsColsSlices struct defined in the header to collect the nRows, nCols, and nSlices information
   vtkm::worklet::ContourTreePPP2 worklet;
   vtkm::Id nRows;
   vtkm::Id nCols;
   vtkm::Id nSlices = 1;
-
-  vtkm::cont::DynamicCellSet temp = input.GetCellSet(mCellSetId);
-  // Collect sizing information from the dataset
-  if (temp.IsType<vtkm::cont::CellSetStructured<2>>()) // Check if we have a 2D cell set
-  {
-    // TODO print warning if mUseMarchingCubes is set to True for 2D data to indicate that the flag is ignored
-    vtkm::cont::CellSetStructured<2> cellSet;
-    input.GetCellSet(mCellSetId)
-      .CopyTo(
-        cellSet); // TODO should the ID of the cell-set we use be an input parameter to ContourTreePPP2?
-    // How should policy be used?
-    vtkm::filter::ApplyPolicy(cellSet, policy);
-    vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
-    nRows = pointDimensions[0];
-    nCols = pointDimensions[1];
-    nSlices = 1;
-  }
-  else if (temp.IsType<vtkm::cont::CellSetStructured<3>>()) // Check if we have a 3D cell set
-  {
-    vtkm::cont::CellSetStructured<3> cellSet;
-    input.GetCellSet(mCellSetId)
-      .CopyTo(cellSet); // TODO see above. cell-set ID always 0 or user-defined
-    // How should policy be used?
-    vtkm::filter::ApplyPolicy(cellSet, policy);
-    vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
-    nRows = pointDimensions[0];
-    nCols = pointDimensions[1];
-    nSlices = pointDimensions[2];
-  }
-  else
-  {
-    throw vtkm::cont::ErrorBadValue("Expected 2D or 3D structured cell cet! ");
-  }
-
-  //vtkm::Float64 startupTime = timer.GetElapsedTime();
-  //std::cout<<"Time to prep for worklet call" <<startupTime<<std::endl;
+  const auto& cells = input.GetCellSet(this->GetActiveCoordinateSystemIndex());
+  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(GetRowsColsSlices(), nRows, nCols, nSlices);
 
   // Run the worklet
   worklet.Run(field,
-              mTimings,
-              mContourTree,
-              mSortOrder,
-              nIterations,
+              this->Timings,
+              this->ContourTreeData,
+              this->MeshSortOrder,
+              this->NumIterations,
               device,
               nRows,
               nCols,
               nSlices,
-              mUseMarchingCubes,
-              mComputeRegularStructure);
+              this->UseMarchingCubes,
+              this->ComputeRegularStructure);
 
   // Compute the saddle peak dataset for return
-  // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(mContourTree, mSortOrder, saddlePeak);
+  // vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > saddlePeak;
+  // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(ContourTreeData, MeshSortOrder, saddlePeak);
 
   // Create the vtkm result object
   auto result = internal::CreateResult(input,
-                                       mContourTree.arcs,
+                                       ContourTreeData.arcs,
                                        this->GetOutputFieldName(),
                                        fieldMeta.GetAssociation(),
                                        fieldMeta.GetCellSetName());
 
   // Update the total timings
   vtkm::Float64 totalTimeWorklet = 0;
-  for (std::vector<std::pair<std::string, vtkm::Float64>>::size_type i = 0; i < mTimings.size();
-       i++)
-    totalTimeWorklet += mTimings[i].second;
+  for (std::vector<std::pair<std::string, vtkm::Float64>>::size_type i = 0; i < Timings.size(); i++)
+    totalTimeWorklet += Timings[i].second;
   //std::cout<<"Total time measured by worklet: "<<totalTimeWorklet<<std::endl;
-  mTimings.push_back(std::pair<std::string, vtkm::Float64>(
+  Timings.push_back(std::pair<std::string, vtkm::Float64>(
     "Others (ContourTreePPP2 Filter): ", timer.GetElapsedTime() - totalTimeWorklet));
 
   // Return the result

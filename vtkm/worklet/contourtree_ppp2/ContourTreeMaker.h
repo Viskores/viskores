@@ -75,26 +75,26 @@
 #include <vtkm/worklet/contourtree_ppp2/Types.h>
 
 // contourtree_maker_inc includes
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/AugmentMergeTrees_InitNewJoinSplitIDAndSuperparents.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/AugmentMergeTrees_SetAugmentedMergeArcs.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/CompressTrees_Step.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/ComputeHyperAndSuperStructure_HypernodesSetFirstSuperchild.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/ComputeHyperAndSuperStructure_PermuteArcs.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/ComputeHyperAndSuperStructure_ResetHyperparentsId.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/ComputeRegularStructure_LocateSuperarcs.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/ComputeRegularStructure_SetArcs.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/ContourTreeNodeComparator.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/ContourTreeSuperNodeComparator.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/FindDegrees_FindRHE.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/FindDegrees_ResetUpAndDowndegree.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/FindDegrees_SubtractLHE.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/TransferLeafChains_CollapsePastRegular.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/TransferLeafChains_InitInAndOutbound.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/TransferLeafChains_TransferToContourTree.h>
-#include <vtkm/worklet/contourtree_ppp2/ContourTreeMaker_Inc/WasNotTransferred.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/AugmentMergeTrees_InitNewJoinSplitIDAndSuperparents.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/AugmentMergeTrees_SetAugmentedMergeArcs.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/CompressTrees_Step.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/ComputeHyperAndSuperStructure_HypernodesSetFirstSuperchild.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/ComputeHyperAndSuperStructure_PermuteArcs.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/ComputeHyperAndSuperStructure_ResetHyperparentsId.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/ComputeRegularStructure_LocateSuperarcs.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/ComputeRegularStructure_SetArcs.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/ContourTreeNodeComparator.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/ContourTreeSuperNodeComparator.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/FindDegrees_FindRHE.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/FindDegrees_ResetUpAndDowndegree.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/FindDegrees_SubtractLHE.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/TransferLeafChains_CollapsePastRegular.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/TransferLeafChains_InitInAndOutbound.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/TransferLeafChains_TransferToContourTree.h>
+#include <vtkm/worklet/contourtree_ppp2/contourtreemaker/WasNotTransferred.h>
 
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/SuperArcNodeComparator.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/SuperArcNodeComparator.h>
 
 
 //VTKM includes
@@ -106,6 +106,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 
 
 
@@ -232,8 +233,8 @@ void ContourTreeMaker<DeviceAdapter>::ComputeHyperAndSuperStructure()
   if (activeSupernodes.GetNumberOfValues() == 1)
   { // meet at a vertex
     vtkm::Id superID = activeSupernodes.GetPortalControl().Get(0);
-    contourTree.superarcs.GetPortalControl().Set(superID, NO_SUCH_ELEMENT);
-    contourTree.hyperarcs.GetPortalControl().Set(superID, NO_SUCH_ELEMENT);
+    contourTree.superarcs.GetPortalControl().Set(superID, (vtkm::Id)NO_SUCH_ELEMENT);
+    contourTree.hyperarcs.GetPortalControl().Set(superID, (vtkm::Id)NO_SUCH_ELEMENT);
     contourTree.hyperparents.GetPortalControl().Set(superID, superID);
     contourTree.whenTransferred.GetPortalControl().Set(superID, nIterations | IS_HYPERNODE);
   } // meet at a vertex
@@ -292,7 +293,8 @@ void ContourTreeMaker<DeviceAdapter>::ComputeHyperAndSuperStructure()
   // we need an extra permutation to get the superarcs correct
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_PermuteArcs permuteSuperarcsWorklet;
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_PermuteArcs>
+    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_PermuteArcs,
+    DeviceAdapter>
     permuteSuperarcsDispatcher(permuteSuperarcsWorklet);
   permuteSuperarcsDispatcher.Invoke(permutedSuperarcs,      // (input)
                                     superSortIndex,         // (input)
@@ -311,7 +313,8 @@ void ContourTreeMaker<DeviceAdapter>::ComputeHyperAndSuperStructure()
     contourTree.hyperarcs, contourTree.hypernodes, permutedHyperarcs);
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_PermuteArcs permuteHyperarcsWorklet;
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_PermuteArcs>
+    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_PermuteArcs,
+    DeviceAdapter>
     permuteHyperarcsDispatcher(permuteHyperarcsWorklet);
   permuteSuperarcsDispatcher.Invoke(permutedHyperarcs, superSortIndex, contourTree.hyperarcs);
 
@@ -350,7 +353,8 @@ void ContourTreeMaker<DeviceAdapter>::ComputeHyperAndSuperStructure()
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs
     setNewHypernodesAndArcsWorklet;
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs>
+    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs,
+    DeviceAdapter>
     setNewHypernodesAndArcsDispatcher(setNewHypernodesAndArcsWorklet);
   setNewHypernodesAndArcsDispatcher.Invoke(contourTree.supernodes,
                                            contourTree.whenTransferred,
@@ -384,7 +388,8 @@ void ContourTreeMaker<DeviceAdapter>::ComputeHyperAndSuperStructure()
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_HypernodesSetFirstSuperchild
     hypernodesSetFirstSuperchildWorklet;
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_HypernodesSetFirstSuperchild>
+    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_HypernodesSetFirstSuperchild,
+    DeviceAdapter>
     hypernodesSetFirstSuperchildDispatcher(hypernodesSetFirstSuperchildWorklet);
   hypernodesSetFirstSuperchildDispatcher.Invoke(
     contourTree.hyperparents, superSortIndex, contourTree.hypernodes);
@@ -396,7 +401,8 @@ void ContourTreeMaker<DeviceAdapter>::ComputeHyperAndSuperStructure()
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_ResetHyperparentsId
     resetHyperparentsIdWorklet;
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_ResetHyperparentsId>
+    contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_ResetHyperparentsId,
+    DeviceAdapter>
     resetHyperparentsIdDispatcher(resetHyperparentsIdWorklet);
   resetHyperparentsIdDispatcher.Invoke(superSortIndex, contourTree.hyperparents);
 
@@ -424,7 +430,8 @@ void ContourTreeMaker<DeviceAdapter>::ComputeRegularStructure(
   contourtree_maker_inc_ns::ComputeRegularStructure_LocateSuperarcs locateSuperarcsWorklet(
     contourTree.hypernodes.GetNumberOfValues(), contourTree.supernodes.GetNumberOfValues());
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::ComputeRegularStructure_LocateSuperarcs>
+    contourtree_maker_inc_ns::ComputeRegularStructure_LocateSuperarcs,
+    DeviceAdapter>
     locateSuperarcsDispatcher(locateSuperarcsWorklet);
   locateSuperarcsDispatcher.Invoke(contourTree.superparents,    // (input/output)
                                    contourTree.whenTransferred, // (input)
@@ -444,7 +451,8 @@ void ContourTreeMaker<DeviceAdapter>::ComputeRegularStructure(
   // now set the arcs based on the array
   contourtree_maker_inc_ns::ComputeRegularStructure_SetArcs setArcsWorklet(
     contourTree.arcs.GetNumberOfValues());
-  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::ComputeRegularStructure_SetArcs>
+  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::ComputeRegularStructure_SetArcs,
+                                    DeviceAdapter>
     setArcsDispatcher(setArcsWorklet);
   setArcsDispatcher.Invoke(contourTree.nodes,        // (input) arcSorter array
                            contourTree.superparents, // (input)
@@ -540,7 +548,8 @@ void ContourTreeMaker<DeviceAdapter>::AugmentMergeTrees()
   contourtree_maker_inc_ns::AugmentMergeTrees_InitNewJoinSplitIDAndSuperparents
     initNewJoinSplitIDAndSuperparentsWorklet;
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::AugmentMergeTrees_InitNewJoinSplitIDAndSuperparents>
+    contourtree_maker_inc_ns::AugmentMergeTrees_InitNewJoinSplitIDAndSuperparents,
+    DeviceAdapter>
     initNewJoinSplitIDAndSuperparentsDispatcher(initNewJoinSplitIDAndSuperparentsWorklet);
   initNewJoinSplitIDAndSuperparentsDispatcher.Invoke(contourTree.supernodes, //input
                                                      joinTree.superparents,  //input
@@ -568,7 +577,8 @@ void ContourTreeMaker<DeviceAdapter>::AugmentMergeTrees()
   augmentedJoinSuperarcs.Allocate(nSupernodes);
   contourtree_maker_inc_ns::AugmentMergeTrees_SetAugmentedMergeArcs setAugmentedJoinArcsWorklet;
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::AugmentMergeTrees_SetAugmentedMergeArcs>
+    contourtree_maker_inc_ns::AugmentMergeTrees_SetAugmentedMergeArcs,
+    DeviceAdapter>
     setAugmentedJoinArcsDispatcher(setAugmentedJoinArcsWorklet);
   setAugmentedJoinArcsDispatcher.Invoke(activeSupernodes,        // (input domain)
                                         joinSuperparents,        // (input)
@@ -587,7 +597,8 @@ void ContourTreeMaker<DeviceAdapter>::AugmentMergeTrees()
   augmentedSplitSuperarcs.Allocate(nSupernodes);
   contourtree_maker_inc_ns::AugmentMergeTrees_SetAugmentedMergeArcs setAugmentedSplitArcsWorklet;
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::AugmentMergeTrees_SetAugmentedMergeArcs>
+    contourtree_maker_inc_ns::AugmentMergeTrees_SetAugmentedMergeArcs,
+    DeviceAdapter>
     setAugmentedSplitArcsDispatcher(setAugmentedSplitArcsWorklet);
   setAugmentedSplitArcsDispatcher.Invoke(activeSupernodes,         // (input domain)
                                          splitSuperparents,        // (input)
@@ -596,7 +607,8 @@ void ContourTreeMaker<DeviceAdapter>::AugmentMergeTrees()
                                          augmentedSplitSuperarcs); // (output)
 
   // 12. Lastly, we can initialise all of the remaining arrays
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray(NO_SUCH_ELEMENT, nSupernodes);
+  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT,
+                                                               nSupernodes);
   DeviceAlgorithm::Copy(noSuchElementArray, contourTree.superarcs);
   DeviceAlgorithm::Copy(noSuchElementArray, contourTree.hyperparents);
   DeviceAlgorithm::Copy(noSuchElementArray, contourTree.hypernodes);
@@ -639,7 +651,8 @@ void ContourTreeMaker<DeviceAdapter>::TransferLeafChains(bool isJoin)
 
   // loop to each active node to copy join/split to outbound and inbound arrays
   contourtree_maker_inc_ns::TransferLeafChains_InitInAndOutbound initInAndOutboundWorklet;
-  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::TransferLeafChains_InitInAndOutbound>
+  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::TransferLeafChains_InitInAndOutbound,
+                                    DeviceAdapter>
     initInAndOutboundDispatcher(initInAndOutboundWorklet);
   initInAndOutboundDispatcher.Invoke(activeSupernodes, // (input)
                                      inwards,          // (input)
@@ -665,7 +678,8 @@ void ContourTreeMaker<DeviceAdapter>::TransferLeafChains(bool isJoin)
     // loop through the vertices, updating outbound
     contourtree_maker_inc_ns::TransferLeafChains_CollapsePastRegular collapsePastRegularWorklet;
     vtkm::worklet::DispatcherMapField<
-      contourtree_maker_inc_ns::TransferLeafChains_CollapsePastRegular>
+      contourtree_maker_inc_ns::TransferLeafChains_CollapsePastRegular,
+      DeviceAdapter>
       collapsePastRegularDispatcher(collapsePastRegularWorklet);
     collapsePastRegularDispatcher.Invoke(activeSupernodes, // (input)
                                          outbound,         // (input/output)
@@ -702,7 +716,8 @@ void ContourTreeMaker<DeviceAdapter>::TransferLeafChains(bool isJoin)
                                  inwards);    // (input)
 
   vtkm::worklet::DispatcherMapField<
-    contourtree_maker_inc_ns::TransferLeafChains_TransferToContourTree<DeviceAdapter>>
+    contourtree_maker_inc_ns::TransferLeafChains_TransferToContourTree<DeviceAdapter>,
+    DeviceAdapter>
     transferTorContourTreeDispatcher(transferToContourTreeWorklet);
   transferTorContourTreeDispatcher.Invoke(activeSupernodes,           // (input)
                                           contourTree.hyperparents,   // (output)
@@ -733,7 +748,7 @@ void ContourTreeMaker<DeviceAdapter>::CompressTrees()
   for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
   { // iteration log times
     contourtree_maker_inc_ns::CompressTrees_Step compressTreesStepWorklet;
-    vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::CompressTrees_Step>
+    vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::CompressTrees_Step, DeviceAdapter>
       compressTreesStepDispatcher(compressTreesStepWorklet);
     compressTreesStepDispatcher.Invoke(activeSupernodes,       // (input)
                                        contourTree.superarcs,  // (input)
@@ -783,7 +798,8 @@ void ContourTreeMaker<DeviceAdapter>::FindDegrees()
 
   // reset the updegree & downdegree
   contourtree_maker_inc_ns::FindDegrees_ResetUpAndDowndegree resetUpAndDowndegreeWorklet;
-  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_ResetUpAndDowndegree>
+  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_ResetUpAndDowndegree,
+                                    DeviceAdapter>
     resetUpAndDowndegreeDispatcher(resetUpAndDowndegreeWorklet);
   resetUpAndDowndegreeDispatcher.Invoke(activeSupernodes, updegree, downdegree);
 
@@ -804,13 +820,14 @@ void ContourTreeMaker<DeviceAdapter>::FindDegrees()
   // there's probably a smarter scatter-gather solution to this, but this should work
   // find the RHE of each segment
   contourtree_maker_inc_ns::FindDegrees_FindRHE joinFindRHEWorklet(nActiveSupernodes);
-  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_FindRHE>
+  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_FindRHE, DeviceAdapter>
     joinFindRHEDispatcher(joinFindRHEWorklet);
   joinFindRHEDispatcher.Invoke(inNeighbour, updegree);
 
   // now subtract the LHE to get the size
   contourtree_maker_inc_ns::FindDegrees_SubtractLHE joinSubractLHEWorklet;
-  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_SubtractLHE>
+  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_SubtractLHE,
+                                    DeviceAdapter>
     joinSubtractLHEDispatcher(joinSubractLHEWorklet);
   joinSubtractLHEDispatcher.Invoke(inNeighbour, updegree);
 
@@ -823,13 +840,14 @@ void ContourTreeMaker<DeviceAdapter>::FindDegrees()
   // there's probably a smarter scatter-gather solution to this, but this should work
   // find the RHE of each segment
   contourtree_maker_inc_ns::FindDegrees_FindRHE splitFindRHEWorklet(nActiveSupernodes);
-  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_FindRHE>
+  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_FindRHE, DeviceAdapter>
     splitFindRHEDispatcher(splitFindRHEWorklet);
   joinFindRHEDispatcher.Invoke(inNeighbour, downdegree);
 
   // now subtract the LHE to get the size
   contourtree_maker_inc_ns::FindDegrees_SubtractLHE splitSubractLHEWorklet;
-  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_SubtractLHE>
+  vtkm::worklet::DispatcherMapField<contourtree_maker_inc_ns::FindDegrees_SubtractLHE,
+                                    DeviceAdapter>
     splitSubtractLHEDispatcher(splitSubractLHEWorklet);
   joinSubtractLHEDispatcher.Invoke(inNeighbour, downdegree);
 

@@ -88,10 +88,10 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
-#include <vtkm/worklet/contourtree_ppp2/Mesh_DEM_Inc/SimulatedSimplicityComperator.h>
-#include <vtkm/worklet/contourtree_ppp2/Mesh_DEM_Inc/SortIndices.h>
 #include <vtkm/worklet/contourtree_ppp2/PrintVectors.h>
 #include <vtkm/worklet/contourtree_ppp2/Types.h>
+#include <vtkm/worklet/contourtree_ppp2/mesh_dem/SimulatedSimplicityComperator.h>
+#include <vtkm/worklet/contourtree_ppp2/mesh_dem/SortIndices.h>
 
 
 //Define namespace alias for the freudenthal types to make the code a bit more readable
@@ -257,8 +257,8 @@ void Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>::SortData(
   //  for (indexType vertex = 0; vertex < nVertices; vertex++)
   //            sortIndices[sortOrder[vertex]] = vertex;
   mesh_dem_worklets::SortIndices sortIndicesWorklet;
-  vtkm::worklet::DispatcherMapField<mesh_dem_worklets::SortIndices> sortIndicesDispatcher(
-    sortIndicesWorklet);
+  vtkm::worklet::DispatcherMapField<mesh_dem_worklets::SortIndices, DeviceAdapter>
+    sortIndicesDispatcher(sortIndicesWorklet);
   sortIndicesDispatcher.Invoke(sortOrder, sortIndices);
 
   // Debug print statement
@@ -361,8 +361,8 @@ void Mesh_DEM_Triangulation_3D<T, StorageType, DeviceAdapter>::DebugPrintValues(
 } // worklet
 } // vtkm
 
-#include "vtkm/worklet/contourtree_ppp2/Mesh_DEM_MeshTypes/Freudenthal_2D_Triangulation.h" // include Mesh_DEM_Triangulation_2D_Freudenthal
-#include "vtkm/worklet/contourtree_ppp2/Mesh_DEM_MeshTypes/Freudenthal_3D_Triangulation.h" // include Mesh_DEM_Triangulation_3D_Freudenthal
-#include "vtkm/worklet/contourtree_ppp2/Mesh_DEM_MeshTypes/MarchingCubes_3D_Triangulation.h" // include Mesh_DEM_Triangulation_3D_MarchinCubes
+#include "vtkm/worklet/contourtree_ppp2/mesh_dem_meshtypes/Freudenthal_2D_Triangulation.h" // include Mesh_DEM_Triangulation_2D_Freudenthal
+#include "vtkm/worklet/contourtree_ppp2/mesh_dem_meshtypes/Freudenthal_3D_Triangulation.h" // include Mesh_DEM_Triangulation_3D_Freudenthal
+#include "vtkm/worklet/contourtree_ppp2/mesh_dem_meshtypes/MarchingCubes_3D_Triangulation.h" // include Mesh_DEM_Triangulation_3D_MarchinCubes
 
 #endif

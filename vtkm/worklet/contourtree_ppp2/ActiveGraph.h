@@ -67,35 +67,35 @@
 #include <numeric>
 
 // local includes
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/BuildChainsWorklet.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/BuildTrunkWorklet.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/CompactActiveEdgesComputeNewVertexOutdegree.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/CompactActiveEdgesTransferActiveEdges.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/EdgePeakComparator.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/FindGoverningSaddlesWorklet.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/FindSuperAndHyperNodesWorklet.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/HyperArcSuperNodeComparator.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/InitializeActiveEdges.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/InitializeActiveGraphVertices.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/InitializeEdgeFarFromActiveIndices.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/InitializeHyperarcsFromActiveIndices.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/InitializeNeighbourhoodMasksAndOutDegrees.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/SetArcsConnectNodes.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/SetArcsSetSuperAndHypernodeArcs.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/SetArcsSlideVertices.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/SetHyperArcsWorklet.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/SetSuperArcsSetTreeHyperparents.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/SetSuperArcsSetTreeSuperarcs.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/SuperArcNodeComparator.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/TransferRegularPointsWorklet.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/TransferSaddleStartsResetEdgeFar.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/TransferSaddleStartsSetNewOutdegreeForSaddles.h>
-#include <vtkm/worklet/contourtree_ppp2/ActiveGraph_Inc/TransferSaddleStartsUpdateEdgeSorter.h>
 #include <vtkm/worklet/contourtree_ppp2/ArrayTransforms.h>
 #include <vtkm/worklet/contourtree_ppp2/MergeTree.h>
 #include <vtkm/worklet/contourtree_ppp2/MeshExtrema.h>
 #include <vtkm/worklet/contourtree_ppp2/PrintVectors.h>
 #include <vtkm/worklet/contourtree_ppp2/Types.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/BuildChainsWorklet.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/BuildTrunkWorklet.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/CompactActiveEdgesComputeNewVertexOutdegree.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/CompactActiveEdgesTransferActiveEdges.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/EdgePeakComparator.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/FindGoverningSaddlesWorklet.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/FindSuperAndHyperNodesWorklet.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/HyperArcSuperNodeComparator.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/InitializeActiveEdges.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/InitializeActiveGraphVertices.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/InitializeEdgeFarFromActiveIndices.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/InitializeHyperarcsFromActiveIndices.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/InitializeNeighbourhoodMasksAndOutDegrees.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/SetArcsConnectNodes.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/SetArcsSetSuperAndHypernodeArcs.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/SetArcsSlideVertices.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/SetHyperArcsWorklet.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/SetSuperArcsSetTreeHyperparents.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/SetSuperArcsSetTreeSuperarcs.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/SuperArcNodeComparator.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/TransferRegularPointsWorklet.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/TransferSaddleStartsResetEdgeFar.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/TransferSaddleStartsSetNewOutdegreeForSaddles.h>
+#include <vtkm/worklet/contourtree_ppp2/activegraph/TransferSaddleStartsUpdateEdgeSorter.h>
 
 
 //VTKM includes
@@ -265,7 +265,8 @@ void ActiveGraph<DeviceAdapter>::Initialise(Mesh& mesh,
   mesh.setPrepareForExecutionBehavior(isJoinGraph);
   active_graph_inc_ns::InitializeNeighbourhoodMasksAndOutDegrees initNeighMasksAndOutDegWorklet(
     isJoinGraph);
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeNeighbourhoodMasksAndOutDegrees>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeNeighbourhoodMasksAndOutDegrees,
+                                    DeviceAdapter>
     initNeighMasksAndOutDegDispatcher(initNeighMasksAndOutDegWorklet);
   initNeighMasksAndOutDegDispatcher.Invoke(mesh.sortIndices,
                                            mesh,
@@ -312,11 +313,12 @@ void ActiveGraph<DeviceAdapter>::Initialise(Mesh& mesh,
   IdArrayType activeIndices;
   activeIndices.Allocate(mesh.sortIndices.GetNumberOfValues());
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray(
-    NO_SUCH_ELEMENT, mesh.sortIndices.GetNumberOfValues());
+    (vtkm::Id)NO_SUCH_ELEMENT, mesh.sortIndices.GetNumberOfValues());
   DeviceAlgorithm::Copy(noSuchElementArray, activeIndices);
 
   active_graph_inc_ns::InitializeActiveGraphVertices initActiveGraphVerticesWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeActiveGraphVertices>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeActiveGraphVertices,
+                                    DeviceAdapter>
     initActiveGraphVerticesDispatcher(initActiveGraphVerticesWorklet);
   initActiveGraphVerticesDispatcher.Invoke(mesh.sortIndices,
                                            outDegrees,
@@ -345,7 +347,7 @@ void ActiveGraph<DeviceAdapter>::Initialise(Mesh& mesh,
   AllocateEdgeArrays(nCriticalEdges);
 
   active_graph_inc_ns::InitializeActiveEdges<Mesh> initActiveEdgesWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeActiveEdges<Mesh>>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeActiveEdges<Mesh>, DeviceAdapter>
     initActiveEdgesDispatcher(initActiveEdgesWorklet);
   initActiveEdgesDispatcher.Invoke(outdegree,
                                    mesh.sortOrder,
@@ -362,14 +364,16 @@ void ActiveGraph<DeviceAdapter>::Initialise(Mesh& mesh,
   // now we have to go through and set the far ends of the new edges using the
   // inverse index array
   active_graph_inc_ns::InitializeEdgeFarFromActiveIndices initEdgeFarWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeEdgeFarFromActiveIndices>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeEdgeFarFromActiveIndices,
+                                    DeviceAdapter>
     initEdgeFarDispatcher(initEdgeFarWorklet);
   initEdgeFarDispatcher.Invoke(edgeFar, extrema, activeIndices);
   DebugPrint("Active Graph Started", __FILE__, __LINE__);
 
   // then we loop through the active vertices to convert their indices to active graph indices
   active_graph_inc_ns::InitializeHyperarcsFromActiveIndices initHyperarcsWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeHyperarcsFromActiveIndices>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::InitializeHyperarcsFromActiveIndices,
+                                    DeviceAdapter>
     initHyperarcsDispatcher(initHyperarcsWorklet);
   initHyperarcsDispatcher.Invoke(hyperarcs, activeIndices);
 
@@ -439,7 +443,8 @@ void ActiveGraph<DeviceAdapter>::TransferSaddleStarts()
 { // TransferSaddleStarts()
   // update all of the edges so that the far end resets to the result of the ascent in the previous step
   active_graph_inc_ns::TransferSaddleStartsResetEdgeFar resetEdgeFarWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::TransferSaddleStartsResetEdgeFar>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::TransferSaddleStartsResetEdgeFar,
+                                    DeviceAdapter>
     resetEdgeFarDispatcher(resetEdgeFarWorklet);
   resetEdgeFarDispatcher.Invoke(activeEdges, hyperarcs, edgeFar);
 
@@ -451,7 +456,8 @@ void ActiveGraph<DeviceAdapter>::TransferSaddleStarts()
   active_graph_inc_ns::TransferSaddleStartsSetNewOutdegreeForSaddles
     setNewOutdegreeForSaddlesWorklet;
   vtkm::worklet::DispatcherMapField<
-    active_graph_inc_ns::TransferSaddleStartsSetNewOutdegreeForSaddles>
+    active_graph_inc_ns::TransferSaddleStartsSetNewOutdegreeForSaddles,
+    DeviceAdapter>
     setNewOutdegreeForSaddlesDispatcher(setNewOutdegreeForSaddlesWorklet);
   setNewOutdegreeForSaddlesDispatcher.Invoke(
     activeVertices, firstEdge, outdegree, activeEdges, hyperarcs, edgeFar, newOutdegree);
@@ -477,7 +483,8 @@ void ActiveGraph<DeviceAdapter>::TransferSaddleStarts()
 
   // this will be a stream compaction later, but for now we'll do it the serial way
   active_graph_inc_ns::TransferSaddleStartsUpdateEdgeSorter updateEdgeSorterWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::TransferSaddleStartsUpdateEdgeSorter>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::TransferSaddleStartsUpdateEdgeSorter,
+                                    DeviceAdapter>
     updateEdgeSorterDispatcher(updateEdgeSorterWorklet);
   updateEdgeSorterDispatcher.Invoke(
     activeVertices, activeEdges, firstEdge, newFirstEdge, newOutdegree, edgeSorter);
@@ -500,7 +507,7 @@ void ActiveGraph<DeviceAdapter>::FindGoverningSaddles()
 
   // now loop through the edges to find the governing saddles
   active_graph_inc_ns::FindGoverningSaddlesWorklet findGovSaddlesWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::FindGoverningSaddlesWorklet>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::FindGoverningSaddlesWorklet, DeviceAdapter>
     findGovSaddlesDispatcher(findGovSaddlesWorklet);
   vtkm::cont::ArrayHandleIndex edgeIndexArray(edgeSorter.GetNumberOfValues());
   findGovSaddlesDispatcher.Invoke(
@@ -516,7 +523,8 @@ void ActiveGraph<DeviceAdapter>::TransferRegularPoints()
 { // TransferRegularPointsWorklet
   // we need to label the regular points that have been identified
   active_graph_inc_ns::TransferRegularPointsWorklet transRegPtWorklet(isJoinGraph);
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::TransferRegularPointsWorklet>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::TransferRegularPointsWorklet,
+                                    DeviceAdapter>
     transRegPtWorkletDispatcher(transRegPtWorklet);
   transRegPtWorkletDispatcher.Invoke(activeVertices, hyperarcs, outdegree);
 
@@ -562,7 +570,8 @@ void ActiveGraph<DeviceAdapter>::CompactActiveEdges()
   // Run workflet to compute newOutdegree for each vertex
   active_graph_inc_ns::CompactActiveEdgesComputeNewVertexOutdegree computeNewOutdegreeWorklet;
   vtkm::worklet::DispatcherMapField<
-    active_graph_inc_ns::CompactActiveEdgesComputeNewVertexOutdegree>
+    active_graph_inc_ns::CompactActiveEdgesComputeNewVertexOutdegree,
+    DeviceAdapter>
     computeNewOutdegreeDispatcher(computeNewOutdegreeWorklet);
   computeNewOutdegreeDispatcher.Invoke(activeVertices, // (input)
                                        activeEdges,    // (input)
@@ -594,7 +603,8 @@ void ActiveGraph<DeviceAdapter>::CompactActiveEdges()
 
   // now copy the relevant edges into the active edge array
   active_graph_inc_ns::CompactActiveEdgesTransferActiveEdges transferActiveEdgesWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::CompactActiveEdgesTransferActiveEdges>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::CompactActiveEdgesTransferActiveEdges,
+                                    DeviceAdapter>
     transferActiveEdgesDispatcher(transferActiveEdgesWorklet);
   transferActiveEdgesDispatcher.Invoke(activeVertices,
                                        newPosition,    // (input)
@@ -635,7 +645,7 @@ void ActiveGraph<DeviceAdapter>::BuildChains()
   for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
   { // per log step
     active_graph_inc_ns::BuildChainsWorklet buildChainsWorklet;
-    vtkm::worklet::DispatcherMapField<active_graph_inc_ns::BuildChainsWorklet>
+    vtkm::worklet::DispatcherMapField<active_graph_inc_ns::BuildChainsWorklet, DeviceAdapter>
       buildChainsDispatcher;
     buildChainsDispatcher.Invoke(activeVertices, hyperarcs);
   } // per log step
@@ -649,7 +659,8 @@ void ActiveGraph<DeviceAdapter>::BuildTrunk()
 { //BuildTrunk
   // all remaining vertices belong to the trunk
   active_graph_inc_ns::BuildTrunkWorklet buildTrunkWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::BuildTrunkWorklet> buildTrunkDispatcher;
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::BuildTrunkWorklet, DeviceAdapter>
+    buildTrunkDispatcher;
   buildTrunkDispatcher.Invoke(activeVertices, hyperarcs);
 
   DebugPrint("Trunk Built", __FILE__, __LINE__);
@@ -714,7 +725,8 @@ void ActiveGraph<DeviceAdapter>::FindSuperAndHyperNodes(MergeTree<DeviceAdapter>
 
   // perform stream compression
   active_graph_inc_ns::FindSuperAndHyperNodesWorklet findSuperAndHyperNodesWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::FindSuperAndHyperNodesWorklet>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::FindSuperAndHyperNodesWorklet,
+                                    DeviceAdapter>
     findSuperAndHyperNodesDispatcher;
   vtkm::cont::ArrayHandleIndex graphVertexIndex(globalIndex.GetNumberOfValues());
   findSuperAndHyperNodesDispatcher.Invoke(graphVertexIndex,
@@ -742,7 +754,8 @@ void ActiveGraph<DeviceAdapter>::SetSuperArcs(MergeTree<DeviceAdapter>& tree)
   tree.hyperparents.Allocate(nSupernodes);
   // execute the worklet to set the hyperparents
   active_graph_inc_ns::SetSuperArcsSetTreeHyperparents setTreeHyperparentsWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetSuperArcsSetTreeHyperparents>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetSuperArcsSetTreeHyperparents,
+                                    DeviceAdapter>
     setTreeHyperparentsDispatcher;
   setTreeHyperparentsDispatcher.Invoke(tree.supernodes, hyperarcs, tree.hyperparents);
 
@@ -788,7 +801,8 @@ void ActiveGraph<DeviceAdapter>::SetSuperArcs(MergeTree<DeviceAdapter>& tree)
   //      5.      Each supernode points to its neighbour in the list, except at the end of segments
   // execute the worklet to set the tree.hyperparents and tree.firstSuperchild
   active_graph_inc_ns::SetSuperArcsSetTreeSuperarcs setTreeSuperarcsWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetSuperArcsSetTreeSuperarcs>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetSuperArcsSetTreeSuperarcs,
+                                    DeviceAdapter>
     setTreeSuperarcsDispatcher;
   setTreeSuperarcsDispatcher.Invoke(tree.supernodes,     // (input)
                                     hyperarcs,           // (input)
@@ -823,7 +837,7 @@ void ActiveGraph<DeviceAdapter>::SetHyperArcs(MergeTree<DeviceAdapter>& tree)
 
   //      2.      Use the superIDs already set to fill in the hyperarcs array
   active_graph_inc_ns::SetHyperArcsWorklet setHyperArcsWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetHyperArcsWorklet>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetHyperArcsWorklet, DeviceAdapter>
     setHyperArcsDispatcher;
   setHyperArcsDispatcher.Invoke(tree.hypernodes, tree.hyperarcs, this->hyperarcs, this->superID);
 
@@ -845,7 +859,8 @@ void ActiveGraph<DeviceAdapter>::SetArcs(MergeTree<DeviceAdapter>& tree,
 
   // 1.   Set the arcs for the super/hypernodes based on where they prune to
   active_graph_inc_ns::SetArcsSetSuperAndHypernodeArcs setSuperAndHypernodeArcsWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetArcsSetSuperAndHypernodeArcs>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetArcsSetSuperAndHypernodeArcs,
+                                    DeviceAdapter>
     setSuperAndHypernodeArcsDispatcher(setSuperAndHypernodeArcsWorklet);
   setSuperAndHypernodeArcsDispatcher.Invoke(
     this->globalIndex, this->hyperarcs, this->hyperID, tree.arcs, tree.superparents);
@@ -856,7 +871,7 @@ void ActiveGraph<DeviceAdapter>::SetArcs(MergeTree<DeviceAdapter>& tree,
   // 2.   Loop through all vertices to slide down hyperarcs
   active_graph_inc_ns::SetArcsSlideVertices slideVerticesWorklet(
     isJoinGraph, nSupernodes, nHypernodes);
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetArcsSlideVertices>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetArcsSlideVertices, DeviceAdapter>
     slideVerticesDispatcher(slideVerticesWorklet);
   slideVerticesDispatcher.Invoke(tree.arcs, // (input)
                                  extrema,   // (input)  i.e,. meshExtrema.peaks or meshExtrema.pits
@@ -886,7 +901,7 @@ void ActiveGraph<DeviceAdapter>::SetArcs(MergeTree<DeviceAdapter>& tree,
 
   //  6. Connect the nodes to each other
   active_graph_inc_ns::SetArcsConnectNodes connectNodesWorklet;
-  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetArcsConnectNodes>
+  vtkm::worklet::DispatcherMapField<active_graph_inc_ns::SetArcsConnectNodes, DeviceAdapter>
     connectNodesDispatcher(connectNodesWorklet);
   connectNodesDispatcher.Invoke(tree.arcs,         // (input/output)
                                 nodes,             // (input)

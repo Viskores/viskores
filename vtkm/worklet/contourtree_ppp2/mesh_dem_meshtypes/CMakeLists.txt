@@ -62,26 +62,15 @@
 ##  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 ##  Oliver Ruebel (LBNL)
 ##==============================================================================
-
 set(headers
-  ArrayTransforms.h
-  ActiveGraph.h
-  ContourTree.h
-  ContourTreeMaker.h
-  MergeTree.h
-  Mesh_DEM_Triangulation.h
-  MeshExtrema.h
-  PointerDoubling.h
-  PrintVectors.h
-  ProcessContourTree.h
-  Types.h
+  Freudenthal_2D_Triangulation.h
+  Freudenthal_3D_Triangulation.h
+  MarchingCubes_3D_Triangulation.h
   )
-#-----------------------------------------------------------------------------
-add_subdirectory(mesh_dem)
-add_subdirectory(mesh_dem_meshtypes)
-add_subdirectory(meshextrema)
-add_subdirectory(activegraph)
-add_subdirectory(contourtreemaker)
-add_subdirectory(processcontourtree)
 
+#-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})
+
+add_subdirectory(freudenthal_2D)
+add_subdirectory(freudenthal_3D)
+add_subdirectory(marchingcubes_3D)

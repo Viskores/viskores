@@ -60,36 +60,21 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
+#ifndef vtkm_worklet_contourtree_ppp2_mesh_dem_triangulation_2d_freudenthal_h
+#define vtkm_worklet_contourtree_ppp2_mesh_dem_triangulation_2d_freudenthal_h
 
-#ifndef vtkm_worklet_contourtree_ppp2_types_h
-#define vtkm_worklet_contourtree_ppp2_types_h
-
+#include <cstdlib>
 #include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/worklet/contourtree_ppp2/mesh_dem_meshtypes/freudenthal_2D/ExecutionObject_MeshStructure.h>
 
-// macros for bit flags
-#ifndef VTKM_USE_64BIT_IDS // 32 bit Ids
+#include <vtkm/worklet/contourtree_ppp2/Mesh_DEM_Triangulation.h>
+#include <vtkm/worklet/contourtree_ppp2/mesh_dem_meshtypes/freudenthal_2D/ExecutionObject_MeshStructure.h>
+#include <vtkm/worklet/contourtree_ppp2/mesh_dem_meshtypes/freudenthal_2D/Types.h>
 
-#define NO_SUCH_ELEMENT 0x80000000L
-#define TERMINAL_ELEMENT 0x40000000L
-#define IS_SUPERNODE 0x20000000L
-#define IS_HYPERNODE 0x10000000L
-#define IS_ASCENDING 0x08000000L
-#define INDEX_MASK 0x07FFFFFFL
-#define CV_OTHER_FLAG                                                                              \
-  0x10000000L // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
+#include <vtkm/cont/ExecutionObjectBase.h>
 
-#else // 64 bit Ids
-
-#define NO_SUCH_ELEMENT 0x8000000000000000LL
-#define TERMINAL_ELEMENT 0x4000000000000000LL
-#define IS_SUPERNODE 0x2000000000000000LL
-#define IS_HYPERNODE 0x1000000000000000LL
-#define IS_ASCENDING 0x0800000000000000LL
-#define INDEX_MASK 0x07FFFFFFFFFFFFFFLL
-#define CV_OTHER_FLAG                                                                              \
-  0x1000000000000000LL // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
-#endif
+//Define namespace alias for the freudenthal and mergetree inc to make the code a bit more readable
+namespace m2d_freudenthal_inc_ns = vtkm::worklet::contourtree_ppp2::mesh_dem_2d_freudenthal_inc;
 
 namespace vtkm
 {
@@ -98,72 +83,61 @@ namespace worklet
 namespace contourtree_ppp2
 {
 
+template <typename T, typename StorageType, typename DeviceAdapter>
+class Mesh_DEM_Triangulation_2D_Freudenthal
+  : public Mesh_DEM_Triangulation_2D<T, StorageType, DeviceAdapter>,
+    public vtkm::cont::ExecutionObjectBase
+{ // class Mesh_DEM_Triangulation
+public:
+  // Constants and case tables
+  m2d_freudenthal_inc_ns::edgeBoundaryDetectionMasksType edgeBoundaryDetectionMasks;
 
-typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
+  //Mesh dependent helper functions
+  void setPrepareForExecutionBehavior(bool getMax);
 
-typedef typename vtkm::Pair<vtkm::Id, vtkm::Id>
-  EdgePair; // here EdgePair.first=low and EdgePair.second=high
-typedef typename vtkm::cont::ArrayHandle<EdgePair> EdgePairArray; // Array of edge pairs
+  template <typename DeviceTag>
+  mesh_dem_2d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag> PrepareForExecution(
+    DeviceTag) const;
 
-// inline functions for retrieving flags or index
-VTKM_EXEC_CONT
-inline bool noSuchElement(vtkm::Id flaggedIndex)
-{ // noSuchElement()
-  return ((flaggedIndex & (vtkm::Id)NO_SUCH_ELEMENT) != 0);
-} // noSuchElement()
+  Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols);
 
-VTKM_EXEC_CONT
-inline bool isTerminalElement(vtkm::Id flaggedIndex)
-{ // isTerminalElement()
-  return ((flaggedIndex & TERMINAL_ELEMENT) != 0);
-} // isTerminalElement()
+private:
+  bool useGetMax; // Define the behavior ofr the PrepareForExecution function
+};                // class Mesh_DEM_Triangulation
 
-VTKM_EXEC_CONT
-inline bool isSupernode(vtkm::Id flaggedIndex)
-{ // isSupernode()
-  return ((flaggedIndex & IS_SUPERNODE) != 0);
-} // isSupernode()
+// creates input mesh
+template <typename T, typename StorageType, typename DeviceAdapter>
+Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType, DeviceAdapter>::
+  Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols)
+  : Mesh_DEM_Triangulation_2D<T, StorageType, DeviceAdapter>(nrows, ncols)
 
-VTKM_EXEC_CONT
-inline bool isHypernode(vtkm::Id flaggedIndex)
-{ // isHypernode()
-  return ((flaggedIndex & IS_HYPERNODE) != 0);
-} // isHypernode()
-
-VTKM_EXEC_CONT
-inline bool isAscending(vtkm::Id flaggedIndex)
-{ // isAscending()
-  return ((flaggedIndex & IS_ASCENDING) != 0);
-} // isAscending()
-
-VTKM_EXEC_CONT
-inline vtkm::Id maskedIndex(vtkm::Id flaggedIndex)
-{ // maskedIndex()
-  return (flaggedIndex & INDEX_MASK);
-} // maskedIndex()
-
-template <typename T>
-struct MaskedIndexFunctor
 {
-  VTKM_EXEC_CONT
+  edgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
+    m2d_freudenthal_inc_ns::edgeBoundaryDetectionMasks, m2d_freudenthal_inc_ns::N_INCIDENT_EDGES);
+}
 
-  MaskedIndexFunctor() {}
+template <typename T, typename StorageType, typename DeviceAdapter>
+void Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType, DeviceAdapter>::
+  setPrepareForExecutionBehavior(bool getMax)
+{
+  this->useGetMax = getMax;
+}
 
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(T x) const { return maskedIndex(x); }
-};
-
-inline std::string flagString(vtkm::Id flaggedIndex)
-{ // flagString()
-  std::string fString("");
-  fString += (noSuchElement(flaggedIndex) ? "n" : ".");
-  fString += (isTerminalElement(flaggedIndex) ? "t" : ".");
-  fString += (isSupernode(flaggedIndex) ? "s" : ".");
-  fString += (isHypernode(flaggedIndex) ? "h" : ".");
-  fString += (isAscending(flaggedIndex) ? "a" : ".");
-  return fString;
-} // flagString()
-
+// Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
+template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename DeviceTag>
+mesh_dem_2d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>
+  Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType, DeviceAdapter>::PrepareForExecution(
+    DeviceTag) const
+{
+  return mesh_dem_2d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>(
+    this->nRows,
+    this->nCols,
+    m2d_freudenthal_inc_ns::N_INCIDENT_EDGES,
+    this->useGetMax,
+    this->sortIndices,
+    edgeBoundaryDetectionMasks);
+}
 
 
 } // namespace contourtree_ppp2

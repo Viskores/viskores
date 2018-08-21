@@ -60,36 +60,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
+#ifndef vtkm_worklet_contourtree_ppp2_active_graph_inc_edge_peak_comparator_h
+#define vtkm_worklet_contourtree_ppp2_active_graph_inc_edge_peak_comparator_h
 
-#ifndef vtkm_worklet_contourtree_ppp2_types_h
-#define vtkm_worklet_contourtree_ppp2_types_h
-
-#include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
-
-// macros for bit flags
-#ifndef VTKM_USE_64BIT_IDS // 32 bit Ids
-
-#define NO_SUCH_ELEMENT 0x80000000L
-#define TERMINAL_ELEMENT 0x40000000L
-#define IS_SUPERNODE 0x20000000L
-#define IS_HYPERNODE 0x10000000L
-#define IS_ASCENDING 0x08000000L
-#define INDEX_MASK 0x07FFFFFFL
-#define CV_OTHER_FLAG                                                                              \
-  0x10000000L // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
-
-#else // 64 bit Ids
-
-#define NO_SUCH_ELEMENT 0x8000000000000000LL
-#define TERMINAL_ELEMENT 0x4000000000000000LL
-#define IS_SUPERNODE 0x2000000000000000LL
-#define IS_HYPERNODE 0x1000000000000000LL
-#define IS_ASCENDING 0x0800000000000000LL
-#define INDEX_MASK 0x07FFFFFFFFFFFFFFLL
-#define CV_OTHER_FLAG                                                                              \
-  0x1000000000000000LL // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
-#endif
+#include <vtkm/worklet/contourtree_ppp2/Types.h>
 
 namespace vtkm
 {
@@ -97,77 +72,82 @@ namespace worklet
 {
 namespace contourtree_ppp2
 {
-
-
-typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
-
-typedef typename vtkm::Pair<vtkm::Id, vtkm::Id>
-  EdgePair; // here EdgePair.first=low and EdgePair.second=high
-typedef typename vtkm::cont::ArrayHandle<EdgePair> EdgePairArray; // Array of edge pairs
-
-// inline functions for retrieving flags or index
-VTKM_EXEC_CONT
-inline bool noSuchElement(vtkm::Id flaggedIndex)
-{ // noSuchElement()
-  return ((flaggedIndex & (vtkm::Id)NO_SUCH_ELEMENT) != 0);
-} // noSuchElement()
-
-VTKM_EXEC_CONT
-inline bool isTerminalElement(vtkm::Id flaggedIndex)
-{ // isTerminalElement()
-  return ((flaggedIndex & TERMINAL_ELEMENT) != 0);
-} // isTerminalElement()
-
-VTKM_EXEC_CONT
-inline bool isSupernode(vtkm::Id flaggedIndex)
-{ // isSupernode()
-  return ((flaggedIndex & IS_SUPERNODE) != 0);
-} // isSupernode()
-
-VTKM_EXEC_CONT
-inline bool isHypernode(vtkm::Id flaggedIndex)
-{ // isHypernode()
-  return ((flaggedIndex & IS_HYPERNODE) != 0);
-} // isHypernode()
-
-VTKM_EXEC_CONT
-inline bool isAscending(vtkm::Id flaggedIndex)
-{ // isAscending()
-  return ((flaggedIndex & IS_ASCENDING) != 0);
-} // isAscending()
-
-VTKM_EXEC_CONT
-inline vtkm::Id maskedIndex(vtkm::Id flaggedIndex)
-{ // maskedIndex()
-  return (flaggedIndex & INDEX_MASK);
-} // maskedIndex()
-
-template <typename T>
-struct MaskedIndexFunctor
+namespace active_graph_inc
 {
-  VTKM_EXEC_CONT
-
-  MaskedIndexFunctor() {}
-
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(T x) const { return maskedIndex(x); }
-};
-
-inline std::string flagString(vtkm::Id flaggedIndex)
-{ // flagString()
-  std::string fString("");
-  fString += (noSuchElement(flaggedIndex) ? "n" : ".");
-  fString += (isTerminalElement(flaggedIndex) ? "t" : ".");
-  fString += (isSupernode(flaggedIndex) ? "s" : ".");
-  fString += (isHypernode(flaggedIndex) ? "h" : ".");
-  fString += (isAscending(flaggedIndex) ? "a" : ".");
-  return fString;
-} // flagString()
 
 
+// comparator used for initial sort of data values
+template <typename DeviceAdapter>
+class EdgePeakComparator
+{
+public:
+  typedef
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
+      IdPortalType;
 
+  IdPortalType edgeFarPortal;
+  IdPortalType edgeNearPortal;
+  bool isJoinGraph;
+
+  // constructor - takes vectors as parameters
+  VTKM_CONT
+  EdgePeakComparator(const IdArrayType& edgeFar, const IdArrayType& edgeNear, bool joinGraph)
+    : isJoinGraph(joinGraph)
+  { // constructor
+    edgeFarPortal = edgeFar.PrepareForInput(DeviceAdapter());
+    edgeNearPortal = edgeNear.PrepareForInput(DeviceAdapter());
+  } // constructor
+
+  // () operator - gets called to do comparison
+  VTKM_EXEC
+  bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
+  { // operator()
+    // start by comparing the indices of the far end
+    vtkm::Id farIndex1 = edgeFarPortal.Get(i);
+    vtkm::Id farIndex2 = edgeFarPortal.Get(j);
+
+    // first compare the far end
+    if (farIndex1 < farIndex2)
+    {
+      return true ^ isJoinGraph;
+    }
+    if (farIndex2 < farIndex1)
+    {
+      return false ^ isJoinGraph;
+    }
+
+    // then compare the indices of the near end (which are guaranteed to be sorted!)
+    vtkm::Id nearIndex1 = edgeNearPortal.Get(i);
+    vtkm::Id nearIndex2 = edgeNearPortal.Get(j);
+
+    if (nearIndex1 < nearIndex2)
+    {
+      return true ^ isJoinGraph;
+    }
+    if (nearIndex2 < nearIndex1)
+    {
+      return false ^ isJoinGraph;
+    }
+
+    // if the near indices match, compare the edge IDs
+    if (i < j)
+    {
+      return false ^ isJoinGraph;
+    }
+    if (j < i)
+    {
+      return true ^ isJoinGraph;
+    }
+
+    // fallback can happen when multiple paths end at same extremum
+    return false;
+  } // operator()
+};  // EdgePeakComparator
+
+
+} // namespace active_graph_inc
 } // namespace contourtree_ppp2
-} // worklet
-} // vtkm
+} // namespace worklet
+} // namespace vtkm
 
 #endif

@@ -86,22 +86,10 @@
 #include <vtkm/worklet/contourtree_ppp2/Mesh_DEM_Triangulation.h>
 #include <vtkm/worklet/contourtree_ppp2/Types.h>
 
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
-const bool JOIN = true;
-const bool SPLIT = false;
-
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-
-using namespace vtkm::worklet::contourtree_ppp2;
-
 namespace vtkm
 {
 namespace worklet
 {
-
 
 class ContourTreePPP2
 {
@@ -115,8 +103,8 @@ public:
   template <typename FieldType, typename StorageType, typename DeviceAdapter>
   void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
            std::vector<std::pair<std::string, vtkm::Float64>>& timings,
-           ContourTree& contourTree,
-           IdArrayType& sortOrder,
+           contourtree_ppp2::ContourTree& contourTree,
+           contourtree_ppp2::IdArrayType& sortOrder,
            vtkm::Id& nIterations,
            const DeviceAdapter& device,
            const vtkm::Id nRows,
@@ -125,6 +113,7 @@ public:
            bool useMarchingCubes = false,
            bool computeRegularStructure = true)
   {
+    using namespace vtkm::worklet::contourtree_ppp2;
     // 2D Contour Tree
     if (nSlices == 1)
     {
@@ -194,8 +183,8 @@ private:
   template <typename FieldType, typename StorageType, typename DeviceAdapter, typename MeshClass>
   void RunContourTree(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
                       std::vector<std::pair<std::string, vtkm::Float64>>& timings,
-                      ContourTree& contourTree,
-                      IdArrayType& sortOrder,
+                      contourtree_ppp2::ContourTree& contourTree,
+                      contourtree_ppp2::IdArrayType& sortOrder,
                       vtkm::Id& nIterations,
                       const DeviceAdapter& device,
                       const vtkm::Id /*nRows*/,   // FIXME: Remove unused parameter?
@@ -204,6 +193,7 @@ private:
                       MeshClass& mesh,
                       bool computeRegularStructure)
   {
+    using namespace vtkm::worklet::contourtree_ppp2;
     // Start the timer
     vtkm::cont::Timer<DeviceAdapter> totalTime;
 

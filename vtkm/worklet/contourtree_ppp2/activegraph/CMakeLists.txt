@@ -64,24 +64,31 @@
 ##==============================================================================
 
 set(headers
-  ArrayTransforms.h
-  ActiveGraph.h
-  ContourTree.h
-  ContourTreeMaker.h
-  MergeTree.h
-  Mesh_DEM_Triangulation.h
-  MeshExtrema.h
-  PointerDoubling.h
-  PrintVectors.h
-  ProcessContourTree.h
-  Types.h
+    BuildChainsWorklet.h
+    BuildTrunkWorklet.h
+    CompactActiveEdgesComputeNewVertexOutdegree.h
+    CompactActiveEdgesTransferActiveEdges.h
+    EdgePeakComparator.h
+    FindGoverningSaddlesWorklet.h
+    FindSuperAndHyperNodesWorklet.h
+    HyperArcSuperNodeComparator.h
+    InitializeActiveEdges.h
+    InitializeActiveGraphVertices.h
+    InitializeEdgeFarFromActiveIndices.h
+    InitializeHyperarcsFromActiveIndices.h
+    InitializeNeighbourhoodMasksAndOutDegrees.h
+    SetArcsConnectNodes.h
+    SetArcsSlideVertices.h
+    SetArcsSetSuperAndHypernodeArcs.h
+    SetHyperArcsWorklet.h
+    SetSuperArcsSetTreeHyperparents.h
+    SetSuperArcsSetTreeSuperarcs.h
+    SuperArcNodeComparator.h
+    TransferRegularPointsWorklet.h
+    TransferSaddleStartsResetEdgeFar.h
+    TransferSaddleStartsSetNewOutdegreeForSaddles.h
+    TransferSaddleStartsUpdateEdgeSorter.h
   )
-#-----------------------------------------------------------------------------
-add_subdirectory(mesh_dem)
-add_subdirectory(mesh_dem_meshtypes)
-add_subdirectory(meshextrema)
-add_subdirectory(activegraph)
-add_subdirectory(contourtreemaker)
-add_subdirectory(processcontourtree)
 
+#-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})
