@@ -23,7 +23,10 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 
-int UnitTestWaveletGenerator(int, char* [])
+namespace
+{
+
+void WaveletGeneratorTest()
 {
   using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
@@ -38,12 +41,12 @@ int UnitTestWaveletGenerator(int, char* [])
   {
     auto coords = ds.GetCoordinateSystem("coords");
     auto data = coords.GetData();
-    VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 8000), "Incorrect number of points.");
+    VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261), "Incorrect number of points.");
   }
 
   {
     auto cells = ds.GetCellSet(ds.GetCellSetIndex("cells"));
-    VTKM_TEST_ASSERT(test_equal(cells.GetNumberOfCells(), 6859), "Incorrect number of cells.");
+    VTKM_TEST_ASSERT(test_equal(cells.GetNumberOfCells(), 8000), "Incorrect number of cells.");
   }
 
   // Spot check some scalars
@@ -56,20 +59,25 @@ int UnitTestWaveletGenerator(int, char* [])
     ScalarHandleType handle = dynData.Cast<ScalarHandleType>();
     auto data = handle.GetPortalConstControl();
 
-    VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 8000), "Incorrect number of scalars.");
+    VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261), "Incorrect number of scalars.");
 
     VTKM_TEST_ASSERT(test_equal(data.Get(0), 60.7635), "Incorrect scalar value.");
     VTKM_TEST_ASSERT(test_equal(data.Get(16), 99.6115), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(21), 94.8764), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(256), 133.639), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(1024), 123.641), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(1987), 129.683), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(2048), 143.527), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(3110), 203.051), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(4097), 170.763), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(6599), 153.964), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(7999), 54.9307), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(21), 69.1968), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(256), 118.620), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(1024), 140.466), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(1987), 203.720), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(2048), 223.010), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(3110), 128.282), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(4097), 153.913), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(6599), 120.068), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(7999), 65.6710), "Incorrect scalar value.");
   }
+}
 
-  return 0;
+} // end anon namespace
+
+int UnitTestWaveletGenerator(int, char* [])
+{
+  return vtkm::cont::testing::Testing::Run(WaveletGeneratorTest);
 }
