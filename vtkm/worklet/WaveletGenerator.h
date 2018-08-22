@@ -213,7 +213,7 @@ public:
   VTKM_CONT vtkm::cont::DataSet GenerateDataSet(Device = Device())
   {
     // Create points:
-    const vtkm::Id3 dims{ this->MaximumExtent - this->MinimumExtent };
+    const vtkm::Id3 dims{ this->MaximumExtent - this->MinimumExtent + vtkm::Id3{ 1 } };
     const Vec3F origin{ this->MinimumExtent };
     vtkm::cont::CoordinateSystem coords{ "coords", dims, origin, this->Spacing };
 
@@ -238,7 +238,7 @@ public:
   {
     using Algo = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
-    const vtkm::Id3 dims{ this->MaximumExtent - this->MinimumExtent };
+    const vtkm::Id3 dims{ this->MaximumExtent - this->MinimumExtent + vtkm::Id3{ 1 } };
     Vec3F minPt = Vec3F(this->MinimumExtent) * this->Spacing;
     vtkm::FloatDefault temp2 = 1.f / (2.f * this->StandardDeviation * this->StandardDeviation);
     Vec3F scale{ ComputeScaleFactor(this->MinimumExtent[0], this->MaximumExtent[0]),
