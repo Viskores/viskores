@@ -386,7 +386,7 @@ auto CellSetExplicit<ShapeStorageTag,
                      OffsetsStorageTag>::PrepareForInput(Device, FromTopology, ToTopology) const ->
   typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType
 {
-  this->BuildConnectivity(FromTopology(), ToTopology());
+  this->BuildConnectivity(Device{}, FromTopology(), ToTopology());
 
   const auto& connectivity = this->GetConnectivity(FromTopology(), ToTopology());
   VTKM_ASSERT(connectivity.ElementsValid);
@@ -411,7 +411,7 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                OffsetsStorageTag>::GetShapesArray(FromTopology, ToTopology) const
   -> const typename ConnectivityChooser<FromTopology, ToTopology>::ShapeArrayType&
 {
-  this->BuildConnectivity(FromTopology(), ToTopology());
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterIdAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).Shapes;
 }
 
@@ -427,7 +427,7 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                                                       ToTopology) const -> const
   typename ConnectivityChooser<FromTopology, ToTopology>::NumIndicesArrayType&
 {
-  this->BuildConnectivity(FromTopology(), ToTopology());
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterIdAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).NumIndices;
 }
 
@@ -443,7 +443,7 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                                                         ToTopology) const -> const
   typename ConnectivityChooser<FromTopology, ToTopology>::ConnectivityArrayType&
 {
-  this->BuildConnectivity(FromTopology(), ToTopology());
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterIdAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).Connectivity;
 }
 
@@ -459,7 +459,7 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                                                        ToTopology) const -> const
   typename ConnectivityChooser<FromTopology, ToTopology>::IndexOffsetArrayType&
 {
-  this->BuildConnectivity(FromTopology(), ToTopology());
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterIdAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).IndexOffsets;
 }
 
@@ -521,9 +521,9 @@ template <typename ShapeStorageTag,
           typename OffsetsStorageTag>
 VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
-  BuildConnectivity(vtkm::TopologyElementTagPoint,
-                    vtkm::TopologyElementTagCell,
-                    vtkm::cont::RuntimeDeviceTracker tracker) const
+  BuildConnectivity(vtkm::cont::DeviceAdapterId device,
+                    vtkm::TopologyElementTagPoint,
+                    vtkm::TopologyElementTagCell) const
 {
   using PointToCellConnectivity =
     typename ConnectivityChooser<vtkm::TopologyElementTagPoint,
@@ -535,9 +535,9 @@ CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, O
     auto self = const_cast<Thisclass*>(this);
     auto functor =
       detail::BuildPointToCellConnectivityFunctor<PointToCellConnectivity>(self->PointToCell);
-    if (!vtkm::cont::TryExecute(functor, tracker))
+    if (!vtkm::cont::TryExecuteOnDevice(device, functor))
     {
-      throw vtkm::cont::ErrorExecution("Failed to run BuildConnectivity on any device.");
+      throw vtkm::cont::ErrorExecution("Failed to run BuildConnectivity.");
     }
   }
 }
@@ -548,9 +548,9 @@ template <typename ShapeStorageTag,
           typename OffsetsStorageTag>
 VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
-  BuildConnectivity(vtkm::TopologyElementTagCell,
-                    vtkm::TopologyElementTagPoint,
-                    vtkm::cont::RuntimeDeviceTracker tracker) const
+  BuildConnectivity(vtkm::cont::DeviceAdapterId device,
+                    vtkm::TopologyElementTagCell,
+                    vtkm::TopologyElementTagPoint) const
 {
   using PointToCellConnectivity =
     typename ConnectivityChooser<vtkm::TopologyElementTagPoint,
@@ -565,9 +565,9 @@ CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, O
     auto functor =
       detail::BuildCellToPointConnectivityFunctor<PointToCellConnectivity, CellToPointConnectivity>(
         self->PointToCell, self->CellToPoint, this->NumberOfPoints);
-    if (!vtkm::cont::TryExecute(functor, tracker))
+    if (!vtkm::cont::TryExecuteOnDevice(device, functor))
     {
-      throw vtkm::cont::ErrorExecution("Failed to run BuildConnectivity on any device.");
+      throw vtkm::cont::ErrorExecution("Failed to run BuildConnectivity.");
     }
   }
 }
