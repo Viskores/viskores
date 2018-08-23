@@ -229,23 +229,11 @@ public:
     HitIdx.PrepareForOutput(NumRays, Device());
     PixelIdx.PrepareForOutput(NumRays, Device());
 
-    vtkm::IdComponent inComp[3];
-    inComp[0] = 0;
-    inComp[1] = 1;
-    inComp[2] = 2;
-
-    Intersection = vtkm::cont::make_ArrayHandleCompositeVector(
-      IntersectionX, inComp[0], IntersectionY, inComp[1], IntersectionZ, inComp[2]);
-
-    Normal = vtkm::cont::make_ArrayHandleCompositeVector(
-      NormalX, inComp[0], NormalY, inComp[1], NormalZ, inComp[2]);
-
-    Origin = vtkm::cont::make_ArrayHandleCompositeVector(
-      OriginX, inComp[0], OriginY, inComp[1], OriginZ, inComp[2]);
-
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
-      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
-
+    Intersection =
+      vtkm::cont::make_ArrayHandleCompositeVector(IntersectionX, IntersectionY, IntersectionZ);
+    Normal = vtkm::cont::make_ArrayHandleCompositeVector(NormalX, NormalY, NormalZ);
+    Origin = vtkm::cont::make_ArrayHandleCompositeVector(OriginX, OriginY, OriginZ);
+    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, DirY, DirZ);
 
     const size_t numBuffers = this->Buffers.size();
     for (size_t i = 0; i < numBuffers; ++i)
