@@ -192,15 +192,13 @@ public:
     GetIndexOffsetArray(FromTopology, ToTopology) const;
 
 protected:
-  VTKM_CONT void BuildConnectivity(
-    vtkm::TopologyElementTagPoint,
-    vtkm::TopologyElementTagCell,
-    vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker()) const;
+  VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId,
+                                   vtkm::TopologyElementTagPoint,
+                                   vtkm::TopologyElementTagCell) const;
 
-  VTKM_CONT void BuildConnectivity(
-    vtkm::TopologyElementTagCell,
-    vtkm::TopologyElementTagPoint,
-    vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker()) const;
+  VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId,
+                                   vtkm::TopologyElementTagCell,
+                                   vtkm::TopologyElementTagPoint) const;
 
   typename ConnectivityChooser<vtkm::TopologyElementTagPoint,
                                vtkm::TopologyElementTagCell>::ConnectivityType PointToCell;
