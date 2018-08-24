@@ -63,6 +63,7 @@ set(benchmarks
   BenchmarkCopySpeeds
   BenchmarkDeviceAdapter
   BenchmarkFieldAlgorithms
+  BenchmarkFilters
   BenchmarkTopologyAlgorithms
   )
 

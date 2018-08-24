@@ -285,6 +285,14 @@ public:
     this->DataFile->FileName = fileName;
   }
 
+  explicit VTKDataSetReaderBase(const std::string& fileName)
+    : DataFile(new internal::VTKDataSetFile)
+    , DataSet()
+    , Loaded(false)
+  {
+    this->DataFile->FileName = fileName;
+  }
+
   virtual ~VTKDataSetReaderBase() {}
 
   const vtkm::cont::DataSet& ReadDataSet()

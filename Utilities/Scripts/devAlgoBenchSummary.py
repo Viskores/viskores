@@ -39,7 +39,7 @@ nameParser = re.compile("Benchmark '([^-]+)' results:")
 meanParser = re.compile("\\s+mean = ([0-9.Ee+-]+)s")
 
 # Parses "std dev = 0.0125s" --> 0.0125
-stdDevParser = re.compile("\\s+std dev = ([0-9.Ee+-]+)s")
+stdDevParser = re.compile("\\s+std dev = ([naN0-9.Ee+-]+)s")
 
 serialFilename = sys.argv[1]
 parallelFilename = sys.argv[2]
@@ -98,9 +98,6 @@ def parseFile(f, benchmarks):
     if stdDevRes:
       stdDev = float(stdDevRes.group(1))
       debug("Found stddev: {}".format(stdDev))
-
-      assert(mean >= 0.)
-      assert(stdDev >= 0.)
 
       # stdDev is always the last parse for a given benchmark, add entry now
       benchmarks[BenchKey(name, type)] = BenchData(mean, stdDev)
