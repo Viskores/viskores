@@ -319,7 +319,16 @@ public:
   {
     std::cout << "*** " << vtkm::testing::TypeName<T>::Name() << " ***************" << std::endl;
     Benchmarker bench;
-    bench(Maker(t));
+    try
+    {
+      bench(Maker(t));
+    }
+    catch (std::exception& e)
+    {
+      std::cout << "\n"
+                << "An exception occuring during a benchmark:\n\t" << e.what() << "\n"
+                << "Attempting to continue with remaining benchmarks...\n\n";
+    }
   }
 };
 
