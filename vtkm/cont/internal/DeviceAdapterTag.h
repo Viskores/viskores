@@ -44,11 +44,6 @@ namespace cont
 
 struct DeviceAdapterId
 {
-  constexpr explicit DeviceAdapterId(vtkm::Int8 id)
-    : Value(id)
-  {
-  }
-
   constexpr bool operator==(DeviceAdapterId other) const { return this->Value == other.Value; }
   constexpr bool operator!=(DeviceAdapterId other) const { return this->Value != other.Value; }
   constexpr bool operator<(DeviceAdapterId other) const { return this->Value < other.Value; }
@@ -59,6 +54,12 @@ struct DeviceAdapterId
   }
 
   constexpr vtkm::Int8 GetValue() const { return this->Value; }
+
+protected:
+  constexpr explicit DeviceAdapterId(vtkm::Int8 id)
+    : Value(id)
+  {
+  }
 
 private:
   vtkm::Int8 Value;
