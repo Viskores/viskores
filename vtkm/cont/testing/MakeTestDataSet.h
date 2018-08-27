@@ -308,6 +308,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(const vtkm::Id
           cv += vtkm::Sin(cz) + 1.5 * vtkm::Cos(vtkm::Sqrt(cx * cx + cy * cy + cz * cz) / 0.75);
         }
         pointvar[idx] = cv;
+        idx++;
       }
     } // y
   }   // z

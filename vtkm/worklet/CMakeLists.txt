@@ -106,6 +106,7 @@ add_subdirectory(tetrahedralize)
 add_subdirectory(triangulate)
 add_subdirectory(wavelets)
 add_subdirectory(particleadvection)
+add_subdirectory(zfp)
 
 vtkm_declare_headers(${headers})
 vtkm_declare_headers(${header_impls} TESTABLE OFF)

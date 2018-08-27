@@ -31,7 +31,8 @@ template <typename Device>
 void Test3D()
 {
   std::cout << "Testing ZFP 3d:" << std::endl;
-  vtkm::Id3 dims(10, 10, 10);
+  //vtkm::Id3 dims(4,4,4);
+  vtkm::Id3 dims(8, 8, 8);
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make3DUniformDataSet3(dims);
   auto dynField = dataset.GetField("pointvar").GetData();
@@ -43,6 +44,12 @@ void Test3D()
   if (dynField.IsSameType(Handle64()))
   {
     Handle64 array = dynField.Cast<Handle64>();
+    //std::cout<<"\n";
+    for (int i = 0; i < 64; ++i)
+    {
+      std::cout << array.GetPortalControl().Get(i) << " ";
+    }
+    std::cout << "\n";
     compressor.Compress(array, rate, dims);
   }
 }

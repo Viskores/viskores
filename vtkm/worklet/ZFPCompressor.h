@@ -23,11 +23,18 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/AtomicArray.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/worklet/zfp/ZFPBlockWriter.h>
+#include <vtkm/worklet/zfp/ZFPFunctions.h>
+#include <vtkm/worklet/zfp/ZFPTypeInfo.h>
+
 using ZFPWord = vtkm::UInt64;
+
+#include <stdio.h>
 
 #define ZFP_MIN_BITS 0    /* minimum number of bits per block */
 #define ZFP_MAX_BITS 4171 /* maximum number of bits per block */
@@ -40,23 +47,6 @@ namespace worklet
 {
 namespace detail
 {
-template <typename T>
-vtkm::UInt32 MinBits(const vtkm::UInt32 bits)
-{
-  return bits;
-}
-
-template <>
-vtkm::UInt32 MinBits<vtkm::Float32>(const vtkm::UInt32 bits)
-{
-  return vtkm::Max(bits, 1 + 8u);
-}
-
-template <>
-vtkm::UInt32 MinBits<vtkm::Float64>(const vtkm::UInt32 bits)
-{
-  return vtkm::Max(bits, 1 + 11u);
-}
 
 struct Bitstream
 {
@@ -74,7 +64,7 @@ struct ZFPStream
   {
     vtkm::UInt32 n = 1u << (2 * dims);
     vtkm::UInt32 bits = (uint)floor(n * rate + 0.5);
-    bits = MinBits<T>(bits);
+    bits = zfp::MinBits<T>(bits);
     //if (wra) {
     //  /* for write random access, round up to next multiple of stream word size */
     //  bits += (uint)stream_word_bits - 1;
@@ -99,22 +89,45 @@ size_t CalcMem3d(const vtkm::Id3 dims, const int bits_per_block)
   return alloc_size * sizeof(ZFPWord);
 }
 
-//template<typename Scalar, typename PortalType> Gather3(Scalar *fblock, const PortalType &portal, )
+template <typename Scalar, typename PortalType>
+VTKM_EXEC inline void Gather3(Scalar* fblock,
+                              const PortalType& scalars,
+                              const vtkm::Id3 dims,
+                              vtkm::Id offset)
+{
+  // TODO: gather partial
+  vtkm::Id counter = 0;
+  for (vtkm::Id z = 0; z < 4; z++, offset += dims[0] * dims[1] - 4 * dims[0])
+  {
+    for (vtkm::Id y = 0; y < 4; y++, offset += dims[0] - 4)
+    {
+      for (vtkm::Id x = 0; x < 4; x++, ++offset)
+      {
+        fblock[counter] = scalars.Get(offset);
+        counter++;
+      } // x
+    }   // y
+  }     // z
+}
 
 struct Encode3 : public vtkm::worklet::WorkletMapField
 {
 protected:
-  vtkm::Id3 Dims;
-  vtkm::Id3 PaddedDims;
-
+  vtkm::Id3 Dims;       // field dims
+  vtkm::Id3 PaddedDims; // dims padded to a multiple of zfp block size
+  vtkm::Id3 ZFPDims;    // zfp block dims
+  vtkm::UInt32 MaxBits; // bits per zfp block
 public:
-  Encode3(const vtkm
-          : Id3 dims, const vtkm::Id3 paddedDims)
+  Encode3(const vtkm::Id3 dims, const vtkm::Id3 paddedDims, const vtkm::UInt32 maxbits)
     : Dims(dims)
     , PaddedDims(paddedDims)
+    , MaxBits(maxbits)
   {
+    ZFPDims[0] = PaddedDims[0] / 4;
+    ZFPDims[1] = PaddedDims[1] / 4;
+    ZFPDims[2] = PaddedDims[2] / 4;
   }
-  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, WholeArrayInOut<> bitstream);
+  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, AtomicArrayInOut<> bitstream);
   using ExecutionSignature = void(_1, _2, _3);
 
   template <typename InputScalarPortal, typename BitstreamPortal>
@@ -122,12 +135,101 @@ public:
                             const InputScalarPortal& scalars,
                             BitstreamPortal& stream) const
   {
+    (void)stream;
     using Scalar = typename InputScalarPortal::ValueType;
-    Scalar fblock[64];
+    constexpr vtkm::Int32 BlockSize = 64;
+    Scalar fblock[BlockSize];
+
+    vtkm::Id3 zfpBlock;
+    zfpBlock[0] = blockIdx % ZFPDims[0];
+    zfpBlock[1] = (blockIdx / ZFPDims[0]) % ZFPDims[1];
+    zfpBlock[2] = blockIdx / (ZFPDims[0] * ZFPDims[1]);
+    std::cout << "Block ID " << blockIdx << "\n";
+    std::cout << "ZFP Block " << zfpBlock << "\n";
+    vtkm::Id3 logicalStart = zfpBlock * vtkm::Id(4);
+    std::cout << "logicalStart Start " << logicalStart << "\n";
+    // get the offset into the field
+    //vtkm::Id offset = (zfpBlock[2]*4*ZFPDims[1] + zfpBlock[1] * 4)*ZFPDims[0] * 4 + zfpBlock[0] * 4;
+    vtkm::Id offset =
+      (logicalStart[2] * PaddedDims[1] + logicalStart[1]) * PaddedDims[0] + logicalStart[0];
+    std::cout << "ZFP block offset " << offset << "\n";
+    Gather3(fblock, scalars, Dims, offset);
+
+    for (int i = 0; i < 64; ++i)
+      std::cout << fblock[i] << " ";
+    std::cout << "\n";
+    // encode block
+    vtkm::Int32 emax = zfp::MaxExponent<BlockSize, Scalar>(fblock);
+    vtkm::Int32 maxprec =
+      zfp::precision(emax, zfp::get_precision<Scalar>(), zfp::get_min_exp<Scalar>());
+    vtkm::UInt32 e = maxprec ? emax + zfp::get_ebias<Scalar>() : 0;
+
+    zfp::BlockWriter<BlockSize, BitstreamPortal> blockWriter(stream, MaxBits, blockIdx);
+    blockWriter.print();
+    const vtkm::UInt32 ebits = zfp::get_ebits<Scalar>() + 1;
+    blockWriter.write_bits(2 * e + 1, ebits);
+    std::cout << "EBITS " << ebits << "\n";
+    std::cout << "Max exponent " << 2 * e + 1 << " emax " << emax << " maxprec " << maxprec << " e "
+              << e << "\n";
+    zfp::print_bits(2 * e + 1);
+    blockWriter.print();
+
+    using Int = typename zfp::zfp_traits<Scalar>::Int;
+    Int iblock[BlockSize];
+    zfp::fwd_cast<Int, Scalar, BlockSize>(iblock, fblock, emax);
+
+    zfp::encode_block<BitstreamPortal, Scalar, Int, BlockSize>(
+      blockWriter, iblock, maxprec, MaxBits - ebits);
+    blockWriter.print(0);
+    blockWriter.print(1);
   }
 };
 
+template <class T>
+class MemSet : public vtkm::worklet::WorkletMapField
+{
+  T Value;
+
+public:
+  VTKM_CONT
+  MemSet(T value)
+    : Value(value)
+  {
+  }
+  using ControlSignature = void(FieldOut<>);
+  using ExecutionSignature = void(_1);
+  VTKM_EXEC
+  void operator()(T& outValue) const { outValue = Value; }
+}; //class MemSet
 } // namespace detail
+
+template <typename T>
+T* GetVTKMPointer(vtkm::cont::ArrayHandle<T>& handle)
+{
+  typedef typename vtkm::cont::ArrayHandle<T> HandleType;
+  typedef typename HandleType::template ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial>::Portal
+    PortalType;
+  typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
+  IteratorType iter =
+    vtkm::cont::ArrayPortalToIterators<PortalType>(handle.GetPortalControl()).GetBegin();
+  return &(*iter);
+}
+
+template <typename T>
+void DataDump(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
+{
+
+  T* ptr = GetVTKMPointer(handle);
+  vtkm::Id osize = handle.GetNumberOfValues();
+  FILE* fp = fopen(fileName.c_str(), "wb");
+  ;
+  if (fp != NULL)
+  {
+    fwrite(ptr, sizeof(T), osize, fp);
+  }
+
+  fclose(fp);
+}
 
 template <typename Device>
 class ZFPCompressor
@@ -159,7 +261,9 @@ public:
       paddedDims[1] += 4 - dims[1] % 4;
     if (paddedDims[2] % 4 != 0)
       paddedDims[2] += 4 - dims[2] % 4;
-    vtkm::Id totalBlocks = paddedDims[0] * paddedDims[1] * paddedDims[2];
+    const vtkm::Id four = 4;
+    vtkm::Id totalBlocks =
+      (paddedDims[0] / four) * (paddedDims[1] / (four) * (paddedDims[2] / four));
 
     std::cout << "Padded dims " << paddedDims << "\n";
 
@@ -167,13 +271,23 @@ public:
     std::cout << "Total output bits " << outbits << "\n";
     vtkm::Id outsize = outbits / sizeof(ZFPWord);
     std::cout << "Output size " << outsize << "\n";
-    vtkm::cont::ArrayHandle<ZFPWord> output;
+
+    vtkm::cont::ArrayHandle<vtkm::Int64> output;
     output.PrepareForOutput(outsize, Device());
 
+    vtkm::worklet::DispatcherMapField<detail::MemSet<vtkm::Int64>, Device> memsetDispatcher(
+      detail::MemSet<vtkm::Int64>(0));
+    memsetDispatcher.Invoke(output);
+
+    // launch 1 thread per zfp block
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
-    vtkm::worklet::DispatcherMapField<detail::Encode3, Device> compressDispatcher;
+    vtkm::worklet::DispatcherMapField<detail::Encode3, Device> compressDispatcher(
+      detail::Encode3(dims, paddedDims, stream.maxbits));
     compressDispatcher.Invoke(blockCounter, data, output);
+
+    DataDump(output, "compressed");
+    DataDump(data, "uncompressed");
   }
 };
 } // namespace worklet
