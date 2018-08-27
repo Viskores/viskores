@@ -65,6 +65,8 @@ public:
 
   void SetSampleDistance(const vtkm::Float32& distance) override;
 
+  void SetDebugOn(bool on) override;
+
 protected:
   vtkm::cont::Field ScalarField;
   vtkm::cont::Field EmissionField;

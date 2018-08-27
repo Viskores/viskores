@@ -127,6 +127,9 @@ public:
   void SetCompositeBackground(bool on) { CompositeBackground = on; }
 
   VTKM_CONT
+  void SetDebugPrints(bool on) { Tracer->SetDebugOn(on); }
+
+  VTKM_CONT
   void SetEmissionField(const std::string& fieldName)
   {
     if (Mode != ENERGY_MODE)
@@ -346,6 +349,11 @@ void ConnectivityProxy::Trace(const vtkm::rendering::Camera& camera,
   Internals->Trace(camera, canvas);
 
   logger->CloseLogEntry(-1.0);
+}
+VTKM_CONT
+void ConnectivityProxy::SetDebugPrints(bool on)
+{
+  Internals->SetDebugPrints(on);
 }
 }
 } // namespace vtkm::rendering

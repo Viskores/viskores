@@ -31,11 +31,17 @@ namespace raytracing
 {
 ConnectivityTracerBase::ConnectivityTracerBase()
   : ConnectivityBase()
+  , CountRayStatus(false)
 {
 }
 
 ConnectivityTracerBase::~ConnectivityTracerBase()
 {
+}
+
+void ConnectivityTracerBase::SetDebugOn(bool on)
+{
+  CountRayStatus = on;
 }
 
 void ConnectivityTracerBase::Init()

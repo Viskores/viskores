@@ -56,6 +56,7 @@ public:
   void SetScalarRange(const vtkm::Range& range);
   void SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colormap);
   void SetCompositeBackground(bool on);
+  void SetDebugPrints(bool on);
 
   vtkm::Bounds GetSpatialBounds();
   vtkm::Range GetScalarRange();
