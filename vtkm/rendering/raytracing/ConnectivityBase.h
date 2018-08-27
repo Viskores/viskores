@@ -61,6 +61,7 @@ public:
   virtual void SetColorMap(
     const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap) = 0;
 
+  virtual void SetDebugOn(bool on) = 0;
 }; // class ConnectivityBase
 }
 }
