@@ -204,6 +204,10 @@ public:
     this->ForceDeviceImpl(device, Traits::GetName(), runtimeDevice.Exists());
   }
 
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  DeviceAdapterNameType GetDeviceName(DeviceAdapterId id) const;
+
 private:
   std::shared_ptr<detail::RuntimeDeviceTrackerInternals> Internals;
 

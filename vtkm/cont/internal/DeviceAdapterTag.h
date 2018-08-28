@@ -25,6 +25,8 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <string>
 
 #define VTKM_DEVICE_ADAPTER_ERROR -2
@@ -42,6 +44,8 @@ namespace vtkm
 namespace cont
 {
 
+using DeviceAdapterNameType = std::string;
+
 struct DeviceAdapterId
 {
   constexpr bool operator==(DeviceAdapterId other) const { return this->Value == other.Value; }
@@ -54,6 +58,9 @@ struct DeviceAdapterId
   }
 
   constexpr vtkm::Int8 GetValue() const { return this->Value; }
+
+  VTKM_CONT_EXPORT
+  DeviceAdapterNameType GetName() const;
 
 protected:
   constexpr explicit DeviceAdapterId(vtkm::Int8 id)
@@ -83,8 +90,6 @@ struct DeviceAdapterIdUndefined : DeviceAdapterId
   {
   }
 };
-
-using DeviceAdapterNameType = std::string;
 
 template <typename DeviceAdapter>
 struct DeviceAdapterTraits;
