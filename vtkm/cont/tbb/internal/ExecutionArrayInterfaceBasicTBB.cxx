@@ -27,7 +27,7 @@ namespace internal
 {
 DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB>::GetDeviceId() const
 {
-  return DeviceAdapterId(VTKM_DEVICE_ADAPTER_TBB);
+  return DeviceAdapterTagTBB{};
 }
 
 } // namespace internal

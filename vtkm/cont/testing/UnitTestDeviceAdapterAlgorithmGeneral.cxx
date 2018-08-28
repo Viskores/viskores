@@ -131,7 +131,7 @@ struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
   using ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareWithControl;
 
   VTKM_CONT
-  DeviceAdapterId GetDeviceId() const final { return DeviceAdapterId(7); }
+  DeviceAdapterId GetDeviceId() const final { return DeviceAdapterTagTestAlgorithmGeneral{}; }
 };
 }
 }
