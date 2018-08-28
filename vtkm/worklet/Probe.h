@@ -149,8 +149,9 @@ private:
       this->CellIds);
     this->ParametricCoordinates.Allocate(points.GetNumberOfValues());
 
-    vtkm::worklet::DispatcherMapTopology<ProbeUniformPoints, Device>().Invoke(
-      cells, coords, points, this->CellIds, this->ParametricCoordinates);
+    vtkm::worklet::DispatcherMapTopology<ProbeUniformPoints> dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(cells, coords, points, this->CellIds, this->ParametricCoordinates);
   }
 
   //============================================================================
@@ -215,12 +216,13 @@ public:
     InputCellSetTypeList icsTypes = InputCellSetTypeList()) const
   {
     vtkm::cont::ArrayHandle<T> result;
-    vtkm::worklet::DispatcherMapField<InterpolatePointField, Device>().Invoke(
-      this->CellIds,
-      this->ParametricCoordinates,
-      this->InputCellSet.ResetCellSetList(icsTypes),
-      field,
-      result);
+    vtkm::worklet::DispatcherMapField<InterpolatePointField> dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(this->CellIds,
+                      this->ParametricCoordinates,
+                      this->InputCellSet.ResetCellSetList(icsTypes),
+                      field,
+                      result);
 
     return result;
   }
@@ -255,7 +257,9 @@ public:
                                               Device) const
   {
     vtkm::cont::ArrayHandle<T> result;
-    vtkm::worklet::DispatcherMapField<MapCellField, Device>().Invoke(this->CellIds, field, result);
+    vtkm::worklet::DispatcherMapField<MapCellField> dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(this->CellIds, field, result);
 
     return result;
   }
@@ -277,8 +281,9 @@ public:
   vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenPointsField(DeviceAdapter) const
   {
     vtkm::cont::ArrayHandle<vtkm::UInt8> field;
-    vtkm::worklet::DispatcherMapField<HiddenPointsWorklet, DeviceAdapter>().Invoke(this->CellIds,
-                                                                                   field);
+    vtkm::worklet::DispatcherMapField<HiddenPointsWorklet> dispatcher;
+    dispatcher.SetDevice(DeviceAdapter());
+    dispatcher.Invoke(this->CellIds, field);
     return field;
   }
 
@@ -312,8 +317,9 @@ public:
   vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenCellsField(CellSetType cellset, DeviceAdapter) const
   {
     vtkm::cont::ArrayHandle<vtkm::UInt8> field;
-    vtkm::worklet::DispatcherMapTopology<HiddenCellsWorklet, DeviceAdapter>().Invoke(
-      cellset, this->CellIds, field);
+    vtkm::worklet::DispatcherMapTopology<HiddenCellsWorklet> dispatcher;
+    dispatcher.SetDevice(DeviceAdapter());
+    dispatcher.Invoke(cellset, this->CellIds, field);
     return field;
   }
 

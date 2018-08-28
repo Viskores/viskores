@@ -224,8 +224,8 @@ public:
 #endif
 
     NearestNeighborSearch3DWorklet nns3dWorklet;
-    vtkm::worklet::DispatcherMapField<NearestNeighborSearch3DWorklet, DeviceAdapter>
-      nns3DDispatcher(nns3dWorklet);
+    vtkm::worklet::DispatcherMapField<NearestNeighborSearch3DWorklet> nns3DDispatcher(nns3dWorklet);
+    nns3DDispatcher.SetDevice(DeviceAdapter());
     nns3DDispatcher.Invoke(
       qc_Handle, pointId_Handle, splitId_Handle, coordi_Handle, nnId_Handle, nnDis_Handle);
 

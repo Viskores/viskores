@@ -140,7 +140,7 @@ private:
     using ParticleAdvectWorkletType =
       vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType, FieldType>;
     using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType, DeviceAdapterTag>;
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
     using ParticleType = vtkm::worklet::particleadvection::Particles<FieldType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
@@ -151,6 +151,7 @@ private:
     //Invoke particle advection worklet
     ParticleAdvectWorkletType particleWorklet(integrator);
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
+    particleWorkletDispatch.SetDevice(DeviceAdapterTag());
     particleWorkletDispatch.Invoke(idxArray, particles);
   }
 
@@ -223,7 +224,7 @@ private:
     using ParticleAdvectWorkletType =
       vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType, FieldType>;
     using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType, DeviceAdapterTag>;
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
     using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles<FieldType>;
 
     vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
@@ -233,6 +234,7 @@ private:
 
     ParticleAdvectWorkletType particleWorklet(integrator);
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
+    particleWorkletDispatch.SetDevice(DeviceAdapterTag());
 
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
 
@@ -250,8 +252,9 @@ private:
 
     vtkm::cont::ArrayHandle<vtkm::Id> stepsTakenNow;
     stepsTakenNow.Allocate(numSeeds);
-    vtkm::worklet::DispatcherMapField<detail::Subtract, DeviceAdapterTag>(detail::Subtract())
-      .Invoke(stepsTakenNow, stepsTaken, initialStepsTaken);
+    vtkm::worklet::DispatcherMapField<detail::Subtract> subtractDispatcher{ (detail::Subtract{}) };
+    subtractDispatcher.SetDevice(DeviceAdapterTag());
+    subtractDispatcher.Invoke(stepsTakenNow, stepsTaken, initialStepsTaken);
 
     //Create cells.
     vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;

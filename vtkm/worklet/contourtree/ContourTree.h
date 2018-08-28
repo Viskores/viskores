@@ -367,8 +367,9 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   if (nCandidates > 0)
   {
     RegularToCriticalUp regularToCriticalUp;
-    vtkm::worklet::DispatcherMapField<RegularToCriticalUp, DeviceAdapter>
-      regularToCriticalUpDispatcher(regularToCriticalUp);
+    vtkm::worklet::DispatcherMapField<RegularToCriticalUp> regularToCriticalUpDispatcher(
+      regularToCriticalUp);
+    regularToCriticalUpDispatcher.SetDevice(DeviceAdapter());
 
     regularToCriticalUpDispatcher.Invoke(candidateIndexArray, // input
                                          candidates,          // input
@@ -404,8 +405,9 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   if (nCandidates > 0)
   {
     RegularToCandidate regularToCandidate;
-    vtkm::worklet::DispatcherMapField<RegularToCandidate, DeviceAdapter>
-      regularToCandidateDispatcher(regularToCandidate);
+    vtkm::worklet::DispatcherMapField<RegularToCandidate> regularToCandidateDispatcher(
+      regularToCandidate);
+    regularToCandidateDispatcher.SetDevice(DeviceAdapter());
 
     regularToCandidateDispatcher.Invoke(candidates,         // input
                                         joinTree.mergeArcs, // input (whole array)
@@ -424,8 +426,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   if (nCandidates > 0)
   {
     SubrangeOffset subRangeOffset;
-    vtkm::worklet::DispatcherMapField<SubrangeOffset, DeviceAdapter> subrangeOffsetDispatcher(
-      subRangeOffset);
+    vtkm::worklet::DispatcherMapField<SubrangeOffset> subrangeOffsetDispatcher(subRangeOffset);
+    subrangeOffsetDispatcher.SetDevice(DeviceAdapter());
 
     subrangeOffsetDispatcher.Invoke(subsetIndexArray, // index
                                     sortVector,       // input
@@ -436,8 +438,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   if (nCandidates > 0)
   {
     DegreeDelta degreeDelta(nCandidates);
-    vtkm::worklet::DispatcherMapField<DegreeDelta, DeviceAdapter> degreeDeltaDispatcher(
-      degreeDelta);
+    vtkm::worklet::DispatcherMapField<DegreeDelta> degreeDeltaDispatcher(degreeDelta);
+    degreeDeltaDispatcher.SetDevice(DeviceAdapter());
 
     degreeDeltaDispatcher.Invoke(subsetIndexArray, // input
                                  sortVector,       // input (whole array)
@@ -449,8 +451,9 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   if (nCandidates > 0)
   {
     RegularToCriticalDown regularToCriticalDown;
-    vtkm::worklet::DispatcherMapField<RegularToCriticalDown, DeviceAdapter>
-      regularToCriticalDownDispatcher(regularToCriticalDown);
+    vtkm::worklet::DispatcherMapField<RegularToCriticalDown> regularToCriticalDownDispatcher(
+      regularToCriticalDown);
+    regularToCriticalDownDispatcher.SetDevice(DeviceAdapter());
 
     regularToCriticalDownDispatcher.Invoke(candidates,          // input
                                            splitTree.mergeArcs, // input (whole array)
@@ -468,8 +471,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   if (nCandidates > 0)
   {
     SubrangeOffset subRangeOffset;
-    vtkm::worklet::DispatcherMapField<SubrangeOffset, DeviceAdapter> subrangeOffsetDispatcher(
-      subRangeOffset);
+    vtkm::worklet::DispatcherMapField<SubrangeOffset> subrangeOffsetDispatcher(subRangeOffset);
+    subrangeOffsetDispatcher.SetDevice(DeviceAdapter());
 
     subrangeOffsetDispatcher.Invoke(subsetIndexArray, // index
                                     sortVector,       // input
@@ -480,8 +483,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   if (nCandidates > 0)
   {
     DegreeDelta degreeDelta(nCandidates);
-    vtkm::worklet::DispatcherMapField<DegreeDelta, DeviceAdapter> degreeDeltaDispatcher(
-      degreeDelta);
+    vtkm::worklet::DispatcherMapField<DegreeDelta> degreeDeltaDispatcher(degreeDelta);
+    degreeDeltaDispatcher.SetDevice(DeviceAdapter());
 
     degreeDeltaDispatcher.Invoke(subsetIndexArray, // index
                                  sortVector,       // input
@@ -496,8 +499,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   if (nCandidates > 0)
   {
     FillSupernodes fillSupernodes;
-    vtkm::worklet::DispatcherMapField<FillSupernodes, DeviceAdapter> fillSupernodesDispatcher(
-      fillSupernodes);
+    vtkm::worklet::DispatcherMapField<FillSupernodes> fillSupernodesDispatcher(fillSupernodes);
+    fillSupernodesDispatcher.SetDevice(DeviceAdapter());
 
     fillSupernodesDispatcher.Invoke(upCandidate,   // input
                                     downCandidate, // input
@@ -526,8 +529,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   if (nCandidates > 0)
   {
     CopySupernodes copySupernodes;
-    vtkm::worklet::DispatcherMapField<CopySupernodes, DeviceAdapter> copySupernodesDispatcher(
-      copySupernodes);
+    vtkm::worklet::DispatcherMapField<CopySupernodes> copySupernodesDispatcher(copySupernodes);
+    copySupernodesDispatcher.SetDevice(DeviceAdapter());
 
     copySupernodesDispatcher.Invoke(isSupernode,       // input
                                     candidates,        // input
@@ -554,8 +557,9 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
 
   // and copy them across, setting IDs for both ends
   SetJoinAndSplitArcs setJoinAndSplitArcs;
-  vtkm::worklet::DispatcherMapField<SetJoinAndSplitArcs, DeviceAdapter>
-    setJoinAndSplitArcsDispatcher(setJoinAndSplitArcs);
+  vtkm::worklet::DispatcherMapField<SetJoinAndSplitArcs> setJoinAndSplitArcsDispatcher(
+    setJoinAndSplitArcs);
+  setJoinAndSplitArcsDispatcher.SetDevice(DeviceAdapter());
 
   setJoinAndSplitArcsDispatcher.Invoke(supernodes,          // input
                                        joinTree.mergeArcs,  // input (whole array)
@@ -584,7 +588,8 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 void ContourTree<T, StorageType, DeviceAdapter>::TransferLeaves()
 {
   FindLeaves findLeaves;
-  vtkm::worklet::DispatcherMapField<FindLeaves, DeviceAdapter> findLeavesDispatcher(findLeaves);
+  vtkm::worklet::DispatcherMapField<FindLeaves> findLeavesDispatcher(findLeaves);
+  findLeavesDispatcher.SetDevice(DeviceAdapter());
 
   findLeavesDispatcher.Invoke(activeSupernodes, // input
                               updegree,         // input (whole array)
@@ -627,8 +632,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CollapseRegular(bool isJoin)
 
   // loop to copy join/split
   CopyJoinSplit copyJoinSplit;
-  vtkm::worklet::DispatcherMapField<CopyJoinSplit, DeviceAdapter> copyJoinSplitDispatcher(
-    copyJoinSplit);
+  vtkm::worklet::DispatcherMapField<CopyJoinSplit> copyJoinSplitDispatcher(copyJoinSplit);
+  copyJoinSplitDispatcher.SetDevice(DeviceAdapter());
 
   copyJoinSplitDispatcher.Invoke(activeSupernodes, // input
                                  inbound,          // input (whole array)
@@ -647,8 +652,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CollapseRegular(bool isJoin)
   for (vtkm::Id iteration = 0; iteration < nLogSteps; iteration++)
   {
     UpdateOutbound updateOutbound;
-    vtkm::worklet::DispatcherMapField<UpdateOutbound, DeviceAdapter> updateOutboundDispatcher(
-      updateOutbound);
+    vtkm::worklet::DispatcherMapField<UpdateOutbound> updateOutboundDispatcher(updateOutbound);
+    updateOutboundDispatcher.SetDevice(DeviceAdapter());
 
     updateOutboundDispatcher.Invoke(activeSupernodes, // input
                                     outbound);        // i/o (whole array)
@@ -661,8 +666,9 @@ void ContourTree<T, StorageType, DeviceAdapter>::CollapseRegular(bool isJoin)
   // a. outbound is not -1 (i.e. vertex is regular)
   // b. superarc[outbound] is not -1 (i.e. outbound is a leaf)
   SetSupernodeInward setSupernodeInward;
-  vtkm::worklet::DispatcherMapField<SetSupernodeInward, DeviceAdapter> setSupernodeInwardDispatcher(
+  vtkm::worklet::DispatcherMapField<SetSupernodeInward> setSupernodeInwardDispatcher(
     setSupernodeInward);
+  setSupernodeInwardDispatcher.SetDevice(DeviceAdapter());
 
   setSupernodeInwardDispatcher.Invoke(activeSupernodes, // input
                                       inbound,          // input (whole array)
@@ -691,7 +697,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CompressTrees()
   for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
   {
     SkipVertex skipVertex;
-    vtkm::worklet::DispatcherMapField<SkipVertex, DeviceAdapter> skipVertexDispatcher(skipVertex);
+    vtkm::worklet::DispatcherMapField<SkipVertex> skipVertexDispatcher(skipVertex);
+    skipVertexDispatcher.SetDevice(DeviceAdapter());
 
     skipVertexDispatcher.Invoke(activeSupernodes, // input
                                 superarcs,        // input (whole array)
@@ -713,8 +720,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CompressActiveSupernodes()
   noSuperarcArray.Allocate(activeSupernodes.GetNumberOfValues());
 
   VertexAssigned vertexAssigned(false);
-  vtkm::worklet::DispatcherMapField<VertexAssigned, DeviceAdapter> vertexAssignedDispatcher(
-    vertexAssigned);
+  vtkm::worklet::DispatcherMapField<VertexAssigned> vertexAssignedDispatcher(vertexAssigned);
+  vertexAssignedDispatcher.SetDevice(DeviceAdapter());
 
   vertexAssignedDispatcher.Invoke(activeSupernodes, superarcs, noSuperarcArray);
 
@@ -738,8 +745,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
 
   vtkm::Id nActiveSupernodes = activeSupernodes.GetNumberOfValues();
   ResetDegrees resetDegrees;
-  vtkm::worklet::DispatcherMapField<ResetDegrees, DeviceAdapter> resetDegreesDispatcher(
-    resetDegrees);
+  vtkm::worklet::DispatcherMapField<ResetDegrees> resetDegreesDispatcher(resetDegrees);
+  resetDegreesDispatcher.SetDevice(DeviceAdapter());
 
   resetDegreesDispatcher.Invoke(activeSupernodes, // input
                                 updegree,         // output (whole array)
@@ -754,8 +761,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
   if (nActiveSupernodes > 0)
   {
     CopyNeighbors copyNeighbors;
-    vtkm::worklet::DispatcherMapField<CopyNeighbors, DeviceAdapter> copyNeighborsDispatcher(
-      copyNeighbors);
+    vtkm::worklet::DispatcherMapField<CopyNeighbors> copyNeighborsDispatcher(copyNeighbors);
+    copyNeighborsDispatcher.SetDevice(DeviceAdapter());
 
     copyNeighborsDispatcher.Invoke(activeSupernodeIndexArray, // input
                                    activeSupernodes,          // input (whole array)
@@ -774,8 +781,9 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
   if (nActiveSupernodes > 1)
   {
     DegreeSubrangeOffset degreeSubrangeOffset;
-    vtkm::worklet::DispatcherMapField<DegreeSubrangeOffset, DeviceAdapter>
-      degreeSubrangeOffsetDispatcher(degreeSubrangeOffset);
+    vtkm::worklet::DispatcherMapField<DegreeSubrangeOffset> degreeSubrangeOffsetDispatcher(
+      degreeSubrangeOffset);
+    degreeSubrangeOffsetDispatcher.SetDevice(DeviceAdapter());
 
     degreeSubrangeOffsetDispatcher.Invoke(subsetIndexArray, // input
                                           sortVector,       // input (whole array)
@@ -786,8 +794,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
   if (nActiveSupernodes > 1)
   {
     DegreeDelta degreeDelta(nActiveSupernodes);
-    vtkm::worklet::DispatcherMapField<DegreeDelta, DeviceAdapter> degreeDeltaDispatcher(
-      degreeDelta);
+    vtkm::worklet::DispatcherMapField<DegreeDelta> degreeDeltaDispatcher(degreeDelta);
+    degreeDeltaDispatcher.SetDevice(DeviceAdapter());
 
     degreeDeltaDispatcher.Invoke(subsetIndexArray, // input
                                  sortVector,       // input
@@ -799,8 +807,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
   if (nActiveSupernodes > 0)
   {
     CopyNeighbors copyNeighbors;
-    vtkm::worklet::DispatcherMapField<CopyNeighbors, DeviceAdapter> copyNeighborsDispatcher(
-      copyNeighbors);
+    vtkm::worklet::DispatcherMapField<CopyNeighbors> copyNeighborsDispatcher(copyNeighbors);
+    copyNeighborsDispatcher.SetDevice(DeviceAdapter());
 
     copyNeighborsDispatcher.Invoke(activeSupernodeIndexArray, // input
                                    activeSupernodes,          // input (whole array)
@@ -818,8 +826,9 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
   if (nActiveSupernodes > 1)
   {
     DegreeSubrangeOffset degreeSubrangeOffset;
-    vtkm::worklet::DispatcherMapField<DegreeSubrangeOffset, DeviceAdapter>
-      degreeSubrangeOffsetDispatcher(degreeSubrangeOffset);
+    vtkm::worklet::DispatcherMapField<DegreeSubrangeOffset> degreeSubrangeOffsetDispatcher(
+      degreeSubrangeOffset);
+    degreeSubrangeOffsetDispatcher.SetDevice(DeviceAdapter());
 
     degreeSubrangeOffsetDispatcher.Invoke(subsetIndexArray, // input
                                           sortVector,       // input (whole array)
@@ -830,8 +839,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
   if (nActiveSupernodes > 1)
   {
     DegreeDelta degreeDelta(nActiveSupernodes);
-    vtkm::worklet::DispatcherMapField<DegreeDelta, DeviceAdapter> degreeDeltaDispatcher(
-      degreeDelta);
+    vtkm::worklet::DispatcherMapField<DegreeDelta> degreeDeltaDispatcher(degreeDelta);
+    degreeDeltaDispatcher.SetDevice(DeviceAdapter());
 
     degreeDeltaDispatcher.Invoke(subsetIndexArray, // input
                                  sortVector,       // input (whole array)

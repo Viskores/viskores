@@ -43,7 +43,6 @@ namespace worklet
 {
 
 /// \brief Compute the tetrahedralize cells for an explicit grid data set
-template <typename DeviceAdapter>
 class TetrahedralizeExplicit
 {
 public:
@@ -62,8 +61,8 @@ public:
     VTKM_CONT
     TetrahedraPerCell() {}
 
-    VTKM_EXEC
-    vtkm::IdComponent operator()(
+    template <typename DeviceAdapter>
+    VTKM_EXEC vtkm::IdComponent operator()(
       vtkm::UInt8 shape,
       const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter>& tables)
       const
@@ -90,11 +89,14 @@ public:
     template <typename CellArrayType>
     VTKM_CONT static ScatterType MakeScatter(const CellArrayType& cellArray)
     {
-      return ScatterType(cellArray, DeviceAdapter());
+      return ScatterType(cellArray);
     }
 
     // Each cell produces tetrahedra and write result at the offset
-    template <typename CellShapeTag, typename ConnectivityInVec, typename ConnectivityOutVec>
+    template <typename CellShapeTag,
+              typename ConnectivityInVec,
+              typename DeviceAdapter,
+              typename ConnectivityOutVec>
     VTKM_EXEC void operator()(
       CellShapeTag shape,
       const ConnectivityInVec& connectivityIn,
@@ -128,12 +130,12 @@ public:
     vtkm::worklet::internal::TetrahedralizeTables tables;
 
     // Determine the number of output cells each input cell will generate
-    vtkm::worklet::DispatcherMapField<TetrahedraPerCell, DeviceAdapter> tetPerCellDispatcher;
+    vtkm::worklet::DispatcherMapField<TetrahedraPerCell> tetPerCellDispatcher;
     tetPerCellDispatcher.Invoke(inShapes, tables.PrepareForInput(), outCellsPerCell);
 
     // Build new cells
-    vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell, DeviceAdapter>
-      tetrahedralizeDispatcher(TetrahedralizeCell::MakeScatter(outCellsPerCell));
+    vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell> tetrahedralizeDispatcher(
+      TetrahedralizeCell::MakeScatter(outCellsPerCell));
     tetrahedralizeDispatcher.Invoke(
       cellSet, tables.PrepareForInput(), vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
 

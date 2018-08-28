@@ -166,8 +166,9 @@ public:
 
     // Worklet to set the bin number for each data value
     SetHistogramBin<FieldType> binWorklet(numberOfBins, fieldMinValue, fieldDelta);
-    vtkm::worklet::DispatcherMapField<SetHistogramBin<FieldType>, DeviceAdapter>
-      setHistogramBinDispatcher(binWorklet);
+    vtkm::worklet::DispatcherMapField<SetHistogramBin<FieldType>> setHistogramBinDispatcher(
+      binWorklet);
+    setHistogramBinDispatcher.SetDevice(DeviceAdapter());
     setHistogramBinDispatcher.Invoke(fieldArray, binIndex);
 
     // Sort the resulting bin array for counting
@@ -179,7 +180,8 @@ public:
     DeviceAlgorithms::UpperBounds(binIndex, binCounter, totalCount);
 
     // Difference between adjacent items is the bin count
-    vtkm::worklet::DispatcherMapField<AdjacentDifference, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapField<AdjacentDifference> dispatcher;
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(binCounter, totalCount, binArray);
 
     //update the users data

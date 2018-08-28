@@ -82,7 +82,8 @@ public:
            DeviceAdapter vtkmNotUsed(adapter))
   {
     WarpVectorImp warpVectorImp(scale);
-    vtkm::worklet::DispatcherMapField<WarpVectorImp, DeviceAdapter> dispatcher(warpVectorImp);
+    vtkm::worklet::DispatcherMapField<WarpVectorImp> dispatcher(warpVectorImp);
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(point, vector, warpedPoint);
   }
 };

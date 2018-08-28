@@ -102,19 +102,20 @@ public:
       bool allStar = false;
       vtkm::cont::ArrayHandle<bool> isStar;
 
-      using DispatcherType =
-        vtkm::worklet::DispatcherPointNeighborhood<detail::ImageGraft<2>, Device>;
-
       do
       {
-        DispatcherType().Invoke(input, componentsOut, pixels, newComponents);
+        vtkm::worklet::DispatcherPointNeighborhood<detail::ImageGraft<2>> imageGraftDispatcher;
+        imageGraftDispatcher.SetDevice(Device());
+        imageGraftDispatcher.Invoke(input, componentsOut, pixels, newComponents);
 
         // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
-        vtkm::worklet::DispatcherMapField<IsStar, Device> isStarDisp;
+        vtkm::worklet::DispatcherMapField<IsStar> isStarDisp;
+        isStarDisp.SetDevice(Device());
         isStarDisp.Invoke(pixelIds, newComponents, isStar);
         allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());
 
-        vtkm::worklet::DispatcherMapField<PointerJumping, Device> pointJumpingDispatcher;
+        vtkm::worklet::DispatcherMapField<PointerJumping> pointJumpingDispatcher;
+        pointJumpingDispatcher.SetDevice(Device());
         pointJumpingDispatcher.Invoke(pixelIds, newComponents);
 
         Algorithm::Copy(newComponents, componentsOut);

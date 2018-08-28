@@ -192,12 +192,14 @@ public:
   {
     if (CartesianToSpherical)
     {
-      vtkm::worklet::DispatcherMapField<detail::CarToSphere<T>, DeviceAdapterTag> dispatcher;
+      vtkm::worklet::DispatcherMapField<detail::CarToSphere<T>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(inPoints, outPoints);
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<detail::SphereToCar<T>, DeviceAdapterTag> dispatcher;
+      vtkm::worklet::DispatcherMapField<detail::SphereToCar<T>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(inPoints, outPoints);
     }
   }
@@ -209,12 +211,14 @@ public:
   {
     if (CartesianToSpherical)
     {
-      vtkm::worklet::DispatcherMapField<detail::CarToSphere<T>, DeviceAdapterTag> dispatcher;
+      vtkm::worklet::DispatcherMapField<detail::CarToSphere<T>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(inPoints, outPoints);
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<detail::SphereToCar<T>, DeviceAdapterTag> dispatcher;
+      vtkm::worklet::DispatcherMapField<detail::SphereToCar<T>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(inPoints, outPoints);
     }
   }

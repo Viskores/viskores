@@ -58,11 +58,11 @@ void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
     //deferring to another device adapter?
     std::cerr << "caught ErrorBadType : " << e.GetMessage() << std::endl;
   }
-  catch (vtkm::cont::ErrorBadValue& e)
+  catch (vtkm::cont::ErrorBadValue&)
   {
-    //should bad value errors should stop the filter, instead of deferring
-    //to another device adapter?
-    std::cerr << "caught ErrorBadValue : " << e.GetMessage() << std::endl;
+    // Should bad values be deferred to another device? Seems unlikely they will succeed.
+    // Re-throw instead.
+    throw;
   }
   catch (vtkm::cont::Error& e)
   {

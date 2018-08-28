@@ -21,6 +21,7 @@
 #ifndef vtk_m_worklet_TetrahedralizeStructured_h
 #define vtk_m_worklet_TetrahedralizeStructured_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/CellSetSingleType.h>
@@ -82,7 +83,6 @@ public:
 }
 
 /// \brief Compute the tetrahedralize cells for a uniform grid data set
-template <typename DeviceAdapter>
 class TetrahedralizeStructured
 {
 public:
@@ -90,17 +90,14 @@ public:
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
-    using DeviceAlgorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    vtkm::worklet::DispatcherMapTopology<tetrahedralize::TetrahedralizeCell, DeviceAdapter>
-      dispatcher;
+    vtkm::worklet::DispatcherMapTopology<tetrahedralize::TetrahedralizeCell> dispatcher;
     dispatcher.Invoke(cellSet, vtkm::cont::make_ArrayHandleGroupVec<4>(connectivity));
 
     // Fill in array of output cells per input cell
-    DeviceAlgorithm::Copy(
+    vtkm::cont::ArrayCopy(
       vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(5, cellSet.GetNumberOfCells()),
       outCellsPerCell);
 

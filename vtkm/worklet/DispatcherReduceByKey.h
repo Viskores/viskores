@@ -33,16 +33,15 @@ namespace worklet
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletReduceByKey.
 ///
-template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template <typename WorkletType>
 class DispatcherReduceByKey
-  : public vtkm::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType, Device>,
+  : public vtkm::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType>,
                                                    WorkletType,
                                                    vtkm::worklet::WorkletReduceByKey>
 {
-  using Superclass =
-    vtkm::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType, Device>,
-                                            WorkletType,
-                                            vtkm::worklet::WorkletReduceByKey>;
+  using Superclass = vtkm::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType>,
+                                                             WorkletType,
+                                                             vtkm::worklet::WorkletReduceByKey>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:
@@ -83,7 +82,7 @@ public:
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BadicInvoke.
-    this->BasicInvoke(invocation, inputDomain.GetInputRange(), Device());
+    this->BasicInvoke(invocation, inputDomain.GetInputRange());
   }
 };
 }

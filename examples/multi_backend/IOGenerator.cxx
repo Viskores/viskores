@@ -53,7 +53,7 @@ vtkm::cont::DataSet make_test3DImageData(vtkm::Id3 dims)
   vtkm::cont::DataSet ds = Builder::Create(dims);
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> field;
-  vtkm::worklet::DispatcherMapField<WaveField, vtkm::cont::DeviceAdapterTagSerial> dispatcher;
+  vtkm::worklet::DispatcherMapField<WaveField> dispatcher;
   dispatcher.Invoke(ds.GetCoordinateSystem(), field);
 
   FieldAdd::AddPointField(ds, "vec_field", field);

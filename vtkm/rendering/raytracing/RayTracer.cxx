@@ -237,22 +237,27 @@ public:
       throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
     bool isAssocPoints = scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
 
-    vtkm::worklet::DispatcherMapField<CalculateNormals, Device>(CalculateNormals(bvh.LeafNodes))
-      .Invoke(rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, coordsHandle);
+    vtkm::worklet::DispatcherMapField<CalculateNormals> calcNormalsDispatcher(
+      CalculateNormals(bvh.LeafNodes));
+    calcNormalsDispatcher.SetDevice(Device());
+    calcNormalsDispatcher.Invoke(
+      rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, coordsHandle);
 
     if (isAssocPoints)
     {
-      vtkm::worklet::DispatcherMapField<LerpScalar<Precision>, Device>(
+      vtkm::worklet::DispatcherMapField<LerpScalar<Precision>> lerpScalarDispatcher(
         LerpScalar<Precision>(
-          bvh.LeafNodes, vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.U, rays.V, rays.Scalar, scalarField);
+          bvh.LeafNodes, vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)));
+      lerpScalarDispatcher.SetDevice(Device());
+      lerpScalarDispatcher.Invoke(rays.HitIdx, rays.U, rays.V, rays.Scalar, scalarField);
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<NodalScalar<Precision>, Device>(
+      vtkm::worklet::DispatcherMapField<NodalScalar<Precision>> nodalScalarDispatcher(
         NodalScalar<Precision>(
-          bvh.LeafNodes, vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.Scalar, scalarField);
+          bvh.LeafNodes, vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)));
+      nodalScalarDispatcher.SetDevice(Device());
+      nodalScalarDispatcher.Invoke(rays.HitIdx, rays.Scalar, scalarField);
     }
   } // Run
 
@@ -373,10 +378,11 @@ public:
     vtkm::Vec<vtkm::Float32, 3> scale(2, 2, 2);
     vtkm::Vec<vtkm::Float32, 3> lightPosition = camera.GetPosition() + scale * camera.GetUp();
     const vtkm::Int32 colorMapSize = vtkm::Int32(colorMap.GetNumberOfValues());
-    vtkm::worklet::DispatcherMapField<MapScalarToColor, Device>(
-      MapScalarToColor(
-        colorMap, colorMapSize, lightPosition, camera.GetPosition(), camera.GetLookAt()))
-      .Invoke(rays.HitIdx, rays.Scalar, rays.Normal, rays.Intersection, rays.Buffers.at(0).Buffer);
+    vtkm::worklet::DispatcherMapField<MapScalarToColor> dispatcher(MapScalarToColor(
+      colorMap, colorMapSize, lightPosition, camera.GetPosition(), camera.GetLookAt()));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(
+      rays.HitIdx, rays.Scalar, rays.Normal, rays.Intersection, rays.Buffers.at(0).Buffer);
   }
 }; // class SurfaceColor
 
@@ -487,15 +493,16 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays, Device)
     timer.Reset();
 
     // Find the intersection point from hit distance
-    vtkm::worklet::DispatcherMapField<detail::IntersectionPoint, Device>(
-      detail::IntersectionPoint())
-      .Invoke(rays.HitIdx,
-              rays.Distance,
-              rays.Dir,
-              rays.Origin,
-              rays.IntersectionX,
-              rays.IntersectionY,
-              rays.IntersectionZ);
+    vtkm::worklet::DispatcherMapField<detail::IntersectionPoint> intersectionPointDispatcher{ (
+      detail::IntersectionPoint{}) };
+    intersectionPointDispatcher.SetDevice(Device());
+    intersectionPointDispatcher.Invoke(rays.HitIdx,
+                                       rays.Distance,
+                                       rays.Dir,
+                                       rays.Origin,
+                                       rays.IntersectionX,
+                                       rays.IntersectionY,
+                                       rays.IntersectionZ);
 
     time = timer.GetElapsedTime();
     logger->AddLogData("find_point", time);

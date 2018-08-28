@@ -59,10 +59,12 @@ struct Transpose3x3 : vtkm::worklet::WorkletMapField
     field[2][1] = tempC;
   }
 
-  template <typename S, typename DeviceAdapter>
-  void Run(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& field, DeviceAdapter)
+  template <typename S>
+  void Run(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& field,
+           vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
-    vtkm::worklet::DispatcherMapField<Transpose3x3<T>, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapField<Transpose3x3<T>> dispatcher;
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(field);
   }
 };

@@ -842,20 +842,19 @@ private:
 //=============================================================================
 
 // Worklet: 3D forward transform along X (left-right)
-template <typename DeviceTag>
 class ForwardTransform3DLeftRight : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left extension
                                 WholeArrayIn<ScalarAll>,   // signal
                                 WholeArrayIn<ScalarAll>,   // right extension
+                                WholeArrayIn<ScalarAll>,   // lowFilter
+                                WholeArrayIn<ScalarAll>,   // highFilter
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
-  using InputDomain = _4;
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using InputDomain = _6;
 
-  ForwardTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                              const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                              vtkm::Id filter_len,
+  ForwardTransform3DLeftRight(vtkm::Id filter_len,
                               vtkm::Id approx_len,
                               bool odd_low,
                               vtkm::Id dimX1,
@@ -873,13 +872,11 @@ public:
                               vtkm::Id dimX3,
                               vtkm::Id dimY3,
                               vtkm::Id dimZ3)
-    : lowFilter(loFilter.PrepareForInput(DeviceTag()))
-    , highFilter(hiFilter.PrepareForInput(DeviceTag()))
-    , filterLen(filter_len)
+    : filterLen(filter_len)
     , approxLen(approx_len)
     , outDimX(pretendX2)
     , outDimY(pretendY2)
-    , outDimZ(pretendZ2)
+    //, outDimZ(pretendZ2)
     , translator(dimX1,
                  dimY1,
                  dimZ1,
@@ -903,9 +900,9 @@ public:
   VTKM_EXEC_CONT
   void Output1Dto3D(vtkm::Id idx, vtkm::Id& x, vtkm::Id& y, vtkm::Id& z) const
   {
-    z = idx / (outDimX * outDimY);
-    y = (idx - z * outDimX * outDimY) / outDimX;
-    x = idx % outDimX;
+    z = idx / (this->outDimX * this->outDimY);
+    y = (idx - z * this->outDimX * this->outDimY) / this->outDimX;
+    x = idx % this->outDimX;
   }
   VTKM_EXEC_CONT
   vtkm::Id Output3Dto1D(vtkm::Id x, vtkm::Id y, vtkm::Id z) const
@@ -944,15 +941,18 @@ public:
   template <typename InPortalType1,
             typename InPortalType2,
             typename InPortalType3,
+            typename FilterPortalType,
             typename OutputPortalType>
-  VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1, // left extension
-                                 const InPortalType2& inPortal2, // signal
-                                 const InPortalType3& inPortal3, // right extension
+  VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1,     // left extension
+                                 const InPortalType2& inPortal2,     // signal
+                                 const InPortalType3& inPortal3,     // right extension
+                                 const FilterPortalType& lowFilter,  // lowFilter
+                                 const FilterPortalType& highFilter, // highFilter
                                  OutputPortalType& coeffOut,
                                  const vtkm::Id& workIndex) const
   {
     vtkm::Id workX, workY, workZ, output1D;
-    Output1Dto3D(workIndex, workX, workY, workZ);
+    this->Output1Dto3D(workIndex, workX, workY, workZ);
     vtkm::Id inputCube = 0, inputIdx = 0;
     using OutputValueType = typename OutputPortalType::ValueType;
 
@@ -987,29 +987,27 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
   const vtkm::Id filterLen, approxLen;
-  const vtkm::Id outDimX, outDimY, outDimZ;
+  const vtkm::Id outDimX;
+  const vtkm::Id outDimY;
+  //const vtkm::Id outDimZ; Not used
   const IndexTranslator3CubesLeftRight translator;
   vtkm::Id lstart, hstart;
 };
 
-template <typename DeviceTag>
 class ForwardTransform3DTopDown : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left extension
                                 WholeArrayIn<ScalarAll>,   // signal
                                 WholeArrayIn<ScalarAll>,   // right extension
+                                WholeArrayIn<ScalarAll>,   // lowFilter
+                                WholeArrayIn<ScalarAll>,   // highFilter
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
-  using InputDomain = _4;
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using InputDomain = _6;
 
-  ForwardTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                            const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                            vtkm::Id filter_len,
+  ForwardTransform3DTopDown(vtkm::Id filter_len,
                             vtkm::Id approx_len,
                             bool odd_low,
                             vtkm::Id dimX1,
@@ -1027,13 +1025,11 @@ public:
                             vtkm::Id dimX3,
                             vtkm::Id dimY3,
                             vtkm::Id dimZ3)
-    : lowFilter(loFilter.PrepareForInput(DeviceTag()))
-    , highFilter(hiFilter.PrepareForInput(DeviceTag()))
-    , filterLen(filter_len)
+    : filterLen(filter_len)
     , approxLen(approx_len)
     , outDimX(pretendX2)
     , outDimY(pretendY2)
-    , outDimZ(pretendZ2)
+    //, outDimZ(pretendZ2)
     , translator(dimX1,
                  dimY1,
                  dimZ1,
@@ -1098,10 +1094,13 @@ public:
   template <typename InPortalType1,
             typename InPortalType2,
             typename InPortalType3,
+            typename FilterPortalType,
             typename OutputPortalType>
-  VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1, // top extension
-                                 const InPortalType2& inPortal2, // signal
-                                 const InPortalType3& inPortal3, // down extension
+  VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1,     // top extension
+                                 const InPortalType2& inPortal2,     // signal
+                                 const InPortalType3& inPortal3,     // down extension
+                                 const FilterPortalType& lowFilter,  // lowFilter
+                                 const FilterPortalType& highFilter, // highFilter
                                  OutputPortalType& coeffOut,
                                  const vtkm::Id& workIndex) const
   {
@@ -1141,29 +1140,27 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
   const vtkm::Id filterLen, approxLen;
-  const vtkm::Id outDimX, outDimY, outDimZ;
+  const vtkm::Id outDimX;
+  const vtkm::Id outDimY;
+  //const vtkm::Id outDimZ; Not used
   const IndexTranslator3CubesTopDown translator;
   vtkm::Id lstart, hstart;
 };
 
-template <typename DeviceTag>
 class ForwardTransform3DFrontBack : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left extension
                                 WholeArrayIn<ScalarAll>,   // signal
                                 WholeArrayIn<ScalarAll>,   // right extension
+                                WholeArrayIn<ScalarAll>,   // lowFilter
+                                WholeArrayIn<ScalarAll>,   // highFilter
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
-  using InputDomain = _4;
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using InputDomain = _6;
 
-  ForwardTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                              const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                              vtkm::Id filter_len,
+  ForwardTransform3DFrontBack(vtkm::Id filter_len,
                               vtkm::Id approx_len,
                               bool odd_low,
                               vtkm::Id dimX1,
@@ -1181,13 +1178,11 @@ public:
                               vtkm::Id dimX3,
                               vtkm::Id dimY3,
                               vtkm::Id dimZ3)
-    : lowFilter(loFilter.PrepareForInput(DeviceTag()))
-    , highFilter(hiFilter.PrepareForInput(DeviceTag()))
-    , filterLen(filter_len)
+    : filterLen(filter_len)
     , approxLen(approx_len)
     , outDimX(pretendX2)
     , outDimY(pretendY2)
-    , outDimZ(pretendZ2)
+    //, outDimZ(pretendZ2)
     , translator(dimX1,
                  dimY1,
                  dimZ1,
@@ -1252,10 +1247,13 @@ public:
   template <typename InPortalType1,
             typename InPortalType2,
             typename InPortalType3,
+            typename FilterPortalType,
             typename OutputPortalType>
   VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1, // top extension
                                  const InPortalType2& inPortal2, // signal
                                  const InPortalType3& inPortal3, // down extension
+                                 const FilterPortalType& lowFilter,
+                                 const FilterPortalType& highFilter,
                                  OutputPortalType& coeffOut,
                                  const vtkm::Id& workIndex) const
   {
@@ -1295,11 +1293,10 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
   const vtkm::Id filterLen, approxLen;
-  const vtkm::Id outDimX, outDimY, outDimZ;
+  const vtkm::Id outDimX;
+  const vtkm::Id outDimY;
+  //const vtkm::Id outDimZ; Not used
   const IndexTranslator3CubesFrontBack translator;
   vtkm::Id lstart, hstart;
 };
@@ -1317,7 +1314,6 @@ private:
 // The following 3 classes perform the same functionaliry in 3 directions
 //
 // Worklet: perform a simple 3D inverse transform along X direction (Left-right)
-template <typename DeviceTag>
 class InverseTransform3DLeftRight : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -1326,14 +1322,14 @@ public:
                                 WholeArrayIn<ScalarAll>, // ext3
                                 WholeArrayIn<ScalarAll>, // ext4
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
+                                WholeArrayIn<ScalarAll>, // lowFilter
+                                WholeArrayIn<ScalarAll>, // highFilter
                                 FieldOut<ScalarAll>);    // outptu coefficients
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
-  using InputDomain = _6;
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
+  using InputDomain = _8;
 
   // Constructor
-  InverseTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
-                              const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
-                              vtkm::Id fil_len,
+  InverseTransform3DLeftRight(vtkm::Id fil_len,
                               vtkm::Id x_1,
                               vtkm::Id y_1,
                               vtkm::Id z_1, // ext1
@@ -1358,12 +1354,10 @@ public:
                               vtkm::Id startX5,
                               vtkm::Id startY5,
                               vtkm::Id startZ5)
-    : lowFilter(lo_fil.PrepareForInput(DeviceTag()))
-    , highFilter(hi_fil.PrepareForInput(DeviceTag()))
-    , filterLen(fil_len)
+    : filterLen(fil_len)
     , outDimX(x_a + x_d)
     , outDimY(y_a)
-    , outDimZ(z_a)
+    //, outDimZ(z_a)
     , cALenExtended(x_1 + x_a + x_2)
     , translator(x_1,
                  y_1,
@@ -1447,12 +1441,15 @@ public:
             typename InPortalType3,
             typename InPortalType4,
             typename InPortalType5,
+            typename FilterPortalType,
             typename OutputValueType>
   VTKM_EXEC void operator()(const InPortalType1& portal1,
                             const InPortalType2& portal2,
                             const InPortalType3& portal3,
                             const InPortalType4& portal4,
                             const InPortalType5& portal5,
+                            const FilterPortalType& lowFilter,
+                            const FilterPortalType& highFilter,
                             OutputValueType& coeffOut,
                             const vtkm::Id& workIdx) const
   {
@@ -1540,16 +1537,14 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
   const vtkm::Id filterLen;
-  vtkm::Id outDimX, outDimY, outDimZ;
+  vtkm::Id outDimX;
+  vtkm::Id outDimY;
+  // vtkm::Id outDimZ; Not used
   vtkm::Id cALenExtended; // Number of cA at the beginning of input, followed by cD
   const IndexTranslator6CubesLeftRight translator;
 };
 
-template <typename DeviceTag>
 class InverseTransform3DTopDown : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -1558,14 +1553,14 @@ public:
                                 WholeArrayIn<ScalarAll>, // ext3
                                 WholeArrayIn<ScalarAll>, // ext4
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
+                                WholeArrayIn<ScalarAll>, // lowFilter
+                                WholeArrayIn<ScalarAll>, // highFilter
                                 FieldOut<ScalarAll>);    // outptu coefficients
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
-  using InputDomain = _6;
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
+  using InputDomain = _8;
 
   // Constructor
-  InverseTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
-                            const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
-                            vtkm::Id fil_len,
+  InverseTransform3DTopDown(vtkm::Id fil_len,
                             vtkm::Id x_1,
                             vtkm::Id y_1,
                             vtkm::Id z_1, // ext1
@@ -1590,12 +1585,10 @@ public:
                             vtkm::Id startX5,
                             vtkm::Id startY5,
                             vtkm::Id startZ5)
-    : lowFilter(lo_fil.PrepareForInput(DeviceTag()))
-    , highFilter(hi_fil.PrepareForInput(DeviceTag()))
-    , filterLen(fil_len)
+    : filterLen(fil_len)
     , outDimX(x_a)
     , outDimY(y_a + y_d)
-    , outDimZ(z_a)
+    //, outDimZ(z_a)
     , cALenExtended(y_1 + y_a + y_2)
     , translator(x_1,
                  y_1,
@@ -1679,12 +1672,15 @@ public:
             typename InPortalType3,
             typename InPortalType4,
             typename InPortalType5,
+            typename FilterPortalType,
             typename OutputValueType>
   VTKM_EXEC void operator()(const InPortalType1& portal1,
                             const InPortalType2& portal2,
                             const InPortalType3& portal3,
                             const InPortalType4& portal4,
                             const InPortalType5& portal5,
+                            const FilterPortalType& lowFilter,
+                            const FilterPortalType& highFilter,
                             OutputValueType& coeffOut,
                             const vtkm::Id& workIdx) const
   {
@@ -1772,16 +1768,14 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
   const vtkm::Id filterLen;
-  vtkm::Id outDimX, outDimY, outDimZ;
+  vtkm::Id outDimX;
+  vtkm::Id outDimY;
+  //vtkm::Id outDimZ; Not used
   vtkm::Id cALenExtended; // Number of cA at the beginning of input, followed by cD
   const IndexTranslator6CubesTopDown translator;
 };
 
-template <typename DeviceTag>
 class InverseTransform3DFrontBack : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -1790,14 +1784,14 @@ public:
                                 WholeArrayIn<ScalarAll>, // ext3
                                 WholeArrayIn<ScalarAll>, // ext4
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
+                                WholeArrayIn<ScalarAll>, // lowFilter
+                                WholeArrayIn<ScalarAll>, // highFilter
                                 FieldOut<ScalarAll>);    // outptu coefficients
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
-  using InputDomain = _6;
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
+  using InputDomain = _8;
 
   // Constructor
-  InverseTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
-                              const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
-                              vtkm::Id fil_len,
+  InverseTransform3DFrontBack(vtkm::Id fil_len,
                               vtkm::Id x_1,
                               vtkm::Id y_1,
                               vtkm::Id z_1, // ext1
@@ -1822,12 +1816,10 @@ public:
                               vtkm::Id startX5,
                               vtkm::Id startY5,
                               vtkm::Id startZ5)
-    : lowFilter(lo_fil.PrepareForInput(DeviceTag()))
-    , highFilter(hi_fil.PrepareForInput(DeviceTag()))
-    , filterLen(fil_len)
+    : filterLen(fil_len)
     , outDimX(x_a)
     , outDimY(y_a)
-    , outDimZ(z_a + z_d)
+    //, outDimZ(z_a + z_d)
     , cALenExtended(z_1 + z_a + z_2)
     , translator(x_1,
                  y_1,
@@ -1913,12 +1905,15 @@ public:
             typename InPortalType3,
             typename InPortalType4,
             typename InPortalType5,
+            typename FilterPortalType,
             typename OutputValueType>
   VTKM_EXEC void operator()(const InPortalType1& portal1,
                             const InPortalType2& portal2,
                             const InPortalType3& portal3,
                             const InPortalType4& portal4,
                             const InPortalType5& portal5,
+                            const FilterPortalType& lowFilter,
+                            const FilterPortalType& highFilter,
                             OutputValueType& coeffOut,
                             const vtkm::Id& workIdx) const
   {
@@ -2006,11 +2001,10 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
   const vtkm::Id filterLen;
-  vtkm::Id outDimX, outDimY, outDimZ;
+  vtkm::Id outDimX;
+  vtkm::Id outDimY;
+  //vtkm::Id outDimZ; Not used
   vtkm::Id cALenExtended; // Number of cA at the beginning of input, followed by cD
   const IndexTranslator6CubesFrontBack translator;
 };
@@ -2397,21 +2391,20 @@ private:
 };
 
 // Worklet: perform a simple 2D forward transform
-template <typename DeviceTag>
 class ForwardTransform2D : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left/top extension
                                 WholeArrayIn<ScalarAll>,   // sigIn
                                 WholeArrayIn<ScalarAll>,   // right/bottom extension
+                                WholeArrayIn<ScalarAll>,   // lowFilter
+                                WholeArrayIn<ScalarAll>,   // highFilter
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
-  using InputDomain = _4;
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using InputDomain = _6;
 
   // Constructor
-  ForwardTransform2D(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                     const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                     vtkm::Id filter_len,
+  ForwardTransform2D(vtkm::Id filter_len,
                      vtkm::Id approx_len,
                      bool odd_low,
                      bool mode_lr,
@@ -2425,12 +2418,10 @@ public:
                      vtkm::Id pretendy2, // pretend dims of signal
                      vtkm::Id x3,
                      vtkm::Id y3) // dims of right/bottom extension
-    : lowFilter(loFilter.PrepareForInput(DeviceTag())),
-      highFilter(hiFilter.PrepareForInput(DeviceTag())),
-      filterLen(filter_len),
+    : filterLen(filter_len),
       approxLen(approx_len),
       outDimX(pretendx2),
-      outDimY(pretendy2),
+      //outDimY(pretendy2),
       oddlow(odd_low),
       modeLR(mode_lr),
       translator(x1, y1, x2, y2, startx2, starty2, pretendx2, pretendy2, x3, y3, mode_lr)
@@ -2478,10 +2469,13 @@ public:
   template <typename InPortalType1,
             typename InPortalType2,
             typename InPortalType3,
+            typename FilterPortalType,
             typename OutputPortalType>
   VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1, // left/top extension
                                  const InPortalType2& inPortal2, // signal
                                  const InPortalType3& inPortal3, // right/bottom extension
+                                 const FilterPortalType& lowFilter,
+                                 const FilterPortalType& highFilter,
                                  OutputPortalType& coeffOut,
                                  const vtkm::Id& workIndex) const
   {
@@ -2553,11 +2547,9 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
   const vtkm::Id filterLen, approxLen;
-  const vtkm::Id outDimX, outDimY;
+  const vtkm::Id outDimX;
+  //const vtkm::Id outDimY; Not used
   bool oddlow;
   bool modeLR; // true = left right; false = top down.
   const IndexTranslator3Matrices translator;
@@ -2584,7 +2576,6 @@ private:
 //  portal4: ext4
 //  portal5: cA + cD
 // Worklet: perform a simple 2D inverse transform
-template <typename DeviceTag>
 class InverseTransform2D : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -2593,14 +2584,14 @@ public:
                                 WholeArrayIn<ScalarAll>, // ext3
                                 WholeArrayIn<ScalarAll>, // ext4
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
+                                WholeArrayIn<ScalarAll>, // lowFilter
+                                WholeArrayIn<ScalarAll>, // highFilter
                                 FieldOut<ScalarAll>);    // outptu coeffs
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
-  using InputDomain = _6;
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
+  using InputDomain = _8;
 
   // Constructor
-  InverseTransform2D(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
-                     const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
-                     vtkm::Id fil_len,
+  InverseTransform2D(vtkm::Id fil_len,
                      vtkm::Id x_1,
                      vtkm::Id y_1, // ext1
                      vtkm::Id x_a,
@@ -2618,9 +2609,7 @@ public:
                      vtkm::Id startX5,
                      vtkm::Id startY5,
                      bool mode_lr)
-    : lowFilter(lo_fil.PrepareForInput(DeviceTag()))
-    , highFilter(hi_fil.PrepareForInput(DeviceTag()))
-    , filterLen(fil_len)
+    : filterLen(fil_len)
     , translator(x_1,
                  y_1,
                  x_a,
@@ -2708,12 +2697,15 @@ public:
             typename InPortalType3,
             typename InPortalType4,
             typename InPortalTypecAcD,
+            typename FilterPortalType,
             typename OutputValueType>
   VTKM_EXEC void operator()(const InPortalType1& portal1,
                             const InPortalType2& portal2,
                             const InPortalType3& portal3,
                             const InPortalType4& portal4,
                             const InPortalTypecAcD& portalcAcD,
+                            const FilterPortalType& lowFilter,
+                            const FilterPortalType& highFilter,
                             OutputValueType& coeffOut,
                             const vtkm::Id& workIdx) const
   {
@@ -2881,9 +2873,6 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
   const vtkm::Id filterLen;
   vtkm::Id outputDimX, outputDimY;
   vtkm::Id cALenExtended; // Number of cA at the beginning of input, followed by cD
@@ -2892,26 +2881,23 @@ private:
 };
 
 // Worklet: perform a simple 1D forward transform
-template <typename DeviceTag>
 class ForwardTransform : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(WholeArrayIn<ScalarAll>,   // sigIn
+                                WholeArrayIn<ScalarAll>,   // lowFilter
+                                WholeArrayIn<ScalarAll>,   // highFilter
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  using ExecutionSignature = void(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
-  ForwardTransform(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                   const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                   vtkm::Id filLen,
+  ForwardTransform(vtkm::Id filLen,
                    vtkm::Id approx_len,
                    vtkm::Id detail_len,
                    bool odd_low,
                    bool odd_high)
-    : lowFilter(loFilter.PrepareForInput(DeviceTag()))
-    , highFilter(hiFilter.PrepareForInput(DeviceTag()))
-    , filterLen(filLen)
+    : filterLen(filLen)
     , approxLen(approx_len)
     , detailLen(detail_len)
     , oddlow(odd_low)
@@ -2923,8 +2909,10 @@ public:
 // Use 64-bit float for convolution calculation
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
-  template <typename InputPortalType, typename OutputPortalType>
+  template <typename InputPortalType, typename FilterPortalType, typename OutputPortalType>
   VTKM_EXEC void operator()(const InputPortalType& signalIn,
+                            const FilterPortalType lowFilter,
+                            const FilterPortalType highFilter,
                             OutputPortalType& coeffOut,
                             const vtkm::Id& workIndex) const
   {
@@ -2959,9 +2947,6 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
   const vtkm::Id filterLen, approxLen, detailLen; // filter and outcome coeff length.
   bool oddlow, oddhigh;
   vtkm::Id xlstart, xhstart;
@@ -2975,27 +2960,21 @@ private:
 };
 
 // Worklet: perform an 1D inverse transform for odd length, symmetric filters.
-template <typename DeviceTag>
 class InverseTransformOdd : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // Input: coeffs,
-                                                           // cA followed by cD
+  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // Input: coeffs, cA followed by cD
+                                WholeArrayIn<ScalarAll>,   // lowFilter
+                                WholeArrayIn<ScalarAll>,   // highFilter
                                 WholeArrayOut<ScalarAll>); // output
-  using ExecutionSignature = void(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
-  InverseTransformOdd(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                      const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                      vtkm::Id filLen,
-                      vtkm::Id ca_len,
-                      vtkm::Id ext_len)
-    : lowFilter(loFilter.PrepareForInput(DeviceTag()))
-    , highFilter(hiFilter.PrepareForInput(DeviceTag()))
-    , filterLen(filLen)
-    , cALen(ca_len)
+  InverseTransformOdd(vtkm::Id filLen, vtkm::Id ca_len, vtkm::Id ext_len)
+    : filterLen(filLen)
+    //, cALen(ca_len)
     , cALen2(ca_len * 2)
     , cALenExtended(ext_len)
   {
@@ -3004,8 +2983,10 @@ public:
 // Use 64-bit float for convolution calculation
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
-  template <typename InputPortalType, typename OutputPortalType>
+  template <typename InputPortalType, typename FilterPortalType, typename OutputPortalType>
   VTKM_EXEC void operator()(const InputPortalType& coeffs,
+                            const FilterPortalType& lowFilter,
+                            const FilterPortalType& highFilter,
                             OutputPortalType& sigOut,
                             vtkm::Id workIndex) const
   {
@@ -3054,37 +3035,27 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
-  const vtkm::Id filterLen;     // filter length.
-  const vtkm::Id cALen;         // Number of actual cAs
+  const vtkm::Id filterLen; // filter length.
+  //const vtkm::Id cALen;         // Number of actual cAs  (Not used)
   const vtkm::Id cALen2;        //  = cALen * 2
   const vtkm::Id cALenExtended; // Number of cA at the beginning of input, followed by cD
 };
 
 // Worklet: perform an 1D inverse transform for even length, symmetric filters.
-template <typename DeviceTag>
 class InverseTransformEven : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // Input: coeffs,
-                                                           // cA followed by cD
+  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // Input: coeffs, cA followed by cD
+                                WholeArrayIn<ScalarAll>,   // lowFilter
+                                WholeArrayIn<ScalarAll>,   // highFilter
                                 WholeArrayOut<ScalarAll>); // output
-  using ExecutionSignature = void(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
-  InverseTransformEven(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                       const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                       vtkm::Id filtL,
-                       vtkm::Id cAL,
-                       vtkm::Id cALExt,
-                       bool m)
-    : lowFilter(loFilter.PrepareForInput(DeviceTag()))
-    , highFilter(hiFilter.PrepareForInput(DeviceTag()))
-    , filterLen(filtL)
-    , cALen(cAL)
+  InverseTransformEven(vtkm::Id filtL, vtkm::Id cAL, vtkm::Id cALExt, bool m)
+    : filterLen(filtL)
+    //, cALen(cAL)
     , cALen2(cAL * 2)
     , cALenExtended(cALExt)
     , matlab(m)
@@ -3094,8 +3065,10 @@ public:
 // Use 64-bit float for convolution calculation
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
-  template <typename InputPortalType, typename OutputPortalType>
+  template <typename InputPortalType, typename FilterPortalType, typename OutputPortalType>
   VTKM_EXEC void operator()(const InputPortalType& coeffs,
+                            const FilterPortalType& lowFilter,
+                            const FilterPortalType& highFilter,
                             OutputPortalType& sigOut,
                             const vtkm::Id& workIndex) const
   {
@@ -3145,11 +3118,8 @@ public:
 #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-    lowFilter,
-    highFilter;
-  const vtkm::Id filterLen;     // filter length.
-  const vtkm::Id cALen;         // Number of actual cAs
+  const vtkm::Id filterLen; // filter length.
+  //const vtkm::Id cALen;         // Number of actual cAs (not used)
   const vtkm::Id cALen2;        //  = cALen * 2
   const vtkm::Id cALenExtended; // Number of cA at the beginning of input, followed by cD
   bool matlab;                  // followed the naming convention from VAPOR

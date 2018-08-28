@@ -139,7 +139,7 @@ public:
       this->PrintedDeviceMsg = true;
     }
 
-    using DispatcherType = vtkm::worklet::DispatcherPointNeighborhood<UpdateLifeState, Device>;
+    using DispatcherType = vtkm::worklet::DispatcherPointNeighborhood<UpdateLifeState>;
 
 
     vtkm::cont::ArrayHandle<vtkm::UInt8> state;
@@ -153,7 +153,9 @@ public:
     input.GetField("state", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(prevstate);
 
     //Update the game state
-    DispatcherType().Invoke(vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
+    DispatcherType dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
 
     //save the results
     vtkm::cont::DataSet output;

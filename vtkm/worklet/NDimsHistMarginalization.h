@@ -94,8 +94,9 @@ public:
         numMarginalVariables++;
         const vtkm::Id nFieldBins = numberOfBins.GetPortalControl().Get(i);
         vtkm::worklet::histogram::To1DIndex binWorklet(nFieldBins);
-        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::To1DIndex, DeviceAdapter>
-          to1DIndexDispatcher(binWorklet);
+        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::To1DIndex> to1DIndexDispatcher(
+          binWorklet);
+        to1DIndexDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(i);
         to1DIndexDispatcher.Invoke(binId[vecIndex], bin1DIndex, bin1DIndex);
       }
@@ -107,9 +108,9 @@ public:
           conditionFunc
         };
         conditionalFreqWorklet.setVar(i);
-        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConditionalFreq<BinaryCompare>,
-                                          DeviceAdapter>
+        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConditionalFreq<BinaryCompare>>
           cfDispatcher(conditionalFreqWorklet);
+        cfDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(i);
         cfDispatcher.Invoke(binId[vecIndex], freqs, freqs);
       }
@@ -138,11 +139,11 @@ public:
       {
         const vtkm::Id nFieldBins = numberOfBins.GetPortalControl().Get(i);
         vtkm::worklet::histogram::ConvertHistBinToND binWorklet(nFieldBins);
-        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND,
-                                          DeviceAdapter>
-          ConvertHistBinToNDDispatcher(binWorklet);
+        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND>
+          convertHistBinToNDDispatcher(binWorklet);
+        convertHistBinToNDDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(marginalVarIdx);
-        ConvertHistBinToNDDispatcher.Invoke(
+        convertHistBinToNDDispatcher.Invoke(
           sparseMarginal1DBinId, sparseMarginal1DBinId, marginalBinId[vecIndex]);
         marginalVarIdx--;
       }
@@ -181,8 +182,9 @@ public:
         numMarginalVariables++;
         const vtkm::Id nFieldBins = numberOfBins.GetPortalControl().Get(i);
         vtkm::worklet::histogram::To1DIndex binWorklet(nFieldBins);
-        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::To1DIndex, DeviceAdapter>
-          to1DIndexDispatcher(binWorklet);
+        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::To1DIndex> to1DIndexDispatcher(
+          binWorklet);
+        to1DIndexDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(i);
         to1DIndexDispatcher.Invoke(binId[vecIndex], bin1DIndex, bin1DIndex);
       }
@@ -203,11 +205,11 @@ public:
       {
         const vtkm::Id nFieldBins = numberOfBins.GetPortalControl().Get(i);
         vtkm::worklet::histogram::ConvertHistBinToND binWorklet(nFieldBins);
-        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND,
-                                          DeviceAdapter>
-          ConvertHistBinToNDDispatcher(binWorklet);
+        vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND>
+          convertHistBinToNDDispatcher(binWorklet);
+        convertHistBinToNDDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(marginalVarIdx);
-        ConvertHistBinToNDDispatcher.Invoke(bin1DIndex, bin1DIndex, marginalBinId[vecIndex]);
+        convertHistBinToNDDispatcher.Invoke(bin1DIndex, bin1DIndex, marginalBinId[vecIndex]);
         marginalVarIdx--;
       }
     }

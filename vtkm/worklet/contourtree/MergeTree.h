@@ -224,8 +224,8 @@ void MergeTree<T, StorageType, DeviceAdapter>::BuildRegularChains()
 
   vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
   ChainDoubler chainDoubler;
-  vtkm::worklet::DispatcherMapField<ChainDoubler, DeviceAdapter> chainDoublerDispatcher(
-    chainDoubler);
+  vtkm::worklet::DispatcherMapField<ChainDoubler> chainDoublerDispatcher(chainDoubler);
+  chainDoublerDispatcher.SetDevice(DeviceAdapter());
 
   // 3. Apply pointer-doubling to build chains to maxima, rocking between two arrays
   for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
@@ -256,8 +256,9 @@ void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedSuperarcs()
   vtkm::Id nExtrema = extrema.GetNumberOfValues();
 
   JoinSuperArcFinder<T> joinSuperArcFinder(isJoinTree);
-  vtkm::worklet::DispatcherMapField<JoinSuperArcFinder<T>, DeviceAdapter>
-    joinSuperArcFinderDispatcher(joinSuperArcFinder);
+  vtkm::worklet::DispatcherMapField<JoinSuperArcFinder<T>> joinSuperArcFinderDispatcher(
+    joinSuperArcFinder);
+  joinSuperArcFinderDispatcher.SetDevice(DeviceAdapter());
   vtkm::cont::ArrayHandleIndex vertexIndexArray(nExtrema);
 
   joinSuperArcFinderDispatcher.Invoke(vertexIndexArray, // input
@@ -308,8 +309,8 @@ void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedArcs(
 
   vtkm::cont::ArrayHandleIndex critVertexIndexArray(nCriticalVerts);
   JoinArcConnector joinArcConnector;
-  vtkm::worklet::DispatcherMapField<JoinArcConnector, DeviceAdapter> joinArcConnectorDispatcher(
-    joinArcConnector);
+  vtkm::worklet::DispatcherMapField<JoinArcConnector> joinArcConnectorDispatcher(joinArcConnector);
+  joinArcConnectorDispatcher.SetDevice(DeviceAdapter());
 
   joinArcConnectorDispatcher.Invoke(critVertexIndexArray, // input
                                     vertexSorter,         // input (whole array)

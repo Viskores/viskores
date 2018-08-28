@@ -138,8 +138,9 @@ public:
       auto coordinates =
         this->Coordinates.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       auto cellset = this->CellSet.ResetCellSetList(StructuredCellSetList());
-      vtkm::worklet::DispatcherMapField<FindCellWorklet, DeviceAdapter>().Invoke(
-        points, cellset, coordinates, cellIds, parametricCoords);
+      vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
+      dispatcher.SetDevice(DeviceAdapter());
+      dispatcher.Invoke(points, cellset, coordinates, cellIds, parametricCoords);
     }
     else
     {

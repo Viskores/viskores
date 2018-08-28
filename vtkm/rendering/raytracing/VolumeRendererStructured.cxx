@@ -818,8 +818,11 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   }
 
   vtkm::cont::Timer<Device> timer;
-  vtkm::worklet::DispatcherMapField<CalcRayStart, Device>(CalcRayStart(this->SpatialExtent))
-    .Invoke(rays.Dir, rays.MinDistance, rays.Distance, rays.MaxDistance, rays.Origin);
+  vtkm::worklet::DispatcherMapField<CalcRayStart> calcRayStartDispatcher(
+    CalcRayStart(this->SpatialExtent));
+  calcRayStartDispatcher.SetDevice(Device());
+  calcRayStartDispatcher.Invoke(
+    rays.Dir, rays.MinDistance, rays.Distance, rays.MaxDistance, rays.Origin);
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("calc_ray_start", time);
@@ -840,18 +843,19 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
     if (isAssocPoints)
     {
-      vtkm::worklet::DispatcherMapField<Sampler<Device, UniformLocator<Device>>, Device>(
+      vtkm::worklet::DispatcherMapField<Sampler<Device, UniformLocator<Device>>> samplerDispatcher(
         Sampler<Device, UniformLocator<Device>>(ColorMap,
                                                 vtkm::Float32(ScalarRange.Min),
                                                 vtkm::Float32(ScalarRange.Max),
                                                 SampleDistance,
-                                                locator))
-        .Invoke(rays.Dir,
-                rays.Origin,
-                rays.MinDistance,
-                rays.MaxDistance,
-                rays.Buffers.at(0).Buffer,
-                *ScalarField);
+                                                locator));
+      samplerDispatcher.SetDevice(Device());
+      samplerDispatcher.Invoke(rays.Dir,
+                               rays.Origin,
+                               rays.MinDistance,
+                               rays.MaxDistance,
+                               rays.Buffers.at(0).Buffer,
+                               *ScalarField);
     }
     else
     {
@@ -876,34 +880,37 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     RectilinearLocator<Device> locator(vertices, Cellset);
     if (isAssocPoints)
     {
-      vtkm::worklet::DispatcherMapField<Sampler<Device, RectilinearLocator<Device>>, Device>(
-        Sampler<Device, RectilinearLocator<Device>>(ColorMap,
-                                                    vtkm::Float32(ScalarRange.Min),
-                                                    vtkm::Float32(ScalarRange.Max),
-                                                    SampleDistance,
-                                                    locator))
-        .Invoke(rays.Dir,
-                rays.Origin,
-                rays.MinDistance,
-                rays.MaxDistance,
-                rays.Buffers.at(0).Buffer,
-                *ScalarField);
+      vtkm::worklet::DispatcherMapField<Sampler<Device, RectilinearLocator<Device>>>
+        samplerDispatcher(
+          Sampler<Device, RectilinearLocator<Device>>(ColorMap,
+                                                      vtkm::Float32(ScalarRange.Min),
+                                                      vtkm::Float32(ScalarRange.Max),
+                                                      SampleDistance,
+                                                      locator));
+      samplerDispatcher.SetDevice(Device());
+      samplerDispatcher.Invoke(rays.Dir,
+                               rays.Origin,
+                               rays.MinDistance,
+                               rays.MaxDistance,
+                               rays.Buffers.at(0).Buffer,
+                               *ScalarField);
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, RectilinearLocator<Device>>,
-                                        Device>(
-        SamplerCellAssoc<Device, RectilinearLocator<Device>>(ColorMap,
-                                                             vtkm::Float32(ScalarRange.Min),
-                                                             vtkm::Float32(ScalarRange.Max),
-                                                             SampleDistance,
-                                                             locator))
-        .Invoke(rays.Dir,
-                rays.Origin,
-                rays.MinDistance,
-                rays.MaxDistance,
-                rays.Buffers.at(0).Buffer,
-                *ScalarField);
+      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, RectilinearLocator<Device>>>
+        rectilinearLocatorDispatcher(
+          SamplerCellAssoc<Device, RectilinearLocator<Device>>(ColorMap,
+                                                               vtkm::Float32(ScalarRange.Min),
+                                                               vtkm::Float32(ScalarRange.Max),
+                                                               SampleDistance,
+                                                               locator));
+      rectilinearLocatorDispatcher.SetDevice(Device());
+      rectilinearLocatorDispatcher.Invoke(rays.Dir,
+                                          rays.Origin,
+                                          rays.MinDistance,
+                                          rays.MaxDistance,
+                                          rays.Buffers.at(0).Buffer,
+                                          *ScalarField);
     }
   }
 

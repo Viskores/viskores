@@ -84,7 +84,8 @@ public:
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    vtkm::worklet::DispatcherMapTopology<triangulate::TriangulateCell, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<triangulate::TriangulateCell> dispatcher;
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(cellSet, vtkm::cont::make_ArrayHandleGroupVec<3>(connectivity));
 
     // Fill in array of output cells per input cell
