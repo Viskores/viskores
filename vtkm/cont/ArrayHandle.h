@@ -498,7 +498,7 @@ public:
   {
     return this->Internals->ExecutionArrayValid
       ? this->Internals->ExecutionArray->GetDeviceAdapterId()
-      : DeviceAdapterIdUndefined{};
+      : DeviceAdapterTagUndefined{};
   }
 
   struct VTKM_ALWAYS_EXPORT InternalStruct

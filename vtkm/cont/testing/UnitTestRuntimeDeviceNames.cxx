@@ -65,7 +65,7 @@ void TestNames()
 {
   DeviceAdapterTagInvalidDeviceId invalidTag;
   vtkm::cont::DeviceAdapterTagError errorTag;
-  vtkm::cont::DeviceAdapterIdUndefined undefinedTag;
+  vtkm::cont::DeviceAdapterTagUndefined undefinedTag;
   vtkm::cont::DeviceAdapterTagSerial serialTag;
   vtkm::cont::DeviceAdapterTagTBB tbbTag;
   vtkm::cont::DeviceAdapterTagOpenMP openmpTag;

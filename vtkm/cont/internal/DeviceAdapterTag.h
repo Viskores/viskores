@@ -72,25 +72,6 @@ private:
   vtkm::Int8 Value;
 };
 
-// Represents when using TryExecute that the functor
-// can be executed on any device instead of a specific
-// one
-struct DeviceAdapterIdAny : DeviceAdapterId
-{
-  constexpr DeviceAdapterIdAny()
-    : DeviceAdapterId(127)
-  {
-  }
-};
-
-struct DeviceAdapterIdUndefined : DeviceAdapterId
-{
-  constexpr DeviceAdapterIdUndefined()
-    : DeviceAdapterId(VTKM_DEVICE_ADAPTER_UNDEFINED)
-  {
-  }
-};
-
 template <typename DeviceAdapter>
 struct DeviceAdapterTraits;
 }
@@ -143,6 +124,13 @@ struct DeviceAdapterTraits;
   };                                                                                               \
   }                                                                                                \
   }
+
+// Represents when using TryExecute that the functor
+// can be executed on any device instead of a specific
+// one
+VTKM_VALID_DEVICE_ADAPTER(Any, VTKM_DEVICE_ADAPTER_ANY)
+
+VTKM_INVALID_DEVICE_ADAPTER(Undefined, VTKM_DEVICE_ADAPTER_UNDEFINED)
 
 /// Checks that the argument is a proper device adapter tag. This is a handy
 /// concept check for functions and classes to make sure that a template

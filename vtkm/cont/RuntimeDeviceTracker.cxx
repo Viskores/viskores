@@ -222,7 +222,7 @@ DeviceAdapterNameType RuntimeDeviceTracker::GetDeviceName(DeviceAdapterId device
       case VTKM_DEVICE_ADAPTER_ERROR:
         return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>::GetName();
       case VTKM_DEVICE_ADAPTER_UNDEFINED:
-        return "Undefined"; // This device id does not have traits.
+        return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagUndefined>::GetName();
       default:
         break;
     }
@@ -232,7 +232,7 @@ DeviceAdapterNameType RuntimeDeviceTracker::GetDeviceName(DeviceAdapterId device
     switch (id)
     {
       case VTKM_DEVICE_ADAPTER_ANY:
-        return "Any"; // This device id does not have traits
+        return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagAny>::GetName();
       default:
         break;
     }

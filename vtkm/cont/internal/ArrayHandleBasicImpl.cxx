@@ -250,7 +250,7 @@ bool ArrayHandleImpl::PrepareForDevice(DeviceAdapterId devId, vtkm::UInt64 sizeO
 DeviceAdapterId ArrayHandleImpl::GetDeviceAdapterId() const
 {
   return this->ExecutionArrayValid ? this->ExecutionInterface->GetDeviceId()
-                                   : DeviceAdapterIdUndefined{};
+                                   : DeviceAdapterTagUndefined{};
 }
 
 
