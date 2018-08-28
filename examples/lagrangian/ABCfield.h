@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/Math.h>
 class ABCfield
 {
 
@@ -27,10 +28,10 @@ public:
     double ep = 0.25;
     double period = 1.0;
 
-    double sinval = ep * sin(period * t);
+    double sinval = ep * vtkm::Sin(period * t);
 
-    velocity[0] = sin(location[2] + sinval) + cos(location[1] + sinval);
-    velocity[1] = sin(location[0] + sinval) + cos(location[2] + sinval);
-    velocity[2] = sin(location[1] + sinval) + cos(location[0] + sinval);
+    velocity[0] = vtkm::Sin(location[2] + sinval) + vtkm::Cos(location[1] + sinval);
+    velocity[1] = vtkm::Sin(location[0] + sinval) + vtkm::Cos(location[2] + sinval);
+    velocity[2] = vtkm::Sin(location[1] + sinval) + vtkm::Cos(location[0] + sinval);
   }
 };
