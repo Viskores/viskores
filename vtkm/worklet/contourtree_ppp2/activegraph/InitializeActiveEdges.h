@@ -126,8 +126,8 @@ public:
       // temporary array for storing edges
       vtkm::Id neigbourComponents[MeshClassType::MAX_OUTDEGREE];
       int currNbrNo = 0;
-      for (vtkm::Int32 nbrNo = 0; nbrNo < meshStructure.GetMaxNumberOfNeighbours(); ++nbrNo)
-        if (neighbourhoodMasks.Get(sortIndex) & 1 << nbrNo)
+      for (vtkm::Id nbrNo = 0; nbrNo < meshStructure.GetMaxNumberOfNeighbours(); ++nbrNo)
+        if (neighbourhoodMasks.Get(sortIndex) & (static_cast<vtkm::Id>(1) << nbrNo))
         {
           neigbourComponents[currNbrNo++] =
             sortIndices.Get(meshStructure.GetNeighbourIndex(meshIndex, nbrNo));

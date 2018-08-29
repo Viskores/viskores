@@ -142,11 +142,11 @@ public:
   {
     if ((outdegreePortal.Get(superID) == 0) && (indegreePortal.Get(superID) == 1))
     { // a leaf
-      contourTreeHyperparentsPortal.Set(superID, superID | (isJoin ? 0LL : IS_ASCENDING));
+      contourTreeHyperparentsPortal.Set(superID, superID | (isJoin ? 0 : IS_ASCENDING));
       contourTreeHyperarcsPortal.Set(
-        superID, maskedIndex(inboundPortal.Get(superID)) | (isJoin ? 0LL : IS_ASCENDING));
+        superID, maskedIndex(inboundPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
       contourTreeSuperarcsPortal.Set(
-        superID, maskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0LL : IS_ASCENDING));
+        superID, maskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
       contourTreeWhenTransferredPortal.Set(superID, nIterations | IS_HYPERNODE);
     } // a leaf
     else
@@ -162,8 +162,8 @@ public:
       {
         // set superarc, &c.
         contourTreeSuperarcsPortal.Set(
-          superID, maskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0LL : IS_ASCENDING));
-        contourTreeHyperparentsPortal.Set(superID, outNeighbour | (isJoin ? 0LL : IS_ASCENDING));
+          superID, maskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
+        contourTreeHyperparentsPortal.Set(superID, outNeighbour | (isJoin ? 0 : IS_ASCENDING));
         contourTreeWhenTransferredPortal.Set(superID, nIterations | IS_SUPERNODE);
       }
     } // not a leaf
@@ -179,9 +179,9 @@ public:
         // test for leaf
         if ((outdegree[superID] == 0) && (indegree[superID] == 1))
                 { // a leaf
-                contourTree.hyperparents[superID] = superID | (isJoin ? 0LL : IS_ASCENDING);
-                contourTree.hyperarcs[superID] = maskedIndex(inbound[superID]) | (isJoin ? 0LL : IS_ASCENDING);
-                contourTree.superarcs[superID] = maskedIndex(inwards[superID]) | (isJoin ? 0LL : IS_ASCENDING);
+                contourTree.hyperparents[superID] = superID | (isJoin ? 0 : IS_ASCENDING);
+                contourTree.hyperarcs[superID] = maskedIndex(inbound[superID]) | (isJoin ? 0 : IS_ASCENDING);
+                contourTree.superarcs[superID] = maskedIndex(inwards[superID]) | (isJoin ? 0 : IS_ASCENDING);
                 contourTree.whenTransferred[superID] = nIterations | IS_HYPERNODE;
                 } // a leaf
         else
@@ -194,8 +194,8 @@ public:
                         continue;
 
                 // set superarc, &c.
-                contourTree.superarcs[superID] = maskedIndex(inwards[superID]) | (isJoin ? 0LL : IS_ASCENDING);
-                contourTree.hyperparents[superID] = outNeighbour | (isJoin ? 0LL : IS_ASCENDING);
+                contourTree.superarcs[superID] = maskedIndex(inwards[superID]) | (isJoin ? 0 : IS_ASCENDING);
+                contourTree.hyperparents[superID] = outNeighbour | (isJoin ? 0 : IS_ASCENDING);
                 contourTree.whenTransferred[superID] = nIterations | IS_SUPERNODE;
                 } // not a leaf
       } // per active supernode

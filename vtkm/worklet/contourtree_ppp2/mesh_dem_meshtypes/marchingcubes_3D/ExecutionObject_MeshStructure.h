@@ -147,7 +147,7 @@ public:
   }
 
   VTKM_EXEC
-  constexpr vtkm::IdComponent GetMaxNumberOfNeighbours() const { return N_FACE_NEIGHBOURS; }
+  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return N_FACE_NEIGHBOURS; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id vertex, vtkm::Id nbrNo) const
@@ -216,6 +216,17 @@ public:
     }
   } // GetNeighbourIndex
 
+// Disable conversion warnings for Add, Subtract, Multiply, Divide on GCC only.
+// GCC creates false positive warnings for signed/unsigned char* operations.
+// This occurs because the values are implicitly casted up to int's for the
+// operation, and than  casted back down to char's when return.
+// This causes a false positive warning, even when the values is within
+// the value types range
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
+
   VTKM_EXEC
   inline vtkm::Id GetExtremalNeighbour(vtkm::Id vertex) const
   { // GetExtremalNeighbour()
@@ -225,11 +236,10 @@ public:
     vtkm::Id slice = this->vertexSlice(vertex);
     vtkm::Id row = this->vertexRow(vertex);
     vtkm::Id col = this->vertexColumn(vertex);
-    const vtkm::Int8 zero = (vtkm::Int8)0;
-    vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : zero) |
-      ((slice == this->nSlices - 1) ? backBit : zero) | ((col == 0) ? leftBit : zero) |
-      ((col == this->nCols - 1) ? rightBit : zero) | ((row == 0) ? topBit : zero) |
-      ((row == this->nRows - 1) ? bottomBit : zero);
+    vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
+      ((slice == this->nSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
+      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
+      ((row == this->nRows - 1) ? bottomBit : 0);
 
     // in what follows, the boundary conditions always reset wasAscent
     // loop downwards so that we pick the same edges as previous versions
@@ -262,11 +272,10 @@ public:
     vtkm::Id slice = this->vertexSlice(vertex);
     vtkm::Id row = this->vertexRow(vertex);
     vtkm::Id col = this->vertexColumn(vertex);
-    const vtkm::Int8 zero = (vtkm::Int8)0;
-    vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : zero) |
-      ((slice == this->nSlices - 1) ? backBit : zero) | ((col == 0) ? leftBit : zero) |
-      ((col == this->nCols - 1) ? rightBit : zero) | ((row == 0) ? topBit : zero) |
-      ((row == this->nRows - 1) ? bottomBit : zero);
+    vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
+      ((slice == this->nSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
+      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
+      ((row == this->nRows - 1) ? bottomBit : 0);
 
     // Initialize "union find"
     int parentId[N_ALL_NEIGHBOURS];
@@ -309,7 +318,7 @@ public:
       {
         for (int edgeNo = 0; edgeNo < 3; ++edgeNo)
         {
-          if (inCubeConnectionsSixPortal.Get(caseNo) & (1 << edgeNo))
+          if (inCubeConnectionsSixPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
           {
             int root0 = cubeVertexPermutationsPortal.Get(
               permIndex)[linkVertexConnectionsSixPortal.Get(edgeNo)[0]];
@@ -328,7 +337,7 @@ public:
       {
         for (int edgeNo = 0; edgeNo < 15; ++edgeNo)
         {
-          if (inCubeConnectionsEighteenPortal.Get(caseNo) & (1 << edgeNo))
+          if (inCubeConnectionsEighteenPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
           {
             int root0 = cubeVertexPermutationsPortal.Get(
               permIndex)[linkVertexConnectionsEighteenPortal.Get(edgeNo)[0]];
@@ -355,12 +364,16 @@ public:
       if (parentId[nbrNo] == nbrNo)
       {
         outDegree++;
-        neighbourComponentMask |= 1 << nbrNo;
+        neighbourComponentMask |= static_cast<vtkm::Id>(1) << nbrNo;
       }
     }
 
     return vtkm::make_Pair(neighbourComponentMask, outDegree);
   } // GetNeighbourComponentsMaskAndDegree()
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif // gcc || clang
 
 
 

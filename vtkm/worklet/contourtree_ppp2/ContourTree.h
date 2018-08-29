@@ -85,8 +85,8 @@ namespace worklet
 namespace contourtree_ppp2
 {
 
-#define N_NODE_COLORS 12
-const char* nodeColors[N_NODE_COLORS] = { // nodeColors
+constexpr int N_NODE_COLORS = 12;
+constexpr const char* nodeColors[N_NODE_COLORS] = { // nodeColors
   "red",  "red4",  "green",   "green4",   "royalblue", "royalblue4",
   "cyan", "cyan4", "magenta", "magenta4", "yellow",    "yellow4"
 }; // nodeColors
@@ -95,8 +95,8 @@ const char* nodeColors[N_NODE_COLORS] = { // nodeColors
 struct SaddlePeakSort
 {
   VTKM_EXEC_CONT
-  bool operator()(const vtkm::Pair<vtkm::Id, vtkm::Id>& a,
-                  const vtkm::Pair<vtkm::Id, vtkm::Id>& b) const
+  inline bool operator()(const vtkm::Pair<vtkm::Id, vtkm::Id>& a,
+                         const vtkm::Pair<vtkm::Id, vtkm::Id>& b) const
   {
     if (a.first < b.first)
       return true;
@@ -161,18 +161,18 @@ public:
   // ROUTINES
 
   // initialises contour tree arrays - rest is done by another class
-  ContourTree();
+  inline ContourTree();
 
   // initialises contour tree arrays - rest is done by another class
   template <typename DeviceAdapter>
-  void Init(vtkm::Id dataSize);
+  inline void Init(vtkm::Id dataSize);
 
   // debug routine
-  void DebugPrint(const char* message, const char* fileName, long lineNum);
+  inline void DebugPrint(const char* message, const char* fileName, long lineNum);
 
   // print routines
   //void PrintDotHyperStructure();
-  void PrintDotSuperStructure();
+  inline void PrintDotSuperStructure();
   //void PrintDotRegularStructure();
 
 }; // class ContourTree
@@ -257,8 +257,8 @@ void ContourTree::PrintDotSuperStructure()
   for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
     vtkm::Id iteration = maskedIndex(whenTransferredPortal.Get(supernode));
-    printf("\tnode s%llu [style=filled,fillcolor=%s]\n",
-           supernodesPortal.Get(supernode),
+    printf("\tnode s%lli [style=filled,fillcolor=%s]\n",
+           (vtkm::Int64)supernodesPortal.Get(supernode),
            nodeColors[iteration % N_NODE_COLORS]);
   } // per supernode
 
@@ -270,15 +270,15 @@ void ContourTree::PrintDotSuperStructure()
       continue;
 
     if (isAscending(superarcsPortal.Get(supernode)))
-      printf("\tedge s%llu -> s%llu[label=S%llu,dir=back]\n",
-             supernodesPortal.Get(maskedIndex(superarcsPortal.Get(supernode))),
-             supernodesPortal.Get(supernode),
-             supernode);
+      printf("\tedge s%lli -> s%lli[label=S%lli,dir=back]\n",
+             (vtkm::Int64)supernodesPortal.Get(maskedIndex(superarcsPortal.Get(supernode))),
+             (vtkm::Int64)supernodesPortal.Get(supernode),
+             (vtkm::Int64)supernode);
     else
-      printf("\tedge s%llu -> s%llu[label=S%llu]\n",
-             supernodesPortal.Get(supernode),
-             supernodesPortal.Get(maskedIndex(superarcsPortal.Get(supernode))),
-             supernode);
+      printf("\tedge s%lli -> s%lli[label=S%lli]\n",
+             (vtkm::Int64)supernodesPortal.Get(supernode),
+             (vtkm::Int64)supernodesPortal.Get(maskedIndex(superarcsPortal.Get(supernode))),
+             (vtkm::Int64)supernode);
   } // per supernode
 
   // now loop through hypernodes to show hyperarcs
@@ -288,19 +288,20 @@ void ContourTree::PrintDotSuperStructure()
     if (noSuchElement(hyperarcsPortal.Get(hypernode)))
       continue;
 
-    printf("\ts%llu -> s%llu [constraint=false][width=5.0][label=\"H%llu\\nW%llu\"]\n",
-           supernodesPortal.Get(hypernodesPortal.Get(hypernode)),
-           supernodesPortal.Get(maskedIndex(hyperarcsPortal.Get(hypernode))),
-           hypernode,
-           maskedIndex(whenTransferredPortal.Get(hypernodesPortal.Get(hypernode))));
+    printf("\ts%lli -> s%lli [constraint=false][width=5.0][label=\"H%lli\\nW%lli\"]\n",
+           (vtkm::Int64)supernodesPortal.Get(hypernodesPortal.Get(hypernode)),
+           (vtkm::Int64)supernodesPortal.Get(maskedIndex(hyperarcsPortal.Get(hypernode))),
+           (vtkm::Int64)hypernode,
+           (vtkm::Int64)maskedIndex(whenTransferredPortal.Get(hypernodesPortal.Get(hypernode))));
   } // per hypernode
 
   // now add the hyperparents
   for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
-    printf("\ts%llu -> s%llu [constraint=false][style=dotted]\n",
-           supernodesPortal.Get(supernode),
-           supernodesPortal.Get(hypernodesPortal.Get(hyperparentsPortal.Get(supernode))));
+    printf(
+      "\ts%lli -> s%lli [constraint=false][style=dotted]\n",
+      (vtkm::Int64)supernodesPortal.Get(supernode),
+      (vtkm::Int64)supernodesPortal.Get(hypernodesPortal.Get(hyperparentsPortal.Get(supernode))));
   } // per supernode
 
   // now use the hyperstructure to define subgraphs
@@ -310,10 +311,10 @@ void ContourTree::PrintDotSuperStructure()
     vtkm::Id childSentinel = (hypernode == hypernodes.GetNumberOfValues() - 1)
       ? supernodes.GetNumberOfValues()
       : hypernodesPortal.Get(hypernode + 1);
-    printf("\tsubgraph H%llu{ ", hypernode);
+    printf("\tsubgraph H%lli{ ", (vtkm::Int64)hypernode);
     for (vtkm::Id supernode = firstChild; supernode < childSentinel; supernode++)
     {
-      printf("s%llu ", supernodesPortal.Get(supernode));
+      printf("s%lli ", (vtkm::Int64)supernodesPortal.Get(supernode));
     }
     printf("}\n");
   } // per hypernode

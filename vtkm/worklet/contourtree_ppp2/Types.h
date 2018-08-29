@@ -70,14 +70,14 @@
 // macros for bit flags
 #ifndef VTKM_USE_64BIT_IDS // 32 bit Ids
 
-#define NO_SUCH_ELEMENT 0x80000000L
-#define TERMINAL_ELEMENT 0x40000000L
-#define IS_SUPERNODE 0x20000000L
-#define IS_HYPERNODE 0x10000000L
-#define IS_ASCENDING 0x08000000L
-#define INDEX_MASK 0x07FFFFFFL
+#define NO_SUCH_ELEMENT 0x80000000
+#define TERMINAL_ELEMENT 0x40000000
+#define IS_SUPERNODE 0x20000000
+#define IS_HYPERNODE 0x10000000
+#define IS_ASCENDING 0x08000000
+#define INDEX_MASK 0x07FFFFFF
 #define CV_OTHER_FLAG                                                                              \
-  0x10000000L // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
+  0x10000000 // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
 
 #else // 64 bit Ids
 

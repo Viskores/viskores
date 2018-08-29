@@ -124,7 +124,7 @@ public:
   }
 
   VTKM_EXEC
-  constexpr vtkm::Int32 GetMaxNumberOfNeighbours() const { return N_INCIDENT_EDGES; }
+  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return N_INCIDENT_EDGES; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id vertex, vtkm::Id edgeNo) const
@@ -157,6 +157,17 @@ public:
   } // GetNeighbourIndex
 
 
+// Disable conversion warnings for Add, Subtract, Multiply, Divide on GCC only.
+// GCC creates false positive warnings for signed/unsigned char* operations.
+// This occurs because the values are implicitly casted up to int's for the
+// operation, and than  casted back down to char's when return.
+// This causes a false positive warning, even when the values is within
+// the value types range
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
+
   // sets outgoing paths for saddles
   VTKM_EXEC
   inline vtkm::Id GetExtremalNeighbour(vtkm::Id vertex) const
@@ -167,10 +178,9 @@ public:
     // get the row and column
     vtkm::Id row = this->vertexRow(vertex);
     vtkm::Id col = this->vertexColumn(vertex);
-    const vtkm::Int8 zero = (vtkm::Int8)0;
-    vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : zero) |
-      ((col == this->nCols - 1) ? rightBit : zero) | ((row == 0) ? topBit : zero) |
-      ((row == this->nRows - 1) ? bottomBit : zero);
+    vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : 0) |
+      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
+      ((row == this->nRows - 1) ? bottomBit : 0);
 
     // in what follows, the boundary conditions always reset wasAscent
     for (vtkm::Id edgeNo = 0; edgeNo < this->nIncidentEdges; edgeNo++)
@@ -211,10 +221,9 @@ public:
     // get the row and column
     vtkm::Id row = this->vertexRow(vertex);
     vtkm::Id col = this->vertexColumn(vertex);
-    const vtkm::Int8 zero = (vtkm::Int8)0;
-    vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : zero) |
-      ((col == this->nCols - 1) ? rightBit : zero) | ((row == 0) ? topBit : zero) |
-      ((row == this->nRows - 1) ? bottomBit : zero);
+    vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : 0) |
+      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
+      ((row == this->nRows - 1) ? bottomBit : 0);
 
     // and initialise the mask
     vtkm::Id neighbourhoodMask = 0;
@@ -234,7 +243,7 @@ public:
         if (getMaxComponents ? (nbrIndex > sortIndex) : (nbrIndex < sortIndex))
         {
           // now set the flag in the neighbourhoodMask
-          neighbourhoodMask |= 1 << edgeNo;
+          neighbourhoodMask |= static_cast<vtkm::Id>(1) << edgeNo;
         }
       }
     } // per edge
@@ -250,37 +259,41 @@ public:
       if ((neighbourhoodMask & 0x30) == 0x20)
       {
         ++outDegree;
-        neighbourComponentMask |= 1 << 5;
+        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 5;
       }
       if ((neighbourhoodMask & 0x18) == 0x10)
       {
         ++outDegree;
-        neighbourComponentMask |= 1 << 4;
+        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 4;
       }
       if ((neighbourhoodMask & 0x0C) == 0x08)
       {
         ++outDegree;
-        neighbourComponentMask |= 1 << 3;
+        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 3;
       }
       if ((neighbourhoodMask & 0x06) == 0x04)
       {
         ++outDegree;
-        neighbourComponentMask |= 1 << 2;
+        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 2;
       }
       if ((neighbourhoodMask & 0x03) == 0x02)
       {
         ++outDegree;
-        neighbourComponentMask |= 1 << 1;
+        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 1;
       }
       if ((neighbourhoodMask & 0x21) == 0x01)
       {
         ++outDegree;
-        neighbourComponentMask |= 1 << 0;
+        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 0;
       }
     } // not a local minimum
 
     return vtkm::make_Pair(neighbourComponentMask, outDegree);
   } // GetNeighbourComponentsMaskAndDegree()
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif // gcc || clang
 
 private:
   sortIndicesPortalType sortIndicesPortal;

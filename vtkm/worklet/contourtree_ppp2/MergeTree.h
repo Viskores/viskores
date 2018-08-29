@@ -238,11 +238,11 @@ void MergeTree<DeviceAdapter>::DebugPrintTree(const char* message,
     vtkm::Id arc = this->arcs.GetPortalConstControl().Get(sortIndex);
     if (noSuchElement(arc))
     {
-      printf("%12ld", -1L);
+      std::cout << "-1" << std::endl;
     }
     else
     {
-      printf("%12llu", mesh.sortOrder.GetPortalConstControl().Get(arc));
+      std::cout << mesh.sortOrder.GetPortalConstControl().Get(arc) << std::endl;
     }
     if (mesh.nDims == 2)
     {
