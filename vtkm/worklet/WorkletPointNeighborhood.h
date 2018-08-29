@@ -55,6 +55,10 @@ namespace vtkm
 namespace worklet
 {
 
+template <typename WorkletType>
+class DispatcherPointNeighborhood;
+
+
 /// \brief Clamps boundary values to the nearest valid i,j,k value
 ///
 /// BoundaryClamp always returns the nearest valid i,j,k value when at an
@@ -80,6 +84,9 @@ struct BoundaryClamp
 class WorkletPointNeighborhoodBase : public vtkm::worklet::internal::WorkletBase
 {
 public:
+  template <typename Worklet>
+  using Dispatcher = vtkm::worklet::DispatcherPointNeighborhood<Worklet>;
+
   /// \brief The \c ExecutionSignature tag to get if you the current iteration is on a boundary.
   ///
   /// A \c WorkletPointNeighborhood operates by iterating over all points using

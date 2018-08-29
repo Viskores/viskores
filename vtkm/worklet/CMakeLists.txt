@@ -42,6 +42,7 @@ set(headers
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
+  Invoker.h
   KdTree3D.h
   KernelSplatter.h
   Keys.h
@@ -50,8 +51,8 @@ set(headers
   Mask.h
   MaskPoints.h
   NDimsEntropy.h
-  NDimsHistogram.h
   NDimsHistMarginalization.h
+  NDimsHistogram.h
   Normalize.h
   OscillatorSource.h
   ParticleAdvection.h

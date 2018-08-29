@@ -39,6 +39,9 @@ namespace vtkm
 namespace worklet
 {
 
+template <typename WorkletType>
+class DispatcherMapField;
+
 /// Base class for worklets that do a simple mapping of field arrays. All
 /// inputs and outputs are on the same domain. That is, all the arrays are the
 /// same size.
@@ -46,6 +49,10 @@ namespace worklet
 class WorkletMapField : public vtkm::worklet::internal::WorkletBase
 {
 public:
+  template <typename Worklet>
+  using Dispatcher = vtkm::worklet::DispatcherMapField<Worklet>;
+
+
   /// \brief A control signature tag for input fields.
   ///
   /// This tag takes a template argument that is a type list tag that limits
