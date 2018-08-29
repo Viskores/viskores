@@ -151,6 +151,9 @@ int main(int argc, char* argv[])
 {
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(DeviceAdapter());
+
   vtkm::cont::Timer<DeviceAdapter> totalTime;
   vtkm::Float64 prevTime = 0;
   vtkm::Float64 currTime = 0;
