@@ -34,6 +34,34 @@
 #include <sstream>
 #include <thread>
 
+namespace
+{
+
+struct VTKM_NEVER_EXPORT GetDeviceNameFunctor
+{
+  vtkm::cont::DeviceAdapterNameType* Names;
+
+  VTKM_CONT
+  GetDeviceNameFunctor(vtkm::cont::DeviceAdapterNameType* names)
+    : Names(names)
+  {
+    std::fill_n(this->Names, VTKM_MAX_DEVICE_ADAPTER_ID, "InvalidDeviceId");
+  }
+
+  template <typename Device>
+  VTKM_CONT void operator()(Device device)
+  {
+    auto id = device.GetValue();
+
+    if (id > 0 && id < VTKM_MAX_DEVICE_ADAPTER_ID)
+    {
+      this->Names[id] = vtkm::cont::DeviceAdapterTraits<Device>::GetName();
+    }
+  }
+};
+
+} // end anon namespace
+
 namespace vtkm
 {
 namespace cont
@@ -45,6 +73,7 @@ namespace detail
 struct RuntimeDeviceTrackerInternals
 {
   bool RuntimeValid[VTKM_MAX_DEVICE_ADAPTER_ID];
+  DeviceAdapterNameType DeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
 };
 }
 
@@ -52,6 +81,9 @@ VTKM_CONT
 RuntimeDeviceTracker::RuntimeDeviceTracker()
   : Internals(new detail::RuntimeDeviceTrackerInternals)
 {
+  GetDeviceNameFunctor functor(this->Internals->DeviceNames);
+  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+
   this->Reset();
 }
 
@@ -176,6 +208,42 @@ vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker()
 #else
   return runtimeDeviceTracker;
 #endif
+}
+
+VTKM_CONT
+DeviceAdapterNameType RuntimeDeviceTracker::GetDeviceName(DeviceAdapterId device) const
+{
+  auto id = device.GetValue();
+
+  if (id < 0)
+  {
+    switch (id)
+    {
+      case VTKM_DEVICE_ADAPTER_ERROR:
+        return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>::GetName();
+      case VTKM_DEVICE_ADAPTER_UNDEFINED:
+        return "Undefined"; // This device id does not have traits.
+      default:
+        break;
+    }
+  }
+  else if (id >= VTKM_MAX_DEVICE_ADAPTER_ID)
+  {
+    switch (id)
+    {
+      case VTKM_DEVICE_ADAPTER_ANY:
+        return "Any"; // This device id does not have traits
+      default:
+        break;
+    }
+  }
+  else // id is valid:
+  {
+    return this->Internals->DeviceNames[id];
+  }
+
+  // Device 0 is invalid:
+  return this->Internals->DeviceNames[0];
 }
 }
 } // namespace vtkm::cont
