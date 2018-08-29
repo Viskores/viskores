@@ -39,6 +39,7 @@ set(headers
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
+  ArrayHandleView.h
   ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
