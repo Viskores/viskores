@@ -95,7 +95,7 @@ public:
       using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
       // Save training data points.
-      Algorithm::Copy(this->Self->GetCoords().GetData(), this->Self->coords);
+      Algorithm::Copy(this->Self->GetCoordinates().GetData(), this->Self->coords);
 
       // generate unique id for each input point
       vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(
@@ -159,7 +159,7 @@ public:
   };
 
   VTKM_CONT
-  const HandleType PrepareForExecutionImp(vtkm::cont::DeviceAdapterId deviceId) const override
+  const HandleType PrepareForExecutionImpl(vtkm::cont::DeviceAdapterId deviceId) const override
   {
     const bool success =
       vtkm::cont::TryExecuteOnDevice(deviceId, PrepareForExecutionFunctor(), *this, ExecHandle);

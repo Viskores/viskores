@@ -27,6 +27,7 @@ set(headers
   CellInside.h
   CellInterpolate.h
   CellLocator.h
+  CellLocatorUniformGrid.h
   CellMeasure.h
   ColorTable.h
   ConnectivityExplicit.h

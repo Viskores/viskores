@@ -129,8 +129,8 @@ public:
     //  { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
     vtkm::cont::PointLocatorUniformGrid locator(
       { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    locator.SetCoords(coord);
-    locator.Build();
+    locator.SetCoordinates(coord);
+    locator.Update();
 
     ///// randomly generate testing points/////
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;

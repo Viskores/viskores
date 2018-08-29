@@ -54,6 +54,7 @@ set(headers
   CellLocator.h
   CellLocatorHelper.h
   CellLocatorTwoLevelUniformGrid.h
+  CellLocatorUniformGrid.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
