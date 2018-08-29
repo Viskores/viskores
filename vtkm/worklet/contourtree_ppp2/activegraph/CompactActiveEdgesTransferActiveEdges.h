@@ -84,7 +84,7 @@ public:
                                 WholeArrayIn<IdType> newPosition,
                                 WholeArrayIn<IdType> newOutdegree,
                                 WholeArrayIn<IdType> activeEdges,
-                                WholeArrayInOut<IdType> newActiveEdges,
+                                WholeArrayOut<IdType> newActiveEdges,
                                 WholeArrayInOut<IdType> edgeFar,
                                 WholeArrayInOut<IdType> firstEdge,
                                 WholeArrayInOut<IdType> outdegree,
@@ -96,13 +96,13 @@ public:
   VTKM_EXEC_CONT
   CompactActiveEdgesTransferActiveEdges() {}
 
-  template <typename InFieldPortalType, typename InOutFieldPortalType>
+  template <typename InFieldPortalType, typename OutFieldPortalType, typename InOutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertexId,
                             const vtkm::Id activeVertex,
                             const InFieldPortalType& newPositionPortal,
                             const InFieldPortalType& newOutdegreePortal,
                             const InFieldPortalType& activeEdgesPortal,
-                            const InOutFieldPortalType& newActiveEdgesPortal,
+                            const OutFieldPortalType& newActiveEdgesPortal,
                             const InOutFieldPortalType& edgeFarPortal,
                             const InOutFieldPortalType& firstEdgePortal,
                             const InOutFieldPortalType& outdegreePortal,

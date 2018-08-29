@@ -296,10 +296,15 @@ void ActiveGraph<DeviceAdapter>::Initialise(Mesh& mesh,
   DeviceAlgorithm::ScanExclusive(oneIfCriticalArrayHandle, inverseIndex);
 
   // now we can compute how many critical points we carry forward
-  vtkm::Id nCriticalPoints =
-    inverseIndex.GetPortalConstControl().Get(inverseIndex.GetNumberOfValues() - 1) +
-    oneIfCriticalFunctor(
-      outDegrees.GetPortalConstControl().Get(outDegrees.GetNumberOfValues() - 1));
+  vtkm::Id nCriticalPoints = 0;
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> temp;
+    temp.PrepareForOutput(2, DeviceAdapter());
+    DeviceAlgorithm::CopySubRange(inverseIndex, inverseIndex.GetNumberOfValues() - 1, 1, temp);
+    DeviceAlgorithm::CopySubRange(outDegrees, outDegrees.GetNumberOfValues() - 1, 1, temp, 1);
+    auto portal = temp.GetPortalControl();
+    nCriticalPoints = portal.Get(0) + oneIfCriticalFunctor(portal.Get(1));
+  }
 
   // we need to keep track of what the index of each vertex is in the active graph
   // for most vertices, this should have the NO_SUCH_VERTEX flag set
@@ -340,9 +345,15 @@ void ActiveGraph<DeviceAdapter>::Initialise(Mesh& mesh,
   // VTKM Version of the prefix sum
   DeviceAlgorithm::ScanExclusive(outdegree, firstEdge);
   // Compute the number of critical edges
-  vtkm::Id nCriticalEdges =
-    firstEdge.GetPortalConstControl().Get(firstEdge.GetNumberOfValues() - 1) +
-    outdegree.GetPortalConstControl().Get(outdegree.GetNumberOfValues() - 1);
+  vtkm::Id nCriticalEdges = 0;
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> temp;
+    temp.PrepareForOutput(2, DeviceAdapter());
+    DeviceAlgorithm::CopySubRange(firstEdge, firstEdge.GetNumberOfValues() - 1, 1, temp);
+    DeviceAlgorithm::CopySubRange(outdegree, outdegree.GetNumberOfValues() - 1, 1, temp, 1);
+    auto portal = temp.GetPortalControl();
+    nCriticalEdges = portal.Get(0) + portal.Get(1);
+  }
 
   AllocateEdgeArrays(nCriticalEdges);
 
@@ -442,10 +453,10 @@ template <typename DeviceAdapter>
 void ActiveGraph<DeviceAdapter>::TransferSaddleStarts()
 { // TransferSaddleStarts()
   // update all of the edges so that the far end resets to the result of the ascent in the previous step
-  active_graph_inc_ns::TransferSaddleStartsResetEdgeFar resetEdgeFarWorklet;
+
   vtkm::worklet::DispatcherMapField<active_graph_inc_ns::TransferSaddleStartsResetEdgeFar,
                                     DeviceAdapter>
-    resetEdgeFarDispatcher(resetEdgeFarWorklet);
+    resetEdgeFarDispatcher;
   resetEdgeFarDispatcher.Invoke(activeEdges, hyperarcs, edgeFar);
 
   // in parallel, we need to create a vector to count the first edge for each vertex
@@ -453,12 +464,10 @@ void ActiveGraph<DeviceAdapter>::TransferSaddleStarts()
   newOutdegree.Allocate(activeVertices.GetNumberOfValues());
 
   // this will be a stream compaction later, but for now we'll do it the serial way
-  active_graph_inc_ns::TransferSaddleStartsSetNewOutdegreeForSaddles
-    setNewOutdegreeForSaddlesWorklet;
   vtkm::worklet::DispatcherMapField<
     active_graph_inc_ns::TransferSaddleStartsSetNewOutdegreeForSaddles,
     DeviceAdapter>
-    setNewOutdegreeForSaddlesDispatcher(setNewOutdegreeForSaddlesWorklet);
+    setNewOutdegreeForSaddlesDispatcher;
   setNewOutdegreeForSaddlesDispatcher.Invoke(
     activeVertices, firstEdge, outdegree, activeEdges, hyperarcs, edgeFar, newOutdegree);
 
@@ -472,9 +481,16 @@ void ActiveGraph<DeviceAdapter>::TransferSaddleStarts()
   //                 vtkm::cont::ArrayPortalToIteratorBegin(newFirstEdge.GetPortalControl()) + 1);
   // VTK:M verison of the prefix sum
   DeviceAlgorithm::ScanExclusive(newOutdegree, newFirstEdge);
-  vtkm::Id nEdgesToSort =
-    newFirstEdge.GetPortalConstControl().Get(newFirstEdge.GetNumberOfValues() - 1) +
-    newOutdegree.GetPortalConstControl().Get(newOutdegree.GetNumberOfValues() - 1);
+
+  vtkm::Id nEdgesToSort = 0;
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> temp;
+    temp.PrepareForOutput(2, DeviceAdapter());
+    DeviceAlgorithm::CopySubRange(newFirstEdge, newFirstEdge.GetNumberOfValues() - 1, 1, temp);
+    DeviceAlgorithm::CopySubRange(newOutdegree, newOutdegree.GetNumberOfValues() - 1, 1, temp, 1);
+    auto portal = temp.GetPortalControl();
+    nEdgesToSort = portal.Get(0) + portal.Get(1);
+  }
 
   // now we write only the active saddle edges to the sorting array
   edgeSorter
@@ -586,12 +602,21 @@ void ActiveGraph<DeviceAdapter>::CompactActiveEdges()
   vtkm::cont::ArrayHandle<vtkm::Id> newPosition;
   // newPosition.Allocate(nActiveVertices);   // Not necessary. ScanExclusive takes care of this.
   DeviceAlgorithm::ScanExclusive(newOutdegree, newPosition);
-  vtkm::Id nNewEdges = newPosition.GetPortalControl().Get(nActiveVertices - 1) +
-    newOutdegree.GetPortalControl().Get(nActiveVertices - 1);
+
+  vtkm::Id nNewEdges = 0;
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> temp;
+    temp.PrepareForOutput(2, DeviceAdapter());
+    DeviceAlgorithm::CopySubRange(newPosition, nActiveVertices - 1, 1, temp);
+    DeviceAlgorithm::CopySubRange(newOutdegree, nActiveVertices - 1, 1, temp, 1);
+    auto portal = temp.GetPortalControl();
+    nNewEdges = portal.Get(0) + portal.Get(1);
+  }
+
 
   // create a temporary vector for copying
   IdArrayType newActiveEdges;
-  newActiveEdges.Allocate(nNewEdges);
+  newActiveEdges.PrepareForOutput(nNewEdges, DeviceAdapter());
   // overwriting hyperarcs in parallel is safe, as the worst than can happen is
   // that another valid ascent is found; for comparison and validation purposes
   // however it makes sense to have a `canoical' computation. To achieve this
@@ -610,7 +635,7 @@ void ActiveGraph<DeviceAdapter>::CompactActiveEdges()
                                        newPosition,    // (input)
                                        newOutdegree,   // (input)
                                        activeEdges,    // (input)
-                                       newActiveEdges, // (input/output)
+                                       newActiveEdges, // (output)
                                        edgeFar,        // (input/output)
                                        firstEdge,      // (input/output)
                                        outdegree,      // (input/output)
@@ -693,9 +718,16 @@ void ActiveGraph<DeviceAdapter>::FindSuperAndHyperNodes(MergeTree<DeviceAdapter>
     hyperarcs, oneIfSupernodeFunctor);
   DeviceAlgorithm::ScanExclusive(oneIfSupernodeArrayHandle, newSupernodePosition);
 
-  nSupernodes =
-    newSupernodePosition.GetPortalConstControl().Get(newSupernodePosition.GetNumberOfValues() - 1) +
-    oneIfSupernodeFunctor(hyperarcs.GetPortalConstControl().Get(hyperarcs.GetNumberOfValues() - 1));
+  nSupernodes = 0;
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> temp;
+    temp.PrepareForOutput(2, DeviceAdapter());
+    DeviceAlgorithm::CopySubRange(
+      newSupernodePosition, newSupernodePosition.GetNumberOfValues() - 1, 1, temp);
+    DeviceAlgorithm::CopySubRange(hyperarcs, hyperarcs.GetNumberOfValues() - 1, 1, temp, 1);
+    auto portal = temp.GetPortalControl();
+    nSupernodes = portal.Get(0) + oneIfSupernodeFunctor(portal.Get(1));
+  }
   tree.supernodes.ReleaseResources();
   tree.supernodes.Allocate(nSupernodes);
 
@@ -716,9 +748,16 @@ void ActiveGraph<DeviceAdapter>::FindSuperAndHyperNodes(MergeTree<DeviceAdapter>
     hyperarcs, oneIfHypernodeFunctor);
   DeviceAlgorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
-  nHypernodes =
-    newHypernodePosition.GetPortalConstControl().Get(newHypernodePosition.GetNumberOfValues() - 1) +
-    oneIfHypernodeFunctor(hyperarcs.GetPortalConstControl().Get(hyperarcs.GetNumberOfValues() - 1));
+  nHypernodes = 0;
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> temp;
+    temp.PrepareForOutput(2, DeviceAdapter());
+    DeviceAlgorithm::CopySubRange(
+      newHypernodePosition, newHypernodePosition.GetNumberOfValues() - 1, 1, temp);
+    DeviceAlgorithm::CopySubRange(hyperarcs, hyperarcs.GetNumberOfValues() - 1, 1, temp, 1);
+    auto portal = temp.GetPortalControl();
+    nHypernodes = portal.Get(0) + oneIfHypernodeFunctor(portal.Get(1));
+  }
 
   tree.hypernodes.ReleaseResources();
   tree.hypernodes.Allocate(globalIndex.GetNumberOfValues());

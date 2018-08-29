@@ -340,10 +340,17 @@ void ContourTreeMaker<DeviceAdapter>::ComputeHyperAndSuperStructure()
     contourTree.whenTransferred, oneIfHypernodeFunctor);
   DeviceAlgorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
-  vtkm::Id nHypernodes =
-    newHypernodePosition.GetPortalConstControl().Get(newHypernodePosition.GetNumberOfValues() - 1) +
-    oneIfHypernodeFunctor(contourTree.whenTransferred.GetPortalConstControl().Get(
-      contourTree.whenTransferred.GetNumberOfValues() - 1));
+  vtkm::Id nHypernodes = 0;
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> temp;
+    temp.PrepareForOutput(2, DeviceAdapter());
+    DeviceAlgorithm::CopySubRange(
+      newHypernodePosition, newHypernodePosition.GetNumberOfValues() - 1, 1, temp);
+    DeviceAlgorithm::CopySubRange(
+      contourTree.whenTransferred, contourTree.whenTransferred.GetNumberOfValues() - 1, 1, temp, 1);
+    auto portal = temp.GetPortalControl();
+    nHypernodes = portal.Get(0) + oneIfHypernodeFunctor(portal.Get(1));
+  }
 
   IdArrayType newHypernodes;
   newHypernodes.Allocate(nHypernodes);

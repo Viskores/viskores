@@ -82,13 +82,13 @@ namespace active_graph_inc
 class TransferSaddleStartsSetNewOutdegreeForSaddles : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeVertices,        // (input) active edges
-                                WholeArrayIn<IdType> firstEdge,        // (input) first edge
-                                WholeArrayIn<IdType> outdegree,        // (input) outdegree
-                                WholeArrayIn<IdType> activeEdges,      // (input) active edges
-                                WholeArrayIn<IdType> hyperarcs,        // (input) hyperarcs
-                                WholeArrayIn<IdType> edgeFar,          // (input) edgeFar
-                                WholeArrayInOut<IdType> newOutdegree); // (output) new outdegree
+  typedef void ControlSignature(FieldIn<IdType> activeVertices,      // (input) active edges
+                                WholeArrayIn<IdType> firstEdge,      // (input) first edge
+                                WholeArrayIn<IdType> outdegree,      // (input) outdegree
+                                WholeArrayIn<IdType> activeEdges,    // (input) active edges
+                                WholeArrayIn<IdType> hyperarcs,      // (input) hyperarcs
+                                WholeArrayIn<IdType> edgeFar,        // (input) edgeFar
+                                WholeArrayOut<IdType> newOutdegree); // (output) new outdegree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7);
   typedef _1 InputDomain;
 
@@ -96,7 +96,7 @@ public:
   VTKM_EXEC_CONT
   TransferSaddleStartsSetNewOutdegreeForSaddles() {}
 
-  template <typename InOutFieldPortalType, typename InFieldPortalType>
+  template <typename OutFieldPortalType, typename InFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertexId,
                             const vtkm::Id vertex,
                             const InFieldPortalType& firstEdgePortal,
@@ -104,7 +104,7 @@ public:
                             const InFieldPortalType& activeEdgesPortal,
                             const InFieldPortalType& hyperarcsPortal,
                             const InFieldPortalType& edgeFarPortal,
-                            const InOutFieldPortalType& newOutdegreePortal) const
+                            const OutFieldPortalType& newOutdegreePortal) const
   {
     // first start found
     vtkm::Id firstExt = (vtkm::Id)NO_SUCH_ELEMENT;
