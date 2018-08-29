@@ -3,14 +3,11 @@
 # Compares the output from BenchmarkDeviceAdapter from the serial
 # device to a parallel device and prints a table containing the results.
 #
-# While this was written for the device adapter algorithms, it could be used
-# to compare any VTKM benchmark output.
-#
 # Example usage:
 #
 # $ BenchmarkDeviceAdapter_SERIAL > serial.out
 # $ BenchmarkDeviceAdapter_TBB > tbb.out
-# $ devAlgoBenchSummary.py serial.out tbb.out
+# $ benchCompare.py serial.out tbb.out
 #
 #
 # The number of threads (optional -- only used to generate the "Warn" column)
