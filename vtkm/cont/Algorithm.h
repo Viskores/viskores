@@ -328,7 +328,7 @@ struct Algorithm
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
                              vtkm::cont::ArrayHandle<U, COut>& output)
   {
-    Copy(vtkm::cont::DeviceAdapterIdAny(), input, output);
+    Copy(vtkm::cont::DeviceAdapterTagAny(), input, output);
   }
 
 
@@ -345,7 +345,7 @@ struct Algorithm
                                const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
                                vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    CopyIf(vtkm::cont::DeviceAdapterIdAny(), input, stencil, output);
+    CopyIf(vtkm::cont::DeviceAdapterTagAny(), input, stencil, output);
   }
 
 
@@ -365,7 +365,7 @@ struct Algorithm
                                vtkm::cont::ArrayHandle<T, COut>& output,
                                UnaryPredicate unary_predicate)
   {
-    CopyIf(vtkm::cont::DeviceAdapterIdAny(), input, stencil, output, unary_predicate);
+    CopyIf(vtkm::cont::DeviceAdapterTagAny(), input, stencil, output, unary_predicate);
   }
 
 
@@ -389,7 +389,7 @@ struct Algorithm
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0)
   {
-    return CopySubRange(vtkm::cont::DeviceAdapterIdAny(),
+    return CopySubRange(vtkm::cont::DeviceAdapterTagAny(),
                         input,
                         inputStartIndex,
                         numberOfElementsToCopy,
@@ -411,7 +411,7 @@ struct Algorithm
                                     const vtkm::cont::ArrayHandle<T, CVal>& values,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output)
   {
-    LowerBounds(vtkm::cont::DeviceAdapterIdAny(), input, values, output);
+    LowerBounds(vtkm::cont::DeviceAdapterTagAny(), input, values, output);
   }
 
 
@@ -431,7 +431,7 @@ struct Algorithm
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output,
                                     BinaryCompare binary_compare)
   {
-    LowerBounds(vtkm::cont::DeviceAdapterIdAny(), input, values, output, binary_compare);
+    LowerBounds(vtkm::cont::DeviceAdapterTagAny(), input, values, output, binary_compare);
   }
 
 
@@ -446,7 +446,7 @@ struct Algorithm
   VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<vtkm::Id, CIn>& input,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& values_output)
   {
-    LowerBounds(vtkm::cont::DeviceAdapterIdAny(), input, values_output);
+    LowerBounds(vtkm::cont::DeviceAdapterTagAny(), input, values_output);
   }
 
 
@@ -462,7 +462,7 @@ struct Algorithm
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
-    return Reduce(vtkm::cont::DeviceAdapterIdAny(), input, initialValue);
+    return Reduce(vtkm::cont::DeviceAdapterTagAny(), input, initialValue);
   }
 
 
@@ -481,7 +481,7 @@ struct Algorithm
                             U initialValue,
                             BinaryFunctor binary_functor)
   {
-    return Reduce(vtkm::cont::DeviceAdapterIdAny(), input, initialValue, binary_functor);
+    return Reduce(vtkm::cont::DeviceAdapterTagAny(), input, initialValue, binary_functor);
   }
 
 
@@ -521,7 +521,7 @@ struct Algorithm
                                     BinaryFunctor binary_functor)
   {
     ReduceByKey(
-      vtkm::cont::DeviceAdapterIdAny(), keys, values, keys_output, values_output, binary_functor);
+      vtkm::cont::DeviceAdapterTagAny(), keys, values, keys_output, values_output, binary_functor);
   }
 
 
@@ -538,7 +538,7 @@ struct Algorithm
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    return ScanInclusive(vtkm::cont::DeviceAdapterIdAny(), input, output);
+    return ScanInclusive(vtkm::cont::DeviceAdapterTagAny(), input, output);
   }
 
 
@@ -557,7 +557,7 @@ struct Algorithm
                                             const vtkm::cont::ArrayHandle<T, CIn>& input,
                                             vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    return StreamingScanExclusive(vtkm::cont::DeviceAdapterIdAny(), numBlocks, input, output);
+    return StreamingScanExclusive(vtkm::cont::DeviceAdapterTagAny(), numBlocks, input, output);
   }
 
 
@@ -576,7 +576,7 @@ struct Algorithm
                                    vtkm::cont::ArrayHandle<T, COut>& output,
                                    BinaryFunctor binary_functor)
   {
-    return ScanInclusive(vtkm::cont::DeviceAdapterIdAny(), input, output, binary_functor);
+    return ScanInclusive(vtkm::cont::DeviceAdapterTagAny(), input, output, binary_functor);
   }
 
 
@@ -607,7 +607,7 @@ struct Algorithm
                                            BinaryFunctor binary_functor)
   {
     ScanInclusiveByKey(
-      vtkm::cont::DeviceAdapterIdAny(), keys, values, values_output, binary_functor);
+      vtkm::cont::DeviceAdapterTagAny(), keys, values, values_output, binary_functor);
   }
 
 
@@ -625,7 +625,7 @@ struct Algorithm
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& values_output)
   {
-    ScanInclusiveByKey(vtkm::cont::DeviceAdapterIdAny(), keys, values, values_output);
+    ScanInclusiveByKey(vtkm::cont::DeviceAdapterTagAny(), keys, values, values_output);
   }
 
 
@@ -642,7 +642,7 @@ struct Algorithm
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    return ScanExclusive(vtkm::cont::DeviceAdapterIdAny(), input, output);
+    return ScanExclusive(vtkm::cont::DeviceAdapterTagAny(), input, output);
   }
 
 
@@ -664,7 +664,7 @@ struct Algorithm
                                    const T& initialValue)
   {
     return ScanExclusive(
-      vtkm::cont::DeviceAdapterIdAny(), input, output, binaryFunctor, initialValue);
+      vtkm::cont::DeviceAdapterTagAny(), input, output, binaryFunctor, initialValue);
   }
 
 
@@ -692,7 +692,7 @@ struct Algorithm
                                            BinaryFunctor binaryFunctor)
   {
     ScanExclusiveByKey(
-      vtkm::cont::DeviceAdapterIdAny(), keys, values, output, initialValue, binaryFunctor);
+      vtkm::cont::DeviceAdapterTagAny(), keys, values, output, initialValue, binaryFunctor);
   }
 
 
@@ -710,7 +710,7 @@ struct Algorithm
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output)
   {
-    ScanExclusiveByKey(vtkm::cont::DeviceAdapterIdAny(), keys, values, output);
+    ScanExclusiveByKey(vtkm::cont::DeviceAdapterTagAny(), keys, values, output);
   }
 
 
@@ -724,7 +724,7 @@ struct Algorithm
   template <class Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
-    Schedule(vtkm::cont::DeviceAdapterIdAny(), functor, numInstances);
+    Schedule(vtkm::cont::DeviceAdapterTagAny(), functor, numInstances);
   }
 
 
@@ -738,7 +738,7 @@ struct Algorithm
   template <class Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id3 rangeMax)
   {
-    Schedule(vtkm::cont::DeviceAdapterIdAny(), functor, rangeMax);
+    Schedule(vtkm::cont::DeviceAdapterTagAny(), functor, rangeMax);
   }
 
 
@@ -751,7 +751,7 @@ struct Algorithm
   template <typename T, class Storage>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
-    Sort(vtkm::cont::DeviceAdapterIdAny(), values);
+    Sort(vtkm::cont::DeviceAdapterTagAny(), values);
   }
 
 
@@ -766,7 +766,7 @@ struct Algorithm
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
                              BinaryCompare binary_compare)
   {
-    Sort(vtkm::cont::DeviceAdapterIdAny(), values, binary_compare);
+    Sort(vtkm::cont::DeviceAdapterTagAny(), values, binary_compare);
   }
 
 
@@ -781,7 +781,7 @@ struct Algorithm
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
-    SortByKey(vtkm::cont::DeviceAdapterIdAny(), keys, values);
+    SortByKey(vtkm::cont::DeviceAdapterTagAny(), keys, values);
   }
 
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
@@ -797,7 +797,7 @@ struct Algorithm
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   BinaryCompare binary_compare)
   {
-    SortByKey(vtkm::cont::DeviceAdapterIdAny(), keys, values, binary_compare);
+    SortByKey(vtkm::cont::DeviceAdapterTagAny(), keys, values, binary_compare);
   }
 
 
@@ -805,7 +805,7 @@ struct Algorithm
   {
     vtkm::cont::TryExecuteOnDevice(devId, detail::SynchronizeFunctor());
   }
-  VTKM_CONT static void Synchronize() { Synchronize(vtkm::cont::DeviceAdapterIdAny()); }
+  VTKM_CONT static void Synchronize() { Synchronize(vtkm::cont::DeviceAdapterTagAny()); }
 
 
   template <typename T,
@@ -836,7 +836,7 @@ struct Algorithm
                                   vtkm::cont::ArrayHandle<V, StorageV>& output,
                                   BinaryFunctor binaryFunctor)
   {
-    Transform(vtkm::cont::DeviceAdapterIdAny(), input1, input2, output, binaryFunctor);
+    Transform(vtkm::cont::DeviceAdapterTagAny(), input1, input2, output, binaryFunctor);
   }
 
 
@@ -849,7 +849,7 @@ struct Algorithm
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
-    Unique(vtkm::cont::DeviceAdapterIdAny(), values);
+    Unique(vtkm::cont::DeviceAdapterTagAny(), values);
   }
 
 
@@ -864,7 +864,7 @@ struct Algorithm
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
-    Unique(vtkm::cont::DeviceAdapterIdAny(), values, binary_compare);
+    Unique(vtkm::cont::DeviceAdapterTagAny(), values, binary_compare);
   }
 
 
@@ -881,7 +881,7 @@ struct Algorithm
                                     const vtkm::cont::ArrayHandle<T, CVal>& values,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output)
   {
-    UpperBounds(vtkm::cont::DeviceAdapterIdAny(), input, values, output);
+    UpperBounds(vtkm::cont::DeviceAdapterTagAny(), input, values, output);
   }
 
 
@@ -901,7 +901,7 @@ struct Algorithm
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output,
                                     BinaryCompare binary_compare)
   {
-    UpperBounds(vtkm::cont::DeviceAdapterIdAny(), input, values, output, binary_compare);
+    UpperBounds(vtkm::cont::DeviceAdapterTagAny(), input, values, output, binary_compare);
   }
 
 
@@ -916,7 +916,7 @@ struct Algorithm
   VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<vtkm::Id, CIn>& input,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& values_output)
   {
-    UpperBounds(vtkm::cont::DeviceAdapterIdAny(), input, values_output);
+    UpperBounds(vtkm::cont::DeviceAdapterTagAny(), input, values_output);
   }
 };
 }
