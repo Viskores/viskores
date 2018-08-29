@@ -36,6 +36,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -385,6 +386,52 @@ private:
           const ValueType result_v = result.GetPortalConstControl().Get(value_index);
           const ValueType correct_value = implicit.GetPortalConstControl().Get(key_index);
           const ValueType control_value = permutation.GetPortalConstControl().Get(value_index);
+          VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Implicit Handle Failed");
+          VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Implicit Handle Failed");
+        }
+      }
+    }
+  };
+
+  struct TestViewAsInput
+  {
+    template <typename ValueType>
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      const vtkm::Id length = ARRAY_SIZE;
+
+      using FunctorType = ::fancy_array_detail::IndexSquared<ValueType>;
+
+      using ValueHandleType = vtkm::cont::ArrayHandleImplicit<FunctorType>;
+      using ViewHandleType = vtkm::cont::ArrayHandleView<ValueHandleType>;
+
+      FunctorType functor;
+      for (vtkm::Id start_pos = 0; start_pos < length; start_pos += length / 4)
+      {
+        const vtkm::Id counting_length = length - start_pos;
+
+        ValueHandleType implicit = vtkm::cont::make_ArrayHandleImplicit(functor, length);
+
+        ViewHandleType view =
+          vtkm::cont::make_ArrayHandleView(implicit, start_pos, counting_length);
+
+        vtkm::cont::printSummary_ArrayHandle(view, std::cout);
+        std::cout << std::endl;
+
+        vtkm::cont::ArrayHandle<ValueType> result;
+
+        vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag> dispatcher;
+        dispatcher.Invoke(view, result);
+
+        //verify that the control portal works
+        for (vtkm::Id i = 0; i < counting_length; ++i)
+        {
+          const vtkm::Id value_index = i;
+          const vtkm::Id key_index = start_pos + i;
+
+          const ValueType result_v = result.GetPortalConstControl().Get(value_index);
+          const ValueType correct_value = implicit.GetPortalConstControl().Get(key_index);
+          const ValueType control_value = view.GetPortalConstControl().Get(value_index);
           VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Implicit Handle Failed");
           VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Implicit Handle Failed");
         }
@@ -829,6 +876,47 @@ private:
     }
   };
 
+  struct TestViewAsOutput
+  {
+    template <typename ValueType>
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      const vtkm::Id length = ARRAY_SIZE;
+
+      using ValueHandleType = vtkm::cont::ArrayHandle<ValueType>;
+      using ViewHandleType = vtkm::cont::ArrayHandleView<ValueHandleType>;
+
+      using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
+      vtkm::cont::ArrayHandle<ValueType> input;
+      using Portal = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
+      input.Allocate(length);
+      Portal inputPortal = input.GetPortalControl();
+      for (vtkm::Id i = 0; i < length; ++i)
+      {
+        inputPortal.Set(i, ValueType(ComponentType(i)));
+      }
+
+      ValueHandleType values;
+      values.Allocate(length * 2);
+
+      ViewHandleType view = vtkm::cont::make_ArrayHandleView(values, length, length);
+      vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag> dispatcher;
+      dispatcher.Invoke(input, view);
+
+      vtkm::cont::printSummary_ArrayHandle(view, std::cout);
+      std::cout << std::endl;
+
+      //verify that the control portal works
+      for (vtkm::Id i = 0; i < length; ++i)
+      {
+        const ValueType result_v = view.GetPortalConstControl().Get(i);
+        const ValueType correct_value = ValueType(ComponentType(i));
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                         "Permutation Handle Failed As Output");
+      }
+    }
+  };
+
   struct TestZipAsOutput
   {
     template <typename KeyType, typename ValueType>
@@ -950,6 +1038,11 @@ private:
         TestingFancyArrayHandles<DeviceAdapterTag>::TestPermutationAsInput(), HandleTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleView as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestViewAsInput(), HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleTransform as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(
         TestingFancyArrayHandles<DeviceAdapterTag>::TestTransformAsInput(), HandleTypesToTest());
@@ -1006,6 +1099,11 @@ private:
       std::cout << "Testing ArrayHandlePermutation as Output" << std::endl;
       vtkm::testing::Testing::TryTypes(
         TestingFancyArrayHandles<DeviceAdapterTag>::TestPermutationAsOutput(), HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleView as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestViewAsOutput(), HandleTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleDiscard as Output" << std::endl;
