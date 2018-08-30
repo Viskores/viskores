@@ -513,8 +513,9 @@ public:
     // 2: For each cell, find the number of top level bins they intersect
     vtkm::cont::ArrayHandle<vtkm::Id> binCounts;
     CountBinsL1 countL1(ls.TopLevel);
-    vtkm::worklet::DispatcherMapTopology<CountBinsL1, DeviceAdapter>(countL1).Invoke(
-      cellset, coords, binCounts);
+    vtkm::worklet::DispatcherMapTopology<CountBinsL1> countL1Dispatcher(countL1);
+    countL1Dispatcher.SetDevice(DeviceAdapter());
+    countL1Dispatcher.Invoke(cellset, coords, binCounts);
 
     // 3: Total number of unique (cell, bin) pairs (for pre-allocating arrays)
     vtkm::Id numPairsL1 = Algorithm::ScanExclusive(binCounts, binCounts);
@@ -523,8 +524,9 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> binIds;
     binIds.Allocate(numPairsL1);
     FindBinsL1 findL1(ls.TopLevel);
-    vtkm::worklet::DispatcherMapTopology<FindBinsL1, DeviceAdapter>(findL1).Invoke(
-      cellset, coords, binCounts, binIds);
+    vtkm::worklet::DispatcherMapTopology<FindBinsL1> findL1Dispatcher(findL1);
+    findL1Dispatcher.SetDevice(DeviceAdapter());
+    findL1Dispatcher.Invoke(cellset, coords, binCounts, binIds);
     binCounts.ReleaseResources();
 
     // 5: From above, find the number of cells that intersect each top level bin
@@ -544,8 +546,9 @@ public:
     Algorithm::Copy(vtkm::cont::make_ArrayHandleConstant(DimVec3(0), numberOfBins),
                     ls.LeafDimensions);
     GenerateBinsL1 generateL1(ls.TopLevel.BinSize, this->DensityL2);
-    vtkm::worklet::DispatcherMapField<GenerateBinsL1, DeviceAdapter>(generateL1)
-      .Invoke(bins, cellsPerBin, ls.LeafDimensions);
+    vtkm::worklet::DispatcherMapField<GenerateBinsL1> generateL1Dispatcher(generateL1);
+    generateL1Dispatcher.SetDevice(DeviceAdapter());
+    generateL1Dispatcher.Invoke(bins, cellsPerBin, ls.LeafDimensions);
     bins.ReleaseResources();
     cellsPerBin.ReleaseResources();
 
@@ -557,8 +560,9 @@ public:
 
     // 8: For each cell, find the number of l2 bins they intersect
     CountBinsL2 countL2(ls.TopLevel);
-    vtkm::worklet::DispatcherMapTopology<CountBinsL2, DeviceAdapter>(countL2).Invoke(
-      cellset, coords, ls.LeafDimensions, binCounts);
+    vtkm::worklet::DispatcherMapTopology<CountBinsL2> countL2Dispatcher(countL2);
+    countL2Dispatcher.SetDevice(DeviceAdapter());
+    countL2Dispatcher.Invoke(cellset, coords, ls.LeafDimensions, binCounts);
 
     // 9: Total number of unique (cell, bin) pairs (for pre-allocating arrays)
     vtkm::Id numPairsL2 = Algorithm::ScanExclusive(binCounts, binCounts);
@@ -567,7 +571,9 @@ public:
     binIds.Allocate(numPairsL2);
     ls.CellIds.Allocate(numPairsL2);
     FindBinsL2 findL2(ls.TopLevel);
-    vtkm::worklet::DispatcherMapTopology<FindBinsL2, DeviceAdapter>(findL2).Invoke(
+    vtkm::worklet::DispatcherMapTopology<FindBinsL2> findL2Dispatcher(findL2);
+    findL2Dispatcher.SetDevice(DeviceAdapter());
+    findL2Dispatcher.Invoke(
       cellset, coords, ls.LeafDimensions, ls.LeafStartIndex, binCounts, binIds, ls.CellIds);
     binCounts.ReleaseResources();
 
@@ -587,8 +593,9 @@ public:
     Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numberOfLeaves),
                     ls.CellStartIndex);
     Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numberOfLeaves), ls.CellCount);
-    vtkm::worklet::DispatcherMapField<GenerateBinsL2, DeviceAdapter>().Invoke(
-      bins, cellsStart, cellsPerBin, ls.CellStartIndex, ls.CellCount);
+    vtkm::worklet::DispatcherMapField<GenerateBinsL2> dispatchGenerateBinsL2;
+    dispatchGenerateBinsL2.SetDevice(DeviceAdapter());
+    dispatchGenerateBinsL2.Invoke(bins, cellsStart, cellsPerBin, ls.CellStartIndex, ls.CellCount);
 
     std::swap(this->LookupStructure, ls);
   }
@@ -708,13 +715,14 @@ public:
     DeviceAdapter,
     CellSetList cellSetTypes = CellSetList()) const
   {
-    vtkm::worklet::DispatcherMapField<FindCellWorklet, DeviceAdapter>().Invoke(
-      points,
-      this->CellSet.ResetCellSetList(cellSetTypes),
-      this->Coordinates,
-      this->LookupStructure,
-      cellIds,
-      parametricCoords);
+    vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
+    dispatcher.SetDevice(DeviceAdapter());
+    dispatcher.Invoke(points,
+                      this->CellSet.ResetCellSetList(cellSetTypes),
+                      this->Coordinates,
+                      this->LookupStructure,
+                      cellIds,
+                      parametricCoords);
   }
 
 private:

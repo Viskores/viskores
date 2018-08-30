@@ -86,7 +86,8 @@ public:
     using ThresholdWorklet = ThresholdPointField<UnaryPredicate>;
 
     ThresholdWorklet worklet(predicate);
-    DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
+    DispatcherMapTopology<ThresholdWorklet> dispatcher(worklet);
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(cellSet, scalars, passFlags);
 
     vtkm::cont::ArrayHandle<vtkm::Id> pointIds;

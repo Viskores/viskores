@@ -469,7 +469,8 @@ void MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& origina
   input_keys.ReleaseResources();
 
   {
-    vtkm::worklet::DispatcherReduceByKey<MergeDuplicateValues, DeviceAdapterTag> dispatcher;
+    vtkm::worklet::DispatcherReduceByKey<MergeDuplicateValues> dispatcher;
+    dispatcher.SetDevice(DeviceAdapterTag());
     vtkm::cont::ArrayHandle<vtkm::Id> writeCells;
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> writeWeights;
     dispatcher.Invoke(keys, weights, cellids, writeWeights, writeCells);
@@ -483,7 +484,8 @@ void MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& origina
     uniqueKeys, original_keys, connectivity, marchingcubes::MultiContourLess());
 
   //update the edge ids
-  vtkm::worklet::DispatcherMapField<CopyEdgeIds, DeviceAdapterTag> edgeDispatcher;
+  vtkm::worklet::DispatcherMapField<CopyEdgeIds> edgeDispatcher;
+  edgeDispatcher.SetDevice(DeviceAdapterTag());
   edgeDispatcher.Invoke(uniqueKeys, edgeIds);
 }
 
@@ -677,13 +679,15 @@ struct GenerateNormalsDeduced
     // The final normal is interpolated from the two gradient values and stored
     // in the normals array.
     //
-    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1, DeviceAdapterTag>
-      dispatcherNormalsPass1(NormalsWorkletPass1::MakeScatter(*edges));
+    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1> dispatcherNormalsPass1(
+      NormalsWorkletPass1::MakeScatter(*edges));
+    dispatcherNormalsPass1.SetDevice(DeviceAdapterTag());
     dispatcherNormalsPass1.Invoke(
       *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *normals);
 
-    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2, DeviceAdapterTag>
-      dispatcherNormalsPass2(NormalsWorkletPass2::MakeScatter(*edges));
+    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2> dispatcherNormalsPass2(
+      NormalsWorkletPass2::MakeScatter(*edges));
+    dispatcherNormalsPass2.SetDevice(DeviceAdapterTag());
     dispatcherNormalsPass2.Invoke(
       *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *weights, *normals);
   }
@@ -797,8 +801,8 @@ public:
   {
     using vtkm::worklet::marchingcubes::MapPointField;
     MapPointField applyToField;
-    vtkm::worklet::DispatcherMapField<MapPointField, DeviceAdapter> applyFieldDispatcher(
-      applyToField);
+    vtkm::worklet::DispatcherMapField<MapPointField> applyFieldDispatcher(applyToField);
+    applyFieldDispatcher.SetDevice(DeviceAdapter());
 
     vtkm::cont::ArrayHandle<ValueType> output;
     applyFieldDispatcher.Invoke(
@@ -940,12 +944,10 @@ private:
     using vtkm::worklet::marchingcubes::MapPointField;
 
     // Setup the Dispatcher Typedefs
-    using ClassifyDispatcher =
-      typename vtkm::worklet::DispatcherMapTopology<ClassifyCell<ValueType>, DeviceAdapter>;
+    using ClassifyDispatcher = vtkm::worklet::DispatcherMapTopology<ClassifyCell<ValueType>>;
 
     using GenerateDispatcher =
-      typename vtkm::worklet::DispatcherMapTopology<EdgeWeightGenerate<ValueType, DeviceAdapter>,
-                                                    DeviceAdapter>;
+      vtkm::worklet::DispatcherMapTopology<EdgeWeightGenerate<ValueType, DeviceAdapter>>;
 
     vtkm::cont::ArrayHandle<ValueType> isoValuesHandle =
       vtkm::cont::make_ArrayHandle(isovalues, numIsoValues);
@@ -957,6 +959,7 @@ private:
     {
       ClassifyCell<ValueType> classifyCell;
       ClassifyDispatcher classifyCellDispatcher(classifyCell);
+      classifyCellDispatcher.SetDevice(DeviceAdapter());
       classifyCellDispatcher.Invoke(
         isoValuesHandle, inputField, cells, numOutputTrisPerCell, this->NumTrianglesTable);
     }
@@ -983,6 +986,7 @@ private:
 
       EdgeWeightGenerate<ValueType, DeviceAdapter> weightGenerate(metaData);
       GenerateDispatcher edgeDispatcher(weightGenerate, scatter);
+      edgeDispatcher.SetDevice(DeviceAdapter());
       edgeDispatcher.Invoke(
         cells,
         //cast to a scalar field if not one, as cellderivative only works on those
@@ -1034,8 +1038,8 @@ private:
 
     //generate the vertices's
     MapPointField applyToField;
-    vtkm::worklet::DispatcherMapField<MapPointField, DeviceAdapter> applyFieldDispatcher(
-      applyToField);
+    vtkm::worklet::DispatcherMapField<MapPointField> applyFieldDispatcher(applyToField);
+    applyFieldDispatcher.SetDevice(DeviceAdapter());
 
     applyFieldDispatcher.Invoke(
       this->InterpolationEdgeIds, this->InterpolationWeights, coordinateSystem, vertices);

@@ -608,7 +608,8 @@ VTKM_CONT void LinearBVHBuilder::SortAABBS(
   //create array of indexes to be sorted with morton codes
   vtkm::cont::ArrayHandle<vtkm::Id> iterator;
   iterator.PrepareForOutput(bvh.GetNumberOfPrimitives(), Device());
-  vtkm::worklet::DispatcherMapField<CountingIterator, Device> iteratorDispatcher;
+  vtkm::worklet::DispatcherMapField<CountingIterator> iteratorDispatcher;
+  iteratorDispatcher.SetDevice(Device());
   iteratorDispatcher.Invoke(iterator);
 
   //std::cout<<"\n\n\n";
@@ -623,56 +624,77 @@ VTKM_CONT void LinearBVHBuilder::SortAABBS(
 
   tempStorage = new vtkm::cont::ArrayHandle<vtkm::Float32>();
   //xmins
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.xmins, *tempStorage, arraySize))
-    .Invoke(iterator);
+  {
+    vtkm::worklet::DispatcherMapField<GatherFloat32<Device>> dispatcher(
+      GatherFloat32<Device>(*bvh.xmins, *tempStorage, arraySize));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(iterator);
+  }
 
   tempPtr = bvh.xmins;
   bvh.xmins = tempStorage;
   tempStorage = tempPtr;
 
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.ymins, *tempStorage, arraySize))
-    .Invoke(iterator);
+  {
+    vtkm::worklet::DispatcherMapField<GatherFloat32<Device>> dispatcher(
+      GatherFloat32<Device>(*bvh.ymins, *tempStorage, arraySize));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(iterator);
+  }
 
   tempPtr = bvh.ymins;
   bvh.ymins = tempStorage;
   tempStorage = tempPtr;
   //zmins
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.zmins, *tempStorage, arraySize))
-    .Invoke(iterator);
+  {
+    vtkm::worklet::DispatcherMapField<GatherFloat32<Device>> dispatcher(
+      GatherFloat32<Device>(*bvh.zmins, *tempStorage, arraySize));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(iterator);
+  }
   tempPtr = bvh.zmins;
   bvh.zmins = tempStorage;
   tempStorage = tempPtr;
   //xmaxs
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.xmaxs, *tempStorage, arraySize))
-    .Invoke(iterator);
+  {
+    vtkm::worklet::DispatcherMapField<GatherFloat32<Device>> dispatcher(
+      GatherFloat32<Device>(*bvh.xmaxs, *tempStorage, arraySize));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(iterator);
+  }
 
   tempPtr = bvh.xmaxs;
   bvh.xmaxs = tempStorage;
   tempStorage = tempPtr;
   //ymaxs
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.ymaxs, *tempStorage, arraySize))
-    .Invoke(iterator);
+  {
+    vtkm::worklet::DispatcherMapField<GatherFloat32<Device>> dispatcher(
+      GatherFloat32<Device>(*bvh.ymaxs, *tempStorage, arraySize));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(iterator);
+  }
 
   tempPtr = bvh.ymaxs;
   bvh.ymaxs = tempStorage;
   tempStorage = tempPtr;
   //zmaxs
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.zmaxs, *tempStorage, arraySize))
-    .Invoke(iterator);
+  {
+    vtkm::worklet::DispatcherMapField<GatherFloat32<Device>> dispatcher(
+      GatherFloat32<Device>(*bvh.zmaxs, *tempStorage, arraySize));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(iterator);
+  }
 
   tempPtr = bvh.zmaxs;
   bvh.zmaxs = tempStorage;
   tempStorage = tempPtr;
 
-  vtkm::worklet::DispatcherMapField<GatherVecCast<Device>, Device>(
-    GatherVecCast<Device>(triangleIndices, outputTriangleIndices, arraySize))
-    .Invoke(iterator);
+  {
+    vtkm::worklet::DispatcherMapField<GatherVecCast<Device>> dispatcher(
+      GatherVecCast<Device>(triangleIndices, outputTriangleIndices, arraySize));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(iterator);
+  }
   delete tempStorage;
 
 } // method SortAABBs
@@ -699,15 +721,16 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   BVHData bvh(numBBoxes, device);
 
   vtkm::cont::Timer<Device> timer;
-  vtkm::worklet::DispatcherMapField<FindAABBs, Device>(FindAABBs())
-    .Invoke(triangleIndices,
-            *bvh.xmins,
-            *bvh.ymins,
-            *bvh.zmins,
-            *bvh.xmaxs,
-            *bvh.ymaxs,
-            *bvh.zmaxs,
-            coordsHandle);
+  vtkm::worklet::DispatcherMapField<FindAABBs> findAABBDispatcher{ (FindAABBs{}) };
+  findAABBDispatcher.SetDevice(Device());
+  findAABBDispatcher.Invoke(triangleIndices,
+                            *bvh.xmins,
+                            *bvh.ymins,
+                            *bvh.zmins,
+                            *bvh.xmaxs,
+                            *bvh.ymaxs,
+                            *bvh.zmaxs,
+                            coordsHandle);
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("find_aabb", time);
@@ -742,10 +765,11 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   }
 
   //Generate the morton codes
-  vtkm::worklet::DispatcherMapField<MortonCodeAABB, Device>(
-    MortonCodeAABB(inverseExtent, minExtent))
-    .Invoke(
-      *bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs, *bvh.zmaxs, bvh.mortonCodes);
+  vtkm::worklet::DispatcherMapField<MortonCodeAABB> mortonCodeAABBDispatcher(
+    MortonCodeAABB(inverseExtent, minExtent));
+  mortonCodeAABBDispatcher.SetDevice(Device());
+  mortonCodeAABBDispatcher.Invoke(
+    *bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs, *bvh.zmaxs, bvh.mortonCodes);
 
   time = timer.GetElapsedTime();
   logger->AddLogData("morton_codes", time);
@@ -759,9 +783,10 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   logger->AddLogData("sort_aabbs", time);
   timer.Reset();
 
-  vtkm::worklet::DispatcherMapField<TreeBuilder<Device>, Device>(
-    TreeBuilder<Device>(bvh.mortonCodes, bvh.parent, bvh.GetNumberOfPrimitives()))
-    .Invoke(bvh.leftChild, bvh.rightChild);
+  vtkm::worklet::DispatcherMapField<TreeBuilder<Device>> treeBuilderDispatcher(
+    TreeBuilder<Device>(bvh.mortonCodes, bvh.parent, bvh.GetNumberOfPrimitives()));
+  treeBuilderDispatcher.SetDevice(Device());
+  treeBuilderDispatcher.Invoke(bvh.leftChild, bvh.rightChild);
 
   time = timer.GetElapsedTime();
   logger->AddLogData("build_tree", time);
@@ -772,15 +797,23 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   vtkm::cont::ArrayHandle<vtkm::Int32> counters;
   counters.PrepareForOutput(bvh.GetNumberOfPrimitives() - 1, Device());
   vtkm::Int32 zero = 0;
-  vtkm::worklet::DispatcherMapField<MemSet<vtkm::Int32>, Device>(MemSet<vtkm::Int32>(zero))
-    .Invoke(counters);
+  vtkm::worklet::DispatcherMapField<MemSet<vtkm::Int32>> resetCountersDispatcher(
+    (MemSet<vtkm::Int32>(zero)));
+  resetCountersDispatcher.SetDevice(Device());
+  resetCountersDispatcher.Invoke(counters);
   vtkm::cont::AtomicArray<vtkm::Int32> atomicCounters(counters);
 
 
-  vtkm::worklet::DispatcherMapField<PropagateAABBs<Device>, Device>(
-    PropagateAABBs<Device>(
-      bvh.parent, bvh.leftChild, bvh.rightChild, primitiveCount, linearBVH.FlatBVH, atomicCounters))
-    .Invoke(*bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs, *bvh.zmaxs);
+  vtkm::worklet::DispatcherMapField<PropagateAABBs<Device>> propagateAABBDispatcher(
+    PropagateAABBs<Device>(bvh.parent,
+                           bvh.leftChild,
+                           bvh.rightChild,
+                           primitiveCount,
+                           linearBVH.FlatBVH,
+                           atomicCounters));
+  propagateAABBDispatcher.SetDevice(Device());
+  propagateAABBDispatcher.Invoke(
+    *bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs, *bvh.zmaxs);
 
   time = timer.GetElapsedTime();
   logger->AddLogData("propagate_aabbs", time);

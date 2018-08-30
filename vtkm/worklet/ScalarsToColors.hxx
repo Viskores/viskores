@@ -71,13 +71,15 @@ void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
-    vtkm::worklet::DispatcherMapField<ShiftScaleToRGBA, Device> dispatcher(
+    vtkm::worklet::DispatcherMapField<ShiftScaleToRGBA> dispatcher(
       ShiftScaleToRGBA(this->Shift, this->Scale, this->Alpha));
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(values, rgbaOut);
   }
   else
   {
-    vtkm::worklet::DispatcherMapField<ConvertToRGBA, Device> dispatcher(ConvertToRGBA(this->Alpha));
+    vtkm::worklet::DispatcherMapField<ConvertToRGBA> dispatcher(ConvertToRGBA(this->Alpha));
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(values, rgbaOut);
   }
 }
@@ -94,13 +96,15 @@ void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
-    vtkm::worklet::DispatcherMapField<ShiftScaleToRGB, Device> dispatcher(
+    vtkm::worklet::DispatcherMapField<ShiftScaleToRGB> dispatcher(
       ShiftScaleToRGB(this->Shift, this->Scale));
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(values, rgbOut);
   }
   else
   {
-    vtkm::worklet::DispatcherMapField<ConvertToRGB, Device> dispatcher;
+    vtkm::worklet::DispatcherMapField<ConvertToRGB> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(values, rgbOut);
   }
 }
@@ -120,14 +124,16 @@ void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
-    vtkm::worklet::DispatcherMapField<ShiftScaleToRGBA, Device> dispatcher(
+    vtkm::worklet::DispatcherMapField<ShiftScaleToRGBA> dispatcher(
       ShiftScaleToRGBA(this->Shift, this->Scale, this->Alpha));
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(
       vtkm::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbaOut);
   }
   else
   {
-    vtkm::worklet::DispatcherMapField<ConvertToRGBA, Device> dispatcher(ConvertToRGBA(this->Alpha));
+    vtkm::worklet::DispatcherMapField<ConvertToRGBA> dispatcher(ConvertToRGBA(this->Alpha));
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(
       vtkm::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbaOut);
   }
@@ -146,14 +152,16 @@ void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
-    vtkm::worklet::DispatcherMapField<ShiftScaleToRGB, Device> dispatcher(
+    vtkm::worklet::DispatcherMapField<ShiftScaleToRGB> dispatcher(
       ShiftScaleToRGB(this->Shift, this->Scale));
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(
       vtkm::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbOut);
   }
   else
   {
-    vtkm::worklet::DispatcherMapField<ConvertToRGB, Device> dispatcher;
+    vtkm::worklet::DispatcherMapField<ConvertToRGB> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(
       vtkm::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbOut);
   }

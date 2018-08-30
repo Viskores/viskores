@@ -141,7 +141,8 @@ public:
         using ThresholdWorklet = ThresholdByPointField<UnaryPredicate>;
 
         ThresholdWorklet worklet(predicate);
-        DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
+        DispatcherMapTopology<ThresholdWorklet> dispatcher(worklet);
+        dispatcher.SetDevice(DeviceAdapter());
         dispatcher.Invoke(cellSet, field, passFlags);
         break;
       }
@@ -150,7 +151,8 @@ public:
         using ThresholdWorklet = ThresholdByCellField<UnaryPredicate>;
 
         ThresholdWorklet worklet(predicate);
-        DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
+        DispatcherMapTopology<ThresholdWorklet> dispatcher(worklet);
+        dispatcher.SetDevice(DeviceAdapter());
         dispatcher.Invoke(cellSet, field, passFlags);
         break;
       }

@@ -631,8 +631,9 @@ private:
       vtkm::cont::ArrayHandle<Value> result;
 
       Timer timer;
-      vtkm::worklet::DispatcherMapField<InterpolateField, DeviceAdapterTag>().Invoke(
-        this->EdgePairHandle, this->WeightHandle, this->FieldHandle, result);
+      vtkm::worklet::DispatcherMapField<InterpolateField> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(this->EdgePairHandle, this->WeightHandle, this->FieldHandle, result);
       return timer.GetElapsedTime();
     }
 
@@ -663,8 +664,9 @@ private:
       vtkm::cont::ArrayHandle<Value> result;
 
       Timer timer;
-      vtkm::worklet::DispatcherMapField<InterpolateField, DeviceAdapterTag>().Invoke(
-        dedges, dweight, dfield, result);
+      vtkm::worklet::DispatcherMapField<InterpolateField> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(dedges, dweight, dfield, result);
       return timer.GetElapsedTime();
     }
 
@@ -719,7 +721,7 @@ private:
     vtkm::Float64 operator()()
     {
       using EvalWorklet = EvaluateImplicitFunction<vtkm::Sphere>;
-      using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet, DeviceAdapterTag>;
+      using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet>;
 
       auto handle = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
       auto function =
@@ -727,7 +729,9 @@ private:
       EvalWorklet eval(function);
 
       vtkm::cont::Timer<DeviceAdapterTag> timer;
-      EvalDispatcher(eval).Invoke(this->Internal.Points, this->Internal.Result);
+      EvalDispatcher dispatcher(eval);
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
       return timer.GetElapsedTime();
     }
 
@@ -755,13 +759,15 @@ private:
     vtkm::Float64 operator()()
     {
       using EvalWorklet = EvaluateImplicitFunction<vtkm::ImplicitFunction>;
-      using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet, DeviceAdapterTag>;
+      using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet>;
 
       auto sphere = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
       EvalWorklet eval(sphere.PrepareForExecution(DeviceAdapterTag()));
 
       vtkm::cont::Timer<DeviceAdapterTag> timer;
-      EvalDispatcher(eval).Invoke(this->Internal.Points, this->Internal.Result);
+      EvalDispatcher dispatcher(eval);
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
       return timer.GetElapsedTime();
     }
 
@@ -789,7 +795,7 @@ private:
     vtkm::Float64 operator()()
     {
       using EvalWorklet = Evaluate2ImplicitFunctions<vtkm::Sphere, vtkm::Sphere>;
-      using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet, DeviceAdapterTag>;
+      using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet>;
 
       auto h1 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
       auto h2 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere2);
@@ -798,7 +804,9 @@ private:
       EvalWorklet eval(f1, f2);
 
       vtkm::cont::Timer<DeviceAdapterTag> timer;
-      EvalDispatcher(eval).Invoke(this->Internal.Points, this->Internal.Result);
+      EvalDispatcher dispatcher(eval);
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
       return timer.GetElapsedTime();
     }
 
@@ -827,7 +835,7 @@ private:
     {
       using EvalWorklet =
         Evaluate2ImplicitFunctions<vtkm::ImplicitFunction, vtkm::ImplicitFunction>;
-      using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet, DeviceAdapterTag>;
+      using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet>;
 
       auto s1 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
       auto s2 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere2);
@@ -835,7 +843,9 @@ private:
                        s2.PrepareForExecution(DeviceAdapterTag()));
 
       vtkm::cont::Timer<DeviceAdapterTag> timer;
-      EvalDispatcher(eval).Invoke(this->Internal.Points, this->Internal.Result);
+      EvalDispatcher dispatcher(eval);
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
       return timer.GetElapsedTime();
     }
 

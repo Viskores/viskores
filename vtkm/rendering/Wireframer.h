@@ -554,12 +554,14 @@ private:
                                    ColorMap,
                                    FrameBuffer,
                                    Camera.GetClippingRange());
-    vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>, DeviceTag>(plotter).Invoke(
-      PointIndices, Coordinates, ScalarField.GetData());
+    vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
+    plotterDispatcher.SetDevice(DeviceTag());
+    plotterDispatcher.Invoke(PointIndices, Coordinates, ScalarField.GetData());
 
     BufferConverter converter;
-    vtkm::worklet::DispatcherMapField<BufferConverter, DeviceTag>(converter).Invoke(
-      FrameBuffer, Canvas->GetDepthBuffer(), Canvas->GetColorBuffer());
+    vtkm::worklet::DispatcherMapField<BufferConverter> converterDispatcher(converter);
+    converterDispatcher.SetDevice(DeviceTag());
+    converterDispatcher.Invoke(FrameBuffer, Canvas->GetDepthBuffer(), Canvas->GetColorBuffer());
   }
 
   VTKM_CONT

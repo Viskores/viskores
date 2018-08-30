@@ -26,8 +26,8 @@
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/cont/DeviceAdapter.h>
-
 #include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/Transport.h>
@@ -255,6 +255,20 @@ struct DispatcherBaseExecutionSignatureTagCheck
     VTKM_IS_EXECUTION_SIGNATURE_TAG(ExecutionSignatureTag);
     using type = ExecutionSignatureTag;
   };
+};
+
+struct DispatcherBaseTryExecuteFunctor
+{
+  template <typename Device, typename DispatcherBaseType, typename Invocation, typename RangeType>
+  VTKM_CONT bool operator()(Device device,
+                            const DispatcherBaseType* self,
+                            Invocation& invocation,
+                            const RangeType& dimensions)
+  {
+    self->InvokeTransportParameters(
+      invocation, dimensions, self->Scatter.GetOutputRange(dimensions), device);
+    return true;
+  }
 };
 
 // A look up helper used by DispatcherBaseTransportFunctor to determine
@@ -627,9 +641,18 @@ private:
     static_cast<const DerivedClass*>(this)->DoInvoke(ivc);
   }
 
-
-
 public:
+  //@{
+  /// Setting the device ID will force the execute to happen on a particular device. If no device
+  /// is specified (or the device ID is set to any), then a device will automatically be chosen
+  /// based on the runtime device tracker.
+  ///
+  VTKM_CONT
+  void SetDevice(vtkm::cont::DeviceAdapterId device) { this->Device = device; }
+
+  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const { return this->Device; }
+  //@}
+
   using ScatterType = typename WorkletType::ScatterType;
 
   template <typename... Args>
@@ -643,33 +666,46 @@ protected:
   DispatcherBase(const WorkletType& worklet, const ScatterType& scatter)
     : Worklet(worklet)
     , Scatter(scatter)
+    , Device(vtkm::cont::DeviceAdapterTagAny())
   {
   }
 
-  template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(Invocation& invocation,
-                             vtkm::Id numInstances,
-                             DeviceAdapter device) const
+  friend struct internal::detail::DispatcherBaseTryExecuteFunctor;
+
+  template <typename Invocation>
+  VTKM_CONT void BasicInvoke(Invocation& invocation, vtkm::Id numInstances) const
   {
-    this->InvokeTransportParameters(
-      invocation, numInstances, this->Scatter.GetOutputRange(numInstances), device);
+    bool success =
+      vtkm::cont::TryExecuteOnDevice(this->Device,
+                                     internal::detail::DispatcherBaseTryExecuteFunctor(),
+                                     this,
+                                     invocation,
+                                     numInstances);
+    if (!success)
+    {
+      throw vtkm::cont::ErrorExecution("Failed to execute worklet on any device.");
+    }
   }
 
-  template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(Invocation& invocation,
-                             vtkm::Id2 dimensions,
-                             DeviceAdapter device) const
+  template <typename Invocation>
+  VTKM_CONT void BasicInvoke(Invocation& invocation, vtkm::Id2 dimensions) const
   {
-    this->BasicInvoke(invocation, vtkm::Id3(dimensions[0], dimensions[1], 1), device);
+    this->BasicInvoke(invocation, vtkm::Id3(dimensions[0], dimensions[1], 1));
   }
 
-  template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(Invocation& invocation,
-                             vtkm::Id3 dimensions,
-                             DeviceAdapter device) const
+  template <typename Invocation>
+  VTKM_CONT void BasicInvoke(Invocation& invocation, vtkm::Id3 dimensions) const
   {
-    this->InvokeTransportParameters(
-      invocation, dimensions, this->Scatter.GetOutputRange(dimensions), device);
+    bool success =
+      vtkm::cont::TryExecuteOnDevice(this->Device,
+                                     internal::detail::DispatcherBaseTryExecuteFunctor(),
+                                     this,
+                                     invocation,
+                                     dimensions);
+    if (!success)
+    {
+      throw vtkm::cont::ErrorExecution("Failed to execute worklet on any device.");
+    }
   }
 
   WorkletType Worklet;
@@ -679,6 +715,8 @@ private:
   // Dispatchers cannot be copied
   DispatcherBase(const MyType&) = delete;
   void operator=(const MyType&) = delete;
+
+  vtkm::cont::DeviceAdapterId Device;
 
   template <typename Invocation,
             typename InputRangeType,

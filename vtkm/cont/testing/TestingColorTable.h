@@ -461,7 +461,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
     TransferFunction transfer(table.PrepareForExecution(DeviceAdapterTag{}));
-    vtkm::worklet::DispatcherMapField<TransferFunction, DeviceAdapterTag> dispatcher(transfer);
+    vtkm::worklet::DispatcherMapField<TransferFunction> dispatcher(transfer);
+    dispatcher.SetDevice(DeviceAdapterTag());
     dispatcher.Invoke(samples, colors);
 
     const vtkm::Vec<vtkm::UInt8, 4> correct_sampling_points[nvals] = { { 14, 28, 31, 255 },

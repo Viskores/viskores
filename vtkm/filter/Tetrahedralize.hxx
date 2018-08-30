@@ -39,7 +39,7 @@ public:
   template <typename CellSetType>
   void operator()(const CellSetType& cellset) const
   {
-    this->OutCellSet = Worklet.Run(cellset, DeviceAdapter());
+    this->OutCellSet = Worklet.Run(cellset);
   }
 };
 }

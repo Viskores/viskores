@@ -111,56 +111,23 @@ public:
 }; //class SurfaceConverter
 
 template <typename Precision>
-struct WriteFunctor
-{
-protected:
-  vtkm::rendering::CanvasRayTracer* Canvas;
-  const vtkm::rendering::raytracing::Ray<Precision>& Rays;
-  const vtkm::cont::ArrayHandle<Precision>& Colors;
-  const vtkm::rendering::Camera& CameraView;
-  vtkm::Matrix<vtkm::Float32, 4, 4> ViewProjMat;
-
-public:
-  VTKM_CONT
-  WriteFunctor(vtkm::rendering::CanvasRayTracer* canvas,
-               const vtkm::rendering::raytracing::Ray<Precision>& rays,
-               const vtkm::cont::ArrayHandle<Precision>& colors,
-               const vtkm::rendering::Camera& camera)
-    : Canvas(canvas)
-    , Rays(rays)
-    , Colors(colors)
-    , CameraView(camera)
-  {
-    ViewProjMat = vtkm::MatrixMultiply(
-      CameraView.CreateProjectionMatrix(Canvas->GetWidth(), Canvas->GetHeight()),
-      CameraView.CreateViewMatrix());
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::worklet::DispatcherMapField<SurfaceConverter, Device>(SurfaceConverter(ViewProjMat))
-      .Invoke(Rays.PixelIdx,
-              Colors,
-              Rays.Distance,
-              Rays.Origin,
-              Rays.Dir,
-              Canvas->GetDepthBuffer(),
-              Canvas->GetColorBuffer());
-    return true;
-  }
-};
-
-template <typename Precision>
 VTKM_CONT void WriteToCanvas(const vtkm::rendering::raytracing::Ray<Precision>& rays,
                              const vtkm::cont::ArrayHandle<Precision>& colors,
                              const vtkm::rendering::Camera& camera,
                              vtkm::rendering::CanvasRayTracer* canvas)
 {
-  WriteFunctor<Precision> functor(canvas, rays, colors, camera);
+  vtkm::Matrix<vtkm::Float32, 4, 4> viewProjMat =
+    vtkm::MatrixMultiply(camera.CreateProjectionMatrix(canvas->GetWidth(), canvas->GetHeight()),
+                         camera.CreateViewMatrix());
 
-  vtkm::cont::TryExecute(functor);
+  vtkm::worklet::DispatcherMapField<SurfaceConverter>(SurfaceConverter(viewProjMat))
+    .Invoke(rays.PixelIdx,
+            colors,
+            rays.Distance,
+            rays.Origin,
+            rays.Dir,
+            canvas->GetDepthBuffer(),
+            canvas->GetColorBuffer());
 
   //Force the transfer so the vectors contain data from device
   canvas->GetColorBuffer().GetPortalControl().Get(0);

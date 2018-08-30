@@ -88,7 +88,8 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
     {
 
       vtkm::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
-      vtkm::worklet::DispatcherReduceByKey<SelectRepresentativePoint, DeviceAdapterTag> dispatcher;
+      vtkm::worklet::DispatcherReduceByKey<SelectRepresentativePoint> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(keys, points, out);
 
       output = out;
@@ -374,8 +375,10 @@ public:
     /// map points
     vtkm::cont::ArrayHandle<vtkm::Id> pointCidArray;
 
-    vtkm::worklet::DispatcherMapField<MapPointsWorklet, DeviceAdapter>(MapPointsWorklet(gridInfo))
-      .Invoke(coordinates, pointCidArray);
+    vtkm::worklet::DispatcherMapField<MapPointsWorklet> mapPointsDispatcher(
+      (MapPointsWorklet(gridInfo)));
+    mapPointsDispatcher.SetDevice(DeviceAdapter());
+    mapPointsDispatcher.Invoke(coordinates, pointCidArray);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
@@ -415,8 +418,9 @@ public:
     /// of the cell vertices
     vtkm::cont::ArrayHandle<vtkm::Id3> cid3Array;
 
-    vtkm::worklet::DispatcherMapTopology<MapCellsWorklet, DeviceAdapter>(MapCellsWorklet())
-      .Invoke(cellSet, pointCidArray, cid3Array);
+    vtkm::worklet::DispatcherMapTopology<MapCellsWorklet> mapCellsDispatcher;
+    mapCellsDispatcher.SetDevice(DeviceAdapter());
+    mapCellsDispatcher.Invoke(cellSet, pointCidArray, cid3Array);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after clustering cells (s): " << timer.GetElapsedTime() << std::endl;
@@ -428,8 +432,9 @@ public:
     cidIndexArray.PrepareForOutput(gridInfo.dim[0] * gridInfo.dim[1] * gridInfo.dim[2],
                                    DeviceAdapter());
 
-    vtkm::worklet::DispatcherMapField<IndexingWorklet, DeviceAdapter>().Invoke(repPointCidArray,
-                                                                               cidIndexArray);
+    vtkm::worklet::DispatcherMapField<IndexingWorklet> indexingDispatcher;
+    indexingDispatcher.SetDevice(DeviceAdapter());
+    indexingDispatcher.Invoke(repPointCidArray, cidIndexArray);
 
     pointCidArray.ReleaseResources();
     repPointCidArray.ReleaseResources();
@@ -443,9 +448,10 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id3> pointId3Array;
 
-    vtkm::worklet::DispatcherMapField<Cid2PointIdWorklet, DeviceAdapter>(
-      Cid2PointIdWorklet(nPoints))
-      .Invoke(cid3Array, pointId3Array, cidIndexArray);
+    vtkm::worklet::DispatcherMapField<Cid2PointIdWorklet> cid2PointIdDispatcher(
+      (Cid2PointIdWorklet(nPoints)));
+    cid2PointIdDispatcher.SetDevice(DeviceAdapter());
+    cid2PointIdDispatcher.Invoke(cid3Array, pointId3Array, cidIndexArray);
 
     cid3Array.ReleaseResources();
     cidIndexArray.ReleaseResources();
@@ -457,8 +463,10 @@ public:
       /// Create hashed array
       vtkm::cont::ArrayHandle<vtkm::Int64> pointId3HashArray;
 
-      vtkm::worklet::DispatcherMapField<Cid3HashWorklet, DeviceAdapter>(Cid3HashWorklet(nPoints))
-        .Invoke(pointId3Array, pointId3HashArray);
+      vtkm::worklet::DispatcherMapField<Cid3HashWorklet> cid3HashDispatcher(
+        (Cid3HashWorklet(nPoints)));
+      cid3HashDispatcher.SetDevice(DeviceAdapter());
+      cid3HashDispatcher.Invoke(pointId3Array, pointId3HashArray);
 
       pointId3Array.ReleaseResources();
 
@@ -481,9 +489,10 @@ public:
       auto tmpPerm = vtkm::cont::make_ArrayHandlePermutation(this->CellIdMap, pointId3HashArray);
 
       // decode
-      vtkm::worklet::DispatcherMapField<Cid3UnhashWorklet, DeviceAdapter>(
-        Cid3UnhashWorklet(nPoints))
-        .Invoke(tmpPerm, pointId3Array);
+      vtkm::worklet::DispatcherMapField<Cid3UnhashWorklet> cid3UnhashDispatcher(
+        (Cid3UnhashWorklet(nPoints)));
+      cid3UnhashDispatcher.SetDevice(DeviceAdapter());
+      cid3UnhashDispatcher.Invoke(tmpPerm, pointId3Array);
     }
     else
     {

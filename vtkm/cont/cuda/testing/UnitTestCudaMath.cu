@@ -92,7 +92,7 @@ struct TriggerICE : public vtkm::worklet::WorkletMapField
   template <class ValueType>
   ValueType operator()(const ValueType& bad, const ValueType& sane, const vtkm::Id sequenceId) const
   {
-    return bad + sane * sequenceId;
+    return bad + sane * static_cast<ValueType>(sequenceId);
   }
 #endif
 };
@@ -156,7 +156,8 @@ void RunEdgeCases()
   auto bad = vtkm::cont::make_ArrayHandle(badvalues);
   auto sane = vtkm::cont::make_ArrayHandle(sanevalues);
   decltype(sane) result;
-  vtkm::worklet::DispatcherMapField<TriggerICE, Device> dispatcher;
+  vtkm::worklet::DispatcherMapField<TriggerICE> dispatcher;
+  dispatcher.SetDevice(Device());
   dispatcher.Invoke(bad, sane, result);
 
   auto portal = result.GetPortalConstControl();

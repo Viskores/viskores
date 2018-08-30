@@ -20,7 +20,6 @@
 #ifndef vtk_m_worklet_Dispatcher_MapField_h
 #define vtk_m_worklet_Dispatcher_MapField_h
 
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
@@ -31,16 +30,15 @@ namespace worklet
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletMapField.
 ///
-template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template <typename WorkletType>
 class DispatcherMapField
-  : public vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType, Device>,
+  : public vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType>,
                                                    WorkletType,
                                                    vtkm::worklet::WorkletMapField>
 {
-  using Superclass =
-    vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType, Device>,
-                                            WorkletType,
-                                            vtkm::worklet::WorkletMapField>;
+  using Superclass = vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType>,
+                                                             WorkletType,
+                                                             vtkm::worklet::WorkletMapField>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:
@@ -80,7 +78,7 @@ public:
 
     // A MapField is a pretty straightforward dispatch. Once we know the number
     // of invocations, the superclass can take care of the rest.
-    this->BasicInvoke(invocation, numInstances, Device());
+    this->BasicInvoke(invocation, numInstances);
   }
 };
 }

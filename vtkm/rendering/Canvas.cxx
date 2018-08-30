@@ -61,33 +61,6 @@ struct ClearBuffers : public vtkm::worklet::WorkletMapField
   }
 }; // struct ClearBuffers
 
-struct ClearBuffersExecutor
-{
-  using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
-  using DepthBufferType = vtkm::rendering::Canvas::DepthBufferType;
-
-  ColorBufferType ColorBuffer;
-  DepthBufferType DepthBuffer;
-
-  VTKM_CONT
-  ClearBuffersExecutor(const ColorBufferType& colorBuffer, const DepthBufferType& depthBuffer)
-    : ColorBuffer(colorBuffer)
-    , DepthBuffer(depthBuffer)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    ClearBuffers worklet;
-    vtkm::worklet::DispatcherMapField<ClearBuffers, Device> dispatcher(worklet);
-    dispatcher.Invoke(this->ColorBuffer, this->DepthBuffer);
-    return true;
-  }
-}; // struct ClearBuffersExecutor
-
 struct BlendBackground : public vtkm::worklet::WorkletMapField
 {
   vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
@@ -113,32 +86,6 @@ struct BlendBackground : public vtkm::worklet::WorkletMapField
     color[3] = alpha + color[3];
   }
 }; // struct BlendBackground
-
-struct BlendBackgroundExecutor
-{
-  using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
-
-  ColorBufferType ColorBuffer;
-  BlendBackground Worklet;
-
-  VTKM_CONT
-  BlendBackgroundExecutor(const ColorBufferType& colorBuffer,
-                          const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
-    : ColorBuffer(colorBuffer)
-    , Worklet(backgroundColor)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::worklet::DispatcherMapField<BlendBackground, Device> dispatcher(this->Worklet);
-    dispatcher.Invoke(this->ColorBuffer);
-    return true;
-  }
-}; // struct BlendBackgroundExecutor
 
 struct DrawColorSwatch : public vtkm::worklet::WorkletMapField
 {
@@ -257,81 +204,6 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
   bool Horizontal;
 }; // struct DrawColorBar
 
-struct ColorSwatchExecutor
-{
-  VTKM_CONT
-  ColorSwatchExecutor(vtkm::Id2 dims,
-                      vtkm::Id2 xBounds,
-                      vtkm::Id2 yBounds,
-                      const vtkm::Vec<vtkm::Float32, 4>& color,
-                      const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorBuffer)
-    : Dims(dims)
-    , XBounds(xBounds)
-    , YBounds(yBounds)
-    , Color(color)
-    , ColorBuffer(colorBuffer)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::Id totalPixels = (XBounds[1] - XBounds[0]) * (YBounds[1] - YBounds[0]);
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> iterator(0, 1, totalPixels);
-    vtkm::worklet::DispatcherMapField<DrawColorSwatch, Device> dispatcher(
-      DrawColorSwatch(this->Dims, this->XBounds, this->YBounds, Color));
-    dispatcher.Invoke(iterator, this->ColorBuffer);
-    return true;
-  }
-
-  vtkm::Id2 Dims;
-  vtkm::Id2 XBounds;
-  vtkm::Id2 YBounds;
-  const vtkm::Vec<vtkm::Float32, 4>& Color;
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorBuffer;
-}; // struct ColorSwatchExecutor
-
-struct ColorBarExecutor
-{
-  VTKM_CONT
-  ColorBarExecutor(vtkm::Id2 dims,
-                   vtkm::Id2 xBounds,
-                   vtkm::Id2 yBounds,
-                   bool horizontal,
-                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& colorMap,
-                   const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorBuffer)
-    : Dims(dims)
-    , XBounds(xBounds)
-    , YBounds(yBounds)
-    , Horizontal(horizontal)
-    , ColorMap(colorMap)
-    , ColorBuffer(colorBuffer)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::Id totalPixels = (XBounds[1] - XBounds[0]) * (YBounds[1] - YBounds[0]);
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> iterator(0, 1, totalPixels);
-    vtkm::worklet::DispatcherMapField<DrawColorBar, Device> dispatcher(
-      DrawColorBar(this->Dims, this->XBounds, this->YBounds, this->Horizontal));
-    dispatcher.Invoke(iterator, this->ColorBuffer, this->ColorMap);
-    return true;
-  }
-
-  vtkm::Id2 Dims;
-  vtkm::Id2 XBounds;
-  vtkm::Id2 YBounds;
-  bool Horizontal;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& ColorMap;
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorBuffer;
-}; // struct ColorSwatchExecutor
-
 } // namespace internal
 
 struct Canvas::CanvasInternals
@@ -441,9 +313,8 @@ void Canvas::Activate()
 
 void Canvas::Clear()
 {
-  // TODO: Should the rendering library support policies or some other way to
-  // configure with custom devices?
-  vtkm::cont::TryExecute(internal::ClearBuffersExecutor(GetColorBuffer(), GetDepthBuffer()));
+  vtkm::worklet::DispatcherMapField<internal::ClearBuffers>().Invoke(this->GetColorBuffer(),
+                                                                     this->GetDepthBuffer());
 }
 
 void Canvas::Finish()
@@ -452,8 +323,9 @@ void Canvas::Finish()
 
 void Canvas::BlendBackground()
 {
-  vtkm::cont::TryExecute(
-    internal::BlendBackgroundExecutor(GetColorBuffer(), GetBackgroundColor().Components));
+  vtkm::worklet::DispatcherMapField<internal::BlendBackground>(
+    this->GetBackgroundColor().Components)
+    .Invoke(this->GetColorBuffer());
 }
 
 void Canvas::ResizeBuffers(vtkm::Id width, vtkm::Id height)
@@ -491,8 +363,12 @@ void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
   y[1] = static_cast<vtkm::Id>(((point2[1] + 1.) / 2.) * height + .5);
 
   vtkm::Id2 dims(this->GetWidth(), this->GetHeight());
-  vtkm::cont::TryExecute(
-    internal::ColorSwatchExecutor(dims, x, y, color.Components, this->GetColorBuffer()));
+
+  vtkm::Id totalPixels = (x[1] - x[0]) * (y[1] - y[0]);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> iterator(0, 1, totalPixels);
+  vtkm::worklet::DispatcherMapField<internal::DrawColorSwatch> dispatcher(
+    internal::DrawColorSwatch(dims, x, y, color.Components));
+  dispatcher.Invoke(iterator, this->GetColorBuffer());
 }
 
 void Canvas::AddColorSwatch(const vtkm::Float64 x0,
@@ -552,8 +428,12 @@ void Canvas::AddColorBar(const vtkm::Bounds& bounds,
   colorTable.Sample(static_cast<vtkm::Int32>(numSamples), colorMap);
 
   vtkm::Id2 dims(this->GetWidth(), this->GetHeight());
-  vtkm::cont::TryExecute(
-    internal::ColorBarExecutor(dims, x, y, horizontal, colorMap, this->GetColorBuffer()));
+
+  vtkm::Id totalPixels = (x[1] - x[0]) * (y[1] - y[0]);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> iterator(0, 1, totalPixels);
+  vtkm::worklet::DispatcherMapField<internal::DrawColorBar> dispatcher(
+    internal::DrawColorBar(dims, x, y, horizontal));
+  dispatcher.Invoke(iterator, this->GetColorBuffer(), colorMap);
 }
 
 void Canvas::AddColorBar(vtkm::Float32 x,

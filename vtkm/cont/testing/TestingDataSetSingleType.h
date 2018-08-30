@@ -139,7 +139,8 @@ private:
 
     //run a basic for-each topology algorithm on this
     vtkm::cont::ArrayHandle<vtkm::Float32> result;
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage, DeviceAdapterTag> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
+    dispatcher.SetDevice(DeviceAdapterTag());
     dispatcher.Invoke(cellset, dataSet.GetField("pointvar"), result);
 
     vtkm::Float32 expected[3] = { 20.1333f, 30.1667f, 40.2333f };

@@ -496,8 +496,9 @@ public:
     vtkm::cont::ArrayHandle<ClipStats> stats;
 
     ComputeStats<DeviceAdapter> computeStats(value, clipTablesDevicePortal, invert);
-    DispatcherMapTopology<ComputeStats<DeviceAdapter>, DeviceAdapter>(computeStats)
-      .Invoke(cellSet, scalars, clipTableIdxs, stats);
+    DispatcherMapTopology<ComputeStats<DeviceAdapter>> computeStatsDispatcher(computeStats);
+    computeStatsDispatcher.SetDevice(DeviceAdapter());
+    computeStatsDispatcher.Invoke(cellSet, scalars, clipTableIdxs, stats);
 
     // compute offsets for each invocation
     ClipStats zero;
@@ -522,15 +523,17 @@ public:
     this->CellIdMap.Allocate(total.NumberOfCells);
 
     GenerateCellSet<DeviceAdapter> generateCellSet(value, clipTablesDevicePortal);
-    DispatcherMapTopology<GenerateCellSet<DeviceAdapter>, DeviceAdapter>(generateCellSet)
-      .Invoke(cellSet,
-              scalars,
-              clipTableIdxs,
-              cellSetIndices,
-              outConnectivity,
-              newPoints,
-              newPointsConnectivityReverseMap,
-              this->CellIdMap);
+    DispatcherMapTopology<GenerateCellSet<DeviceAdapter>> generateCellSetDispatcher(
+      generateCellSet);
+    generateCellSetDispatcher.SetDevice(DeviceAdapter());
+    generateCellSetDispatcher.Invoke(cellSet,
+                                     scalars,
+                                     clipTableIdxs,
+                                     cellSetIndices,
+                                     outConnectivity,
+                                     newPoints,
+                                     newPointsConnectivityReverseMap,
+                                     this->CellIdMap);
     cellSetIndices.ReleaseResources();
 
     // Step 3. remove duplicates from the list of new points

@@ -165,7 +165,8 @@ struct RenderBitmapFontExecutor
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-    vtkm::worklet::DispatcherMapField<RenderBitmapFont, Device> dispatcher(Worklet);
+    vtkm::worklet::DispatcherMapField<RenderBitmapFont> dispatcher(Worklet);
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(
       ScreenCoords, TextureCoords, FontTexture.GetExecObjectFactory(), ColorBuffer, DepthBuffer);
     return true;

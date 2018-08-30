@@ -117,8 +117,10 @@ public:
   template <typename Device, typename T>
   static void ResetStatus(Ray<T>& rays, vtkm::UInt8 status, Device)
   {
-    vtkm::worklet::DispatcherMapField<MemSet<vtkm::UInt8>, Device>(MemSet<vtkm::UInt8>(status))
-      .Invoke(rays.Status);
+    vtkm::worklet::DispatcherMapField<MemSet<vtkm::UInt8>> dispatcher(
+      (MemSet<vtkm::UInt8>(status)));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Status);
   }
 
   //
@@ -129,8 +131,10 @@ public:
   template <typename Device, typename T>
   static void UpdateRayStatus(Ray<T>& rays, Device)
   {
-    vtkm::worklet::DispatcherMapField<detail::RayStatusFilter, Device>(detail::RayStatusFilter())
-      .Invoke(rays.HitIdx, rays.Status);
+    vtkm::worklet::DispatcherMapField<detail::RayStatusFilter> dispatcher{ (
+      detail::RayStatusFilter{}) };
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.HitIdx, rays.Status);
   }
 
   static void MapCanvasToRays(Ray<vtkm::Float32>& rays,
@@ -146,9 +150,10 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::UInt8> masks;
 
-    vtkm::worklet::DispatcherMapField<ManyMask<vtkm::UInt8, 2>, Device>(
-      ManyMask<vtkm::UInt8, 2>(maskValues))
-      .Invoke(rays.Status, masks);
+    vtkm::worklet::DispatcherMapField<ManyMask<vtkm::UInt8, 2>> dispatcher{ (
+      ManyMask<vtkm::UInt8, 2>{ maskValues }) };
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Status, masks);
     vtkm::cont::ArrayHandleCast<vtkm::Id, vtkm::cont::ArrayHandle<vtkm::UInt8>> castedMasks(masks);
     const vtkm::Id initVal = 0;
     vtkm::Id count = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(castedMasks, initVal);
@@ -168,8 +173,10 @@ public:
     statusUInt8 = static_cast<vtkm::UInt8>(status);
     vtkm::cont::ArrayHandle<vtkm::UInt8> masks;
 
-    vtkm::worklet::DispatcherMapField<Mask<vtkm::UInt8>, Device>(Mask<vtkm::UInt8>(statusUInt8))
-      .Invoke(rays.Status, masks);
+    vtkm::worklet::DispatcherMapField<Mask<vtkm::UInt8>> dispatcher{ (
+      Mask<vtkm::UInt8>{ statusUInt8 }) };
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Status, masks);
     vtkm::cont::ArrayHandleCast<vtkm::Id, vtkm::cont::ArrayHandle<vtkm::UInt8>> castedMasks(masks);
     const vtkm::Id initVal = 0;
     vtkm::Id count = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(castedMasks, initVal);
@@ -187,9 +194,10 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::UInt8> masks;
 
-    vtkm::worklet::DispatcherMapField<ManyMask<vtkm::UInt8, 3>, Device>(
-      ManyMask<vtkm::UInt8, 3>(maskValues))
-      .Invoke(rays.Status, masks);
+    vtkm::worklet::DispatcherMapField<ManyMask<vtkm::UInt8, 3>> dispatcher{ (
+      ManyMask<vtkm::UInt8, 3>{ maskValues }) };
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Status, masks);
     vtkm::cont::ArrayHandleCast<vtkm::Id, vtkm::cont::ArrayHandle<vtkm::UInt8>> castedMasks(masks);
     const vtkm::Id initVal = 0;
     vtkm::Id count = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(castedMasks, initVal);
@@ -205,8 +213,10 @@ public:
     vtkm::UInt8 statusUInt8 = static_cast<vtkm::UInt8>(RAY_ACTIVE);
     vtkm::cont::ArrayHandle<vtkm::UInt8> masks;
 
-    vtkm::worklet::DispatcherMapField<Mask<vtkm::UInt8>, Device>(Mask<vtkm::UInt8>(statusUInt8))
-      .Invoke(rays.Status, masks);
+    vtkm::worklet::DispatcherMapField<Mask<vtkm::UInt8>> dispatcher{ (
+      Mask<vtkm::UInt8>{ statusUInt8 }) };
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Status, masks);
 
     vtkm::cont::ArrayHandle<T> emptyHandle;
 
@@ -328,9 +338,10 @@ public:
   template <typename Device, typename T>
   static void CopyDistancesToMin(Ray<T> rays, Device, const T offset = 0.f)
   {
-    vtkm::worklet::DispatcherMapField<CopyAndOffsetMask<T>, Device>(
-      CopyAndOffsetMask<T>(offset, RAY_EXITED_MESH))
-      .Invoke(rays.Distance, rays.MinDistance, rays.Status);
+    vtkm::worklet::DispatcherMapField<CopyAndOffsetMask<T>> dispatcher{ (
+      CopyAndOffsetMask<T>{ offset, RAY_EXITED_MESH }) };
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Distance, rays.MinDistance, rays.Status);
   }
 };
 }

@@ -737,8 +737,9 @@ public:
 
     // Create a worklet to count the number of external faces on each cell
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numExternalFaces;
-    vtkm::worklet::DispatcherMapTopology<NumExternalFacesPerStructuredCell, DeviceAdapter>
+    vtkm::worklet::DispatcherMapTopology<NumExternalFacesPerStructuredCell>
       numExternalFacesDispatcher((NumExternalFacesPerStructuredCell(MinPoint, MaxPoint)));
+    numExternalFacesDispatcher.SetDevice(DeviceAdapter());
 
     numExternalFacesDispatcher.Invoke(inCellSet, numExternalFaces, coordData);
 
@@ -761,9 +762,10 @@ public:
     // information to.
     faceConnectivity.Allocate(connectivitySize);
 
-    vtkm::worklet::DispatcherMapTopology<BuildConnectivityStructured, DeviceAdapter>
+    vtkm::worklet::DispatcherMapTopology<BuildConnectivityStructured>
       buildConnectivityStructuredDispatcher(BuildConnectivityStructured(MinPoint, MaxPoint),
                                             scatterCellToExternalFace);
+    buildConnectivityStructuredDispatcher.SetDevice(DeviceAdapter());
 
     buildConnectivityStructuredDispatcher.Invoke(
       inCellSet,
@@ -797,7 +799,8 @@ public:
 
     //Create a worklet to map the number of faces to each cell
     vtkm::cont::ArrayHandle<vtkm::IdComponent> facesPerCell;
-    vtkm::worklet::DispatcherMapTopology<NumFacesPerCell, DeviceAdapter> numFacesDispatcher;
+    vtkm::worklet::DispatcherMapTopology<NumFacesPerCell> numFacesDispatcher;
+    numFacesDispatcher.SetDevice(DeviceAdapter());
 
     numFacesDispatcher.Invoke(inCellSet, facesPerCell);
 
@@ -813,7 +816,8 @@ public:
     if (this->PassPolyData)
     {
       vtkm::cont::ArrayHandle<vtkm::IdComponent> isPolyDataCell;
-      vtkm::worklet::DispatcherMapTopology<IsPolyDataCell, DeviceAdapter> isPolyDataCellDispatcher;
+      vtkm::worklet::DispatcherMapTopology<IsPolyDataCell> isPolyDataCellDispatcher;
+      isPolyDataCellDispatcher.SetDevice(DeviceAdapter());
 
       isPolyDataCellDispatcher.Invoke(inCellSet, isPolyDataCell);
 
@@ -823,16 +827,18 @@ public:
 
       if (scatterPolyDataCells.GetOutputRange(inCellSet.GetNumberOfCells()) != 0)
       {
-        vtkm::worklet::DispatcherMapTopology<CountPolyDataCellPoints, DeviceAdapter>
+        vtkm::worklet::DispatcherMapTopology<CountPolyDataCellPoints>
           countPolyDataCellPointsDispatcher(scatterPolyDataCells);
+        countPolyDataCellPointsDispatcher.SetDevice(DeviceAdapter());
 
         countPolyDataCellPointsDispatcher.Invoke(inCellSet, polyDataPointCount);
 
         vtkm::cont::ConvertNumComponentsToOffsets(
           polyDataPointCount, polyDataOffsets, polyDataConnectivitySize);
 
-        vtkm::worklet::DispatcherMapTopology<PassPolyDataCells, DeviceAdapter>
-          passPolyDataCellsDispatcher(scatterPolyDataCells);
+        vtkm::worklet::DispatcherMapTopology<PassPolyDataCells> passPolyDataCellsDispatcher(
+          scatterPolyDataCells);
+        passPolyDataCellsDispatcher.SetDevice(DeviceAdapter());
 
         polyDataConnectivity.Allocate(polyDataConnectivitySize);
 
@@ -869,23 +875,25 @@ public:
     vtkm::cont::ArrayHandle<vtkm::HashType> faceHashes;
     vtkm::cont::ArrayHandle<vtkm::Id> originCells;
     vtkm::cont::ArrayHandle<vtkm::IdComponent> originFaces;
-    vtkm::worklet::DispatcherMapTopology<FaceHash, DeviceAdapter> faceHashDispatcher(
-      scatterCellToFace);
+    vtkm::worklet::DispatcherMapTopology<FaceHash> faceHashDispatcher(scatterCellToFace);
+    faceHashDispatcher.SetDevice(DeviceAdapter());
 
     faceHashDispatcher.Invoke(inCellSet, faceHashes, originCells, originFaces);
 
     vtkm::worklet::Keys<vtkm::HashType> faceKeys(faceHashes, DeviceAdapter());
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> faceOutputCount;
-    vtkm::worklet::DispatcherReduceByKey<FaceCounts, DeviceAdapter> faceCountDispatcher;
+    vtkm::worklet::DispatcherReduceByKey<FaceCounts> faceCountDispatcher;
+    faceCountDispatcher.SetDevice(DeviceAdapter());
 
     faceCountDispatcher.Invoke(faceKeys, inCellSet, originCells, originFaces, faceOutputCount);
 
     auto scatterCullInternalFaces = NumPointsPerFace::MakeScatter(faceOutputCount, DeviceAdapter());
 
     PointCountArrayType facePointCount;
-    vtkm::worklet::DispatcherReduceByKey<NumPointsPerFace, DeviceAdapter> pointsPerFaceDispatcher(
+    vtkm::worklet::DispatcherReduceByKey<NumPointsPerFace> pointsPerFaceDispatcher(
       scatterCullInternalFaces);
+    pointsPerFaceDispatcher.SetDevice(DeviceAdapter());
 
     pointsPerFaceDispatcher.Invoke(faceKeys, inCellSet, originCells, originFaces, facePointCount);
 
@@ -900,8 +908,9 @@ public:
     // information to.
     faceConnectivity.Allocate(connectivitySize);
 
-    vtkm::worklet::DispatcherReduceByKey<BuildConnectivity, DeviceAdapter>
-      buildConnectivityDispatcher(scatterCullInternalFaces);
+    vtkm::worklet::DispatcherReduceByKey<BuildConnectivity> buildConnectivityDispatcher(
+      scatterCullInternalFaces);
+    buildConnectivityDispatcher.SetDevice(DeviceAdapter());
 
     vtkm::cont::ArrayHandle<vtkm::Id> faceToCellIdMap;
 

@@ -78,7 +78,8 @@ struct AverageByKey
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-    vtkm::worklet::DispatcherReduceByKey<AverageWorklet, Device> dispatcher;
+    vtkm::worklet::DispatcherReduceByKey<AverageWorklet> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(keys, inValues, outAverages);
   }
 
@@ -175,8 +176,9 @@ struct AverageByKey
       keyArraySorted, inputZipHandle, outputKeyArray, outputZipHandle, vtkm::Add());
 
     // get average
-    DispatcherMapField<DivideWorklet, DeviceAdapter>().Invoke(
-      sumArray, countArray, outputValueArray);
+    DispatcherMapField<DivideWorklet> dispatcher;
+    dispatcher.SetDevice(DeviceAdapter());
+    dispatcher.Invoke(sumArray, countArray, outputValueArray);
   }
 };
 }

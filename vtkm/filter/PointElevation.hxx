@@ -63,8 +63,8 @@ inline VTKM_CONT vtkm::cont::DataSet PointElevation::DoExecute(
   const DeviceAdapter&)
 {
   vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::PointElevation, DeviceAdapter> dispatcher(
-    this->Worklet);
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::PointElevation> dispatcher(this->Worklet);
+  dispatcher.SetDevice(DeviceAdapter());
 
   //todo, we need to use the policy to determine the valid conversions
   //that the dispatcher should do

@@ -55,8 +55,8 @@ inline VTKM_CONT vtkm::cont::DataSet CellAverage::DoExecute(
   //If the input is implicit, we should know what to fall back to
   vtkm::cont::ArrayHandle<T> outArray;
 
-  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage, DeviceAdapter> dispatcher(
-    this->Worklet);
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher(this->Worklet);
+  dispatcher.SetDevice(DeviceAdapter());
 
   dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellSet, policy), inField, outArray);
 

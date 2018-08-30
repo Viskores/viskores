@@ -60,7 +60,8 @@ struct DeducedPointGrad
   template <typename CellSetType>
   void operator()(const CellSetType& cellset) const
   {
-    vtkm::worklet::DispatcherMapTopology<PointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<PointGradient<T>> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       cellset, //whole cellset in
                       *this->Points,
@@ -70,7 +71,8 @@ struct DeducedPointGrad
 
   void operator()(const vtkm::cont::CellSetStructured<3>& cellset) const
   {
-    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       *this->Points,
                       *this->Field,
@@ -81,7 +83,8 @@ struct DeducedPointGrad
   void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>,
                                                        PermIterType>& cellset) const
   {
-    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       *this->Points,
                       *this->Field,
@@ -90,7 +93,8 @@ struct DeducedPointGrad
 
   void operator()(const vtkm::cont::CellSetStructured<2>& cellset) const
   {
-    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       *this->Points,
                       *this->Field,
@@ -101,7 +105,8 @@ struct DeducedPointGrad
   void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>,
                                                        PermIterType>& cellset) const
   {
-    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       *this->Points,
                       *this->Field,
@@ -273,11 +278,11 @@ public:
                                                DeviceAdapter)
   {
     using DispatcherType =
-      vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient<T>, DeviceAdapter>;
+      vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient<T>>;
 
     vtkm::worklet::gradient::CellGradient<T> worklet;
     DispatcherType dispatcher(worklet);
-
+    dispatcher.SetDevice(DeviceAdapter());
 
     dispatcher.Invoke(cells, coords, field, extraOutput);
     return extraOutput.Gradient;

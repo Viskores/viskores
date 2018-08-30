@@ -101,19 +101,24 @@ void RayTracking<FloatType>::Init(const vtkm::Id size,
   //
   // Set the initial Distances
   //
-  vtkm::worklet::DispatcherMapField<CopyAndOffset<FloatType>, Device>(
-    CopyAndOffset<FloatType>(0.0f))
-    .Invoke(distances, *EnterDist);
+  vtkm::worklet::DispatcherMapField<CopyAndOffset<FloatType>> resetDistancesDispatcher(
+    CopyAndOffset<FloatType>(0.0f));
+  resetDistancesDispatcher.SetDevice(Device());
+  resetDistancesDispatcher.Invoke(distances, *EnterDist);
 
   //
   // Init the exit faces. This value is used to load the next cell
   // base on the cell and face it left
   //
-  vtkm::worklet::DispatcherMapField<MemSet<vtkm::Int32>, Device>(MemSet<vtkm::Int32>(-1))
-    .Invoke(ExitFace);
+  vtkm::worklet::DispatcherMapField<MemSet<vtkm::Int32>> initExitFaceDispatcher(
+    MemSet<vtkm::Int32>(-1));
+  initExitFaceDispatcher.SetDevice(Device());
+  initExitFaceDispatcher.Invoke(ExitFace);
 
-  vtkm::worklet::DispatcherMapField<MemSet<FloatType>, Device>(MemSet<FloatType>(-1))
-    .Invoke(*ExitDist);
+  vtkm::worklet::DispatcherMapField<MemSet<FloatType>> initExitDistanceDispatcher(
+    MemSet<FloatType>(-1));
+  initExitDistanceDispatcher.SetDevice(Device());
+  initExitDistanceDispatcher.Invoke(*ExitDist);
 }
 
 template <typename FloatType>
@@ -956,15 +961,16 @@ void ConnectivityTracer<CellType, ConnectivityType>::IntersectCell(
 {
   using LocateC = LocateCell<CellType, FloatType, MeshConnExec<ConnectivityType, Device>>;
   vtkm::cont::Timer<Device> timer;
-  vtkm::worklet::DispatcherMapField<LocateC, Device>(LocateC(MeshConn))
-    .Invoke(rays.HitIdx,
-            this->MeshConn.GetCoordinates(),
-            rays.Dir,
-            *(tracker.EnterDist),
-            *(tracker.ExitDist),
-            tracker.ExitFace,
-            rays.Status,
-            rays.Origin);
+  vtkm::worklet::DispatcherMapField<LocateC> dispatcher((LocateC(MeshConn)));
+  dispatcher.SetDevice(Device());
+  dispatcher.Invoke(rays.HitIdx,
+                    this->MeshConn.GetCoordinates(),
+                    rays.Dir,
+                    *(tracker.EnterDist),
+                    *(tracker.ExitDist),
+                    tracker.ExitFace,
+                    rays.Status,
+                    rays.Origin);
 
   if (this->CountRayStatus)
     RaysLost = RayOperations::GetStatusCount(rays, RAY_LOST, Device());
@@ -978,11 +984,11 @@ void ConnectivityTracer<CellType, ConnectivityType>::AccumulatePathLengths(
   detail::RayTracking<FloatType>& tracker,
   Device)
 {
-  vtkm::worklet::DispatcherMapField<AddPathLengths<FloatType>, Device>(AddPathLengths<FloatType>())
-    .Invoke(rays.Status,
-            *(tracker.EnterDist),
-            *(tracker.ExitDist),
-            rays.GetBuffer("path_lengths").Buffer);
+  vtkm::worklet::DispatcherMapField<AddPathLengths<FloatType>> dispatcher(
+    (AddPathLengths<FloatType>()));
+  dispatcher.SetDevice(Device());
+  dispatcher.Invoke(
+    rays.Status, *(tracker.EnterDist), *(tracker.ExitDist), rays.GetBuffer("path_lengths").Buffer);
 }
 
 template <vtkm::Int32 CellType, typename ConnectivityType>
@@ -995,15 +1001,16 @@ void ConnectivityTracer<CellType, ConnectivityType>::FindLostRays(
   using RayB = RayBumper<CellType, FloatType, Device, MeshConnExec<ConnectivityType, Device>>;
   vtkm::cont::Timer<Device> timer;
 
-  vtkm::worklet::DispatcherMapField<RayB, Device>(
-    RayB(rays.DirX, rays.DirY, rays.DirZ, this->MeshConn))
-    .Invoke(rays.HitIdx,
-            this->MeshConn.GetCoordinates(),
-            *(tracker.EnterDist),
-            *(tracker.ExitDist),
-            tracker.ExitFace,
-            rays.Status,
-            rays.Origin);
+  vtkm::worklet::DispatcherMapField<RayB> dispatcher(
+    RayB(rays.DirX, rays.DirY, rays.DirZ, this->MeshConn));
+  dispatcher.SetDevice(Device());
+  dispatcher.Invoke(rays.HitIdx,
+                    this->MeshConn.GetCoordinates(),
+                    *(tracker.EnterDist),
+                    *(tracker.ExitDist),
+                    tracker.ExitFace,
+                    rays.Status,
+                    rays.Origin);
 
   this->LostRayTime += timer.GetElapsedTime();
 }
@@ -1025,38 +1032,40 @@ void ConnectivityTracer<CellType, ConnectivityType>::SampleCells(
 
   if (FieldAssocPoints)
   {
-    vtkm::worklet::DispatcherMapField<SampleP, Device>(
+    vtkm::worklet::DispatcherMapField<SampleP> dispatcher(
       SampleP(this->SampleDistance,
               vtkm::Float32(this->ScalarBounds.Min),
               vtkm::Float32(this->ScalarBounds.Max),
               this->ColorMap,
               rays.Buffers.at(0).Buffer,
-              this->MeshConn))
-      .Invoke(rays.HitIdx,
-              this->MeshConn.GetCoordinates(),
-              this->ScalarField.GetData(),
-              *(tracker.EnterDist),
-              *(tracker.ExitDist),
-              tracker.CurrentDistance,
-              rays.Dir,
-              rays.Status,
-              rays.Origin);
+              this->MeshConn));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.HitIdx,
+                      this->MeshConn.GetCoordinates(),
+                      this->ScalarField.GetData(),
+                      *(tracker.EnterDist),
+                      *(tracker.ExitDist),
+                      tracker.CurrentDistance,
+                      rays.Dir,
+                      rays.Status,
+                      rays.Origin);
   }
   else
   {
-    vtkm::worklet::DispatcherMapField<SampleC, Device>(
+    vtkm::worklet::DispatcherMapField<SampleC> dispatcher(
       SampleC(this->SampleDistance,
               vtkm::Float32(this->ScalarBounds.Min),
               vtkm::Float32(this->ScalarBounds.Max),
               this->ColorMap,
               rays.Buffers.at(0).Buffer,
-              this->MeshConn))
-      .Invoke(rays.HitIdx,
-              this->ScalarField.GetData(),
-              *(tracker.EnterDist),
-              *(tracker.ExitDist),
-              tracker.CurrentDistance,
-              rays.Status);
+              this->MeshConn));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.HitIdx,
+                      this->ScalarField.GetData(),
+                      *(tracker.EnterDist),
+                      *(tracker.ExitDist),
+                      tracker.CurrentDistance,
+                      rays.Status);
   }
 
   this->SampleTime += timer.GetElapsedTime();
@@ -1075,29 +1084,31 @@ void ConnectivityTracer<CellType, ConnectivityType>::IntegrateCells(
     bool divideEmisByAbsorp = false;
     vtkm::cont::ArrayHandle<FloatType> absorp = rays.Buffers.at(0).Buffer;
     vtkm::cont::ArrayHandle<FloatType> emission = rays.GetBuffer("emission").Buffer;
-    vtkm::worklet::DispatcherMapField<IntegrateEmission<FloatType>, Device>(
-      IntegrateEmission<FloatType>(rays.Buffers.at(0).GetNumChannels(), divideEmisByAbsorp))
-      .Invoke(rays.Status,
-              *(tracker.EnterDist),
-              *(tracker.ExitDist),
-              rays.Distance,
-              this->ScalarField.GetData(),
-              this->EmissionField.GetData(),
-              absorp,
-              emission,
-              rays.HitIdx);
+    vtkm::worklet::DispatcherMapField<IntegrateEmission<FloatType>> dispatcher(
+      IntegrateEmission<FloatType>(rays.Buffers.at(0).GetNumChannels(), divideEmisByAbsorp));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Status,
+                      *(tracker.EnterDist),
+                      *(tracker.ExitDist),
+                      rays.Distance,
+                      this->ScalarField.GetData(),
+                      this->EmissionField.GetData(),
+                      absorp,
+                      emission,
+                      rays.HitIdx);
   }
   else
   {
-    vtkm::worklet::DispatcherMapField<Integrate<FloatType>, Device>(
-      Integrate<FloatType>(rays.Buffers.at(0).GetNumChannels()))
-      .Invoke(rays.Status,
-              *(tracker.EnterDist),
-              *(tracker.ExitDist),
-              rays.Distance,
-              this->ScalarField.GetData(),
-              rays.Buffers.at(0).Buffer,
-              rays.HitIdx);
+    vtkm::worklet::DispatcherMapField<Integrate<FloatType>> dispatcher(
+      Integrate<FloatType>(rays.Buffers.at(0).GetNumChannels()));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Status,
+                      *(tracker.EnterDist),
+                      *(tracker.ExitDist),
+                      rays.Distance,
+                      this->ScalarField.GetData(),
+                      rays.Buffers.at(0).Buffer,
+                      rays.HitIdx);
   }
 
   IntegrateTime += timer.GetElapsedTime();
@@ -1136,9 +1147,10 @@ template <typename FloatType, typename Device>
 void ConnectivityTracer<CellType, ConnectivityType>::OffsetMinDistances(Ray<FloatType>& rays,
                                                                         Device)
 {
-  vtkm::worklet::DispatcherMapField<AdvanceRay<FloatType>, Device>(
-    AdvanceRay<FloatType>(FloatType(0.001)))
-    .Invoke(rays.Status, rays.MinDistance);
+  vtkm::worklet::DispatcherMapField<AdvanceRay<FloatType>> dispatcher(
+    AdvanceRay<FloatType>(FloatType(0.001)));
+  dispatcher.SetDevice(Device());
+  dispatcher.Invoke(rays.Status, rays.MinDistance);
 }
 
 template <vtkm::Int32 CellType, typename ConnectivityType>
@@ -1253,9 +1265,10 @@ void ConnectivityTracer<CellType, ConnectivityType>::RenderOnDevice(Ray<FloatTyp
   {
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> pCounter(0, 1, rays.NumRays);
-    vtkm::worklet::DispatcherMapField<IdentifyMissedRay, Device>(
-      IdentifyMissedRay(rays.DebugWidth, rays.DebugHeight, this->BackgroundColor))
-      .Invoke(pCounter, rays.Buffers.at(0).Buffer);
+    vtkm::worklet::DispatcherMapField<IdentifyMissedRay> dispatcher(
+      IdentifyMissedRay(rays.DebugWidth, rays.DebugHeight, this->BackgroundColor));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(pCounter, rays.Buffers.at(0).Buffer);
   }
   vtkm::Float64 renderTime = renderTimer.GetElapsedTime();
   this->LogTimers();

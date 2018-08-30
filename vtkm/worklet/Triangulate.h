@@ -60,11 +60,12 @@ public:
   }
 
   // Triangulate explicit data set, save number of triangulated cells per input
-  template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet, const DeviceAdapter&)
+  template <typename CellSetType>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      vtkm::cont::DeviceAdapterId device)
   {
-    TriangulateExplicit<DeviceAdapter> worklet;
-    return worklet.Run(cellSet, this->OutCellsPerCell);
+    TriangulateExplicit worklet;
+    return worklet.Run(cellSet, this->OutCellsPerCell, device);
   }
 
   // Triangulate structured data set, save number of triangulated cells per input
@@ -90,8 +91,9 @@ public:
   {
     vtkm::cont::ArrayHandle<ValueType> output;
 
-    vtkm::worklet::DispatcherMapField<DistributeCellData, DeviceAdapter> dispatcher(
+    vtkm::worklet::DispatcherMapField<DistributeCellData> dispatcher(
       DistributeCellData::MakeScatter(this->OutCellsPerCell, device));
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(input, output);
 
     return output;

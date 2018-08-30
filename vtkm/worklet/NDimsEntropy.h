@@ -80,9 +80,9 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float64> informationContent;
     vtkm::worklet::histogram::SetBinInformationContent binWorklet(
       static_cast<vtkm::Float64>(freqSum));
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::SetBinInformationContent,
-                                      DeviceAdapter>
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::SetBinInformationContent>
       setBinInformationContentDispatcher(binWorklet);
+    setBinInformationContentDispatcher.SetDevice(DeviceAdapter());
     setBinInformationContentDispatcher.Invoke(freqs, informationContent);
 
     ///// calculate entropy by summing up information conetent of all bins /////

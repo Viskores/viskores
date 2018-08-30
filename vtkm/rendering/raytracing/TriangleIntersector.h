@@ -1049,16 +1049,17 @@ public:
   template <typename DynamicCoordType, typename Precision>
   VTKM_CONT void run(Ray<Precision>& rays, LinearBVH& bvh, DynamicCoordType coordsHandle)
   {
-    vtkm::worklet::DispatcherMapField<Intersector, Device>(Intersector(false, bvh))
-      .Invoke(rays.Dir,
-              rays.Origin,
-              rays.Distance,
-              rays.MinDistance,
-              rays.MaxDistance,
-              rays.U,
-              rays.V,
-              rays.HitIdx,
-              coordsHandle);
+    vtkm::worklet::DispatcherMapField<Intersector> dispatcher(Intersector(false, bvh));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Dir,
+                      rays.Origin,
+                      rays.Distance,
+                      rays.MinDistance,
+                      rays.MaxDistance,
+                      rays.U,
+                      rays.V,
+                      rays.HitIdx,
+                      coordsHandle);
   }
 
   template <typename DynamicCoordType, typename Precision>
@@ -1068,21 +1069,24 @@ public:
                             bool returnCellIndex)
   {
 
-    vtkm::worklet::DispatcherMapField<IntersectorHitIndex<Precision>, Device>(
-      IntersectorHitIndex<Precision>(false, bvh))
-      .Invoke(rays.Dir,
-              rays.HitIdx,
-              coordsHandle,
-              rays.Distance,
-              rays.MinDistance,
-              rays.MaxDistance,
-              rays.Origin);
+    vtkm::worklet::DispatcherMapField<IntersectorHitIndex<Precision>> dispatcher(
+      IntersectorHitIndex<Precision>(false, bvh));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.Dir,
+                      rays.HitIdx,
+                      coordsHandle,
+                      rays.Distance,
+                      rays.MinDistance,
+                      rays.MaxDistance,
+                      rays.Origin);
     // Normally we return the index of the triangle hit,
     // but in some cases we are only interested in the cell
     if (returnCellIndex)
     {
-      vtkm::worklet::DispatcherMapField<CellIndexFilter, Device>(CellIndexFilter(bvh))
-        .Invoke(rays.HitIdx);
+      vtkm::worklet::DispatcherMapField<CellIndexFilter> cellIndexFilterDispatcher(
+        (CellIndexFilter(bvh)));
+      cellIndexFilterDispatcher.SetDevice(Device());
+      cellIndexFilterDispatcher.Invoke(rays.HitIdx);
     }
     // Update ray status
     RayOperations::UpdateRayStatus(rays, Device());

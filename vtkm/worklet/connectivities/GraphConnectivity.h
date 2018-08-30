@@ -90,16 +90,19 @@ public:
 
     do
     {
-      vtkm::worklet::DispatcherMapField<detail::Graft, DeviceAdapter> graftDispatcher;
+      vtkm::worklet::DispatcherMapField<detail::Graft> graftDispatcher;
+      graftDispatcher.SetDevice(DeviceAdapter());
       graftDispatcher.Invoke(
         cellIds, indexOffsetArray, numIndexArray, connectivityArray, components);
 
       // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
-      vtkm::worklet::DispatcherMapField<IsStar, DeviceAdapter> isStarDisp;
+      vtkm::worklet::DispatcherMapField<IsStar> isStarDisp;
+      isStarDisp.SetDevice(DeviceAdapter());
       isStarDisp.Invoke(cellIds, components, isStar);
       allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());
 
-      vtkm::worklet::DispatcherMapField<PointerJumping, DeviceAdapter> pointJumpingDispatcher;
+      vtkm::worklet::DispatcherMapField<PointerJumping> pointJumpingDispatcher;
+      pointJumpingDispatcher.SetDevice(DeviceAdapter());
       pointJumpingDispatcher.Invoke(cellIds, components);
     } while (!allStar);
 

@@ -32,14 +32,14 @@ namespace worklet
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletMapTopology.
 ///
-template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template <typename WorkletType>
 class DispatcherMapTopology
-  : public vtkm::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType, Device>,
+  : public vtkm::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType>,
                                                    WorkletType,
                                                    vtkm::worklet::detail::WorkletMapTopologyBase>
 {
   using Superclass =
-    vtkm::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType, Device>,
+    vtkm::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType>,
                                             WorkletType,
                                             vtkm::worklet::detail::WorkletMapTopologyBase>;
   using ScatterType = typename Superclass::ScatterType;
@@ -81,8 +81,7 @@ public:
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BadicInvoke.
-    this->BasicInvoke(
-      invocation, internal::scheduling_range(inputDomain, SchedulingRangeType{}), Device());
+    this->BasicInvoke(invocation, internal::scheduling_range(inputDomain, SchedulingRangeType{}));
   }
 };
 }

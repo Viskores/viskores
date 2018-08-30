@@ -39,7 +39,8 @@ struct DotProductFunctor
   template <typename PrimaryFieldType, typename SecondaryFieldType>
   void operator()(const SecondaryFieldType& secondaryField, const PrimaryFieldType& primaryField)
   {
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::DotProduct, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::DotProduct> dispatcher;
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(primaryField,
                       vtkm::cont::make_ArrayHandleCast<vtkm::Vec<T, 3>>(secondaryField),
                       this->OutArray);

@@ -134,7 +134,8 @@ public:
     }
     VTKM_ASSERT(this->MaskArray.GetNumberOfValues() == inCellSet.GetNumberOfPoints());
 
-    vtkm::worklet::DispatcherMapField<GeneratePointMask, Device> dispatcher;
+    vtkm::worklet::DispatcherMapField<GeneratePointMask> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(inCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
                                                      vtkm::TopologyElementTagCell()),
                       this->MaskArray);
@@ -181,7 +182,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id, NewConnectivityStorage> newConnectivityArray;
 
-    vtkm::worklet::DispatcherMapField<TransformPointIndices, Device> dispatcher;
+    vtkm::worklet::DispatcherMapField<TransformPointIndices> dispatcher;
+    dispatcher.SetDevice(Device());
     dispatcher.Invoke(inCellSet.GetConnectivityArray(FromTopology(), ToTopology()),
                       this->PointScatter->GetInputToOutputMap(),
                       newConnectivityArray);
