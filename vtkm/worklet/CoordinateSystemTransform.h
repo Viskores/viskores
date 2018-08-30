@@ -143,11 +143,13 @@ public:
     if (cartesianToCylindrical)
     {
       vtkm::worklet::DispatcherMapField<detail::CarToCyl<T>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(inPoints, outPoints);
     }
     else
     {
       vtkm::worklet::DispatcherMapField<detail::CylToCar<T>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(inPoints, outPoints);
     }
   }
@@ -160,11 +162,13 @@ public:
     if (cartesianToCylindrical)
     {
       vtkm::worklet::DispatcherMapField<detail::CarToCyl<T>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(inPoints, outPoints);
     }
     else
     {
       vtkm::worklet::DispatcherMapField<detail::CylToCar<T>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(inPoints, outPoints);
     }
   }
