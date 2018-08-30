@@ -97,6 +97,7 @@ vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
+vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
 
 vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)

@@ -25,6 +25,7 @@
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 #include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
@@ -50,6 +51,8 @@ public:
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
                              vtkm::cont::ArrayHandle<U, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id inSize = input.GetNumberOfValues();
     auto inputPortal = input.PrepareForInput(DeviceAdapterTagTBB());
     auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagTBB());
@@ -62,6 +65,8 @@ public:
                                const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
                                vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     ::vtkm::NotZeroInitialized unary_predicate;
     CopyIf(input, stencil, output, unary_predicate);
   }
@@ -72,6 +77,8 @@ public:
                                vtkm::cont::ArrayHandle<T, COut>& output,
                                UnaryPredicate unary_predicate)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id inputSize = input.GetNumberOfValues();
     VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
     vtkm::Id outputSize =
@@ -89,6 +96,8 @@ public:
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
@@ -142,6 +151,8 @@ public:
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return Reduce(input, initialValue, vtkm::Add());
   }
 
@@ -150,6 +161,8 @@ public:
                             U initialValue,
                             BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return tbb::ReducePortals(
       input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()), initialValue, binary_functor);
   }
@@ -167,6 +180,8 @@ public:
                                     vtkm::cont::ArrayHandle<U, CValOut>& values_output,
                                     BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id inputSize = keys.GetNumberOfValues();
     VTKM_ASSERT(inputSize == values.GetNumberOfValues());
     vtkm::Id outputSize =
@@ -183,6 +198,8 @@ public:
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return tbb::ScanInclusivePortals(
       input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
       output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
@@ -194,6 +211,8 @@ public:
                                    vtkm::cont::ArrayHandle<T, COut>& output,
                                    BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return tbb::ScanInclusivePortals(
       input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
       output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
@@ -204,6 +223,8 @@ public:
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return tbb::ScanExclusivePortals(
       input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
       output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
@@ -217,6 +238,8 @@ public:
                                    BinaryFunctor binary_functor,
                                    const T& initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return tbb::ScanExclusivePortals(
       input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
       output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
@@ -232,6 +255,9 @@ public:
   template <class FunctorType>
   VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id numInstances)
   {
+    VTKM_LOG_SCOPE(
+      vtkm::cont::LogLevel::Perf, "Schedule TBB 1D: '%s'", vtkm::cont::TypeName(functor).c_str());
+
     vtkm::exec::tbb::internal::TaskTiling1D kernel(functor);
     ScheduleTask(kernel, numInstances);
   }
@@ -239,6 +265,9 @@ public:
   template <class FunctorType>
   VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id3 rangeMax)
   {
+    VTKM_LOG_SCOPE(
+      vtkm::cont::LogLevel::Perf, "Schedule TBB 3D: '%s'", vtkm::cont::TypeName(functor).c_str());
+
     vtkm::exec::tbb::internal::TaskTiling3D kernel(functor);
     ScheduleTask(kernel, rangeMax);
   }

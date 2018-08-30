@@ -21,6 +21,11 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/Error.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/ErrorBadDevice.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -29,10 +34,30 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+#include <exception>
+
 namespace
 {
 
 static constexpr vtkm::Id ARRAY_SIZE = 10;
+
+class ErrorDeviceIndependent : public vtkm::cont::Error
+{
+public:
+  ErrorDeviceIndependent(const std::string& msg)
+    : vtkm::cont::Error(msg, true)
+  {
+  }
+};
+
+class ErrorDeviceDependent : public vtkm::cont::Error
+{
+public:
+  ErrorDeviceDependent(const std::string& msg)
+    : vtkm::cont::Error(msg, false)
+  {
+  }
+};
 
 struct TryExecuteTestFunctor
 {
@@ -53,6 +78,16 @@ struct TryExecuteTestFunctor
     Algorithm::Copy(in, out);
     this->NumCalls++;
     return true;
+  }
+};
+
+template <typename ExceptionT>
+struct TryExecuteTestErrorFunctor
+{
+  template <typename Device>
+  VTKM_CONT bool operator()(Device)
+  {
+    throw ExceptionT("Test message");
   }
 };
 
@@ -171,11 +206,74 @@ void TryExecuteTests(DeviceList list, bool expectSuccess)
   TryExecuteWithDevice(list, expectSuccess);
 }
 
+template <typename ExceptionType>
+void RunErrorTest(bool shouldFail, bool shouldThrow, bool shouldDisable)
+{
+  using Device = vtkm::cont::DeviceAdapterTagSerial;
+  using Functor = TryExecuteTestErrorFunctor<ExceptionType>;
+
+  // Initialize this one to what we expect -- it won't get set if we throw.
+  bool succeeded = !shouldFail;
+  bool threw = false;
+  bool disabled = false;
+
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(Device{});
+
+  try
+  {
+    succeeded = vtkm::cont::TryExecute(Functor{});
+    threw = false;
+  }
+  catch (...)
+  {
+    threw = true;
+  }
+
+  disabled = !tracker.CanRunOn(Device{});
+  tracker.Reset();
+
+  std::cout << "Failed: " << !succeeded << " "
+            << "Threw: " << threw << " "
+            << "Disabled: " << disabled << "\n"
+            << std::endl;
+
+  VTKM_TEST_ASSERT(shouldFail == !succeeded, "TryExecute return status incorrect.");
+  VTKM_TEST_ASSERT(threw == shouldThrow, "TryExecute throw behavior incorrect.");
+  VTKM_TEST_ASSERT(disabled == shouldDisable, "TryExecute device-disabling behavior incorrect.");
+}
+
+void TryExecuteErrorTests()
+{
+  std::cout << "Test ErrorBadAllocation." << std::endl;
+  RunErrorTest<vtkm::cont::ErrorBadAllocation>(true, false, true);
+
+  std::cout << "Test ErrorBadDevice." << std::endl;
+  RunErrorTest<vtkm::cont::ErrorBadDevice>(true, false, true);
+
+  std::cout << "Test ErrorBadType." << std::endl;
+  RunErrorTest<vtkm::cont::ErrorBadType>(true, false, false);
+
+  std::cout << "Test ErrorBadValue." << std::endl;
+  RunErrorTest<vtkm::cont::ErrorBadValue>(true, true, false);
+
+  std::cout << "Test custom vtkm Error (dev indep)." << std::endl;
+  RunErrorTest<ErrorDeviceIndependent>(true, true, false);
+
+  std::cout << "Test custom vtkm Error (dev dep)." << std::endl;
+  RunErrorTest<ErrorDeviceDependent>(true, false, false);
+
+  std::cout << "Test std::exception." << std::endl;
+  RunErrorTest<std::runtime_error>(true, false, false);
+
+  std::cout << "Test throw non-exception." << std::endl;
+  RunErrorTest<std::string>(true, false, false);
+}
+
 static void Run()
 {
   using ValidDevice = vtkm::cont::DeviceAdapterTagSerial;
   using InvalidDevice = vtkm::cont::DeviceAdapterTagError;
-
 
   TryExecuteAllEdgeCases();
 
@@ -194,6 +292,8 @@ static void Run()
   std::cout << "Try a list with an invalid and valid device." << std::endl;
   using InvalidAndValidList = vtkm::ListTagBase<InvalidDevice, ValidDevice>;
   TryExecuteTests(InvalidAndValidList(), true);
+
+  TryExecuteErrorTests();
 }
 
 } // anonymous namespace

@@ -27,6 +27,7 @@
 
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
@@ -662,6 +663,9 @@ public:
   template <typename... Args>
   VTKM_CONT void Invoke(Args&&... args) const
   {
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
+                   "Invoking Worklet: '%s'",
+                   vtkm::cont::TypeName<WorkletType>().c_str());
     this->StartInvoke(std::forward<Args>(args)...);
   }
 

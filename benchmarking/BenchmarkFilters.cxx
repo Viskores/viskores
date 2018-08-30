@@ -32,6 +32,7 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorInternal.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
@@ -1282,6 +1283,8 @@ int BenchmarkBody(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+  vtkm::cont::InitLogging(argc, argv);
+
   int retval = 1;
   try
   {

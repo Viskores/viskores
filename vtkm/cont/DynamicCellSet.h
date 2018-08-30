@@ -23,6 +23,7 @@
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetListTag.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/Logging.h>
 
 #include <vtkm/cont/internal/DynamicTransform.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
@@ -186,8 +187,10 @@ public:
       detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
     if (cellSetPointer == nullptr)
     {
+      VTKM_LOG_CAST_FAIL(*this, CellSetType);
       throw vtkm::cont::ErrorBadType("Bad cast of dynamic cell set.");
     }
+    VTKM_LOG_CAST_SUCC(*this, *cellSetPointer);
     return *cellSetPointer;
   }
 
@@ -289,6 +292,7 @@ struct DynamicCellSetTry
       downcastType downcastContainer = dynamic_cast<downcastType>(this->Container);
       if (downcastContainer)
       {
+        VTKM_LOG_CAST_SUCC(*this->Container, *downcastContainer);
         f(downcastContainer->Item, std::forward<Args>(args)...);
         called = true;
       }
@@ -310,6 +314,7 @@ VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(Functor&& f, Args&&.
     tryCellSet, CellSetList{}, std::forward<Functor>(f), called, std::forward<Args>(args)...);
   if (!called)
   {
+    VTKM_LOG_CAST_FAIL(*this, CellSetList);
     throw vtkm::cont::ErrorBadValue("Could not find appropriate cast for cell set.");
   }
 }
