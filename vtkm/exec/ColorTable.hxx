@@ -303,6 +303,8 @@ inline float DivergingAngleDiff(float a1, float a2)
 VTKM_EXEC
 inline float DivergingAdjustHue(const vtkm::Vec<float, 3>& msh, float unsatM)
 {
+  const float sinS = vtkm::Sin(msh[1]);
+
   if (msh[0] >= unsatM - 0.1f)
   {
     // The best we can do is hold hue constant.
@@ -312,8 +314,7 @@ inline float DivergingAdjustHue(const vtkm::Vec<float, 3>& msh, float unsatM)
   {
     // This equation is designed to make the perceptual change of the
     // interpolation to be close to constant.
-    float hueSpin =
-      (msh[1] * vtkm::Sqrt(unsatM * unsatM - msh[0] * msh[0]) / (msh[0] * vtkm::Sin(msh[1])));
+    float hueSpin = msh[1] * vtkm::Sqrt(unsatM * unsatM - msh[0] * msh[0]) / (msh[0] * sinS);
 
     constexpr float one_third_pi = vtkm::Pi_3f();
     // Spin hue away from 0 except in purple hues.
@@ -609,6 +610,7 @@ vtkm::Vec<float, 3> ColorTableDiverging::MapThroughColorSpace(const vtkm::Vec<fl
   detail::LabToMsh(lab2, msh2);
   // If the endpoints are distinct saturated colors, then place white in between
   // them.
+
   constexpr float one_third_pi = vtkm::Pi_3f();
   if ((msh1[1] > 0.05f) && (msh2[1] > 0.05f) &&
       (detail::DivergingAngleDiff(msh1[2], msh2[2]) > one_third_pi))
