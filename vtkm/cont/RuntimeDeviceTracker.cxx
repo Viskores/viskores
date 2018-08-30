@@ -93,31 +93,28 @@ RuntimeDeviceTracker::~RuntimeDeviceTracker()
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::CheckDevice(vtkm::cont::DeviceAdapterId deviceId,
-                                       const vtkm::cont::DeviceAdapterNameType& deviceName) const
+void RuntimeDeviceTracker::CheckDevice(vtkm::cont::DeviceAdapterId deviceId) const
 {
   if (!deviceId.IsValueValid())
   {
     std::stringstream message;
-    message << "Device '" << deviceName << "' has invalid ID of " << (int)deviceId.GetValue();
+    message << "Device '" << deviceId.GetName() << "' has invalid ID of "
+            << (int)deviceId.GetValue();
     throw vtkm::cont::ErrorBadValue(message.str());
   }
 }
 
 VTKM_CONT
-bool RuntimeDeviceTracker::CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId,
-                                        const vtkm::cont::DeviceAdapterNameType& deviceName) const
+bool RuntimeDeviceTracker::CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId) const
 {
-  this->CheckDevice(deviceId, deviceName);
+  this->CheckDevice(deviceId);
   return this->Internals->RuntimeValid[deviceId.GetValue()];
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId,
-                                          const vtkm::cont::DeviceAdapterNameType& deviceName,
-                                          bool state)
+void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, bool state)
 {
-  this->CheckDevice(deviceId, deviceName);
+  this->CheckDevice(deviceId);
   this->Internals->RuntimeValid[deviceId.GetValue()] = state;
 }
 
@@ -167,18 +164,16 @@ void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker& src)
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
-                                           const vtkm::cont::DeviceAdapterNameType& deviceName,
-                                           bool runtimeExists)
+void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId, bool runtimeExists)
 {
   if (!runtimeExists)
   {
     std::stringstream message;
-    message << "Cannot force to device '" << deviceName
+    message << "Cannot force to device '" << deviceId.GetName()
             << "' because that device is not available on this system";
     throw vtkm::cont::ErrorBadValue(message.str());
   }
-  this->CheckDevice(deviceId, deviceName);
+  this->CheckDevice(deviceId);
 
   std::fill_n(this->Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, false);
 

@@ -131,9 +131,9 @@ public:
       if (!this->Internals->Transfers[static_cast<std::size_t>(deviceId.GetValue())])
       {
         std::string msg =
-          "VTK-m was asked to transfer a VirtualObjectHandle for execution on DeviceAdapter " +
-          std::to_string(deviceId.GetValue()) +
-          ". It can't as this VirtualObjectHandle was not constructed/bound with this "
+          "VTK-m was asked to transfer a VirtualObjectHandle for execution on DeviceAdapter '" +
+          deviceId.GetName() + "' (" + std::to_string(deviceId.GetValue()) +
+          "). It can't as this VirtualObjectHandle was not constructed/bound with this "
           "DeviceAdapter in the list of valid DeviceAdapters.";
         throw vtkm::cont::ErrorBadDevice(msg);
       }
