@@ -50,12 +50,9 @@ public:
     Bounds = coords.GetBounds();
     Dims = cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
 
-    RangeTransform[0] =
-      static_cast<vtkm::FloatDefault>((Dims[0] - 1.0l) / (Bounds.X.Max - Bounds.X.Min));
-    RangeTransform[1] =
-      static_cast<vtkm::FloatDefault>((Dims[1] - 1.0l) / (Bounds.Y.Max - Bounds.Y.Min));
-    RangeTransform[2] =
-      static_cast<vtkm::FloatDefault>((Dims[2] - 1.0l) / (Bounds.Z.Max - Bounds.Z.Min));
+    RangeTransform[0] = static_cast<vtkm::FloatDefault>((Dims[0] - 1.0l) / (Bounds.X.Lenght()));
+    RangeTransform[1] = static_cast<vtkm::FloatDefault>((Dims[1] - 1.0l) / (Bounds.Y.Length()));
+    RangeTransform[2] = static_cast<vtkm::FloatDefault>((Dims[2] - 1.0l) / (Bounds.Z.Length()));
 
     // Since we are calculating the cell Id, and the number of cells is
     // 1 less than the number of points in each direction, the -1 from Dims
