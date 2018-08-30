@@ -66,6 +66,7 @@
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
@@ -78,8 +79,8 @@ namespace process_contourtree_inc
 {
 
 template <typename DeviceAdapter>
-class SuperNodeBranchComparator
-{ // SuperNodeBranchComparator
+class SuperNodeBranchComparatorImpl
+{ // SuperNodeBranchComparatorImpl
 public:
   using IdPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
@@ -87,7 +88,7 @@ public:
   IdPortalType supernodesPortal;
 
   // constructor
-  SuperNodeBranchComparator(const IdArrayType& WhichBranch, const IdArrayType& Supernodes)
+  SuperNodeBranchComparatorImpl(const IdArrayType& WhichBranch, const IdArrayType& Supernodes)
   { // constructor
     whichBranchPortal = WhichBranch.PrepareForInput(DeviceAdapter());
     supernodesPortal = Supernodes.PrepareForInput(DeviceAdapter());
@@ -119,8 +120,28 @@ public:
     // fallback just in case
     return false;
   } // operator()
-};  // SuperNodeBranchComparator
+};  // SuperNodeBranchComparatorImpl
 
+class SuperNodeBranchComparator : public vtkm::cont::ExecutionObjectBase
+{ // SuperNodeBranchComparator
+public:
+  // constructor
+  SuperNodeBranchComparator(const IdArrayType& whichBranch, const IdArrayType& supernodes)
+    : WhichBranch(whichBranch)
+    , Supernodes(supernodes)
+  {
+  }
+
+  template <typename DeviceAdapter>
+  VTKM_CONT SuperNodeBranchComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  {
+    return SuperNodeBranchComparatorImpl<DeviceAdapter>(this->WhichBranch, this->Supernodes);
+  }
+
+private:
+  IdArrayType WhichBranch;
+  IdArrayType Supernodes;
+}; // SuperNodeBranchComparator
 
 
 } // namespace process_contourtree_inc

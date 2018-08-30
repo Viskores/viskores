@@ -87,12 +87,14 @@ inline VTKM_CONT vtkm::cont::DataSet FilterDataSetWithField<Derived>::PrepareFor
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
 
-  using FunctorType =
-    internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, vtkm::cont::DataSet>;
-  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
-  using Traits = vtkm::filter::FilterTraits<Derived>;
   vtkm::cont::CastAndCall(
-    vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->GetRuntimeDeviceTracker());
+    vtkm::filter::ApplyPolicy(field, policy, vtkm::filter::FilterTraits<Derived>()),
+    internal::ResolveFieldTypeAndExecute(),
+    static_cast<Derived*>(this),
+    input,
+    metaData,
+    policy,
+    result);
   return result;
 }
 
@@ -107,19 +109,21 @@ inline VTKM_CONT vtkm::cont::DataSet FilterDataSetWithField<Derived>::PrepareFor
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems
   vtkm::filter::FieldMetadata metaData(field);
+  vtkm::cont::DataSet result;
 
   //determine the field type first
-  vtkm::cont::DataSet result;
-  using FunctorType =
-    internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, vtkm::cont::DataSet>;
-  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
-
   using Traits = vtkm::filter::FilterTraits<Derived>;
   constexpr bool supportsVec3 = vtkm::ListContains<typename Traits::InputFieldTypeList,
                                                    vtkm::Vec<vtkm::FloatDefault, 3>>::value;
   using supportsCoordinateSystem = std::integral_constant<bool, supportsVec3>;
-  vtkm::cont::ConditionalCastAndCall(
-    supportsCoordinateSystem(), field, functor, this->GetRuntimeDeviceTracker());
+  vtkm::cont::ConditionalCastAndCall(supportsCoordinateSystem(),
+                                     field,
+                                     internal::ResolveFieldTypeAndExecute(),
+                                     static_cast<Derived*>(this),
+                                     input,
+                                     metaData,
+                                     policy,
+                                     result);
 
   return result;
 }
@@ -138,8 +142,7 @@ inline VTKM_CONT bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(
   using FunctorType = internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
   FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
-  vtkm::cont::CastAndCall(
-    vtkm::filter::ApplyPolicy(field, policy), functor, this->GetRuntimeDeviceTracker());
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy), functor);
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been

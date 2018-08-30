@@ -47,17 +47,16 @@ inline void add_field(vtkm::cont::DataSet& result,
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename S, typename DeviceAdapter>
-inline void transpose_3x3(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& field,
-                          DeviceAdapter adapter)
+template <typename T, typename S>
+inline void transpose_3x3(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& field)
 {
   vtkm::worklet::gradient::Transpose3x3<T> transpose;
-  transpose.Run(field, adapter);
+  transpose.Run(field);
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename S, typename DeviceAdapter>
-inline void transpose_3x3(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, S>&, DeviceAdapter)
+template <typename T, typename S>
+inline void transpose_3x3(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, S>&)
 { //This is not a 3x3 matrix so no transpose needed
 }
 
@@ -83,13 +82,12 @@ Gradient::Gradient()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& adapter)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   if (!fieldMetadata.IsPointField())
   {
@@ -116,18 +114,18 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
   if (this->ComputePointGradient)
   {
     vtkm::worklet::PointGradient gradient;
-    outArray = gradient.Run(
-      vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields, adapter);
+    outArray =
+      gradient.Run(vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields);
   }
   else
   {
     vtkm::worklet::CellGradient gradient;
-    outArray = gradient.Run(
-      vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields, adapter);
+    outArray =
+      gradient.Run(vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields);
   }
   if (!this->RowOrdering)
   {
-    transpose_3x3(outArray, adapter);
+    transpose_3x3(outArray);
   }
 
   constexpr bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,

@@ -76,8 +76,9 @@
 //VTKM includes
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/contourtree_augmented/ArrayTransforms.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
@@ -108,19 +109,16 @@ public:
   ProcessContourTree();
 
   // sorted print routines
-  template <typename DeviceAdapter>
   static void CollectSortedArcs(const ContourTree& contourTree,
                                 const IdArrayType& sortOrder,
                                 EdgePairArray& sortedArcs);
 
   // Compute the saddle peak pairs
-  template <typename DeviceAdapter>
   static void CollectSortedSuperarcs(const ContourTree& contourTree,
                                      const IdArrayType& sortOrder,
                                      EdgePairArray& saddlePeak);
 
   // routine to compute the volume for each hyperarc and superarc
-  template <typename DeviceAdapter>
   static void ComputeVolumeWeights(const ContourTree& contourTree,
                                    const vtkm::Id nIterations,
                                    IdArrayType& superarcIntrinsicWeight,
@@ -129,7 +127,6 @@ public:
                                    IdArrayType& hyperarcDependentWeight);
 
   // routine to compute the branch decomposition by volume
-  template <typename DeviceAdapter>
   static void ComputeVolumeBranchDecomposition(const ContourTree& contourTree,
                                                const IdArrayType& superarcDependentWeight,
                                                const IdArrayType& superarcIntrinsicWeight,
@@ -188,13 +185,10 @@ process_contourtree_inc_ns::Branch<T>* ProcessContourTree::ComputeBranchDecompos
 
 
 // collect the sorted superarcs
-template <typename DeviceAdapter>
 void ProcessContourTree::CollectSortedSuperarcs(const ContourTree& contourTree,
                                                 const IdArrayType& sortOrder,
                                                 EdgePairArray& saddlePeak)
 { // CollectSortedSuperarcs()
-  VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-
   // create an array for sorting the arcs
   std::vector<EdgePair> superarcSorter;
 
@@ -243,19 +237,16 @@ void ProcessContourTree::CollectSortedSuperarcs(const ContourTree& contourTree,
   EdgePairArray tempArray = vtkm::cont::make_ArrayHandle(superarcSorter);
 
   // now sort it
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(tempArray, SaddlePeakSort());
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(tempArray, saddlePeak);
+  vtkm::cont::Algorithm::Sort(tempArray, SaddlePeakSort());
+  vtkm::cont::ArrayCopy(tempArray, saddlePeak);
 } // CollectSortedSuperarcs()
 
 
 // collect the sorted arcs
-template <typename DeviceAdapter>
 void ProcessContourTree::CollectSortedArcs(const ContourTree& contourTree,
                                            const IdArrayType& sortOrder,
                                            EdgePairArray& sortedArcs)
 { // CollectSortedArcs
-  VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-
   // create an array for sorting the arcs
   std::vector<EdgePair> arcSorter;
 
@@ -292,13 +283,12 @@ void ProcessContourTree::CollectSortedArcs(const ContourTree& contourTree,
   // now sort it
   // Setting saddlePeak reference to the make_ArrayHandle directly does not work
   EdgePairArray tempArray = vtkm::cont::make_ArrayHandle(arcSorter);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(tempArray, SaddlePeakSort());
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(tempArray, sortedArcs);
+  vtkm::cont::Algorithm::Sort(tempArray, SaddlePeakSort());
+  vtkm::cont::ArrayCopy(tempArray, sortedArcs);
 } // CollectSortedArcs
 
 
 // routine to compute the volume for each hyperarc and superarc
-template <typename DeviceAdapter>
 void ProcessContourTree::ComputeVolumeWeights(const ContourTree& contourTree,
                                               const vtkm::Id nIterations,
                                               IdArrayType& superarcIntrinsicWeight,
@@ -306,8 +296,6 @@ void ProcessContourTree::ComputeVolumeWeights(const ContourTree& contourTree,
                                               IdArrayType& supernodeTransferWeight,
                                               IdArrayType& hyperarcDependentWeight)
 { // ContourTreeMaker::ComputeWeights()
-  VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-
   // start by storing the first sorted vertex ID for each superarc
   IdArrayType firstVertexForSuperparent;
   firstVertexForSuperparent.Allocate(contourTree.superarcs.GetNumberOfValues());
@@ -342,20 +330,20 @@ void ProcessContourTree::ComputeVolumeWeights(const ContourTree& contourTree,
                                           firstVertexForSuperparentPortal.Get(superarc));
 
   // now initialise the arrays for transfer & dependent weights
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(
+  vtkm::cont::ArrayCopy(
     vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.superarcs.GetNumberOfValues()),
     superarcDependentWeight);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(
+  vtkm::cont::ArrayCopy(
     vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.supernodes.GetNumberOfValues()),
     supernodeTransferWeight);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(
+  vtkm::cont::ArrayCopy(
     vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.hyperarcs.GetNumberOfValues()),
     hyperarcDependentWeight);
 
   // set up the array which tracks which supernodes to deal with on which iteration
   IdArrayType firstSupernodePerIteration;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(
-    vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nIterations + 1), firstSupernodePerIteration);
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nIterations + 1),
+                        firstSupernodePerIteration);
   auto firstSupernodePerIterationPortal = firstSupernodePerIteration.GetPortalControl();
   for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
@@ -480,7 +468,6 @@ void ProcessContourTree::ComputeVolumeWeights(const ContourTree& contourTree,
 
 
 // routine to compute the branch decomposition by volume
-template <typename DeviceAdapter>
 void ProcessContourTree::ComputeVolumeBranchDecomposition(
   const ContourTree& contourTree,
   const IdArrayType& superarcDependentWeight,
@@ -491,8 +478,6 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   IdArrayType& branchSaddle,
   IdArrayType& branchParent)
 { // ComputeVolumeBranchDecomposition()
-  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   auto superarcsPortal = contourTree.superarcs.GetPortalConstControl();
   auto superarcDependentWeightPortal = superarcDependentWeight.GetPortalConstControl();
   auto superarcIntrinsicWeightPortal = superarcIntrinsicWeight.GetPortalConstControl();
@@ -511,10 +496,10 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   IdArrayType bestUpward;
   auto noSuchElementArray =
     vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nSupernodes);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, bestUpward);
+  vtkm::cont::ArrayCopy(noSuchElementArray, bestUpward);
   IdArrayType bestDownward;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, bestDownward);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, whichBranch);
+  vtkm::cont::ArrayCopy(noSuchElementArray, bestDownward);
+  vtkm::cont::ArrayCopy(noSuchElementArray, whichBranch);
   auto bestUpwardPortal = bestUpward.GetPortalControl();
   auto bestDownwardPortal = bestDownward.GetPortalControl();
   auto whichBranchPortal = whichBranch.GetPortalControl();
@@ -524,8 +509,8 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   // II A 1.  Sort the superarcs by lower vertex
   // II A 2.  Per segment, best superarc writes to the best upwards array
   vtkm::cont::ArrayHandle<EdgePair> superarcList;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(
-    vtkm::cont::ArrayHandleConstant<EdgePair>(EdgePair(-1, -1), nSuperarcs), superarcList);
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<EdgePair>(EdgePair(-1, -1), nSuperarcs),
+                        superarcList);
   auto superarcListPortal = superarcList.GetPortalControl();
   vtkm::Id totalVolume = contourTree.nodes.GetNumberOfValues();
 #ifdef DEBUG_PRINT
@@ -577,9 +562,9 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     superarcSorterPortal.Set(superarc, superarc);
 
-  DeviceAlgorithm::Sort(superarcSorter,
-                        process_contourtree_inc_ns::SuperArcVolumetricComparator<DeviceAdapter>(
-                          upWeight, superarcList, false));
+  vtkm::cont::Algorithm::Sort(
+    superarcSorter,
+    process_contourtree_inc_ns::SuperArcVolumetricComparator(upWeight, superarcList, false));
 
   // II B 2.  Per segment, best superarc writes to the best upward array
   for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
@@ -599,9 +584,9 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   }   // per superarc
 
   // II B 3.  Repeat for lower vertex
-  DeviceAlgorithm::Sort(superarcSorter,
-                        process_contourtree_inc_ns::SuperArcVolumetricComparator<DeviceAdapter>(
-                          downWeight, superarcList, true));
+  vtkm::cont::Algorithm::Sort(
+    superarcSorter,
+    process_contourtree_inc_ns::SuperArcVolumetricComparator(downWeight, superarcList, true));
 
   // II B 2.  Per segment, best superarc writes to the best upward array
   for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
@@ -680,7 +665,7 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   // V A.  Set up the ID lookup for branches
   vtkm::Id nBranches = 0;
   IdArrayType chainToBranch;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, chainToBranch);
+  vtkm::cont::ArrayCopy(noSuchElementArray, chainToBranch);
   auto chainToBranchPortal = chainToBranch.GetPortalControl();
   for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
   {
@@ -694,14 +679,10 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   // V B.  Create the arrays for the branches
   auto noSuchElementArrayNBranches =
     vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nBranches);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArrayNBranches,
-                                                          branchMinimum);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArrayNBranches,
-                                                          branchMaximum);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArrayNBranches,
-                                                          branchSaddle);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArrayNBranches,
-                                                          branchParent);
+  vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchMinimum);
+  vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchMaximum);
+  vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchSaddle);
+  vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchParent);
   auto branchMinimumPortal = branchMinimum.GetPortalControl();
   auto branchMaximumPortal = branchMaximum.GetPortalControl();
   auto branchSaddlePortal = branchSaddle.GetPortalControl();
@@ -728,17 +709,16 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
     supernodeSorterPortal.Set(supernode, supernode);
   }
 
-  DeviceAlgorithm::Sort(supernodeSorter,
-                        process_contourtree_inc_ns::SuperNodeBranchComparator<DeviceAdapter>(
-                          whichBranch, contourTree.supernodes));
+  vtkm::cont::Algorithm::Sort(
+    supernodeSorter,
+    process_contourtree_inc_ns::SuperNodeBranchComparator(whichBranch, contourTree.supernodes));
   IdArrayType permutedBranches;
   permutedBranches.Allocate(nSupernodes);
-  permuteArray<vtkm::Id>(DeviceAdapter{}, whichBranch, supernodeSorter, permutedBranches);
+  permuteArray<vtkm::Id>(whichBranch, supernodeSorter, permutedBranches);
 
   IdArrayType permutedRegularID;
   permutedRegularID.Allocate(nSupernodes);
-  permuteArray<vtkm::Id>(
-    DeviceAdapter{}, contourTree.supernodes, supernodeSorter, permutedRegularID);
+  permuteArray<vtkm::Id>(contourTree.supernodes, supernodeSorter, permutedRegularID);
 
 #ifdef DEBUG_PRINT
   std::cout << "VI A. Sorted into Branches" << std::endl;

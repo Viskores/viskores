@@ -64,21 +64,19 @@ public:
   VTKM_CONT
   bool GetConvertOutputToUnstructured() { return this->ConvertToUnstructured; }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          DeviceAdapter tag);
+                                          vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                            DeviceAdapter tag);
+                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   bool RemoveAll;
@@ -86,10 +84,8 @@ private:
   vtkm::UInt8 RemoveVals;
   vtkm::worklet::Threshold Worklet;
 
-  template <typename DeviceAdapter>
   VTKM_CONT vtkm::cont::CellSetExplicit<> ConvertOutputToUnstructured(
-    vtkm::cont::DynamicCellSet& inCells,
-    DeviceAdapter tag);
+    vtkm::cont::DynamicCellSet& inCells);
 };
 
 template <>

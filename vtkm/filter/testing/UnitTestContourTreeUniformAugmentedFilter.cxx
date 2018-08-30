@@ -79,7 +79,6 @@ namespace
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestContourTreeUniform
 {
 public:
@@ -100,7 +99,7 @@ public:
 
     // Compute the saddle peaks to make sure the contour tree is correct
     vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
-    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(
+    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
       filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
 
     // Print the contour tree we computed
@@ -150,7 +149,7 @@ public:
 
     // Compute the saddle peaks to make sure the contour tree is correct
     vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
-    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(
+    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
       filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
 
     // Print the contour tree we computed
@@ -207,7 +206,7 @@ public:
 
     // Compute the saddle peaks to make sure the contour tree is correct
     vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
-    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(
+    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
       filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
 
     // Print the contour tree we computed
@@ -264,6 +263,6 @@ public:
 
 int UnitTestContourTreeUniformAugmentedFilter(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestContourTreeUniform<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  return vtkm::cont::testing::Testing::Run(TestContourTreeUniform());
 }

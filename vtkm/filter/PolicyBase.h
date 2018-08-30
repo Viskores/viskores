@@ -47,9 +47,6 @@ struct PolicyBase
   using StructuredCellSetList = vtkm::cont::CellSetListTagStructured;
   using UnstructuredCellSetList = vtkm::cont::CellSetListTagUnstructured;
   using AllCellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG;
-
-  // List of backends to try in sequence (if one fails, the next is attempted).
-  using DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
 };
 
 //-----------------------------------------------------------------------------

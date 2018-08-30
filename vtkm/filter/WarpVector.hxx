@@ -38,18 +38,17 @@ inline VTKM_CONT WarpVector::WarpVector(vtkm::FloatDefault scale)
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   using vecType = vtkm::Vec<T, 3>;
   auto vectorF = inDataSet.GetField(this->VectorFieldName, this->VectorFieldAssociation);
   vtkm::cont::ArrayHandle<vecType> result;
-  this->Worklet.Run(field, vtkm::filter::ApplyPolicy(vectorF, policy), this->Scale, result, device);
+  this->Worklet.Run(field, vtkm::filter::ApplyPolicy(vectorF, policy), this->Scale, result);
 
   return internal::CreateResult(inDataSet,
                                 result,

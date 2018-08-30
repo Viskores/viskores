@@ -25,7 +25,6 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingExtractPoints
 {
 public:
@@ -49,7 +48,7 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0), pointIds, DeviceAdapter());
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0), pointIds);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints),
@@ -80,8 +79,7 @@ public:
       extractPoints.Run(dataset.GetCellSet(0),
                         dataset.GetCoordinateSystem("coords"),
                         vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside,
-                        DeviceAdapter());
+                        extractInside);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -112,8 +110,7 @@ public:
       extractPoints.Run(dataset.GetCellSet(0),
                         dataset.GetCoordinateSystem("coords"),
                         vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside,
-                        DeviceAdapter());
+                        extractInside);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 98),
@@ -144,8 +141,7 @@ public:
       extractPoints.Run(dataset.GetCellSet(0),
                         dataset.GetCoordinateSystem("coords"),
                         vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
-                        extractInside,
-                        DeviceAdapter());
+                        extractInside);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -176,8 +172,7 @@ public:
       extractPoints.Run(dataset.GetCellSet(0),
                         dataset.GetCoordinateSystem("coordinates"),
                         vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside,
-                        DeviceAdapter());
+                        extractInside);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8),
@@ -208,8 +203,7 @@ public:
       extractPoints.Run(dataset.GetCellSet(0),
                         dataset.GetCoordinateSystem("coordinates"),
                         vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside,
-                        DeviceAdapter());
+                        extractInside);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 3),
@@ -236,7 +230,7 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0), pointIds, DeviceAdapter());
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0), pointIds);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints),
@@ -257,5 +251,6 @@ public:
 
 int UnitTestExtractPoints(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestingExtractPoints<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  return vtkm::cont::testing::Testing::Run(TestingExtractPoints());
 }

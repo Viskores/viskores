@@ -60,21 +60,19 @@ public:
   VTKM_CONT
   void SetThresholdBetween(const vtkm::Float64 value1, const vtkm::Float64 value2);
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag);
+                                          vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                            const DeviceAdapter& tag);
+                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   double LowerValue;

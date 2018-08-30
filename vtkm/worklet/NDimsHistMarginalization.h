@@ -22,10 +22,11 @@
 #define vtk_m_worklet_NDimsHistMarginalization_h
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/histogram/ComputeNDHistogram.h>
@@ -63,28 +64,25 @@ public:
   //                  more details can refer to example in UnitTestNDimsHistMarginalization.cxx
   //   marginalBinId, marginalFreqs: return marginalized histogram in the fashion of sparse representation
   //                                 the definition is the same as (binId and freqsIn)
-  template <typename BinaryCompare, typename DeviceAdapter>
+  template <typename BinaryCompare>
   void Run(const std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& binId,
            vtkm::cont::ArrayHandle<vtkm::Id>& freqsIn,
            vtkm::cont::ArrayHandle<vtkm::Id>& numberOfBins,
            vtkm::cont::ArrayHandle<bool>& marginalVariables,
            BinaryCompare conditionFunc,
            std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& marginalBinId,
-           vtkm::cont::ArrayHandle<vtkm::Id>& marginalFreqs,
-           DeviceAdapter vtkmNotUsed(device))
+           vtkm::cont::ArrayHandle<vtkm::Id>& marginalFreqs)
   {
-    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     //total variables
     vtkm::Id numOfVariable = static_cast<vtkm::Id>(binId.size());
 
     const vtkm::Id numberOfValues = freqsIn.GetPortalConstControl().GetNumberOfValues();
     vtkm::cont::ArrayHandleConstant<vtkm::Id> constant0Array(0, numberOfValues);
     vtkm::cont::ArrayHandle<vtkm::Id> bin1DIndex;
-    DeviceAlgorithms::Copy(constant0Array, bin1DIndex);
+    vtkm::cont::ArrayCopy(constant0Array, bin1DIndex);
 
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
-    DeviceAlgorithms::Copy(freqsIn, freqs);
+    vtkm::cont::ArrayCopy(freqsIn, freqs);
     vtkm::Id numMarginalVariables = 0; //count num of marginal variables
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
@@ -96,7 +94,6 @@ public:
         vtkm::worklet::histogram::To1DIndex binWorklet(nFieldBins);
         vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::To1DIndex> to1DIndexDispatcher(
           binWorklet);
-        to1DIndexDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(i);
         to1DIndexDispatcher.Invoke(binId[vecIndex], bin1DIndex, bin1DIndex);
       }
@@ -110,7 +107,6 @@ public:
         conditionalFreqWorklet.setVar(i);
         vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConditionalFreq<BinaryCompare>>
           cfDispatcher(conditionalFreqWorklet);
-        cfDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(i);
         cfDispatcher.Invoke(binId[vecIndex], freqs, freqs);
       }
@@ -118,17 +114,17 @@ public:
 
 
     // Sort the freq array for counting by key(1DIndex)
-    DeviceAlgorithms::SortByKey(bin1DIndex, freqs);
+    vtkm::cont::Algorithm::SortByKey(bin1DIndex, freqs);
 
     // Add frequency within same 1d index bin (this get a nonSparse representation)
     vtkm::cont::ArrayHandle<vtkm::Id> nonSparseMarginalFreqs;
-    DeviceAlgorithms::ReduceByKey(
+    vtkm::cont::Algorithm::ReduceByKey(
       bin1DIndex, freqs, bin1DIndex, nonSparseMarginalFreqs, vtkm::Add());
 
     // Convert to sparse representation(remove all zero freqncy entities)
     vtkm::cont::ArrayHandle<vtkm::Id> sparseMarginal1DBinId;
-    DeviceAlgorithms::CopyIf(bin1DIndex, nonSparseMarginalFreqs, sparseMarginal1DBinId);
-    DeviceAlgorithms::CopyIf(nonSparseMarginalFreqs, nonSparseMarginalFreqs, marginalFreqs);
+    vtkm::cont::Algorithm::CopyIf(bin1DIndex, nonSparseMarginalFreqs, sparseMarginal1DBinId);
+    vtkm::cont::Algorithm::CopyIf(nonSparseMarginalFreqs, nonSparseMarginalFreqs, marginalFreqs);
 
     //convert back to multi variate binId
     marginalBinId.resize(static_cast<size_t>(numMarginalVariables));
@@ -141,7 +137,6 @@ public:
         vtkm::worklet::histogram::ConvertHistBinToND binWorklet(nFieldBins);
         vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND>
           convertHistBinToNDDispatcher(binWorklet);
-        convertHistBinToNDDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(marginalVarIdx);
         convertHistBinToNDDispatcher.Invoke(
           sparseMarginal1DBinId, sparseMarginal1DBinId, marginalBinId[vecIndex]);
@@ -152,27 +147,23 @@ public:
 
   // Execute the histogram marginalization WITHOUT CONDITION,
   // Please refer to the other Run() functions for the definition of input arguments.
-  template <typename DeviceAdapter>
   void Run(const std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& binId,
            vtkm::cont::ArrayHandle<vtkm::Id>& freqsIn,
            vtkm::cont::ArrayHandle<vtkm::Id>& numberOfBins,
            vtkm::cont::ArrayHandle<bool>& marginalVariables,
            std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& marginalBinId,
-           vtkm::cont::ArrayHandle<vtkm::Id>& marginalFreqs,
-           DeviceAdapter vtkmNotUsed(device))
+           vtkm::cont::ArrayHandle<vtkm::Id>& marginalFreqs)
   {
-    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     //total variables
     vtkm::Id numOfVariable = static_cast<vtkm::Id>(binId.size());
 
     const vtkm::Id numberOfValues = freqsIn.GetPortalConstControl().GetNumberOfValues();
     vtkm::cont::ArrayHandleConstant<vtkm::Id> constant0Array(0, numberOfValues);
     vtkm::cont::ArrayHandle<vtkm::Id> bin1DIndex;
-    DeviceAlgorithms::Copy(constant0Array, bin1DIndex);
+    vtkm::cont::ArrayCopy(constant0Array, bin1DIndex);
 
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
-    DeviceAlgorithms::Copy(freqsIn, freqs);
+    vtkm::cont::ArrayCopy(freqsIn, freqs);
     vtkm::Id numMarginalVariables = 0; //count num of marginal variables
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
@@ -184,17 +175,16 @@ public:
         vtkm::worklet::histogram::To1DIndex binWorklet(nFieldBins);
         vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::To1DIndex> to1DIndexDispatcher(
           binWorklet);
-        to1DIndexDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(i);
         to1DIndexDispatcher.Invoke(binId[vecIndex], bin1DIndex, bin1DIndex);
       }
     }
 
     // Sort the freq array for counting by key (1DIndex)
-    DeviceAlgorithms::SortByKey(bin1DIndex, freqs);
+    vtkm::cont::Algorithm::SortByKey(bin1DIndex, freqs);
 
     // Add frequency within same 1d index bin
-    DeviceAlgorithms::ReduceByKey(bin1DIndex, freqs, bin1DIndex, marginalFreqs, vtkm::Add());
+    vtkm::cont::Algorithm::ReduceByKey(bin1DIndex, freqs, bin1DIndex, marginalFreqs, vtkm::Add());
 
     //convert back to multi variate binId
     marginalBinId.resize(static_cast<size_t>(numMarginalVariables));
@@ -207,7 +197,6 @@ public:
         vtkm::worklet::histogram::ConvertHistBinToND binWorklet(nFieldBins);
         vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND>
           convertHistBinToNDDispatcher(binWorklet);
-        convertHistBinToNDDispatcher.SetDevice(DeviceAdapter());
         size_t vecIndex = static_cast<size_t>(marginalVarIdx);
         convertHistBinToNDDispatcher.Invoke(bin1DIndex, bin1DIndex, marginalBinId[vecIndex]);
         marginalVarIdx--;

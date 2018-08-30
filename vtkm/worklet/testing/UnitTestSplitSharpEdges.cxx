@@ -28,7 +28,6 @@ namespace
 {
 
 using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
-using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 const vtkm::Vec<vtkm::FloatDefault, 3> expectedCoords[24] = {
   { 0.0, 0.0, 0.0 }, { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 }, { 0.0, 1.0, 0.0 },
@@ -135,13 +134,12 @@ void TestSplitSharpEdgesSplitEveryEdge(vtkm::cont::DataSet& simpleCube,
                       faceNormals,
                       simpleCube.GetCoordinateSystem().GetData(),
                       newCoords,
-                      newCellset,
-                      DeviceAdapter());
+                      newCellset);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> pointvar;
   simpleCube.GetPointField("pointvar").GetData().CopyTo(pointvar);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointFields =
-    splitSharpEdges.ProcessPointField(pointvar, DeviceAdapter());
+    splitSharpEdges.ProcessPointField(pointvar);
   VTKM_TEST_ASSERT(newCoords.GetNumberOfValues() == 24,
                    "new coordinates"
                    " number is wrong");
@@ -181,13 +179,12 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
                       faceNormals,
                       simpleCube.GetCoordinateSystem().GetData(),
                       newCoords,
-                      newCellset,
-                      DeviceAdapter());
+                      newCellset);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> pointvar;
   simpleCube.GetPointField("pointvar").GetData().CopyTo(pointvar);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointFields =
-    splitSharpEdges.ProcessPointField(pointvar, DeviceAdapter());
+    splitSharpEdges.ProcessPointField(pointvar);
   VTKM_TEST_ASSERT(newCoords.GetNumberOfValues() == 8,
                    "new coordinates"
                    " number is wrong");
@@ -227,10 +224,7 @@ void TestSplitSharpEdges()
   vtkm::cont::DataSet simpleCube = Make3DExplicitSimpleCube();
   NormalsArrayHandle faceNormals;
   vtkm::worklet::FacetedSurfaceNormals faceted;
-  faceted.Run(simpleCube.GetCellSet(),
-              simpleCube.GetCoordinateSystem().GetData(),
-              faceNormals,
-              DeviceAdapter());
+  faceted.Run(simpleCube.GetCellSet(), simpleCube.GetCoordinateSystem().GetData(), faceNormals);
 
   vtkm::worklet::SplitSharpEdges splitSharpEdges;
 
@@ -242,5 +236,6 @@ void TestSplitSharpEdges()
 
 int UnitTestSplitSharpEdges(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(TestSplitSharpEdges);
 }

@@ -18,10 +18,6 @@
 //  this software.
 //============================================================================
 
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
@@ -66,8 +62,6 @@ void RunTest(const std::string& fname,
              vtkm::Id advectType,
              vtkm::Id seeding)
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
   using FieldType = vtkm::Float32;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
 
@@ -163,12 +157,12 @@ void RunTest(const std::string& fname,
   if (advectType == 0)
   {
     vtkm::worklet::ParticleAdvection particleAdvection;
-    particleAdvection.Run(rk4, seedArray, numSteps, DeviceAdapter());
+    particleAdvection.Run(rk4, seedArray, numSteps);
   }
   else
   {
     vtkm::worklet::Streamline streamline;
-    streamline.Run(rk4, seedArray, numSteps, DeviceAdapter());
+    streamline.Run(rk4, seedArray, numSteps);
   }
 
   auto t1 = std::chrono::high_resolution_clock::now() - t0;

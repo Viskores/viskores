@@ -27,7 +27,6 @@ namespace
 void TestCellLocator()
 {
   using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
-  VTKM_DEFAULT_DEVICE_ADAPTER_TAG device;
 
   const vtkm::Id SIZE = 4;
   auto ds =
@@ -36,7 +35,7 @@ void TestCellLocator()
   vtkm::cont::CellLocatorHelper locator;
   locator.SetCellSet(ds.GetCellSet());
   locator.SetCoordinates(ds.GetCoordinateSystem());
-  locator.Build(device);
+  locator.Build();
 
   PointType points[] = {
     { 0.25, 0.25, 0.25 }, { 1.25, 1.25, 1.25 }, { 2.25, 2.25, 2.25 }, { 3.25, 3.25, 3.25 }
@@ -44,7 +43,7 @@ void TestCellLocator()
 
   vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
   vtkm::cont::ArrayHandle<PointType> parametricCoords;
-  locator.FindCells(vtkm::cont::make_ArrayHandle(points, 4), cellIds, parametricCoords, device);
+  locator.FindCells(vtkm::cont::make_ArrayHandle(points, 4), cellIds, parametricCoords);
 
   const vtkm::Id NCELLS_PER_AXIS = SIZE - 1;
   const vtkm::Id DIA_STRIDE = (NCELLS_PER_AXIS * NCELLS_PER_AXIS) + NCELLS_PER_AXIS + 1;
@@ -62,5 +61,6 @@ void TestCellLocator()
 
 int UnitTestCellLocator(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(TestCellLocator);
 }

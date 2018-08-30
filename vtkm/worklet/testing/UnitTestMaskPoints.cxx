@@ -35,7 +35,6 @@ namespace
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingMaskPoints
 {
 public:
@@ -54,7 +53,7 @@ public:
     // Output dataset gets new cell set of points that pass subsampling
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 2, DeviceAdapter());
+    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 2);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 12), "Wrong result for MaskPoints");
@@ -75,7 +74,7 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 5, DeviceAdapter());
+    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 5);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 25), "Wrong result for MaskPoints");
@@ -96,7 +95,7 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 3, DeviceAdapter());
+    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 3);
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 3), "Wrong result for MaskPoints");
@@ -113,5 +112,6 @@ public:
 
 int UnitTestMaskPoints(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestingMaskPoints<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  return vtkm::cont::testing::Testing::Run(TestingMaskPoints());
 }

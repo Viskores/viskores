@@ -129,20 +129,18 @@ public:
   }
   //@}
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
     const vtkm::cont::DataSet& input,
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
     const vtkm::filter::FieldMetadata& fieldMeta,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter& tag);
+    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                            DeviceAdapter tag);
+                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   std::string SecondaryFieldName;

@@ -64,6 +64,7 @@
 #define vtkm_worklet_contourtree_augmented_mesh_dem_simlated_simplicity_comperator_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -77,7 +78,7 @@ namespace mesh_dem
 
 // comparator used for initial sort of data values
 template <typename T, typename StorageType, typename DeviceAdapter>
-class SimulatedSimplicityIndexComparator
+class SimulatedSimplicityIndexComparatorImpl
 {
 public:
   using ValuePortalType = typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
@@ -87,7 +88,7 @@ public:
 
   // constructor - takes vectors as parameters
   VTKM_CONT
-  SimulatedSimplicityIndexComparator(ValuePortalType Values)
+  SimulatedSimplicityIndexComparatorImpl(ValuePortalType Values)
     : values(Values)
   { // constructor
   } // constructor
@@ -109,8 +110,30 @@ public:
     // fallback - always false
     return false;
   } // operator()*/
-};  // SimulatedSimplicityIndexComparator
+};  // SimulatedSimplicityIndexComparatorImpl
 
+template <typename T, typename StorageType>
+class SimulatedSimplicityIndexComparator : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  // constructor - takes vectors as parameters
+  VTKM_CONT
+  SimulatedSimplicityIndexComparator(vtkm::cont::ArrayHandle<T, StorageType> values)
+    : Values(values)
+  { // constructor
+  } // constructor
+
+  template <typename DeviceAdapter>
+  VTKM_CONT SimulatedSimplicityIndexComparatorImpl<T, StorageType, DeviceAdapter>
+  PrepareForExecution(DeviceAdapter device) const
+  {
+    return SimulatedSimplicityIndexComparatorImpl<T, StorageType, DeviceAdapter>(
+      this->Values.PrepareForInput(device));
+  }
+
+private:
+  vtkm::cont::ArrayHandle<T, StorageType> Values;
+}; // SimulatedSimplicityIndexComparator
 
 } // namespace mesh_dem_triangulation_worklets
 } // namespace contourtree_augmented

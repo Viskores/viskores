@@ -164,7 +164,7 @@ public:
   inline ContourTree();
 
   // initialises contour tree arrays - rest is done by another class
-  inline void Init(vtkm::cont::DeviceAdapterId device, vtkm::Id dataSize);
+  inline void Init(vtkm::Id dataSize);
 
   // debug routine
   inline void DebugPrint(const char* message, const char* fileName, long lineNum);
@@ -191,11 +191,11 @@ ContourTree::ContourTree()
 
 
 // initialises contour tree arrays - rest is done by another class
-void ContourTree::Init(vtkm::cont::DeviceAdapterId device, vtkm::Id dataSize)
+void ContourTree::Init(vtkm::Id dataSize)
 { // Init()
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT, dataSize);
-  vtkm::cont::Algorithm::Copy(device, noSuchElementArray, arcs);
-  vtkm::cont::Algorithm::Copy(device, noSuchElementArray, superparents);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, arcs);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, superparents);
 } // Init()
 
 

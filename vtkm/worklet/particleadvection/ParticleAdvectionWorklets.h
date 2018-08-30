@@ -22,6 +22,7 @@
 #define vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
@@ -112,14 +113,12 @@ public:
 
   ~ParticleAdvectionWorklet() {}
 
-  template <typename DeviceAdapterTag>
   void Run(const IntegratorType& integrator,
            vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& seedArray,
            vtkm::Id maxSteps,
            vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id>& stepsTaken,
-           vtkm::cont::ArrayHandle<ScalarType>& timeArray,
-           DeviceAdapterTag)
+           vtkm::cont::ArrayHandle<ScalarType>& timeArray)
   {
     using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorklet;
     using ParticleWorkletDispatchType =
@@ -133,7 +132,6 @@ public:
 
     //Invoke particle advection worklet
     ParticleWorkletDispatchType particleWorkletDispatch;
-    particleWorkletDispatch.SetDevice(DeviceAdapterTag());
     particleWorkletDispatch.Invoke(idxArray, integrator, particles);
   }
 };
@@ -160,7 +158,7 @@ class StreamlineWorklet
 public:
   VTKM_EXEC_CONT StreamlineWorklet() {}
 
-  template <typename PointStorage, typename FieldStorage, typename DeviceAdapterTag>
+  template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
            const vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>, PointStorage>& pts,
            const vtkm::Id& nSteps,
@@ -168,13 +166,12 @@ public:
            vtkm::cont::CellSetExplicit<>& polyLines,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken,
-           vtkm::cont::ArrayHandle<ScalarType, FieldStorage>& timeArray,
-           DeviceAdapterTag tag)
+           vtkm::cont::ArrayHandle<ScalarType, FieldStorage>& timeArray)
   {
     integrator = it;
     seedArray = pts;
     maxSteps = nSteps;
-    run(positions, polyLines, statusArray, stepsTaken, timeArray, tag);
+    run(positions, polyLines, statusArray, stepsTaken, timeArray);
   }
 
   ~StreamlineWorklet() {}
@@ -189,27 +186,22 @@ public:
   };
 
 private:
-  template <typename DeviceAdapterTag>
   void run(vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines,
            vtkm::cont::ArrayHandle<vtkm::Id>& status,
            vtkm::cont::ArrayHandle<vtkm::Id>& stepsTaken,
-           vtkm::cont::ArrayHandle<ScalarType>& timeArray,
-           DeviceAdapterTag)
+           vtkm::cont::ArrayHandle<ScalarType>& timeArray)
   {
-
-    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
     using ParticleWorkletDispatchType = typename vtkm::worklet::DispatcherMapField<
       vtkm::worklet::particleadvection::ParticleAdvectWorklet>;
     using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles;
 
     vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
-    DeviceAlgorithm::Copy(stepsTaken, initialStepsTaken);
+    vtkm::cont::ArrayCopy(stepsTaken, initialStepsTaken);
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
 
     ParticleWorkletDispatchType particleWorkletDispatch;
-    particleWorkletDispatch.SetDevice(DeviceAdapterTag());
 
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
 
@@ -223,29 +215,28 @@ private:
       seedArray, history, stepsTaken, status, timeArray, validPoint, maxSteps);
 
     particleWorkletDispatch.Invoke(idxArray, integrator, streamlines);
-    DeviceAlgorithm::CopyIf(history, validPoint, positions, IsOne());
+    vtkm::cont::Algorithm::CopyIf(history, validPoint, positions, IsOne());
 
     vtkm::cont::ArrayHandle<vtkm::Id> stepsTakenNow;
     stepsTakenNow.Allocate(numSeeds);
     vtkm::worklet::DispatcherMapField<detail::Subtract> subtractDispatcher{ (detail::Subtract{}) };
-    subtractDispatcher.SetDevice(DeviceAdapterTag());
     subtractDispatcher.Invoke(stepsTakenNow, stepsTaken, initialStepsTaken);
 
     //Create cells.
     vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;
-    vtkm::Id connectivityLen = DeviceAlgorithm::ScanExclusive(stepsTakenNow, cellIndex);
+    vtkm::Id connectivityLen = vtkm::cont::Algorithm::ScanExclusive(stepsTakenNow, cellIndex);
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> connCount(0, 1, connectivityLen);
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-    DeviceAlgorithm::Copy(connCount, connectivity);
+    vtkm::cont::ArrayCopy(connCount, connectivity);
 
     vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
     cellTypes.Allocate(numSeeds);
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> polyLineShape(vtkm::CELL_SHAPE_LINE, numSeeds);
-    DeviceAlgorithm::Copy(polyLineShape, cellTypes);
+    vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> cellCounts;
-    DeviceAlgorithm::Copy(vtkm::cont::make_ArrayHandleCast(stepsTakenNow, vtkm::IdComponent()),
+    vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCast(stepsTakenNow, vtkm::IdComponent()),
                           cellCounts);
 
     polyLines.Fill(positions.GetNumberOfValues(), cellTypes, cellCounts, connectivity);

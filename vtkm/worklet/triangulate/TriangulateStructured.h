@@ -21,12 +21,12 @@
 #ifndef vtk_m_worklet_TriangulateStructured_h
 #define vtk_m_worklet_TriangulateStructured_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
@@ -70,7 +70,6 @@ public:
 }
 
 /// \brief Compute the triangulate cells for a uniform grid data set
-template <typename DeviceAdapter>
 class TriangulateStructured
 {
 public:
@@ -79,17 +78,14 @@ public:
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
 
   {
-    using DeviceAlgorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
     vtkm::worklet::DispatcherMapTopology<triangulate::TriangulateCell> dispatcher;
-    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(cellSet, vtkm::cont::make_ArrayHandleGroupVec<3>(connectivity));
 
     // Fill in array of output cells per input cell
-    DeviceAlgorithm::Copy(
+    vtkm::cont::ArrayCopy(
       vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, cellSet.GetNumberOfCells()),
       outCellsPerCell);
 

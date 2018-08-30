@@ -64,6 +64,7 @@
 #define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_supernode_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
@@ -78,7 +79,7 @@ namespace contourtree_maker_inc
 
 // comparator used for initial sort of data values
 template <typename DeviceAdapter>
-class ContourTreeSuperNodeComparator
+class ContourTreeSuperNodeComparatorImpl
 {
 public:
   using IdPortalType =
@@ -90,9 +91,9 @@ public:
 
   // constructor
   VTKM_CONT
-  ContourTreeSuperNodeComparator(const IdArrayType& hyperparents,
-                                 const IdArrayType& supernodes,
-                                 const IdArrayType& whenTransferred)
+  ContourTreeSuperNodeComparatorImpl(const IdArrayType& hyperparents,
+                                     const IdArrayType& supernodes,
+                                     const IdArrayType& whenTransferred)
   {
     hyperparentsPortal = hyperparents.PrepareForInput(DeviceAdapter());
     supernodesPortal = supernodes.PrepareForInput(DeviceAdapter());
@@ -132,6 +133,32 @@ public:
   } // operator()
 };  // ContourTreeSuperNodeComparator
 
+class ContourTreeSuperNodeComparator : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  // constructor
+  VTKM_CONT
+  ContourTreeSuperNodeComparator(const IdArrayType& hyperparents,
+                                 const IdArrayType& supernodes,
+                                 const IdArrayType& whenTransferred)
+    : Hyperparents(hyperparents)
+    , Supernodes(supernodes)
+    , WhenTransferred(whenTransferred)
+  {
+  }
+
+  template <typename DeviceAdapter>
+  VTKM_CONT ContourTreeSuperNodeComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  {
+    return ContourTreeSuperNodeComparatorImpl<DeviceAdapter>(
+      this->Hyperparents, this->Supernodes, this->WhenTransferred);
+  }
+
+private:
+  IdArrayType Hyperparents;
+  IdArrayType Supernodes;
+  IdArrayType WhenTransferred;
+};
 
 } // namespace contourtree_maker_inc
 } // namespace contourtree_augmented

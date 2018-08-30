@@ -28,7 +28,6 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -123,28 +122,25 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
   return ds;
 }
 
-template <typename DeviceAdapter>
 void TestClippingExplicit()
 {
   vtkm::cont::DataSet ds = MakeTestDatasetExplicit();
 
   vtkm::worklet::Clip clip;
   bool invertClip = false;
-  vtkm::cont::CellSetExplicit<> outputCellSet = clip.Run(
-    ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, invertClip, DeviceAdapter());
+  vtkm::cont::CellSetExplicit<> outputCellSet =
+    clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
-  vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
   ds.GetField("scalars").GetData().CopyTo(scalarsIn);
-  vtkm::cont::ArrayHandle<vtkm::Float32> scalars =
-    clip.ProcessPointField(scalarsIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalars = clip.ProcessPointField(scalarsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
   ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
-  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar =
-    clip.ProcessCellField(cellvarIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar = clip.ProcessCellField(cellvarIn);
 
   vtkm::Id connectivitySize = 12;
   vtkm::Id fieldSize = 7;
@@ -176,7 +172,6 @@ void TestClippingExplicit()
     "Got incorrect cellvar");
 }
 
-template <typename DeviceAdapter>
 void TestClippingStructured()
 {
   using CoordsValueType = vtkm::cont::ArrayHandleUniformPointCoordinates::ValueType;
@@ -186,21 +181,19 @@ void TestClippingStructured()
 
   bool invertClip = false;
   vtkm::worklet::Clip clip;
-  vtkm::cont::CellSetExplicit<> outputCellSet = clip.Run(
-    ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, invertClip, DeviceAdapter());
+  vtkm::cont::CellSetExplicit<> outputCellSet =
+    clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
-  CoordsOutType coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
+  CoordsOutType coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
   ds.GetField("scalars").GetData().CopyTo(scalarsIn);
-  vtkm::cont::ArrayHandle<vtkm::Float32> scalars =
-    clip.ProcessPointField(scalarsIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalars = clip.ProcessPointField(scalarsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
   ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
-  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar =
-    clip.ProcessCellField(cellvarIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar = clip.ProcessCellField(cellvarIn);
 
 
   vtkm::Id connectivitySize = 36;
@@ -238,7 +231,6 @@ void TestClippingStructured()
     "Got incorrect cellvar");
 }
 
-template <typename DeviceAdapter>
 void TestClippingWithImplicitFunction()
 {
   vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
@@ -251,21 +243,18 @@ void TestClippingWithImplicitFunction()
     clip.Run(ds.GetCellSet(0),
              vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
              ds.GetCoordinateSystem("coords"),
-             invertClip,
-             DeviceAdapter());
+             invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
-  vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
   ds.GetField("scalars").GetData().CopyTo(scalarsIn);
-  vtkm::cont::ArrayHandle<vtkm::Float32> scalars =
-    clip.ProcessPointField(scalarsIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalars = clip.ProcessPointField(scalarsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
   ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
-  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar =
-    clip.ProcessCellField(cellvarIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar = clip.ProcessCellField(cellvarIn);
 
   vtkm::Id connectivitySize = 36;
   vtkm::Id fieldSize = 13;
@@ -300,7 +289,6 @@ void TestClippingWithImplicitFunction()
     "Got incorrect cellvar");
 }
 
-template <typename DeviceAdapter>
 void TestClippingWithImplicitFunctionInverted()
 {
   vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
@@ -313,21 +301,18 @@ void TestClippingWithImplicitFunctionInverted()
     clip.Run(ds.GetCellSet(0),
              vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
              ds.GetCoordinateSystem("coords"),
-             invertClip,
-             DeviceAdapter());
+             invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
-  vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
   ds.GetField("scalars").GetData().CopyTo(scalarsIn);
-  vtkm::cont::ArrayHandle<vtkm::Float32> scalars =
-    clip.ProcessPointField(scalarsIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalars = clip.ProcessPointField(scalarsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
   ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
-  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar =
-    clip.ProcessCellField(cellvarIn, DeviceAdapter());
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar = clip.ProcessCellField(cellvarIn);
 
   vtkm::Id connectivitySize = 12;
   vtkm::Id fieldSize = 13;
@@ -358,19 +343,19 @@ void TestClippingWithImplicitFunctionInverted()
     "Got incorrect cellvar");
 }
 
-template <typename DeviceAdapter>
 void TestClipping()
 {
   std::cout << "Testing explicit dataset:" << std::endl;
-  TestClippingExplicit<DeviceAdapter>();
+  TestClippingExplicit();
   std::cout << "Testing structured dataset:" << std::endl;
-  TestClippingStructured<DeviceAdapter>();
+  TestClippingStructured();
   std::cout << "Testing clipping with implicit function (sphere):" << std::endl;
-  TestClippingWithImplicitFunction<DeviceAdapter>();
-  TestClippingWithImplicitFunctionInverted<DeviceAdapter>();
+  TestClippingWithImplicitFunction();
+  TestClippingWithImplicitFunctionInverted();
 }
 
 int UnitTestClipping(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestClipping<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>);
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  return vtkm::cont::testing::Testing::Run(TestClipping);
 }

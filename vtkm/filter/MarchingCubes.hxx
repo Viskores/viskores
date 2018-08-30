@@ -102,13 +102,12 @@ inline vtkm::Float64 MarchingCubes::GetIsoValue(vtkm::Id index) const
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -169,8 +168,7 @@ inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
                                     coords.GetData(),
                                     field,
                                     vertices,
-                                    normals,
-                                    device);
+                                    normals);
   }
   else
   {
@@ -179,8 +177,7 @@ inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
                                     vtkm::filter::ApplyPolicy(cells, policy),
                                     coords.GetData(),
                                     field,
-                                    vertices,
-                                    device);
+                                    vertices);
   }
 
   if (this->GenerateNormals)
@@ -189,10 +186,10 @@ inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
     {
       Vec3HandleType faceNormals;
       vtkm::worklet::FacetedSurfaceNormals faceted;
-      faceted.Run(outputCells, vertices, faceNormals, device);
+      faceted.Run(outputCells, vertices, faceNormals);
 
       vtkm::worklet::SmoothSurfaceNormals smooth;
-      smooth.Run(outputCells, faceNormals, normals, device);
+      smooth.Run(outputCells, faceNormals, normals);
     }
 
     vtkm::cont::Field normalField(
@@ -216,23 +213,22 @@ inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool MarchingCubes::DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::ArrayHandle<T> fieldArray;
 
   if (fieldMeta.IsPointField())
   {
-    fieldArray = this->Worklet.ProcessPointField(input, device);
+    fieldArray = this->Worklet.ProcessPointField(input);
   }
   else if (fieldMeta.IsCellField())
   {
-    fieldArray = this->Worklet.ProcessCellField(input, device);
+    fieldArray = this->Worklet.ProcessCellField(input);
   }
   else
   {

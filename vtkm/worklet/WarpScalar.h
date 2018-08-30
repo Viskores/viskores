@@ -22,7 +22,6 @@
 #define vtk_m_worklet_WarpScalar_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -80,18 +79,15 @@ public:
             typename NormalType,
             typename ScaleFactorType,
             typename ResultType,
-            typename ScaleAmountType,
-            typename DeviceAdapter>
+            typename ScaleAmountType>
   void Run(PointType point,
            NormalType normal,
            ScaleFactorType scaleFactor,
            ScaleAmountType scale,
-           ResultType warpedPoint,
-           DeviceAdapter vtkmNotUsed(adapter))
+           ResultType warpedPoint)
   {
     WarpScalarImp warpScalarImp(scale);
     vtkm::worklet::DispatcherMapField<WarpScalarImp> dispatcher(warpScalarImp);
-    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(point, normal, scaleFactor, warpedPoint);
   }
 };

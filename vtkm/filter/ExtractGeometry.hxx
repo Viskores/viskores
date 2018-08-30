@@ -28,7 +28,6 @@
 namespace
 {
 
-template <typename DeviceTag>
 struct CallWorker
 {
   vtkm::cont::DynamicCellSet& Output;
@@ -64,8 +63,7 @@ struct CallWorker
                                      this->Function,
                                      this->ExtractInside,
                                      this->ExtractBoundaryCells,
-                                     this->ExtractOnlyBoundaryCells,
-                                     DeviceTag());
+                                     this->ExtractOnlyBoundaryCells);
   }
 };
 
@@ -86,11 +84,10 @@ inline VTKM_CONT ExtractGeometry::ExtractGeometry()
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename DeviceAdapter>
+template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
   const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   // extract the input cell set and coordinates
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -98,13 +95,13 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   vtkm::cont::DynamicCellSet outCells;
-  CallWorker<DeviceAdapter> worker(outCells,
-                                   this->Worklet,
-                                   coords,
-                                   this->Function,
-                                   this->ExtractInside,
-                                   this->ExtractBoundaryCells,
-                                   this->ExtractOnlyBoundaryCells);
+  CallWorker worker(outCells,
+                    this->Worklet,
+                    coords,
+                    this->Function,
+                    this->ExtractInside,
+                    this->ExtractBoundaryCells,
+                    this->ExtractOnlyBoundaryCells);
   vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(worker);
 
   // create the output dataset
@@ -115,13 +112,12 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool ExtractGeometry::DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::DynamicArrayHandle output;
 
@@ -131,7 +127,7 @@ inline VTKM_CONT bool ExtractGeometry::DoMapField(
   }
   else if (fieldMeta.IsCellField())
   {
-    output = this->Worklet.ProcessCellField(input, device);
+    output = this->Worklet.ProcessCellField(input);
   }
   else
   {

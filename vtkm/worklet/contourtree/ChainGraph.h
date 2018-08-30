@@ -93,6 +93,8 @@
 #include <vtkm/worklet/contourtree/TrunkBuilder.h>
 #include <vtkm/worklet/contourtree/VertexDegreeUpdater.h>
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
@@ -130,12 +132,10 @@ namespace contourtree
 #define DEBUG_STRING_SORTED_NEAR_VALUE "Sorted Near Value"
 #define DEBUG_STRING_SORTED_FAR_ID "Sorted Far"
 
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 class ChainGraph
 {
 public:
-  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   // we will want a reference to the original data array
   const vtkm::cont::ArrayHandle<T, StorageType>& values;
 
@@ -224,8 +224,8 @@ public:
 }; // class ChainGraph
 
 // sets initial size of vertex arrays
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::AllocateVertexArrays(vtkm::Id Size)
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::AllocateVertexArrays(vtkm::Id Size)
 {
   valueIndex.Allocate(Size);
   prunesTo.Allocate(Size);
@@ -236,8 +236,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::AllocateVertexArrays(vtkm::Id Si
 } // AllocateVertexArrays()
 
 // sets initial size of edge arrays
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::AllocateEdgeArrays(vtkm::Id Size)
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::AllocateEdgeArrays(vtkm::Id Size)
 {
   edgeFar.Allocate(Size);
   edgeNear.Allocate(Size);
@@ -245,8 +245,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::AllocateEdgeArrays(vtkm::Id Size
 } // AllocateEdgeArrays()
 
 // routine that builds the merge graph once the initial vertices & edges are set
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::Compute(vtkm::cont::ArrayHandle<vtkm::Id>& saddles)
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::Compute(vtkm::cont::ArrayHandle<vtkm::Id>& saddles)
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -309,8 +309,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::Compute(vtkm::cont::ArrayHandle<
 } // Compute()
 
 // sorts saddle ascents to find governing saddles
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::FindGoverningSaddles()
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::FindGoverningSaddles()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -321,14 +321,9 @@ void ChainGraph<T, StorageType, DeviceAdapter>::FindGoverningSaddles()
 #endif
 
   // sort with the comparator
-  DeviceAlgorithm::Sort(
-    edgeSorter,
-    EdgePeakComparator<T, StorageType, DeviceAdapter>(values.PrepareForInput(DeviceAdapter()),
-                                                      valueIndex.PrepareForInput(DeviceAdapter()),
-                                                      edgeFar.PrepareForInput(DeviceAdapter()),
-                                                      edgeNear.PrepareForInput(DeviceAdapter()),
-                                                      arcArray.PrepareForInput(DeviceAdapter()),
-                                                      isJoinGraph));
+  vtkm::cont::Algorithm::Sort(edgeSorter,
+                              EdgePeakComparator<T, StorageType>(
+                                values, valueIndex, edgeFar, edgeNear, arcArray, isJoinGraph));
 
 #ifdef DEBUG_PRINT
   DebugPrint("After Sorting");
@@ -338,7 +333,6 @@ void ChainGraph<T, StorageType, DeviceAdapter>::FindGoverningSaddles()
   GoverningSaddleFinder governingSaddleFinder;
   vtkm::worklet::DispatcherMapField<GoverningSaddleFinder> governingSaddleFinderDispatcher(
     governingSaddleFinder);
-  governingSaddleFinderDispatcher.SetDevice(DeviceAdapter());
   vtkm::Id nEdges = edgeSorter.GetNumberOfValues();
   vtkm::cont::ArrayHandleIndex edgeIndexArray(nEdges);
 
@@ -354,8 +348,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::FindGoverningSaddles()
 } // FindGoverningSaddles()
 
 // marks now regular points for removal
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::TransferRegularPoints()
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::TransferRegularPoints()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -367,7 +361,6 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferRegularPoints()
   RegularPointTransferrer<T> regularPointTransferrer(isJoinGraph);
   vtkm::worklet::DispatcherMapField<RegularPointTransferrer<T>> regularPointTransferrerDispatcher(
     regularPointTransferrer);
-  regularPointTransferrerDispatcher.SetDevice(DeviceAdapter());
 
   regularPointTransferrerDispatcher.Invoke(activeVertices, // input
                                            chainExtremum,  // input (whole array)
@@ -381,8 +374,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferRegularPoints()
 } // TransferRegularPoints()
 
 // compacts the active vertex list
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveVertices()
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::CompactActiveVertices()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -399,13 +392,13 @@ void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveVertices()
 
   // Use only the current activeVertices outdegree to match size on CopyIf
   vtkm::cont::ArrayHandle<vtkm::Id> outdegreeLookup;
-  DeviceAlgorithm::Copy(PermuteIndexType(activeVertices, outdegree), outdegreeLookup);
+  vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, outdegree), outdegreeLookup);
 
   // compact the activeVertices array to keep only the ones of interest
-  DeviceAlgorithm::CopyIf(activeVertices, outdegreeLookup, newActiveVertices);
+  vtkm::cont::Algorithm::CopyIf(activeVertices, outdegreeLookup, newActiveVertices);
 
   activeVertices.ReleaseResources();
-  DeviceAlgorithm::Copy(newActiveVertices, activeVertices);
+  vtkm::cont::Algorithm::Copy(newActiveVertices, activeVertices);
 
 #ifdef DEBUG_PRINT
   DebugPrint("Active Vertex List Compacted");
@@ -413,8 +406,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveVertices()
 } // CompactActiveVertices()
 
 // compacts the active edge list
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveEdges()
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::CompactActiveEdges()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -437,7 +430,6 @@ void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveEdges()
   VertexDegreeUpdater vertexDegreeUpdater;
   vtkm::worklet::DispatcherMapField<VertexDegreeUpdater> vertexDegreeUpdaterDispatcher(
     vertexDegreeUpdater);
-  vertexDegreeUpdaterDispatcher.SetDevice(DeviceAdapter());
 
   vertexDegreeUpdaterDispatcher.Invoke(activeVertices, // input
                                        activeEdges,    // input (whole array)
@@ -450,7 +442,7 @@ void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveEdges()
 
   // now we do a reduction to compute the offsets of each vertex
   vtkm::cont::ArrayHandle<vtkm::Id> newPosition;
-  DeviceAlgorithm::ScanExclusive(newOutdegree, newPosition);
+  vtkm::cont::Algorithm::ScanExclusive(newOutdegree, newPosition);
   vtkm::Id nNewEdges = newPosition.GetPortalControl().Get(nActiveVertices - 1) +
     newOutdegree.GetPortalControl().Get(nActiveVertices - 1);
 
@@ -461,23 +453,20 @@ void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveEdges()
   // now copy the relevant edges into the active edge array
   // WARNING: Using chainMaximum, edgeHigh, firstEdge, updegree for I/O in parallel loop
   // See functor description for algorithmic justification of safety
-  ActiveEdgeTransferrer<DeviceAdapter> activeEdgeTransferrer(
-    activeEdges.PrepareForInput(DeviceAdapter()), prunesTo.PrepareForInput(DeviceAdapter()));
-  vtkm::worklet::DispatcherMapField<ActiveEdgeTransferrer<DeviceAdapter>>
-    activeEdgeTransferrerDispatcher(activeEdgeTransferrer);
-  activeEdgeTransferrerDispatcher.SetDevice(DeviceAdapter());
-
-  activeEdgeTransferrerDispatcher.Invoke(activeVertices,  // input
-                                         newPosition,     // input
-                                         newOutdegree,    // input
-                                         firstEdge,       // i/o (whole array)
-                                         outdegree,       // i/o (whole array)
-                                         chainExtremum,   // i/o (whole array)
-                                         edgeFar,         // i/o (whole array)
-                                         newActiveEdges); // output (whole array)
+  vtkm::worklet::DispatcherMapField<ActiveEdgeTransferrer>().Invoke(
+    activeVertices,  // input
+    newPosition,     // input
+    newOutdegree,    // input
+    activeEdges,     // input (whole array)
+    prunesTo,        // input (whole array)
+    firstEdge,       // i/o (whole array)
+    outdegree,       // i/o (whole array)
+    chainExtremum,   // i/o (whole array)
+    edgeFar,         // i/o (whole array)
+    newActiveEdges); // output (whole array)
 
   // resize the original array and recopy
-  DeviceAlgorithm::Copy(newActiveEdges, activeEdges);
+  vtkm::cont::ArrayCopy(newActiveEdges, activeEdges);
 
 #ifdef DEBUG_PRINT
   DebugPrint("Active Edges Now Compacted");
@@ -485,8 +474,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveEdges()
 } // CompactActiveEdges()
 
 // builds the chains for the new active vertices
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::BuildChains()
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::BuildChains()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -507,7 +496,6 @@ void ChainGraph<T, StorageType, DeviceAdapter>::BuildChains()
 
   ChainDoubler chainDoubler;
   vtkm::worklet::DispatcherMapField<ChainDoubler> chainDoublerDispatcher(chainDoubler);
-  chainDoublerDispatcher.SetDevice(DeviceAdapter());
 
   // 2.	Use path compression / step doubling to collect vertices along ascending chains
   //		until every vertex has been assigned to *an* extremum
@@ -524,8 +512,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::BuildChains()
 } // BuildChains()
 
 // transfers saddle ascent edges into edge sorter
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::TransferSaddleStarts()
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::TransferSaddleStarts()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -551,7 +539,6 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferSaddleStarts()
   SaddleAscentFunctor saddleAscentFunctor;
   vtkm::worklet::DispatcherMapField<SaddleAscentFunctor> saddleAscentFunctorDispatcher(
     saddleAscentFunctor);
-  saddleAscentFunctorDispatcher.SetDevice(DeviceAdapter());
 
   saddleAscentFunctorDispatcher.Invoke(activeVertices, // input
                                        firstEdge,      // input (whole array)
@@ -562,7 +549,7 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferSaddleStarts()
                                        newOutdegree);  // output
 
   // 3. now compute the new offsets in the newFirstEdge array
-  DeviceAlgorithm::ScanExclusive(newOutdegree, newFirstEdge);
+  vtkm::cont::Algorithm::ScanExclusive(newOutdegree, newFirstEdge);
   nEdgesToSort = newFirstEdge.GetPortalControl().Get(nActiveVertices - 1) +
     newOutdegree.GetPortalControl().Get(nActiveVertices - 1);
 
@@ -572,7 +559,6 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferSaddleStarts()
   SaddleAscentTransferrer saddleAscentTransferrer;
   vtkm::worklet::DispatcherMapField<SaddleAscentTransferrer> saddleAscentTransferrerDispatcher(
     saddleAscentTransferrer);
-  saddleAscentTransferrerDispatcher.SetDevice(DeviceAdapter());
 
   saddleAscentTransferrerDispatcher.Invoke(activeVertices, // input
                                            newOutdegree,   // input
@@ -587,8 +573,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferSaddleStarts()
 } // TransferSaddleStarts()
 
 // sets all remaining active vertices
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::BuildTrunk()
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::BuildTrunk()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -600,7 +586,6 @@ void ChainGraph<T, StorageType, DeviceAdapter>::BuildTrunk()
 
   TrunkBuilder trunkBuilder;
   vtkm::worklet::DispatcherMapField<TrunkBuilder> trunkBuilderDispatcher(trunkBuilder);
-  trunkBuilderDispatcher.SetDevice(DeviceAdapter());
 
   trunkBuilderDispatcher.Invoke(activeVertices, // input
                                 chainExtremum,  // input (whole array)
@@ -611,9 +596,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::BuildTrunk()
 } // BuildTrunk()
 
 // transfers partial results to merge tree array
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::TransferToMergeTree(
-  vtkm::cont::ArrayHandle<vtkm::Id>& saddles)
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::TransferToMergeTree(vtkm::cont::ArrayHandle<vtkm::Id>& saddles)
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -627,12 +611,11 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferToMergeTree(
   saddles.ReleaseResources();
 
   // initialise it to the arcArray
-  DeviceAlgorithm::Copy(arcArray, saddles);
+  vtkm::cont::ArrayCopy(arcArray, saddles);
 
   JoinTreeTransferrer joinTreeTransferrer;
   vtkm::worklet::DispatcherMapField<JoinTreeTransferrer> joinTreeTransferrerDispatcher(
     joinTreeTransferrer);
-  joinTreeTransferrerDispatcher.SetDevice(DeviceAdapter());
   vtkm::cont::ArrayHandleIndex valueIndexArray(valueIndex.GetNumberOfValues());
 
   joinTreeTransferrerDispatcher.Invoke(valueIndexArray, // input
@@ -644,8 +627,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::TransferToMergeTree(
 } // TransferToMergeTree()
 
 // prints the contents of the topology graph in standard format
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ChainGraph<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
+template <typename T, typename StorageType>
+void ChainGraph<T, StorageType>::DebugPrint(const char* message)
 {
   std::cout << "---------------------------" << std::endl;
   std::cout << std::string(message) << std::endl;
@@ -664,7 +647,7 @@ void ChainGraph<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
   std::cout << "Full Vertex Arrays - Size:  " << nValues << std::endl;
   printHeader(nValues);
   printIndices("Index", valueIndex);
-  DeviceAlgorithm::Copy(PermuteValueType(valueIndex, values), vertexValues);
+  vtkm::cont::ArrayCopy(PermuteValueType(valueIndex, values), vertexValues);
   printValues("Value", vertexValues);
   printIndices("First Edge", firstEdge);
   printIndices("Outdegree", outdegree);
@@ -682,17 +665,17 @@ void ChainGraph<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
 
     printHeader(nActiveVertices);
     printIndices("Active Vertices", activeVertices);
-    DeviceAlgorithm::Copy(PermuteIndexType(activeVertices, valueIndex), tempIndex);
+    vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, valueIndex), tempIndex);
     printIndices("Active Indices", tempIndex);
-    DeviceAlgorithm::Copy(PermuteValueType(activeVertices, vertexValues), tempValue);
+    vtkm::cont::ArrayCopy(PermuteValueType(activeVertices, vertexValues), tempValue);
     printValues("Active Values", tempValue);
-    DeviceAlgorithm::Copy(PermuteIndexType(activeVertices, firstEdge), tempIndex);
+    vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, firstEdge), tempIndex);
     printIndices("Active First Edge", tempIndex);
-    DeviceAlgorithm::Copy(PermuteIndexType(activeVertices, outdegree), tempIndex);
+    vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, outdegree), tempIndex);
     printIndices("Active Outdegree", tempIndex);
-    DeviceAlgorithm::Copy(PermuteIndexType(activeVertices, chainExtremum), tempIndex);
+    vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, chainExtremum), tempIndex);
     printIndices("Active Chain Ext", tempIndex);
-    DeviceAlgorithm::Copy(PermuteIndexType(activeVertices, prunesTo), tempIndex);
+    vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, prunesTo), tempIndex);
     printIndices("Active Prunes To", tempIndex);
     std::cout << std::endl;
   }
@@ -708,16 +691,16 @@ void ChainGraph<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
   {
     printHeader(nEdges);
     printIndices("Far", edgeFar);
-    DeviceAlgorithm::Copy(PermuteIndexType(edgeFar, valueIndex), farIndices);
+    vtkm::cont::ArrayCopy(PermuteIndexType(edgeFar, valueIndex), farIndices);
     printIndices("Far Index", farIndices);
-    DeviceAlgorithm::Copy(PermuteValueType(farIndices, values), farValues);
+    vtkm::cont::ArrayCopy(PermuteValueType(farIndices, values), farValues);
     printValues("Far Value", farValues);
 
     printHeader(nEdges);
     printIndices("Near", edgeNear);
-    DeviceAlgorithm::Copy(PermuteIndexType(edgeNear, valueIndex), nearIndices);
+    vtkm::cont::ArrayCopy(PermuteIndexType(edgeNear, valueIndex), nearIndices);
     printIndices("Near Index", nearIndices);
-    DeviceAlgorithm::Copy(PermuteValueType(nearIndices, values), nearValues);
+    vtkm::cont::ArrayCopy(PermuteValueType(nearIndices, values), nearValues);
     printValues("Near Value", nearValues);
   }
 
@@ -734,13 +717,13 @@ void ChainGraph<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
     printHeader(nActiveEdges);
     printIndices("Active Edges", activeEdges);
 
-    DeviceAlgorithm::Copy(PermuteIndexType(activeEdges, edgeFar), activeFarIndices);
+    vtkm::cont::ArrayCopy(PermuteIndexType(activeEdges, edgeFar), activeFarIndices);
     printIndices("Edge Far", activeFarIndices);
-    DeviceAlgorithm::Copy(PermuteIndexType(activeEdges, edgeNear), activeNearIndices);
+    vtkm::cont::ArrayCopy(PermuteIndexType(activeEdges, edgeNear), activeNearIndices);
     printIndices("Edge Near", activeNearIndices);
-    DeviceAlgorithm::Copy(PermuteIndexType(activeNearIndices, valueIndex), activeNearLookup);
+    vtkm::cont::ArrayCopy(PermuteIndexType(activeNearIndices, valueIndex), activeNearLookup);
     printIndices("Edge Near Index", activeNearLookup);
-    DeviceAlgorithm::Copy(PermuteValueType(activeNearLookup, values), activeNearValues);
+    vtkm::cont::ArrayCopy(PermuteValueType(activeNearLookup, values), activeNearValues);
     printValues("Edge Near Value", activeNearValues);
     std::cout << std::endl;
   }
@@ -755,13 +738,13 @@ void ChainGraph<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
 
     printHeader(nEdgeSorter);
     printIndices("Edge Sorter", edgeSorter);
-    DeviceAlgorithm::Copy(PermuteIndexType(edgeSorter, edgeNear), tempSortIndex);
+    vtkm::cont::ArrayCopy(PermuteIndexType(edgeSorter, edgeNear), tempSortIndex);
     printIndices("Sorted Near", tempSortIndex);
-    DeviceAlgorithm::Copy(PermuteIndexType(edgeSorter, nearIndices), tempSortIndex);
+    vtkm::cont::ArrayCopy(PermuteIndexType(edgeSorter, nearIndices), tempSortIndex);
     printIndices("Sorted Near Index", tempSortIndex);
-    DeviceAlgorithm::Copy(PermuteIndexType(edgeSorter, edgeFar), tempSortIndex);
+    vtkm::cont::ArrayCopy(PermuteIndexType(edgeSorter, edgeFar), tempSortIndex);
     printIndices("Sorted Far", tempSortIndex);
-    DeviceAlgorithm::Copy(PermuteValueType(edgeSorter, nearValues), tempSortValue);
+    vtkm::cont::ArrayCopy(PermuteValueType(edgeSorter, nearValues), tempSortValue);
     printValues("Sorted Near Value", tempSortValue);
     std::cout << std::endl;
   }

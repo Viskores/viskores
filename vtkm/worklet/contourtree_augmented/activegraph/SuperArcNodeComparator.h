@@ -65,6 +65,7 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
@@ -79,7 +80,7 @@ namespace active_graph_inc
 
 // comparator used for initial sort of data values
 template <typename DeviceAdapter>
-class SuperArcNodeComparator
+class SuperArcNodeComparatorImpl
 {
 public:
   using IdPortalType =
@@ -90,7 +91,7 @@ public:
 
   // constructor - takes vectors as parameters
   VTKM_CONT
-  SuperArcNodeComparator(const IdArrayType& superparents, bool joinSweep)
+  SuperArcNodeComparatorImpl(const IdArrayType& superparents, bool joinSweep)
     : isJoinSweep(joinSweep)
   { // constructor
     superparentsPortal = superparents.PrepareForInput(DeviceAdapter());
@@ -120,7 +121,29 @@ public:
     // fallback just in case
     return false;
   } // operator()
-};  // SuperArcNodeComparator
+};  // SuperArcNodeComparatorImpl
+
+class SuperArcNodeComparator : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  // constructor - takes vectors as parameters
+  VTKM_CONT
+  SuperArcNodeComparator(const IdArrayType& superparents, bool joinSweep)
+    : Superparents(superparents)
+    , JoinSweep(joinSweep)
+  {
+  }
+
+  template <typename DeviceAdapter>
+  VTKM_CONT SuperArcNodeComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  {
+    return SuperArcNodeComparatorImpl<DeviceAdapter>(this->Superparents, this->JoinSweep);
+  }
+
+private:
+  IdArrayType Superparents;
+  bool JoinSweep;
+}; // SuperArcNodeComparator
 
 } // namespace active_graph_inc
 } // namespace contourtree_augmented

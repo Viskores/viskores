@@ -95,7 +95,6 @@ namespace contourtree
 {
 
 // Worklet for setting initial chain maximum value
-template <typename DeviceAdapter>
 class Mesh3D_DEM_SaddleStarter : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -110,49 +109,42 @@ public:
          WholeArrayIn<IdType> linkMask,      // (input) neighbors of vertex
          WholeArrayIn<IdType> arcArray,      // (input) chain extrema per vertex
          WholeArrayIn<IdType> inverseIndex,  // (input) permutation of index
+         WholeArrayIn<> neighbourTable,      // (input) table for neighbour offsets
+         WholeArrayIn<> caseTable,           // (input) case table for neighbours
          WholeArrayOut<IdType> edgeNear,     // (output) low end of edges
          WholeArrayOut<IdType> edgeFar,      // (output) high end of edges
          WholeArrayOut<IdType> activeEdges); // (output) active edge list
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11);
   using InputDomain = _1;
 
-  using IdComponentPortalType = typename vtkm::cont::ArrayHandle<
-    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
-
-  vtkm::Id nRows;                       // (input) number of rows in 3D
-  vtkm::Id nCols;                       // (input) number of cols in 3D
-  vtkm::Id nSlices;                     // (input) number of cols in 3D
-  bool ascending;                       // (input) ascending or descending (join or split)
-  IdComponentPortalType neighbourTable; // (input) table for neighbour offsets
-  IdPortalType caseTable;               // (input) case table for neighbours
+  vtkm::Id nRows;   // (input) number of rows in 3D
+  vtkm::Id nCols;   // (input) number of cols in 3D
+  vtkm::Id nSlices; // (input) number of cols in 3D
+  bool ascending;   // (input) ascending or descending (join or split)
 
   // Constructor
   VTKM_EXEC_CONT
-  Mesh3D_DEM_SaddleStarter(vtkm::Id NRows,
-                           vtkm::Id NCols,
-                           vtkm::Id NSlices,
-                           bool Ascending,
-                           IdComponentPortalType NeighbourTable,
-                           IdPortalType CaseTable)
+  Mesh3D_DEM_SaddleStarter(vtkm::Id NRows, vtkm::Id NCols, vtkm::Id NSlices, bool Ascending)
     : nRows(NRows)
     , nCols(NCols)
     , nSlices(NSlices)
     , ascending(Ascending)
-    , neighbourTable(NeighbourTable)
-    , caseTable(CaseTable)
   {
   }
 
   // operator() routine that executes the loop
-  template <typename InFieldPortalType, typename OutFieldPortalType>
+  template <typename InFieldPortalType,
+            typename NeighbourTableType,
+            typename CaseTableType,
+            typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertex,
                             const vtkm::Pair<vtkm::Id, vtkm::Id>& outDegFirstEdge,
                             const vtkm::Id& valueIndex,
                             const InFieldPortalType& linkMask,
                             const InFieldPortalType& arcArray,
                             const InFieldPortalType& inverseIndex,
+                            const NeighbourTableType& neighbourTable,
+                            const CaseTableType& caseTable,
                             const OutFieldPortalType& edgeNear,
                             const OutFieldPortalType& edgeFar,
                             const OutFieldPortalType& activeEdges) const

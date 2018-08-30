@@ -202,10 +202,6 @@ template <typename T>
 struct ScanExclusiveFunctor
 {
   T result;
-  ScanExclusiveFunctor()
-    : result(T(0))
-  {
-  }
 
   template <typename Device, typename... Args>
   VTKM_CONT bool operator()(Device, Args&&... args)

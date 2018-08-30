@@ -21,6 +21,7 @@
 #define vtk_m_cont_VirtualObjectHandle_h
 
 #include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
@@ -68,7 +69,7 @@ struct CreateTransferInterface
 /// \sa vtkm::VirtualObjectBase
 ///
 template <typename VirtualBaseType>
-class VTKM_ALWAYS_EXPORT VirtualObjectHandle
+class VTKM_ALWAYS_EXPORT VirtualObjectHandle : public vtkm::cont::ExecutionAndControlObjectBase
 {
   VTKM_STATIC_ASSERT_MSG((std::is_base_of<vtkm::VirtualObjectBase, VirtualBaseType>::value),
                          "All virtual objects must be subclass of vtkm::VirtualObjectBase.");
@@ -154,6 +155,9 @@ public:
     return static_cast<const VirtualBaseType*>(this->Internals->PrepareForExecution(deviceId));
   }
 
+  /// Used as part of the \c ExecutionAndControlObjectBase interface. Returns the same pointer
+  /// as \c Get.
+  VTKM_CONT const VirtualBaseType* PrepareForControl() const { return this->Get(); }
 
 private:
   std::shared_ptr<internal::TransferState> Internals;

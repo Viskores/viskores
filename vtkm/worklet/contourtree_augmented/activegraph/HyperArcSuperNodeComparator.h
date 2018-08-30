@@ -64,6 +64,7 @@
 #define vtkm_worklet_contourtree_augmented_active_graph_inc_hyper_arc_super_node_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
@@ -78,7 +79,7 @@ namespace active_graph_inc
 
 // comparator used for initial sort of data values
 template <typename DeviceAdapter>
-class HyperArcSuperNodeComparator
+class HyperArcSuperNodeComparatorImpl
 {
 public:
   using IdArrayPortalType =
@@ -90,9 +91,9 @@ public:
 
   // constructor - takes vectors as parameters
   VTKM_CONT
-  HyperArcSuperNodeComparator(const IdArrayPortalType& hyperparents,
-                              const IdArrayPortalType& superID,
-                              bool IsJoinTree)
+  HyperArcSuperNodeComparatorImpl(const IdArrayPortalType& hyperparents,
+                                  const IdArrayPortalType& superID,
+                                  bool IsJoinTree)
     : treeHyperparentsPortal(hyperparents)
     , graphSuperIDPortal(superID)
     , isJoinTree(IsJoinTree)
@@ -125,6 +126,35 @@ public:
   } // operator()
 };  // SimulatedSimplicityIndexComparator
 
+class HyperArcSuperNodeComparator : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  // constructor - takes vectors as parameters
+  VTKM_CONT
+  HyperArcSuperNodeComparator(const IdArrayType& hyperparents,
+                              const IdArrayType& superID,
+                              bool isJoinTree)
+    : Hyperparents(hyperparents)
+    , SuperID(superID)
+    , IsJoinTree(isJoinTree)
+  {
+  }
+
+  template <typename DeviceAdapter>
+  VTKM_CONT HyperArcSuperNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter device) const
+  {
+    return HyperArcSuperNodeComparatorImpl<DeviceAdapter>(
+      this->Hyperparents.PrepareForInput(device),
+      this->SuperID.PrepareForInput(device),
+      this->IsJoinTree);
+  }
+
+private:
+  IdArrayType Hyperparents;
+  IdArrayType SuperID;
+  bool IsJoinTree;
+};
 
 } // namespace active_graph_inc
 } // namespace contourtree_augmented

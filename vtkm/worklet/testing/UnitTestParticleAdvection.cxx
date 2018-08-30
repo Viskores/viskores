@@ -19,11 +19,11 @@
 //============================================================================
 
 #include <typeinfo>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
@@ -162,12 +162,9 @@ void CreateConstantVectorField(vtkm::Id num,
                                const vtkm::Vec<ScalarType, 3>& vec,
                                vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& vecField)
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   vtkm::cont::ArrayHandleConstant<vtkm::Vec<ScalarType, 3>> vecConst;
   vecConst = vtkm::cont::make_ArrayHandleConstant(vec, num);
-  DeviceAlgorithm::Copy(vecConst, vecField);
+  vtkm::cont::ArrayCopy(vecConst, vecField);
 }
 
 template <typename ScalarType>
@@ -197,7 +194,6 @@ void ValidateEvaluator(const EvalType& eval,
                        const vtkm::Vec<ScalarType, 3>& vec,
                        const std::string& msg)
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using EvalTester = TestEvaluatorWorklet<ScalarType>;
   using EvalTesterDispatcher = vtkm::worklet::DispatcherMapField<EvalTester>;
   EvalTester evalTester;
@@ -205,11 +201,8 @@ void ValidateEvaluator(const EvalType& eval,
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
-  pointsHandle.PrepareForInput(DeviceAdapter());
   vtkm::cont::ArrayHandle<bool> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> evalResults;
-  evalStatus.PrepareForOutput(numPoints, DeviceAdapter());
-  evalResults.PrepareForOutput(numPoints, DeviceAdapter());
   evalTesterDispatcher.Invoke(pointsHandle, eval, evalStatus, evalResults);
   auto statusPortal = evalStatus.GetPortalConstControl();
   auto resultsPortal = evalResults.GetPortalConstControl();
@@ -254,7 +247,6 @@ void ValidateIntegrator(const IntegratorType& integrator,
                         const std::vector<vtkm::Vec<ScalarType, 3>>& expStepResults,
                         const std::string& msg)
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using IntegratorTester = TestIntegratorWorklet<ScalarType>;
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
   using Status = vtkm::worklet::particleadvection::ParticleStatus;
@@ -262,11 +254,8 @@ void ValidateIntegrator(const IntegratorType& integrator,
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
-  pointsHandle.PrepareForInput(DeviceAdapter());
   vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> stepResults;
-  stepStatus.PrepareForOutput(numPoints, DeviceAdapter());
-  stepResults.PrepareForOutput(numPoints, DeviceAdapter());
   integratorTesterDispatcher.Invoke(pointsHandle, integrator, stepStatus, stepResults);
   auto statusPortal = stepStatus.GetPortalConstControl();
   auto resultsPortal = stepResults.GetPortalConstControl();
@@ -397,7 +386,6 @@ void TestEvaluators()
 
 void TestParticleWorklets()
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using ScalarType = vtkm::Float32;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>;
 
@@ -452,12 +440,12 @@ void TestParticleWorklets()
           seeds.GetPortalControl().Set(k, pts[static_cast<size_t>(k)]);
 
         if (j == 0)
-          res = particleAdvection.Run(rk4, seeds, maxSteps, DeviceAdapter());
+          res = particleAdvection.Run(rk4, seeds, maxSteps);
         else if (j == 1)
         {
           vtkm::cont::ArrayHandle<vtkm::Id> stepsTakenArrayHandle =
             vtkm::cont::make_ArrayHandle(stepsTaken);
-          res = particleAdvection.Run(rk4, seeds, stepsTakenArrayHandle, maxSteps, DeviceAdapter());
+          res = particleAdvection.Run(rk4, seeds, stepsTakenArrayHandle, maxSteps);
         }
 
         VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
@@ -483,12 +471,12 @@ void TestParticleWorklets()
           seeds.GetPortalControl().Set(k, pts[static_cast<size_t>(k)]);
 
         if (j == 0)
-          res = streamline.Run(rk4, seeds, maxSteps, DeviceAdapter());
+          res = streamline.Run(rk4, seeds, maxSteps);
         else if (j == 1)
         {
           vtkm::cont::ArrayHandle<vtkm::Id> stepsTakenArrayHandle =
             vtkm::cont::make_ArrayHandle(stepsTaken);
-          res = streamline.Run(rk4, seeds, stepsTakenArrayHandle, maxSteps, DeviceAdapter());
+          res = streamline.Run(rk4, seeds, stepsTakenArrayHandle, maxSteps);
         }
 
         //Make sure we have the right number of streamlines.
@@ -523,5 +511,6 @@ void TestParticleAdvection()
 
 int UnitTestParticleAdvection(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(TestParticleAdvection);
 }

@@ -668,7 +668,6 @@ private:
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;
   RectilinearType CoordinatesArray;
-
 }; //RectilinearGridEvaluate
 
 } //namespace particleadvection

@@ -33,13 +33,10 @@ inline VTKM_CONT CleanGrid::CleanGrid()
 {
 }
 
-template <typename Policy, typename Device>
+template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
-                                                          vtkm::filter::PolicyBase<Policy> policy,
-                                                          Device)
+                                                          vtkm::filter::PolicyBase<Policy> policy)
 {
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
   using CellSetType = vtkm::cont::CellSetExplicit<>;
   using VecId = std::vector<CellSetType>::size_type;
 
@@ -53,24 +50,23 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
     vtkm::cont::DynamicCellSet inCellSet =
       inData.GetCellSet(static_cast<vtkm::IdComponent>(cellSetIndex));
 
-    vtkm::worklet::CellDeepCopy::Run(
-      vtkm::filter::ApplyPolicy(inCellSet, policy), outputCellSets[cellSetIndex], Device());
+    vtkm::worklet::CellDeepCopy::Run(vtkm::filter::ApplyPolicy(inCellSet, policy),
+                                     outputCellSets[cellSetIndex]);
   }
 
   // Optionally adjust the cell set indices to remove all unused points
   if (this->GetCompactPointFields())
   {
-    this->PointCompactor.FindPointsStart(Device());
+    this->PointCompactor.FindPointsStart();
     for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; cellSetIndex++)
     {
-      this->PointCompactor.FindPoints(outputCellSets[cellSetIndex], Device());
+      this->PointCompactor.FindPoints(outputCellSets[cellSetIndex]);
     }
-    this->PointCompactor.FindPointsEnd(Device());
+    this->PointCompactor.FindPointsEnd();
 
     for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; cellSetIndex++)
     {
-      outputCellSets[cellSetIndex] =
-        this->PointCompactor.MapCellSet(outputCellSets[cellSetIndex], Device());
+      outputCellSets[cellSetIndex] = this->PointCompactor.MapCellSet(outputCellSets[cellSetIndex]);
     }
   }
 
@@ -96,7 +92,7 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
 
     if (this->GetCompactPointFields())
     {
-      auto outArray = this->MapPointField(coordSystem.GetData(), Device());
+      auto outArray = this->MapPointField(coordSystem.GetData());
       outData.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordSystem.GetName(), outArray));
     }
     else
@@ -108,17 +104,16 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
   return outData;
 }
 
-template <typename ValueType, typename Storage, typename Policy, typename Device>
+template <typename ValueType, typename Storage, typename Policy>
 inline VTKM_CONT bool CleanGrid::DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<Policy>,
-  Device)
+  vtkm::filter::PolicyBase<Policy>)
 {
   if (this->GetCompactPointFields() && fieldMeta.IsPointField())
   {
-    vtkm::cont::ArrayHandle<ValueType> compactedArray = this->MapPointField(input, Device());
+    vtkm::cont::ArrayHandle<ValueType> compactedArray = this->MapPointField(input);
     result.AddField(fieldMeta.AsField(compactedArray));
   }
   else
@@ -129,14 +124,13 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
   return true;
 }
 
-template <typename ValueType, typename Storage, typename Device>
+template <typename ValueType, typename Storage>
 inline VTKM_CONT vtkm::cont::ArrayHandle<ValueType> CleanGrid::MapPointField(
-  const vtkm::cont::ArrayHandle<ValueType, Storage>& inArray,
-  Device) const
+  const vtkm::cont::ArrayHandle<ValueType, Storage>& inArray) const
 {
   VTKM_ASSERT(this->GetCompactPointFields());
 
-  return this->PointCompactor.MapPointFieldDeep(inArray, Device());
+  return this->PointCompactor.MapPointFieldDeep(inArray);
 }
 }
 }

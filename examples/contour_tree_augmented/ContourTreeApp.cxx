@@ -62,10 +62,6 @@
 
 #define DEBUG_TIMING
 
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
 #ifdef ENABLE_SET_NUM_THREADS
 #include "tbb/task_scheduler_init.h"
 #endif
@@ -149,12 +145,8 @@ private:
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(DeviceAdapter());
-
-  vtkm::cont::Timer<DeviceAdapter> totalTime;
+  // TODO: Change timing to use logging in vtkm/cont/Logging.h
+  vtkm::cont::Timer<> totalTime;
   vtkm::Float64 prevTime = 0;
   vtkm::Float64 currTime = 0;
   std::cout << "ContourTreePPP2Mesh <options> <fileName>" << std::endl;
@@ -337,20 +329,20 @@ int main(int argc, char* argv[])
   ////////////////////////////////////////////
   if (computeBranchDecomposition)
   {
-    vtkm::cont::Timer<DeviceAdapter> branchDecompTimer;
+    // TODO: Change timing to use logging in vtkm/cont/Logging.h
+    vtkm::cont::Timer<> branchDecompTimer;
     // compute the volume for each hyperarc and superarc
     cppp2_ns::IdArrayType superarcIntrinsicWeight;
     cppp2_ns::IdArrayType superarcDependentWeight;
     cppp2_ns::IdArrayType supernodeTransferWeight;
     cppp2_ns::IdArrayType hyperarcDependentWeight;
 
-    cppp2_ns::ProcessContourTree::ComputeVolumeWeights<DeviceAdapter>(
-      filter.GetContourTree(),
-      filter.GetNumIterations(),
-      superarcIntrinsicWeight,  // (output)
-      superarcDependentWeight,  // (output)
-      supernodeTransferWeight,  // (output)
-      hyperarcDependentWeight); // (output)
+    cppp2_ns::ProcessContourTree::ComputeVolumeWeights(filter.GetContourTree(),
+                                                       filter.GetNumIterations(),
+                                                       superarcIntrinsicWeight,  // (output)
+                                                       superarcDependentWeight,  // (output)
+                                                       supernodeTransferWeight,  // (output)
+                                                       hyperarcDependentWeight); // (output)
     std::cout << std::setw(42) << std::left << "Compute Volume Weights"
               << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
     branchDecompTimer.Reset();
@@ -362,15 +354,14 @@ int main(int argc, char* argv[])
     cppp2_ns::IdArrayType branchSaddle;
     cppp2_ns::IdArrayType branchParent;
 
-    cppp2_ns::ProcessContourTree::ComputeVolumeBranchDecomposition<DeviceAdapter>(
-      filter.GetContourTree(),
-      superarcDependentWeight,
-      superarcIntrinsicWeight,
-      whichBranch,   // (output)
-      branchMinimum, // (output)
-      branchMaximum, // (output)
-      branchSaddle,  // (output)
-      branchParent); // (output)
+    cppp2_ns::ProcessContourTree::ComputeVolumeBranchDecomposition(filter.GetContourTree(),
+                                                                   superarcDependentWeight,
+                                                                   superarcIntrinsicWeight,
+                                                                   whichBranch,   // (output)
+                                                                   branchMinimum, // (output)
+                                                                   branchMaximum, // (output)
+                                                                   branchSaddle,  // (output)
+                                                                   branchParent); // (output)
     std::cout << std::setw(42) << std::left << "Compute Volume Branch Decomposition"
               << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
   }
@@ -388,7 +379,7 @@ int main(int argc, char* argv[])
     std::cout << "Contour Tree" << std::endl;
     std::cout << "============" << std::endl;
     cppp2_ns::EdgePairArray saddlePeak;
-    cppp2_ns::ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(
+    cppp2_ns::ProcessContourTree::CollectSortedSuperarcs(
       filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
     cppp2_ns::printEdgePairArray(saddlePeak);
   }

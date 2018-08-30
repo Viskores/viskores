@@ -128,7 +128,7 @@ public:
   // ROUTINES
 
   // creates merge tree (empty)
-  MergeTree(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize, bool IsJoinTree);
+  MergeTree(vtkm::Id meshSize, bool IsJoinTree);
 
   // debug routine
   void DebugPrint(const char* message, const char* fileName, long lineNum);
@@ -145,7 +145,7 @@ public:
 
 
 // creates merge tree (empty)
-inline MergeTree::MergeTree(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize, bool IsJoinTree)
+inline MergeTree::MergeTree(vtkm::Id meshSize, bool IsJoinTree)
   : isJoinTree(IsJoinTree)
   , supernodes()
   , superarcs()
@@ -157,11 +157,11 @@ inline MergeTree::MergeTree(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSiz
   // Allocate the arcs array
   // TODO it should be sufficient to just allocate arcs without initializing it with 0s
   vtkm::cont::ArrayHandleConstant<vtkm::Id> meshSizeNullArray(0, meshSize);
-  vtkm::cont::Algorithm::Copy(device, meshSizeNullArray, arcs);
+  vtkm::cont::Algorithm::Copy(meshSizeNullArray, arcs);
 
   // Initialize the superparents with NO_SUCH_ELEMENT
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT, meshSize);
-  vtkm::cont::Algorithm::Copy(device, noSuchElementArray, superparents);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, superparents);
 
 } // MergeTree()
 

@@ -30,7 +30,7 @@
 
 void TestVertexClustering()
 {
-  VTKM_DEFAULT_DEVICE_ADAPTER_TAG device;
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   const vtkm::Id3 divisions(3, 3, 3);
   vtkm::cont::testing::MakeTestDataSet maker;
@@ -42,13 +42,13 @@ void TestVertexClustering()
   // run
   vtkm::worklet::VertexClustering clustering;
   vtkm::cont::DataSet outDataSet =
-    clustering.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), bounds, divisions, device);
+    clustering.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), bounds, divisions);
 
   using FieldArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
   FieldArrayType pointvar = clustering.ProcessPointField(
-    dataSet.GetPointField("pointvar").GetData().Cast<FieldArrayType>(), device);
-  FieldArrayType cellvar = clustering.ProcessCellField(
-    dataSet.GetCellField("cellvar").GetData().Cast<FieldArrayType>(), device);
+    dataSet.GetPointField("pointvar").GetData().Cast<FieldArrayType>());
+  FieldArrayType cellvar =
+    clustering.ProcessCellField(dataSet.GetCellField("cellvar").GetData().Cast<FieldArrayType>());
 
   // test
   const vtkm::Id output_pointIds = 18;

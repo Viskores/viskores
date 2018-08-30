@@ -40,13 +40,12 @@ inline VTKM_CONT WarpScalar::WarpScalar(vtkm::FloatDefault scaleAmount)
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   using vecType = vtkm::Vec<T, 3>;
   auto normalF = inDataSet.GetField(this->NormalFieldName, this->NormalFieldAssociation);
@@ -56,8 +55,7 @@ inline VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(
                     vtkm::filter::ApplyPolicy(normalF, policy),
                     vtkm::filter::ApplyPolicy(sfF, policy),
                     this->ScaleAmount,
-                    result,
-                    device);
+                    result);
 
   return internal::CreateResult(inDataSet,
                                 result,

@@ -50,11 +50,10 @@ inline VTKM_CONT MaskPoints::MaskPoints()
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename DeviceAdapter>
+template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // extract the input cell set
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -63,7 +62,7 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::MaskPoints worklet;
 
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy), this->Stride, device);
+  outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy), this->Stride);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -74,7 +73,7 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
-    return this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy), DeviceAdapter());
+    return this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy));
   }
   else
   {
@@ -83,19 +82,18 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool MaskPoints::DoMapField(vtkm::cont::DataSet& result,
                                              const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                              const vtkm::filter::FieldMetadata& fieldMeta,
-                                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                             const DeviceAdapter&)
+                                             vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // point data is copied as is because it was not collapsed
   if (fieldMeta.IsPointField())
   {
     if (this->CompactPoints)
     {
-      return this->Compactor.DoMapField(result, input, fieldMeta, policy, DeviceAdapter());
+      return this->Compactor.DoMapField(result, input, fieldMeta, policy);
     }
     else
     {
