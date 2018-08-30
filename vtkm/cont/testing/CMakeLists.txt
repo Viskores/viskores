@@ -25,6 +25,7 @@ set(headers
   TestingArrayHandles.h
   TestingArrayHandleVirtualCoordinates.h
   TestingCellLocatorTwoLevelUniformGrid.h
+  TestingCellLocatorUniformGrid.h
   TestingColorTable.h
   TestingComputeRange.h
   TestingDeviceAdapter.h
