@@ -272,7 +272,7 @@ public:
   template <typename Device>
   class ExecObject : public Integrator::ExecObjectBaseImpl<
                        decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device())),
-                       RK4Integrator::ExecObject<Device>>
+                       typename RK4Integrator::template ExecObject<Device>>
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 

@@ -242,21 +242,16 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
   using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using FieldPortalConstType =
-    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using PortalType_Position = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::PortalControl;
-  using PortalType_DoublePosition =
-    typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>::PortalControl;
 
   vtkm::worklet::ParticleAdvection particleadvection;
-  vtkm::worklet::ParticleAdvectionResult<T> res;
+  vtkm::worklet::ParticleAdvectionResult res;
 
   if (coords.GetData().IsType<RectilinearType>())
   {
-    using RectilinearGridEvalType = vtkm::worklet::particleadvection::
-      RectilinearGridEvaluate<FieldPortalConstType, T, DeviceAdapter, StorageType>;
+    using RectilinearGridEvalType =
+      vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldHandle>;
     using RK4IntegratorType =
-      vtkm::worklet::particleadvection::RK4Integrator<RectilinearGridEvalType, T>;
+      vtkm::worklet::particleadvection::RK4Integrator<RectilinearGridEvalType>;
     /*
   * If Euler step is preferred.
   using EulerIntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<RectilinearGridEvalType, T>;
@@ -271,10 +266,8 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   }
   else if (coords.GetData().IsType<UniformType>())
   {
-    using UniformGridEvalType = vtkm::worklet::particleadvection::
-      UniformGridEvaluate<FieldPortalConstType, T, DeviceAdapter, StorageType>;
-    using RK4IntegratorType =
-      vtkm::worklet::particleadvection::RK4Integrator<UniformGridEvalType, T>;
+    using UniformGridEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
+    using RK4IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<UniformGridEvalType>;
     /*
   * If Euler step is preferred.
   using EulerIntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<UniformGridEvalType, T>;
@@ -292,17 +285,14 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     std::cout << "Data set type is not rectilinear or uniform." << std::endl;
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> particle_positions = res.positions;
-  vtkm::cont::ArrayHandle<vtkm::Id> particle_stepstaken = res.stepsTaken;
+  auto particle_positions = res.positions;
+  auto particle_stepstaken = res.stepsTaken;
 
-  using PortalType_Position = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::PortalControl;
-  using PortalType_ID = typename vtkm::cont::ArrayHandle<vtkm::Id>::PortalControl;
+  auto start_position = BasisParticlesOriginal.GetPortalControl();
+  auto end_position = particle_positions.GetPortalControl();
 
-  PortalType_DoublePosition start_position = BasisParticlesOriginal.GetPortalControl();
-  PortalType_Position end_position = particle_positions.GetPortalControl();
-
-  PortalType_ID portal_stepstaken = particle_stepstaken.GetPortalControl();
-  PortalType_ID portal_validity = BasisParticlesValidity.GetPortalControl();
+  auto portal_stepstaken = particle_stepstaken.GetPortalControl();
+  auto portal_validity = BasisParticlesValidity.GetPortalControl();
 
   vtkm::cont::DataSet outputData;
   vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
