@@ -43,9 +43,9 @@ public:
     vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
 
     if (!coords.GetData().IsType<UniformType>())
-      throw vtkm::cont::ErrorInternal("CellSet is not 3D Structured Type");
+      throw vtkm::cont::ErrorInternal("Coordinate system is not uniform type");
     if (!cellSet.IsSameType(StructuredType()))
-      throw vtkm::cont::ErrorInternal("CellSet is not 3D Structured Type");
+      throw vtkm::cont::ErrorInternal("Cell set is not 3D structured type");
 
     Bounds = coords.GetBounds();
     Dims = cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
