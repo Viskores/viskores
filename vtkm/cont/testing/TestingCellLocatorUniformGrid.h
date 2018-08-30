@@ -57,9 +57,12 @@ public:
     if (!bounds.Contains(point))
       return -1;
     vtkm::Vec<vtkm::Id, 3> logical;
-    logical[0] = static_cast<vtkm::Id>(vtkm::Floor((point[0] / bounds.X.Length()) * (dims[0] - 1)));
-    logical[1] = static_cast<vtkm::Id>(vtkm::Floor((point[1] / bounds.Y.Length()) * (dims[1] - 1)));
-    logical[2] = static_cast<vtkm::Id>(vtkm::Floor((point[2] / bounds.Z.Length()) * (dims[2] - 1)));
+    logical[0] = static_cast<vtkm::Id>(
+      vtkm::Floor((point[0] / bounds.X.Length()) * static_cast<vtkm::FloatDefault>(dims[0] - 1)));
+    logical[1] = static_cast<vtkm::Id>(
+      vtkm::Floor((point[1] / bounds.Y.Length()) * static_cast<vtkm::FloatDefault>(dims[1] - 1)));
+    logical[2] = static_cast<vtkm::Id>(
+      vtkm::Floor((point[2] / bounds.Z.Length()) * static_cast<vtkm::FloatDefault>(dims[2] - 1)));
     return logical[2] * (dims[0] - 1) * (dims[1] - 1) + logical[1] * (dims[0] - 1) + logical[0];
   }
 

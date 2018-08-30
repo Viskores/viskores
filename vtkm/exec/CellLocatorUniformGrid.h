@@ -72,14 +72,13 @@ public:
       return;
     }
     // Get the Cell Id from the point.
-    vtkm::Vec<vtkm::FloatDefault, 3> relative;
-    relative[0] = static_cast<vtkm::FloatDefault>((point[0] - Bounds.X.Min) * RangeTransform[0]);
-    relative[1] = static_cast<vtkm::FloatDefault>((point[1] - Bounds.Y.Min) * RangeTransform[1]);
-    relative[2] = static_cast<vtkm::FloatDefault>((point[2] - Bounds.Z.Min) * RangeTransform[2]);
     vtkm::Vec<vtkm::Id, 3> logicalCell;
-    logicalCell[0] = static_cast<vtkm::Id>(vtkm::Floor(relative[0]));
-    logicalCell[1] = static_cast<vtkm::Id>(vtkm::Floor(relative[1]));
-    logicalCell[2] = static_cast<vtkm::Id>(vtkm::Floor(relative[2]));
+    logicalCell[0] =
+      static_cast<vtkm::Id>(vtkm::Floor((point[0] - Bounds.X.Min) * RangeTransform[0]));
+    logicalCell[1] =
+      static_cast<vtkm::Id>(vtkm::Floor((point[1] - Bounds.Y.Min) * RangeTransform[1]));
+    logicalCell[2] =
+      static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * RangeTransform[2]));
     // Get the actual cellId, from the logical cell index of the cell
     cellId = logicalCell[2] * PlaneSize + logicalCell[1] * RowSize + logicalCell[0];
 
