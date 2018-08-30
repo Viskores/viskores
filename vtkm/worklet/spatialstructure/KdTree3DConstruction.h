@@ -254,9 +254,9 @@ public:
   {
     vtkm::cont::ArrayHandle<T> InverseHandle;
     InverseArray invWorklet;
-    vtkm::worklet::DispatcherMapField<InverseArray, DeviceAdapter> InverseArrayDispatcher(
-      invWorklet);
-    InverseArrayDispatcher.Invoke(inputHandle, InverseHandle);
+    vtkm::worklet::DispatcherMapField<InverseArray> inverseArrayDispatcher(invWorklet);
+    inverseArrayDispatcher.SetDevice(DeviceAdapter());
+    inverseArrayDispatcher.Invoke(inputHandle, InverseHandle);
     return InverseHandle;
   }
 
@@ -268,9 +268,9 @@ public:
     vtkm::cont::ArrayHandle<T> outputHandle;
     outputHandle.Allocate(inputHandle.GetNumberOfValues());
     ScatterArray scatterWorklet;
-    vtkm::worklet::DispatcherMapField<ScatterArray, DeviceAdapter> ScatterArrayDispatcher(
-      scatterWorklet);
-    ScatterArrayDispatcher.Invoke(inputHandle, indexHandle, outputHandle);
+    vtkm::worklet::DispatcherMapField<ScatterArray> scatterArrayDispatcher(scatterWorklet);
+    scatterArrayDispatcher.SetDevice(DeviceAdapter());
+    scatterArrayDispatcher.Invoke(inputHandle, indexHandle, outputHandle);
     return outputHandle;
   }
 
@@ -281,8 +281,8 @@ public:
   {
     vtkm::cont::ArrayHandle<T> newSegIdHandle;
     NewSegmentId newsegidWorklet;
-    vtkm::worklet::DispatcherMapField<NewSegmentId, DeviceAdapter> newSegIdDispatcher(
-      newsegidWorklet);
+    vtkm::worklet::DispatcherMapField<NewSegmentId> newSegIdDispatcher(newsegidWorklet);
+    newSegIdDispatcher.SetDevice(DeviceAdapter());
     newSegIdDispatcher.Invoke(oldSegIdHandle, flagHandle, newSegIdHandle);
     return newSegIdHandle;
   }
@@ -296,8 +296,9 @@ public:
   {
     vtkm::cont::ArrayHandle<T> splitIdInSegmentHandle;
     FindSplitPointId findSplitPointIdWorklet;
-    vtkm::worklet::DispatcherMapField<FindSplitPointId, DeviceAdapter>
-      findSplitPointIdWorkletDispatcher(findSplitPointIdWorklet);
+    vtkm::worklet::DispatcherMapField<FindSplitPointId> findSplitPointIdWorkletDispatcher(
+      findSplitPointIdWorklet);
+    findSplitPointIdWorkletDispatcher.SetDevice(DeviceAdapter());
     findSplitPointIdWorkletDispatcher.Invoke(pointIdHandle, rankHandle, splitIdInSegmentHandle);
 
     vtkm::cont::ArrayHandle<T> splitIdInSegmentByScanHandle =
@@ -305,8 +306,9 @@ public:
 
     vtkm::cont::ArrayHandle<T> splitIdHandle;
     SaveSplitPointId saveSplitPointIdWorklet;
-    vtkm::worklet::DispatcherMapField<SaveSplitPointId, DeviceAdapter>
-      saveSplitPointIdWorkletDispatcher(saveSplitPointIdWorklet);
+    vtkm::worklet::DispatcherMapField<SaveSplitPointId> saveSplitPointIdWorkletDispatcher(
+      saveSplitPointIdWorklet);
+    saveSplitPointIdWorkletDispatcher.SetDevice(DeviceAdapter());
     saveSplitPointIdWorkletDispatcher.Invoke(
       splitIdInSegmentByScanHandle, flagHandle, oldSplitIdHandle, splitIdHandle);
 
@@ -320,7 +322,8 @@ public:
   {
     vtkm::cont::ArrayHandle<T> resultHandle;
     ArrayAdd arrayAddWorklet;
-    vtkm::worklet::DispatcherMapField<ArrayAdd, DeviceAdapter> arrayAddDispatcher(arrayAddWorklet);
+    vtkm::worklet::DispatcherMapField<ArrayAdd> arrayAddDispatcher(arrayAddWorklet);
+    arrayAddDispatcher.SetDevice(DeviceAdapter());
     arrayAddDispatcher.Invoke(array0Handle, array1Handle, resultHandle);
     return resultHandle;
   }
@@ -347,8 +350,9 @@ public:
     }
 
     vtkm::cont::ArrayHandle<T> flagHandle;
-    vtkm::worklet::DispatcherMapField<ComputeFlag, DeviceAdapter> ComputeFlagDispatcher;
-    ComputeFlagDispatcher.Invoke(rankHandle, segCountAryHandle, flagHandle);
+    vtkm::worklet::DispatcherMapField<ComputeFlag> computeFlagDispatcher;
+    computeFlagDispatcher.SetDevice(DeviceAdapter());
+    computeFlagDispatcher.Invoke(rankHandle, segCountAryHandle, flagHandle);
 
     return flagHandle;
   }
@@ -381,9 +385,10 @@ public:
 
     vtkm::cont::ArrayHandle<T> I_Handle;
     SegmentedSplitTransform sstWorklet;
-    vtkm::worklet::DispatcherMapField<SegmentedSplitTransform, DeviceAdapter>
-      SegmentedSplitTransformDispatcher(sstWorklet);
-    SegmentedSplitTransformDispatcher.Invoke(
+    vtkm::worklet::DispatcherMapField<SegmentedSplitTransform> segmentedSplitTransformDispatcher(
+      sstWorklet);
+    segmentedSplitTransformDispatcher.SetDevice(DeviceAdapter());
+    segmentedSplitTransformDispatcher.Invoke(
       B_Handle, D_Handle, F_Handle, G_Handle, H_Handle, I_Handle);
 
     return ScatterArrayWrapper(A_Handle, I_Handle, device);
@@ -482,9 +487,10 @@ public:
 
     vtkm::cont::ArrayHandle<T> I_Handle;
     SegmentedSplitTransform sstWorklet;
-    vtkm::worklet::DispatcherMapField<SegmentedSplitTransform, DeviceAdapter>
-      SegmentedSplitTransformDispatcher(sstWorklet);
-    SegmentedSplitTransformDispatcher.Invoke(
+    vtkm::worklet::DispatcherMapField<SegmentedSplitTransform> segmentedSplitTransformDispatcher(
+      sstWorklet);
+    segmentedSplitTransformDispatcher.SetDevice(DeviceAdapter());
+    segmentedSplitTransformDispatcher.Invoke(
       flag_Handle, D_Handle, F_Handle, G_Handle, H_Handle, I_Handle);
 
     pointId_Handle = ScatterArrayWrapper(pointId_Handle, I_Handle, device);
@@ -596,8 +602,8 @@ public:
     vtkm::cont::ArrayHandle<CoordType> zcoordi_Handle;
 
     SeprateVec3AryHandle sepVec3Worklet;
-    vtkm::worklet::DispatcherMapField<SeprateVec3AryHandle, DeviceAdapter> sepVec3Dispatcher(
-      sepVec3Worklet);
+    vtkm::worklet::DispatcherMapField<SeprateVec3AryHandle> sepVec3Dispatcher(sepVec3Worklet);
+    sepVec3Dispatcher.SetDevice(DeviceAdapter());
     sepVec3Dispatcher.Invoke(coordi_Handle, xcoordi_Handle, ycoordi_Handle, zcoordi_Handle);
 
     Algorithm::SortByKey(xcoordi_Handle, xorder_Handle);

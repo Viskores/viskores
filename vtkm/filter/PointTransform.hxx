@@ -127,8 +127,8 @@ inline VTKM_CONT vtkm::cont::DataSet PointTransform<S>::DoExecute(
   const DeviceAdapter&)
 {
   vtkm::cont::ArrayHandle<T> outArray;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::PointTransform<S>, DeviceAdapter> dispatcher(
-    this->Worklet);
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::PointTransform<S>> dispatcher(this->Worklet);
+  dispatcher.SetDevice(DeviceAdapter());
 
   dispatcher.Invoke(field, outArray);
 

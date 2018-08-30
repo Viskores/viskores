@@ -43,7 +43,6 @@ namespace worklet
 {
 
 /// \brief Compute the triangulate cells for an explicit grid data set
-template <typename DeviceAdapter>
 class TriangulateExplicit
 {
 public:
@@ -65,8 +64,8 @@ public:
     VTKM_CONT
     TrianglesPerCell() {}
 
-    VTKM_EXEC
-    vtkm::IdComponent operator()(
+    template <typename DeviceAdapter>
+    VTKM_EXEC vtkm::IdComponent operator()(
       vtkm::UInt8 shape,
       vtkm::IdComponent numPoints,
       const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter>& tables) const
@@ -93,11 +92,14 @@ public:
     template <typename CountArrayType>
     VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
     {
-      return ScatterType(countArray, DeviceAdapter());
+      return ScatterType(countArray);
     }
 
     // Each cell produces triangles and write result at the offset
-    template <typename CellShapeTag, typename ConnectivityInVec, typename ConnectivityOutVec>
+    template <typename CellShapeTag,
+              typename ConnectivityInVec,
+              typename ConnectivityOutVec,
+              typename DeviceAdapter>
     VTKM_EXEC void operator()(
       CellShapeTag shape,
       const ConnectivityInVec& connectivityIn,
@@ -114,7 +116,8 @@ public:
 
   template <typename CellSetType>
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell,
+                                      vtkm::cont::DeviceAdapterId device)
   {
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
@@ -130,12 +133,14 @@ public:
     vtkm::worklet::internal::TriangulateTables tables;
 
     // Determine the number of output cells each input cell will generate
-    vtkm::worklet::DispatcherMapField<TrianglesPerCell, DeviceAdapter> triPerCellDispatcher;
+    vtkm::worklet::DispatcherMapField<TrianglesPerCell> triPerCellDispatcher;
+    triPerCellDispatcher.SetDevice(device);
     triPerCellDispatcher.Invoke(inShapes, inNumIndices, tables.PrepareForInput(), outCellsPerCell);
 
     // Build new cells
-    vtkm::worklet::DispatcherMapTopology<TriangulateCell, DeviceAdapter> triangulateDispatcher(
+    vtkm::worklet::DispatcherMapTopology<TriangulateCell> triangulateDispatcher(
       TriangulateCell::MakeScatter(outCellsPerCell));
+    triangulateDispatcher.SetDevice(device);
     triangulateDispatcher.Invoke(
       cellSet, tables.PrepareForInput(), vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
 

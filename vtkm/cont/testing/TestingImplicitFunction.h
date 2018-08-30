@@ -71,10 +71,12 @@ void EvaluateOnCoordinates(vtkm::cont::CoordinateSystem points,
                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>& values,
                            DeviceAdapter device)
 {
-  using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvaluateImplicitFunction, DeviceAdapter>;
+  using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvaluateImplicitFunction>;
 
   EvaluateImplicitFunction eval(function.PrepareForExecution(device));
-  EvalDispatcher(eval).Invoke(points, values);
+  EvalDispatcher dispatcher(eval);
+  dispatcher.SetDevice(DeviceAdapter());
+  dispatcher.Invoke(points, values);
 }
 
 template <std::size_t N>

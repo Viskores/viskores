@@ -179,8 +179,9 @@ struct MapColorAndVerticesInvokeFunctor
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-    auto colorHandle = this->ColorTable.GetHandleForExecution();
-    MapColorAndVertices worklet(colorHandle->PrepareForExecution(device), this->SMin, this->SDiff);
+
+    MapColorAndVertices worklet(
+      this->ColorTable.PrepareForExecution(device), this->SMin, this->SDiff);
     vtkm::worklet::DispatcherMapField<MapColorAndVertices, Device> dispatcher(worklet);
 
     vtkm::cont::ArrayHandleIndex indexArray(this->TriangleIndices.GetNumberOfValues());

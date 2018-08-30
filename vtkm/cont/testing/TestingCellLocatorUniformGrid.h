@@ -134,8 +134,9 @@ public:
     vtkm::cont::ArrayHandle<PointType> parametric;
     vtkm::cont::ArrayHandle<bool> match;
     LocatorWorklet worklet(bounds, dims);
-    vtkm::worklet::DispatcherMapField<LocatorWorklet, DeviceAdapter> dispather(worklet);
-    dispather.Invoke(points, locator, cellIds, parametric, match);
+    vtkm::worklet::DispatcherMapField<LocatorWorklet> dispatcher(worklet);
+    dispatcher.SetDevice(DeviceAdapter());
+    dispatcher.Invoke(points, locator, cellIds, parametric, match);
 
     auto matchPortal = match.GetPortalConstControl();
     for (vtkm::Id index = 0; index < match.GetNumberOfValues(); index++)

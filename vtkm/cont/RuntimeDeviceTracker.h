@@ -64,8 +64,7 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT bool CanRunOn(DeviceAdapterTag device) const
   {
-    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    return this->CanRunOnImpl(device, Traits::GetName());
+    return this->CanRunOnImpl(device);
   }
 
   /// Report a failure to allocate memory on a device, this will flag the
@@ -76,8 +75,7 @@ public:
   VTKM_CONT void ReportAllocationFailure(DeviceAdapterTag device,
                                          const vtkm::cont::ErrorBadAllocation&)
   {
-    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    this->SetDeviceState(device, Traits::GetName(), false);
+    this->SetDeviceState(device, false);
   }
 
   /// Report a failure to allocate memory on a device, this will flag the
@@ -85,10 +83,9 @@ public:
   /// the filter.
   ///
   VTKM_CONT void ReportAllocationFailure(vtkm::cont::DeviceAdapterId deviceId,
-                                         const std::string& name,
                                          const vtkm::cont::ErrorBadAllocation&)
   {
-    this->SetDeviceState(deviceId, name, false);
+    this->SetDeviceState(deviceId, false);
   }
 
   //@{
@@ -96,15 +93,13 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void ReportBadDeviceFailure(DeviceAdapterTag device, const vtkm::cont::ErrorBadDevice&)
   {
-    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    this->SetDeviceState(device, Traits::GetName(), false);
+    this->SetDeviceState(device, false);
   }
 
   VTKM_CONT void ReportBadDeviceFailure(vtkm::cont::DeviceAdapterId deviceId,
-                                        const std::string& name,
                                         const vtkm::cont::ErrorBadDevice&)
   {
-    this->SetDeviceState(deviceId, name, false);
+    this->SetDeviceState(deviceId, false);
   }
   //@}
 
@@ -114,9 +109,8 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void ResetDevice(DeviceAdapterTag device)
   {
-    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
     vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
-    this->SetDeviceState(device, Traits::GetName(), runtimeDevice.Exists());
+    this->SetDeviceState(device, runtimeDevice.Exists());
   }
 
   /// Reset the tracker to its default state for default devices.
@@ -180,8 +174,7 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void DisableDevice(DeviceAdapterTag device)
   {
-    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    this->SetDeviceState(device, Traits::GetName(), false);
+    this->SetDeviceState(device, false);
   }
 
   /// \brief Disable all devices except the specified one.
@@ -199,35 +192,32 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void ForceDevice(DeviceAdapterTag device)
   {
-    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
     vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
-    this->ForceDeviceImpl(device, Traits::GetName(), runtimeDevice.Exists());
+    this->ForceDeviceImpl(device, runtimeDevice.Exists());
   }
+
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  DeviceAdapterNameType GetDeviceName(DeviceAdapterId id) const;
 
 private:
   std::shared_ptr<detail::RuntimeDeviceTrackerInternals> Internals;
 
   VTKM_CONT_EXPORT
   VTKM_CONT
-  void CheckDevice(vtkm::cont::DeviceAdapterId deviceId,
-                   const vtkm::cont::DeviceAdapterNameType& deviceName) const;
+  void CheckDevice(vtkm::cont::DeviceAdapterId deviceId) const;
 
   VTKM_CONT_EXPORT
   VTKM_CONT
-  bool CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId,
-                    const vtkm::cont::DeviceAdapterNameType& deviceName) const;
+  bool CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId) const;
 
   VTKM_CONT_EXPORT
   VTKM_CONT
-  void SetDeviceState(vtkm::cont::DeviceAdapterId deviceId,
-                      const vtkm::cont::DeviceAdapterNameType& deviceName,
-                      bool state);
+  void SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, bool state);
 
   VTKM_CONT_EXPORT
   VTKM_CONT
-  void ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
-                       const vtkm::cont::DeviceAdapterNameType& deviceName,
-                       bool runtimeExists);
+  void ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId, bool runtimeExists);
 };
 
 /// \brief Get the \c RuntimeDeviceTracker for the current thread.

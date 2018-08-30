@@ -112,8 +112,9 @@ public:
     BinDelta = compute_delta(MinMax.Min, MinMax.Max, NumOfBins);
 
     SetHistogramBin<T> binWorklet(NumOfBins, MinMax.Min, BinDelta);
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::SetHistogramBin<T>, DeviceAdapter>
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::SetHistogramBin<T>>
       setHistogramBinDispatcher(binWorklet);
+    setHistogramBinDispatcher.SetDevice(DeviceAdapter());
     setHistogramBinDispatcher.Invoke(field, Bin1DIdx, Bin1DIdx);
   }
 

@@ -934,7 +934,8 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> pvecs;
 
     PointVectorGenerator worklet(bounds);
-    vtkm::worklet::DispatcherMapField<PointVectorGenerator, Device> dispatch(worklet);
+    vtkm::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);
+    dispatch.SetDevice(Device());
     dispatch.Invoke(points, pvecs);
     InputDataSet.AddField(
       vtkm::cont::Field("GeneratedPointVectors", vtkm::cont::Field::Association::POINTS, pvecs));

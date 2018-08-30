@@ -34,6 +34,34 @@
 #include <sstream>
 #include <thread>
 
+namespace
+{
+
+struct VTKM_NEVER_EXPORT GetDeviceNameFunctor
+{
+  vtkm::cont::DeviceAdapterNameType* Names;
+
+  VTKM_CONT
+  GetDeviceNameFunctor(vtkm::cont::DeviceAdapterNameType* names)
+    : Names(names)
+  {
+    std::fill_n(this->Names, VTKM_MAX_DEVICE_ADAPTER_ID, "InvalidDeviceId");
+  }
+
+  template <typename Device>
+  VTKM_CONT void operator()(Device device)
+  {
+    auto id = device.GetValue();
+
+    if (id > 0 && id < VTKM_MAX_DEVICE_ADAPTER_ID)
+    {
+      this->Names[id] = vtkm::cont::DeviceAdapterTraits<Device>::GetName();
+    }
+  }
+};
+
+} // end anon namespace
+
 namespace vtkm
 {
 namespace cont
@@ -45,6 +73,7 @@ namespace detail
 struct RuntimeDeviceTrackerInternals
 {
   bool RuntimeValid[VTKM_MAX_DEVICE_ADAPTER_ID];
+  DeviceAdapterNameType DeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
 };
 }
 
@@ -52,6 +81,9 @@ VTKM_CONT
 RuntimeDeviceTracker::RuntimeDeviceTracker()
   : Internals(new detail::RuntimeDeviceTrackerInternals)
 {
+  GetDeviceNameFunctor functor(this->Internals->DeviceNames);
+  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+
   this->Reset();
 }
 
@@ -61,31 +93,28 @@ RuntimeDeviceTracker::~RuntimeDeviceTracker()
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::CheckDevice(vtkm::cont::DeviceAdapterId deviceId,
-                                       const vtkm::cont::DeviceAdapterNameType& deviceName) const
+void RuntimeDeviceTracker::CheckDevice(vtkm::cont::DeviceAdapterId deviceId) const
 {
   if (!deviceId.IsValueValid())
   {
     std::stringstream message;
-    message << "Device '" << deviceName << "' has invalid ID of " << (int)deviceId.GetValue();
+    message << "Device '" << deviceId.GetName() << "' has invalid ID of "
+            << (int)deviceId.GetValue();
     throw vtkm::cont::ErrorBadValue(message.str());
   }
 }
 
 VTKM_CONT
-bool RuntimeDeviceTracker::CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId,
-                                        const vtkm::cont::DeviceAdapterNameType& deviceName) const
+bool RuntimeDeviceTracker::CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId) const
 {
-  this->CheckDevice(deviceId, deviceName);
+  this->CheckDevice(deviceId);
   return this->Internals->RuntimeValid[deviceId.GetValue()];
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId,
-                                          const vtkm::cont::DeviceAdapterNameType& deviceName,
-                                          bool state)
+void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, bool state)
 {
-  this->CheckDevice(deviceId, deviceName);
+  this->CheckDevice(deviceId);
   this->Internals->RuntimeValid[deviceId.GetValue()] = state;
 }
 
@@ -135,18 +164,16 @@ void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker& src)
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
-                                           const vtkm::cont::DeviceAdapterNameType& deviceName,
-                                           bool runtimeExists)
+void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId, bool runtimeExists)
 {
   if (!runtimeExists)
   {
     std::stringstream message;
-    message << "Cannot force to device '" << deviceName
+    message << "Cannot force to device '" << deviceId.GetName()
             << "' because that device is not available on this system";
     throw vtkm::cont::ErrorBadValue(message.str());
   }
-  this->CheckDevice(deviceId, deviceName);
+  this->CheckDevice(deviceId);
 
   std::fill_n(this->Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, false);
 
@@ -176,6 +203,42 @@ vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker()
 #else
   return runtimeDeviceTracker;
 #endif
+}
+
+VTKM_CONT
+DeviceAdapterNameType RuntimeDeviceTracker::GetDeviceName(DeviceAdapterId device) const
+{
+  auto id = device.GetValue();
+
+  if (id < 0)
+  {
+    switch (id)
+    {
+      case VTKM_DEVICE_ADAPTER_ERROR:
+        return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>::GetName();
+      case VTKM_DEVICE_ADAPTER_UNDEFINED:
+        return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagUndefined>::GetName();
+      default:
+        break;
+    }
+  }
+  else if (id >= VTKM_MAX_DEVICE_ADAPTER_ID)
+  {
+    switch (id)
+    {
+      case VTKM_DEVICE_ADAPTER_ANY:
+        return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagAny>::GetName();
+      default:
+        break;
+    }
+  }
+  else // id is valid:
+  {
+    return this->Internals->DeviceNames[id];
+  }
+
+  // Device 0 is invalid:
+  return this->Internals->DeviceNames[0];
 }
 }
 } // namespace vtkm::cont

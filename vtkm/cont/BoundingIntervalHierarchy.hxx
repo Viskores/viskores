@@ -135,15 +135,16 @@ VTKM_CONT void BoundingIntervalHierarchy::CalculatePlaneSplitCost(
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> splitPlanes;
   vtkm::worklet::spatialstructure::SplitPlaneCalculatorWorklet splitPlaneCalcWorklet(planeIndex,
                                                                                      numPlanes);
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::SplitPlaneCalculatorWorklet,
-                                    DeviceAdapter>
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::SplitPlaneCalculatorWorklet>
     splitDispatcher(splitPlaneCalcWorklet);
+  splitDispatcher.SetDevice(DeviceAdapter());
   splitDispatcher.Invoke(segmentRanges, splitPlanes);
 
   // Check if a point is to the left of the split plane or right
   vtkm::cont::ArrayHandle<vtkm::Id> isLEQOfSplitPlane, isROfSplitPlane;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::LEQWorklet, DeviceAdapter>()
-    .Invoke(coords, splitPlanes, isLEQOfSplitPlane, isROfSplitPlane);
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::LEQWorklet> LEQDispatcher;
+  LEQDispatcher.SetDevice(DeviceAdapter());
+  LEQDispatcher.Invoke(coords, splitPlanes, isLEQOfSplitPlane, isROfSplitPlane);
 
   // Count of points to the left
   vtkm::cont::ArrayHandle<vtkm::Id> pointsToLeft;
@@ -270,9 +271,11 @@ public:
     //START_TIMER(s12);
     CoordsArrayHandle centerXs, centerYs, centerZs;
     RangeArrayHandle xRanges, yRanges, zRanges;
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::spatialstructure::CellRangesExtracter,
-                                         DeviceAdapter>()
-      .Invoke(cellSet, points, xRanges, yRanges, zRanges, centerXs, centerYs, centerZs);
+    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::spatialstructure::CellRangesExtracter>
+      cellRangesExtracterDispatcher;
+    cellRangesExtracterDispatcher.SetDevice(DeviceAdapter());
+    cellRangesExtracterDispatcher.Invoke(
+      cellSet, points, xRanges, yRanges, zRanges, centerXs, centerYs, centerZs);
     //PRINT_TIMER("1.2", s12);
 
     bool done = false;

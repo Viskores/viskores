@@ -134,12 +134,14 @@ public:
   {
     if (this->Normalize)
     {
-      vtkm::worklet::DispatcherMapTopology<Worklet<>, DeviceAdapter> dispatcher;
+      vtkm::worklet::DispatcherMapTopology<Worklet<>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapter());
       dispatcher.Invoke(cellset, points, normals);
     }
     else
     {
-      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>, DeviceAdapter> dispatcher;
+      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapter());
       dispatcher.Invoke(cellset, points, normals);
     }
   }
@@ -156,12 +158,14 @@ public:
   {
     if (this->Normalize)
     {
-      vtkm::worklet::DispatcherMapTopology<Worklet<>, DeviceAdapter> dispatcher;
+      vtkm::worklet::DispatcherMapTopology<Worklet<>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapter());
       dispatcher.Invoke(cellset, points, normals);
     }
     else
     {
-      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>, DeviceAdapter> dispatcher;
+      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>> dispatcher;
+      dispatcher.SetDevice(DeviceAdapter());
       dispatcher.Invoke(cellset, points, normals);
     }
   }
@@ -214,7 +218,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals,
     DeviceAdapter)
   {
-    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<Worklet> dispatcher;
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(cellset, faceNormals, pointNormals);
   }
 
@@ -229,7 +234,8 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals,
            DeviceAdapter)
   {
-    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<Worklet> dispatcher;
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(cellset, faceNormals, pointNormals);
   }
 };

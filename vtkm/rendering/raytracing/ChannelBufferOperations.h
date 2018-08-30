@@ -116,9 +116,10 @@ public:
     vtkm::cont::ArrayHandle<Precision> compactedBuffer;
     compactedBuffer.PrepareForOutput(newSize * buffer.NumChannels, Device());
 
-    vtkm::worklet::DispatcherMapField<detail::CompactBuffer, Device>(
-      detail::CompactBuffer(buffer.NumChannels))
-      .Invoke(masks, buffer.Buffer, offsets, compactedBuffer);
+    vtkm::worklet::DispatcherMapField<detail::CompactBuffer> dispatcher(
+      detail::CompactBuffer(buffer.NumChannels));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(masks, buffer.Buffer, offsets, compactedBuffer);
     buffer.Buffer = compactedBuffer;
     buffer.Size = newSize;
   }
@@ -133,16 +134,19 @@ public:
       std::string msg = "ChannelBuffer: number of bins in sourse signature must match NumChannels";
       throw vtkm::cont::ErrorBadValue(msg);
     }
-    vtkm::worklet::DispatcherMapField<detail::InitBuffer, Device>(
-      detail::InitBuffer(buffer.NumChannels))
-      .Invoke(buffer.Buffer, sourceSignature);
+    vtkm::worklet::DispatcherMapField<detail::InitBuffer> initBufferDispatcher(
+      detail::InitBuffer(buffer.NumChannels));
+    initBufferDispatcher.SetDevice(Device());
+    initBufferDispatcher.Invoke(buffer.Buffer, sourceSignature);
   }
 
   template <typename Device, typename Precision>
   static void InitConst(ChannelBuffer<Precision>& buffer, const Precision value, Device)
   {
-    vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(MemSet<Precision>(value))
-      .Invoke(buffer.Buffer);
+    vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetDispatcher(
+      (MemSet<Precision>(value)));
+    memSetDispatcher.SetDevice(Device());
+    memSetDispatcher.Invoke(buffer.Buffer);
   }
 };
 }

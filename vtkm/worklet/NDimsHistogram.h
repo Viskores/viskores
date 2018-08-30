@@ -109,10 +109,11 @@ public:
     {
       const vtkm::Id nFieldBins = NumberOfBins[static_cast<size_t>(i)];
       vtkm::worklet::histogram::ConvertHistBinToND binWorklet(nFieldBins);
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND, DeviceAdapter>
-        ConvertHistBinToNDDispatcher(binWorklet);
+      vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND>
+        convertHistBinToNDDispatcher(binWorklet);
+      convertHistBinToNDDispatcher.SetDevice(DeviceAdapter());
       size_t vectorId = static_cast<size_t>(i);
-      ConvertHistBinToNDDispatcher.Invoke(Bin1DIndex, Bin1DIndex, binId[vectorId]);
+      convertHistBinToNDDispatcher.Invoke(Bin1DIndex, Bin1DIndex, binId[vectorId]);
     }
   }
 

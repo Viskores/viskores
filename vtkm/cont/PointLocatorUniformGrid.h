@@ -20,10 +20,9 @@
 #ifndef vtk_m_cont_PointLocatorUniformGrid_h
 #define vtk_m_cont_PointLocatorUniformGrid_h
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/TryExecute.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -77,62 +76,29 @@ public:
     vtkm::Vec<vtkm::FloatDefault, 3> Dxdydz;
   };
 
-  /// \brief Construct a 3D uniform grid for nearest neighbor search.
-  ///
-  /// \param coords An ArrayHandle of x, y, z coordinates of input points.
-  /// \param device Tag for selecting device adapter
-
-  struct BuildFunctor
-  {
-    BuildFunctor(vtkm::cont::PointLocatorUniformGrid* self)
-      : Self(self)
-    {
-    }
-
-    template <typename Device>
-    bool operator()(Device)
-    {
-      using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
-      // Save training data points.
-      Algorithm::Copy(this->Self->GetCoordinates().GetData(), this->Self->coords);
-
-      // generate unique id for each input point
-      vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(
-        0, 1, this->Self->coords.GetNumberOfValues());
-      Algorithm::Copy(pointCounting, this->Self->pointIds);
-
-      // bin points into cells and give each of them the cell id.
-      BinPointsWorklet cellIdWorklet(this->Self->Min, this->Self->Max, this->Self->Dims);
-      vtkm::worklet::DispatcherMapField<BinPointsWorklet, Device> dispatchCellId(cellIdWorklet);
-      dispatchCellId.Invoke(this->Self->coords, this->Self->cellIds);
-
-      // Group points of the same cell together by sorting them according to the cell ids
-      Algorithm::SortByKey(this->Self->cellIds, this->Self->pointIds);
-
-      // for each cell, find the lower and upper bound of indices to the sorted point ids.
-      vtkm::cont::ArrayHandleCounting<vtkm::Id> cell_ids_counting(
-        0, 1, this->Self->Dims[0] * this->Self->Dims[1] * this->Self->Dims[2]);
-      Algorithm::UpperBounds(this->Self->cellIds, cell_ids_counting, this->Self->cellUpper);
-      Algorithm::LowerBounds(this->Self->cellIds, cell_ids_counting, this->Self->cellLower);
-
-      return true;
-    }
-
-  private:
-    vtkm::cont::PointLocatorUniformGrid* Self;
-  };
-
   void Build() override
   {
-    BuildFunctor functor(this);
+    // Save training data points.
+    vtkm::cont::ArrayCopy(this->GetCoordinates().GetData(), this->coords);
 
-    bool success = vtkm::cont::TryExecute(functor);
-    if (!success)
-    {
-      throw vtkm::cont::ErrorExecution("Could not build point locator structure");
-    }
-  };
+    // generate unique id for each input point
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(0, 1, this->coords.GetNumberOfValues());
+    vtkm::cont::ArrayCopy(pointCounting, this->pointIds);
+
+    // bin points into cells and give each of them the cell id.
+    BinPointsWorklet cellIdWorklet(this->Min, this->Max, this->Dims);
+    vtkm::worklet::DispatcherMapField<BinPointsWorklet> dispatchCellId(cellIdWorklet);
+    dispatchCellId.Invoke(this->coords, this->cellIds);
+
+    // Group points of the same cell together by sorting them according to the cell ids
+    vtkm::cont::Algorithm::SortByKey(this->cellIds, this->pointIds);
+
+    // for each cell, find the lower and upper bound of indices to the sorted point ids.
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> cell_ids_counting(
+      0, 1, this->Dims[0] * this->Dims[1] * this->Dims[2]);
+    vtkm::cont::Algorithm::UpperBounds(this->cellIds, cell_ids_counting, this->cellUpper);
+    vtkm::cont::Algorithm::LowerBounds(this->cellIds, cell_ids_counting, this->cellLower);
+  }
 
 
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;

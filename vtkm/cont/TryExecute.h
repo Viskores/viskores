@@ -33,7 +33,6 @@ namespace detail
 {
 
 VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::cont::DeviceAdapterId,
-                                                const std::string&,
                                                 vtkm::cont::RuntimeDeviceTracker&);
 
 template <typename DeviceTag, typename Functor, typename... Args>
@@ -44,7 +43,7 @@ inline bool TryExecuteIfValid(std::true_type,
                               vtkm::cont::RuntimeDeviceTracker& tracker,
                               Args&&... args)
 {
-  if ((tag == devId || devId == DeviceAdapterIdAny()) && tracker.CanRunOn(tag))
+  if ((tag == devId || devId == DeviceAdapterTagAny()) && tracker.CanRunOn(tag))
   {
     try
     {
@@ -52,8 +51,7 @@ inline bool TryExecuteIfValid(std::true_type,
     }
     catch (...)
     {
-      using Traits = vtkm::cont::DeviceAdapterTraits<DeviceTag>;
-      detail::HandleTryExecuteException(tag, Traits::GetName(), tracker);
+      detail::HandleTryExecuteException(tag, tracker);
     }
   }
 
@@ -344,7 +342,7 @@ template <typename Functor, typename... Args>
 VTKM_CONT bool TryExecute(Functor&& functor, Args&&... args)
 {
   return TryExecuteOnDevice(
-    vtkm::cont::DeviceAdapterIdAny(), std::forward<Functor>(functor), std::forward<Args>(args)...);
+    vtkm::cont::DeviceAdapterTagAny(), std::forward<Functor>(functor), std::forward<Args>(args)...);
 }
 
 

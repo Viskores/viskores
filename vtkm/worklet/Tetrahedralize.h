@@ -60,24 +60,21 @@ public:
   }
 
   // Tetrahedralize explicit data set, save number of tetra cells per input
-  template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet, const DeviceAdapter&)
+  template <typename CellSetType>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet)
   {
-    TetrahedralizeExplicit<DeviceAdapter> worklet;
+    TetrahedralizeExplicit worklet;
     return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
   // Tetrahedralize structured data set, save number of tetra cells per input
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>& cellSet,
-                                      const DeviceAdapter&)
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>& cellSet)
   {
-    TetrahedralizeStructured<DeviceAdapter> worklet;
+    TetrahedralizeStructured worklet;
     return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&, const DeviceAdapter&)
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&)
   {
     throw vtkm::cont::ErrorBadType("CellSetStructured<2> can't be tetrahedralized");
   }
@@ -89,8 +86,9 @@ public:
   {
     vtkm::cont::ArrayHandle<T> output;
 
-    vtkm::worklet::DispatcherMapField<DistributeCellData, DeviceAdapter> dispatcher(
+    vtkm::worklet::DispatcherMapField<DistributeCellData> dispatcher(
       DistributeCellData::MakeScatter(this->OutCellsPerCell, device));
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(input, output);
 
     return output;

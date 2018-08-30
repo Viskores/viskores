@@ -65,6 +65,10 @@ public:
     T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return this->vtkmAtomicAdd(lockedValue, value);
 #else
+    // Shut up, compiler
+    (void)index;
+    (void)value;
+
     throw vtkm::cont::ErrorExecution("AtomicArray used in control environment, "
                                      "or incorrect array implementation used "
                                      "for device.");
@@ -85,6 +89,11 @@ public:
     T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return this->vtkmCompareAndSwap(lockedValue, newValue, oldValue);
 #else
+    // Shut up, compiler.
+    (void)index;
+    (void)newValue;
+    (void)oldValue;
+
     throw vtkm::cont::ErrorExecution("AtomicArray used in control environment, "
                                      "or incorrect array implementation used "
                                      "for device.");

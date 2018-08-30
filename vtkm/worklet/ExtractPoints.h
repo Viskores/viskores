@@ -107,7 +107,8 @@ public:
     vtkm::cont::ArrayHandle<bool> passFlags;
 
     ExtractPointsByVOI worklet(implicitFunction.PrepareForExecution(device), extractInside);
-    DispatcherMapTopology<ExtractPointsByVOI, DeviceAdapter> dispatcher(worklet);
+    DispatcherMapTopology<ExtractPointsByVOI> dispatcher(worklet);
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(cellSet, coordinates, passFlags);
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =

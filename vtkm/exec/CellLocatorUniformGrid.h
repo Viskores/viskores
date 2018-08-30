@@ -43,7 +43,6 @@ class CellLocatorUniformGrid : public vtkm::exec::CellLocator
 public:
   VTKM_CONT
   CellLocatorUniformGrid(const vtkm::Bounds& bounds,
-                         const vtkm::Vec<vtkm::Id, 3>& dims,
                          const vtkm::Vec<vtkm::FloatDefault, 3> rangeTransform,
                          const vtkm::Id planeSize,
                          const vtkm::Id rowSize,
@@ -51,7 +50,6 @@ public:
                          const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
                          DeviceAdapter)
     : Bounds(bounds)
-    , Dims(dims)
     , RangeTransform(rangeTransform)
     , PlaneSize(planeSize)
     , RowSize(rowSize)
@@ -101,7 +99,6 @@ private:
     DeviceAdapter>::PortalConst;
 
   vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::Id, 3> Dims;
   vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;

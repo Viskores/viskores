@@ -48,17 +48,18 @@ public:
       throw vtkm::cont::ErrorInternal("Cell set is not 3D structured type");
 
     Bounds = coords.GetBounds();
-    Dims = cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+    vtkm::Vec<vtkm::Id, 3> dims =
+      cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
 
-    RangeTransform[0] = static_cast<vtkm::FloatDefault>((Dims[0] - 1.0l) / (Bounds.X.Lenght()));
-    RangeTransform[1] = static_cast<vtkm::FloatDefault>((Dims[1] - 1.0l) / (Bounds.Y.Length()));
-    RangeTransform[2] = static_cast<vtkm::FloatDefault>((Dims[2] - 1.0l) / (Bounds.Z.Length()));
+    RangeTransform[0] = static_cast<vtkm::FloatDefault>((dims[0] - 1.0l) / (Bounds.X.Length()));
+    RangeTransform[1] = static_cast<vtkm::FloatDefault>((dims[1] - 1.0l) / (Bounds.Y.Length()));
+    RangeTransform[2] = static_cast<vtkm::FloatDefault>((dims[2] - 1.0l) / (Bounds.Z.Length()));
 
     // Since we are calculating the cell Id, and the number of cells is
-    // 1 less than the number of points in each direction, the -1 from Dims
+    // 1 less than the number of points in each direction, the -1 from dims
     // is necessary.
-    PlaneSize = (Dims[0] - 1) * (Dims[1] - 1);
-    RowSize = (Dims[0] - 1);
+    PlaneSize = (dims[0] - 1) * (dims[1] - 1);
+    RowSize = (dims[0] - 1);
   }
 
   struct PrepareForExecutionFunctor
@@ -71,7 +72,6 @@ public:
       using ExecutionType = vtkm::exec::CellLocatorUniformGrid<DeviceAdapter>;
       ExecutionType* execObject =
         new ExecutionType(contLocator.Bounds,
-                          contLocator.Dims,
                           contLocator.RangeTransform,
                           contLocator.PlaneSize,
                           contLocator.RowSize,
@@ -101,7 +101,6 @@ private:
   using StructuredType = vtkm::cont::CellSetStructured<3>;
 
   vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::Id, 3> Dims;
   vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;

@@ -32,7 +32,6 @@ namespace detail
 {
 
 void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
-                               const std::string& name,
                                vtkm::cont::RuntimeDeviceTracker& tracker)
 {
   try
@@ -45,12 +44,12 @@ void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
     std::cerr << "caught ErrorBadAllocation " << e.GetMessage() << std::endl;
     //currently we only consider OOM errors worth disabling a device for
     //than we fallback to another device
-    tracker.ReportAllocationFailure(deviceId, name, e);
+    tracker.ReportAllocationFailure(deviceId, e);
   }
   catch (vtkm::cont::ErrorBadDevice& e)
   {
     std::cerr << "caught ErrorBadDevice: " << e.GetMessage() << std::endl;
-    tracker.ReportBadDeviceFailure(deviceId, name, e);
+    tracker.ReportBadDeviceFailure(deviceId, e);
   }
   catch (vtkm::cont::ErrorBadType& e)
   {
@@ -58,11 +57,11 @@ void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
     //deferring to another device adapter?
     std::cerr << "caught ErrorBadType : " << e.GetMessage() << std::endl;
   }
-  catch (vtkm::cont::ErrorBadValue& e)
+  catch (vtkm::cont::ErrorBadValue&)
   {
-    //should bad value errors should stop the filter, instead of deferring
-    //to another device adapter?
-    std::cerr << "caught ErrorBadValue : " << e.GetMessage() << std::endl;
+    // Should bad values be deferred to another device? Seems unlikely they will succeed.
+    // Re-throw instead.
+    throw;
   }
   catch (vtkm::cont::Error& e)
   {

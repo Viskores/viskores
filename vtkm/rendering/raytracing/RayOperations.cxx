@@ -27,41 +27,6 @@ namespace rendering
 namespace raytracing
 {
 
-template <typename T>
-struct MapCanvasFunctor
-{
-  const vtkm::Matrix<vtkm::Float32, 4, 4> Inverse;
-  const vtkm::Id Width;
-  const vtkm::Id Height;
-  const vtkm::cont::ArrayHandle<vtkm::Float32>& DepthBuffer;
-  Ray<T>& Rays;
-  vtkm::Vec<vtkm::Float32, 3> Origin;
-
-  MapCanvasFunctor(Ray<T>& rays,
-                   const vtkm::Matrix<vtkm::Float32, 4, 4> inverse,
-                   const vtkm::Id width,
-                   const vtkm::Id height,
-                   const vtkm::cont::ArrayHandle<vtkm::Float32>& depthBuffer,
-                   const vtkm::Vec<vtkm::Float32, 3>& origin)
-    : Inverse(inverse)
-    , Width(width)
-    , Height(height)
-    , DepthBuffer(depthBuffer)
-    , Rays(rays)
-    , Origin(origin)
-  {
-  }
-
-  template <typename Device>
-  bool operator()(Device)
-  {
-    vtkm::worklet::DispatcherMapField<detail::RayMapCanvas, Device>(
-      detail::RayMapCanvas(Inverse, Width, Height, Origin))
-      .Invoke(Rays.PixelIdx, Rays.MaxDistance, DepthBuffer);
-    return true;
-  }
-};
-
 void RayOperations::MapCanvasToRays(Ray<vtkm::Float32>& rays,
                                     const vtkm::rendering::Camera& camera,
                                     const vtkm::rendering::CanvasRayTracer& canvas)
@@ -75,9 +40,9 @@ void RayOperations::MapCanvasToRays(Ray<vtkm::Float32>& rays,
   if (!valid)
     throw vtkm::cont::ErrorBadValue("Inverse Invalid");
 
-  MapCanvasFunctor<vtkm::Float32> functor(
-    rays, inverse, width, height, canvas.GetDepthBuffer(), camera.GetPosition());
-  vtkm::cont::TryExecute(functor);
+  vtkm::worklet::DispatcherMapField<detail::RayMapCanvas>(
+    detail::RayMapCanvas(inverse, width, height, camera.GetPosition()))
+    .Invoke(rays.PixelIdx, rays.MaxDistance, canvas.GetDepthBuffer());
 }
 }
 }

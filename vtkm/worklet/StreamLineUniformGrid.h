@@ -396,9 +396,9 @@ public:
     // Worklet to make the streamlines
     MakeStreamLines makeStreamLines(
       timeStep, streamMode, maxSteps, vdims, fieldArray.PrepareForInput(DeviceAdapter()));
-    using MakeStreamLinesDispatcher =
-      typename vtkm::worklet::DispatcherMapField<MakeStreamLines, DeviceAdapter>;
+    using MakeStreamLinesDispatcher = vtkm::worklet::DispatcherMapField<MakeStreamLines>;
     MakeStreamLinesDispatcher makeStreamLinesDispatcher(makeStreamLines);
+    makeStreamLinesDispatcher.SetDevice(DeviceAdapter());
     makeStreamLinesDispatcher.Invoke(
       seedIdArray, seedPosArray, numIndices, validPoint, streamArray);
 

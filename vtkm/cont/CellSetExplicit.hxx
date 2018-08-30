@@ -405,7 +405,7 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                OffsetsStorageTag>::GetShapesArray(FromTopology, ToTopology) const
   -> const typename ConnectivityChooser<FromTopology, ToTopology>::ShapeArrayType&
 {
-  this->BuildConnectivity(vtkm::cont::DeviceAdapterIdAny{}, FromTopology(), ToTopology());
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).Shapes;
 }
 
@@ -421,7 +421,7 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                                                       ToTopology) const -> const
   typename ConnectivityChooser<FromTopology, ToTopology>::NumIndicesArrayType&
 {
-  this->BuildConnectivity(vtkm::cont::DeviceAdapterIdAny{}, FromTopology(), ToTopology());
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).NumIndices;
 }
 
@@ -437,7 +437,7 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                                                         ToTopology) const -> const
   typename ConnectivityChooser<FromTopology, ToTopology>::ConnectivityArrayType&
 {
-  this->BuildConnectivity(vtkm::cont::DeviceAdapterIdAny{}, FromTopology(), ToTopology());
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).Connectivity;
 }
 
@@ -453,7 +453,7 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                                                        ToTopology) const -> const
   typename ConnectivityChooser<FromTopology, ToTopology>::IndexOffsetArrayType&
 {
-  this->BuildConnectivity(vtkm::cont::DeviceAdapterIdAny{}, FromTopology(), ToTopology());
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).IndexOffsets;
 }
 

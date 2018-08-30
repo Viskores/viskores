@@ -55,8 +55,8 @@ inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
   //If the input is implicit, we should know what to fall back to
   vtkm::cont::ArrayHandle<T> outArray;
 
-  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointAverage, DeviceAdapter> dispatcher(
-    this->Worklet);
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointAverage> dispatcher(this->Worklet);
+  dispatcher.SetDevice(DeviceAdapter());
 
   dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellSet, policy), inField, outArray);
 

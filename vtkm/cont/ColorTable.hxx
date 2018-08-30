@@ -57,7 +57,8 @@ struct map_color_table
   {
     using namespace vtkm::worklet::colorconversion;
     TransferFunction transfer(colors->PrepareForExecution(device));
-    vtkm::worklet::DispatcherMapField<TransferFunction, DeviceAdapter> dispatcher(transfer);
+    vtkm::worklet::DispatcherMapField<TransferFunction> dispatcher(transfer);
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(std::forward<Args>(args)...);
     return true;
   }
@@ -71,7 +72,8 @@ struct map_color_table_with_samples
                   Args&&... args) const
   {
     using namespace vtkm::worklet::colorconversion;
-    vtkm::worklet::DispatcherMapField<LookupTable, DeviceAdapter> dispatcher(lookupTable);
+    vtkm::worklet::DispatcherMapField<LookupTable> dispatcher(lookupTable);
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(std::forward<Args>(args)...);
     return true;
   }

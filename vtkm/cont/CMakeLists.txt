@@ -39,6 +39,7 @@ set(headers
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
+  ArrayHandleView.h
   ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
@@ -133,6 +134,7 @@ set(sources
   FieldRangeGlobalCompute.cxx
   internal/ArrayHandleBasicImpl.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
+  internal/DeviceAdapterTag.cxx
   internal/SimplePolymorphicContainer.cxx
   MultiBlock.cxx
   PresetColorTables.cxx

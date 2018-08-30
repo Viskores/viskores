@@ -118,7 +118,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
       cellset = vtkm::worklet::Triangulate().Run(uniformCs, device);
       break;
     case 3:
-      cellset = vtkm::worklet::Tetrahedralize().Run(uniformCs, device);
+      cellset = vtkm::worklet::Tetrahedralize().Run(uniformCs);
       break;
     default:
       VTKM_ASSERT(false);
@@ -181,8 +181,9 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
     pcoords.GetPortalControl().Set(i, pc);
   }
 
-  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates, DeviceAdapter> dispatcher(
+  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
     ParametricToWorldCoordinates::MakeScatter(cellIds));
+  dispatcher.SetDevice(DeviceAdapter());
   dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
 }
 

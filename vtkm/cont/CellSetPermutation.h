@@ -92,8 +92,9 @@ public:
     vtkm::Id connectivityLength = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
       vtkm::cont::make_ArrayHandleCast(conn.NumIndices, vtkm::Id()), conn.IndexOffsets);
     conn.Connectivity.Allocate(connectivityLength);
-    vtkm::worklet::DispatcherMapTopology<WriteConnectivity, Device>().Invoke(
-      cellset, conn.IndexOffsets, conn.Connectivity);
+    vtkm::worklet::DispatcherMapTopology<WriteConnectivity> dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(cellset, conn.IndexOffsets, conn.Connectivity);
 
     return conn;
   }
@@ -126,8 +127,9 @@ public:
     conn.NumIndices = make_ArrayHandleConstant(numPointsInCell, numberOfCells);
     conn.IndexOffsets = ArrayHandleCounting<vtkm::Id>(0, numPointsInCell, numberOfCells);
     conn.Connectivity.Allocate(connectivityLength);
-    vtkm::worklet::DispatcherMapTopology<WriteConnectivity, Device>().Invoke(
-      cellset, conn.IndexOffsets, conn.Connectivity);
+    vtkm::worklet::DispatcherMapTopology<WriteConnectivity> dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(cellset, conn.IndexOffsets, conn.Connectivity);
 
     return conn;
   }

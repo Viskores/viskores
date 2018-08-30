@@ -89,7 +89,8 @@ struct CellDeepCopy
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage> numIndices;
 
-    vtkm::worklet::DispatcherMapTopology<CountCellPoints, Device> countDispatcher;
+    vtkm::worklet::DispatcherMapTopology<CountCellPoints> countDispatcher;
+    countDispatcher.SetDevice(Device());
     countDispatcher.Invoke(inCellSet, numIndices);
 
     vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage> shapes;
@@ -100,7 +101,8 @@ struct CellDeepCopy
     vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connectivitySize);
     connectivity.Allocate(connectivitySize);
 
-    vtkm::worklet::DispatcherMapTopology<PassCellStructure, Device> passDispatcher;
+    vtkm::worklet::DispatcherMapTopology<PassCellStructure> passDispatcher;
+    passDispatcher.SetDevice(Device());
     passDispatcher.Invoke(
       inCellSet, shapes, vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
 

@@ -571,8 +571,9 @@ public:
 
 
     // scatter the coonectivity into the original order
-    vtkm::worklet::DispatcherMapField<WriteFaceConn, DeviceAdapter>(WriteFaceConn())
-      .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
+    vtkm::worklet::DispatcherMapField<WriteFaceConn> dispatcherWriteFaceConn;
+    dispatcherWriteFaceConn.SetDevice(DeviceAdapter());
+    dispatcherWriteFaceConn.Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
 
     FaceConnectivity = faceConnectivity;
@@ -628,8 +629,9 @@ public:
       this->ExtractExternalFaces(cellFaceId, faceConnectivity, shapes, conn, shapeOffsets);
 
     // scatter the coonectivity into the original order
-    vtkm::worklet::DispatcherMapField<WriteFaceConn, DeviceAdapter>(WriteFaceConn())
-      .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
+    vtkm::worklet::DispatcherMapField<WriteFaceConn> dispatcher{ (WriteFaceConn{}) };
+    dispatcher.SetDevice(DeviceAdapter());
+    dispatcher.Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
     FaceConnectivity = faceConnectivity;
     OutsideTriangles = externalTriangles;
@@ -653,10 +655,11 @@ public:
     triangles.PrepareForOutput(numFaces * 2, DeviceAdapter());
     vtkm::cont::ArrayHandleCounting<vtkm::Id> counting(0, 1, numFaces);
 
-    vtkm::worklet::DispatcherMapField<StructuredExternalTriangles, DeviceAdapter>(
+    vtkm::worklet::DispatcherMapField<StructuredExternalTriangles> dispatcher(
       StructuredExternalTriangles(cellSetStructured.PrepareForInput(
-        DeviceAdapter(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())))
-      .Invoke(counting, triangles);
+        DeviceAdapter(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())));
+    dispatcher.SetDevice(DeviceAdapter());
+    dispatcher.Invoke(counting, triangles);
 
     vtkm::Float64 time = timer.GetElapsedTime();
     Logger::GetInstance()->AddLogData("structured_external_faces", time);
@@ -701,8 +704,9 @@ protected:
     // Count the number of total faces in the cell set
     vtkm::cont::ArrayHandle<vtkm::Id> facesPerCell;
 
-    vtkm::worklet::DispatcherMapField<CountFaces, DeviceAdapter>(CountFaces())
-      .Invoke(shapes, facesPerCell);
+    vtkm::worklet::DispatcherMapField<CountFaces> countFacesDispatcher{ (CountFaces{}) };
+    countFacesDispatcher.SetDevice(DeviceAdapter());
+    countFacesDispatcher.Invoke(shapes, facesPerCell);
 
     vtkm::Id totalFaces = 0;
     totalFaces =
@@ -744,9 +748,10 @@ protected:
     vtkm::cont::ArrayHandle<vtkm::UInt32> faceMortonCodes;
     cellFaceId.PrepareForOutput(totalFaces, DeviceAdapter());
     faceMortonCodes.PrepareForOutput(totalFaces, DeviceAdapter());
-    vtkm::worklet::DispatcherMapTopology<MortonCodeFace, DeviceAdapter>(
-      MortonCodeFace(inverseExtent, minPoint))
-      .Invoke(cellSet, coordinates, cellOffsets, faceMortonCodes, cellFaceId);
+    vtkm::worklet::DispatcherMapTopology<MortonCodeFace> mortonCodeFaceDispatcher(
+      MortonCodeFace(inverseExtent, minPoint));
+    mortonCodeFaceDispatcher.SetDevice(DeviceAdapter());
+    mortonCodeFaceDispatcher.Invoke(cellSet, coordinates, cellOffsets, faceMortonCodes, cellFaceId);
 
     // Sort the "faces" (i.e., morton codes)
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::SortByKey(faceMortonCodes, cellFaceId);
@@ -755,11 +760,15 @@ protected:
     faceConnectivity.PrepareForOutput(totalFaces, DeviceAdapter());
 
     // Initialize All connecting faces to -1 (connects to nothing)
-    vtkm::worklet::DispatcherMapField<MemSet<vtkm::Id>, DeviceAdapter>(MemSet<vtkm::Id>(-1))
-      .Invoke(faceConnectivity);
+    vtkm::worklet::DispatcherMapField<MemSet<vtkm::Id>> memSetDispatcher(MemSet<vtkm::Id>(-1));
+    memSetDispatcher.SetDevice(DeviceAdapter());
+    memSetDispatcher.Invoke(faceConnectivity);
 
-    vtkm::worklet::DispatcherMapField<MortonNeighbor, DeviceAdapter>(MortonNeighbor())
-      .Invoke(faceMortonCodes, cellFaceId, conn, shapes, shapeOffsets, faceConnectivity);
+    vtkm::worklet::DispatcherMapField<MortonNeighbor> mortonNeighborDispatcher{ (
+      MortonNeighbor{}) };
+    mortonNeighborDispatcher.SetDevice(DeviceAdapter());
+    mortonNeighborDispatcher.Invoke(
+      faceMortonCodes, cellFaceId, conn, shapes, shapeOffsets, faceConnectivity);
 
     vtkm::Float64 time = timer.GetElapsedTime();
     Logger::GetInstance()->AddLogData("gen_face_conn", time);
@@ -792,9 +801,10 @@ protected:
     trianglesPerExternalFace.PrepareForOutput(numExternalFaces, DeviceAdapter());
 
 
-    vtkm::worklet::DispatcherMapField<CountExternalTriangles, DeviceAdapter>(
-      CountExternalTriangles())
-      .Invoke(externalFacePairs, shapes, trianglesPerExternalFace);
+    vtkm::worklet::DispatcherMapField<CountExternalTriangles> countExternalDispatcher{ (
+      CountExternalTriangles{}) };
+    countExternalDispatcher.SetDevice(DeviceAdapter());
+    countExternalDispatcher.Invoke(externalFacePairs, shapes, trianglesPerExternalFace);
 
     vtkm::cont::ArrayHandle<vtkm::Id> externalTriangleOffsets;
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanExclusive(trianglesPerExternalFace,
@@ -807,9 +817,11 @@ protected:
     externalTriangles.PrepareForOutput(totalExternalTriangles, DeviceAdapter());
     //count the number triangles in the external faces
 
-    vtkm::worklet::DispatcherMapField<ExternalTriangles, DeviceAdapter>(ExternalTriangles())
-      .Invoke(
-        externalFacePairs, shapes, shapeOffsets, conn, externalTriangles, externalTriangleOffsets);
+    vtkm::worklet::DispatcherMapField<ExternalTriangles> externalTriDispatcher{ (
+      ExternalTriangles{}) };
+    externalTriDispatcher.SetDevice(DeviceAdapter());
+    externalTriDispatcher.Invoke(
+      externalFacePairs, shapes, shapeOffsets, conn, externalTriangles, externalTriangleOffsets);
 
 
     vtkm::Float64 time = timer.GetElapsedTime();

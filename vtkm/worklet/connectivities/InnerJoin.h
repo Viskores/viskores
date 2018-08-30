@@ -90,7 +90,8 @@ public:
     Algorithm::Transform(ubs, lbs, counts, vtkm::Subtract());
 
     vtkm::worklet::ScatterCounting scatter{ counts, DeviceAdapter() };
-    vtkm::worklet::DispatcherMapField<Merge, DeviceAdapter> mergeDisp(scatter);
+    vtkm::worklet::DispatcherMapField<Merge> mergeDisp(scatter);
+    mergeDisp.SetDevice(DeviceAdapter());
     mergeDisp.Invoke(key1, value1, lbs, value2, keyOut, value1Out, value2Out);
   }
 };

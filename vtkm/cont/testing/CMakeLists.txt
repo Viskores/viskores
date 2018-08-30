@@ -73,6 +73,7 @@ set(unit_tests
   UnitTestFieldRangeCompute.cxx
   UnitTestMultiBlock.cxx
   UnitTestRuntimeDeviceInformation.cxx
+  UnitTestRuntimeDeviceNames.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
   UnitTestStorageListTag.cxx

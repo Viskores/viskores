@@ -25,7 +25,7 @@
 #include <vtkm/worklet/wavelets/WaveletTransforms.h>
 
 #include <vtkm/Math.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Algorithm.h>
 
 namespace vtkm
 {
@@ -104,98 +104,105 @@ public:
   }
 
   // perform a device copy. The whole 1st array to a certain start location of the 2nd array
-  template <typename ArrayType1, typename ArrayType2, typename DeviceTag>
+  template <typename ArrayType1, typename ArrayType2>
   void DeviceCopyStartX(const ArrayType1& srcArray,
                         ArrayType2& dstArray,
                         vtkm::Id startIdx,
-                        DeviceTag)
+                        vtkm::cont::DeviceAdapterId device)
   {
     using CopyType = vtkm::worklet::wavelets::CopyWorklet;
     CopyType cp(startIdx);
-    vtkm::worklet::DispatcherMapField<CopyType, DeviceTag> dispatcher(cp);
+    vtkm::worklet::DispatcherMapField<CopyType> dispatcher(cp);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(srcArray, dstArray);
   }
 
   // Assign zero value to a certain location of an array
-  template <typename ArrayType, typename DeviceTag>
-  void DeviceAssignZero(ArrayType& array, vtkm::Id index, DeviceTag)
+  template <typename ArrayType>
+  void DeviceAssignZero(ArrayType& array, vtkm::Id index, vtkm::cont::DeviceAdapterId device)
   {
     using ZeroWorklet = vtkm::worklet::wavelets::AssignZeroWorklet;
     ZeroWorklet worklet(index);
-    vtkm::worklet::DispatcherMapField<ZeroWorklet, DeviceTag> dispatcher(worklet);
+    vtkm::worklet::DispatcherMapField<ZeroWorklet> dispatcher(worklet);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(array);
   }
 
   // Assign zeros to a certain row to a matrix
-  template <typename ArrayType, typename DeviceTag>
+  template <typename ArrayType>
   void DeviceAssignZero2DRow(ArrayType& array,
                              vtkm::Id dimX,
                              vtkm::Id dimY, // input
                              vtkm::Id rowIdx,
-                             DeviceTag)
+                             vtkm::cont::DeviceAdapterId device)
   {
     using AssignZero2DType = vtkm::worklet::wavelets::AssignZero2DWorklet;
     AssignZero2DType zeroWorklet(dimX, dimY, -1, rowIdx);
-    vtkm::worklet::DispatcherMapField<AssignZero2DType, DeviceTag> dispatcher(zeroWorklet);
+    vtkm::worklet::DispatcherMapField<AssignZero2DType> dispatcher(zeroWorklet);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(array);
   }
 
   // Assign zeros to a certain column to a matrix
-  template <typename ArrayType, typename DeviceTag>
+  template <typename ArrayType>
   void DeviceAssignZero2DColumn(ArrayType& array,
                                 vtkm::Id dimX,
                                 vtkm::Id dimY, // input
                                 vtkm::Id colIdx,
-                                DeviceTag)
+                                vtkm::cont::DeviceAdapterId device)
   {
     using AssignZero2DType = vtkm::worklet::wavelets::AssignZero2DWorklet;
     AssignZero2DType zeroWorklet(dimX, dimY, colIdx, -1);
-    vtkm::worklet::DispatcherMapField<AssignZero2DType, DeviceTag> dispatcher(zeroWorklet);
+    vtkm::worklet::DispatcherMapField<AssignZero2DType> dispatcher(zeroWorklet);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(array);
   }
 
   // Assign zeros to a plane that's perpendicular to the X axis (Left-Right direction)
-  template <typename ArrayType, typename DeviceTag>
+  template <typename ArrayType>
   void DeviceAssignZero3DPlaneX(ArrayType& array, // input array
                                 vtkm::Id dimX,
                                 vtkm::Id dimY,
                                 vtkm::Id dimZ,  // dims of input
                                 vtkm::Id zeroX, // X idx to set zero
-                                DeviceTag)
+                                vtkm::cont::DeviceAdapterId device)
   {
     using AssignZero3DType = vtkm::worklet::wavelets::AssignZero3DWorklet;
     AssignZero3DType zeroWorklet(dimX, dimY, dimZ, zeroX, -1, -1);
-    vtkm::worklet::DispatcherMapField<AssignZero3DType, DeviceTag> dispatcher(zeroWorklet);
+    vtkm::worklet::DispatcherMapField<AssignZero3DType> dispatcher(zeroWorklet);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(array);
   }
 
   // Assign zeros to a plane that's perpendicular to the Y axis (Top-Down direction)
-  template <typename ArrayType, typename DeviceTag>
+  template <typename ArrayType>
   void DeviceAssignZero3DPlaneY(ArrayType& array, // input array
                                 vtkm::Id dimX,
                                 vtkm::Id dimY,
                                 vtkm::Id dimZ,  // dims of input
                                 vtkm::Id zeroY, // Y idx to set zero
-                                DeviceTag)
+                                vtkm::cont::DeviceAdapterId device)
   {
     using AssignZero3DType = vtkm::worklet::wavelets::AssignZero3DWorklet;
     AssignZero3DType zeroWorklet(dimX, dimY, dimZ, -1, zeroY, -1);
-    vtkm::worklet::DispatcherMapField<AssignZero3DType, DeviceTag> dispatcher(zeroWorklet);
+    vtkm::worklet::DispatcherMapField<AssignZero3DType> dispatcher(zeroWorklet);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(array);
   }
 
   // Assign zeros to a plane that's perpendicular to the Z axis (Front-Back direction)
-  template <typename ArrayType, typename DeviceTag>
+  template <typename ArrayType>
   void DeviceAssignZero3DPlaneZ(ArrayType& array, // input array
                                 vtkm::Id dimX,
                                 vtkm::Id dimY,
                                 vtkm::Id dimZ,  // dims of input
                                 vtkm::Id zeroZ, // Y idx to set zero
-                                DeviceTag)
+                                vtkm::cont::DeviceAdapterId device)
   {
     using AssignZero3DType = vtkm::worklet::wavelets::AssignZero3DWorklet;
     AssignZero3DType zeroWorklet(dimX, dimY, dimZ, -1, -1, zeroZ);
-    vtkm::worklet::DispatcherMapField<AssignZero3DType, DeviceTag> dispatcher(zeroWorklet);
+    vtkm::worklet::DispatcherMapField<AssignZero3DType> dispatcher(zeroWorklet);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(array);
   }
 
@@ -208,18 +215,19 @@ public:
       return vtkm::Abs(x) < vtkm::Abs(y);
     }
   };
-  template <typename ArrayType, typename DeviceTag>
-  void DeviceSort(ArrayType& array, DeviceTag)
+  template <typename ArrayType>
+  void DeviceSort(ArrayType& array, vtkm::cont::DeviceAdapterId device)
   {
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Sort(array, SortLessAbsFunctor());
+    vtkm::cont::Algorithm::Sort(device, array, SortLessAbsFunctor());
   }
 
   // Reduce to the sum of all values on device
-  template <typename ArrayType, typename DeviceTag>
-  typename ArrayType::ValueType DeviceSum(const ArrayType& array, DeviceTag)
+  template <typename ArrayType>
+  typename ArrayType::ValueType DeviceSum(const ArrayType& array,
+                                          vtkm::cont::DeviceAdapterId device)
   {
-    return vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Reduce(
-      array, static_cast<typename ArrayType::ValueType>(0.0));
+    return vtkm::cont::Algorithm::Reduce(
+      device, array, static_cast<typename ArrayType::ValueType>(0.0));
   }
 
   // Helper functors for finding the max and min of an array
@@ -241,17 +249,19 @@ public:
   };
 
   // Device Min and Max functions
-  template <typename ArrayType, typename DeviceTag>
-  typename ArrayType::ValueType DeviceMax(const ArrayType& array, DeviceTag)
+  template <typename ArrayType>
+  typename ArrayType::ValueType DeviceMax(const ArrayType& array,
+                                          vtkm::cont::DeviceAdapterId device)
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
-    return vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Reduce(array, initVal, maxFunctor());
+    return vtkm::cont::Algorithm::Reduce(device, array, initVal, maxFunctor());
   }
-  template <typename ArrayType, typename DeviceTag>
-  typename ArrayType::ValueType DeviceMin(const ArrayType& array, DeviceTag)
+  template <typename ArrayType>
+  typename ArrayType::ValueType DeviceMin(const ArrayType& array,
+                                          vtkm::cont::DeviceAdapterId device)
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
-    return vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Reduce(array, initVal, minFunctor());
+    return vtkm::cont::Algorithm::Reduce(device, array, initVal, minFunctor());
   }
 
   // Max absolute value of an array
@@ -263,18 +273,19 @@ public:
       return vtkm::Max(vtkm::Abs(x), vtkm::Abs(y));
     }
   };
-  template <typename ArrayType, typename DeviceTag>
-  typename ArrayType::ValueType DeviceMaxAbs(const ArrayType& array, DeviceTag)
+  template <typename ArrayType>
+  typename ArrayType::ValueType DeviceMaxAbs(const ArrayType& array,
+                                             vtkm::cont::DeviceAdapterId device)
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
-    return vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Reduce(array, initVal, maxAbsFunctor());
+    return vtkm::cont::Algorithm::Reduce(device, array, initVal, maxAbsFunctor());
   }
 
   // Calculate variance of an array
-  template <typename ArrayType, typename DeviceTag>
-  vtkm::Float64 DeviceCalculateVariance(ArrayType& array, DeviceTag)
+  template <typename ArrayType>
+  vtkm::Float64 DeviceCalculateVariance(ArrayType& array, vtkm::cont::DeviceAdapterId device)
   {
-    vtkm::Float64 mean = static_cast<vtkm::Float64>(this->DeviceSum(array, DeviceTag())) /
+    vtkm::Float64 mean = static_cast<vtkm::Float64>(this->DeviceSum(array, device)) /
       static_cast<vtkm::Float64>(array.GetNumberOfValues());
 
     vtkm::cont::ArrayHandle<vtkm::Float64> squaredDeviation;
@@ -282,17 +293,18 @@ public:
     // Use a worklet
     using SDWorklet = vtkm::worklet::wavelets::SquaredDeviation;
     SDWorklet sdw(mean);
-    vtkm::worklet::DispatcherMapField<SDWorklet, DeviceTag> dispatcher(sdw);
+    vtkm::worklet::DispatcherMapField<SDWorklet> dispatcher(sdw);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(array, squaredDeviation);
 
-    vtkm::Float64 sdMean = this->DeviceSum(squaredDeviation, DeviceTag()) /
+    vtkm::Float64 sdMean = this->DeviceSum(squaredDeviation, device) /
       static_cast<vtkm::Float64>(squaredDeviation.GetNumberOfValues());
 
     return sdMean;
   }
 
   // Copy a small rectangle to a big rectangle
-  template <typename SmallArrayType, typename BigArrayType, typename DeviceTag>
+  template <typename SmallArrayType, typename BigArrayType>
   void DeviceRectangleCopyTo(const SmallArrayType& smallRect,
                              vtkm::Id smallX,
                              vtkm::Id smallY,
@@ -301,16 +313,17 @@ public:
                              vtkm::Id bigY,
                              vtkm::Id startX,
                              vtkm::Id startY,
-                             DeviceTag)
+                             vtkm::cont::DeviceAdapterId device)
   {
     using CopyToWorklet = vtkm::worklet::wavelets::RectangleCopyTo;
     CopyToWorklet cp(smallX, smallY, bigX, bigY, startX, startY);
-    vtkm::worklet::DispatcherMapField<CopyToWorklet, DeviceTag> dispatcher(cp);
+    vtkm::worklet::DispatcherMapField<CopyToWorklet> dispatcher(cp);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(smallRect, bigRect);
   }
 
   // Copy a small cube to a big cube
-  template <typename SmallArrayType, typename BigArrayType, typename DeviceTag>
+  template <typename SmallArrayType, typename BigArrayType>
   void DeviceCubeCopyTo(const SmallArrayType& smallCube,
                         vtkm::Id smallX,
                         vtkm::Id smallY,
@@ -322,11 +335,12 @@ public:
                         vtkm::Id startX,
                         vtkm::Id startY,
                         vtkm::Id startZ,
-                        DeviceTag)
+                        vtkm::cont::DeviceAdapterId device)
   {
     using CopyToWorklet = vtkm::worklet::wavelets::CubeCopyTo;
     CopyToWorklet cp(smallX, smallY, smallZ, bigX, bigY, bigZ, startX, startY, startZ);
-    vtkm::worklet::DispatcherMapField<CopyToWorklet, DeviceTag> dispatcher(cp);
+    vtkm::worklet::DispatcherMapField<CopyToWorklet> dispatcher(cp);
+    dispatcher.SetDevice(device);
     dispatcher.Invoke(smallCube, bigCube);
   }
 

@@ -20,6 +20,7 @@
 
 #include <vtkm/VectorAnalysis.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
@@ -659,69 +660,38 @@ struct Camera::CreateRaysFunctor
   }
 };
 
-struct Camera::PixelDataFunctor
-{
-  vtkm::rendering::raytracing::Camera* Self;
-  const vtkm::cont::CoordinateSystem& Coords;
-  vtkm::Int32& ActivePixels;
-  vtkm::Float32& AveDistPerRay;
-
-  VTKM_CONT
-  PixelDataFunctor(vtkm::rendering::raytracing::Camera* self,
-                   const vtkm::cont::CoordinateSystem& coords,
-                   vtkm::Int32& activePixels,
-                   vtkm::Float32& aveDistPerRay)
-    : Self(self)
-    , Coords(coords)
-    , ActivePixels(activePixels)
-    , AveDistPerRay(aveDistPerRay)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::Bounds boundingBox = Coords.GetBounds();
-    Self->FindSubset(boundingBox);
-    //Reset the camera look vector
-    Self->Look = Self->LookAt - Self->Position;
-    vtkm::Normalize(Self->Look);
-    const int size = Self->SubsetWidth * Self->SubsetHeight;
-    vtkm::cont::ArrayHandle<vtkm::Float32> dists;
-    vtkm::cont::ArrayHandle<vtkm::Int32> hits;
-    dists.PrepareForOutput(size, Device());
-    hits.PrepareForOutput(size, Device());
-
-    //Create the ray direction
-    vtkm::worklet::DispatcherMapField<PixelData, Device>(PixelData(Self->Width,
-                                                                   Self->Height,
-                                                                   Self->FovX,
-                                                                   Self->FovY,
-                                                                   Self->Look,
-                                                                   Self->Up,
-                                                                   Self->Zoom,
-                                                                   Self->SubsetWidth,
-                                                                   Self->SubsetMinX,
-                                                                   Self->SubsetMinY,
-                                                                   Self->Position,
-                                                                   boundingBox))
-      .Invoke(hits, dists); //X Y Z
-    ActivePixels = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(hits, vtkm::Int32(0));
-    AveDistPerRay = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(dists, vtkm::Float32(0)) /
-      vtkm::Float32(ActivePixels);
-    return true;
-  }
-};
-
 void Camera::GetPixelData(const vtkm::cont::CoordinateSystem& coords,
                           vtkm::Int32& activePixels,
                           vtkm::Float32& aveRayDistance)
 {
+  vtkm::Bounds boundingBox = coords.GetBounds();
+  this->FindSubset(boundingBox);
+  //Reset the camera look vector
+  this->Look = this->LookAt - this->Position;
+  vtkm::Normalize(this->Look);
+  const int size = this->SubsetWidth * this->SubsetHeight;
+  vtkm::cont::ArrayHandle<vtkm::Float32> dists;
+  vtkm::cont::ArrayHandle<vtkm::Int32> hits;
+  dists.Allocate(size);
+  hits.Allocate(size);
 
-  PixelDataFunctor functor(this, coords, activePixels, aveRayDistance);
-  vtkm::cont::TryExecute(functor);
+  //Create the ray direction
+  vtkm::worklet::DispatcherMapField<PixelData>(PixelData(this->Width,
+                                                         this->Height,
+                                                         this->FovX,
+                                                         this->FovY,
+                                                         this->Look,
+                                                         this->Up,
+                                                         this->Zoom,
+                                                         this->SubsetWidth,
+                                                         this->SubsetMinX,
+                                                         this->SubsetMinY,
+                                                         this->Position,
+                                                         boundingBox))
+    .Invoke(hits, dists); //X Y Z
+  activePixels = vtkm::cont::Algorithm::Reduce(hits, vtkm::Int32(0));
+  aveRayDistance =
+    vtkm::cont::Algorithm::Reduce(dists, vtkm::Float32(0)) / vtkm::Float32(activePixels);
 }
 
 VTKM_CONT
@@ -758,18 +728,20 @@ VTKM_CONT void Camera::CreateRaysOnDevice(Ray<Precision>& rays,
   Precision infinity;
   GetInfinity(infinity);
 
-  vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(MemSet<Precision>(infinity))
-    .Invoke(rays.MaxDistance);
+  vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetInfDispatcher(
+    (MemSet<Precision>(infinity)));
+  memSetInfDispatcher.SetDevice(Device());
+  memSetInfDispatcher.Invoke(rays.MaxDistance);
 
-  vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(MemSet<Precision>(0.f))
-    .Invoke(rays.MinDistance);
-
-  vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(MemSet<Precision>(0.f))
-    .Invoke(rays.Distance);
+  vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSet0Dispatcher((MemSet<Precision>(0.f)));
+  memSet0Dispatcher.SetDevice(Device());
+  memSet0Dispatcher.Invoke(rays.MinDistance);
+  memSet0Dispatcher.Invoke(rays.Distance);
 
   //Reset the Rays Hit Index to -2
-  vtkm::worklet::DispatcherMapField<MemSet<vtkm::Id>, Device>(MemSet<vtkm::Id>(-2))
-    .Invoke(rays.HitIdx);
+  vtkm::worklet::DispatcherMapField<MemSet<vtkm::Id>> memSetM2Dispatcher((MemSet<vtkm::Id>(-2)));
+  memSetM2Dispatcher.SetDevice(Device());
+  memSetM2Dispatcher.Invoke(rays.HitIdx);
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("camera_memset", time);
@@ -781,25 +753,26 @@ VTKM_CONT void Camera::CreateRaysOnDevice(Ray<Precision>& rays,
   if (ortho)
   {
 
-    vtkm::worklet::DispatcherMapField<Ortho2DRayGen, Device>(Ortho2DRayGen(this->Width,
-                                                                           this->Height,
-                                                                           this->Zoom,
-                                                                           this->SubsetWidth,
-                                                                           this->SubsetMinX,
-                                                                           this->SubsetMinY,
-                                                                           this->CameraView))
-      .Invoke(rays.DirX,
-              rays.DirY,
-              rays.DirZ,
-              rays.OriginX,
-              rays.OriginY,
-              rays.OriginZ,
-              rays.PixelIdx); //X Y Z
+    vtkm::worklet::DispatcherMapField<Ortho2DRayGen> dispatcher(Ortho2DRayGen(this->Width,
+                                                                              this->Height,
+                                                                              this->Zoom,
+                                                                              this->SubsetWidth,
+                                                                              this->SubsetMinX,
+                                                                              this->SubsetMinY,
+                                                                              this->CameraView));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.DirX,
+                      rays.DirY,
+                      rays.DirZ,
+                      rays.OriginX,
+                      rays.OriginY,
+                      rays.OriginZ,
+                      rays.PixelIdx); //X Y Z
   }
   else
   {
     //Create the ray direction
-    vtkm::worklet::DispatcherMapField<PerspectiveRayGen, Device>(
+    vtkm::worklet::DispatcherMapField<PerspectiveRayGen> dispatcher(
       PerspectiveRayGen(this->Width,
                         this->Height,
                         this->FovX,
@@ -809,23 +782,24 @@ VTKM_CONT void Camera::CreateRaysOnDevice(Ray<Precision>& rays,
                         this->Zoom,
                         this->SubsetWidth,
                         this->SubsetMinX,
-                        this->SubsetMinY))
-      .Invoke(rays.DirX,
-              rays.DirY,
-              rays.DirZ,
-              rays.PixelIdx); //X Y Z
+                        this->SubsetMinY));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.DirX, rays.DirY, rays.DirZ, rays.PixelIdx); //X Y Z
 
-    vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(
-      MemSet<Precision>(this->Position[0]))
-      .Invoke(rays.OriginX);
+    vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetPos0Dispatcher(
+      MemSet<Precision>(this->Position[0]));
+    memSetPos0Dispatcher.SetDevice(Device());
+    memSetPos0Dispatcher.Invoke(rays.OriginX);
 
-    vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(
-      MemSet<Precision>(this->Position[1]))
-      .Invoke(rays.OriginY);
+    vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetPos1Dispatcher(
+      MemSet<Precision>(this->Position[1]));
+    memSetPos1Dispatcher.SetDevice(Device());
+    memSetPos1Dispatcher.Invoke(rays.OriginY);
 
-    vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(
-      MemSet<Precision>(this->Position[2]))
-      .Invoke(rays.OriginZ);
+    vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetPos2Dispatcher(
+      MemSet<Precision>(this->Position[2]));
+    memSetPos2Dispatcher.SetDevice(Device());
+    memSetPos2Dispatcher.Invoke(rays.OriginZ);
   }
 
   time = timer.GetElapsedTime();

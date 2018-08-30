@@ -169,7 +169,8 @@ public:
                               extractInside,
                               extractBoundaryCells,
                               extractOnlyBoundaryCells);
-    DispatcherMapTopology<ExtractCellsByVOI, DeviceAdapter> dispatcher(worklet);
+    DispatcherMapTopology<ExtractCellsByVOI> dispatcher(worklet);
+    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(cellSet, coordinates, passFlags);
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
