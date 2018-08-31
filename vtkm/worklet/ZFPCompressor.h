@@ -200,6 +200,23 @@ public:
   VTKM_EXEC
   void operator()(T& outValue) const { outValue = Value; }
 }; //class MemSet
+
+class MemTransfer : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  MemTransfer() {}
+  using ControlSignature = void(FieldIn<>, WholeArrayInOut<>);
+  using ExecutionSignature = void(_1, _2);
+
+  template <typename PortalType>
+  VTKM_EXEC void operator()(const vtkm::Id id, PortalType& outValue) const
+  {
+    (void)id;
+    (void)outValue;
+  }
+}; //class MemTransfer
+
 } // namespace detail
 
 template <typename T>
@@ -274,22 +291,37 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Int64> output;
     output.PrepareForOutput(outsize, Device());
 
-    vtkm::worklet::DispatcherMapField<detail::MemSet<vtkm::Int64>, Device> memsetDispatcher(
+    vtkm::worklet::DispatcherMapField<detail::MemSet<vtkm::Int64>> memsetDispatcher(
       detail::MemSet<vtkm::Int64>(0));
+    memsetDispatcher.SetDevice(Device());
     memsetDispatcher.Invoke(output);
 
+
+    {
+      vtkm::cont::Timer<Device> timer;
+      vtkm::cont::ArrayHandleCounting<vtkm::Id> one(0, 1, 1);
+      vtkm::worklet::DispatcherMapField<detail::MemTransfer> dis;
+      dis.SetDevice(Device());
+      dis.Invoke(one, data);
+
+      vtkm::Float64 time = timer.GetElapsedTime();
+      std::cout << "Copy scalars " << time << "\n";
+    }
 
     // launch 1 thread per zfp block
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
     vtkm::cont::Timer<Device> timer;
-    vtkm::worklet::DispatcherMapField<detail::Encode3, Device> compressDispatcher(
+    vtkm::worklet::DispatcherMapField<detail::Encode3> compressDispatcher(
       detail::Encode3(dims, paddedDims, stream.maxbits));
+    compressDispatcher.SetDevice(Device());
     compressDispatcher.Invoke(blockCounter, data, output);
     vtkm::Float64 time = timer.GetElapsedTime();
-    vtkm::Float64 rate =
-      ((data.GetNumberOfValues() * sizeof(vtkm::Float64)) / (1024.f * 1024.f * 1024.f)) / time;
-    std::cout << "Compress rate " << rate << " Gb / sec\n";
+    size_t total_bytes = data.GetNumberOfValues() * sizeof(vtkm::Float64);
+    vtkm::Float64 gB = vtkm::Float64(total_bytes) / (1024. * 1024. * 1024.);
+    vtkm::Float64 rate = gB / time;
+    std::cout << "Compress time " << time << " sec\n";
+    std::cout << "Compress rate " << rate << " GB / sec\n";
     DataDump(output, "compressed");
     DataDump(data, "uncompressed");
   }

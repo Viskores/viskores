@@ -31,7 +31,9 @@ template <typename Device>
 void Test3D()
 {
   std::cout << "Testing ZFP 3d:" << std::endl;
-  vtkm::Id3 dims(4, 4, 4);
+  //vtkm::Id3 dims(4,4,4);
+  //vtkm::Id3 dims(8,8,8);
+  vtkm::Id3 dims(256, 256, 256);
   //vtkm::Id3 dims(128,128,128);
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make3DUniformDataSet3(dims);
@@ -40,7 +42,7 @@ void Test3D()
 
   vtkm::worklet::ZFPCompressor<Device> compressor;
 
-  vtkm::Float64 rate = 4;
+  vtkm::Float64 rate = 1;
   if (dynField.IsSameType(Handle64()))
   {
     Handle64 array = dynField.Cast<Handle64>();
