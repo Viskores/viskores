@@ -24,6 +24,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/AtomicArray.h>
+#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -144,20 +145,19 @@ public:
     zfpBlock[0] = blockIdx % ZFPDims[0];
     zfpBlock[1] = (blockIdx / ZFPDims[0]) % ZFPDims[1];
     zfpBlock[2] = blockIdx / (ZFPDims[0] * ZFPDims[1]);
-    std::cout << "Block ID " << blockIdx << "\n";
-    std::cout << "ZFP Block " << zfpBlock << "\n";
+    //std::cout<<"Block ID "<<blockIdx<<"\n";
+    //std::cout<<"ZFP Block "<<zfpBlock<<"\n";
     vtkm::Id3 logicalStart = zfpBlock * vtkm::Id(4);
-    std::cout << "logicalStart Start " << logicalStart << "\n";
+    //std::cout<<"logicalStart Start "<<logicalStart<<"\n";
     // get the offset into the field
     //vtkm::Id offset = (zfpBlock[2]*4*ZFPDims[1] + zfpBlock[1] * 4)*ZFPDims[0] * 4 + zfpBlock[0] * 4;
     vtkm::Id offset =
       (logicalStart[2] * PaddedDims[1] + logicalStart[1]) * PaddedDims[0] + logicalStart[0];
-    std::cout << "ZFP block offset " << offset << "\n";
+    //std::cout<<"ZFP block offset "<<offset<<"\n";
     Gather3(fblock, scalars, Dims, offset);
 
-    for (int i = 0; i < 64; ++i)
-      std::cout << fblock[i] << " ";
-    std::cout << "\n";
+    //for(int i = 0; i < 64; ++i) std::cout<< fblock[i]<<" ";
+    //std::cout<<"\n";
     // encode block
     vtkm::Int32 emax = zfp::MaxExponent<BlockSize, Scalar>(fblock);
     vtkm::Int32 maxprec =
@@ -165,14 +165,13 @@ public:
     vtkm::UInt32 e = maxprec ? emax + zfp::get_ebias<Scalar>() : 0;
 
     zfp::BlockWriter<BlockSize, BitstreamPortal> blockWriter(stream, MaxBits, blockIdx);
-    blockWriter.print();
+    //blockWriter.print();
     const vtkm::UInt32 ebits = zfp::get_ebits<Scalar>() + 1;
     blockWriter.write_bits(2 * e + 1, ebits);
-    std::cout << "EBITS " << ebits << "\n";
-    std::cout << "Max exponent " << 2 * e + 1 << " emax " << emax << " maxprec " << maxprec << " e "
-              << e << "\n";
-    zfp::print_bits(2 * e + 1);
-    blockWriter.print();
+    //std::cout<<"EBITS "<<ebits<<"\n";
+    //std::cout<<"Max exponent "<<2*e+1<<" emax "<<emax<<" maxprec "<<maxprec<<" e "<<e<<"\n";
+    //zfp::print_bits(2*e+1);
+    //blockWriter.print();
 
     using Int = typename zfp::zfp_traits<Scalar>::Int;
     Int iblock[BlockSize];
@@ -180,8 +179,8 @@ public:
 
     zfp::encode_block<BitstreamPortal, Scalar, Int, BlockSize>(
       blockWriter, iblock, maxprec, MaxBits - ebits);
-    blockWriter.print(0);
-    blockWriter.print(1);
+    //blockWriter.print(0);
+    //blockWriter.print(1);
   }
 };
 
@@ -279,13 +278,18 @@ public:
       detail::MemSet<vtkm::Int64>(0));
     memsetDispatcher.Invoke(output);
 
+
     // launch 1 thread per zfp block
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
+    vtkm::cont::Timer<Device> timer;
     vtkm::worklet::DispatcherMapField<detail::Encode3, Device> compressDispatcher(
       detail::Encode3(dims, paddedDims, stream.maxbits));
     compressDispatcher.Invoke(blockCounter, data, output);
-
+    vtkm::Float64 time = timer.GetElapsedTime();
+    vtkm::Float64 rate =
+      ((data.GetNumberOfValues() * sizeof(vtkm::Float64)) / (1024.f * 1024.f * 1024.f)) / time;
+    std::cout << "Compress rate " << rate << " Gb / sec\n";
     DataDump(output, "compressed");
     DataDump(data, "uncompressed");
   }
