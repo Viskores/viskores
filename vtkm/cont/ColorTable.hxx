@@ -21,7 +21,7 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/TryExecute.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/colorconversion/LookupTable.h>
 #include <vtkm/worklet/colorconversion/Portals.h>
 #include <vtkm/worklet/colorconversion/TransferFunction.h>
@@ -55,26 +55,9 @@ struct map_color_table
   template <typename DeviceAdapter, typename ColorTable, typename... Args>
   bool operator()(DeviceAdapter device, ColorTable&& colors, Args&&... args) const
   {
-    using namespace vtkm::worklet::colorconversion;
-    TransferFunction transfer(colors->PrepareForExecution(device));
-    vtkm::worklet::DispatcherMapField<TransferFunction> dispatcher(transfer);
-    dispatcher.SetDevice(DeviceAdapter());
-    dispatcher.Invoke(std::forward<Args>(args)...);
-    return true;
-  }
-};
-
-struct map_color_table_with_samples
-{
-  template <typename DeviceAdapter, typename... Args>
-  bool operator()(DeviceAdapter,
-                  const vtkm::worklet::colorconversion::LookupTable& lookupTable,
-                  Args&&... args) const
-  {
-    using namespace vtkm::worklet::colorconversion;
-    vtkm::worklet::DispatcherMapField<LookupTable> dispatcher(lookupTable);
-    dispatcher.SetDevice(DeviceAdapter());
-    dispatcher.Invoke(std::forward<Args>(args)...);
+    vtkm::worklet::colorconversion::TransferFunction transfer(colors->PrepareForExecution(device));
+    vtkm::worklet::Invoker invoke(device);
+    invoke(transfer, std::forward<Args>(args)...);
     return true;
   }
 };
@@ -121,8 +104,9 @@ bool ColorTable::Map(const vtkm::cont::ArrayHandle<T, S>& values,
     return false;
   }
   vtkm::worklet::colorconversion::LookupTable lookupTable(samples);
-  return vtkm::cont::TryExecute(
-    detail::map_color_table_with_samples{}, lookupTable, values, samples.Samples, rgbaOut);
+  vtkm::worklet::Invoker invoke(vtkm::cont::DeviceAdapterTagAny{});
+  invoke(lookupTable, values, samples.Samples, rgbaOut);
+  return true;
 }
 //---------------------------------------------------------------------------
 template <typename T, typename S>
@@ -135,8 +119,9 @@ bool ColorTable::Map(const vtkm::cont::ArrayHandle<T, S>& values,
     return false;
   }
   vtkm::worklet::colorconversion::LookupTable lookupTable(samples);
-  return vtkm::cont::TryExecute(
-    detail::map_color_table_with_samples{}, lookupTable, values, samples.Samples, rgbOut);
+  vtkm::worklet::Invoker invoke(vtkm::cont::DeviceAdapterTagAny{});
+  invoke(lookupTable, values, samples.Samples, rgbOut);
+  return true;
 }
 //---------------------------------------------------------------------------
 template <typename T, int N, typename S>
