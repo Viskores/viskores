@@ -235,6 +235,29 @@ thread_local static vtkm::cont::RuntimeDeviceTracker runtimeDeviceTracker;
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker();
+
+struct ScopedGlobalRuntimeDeviceTracker
+{
+  vtkm::cont::RuntimeDeviceTracker SavedTracker;
+
+  VTKM_CONT ScopedGlobalRuntimeDeviceTracker()
+    : SavedTracker(vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy())
+  {
+  }
+
+  VTKM_CONT ScopedGlobalRuntimeDeviceTracker(vtkm::cont::RuntimeDeviceTracker tracker)
+    : SavedTracker(vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy())
+  {
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy(tracker);
+  }
+
+  VTKM_CONT ~ScopedGlobalRuntimeDeviceTracker()
+  {
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy(this->SavedTracker);
+  }
+
+  ScopedGlobalRuntimeDeviceTracker(const ScopedGlobalRuntimeDeviceTracker&) = delete;
+};
 }
 } // namespace vtkm::cont
 

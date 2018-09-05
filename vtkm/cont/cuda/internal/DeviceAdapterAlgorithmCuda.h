@@ -26,7 +26,6 @@
 #include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/vtkm_cont_export.h>
@@ -126,6 +125,26 @@ __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic pop
 #endif
+
+template <typename PortalType, typename OutValueType>
+struct CastPortal
+{
+  using ValueType = OutValueType;
+
+  PortalType Portal;
+
+  VTKM_CONT
+  CastPortal(const PortalType& portal)
+    : Portal(portal)
+  {
+  }
+
+  VTKM_EXEC
+  vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
+
+  VTKM_EXEC
+  ValueType Get(vtkm::Id index) const { return static_cast<OutValueType>(this->Portal.Get(index)); }
+};
 }
 } // end namespace cuda::internal
 
@@ -313,9 +332,7 @@ private:
     //The portal type and the initial value AREN'T the same type so we have
     //to a slower approach, where we wrap the input portal inside a cast
     //portal
-    using CastFunctor = vtkm::cont::internal::Cast<typename InputPortal::ValueType, T>;
-
-    vtkm::exec::internal::ArrayPortalTransform<T, InputPortal, CastFunctor> castPortal(input);
+    vtkm::cont::cuda::internal::CastPortal<InputPortal, T> castPortal(input);
 
     vtkm::exec::cuda::internal::WrappedBinaryOperator<T, BinaryFunctor> bop(binary_functor);
 
