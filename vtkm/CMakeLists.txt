@@ -36,6 +36,7 @@ set(headers
   CellTraits.h
   Flags.h
   Geometry.h
+  GhostCell.h
   Hash.h
   ImplicitFunction.h
   ListTag.h
