@@ -49,7 +49,7 @@ public:
 
   VTKM_CONT
   RemoveGhostByType(const vtkm::UInt8& val)
-    : RemoveType(~val)
+    : RemoveType(static_cast<vtkm::UInt8>(~val))
   {
   }
 
