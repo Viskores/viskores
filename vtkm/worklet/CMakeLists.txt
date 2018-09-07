@@ -67,6 +67,7 @@ set(headers
   ScatterIdentity.h
   ScatterPermutation.h
   ScatterUniform.h
+  SplitSharpEdges.h
   StableSortIndices.h
   StreamLineUniformGrid.h
   SurfaceNormals.h

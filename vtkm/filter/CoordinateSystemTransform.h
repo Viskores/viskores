@@ -84,7 +84,7 @@ template <>
 class FilterTraits<SphericalCoordinateTransform>
 {
 public:
-  //Point Elevation can only convert Float and Double Vec3 arrays
+  //CoordinateSystemTransformation can only convert Float and Double Vec3 arrays
   using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
