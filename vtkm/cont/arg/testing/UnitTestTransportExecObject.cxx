@@ -33,6 +33,13 @@
 namespace
 {
 
+struct NotAnExecutionObject
+{
+};
+struct InvalidExecutionObject : vtkm::cont::ExecutionObjectBase
+{
+};
+
 template <typename Device>
 struct ExecutionObject
 {
@@ -51,6 +58,7 @@ struct TestExecutionObject : public vtkm::cont::ExecutionObjectBase
     return object;
   }
 };
+
 template <typename Device>
 struct TestKernel : public vtkm::exec::FunctorBase
 {
@@ -83,6 +91,21 @@ void TryExecObjectTransport(Device)
 
 void TestExecObjectTransport()
 {
+  std::cout << "Checking ExecObject queries." << std::endl;
+  VTKM_TEST_ASSERT(!vtkm::cont::internal::IsExecutionObjectBase<NotAnExecutionObject>::value,
+                   "Bad query");
+  VTKM_TEST_ASSERT(vtkm::cont::internal::IsExecutionObjectBase<InvalidExecutionObject>::value,
+                   "Bad query");
+  VTKM_TEST_ASSERT(vtkm::cont::internal::IsExecutionObjectBase<TestExecutionObject>::value,
+                   "Bad query");
+
+  VTKM_TEST_ASSERT(!vtkm::cont::internal::HasPrepareForExecution<NotAnExecutionObject>::value,
+                   "Bad query");
+  VTKM_TEST_ASSERT(!vtkm::cont::internal::HasPrepareForExecution<InvalidExecutionObject>::value,
+                   "Bad query");
+  VTKM_TEST_ASSERT(vtkm::cont::internal::HasPrepareForExecution<TestExecutionObject>::value,
+                   "Bad query");
+
   std::cout << "Trying ExecObject transport with serial device." << std::endl;
   TryExecObjectTransport(vtkm::cont::DeviceAdapterTagSerial());
 }

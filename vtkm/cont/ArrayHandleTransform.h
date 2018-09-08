@@ -25,9 +25,8 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorInternal.h>
-#include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 namespace vtkm
 {
@@ -181,14 +180,17 @@ namespace cont
 namespace internal
 {
 
-template <typename ProvidedFunctorType, typename Device, typename FunctorIsExecObject>
+template <typename ProvidedFunctorType, typename FunctorIsExecContObject>
 struct TransformFunctorManagerImpl;
 
-template <typename ProvidedFunctorType, typename Device>
-struct TransformFunctorManagerImpl<ProvidedFunctorType, Device, std::false_type>
+template <typename ProvidedFunctorType>
+struct TransformFunctorManagerImpl<ProvidedFunctorType, std::false_type>
 {
+  VTKM_STATIC_ASSERT_MSG(!vtkm::cont::internal::IsExecutionObjectBase<ProvidedFunctorType>::value,
+                         "Must use an ExecutionAndControlObject instead of an ExecutionObject.");
+
+  ProvidedFunctorType Functor;
   using FunctorType = ProvidedFunctorType;
-  ProvidedFunctorType Functor;
 
   TransformFunctorManagerImpl() = default;
 
@@ -199,14 +201,23 @@ struct TransformFunctorManagerImpl<ProvidedFunctorType, Device, std::false_type>
   }
 
   VTKM_CONT
-  FunctorType GetFunctor() const { return this->Functor; }
+  ProvidedFunctorType PrepareForControl() const { return this->Functor; }
+
+  template <typename Device>
+  VTKM_CONT ProvidedFunctorType PrepareForExecution(Device) const
+  {
+    return this->Functor;
+  }
 };
 
-template <typename ProvidedFunctorType, typename Device>
-struct TransformFunctorManagerImpl<ProvidedFunctorType, Device, std::true_type>
+template <typename ProvidedFunctorType>
+struct TransformFunctorManagerImpl<ProvidedFunctorType, std::true_type>
 {
-  using FunctorType = decltype(std::declval<ProvidedFunctorType>().PrepareForExecution(Device()));
+  VTKM_IS_EXECUTION_AND_CONTROL_OBJECT(ProvidedFunctorType);
+
   ProvidedFunctorType Functor;
+  //  using FunctorType = decltype(std::declval<ProvidedFunctorType>().PrepareForControl());
+  using FunctorType = decltype(Functor.PrepareForControl());
 
   TransformFunctorManagerImpl() = default;
 
@@ -217,20 +228,28 @@ struct TransformFunctorManagerImpl<ProvidedFunctorType, Device, std::true_type>
   }
 
   VTKM_CONT
-  FunctorType GetFunctor() const { return this->Functor.PrepareForExecution(Device()); }
+  auto PrepareForControl() const -> decltype(this->Functor.PrepareForControl())
+  {
+    return this->Functor.PrepareForControl();
+  }
+
+  template <typename Device>
+  VTKM_CONT auto PrepareForExecution(Device device) const
+    -> decltype(this->Functor.PrepareForExecution(device))
+  {
+    return this->Functor.PrepareForExecution(device);
+  }
 };
 
-template <typename ProvidedFunctorType, typename Device = vtkm::cont::DeviceAdapterTagSerial>
+template <typename ProvidedFunctorType>
 struct TransformFunctorManager
   : TransformFunctorManagerImpl<
       ProvidedFunctorType,
-      Device,
-      typename std::is_base_of<vtkm::cont::ExecutionObjectBase, ProvidedFunctorType>::type>
+      typename vtkm::cont::internal::IsExecutionAndControlObjectBase<ProvidedFunctorType>::type>
 {
   using Superclass = TransformFunctorManagerImpl<
     ProvidedFunctorType,
-    Device,
-    typename std::is_base_of<vtkm::cont::ExecutionObjectBase, ProvidedFunctorType>::type>;
+    typename vtkm::cont::internal::IsExecutionAndControlObjectBase<ProvidedFunctorType>::type>;
   using FunctorType = typename Superclass::FunctorType;
 
   VTKM_CONT TransformFunctorManager() = default;
@@ -239,13 +258,6 @@ struct TransformFunctorManager
 
   VTKM_CONT TransformFunctorManager(const ProvidedFunctorType& functor)
     : Superclass(functor)
-  {
-  }
-
-  template <typename OtherDevice>
-  VTKM_CONT TransformFunctorManager(
-    const TransformFunctorManager<ProvidedFunctorType, OtherDevice>& other)
-    : Superclass(other.Functor)
   {
   }
 
@@ -312,7 +324,7 @@ public:
     VTKM_ASSERT(this->Valid);
     vtkm::cont::ScopedGlobalRuntimeDeviceTracker trackerScope;
     vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
-    return PortalConstType(this->Array.GetPortalConstControl(), this->Functor.GetFunctor());
+    return PortalConstType(this->Array.GetPortalConstControl(), this->Functor.PrepareForControl());
   }
 
   VTKM_CONT
@@ -405,8 +417,8 @@ public:
     vtkm::cont::ScopedGlobalRuntimeDeviceTracker trackerScope;
     vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     return PortalType(this->Array.GetPortalControl(),
-                      this->Functor.GetFunctor(),
-                      this->InverseFunctor.GetFunctor());
+                      this->Functor.PrepareForControl(),
+                      this->InverseFunctor.PrepareForControl());
   }
 
   VTKM_CONT
@@ -416,8 +428,8 @@ public:
     vtkm::cont::ScopedGlobalRuntimeDeviceTracker trackerScope;
     vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     return PortalConstType(this->Array.GetPortalConstControl(),
-                           this->Functor.GetFunctor(),
-                           this->InverseFunctor.GetFunctor());
+                           this->Functor.PrepareForControl(),
+                           this->InverseFunctor.PrepareForControl());
   }
 
   VTKM_CONT
@@ -470,7 +482,7 @@ class ArrayTransfer<typename StorageTagTransform<ArrayHandleType, FunctorType>::
                     Device>
 {
   using StorageTag = StorageTagTransform<ArrayHandleType, FunctorType>;
-  using FunctorManager = TransformFunctorManager<FunctorType, Device>;
+  using FunctorManager = TransformFunctorManager<FunctorType>;
 
 public:
   using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
@@ -499,7 +511,8 @@ public:
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()), this->Functor.GetFunctor());
+    return PortalConstExecution(this->Array.PrepareForInput(Device()),
+                                this->Functor.PrepareForExecution(Device()));
   }
 
   VTKM_CONT
@@ -548,8 +561,8 @@ class ArrayTransfer<
   Device>
 {
   using StorageTag = StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>;
-  using FunctorManager = TransformFunctorManager<FunctorType, Device>;
-  using InverseFunctorManager = TransformFunctorManager<InverseFunctorType, Device>;
+  using FunctorManager = TransformFunctorManager<FunctorType>;
+  using InverseFunctorManager = TransformFunctorManager<InverseFunctorType>;
 
 public:
   using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
@@ -584,24 +597,24 @@ public:
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
     return PortalConstExecution(this->Array.PrepareForInput(Device()),
-                                this->Functor.GetFunctor(),
-                                this->InverseFunctor.GetFunctor());
+                                this->Functor.PrepareForExecution(Device()),
+                                this->InverseFunctor.PrepareForExecution(Device()));
   }
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool& vtkmNotUsed(updateData))
   {
     return PortalExecution(this->Array.PrepareForInPlace(Device()),
-                           this->Functor.GetFunctor(),
-                           this->InverseFunctor.GetFunctor());
+                           this->Functor.PrepareForExecution(Device()),
+                           this->InverseFunctor.PrepareForExecution(Device()));
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
     return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device()),
-                           this->Functor.GetFunctor(),
-                           this->InverseFunctor.GetFunctor());
+                           this->Functor.PrepareForExecution(Device()),
+                           this->InverseFunctor.PrepareForExecution(Device()));
   }
 
   VTKM_CONT

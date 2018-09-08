@@ -162,7 +162,7 @@ struct VirtualTransformFunctor : VirtualTransformFunctorBase<ValueType>
 };
 
 template <typename ValueType>
-struct TransformExecObject : public vtkm::cont::ExecutionObjectBase
+struct TransformExecObject : public vtkm::cont::ExecutionAndControlObjectBase
 {
   vtkm::cont::VirtualObjectHandle<VirtualTransformFunctorBase<ValueType>> VirtualFunctor;
 
@@ -178,15 +178,14 @@ struct TransformExecObject : public vtkm::cont::ExecutionObjectBase
     this->VirtualFunctor.Reset(new VirtualTransformFunctor<ValueType, FunctorType>(functor));
   }
 
-  template <typename DeviceAdapterTag>
-  struct ExecutionObject
+  struct FunctorWrapper
   {
     const VirtualTransformFunctorBase<ValueType>* FunctorPointer;
 
-    ExecutionObject() = default;
+    FunctorWrapper() = default;
 
     VTKM_CONT
-    ExecutionObject(const VirtualTransformFunctorBase<ValueType>* functorPointer)
+    FunctorWrapper(const VirtualTransformFunctorBase<ValueType>* functorPointer)
       : FunctorPointer(functorPointer)
     {
     }
@@ -199,9 +198,14 @@ struct TransformExecObject : public vtkm::cont::ExecutionObjectBase
   };
 
   template <typename DeviceAdapterTag>
-  VTKM_CONT ExecutionObject<DeviceAdapterTag> PrepareForExecution(DeviceAdapterTag device) const
+  VTKM_CONT FunctorWrapper PrepareForExecution(DeviceAdapterTag device) const
   {
-    return ExecutionObject<DeviceAdapterTag>(this->VirtualFunctor.PrepareForExecution(device));
+    return FunctorWrapper(this->VirtualFunctor.PrepareForExecution(device));
+  }
+
+  VTKM_CONT FunctorWrapper PrepareForControl() const
+  {
+    return FunctorWrapper(this->VirtualFunctor.Get());
   }
 };
 }

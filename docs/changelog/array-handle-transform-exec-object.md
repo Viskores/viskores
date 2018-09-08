@@ -12,8 +12,9 @@ might be that you need some lookup tables. Another might be you want to
 support a virtual object, which has to be initialized for a particular
 device. The standard way to implement this in VTK-m is to create an
 "executive object." This actually means that we create a wrapper around
-executive objects that inherits from `vtkm::cont::ExecutionObjectBase` that
-contains a `PrepareForExecution` method.
+executive objects that inherits from
+`vtkm::cont::ExecutionAndControlObjectBase` that contains a
+`PrepareForExecution` method and a `PrepareForControl` method.
 
 As an example, consider the use case of a special `ArrayHandle` that takes
 the value in one array and returns the index of that value in another
@@ -56,12 +57,14 @@ struct FindValueFunctor
 
 Simple enough, except that the type of `ArrayPortalType` depends on what
 device the functor runs on (not to mention its memory might need to be
-moved to different hardware). We can now solve this problem by creating an
-execution object to set this up for a device.
+moved to different hardware). We can now solve this problem by creating a
+functor objecgt set this up for a device. `ArrayHandle`s also need to be
+able to provide portals that run in the control environment, and for that
+we need a special version of the functor for the control environment.
 
 ``` cpp
 template <typename ArrayHandleType>
-struct FindValueExecutionObject : vtkm::cont::ExecutionObjectBase
+struct FindValueExecutionObject : vtkm::cont::ExecutionAndControlObjectBase
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
   
@@ -82,6 +85,16 @@ struct FindValueExecutionObject : vtkm::cont::ExecutionObjectBase
 	  FindValueFunctor<decltype(std::declval<FunctorType>()(Device()))>
 
     return FunctorType(this->SortedArray.PrepareForInput(device));
+  }
+  
+  VTKM_CONT
+  FundValueFunctor<typename ArrayHandleType::PortalConstControl>
+  PrepareForControl()
+  {
+    using FunctorType =
+	  FindValueFunctor<typename ArrayHandleType::PortalConstControl>
+	
+	return FunctorType(this->SortedArray.GetPortalConstControl());
   }
 }
 ```

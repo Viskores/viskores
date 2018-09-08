@@ -22,8 +22,6 @@
 
 #include <vtkm/exec/arg/testing/ThreadIndicesTesting.h>
 
-#include <vtkm/cont/ExecutionObjectBase.h>
-
 #include <vtkm/testing/Testing.h>
 
 #define EXPECTED_NUMBER 67
@@ -31,7 +29,7 @@
 namespace
 {
 
-struct TestExecutionObject : public vtkm::cont::ExecutionObjectBase
+struct TestExecutionObject
 {
   TestExecutionObject()
     : Number(static_cast<vtkm::Int32>(0xDEADDEAD))
