@@ -65,7 +65,6 @@
 
 #include <cstdlib>
 #include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_ppp2/mesh_dem_meshtypes/freudenthal_2D/ExecutionObject_MeshStructure.h>
 
 #include <vtkm/worklet/contourtree_ppp2/Mesh_DEM_Triangulation.h>
 #include <vtkm/worklet/contourtree_ppp2/mesh_dem_meshtypes/freudenthal_2D/ExecutionObject_MeshStructure.h>
@@ -83,10 +82,9 @@ namespace worklet
 namespace contourtree_ppp2
 {
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-class Mesh_DEM_Triangulation_2D_Freudenthal
-  : public Mesh_DEM_Triangulation_2D<T, StorageType, DeviceAdapter>,
-    public vtkm::cont::ExecutionObjectBase
+template <typename T, typename StorageType>
+class Mesh_DEM_Triangulation_2D_Freudenthal : public Mesh_DEM_Triangulation_2D<T, StorageType>,
+                                              public vtkm::cont::ExecutionObjectBase
 { // class Mesh_DEM_Triangulation
 public:
   // Constants and case tables
@@ -106,29 +104,29 @@ private:
 };                // class Mesh_DEM_Triangulation
 
 // creates input mesh
-template <typename T, typename StorageType, typename DeviceAdapter>
-Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType, DeviceAdapter>::
-  Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols)
-  : Mesh_DEM_Triangulation_2D<T, StorageType, DeviceAdapter>(nrows, ncols)
+template <typename T, typename StorageType>
+Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_2D_Freudenthal(
+  vtkm::Id nrows,
+  vtkm::Id ncols)
+  : Mesh_DEM_Triangulation_2D<T, StorageType>(nrows, ncols)
 
 {
   edgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
     m2d_freudenthal_inc_ns::edgeBoundaryDetectionMasks, m2d_freudenthal_inc_ns::N_INCIDENT_EDGES);
 }
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType, DeviceAdapter>::
-  setPrepareForExecutionBehavior(bool getMax)
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::setPrepareForExecutionBehavior(
+  bool getMax)
 {
   this->useGetMax = getMax;
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 template <typename DeviceTag>
 mesh_dem_2d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>
-  Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType, DeviceAdapter>::PrepareForExecution(
-    DeviceTag) const
+  Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
 {
   return mesh_dem_2d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>(
     this->nRows,

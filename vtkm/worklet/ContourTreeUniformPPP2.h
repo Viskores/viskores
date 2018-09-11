@@ -63,6 +63,7 @@
 #ifndef vtk_m_worklet_ContourTreeUniformPPP2_h
 #define vtk_m_worklet_ContourTreeUniformPPP2_h
 
+
 #include <utility>
 #include <vector>
 
@@ -118,8 +119,7 @@ public:
     if (nSlices == 1)
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_2D_Freudenthal<FieldType, StorageType, DeviceAdapter> mesh(nRows,
-                                                                                        nCols);
+      Mesh_DEM_Triangulation_2D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols);
       // Run the contour tree on the mesh
       return RunContourTree(fieldArray,
                             timings,
@@ -137,8 +137,7 @@ public:
     else if (useMarchingCubes)
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_3D_MarchingCubes<FieldType, StorageType, DeviceAdapter> mesh(
-        nRows, nCols, nSlices);
+      Mesh_DEM_Triangulation_3D_MarchingCubes<FieldType, StorageType> mesh(nRows, nCols, nSlices);
       // Run the contour tree on the mesh
       return RunContourTree(fieldArray,
                             timings,
@@ -156,8 +155,7 @@ public:
     else
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_3D_Freudenthal<FieldType, StorageType, DeviceAdapter> mesh(
-        nRows, nCols, nSlices);
+      Mesh_DEM_Triangulation_3D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols, nSlices);
       // Run the contour tree on the mesh
       return RunContourTree(fieldArray,
                             timings,
@@ -197,9 +195,6 @@ private:
     // Start the timer
     vtkm::cont::Timer<DeviceAdapter> totalTime;
 
-    // DeviceAdapter is passed only to be available in template but is not used
-    (void)device;
-
     // Stage 1: Load the data into the mesh. This is done in the Run() method above and accesible
     //          here via the mesh parameter. The actual data load is perfomed outside of the
     //          worklet in the example contour tree app (or whoever uses the worklet)
@@ -207,12 +202,12 @@ private:
     // Stage 2 : Sort the data on the mesh to initialize sortIndex & indexReverse on the mesh
     // Start the timer for the mesh sort
     vtkm::cont::Timer<DeviceAdapter> timer;
-    mesh.SortData(fieldArray);
+    mesh.SortData(device, fieldArray);
     timings.push_back(std::pair<std::string, vtkm::Float64>("Sort Data", timer.GetElapsedTime()));
     timer.Reset();
 
     // Stage 3: Assign every mesh vertex to a peak
-    MeshExtrema<DeviceAdapter> extrema(mesh.nVertices);
+    MeshExtrema extrema(device, mesh.nVertices);
     extrema.SetStarts(mesh, true);
     extrema.BuildRegularChains(true);
     timings.push_back(
@@ -220,11 +215,12 @@ private:
     timer.Reset();
 
     // Stage 4: Identify join saddles & construct Active Join Graph
-    MergeTree<DeviceAdapter> joinTree(mesh.nVertices, true);
-    ActiveGraph<DeviceAdapter> joinGraph(true);
+    MergeTree joinTree(device, mesh.nVertices, true);
+    ActiveGraph joinGraph(device, true);
     joinGraph.Initialise(mesh, extrema);
     timings.push_back(std::pair<std::string, vtkm::Float64>("Join Tree Initialize Active Graph",
                                                             timer.GetElapsedTime()));
+
 #ifdef DEBUG_PRINT
     joinGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
     joinGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
@@ -249,8 +245,8 @@ private:
     timer.Reset();
 
     // Stage 7:     Identify split saddles & construct Active Split Graph
-    MergeTree<DeviceAdapter> splitTree(mesh.nVertices, false);
-    ActiveGraph<DeviceAdapter> splitGraph(false);
+    MergeTree splitTree(device, mesh.nVertices, false);
+    ActiveGraph splitGraph(device, false);
     splitGraph.Initialise(mesh, extrema);
     timings.push_back(std::pair<std::string, vtkm::Float64>("Split Tree Initialize Active Graph",
                                                             timer.GetElapsedTime()));
@@ -272,8 +268,8 @@ private:
     timer.Reset();
 
     // Stage 9: Join & Split Tree are Augmented, then combined to construct Contour Tree
-    contourTree.Init<DeviceAdapter>(mesh.nVertices);
-    ContourTreeMaker<DeviceAdapter> treeMaker(contourTree, joinTree, splitTree);
+    contourTree.Init(device, mesh.nVertices);
+    ContourTreeMaker treeMaker(device, contourTree, joinTree, splitTree);
     // 9.1 First we compute the hyper- and super- structure
     treeMaker.ComputeHyperAndSuperStructure();
     timings.push_back(std::pair<std::string, vtkm::Float64>(

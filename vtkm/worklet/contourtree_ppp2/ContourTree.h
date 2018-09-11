@@ -75,8 +75,8 @@
 //VTKM includes
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 namespace vtkm
 {
@@ -164,8 +164,7 @@ public:
   inline ContourTree();
 
   // initialises contour tree arrays - rest is done by another class
-  template <typename DeviceAdapter>
-  inline void Init(vtkm::Id dataSize);
+  inline void Init(vtkm::cont::DeviceAdapterId device, vtkm::Id dataSize);
 
   // debug routine
   inline void DebugPrint(const char* message, const char* fileName, long lineNum);
@@ -192,12 +191,11 @@ ContourTree::ContourTree()
 
 
 // initialises contour tree arrays - rest is done by another class
-template <typename DeviceAdapter>
-void ContourTree::Init(vtkm::Id dataSize)
+void ContourTree::Init(vtkm::cont::DeviceAdapterId device, vtkm::Id dataSize)
 { // Init()
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT, dataSize);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, arcs);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, superparents);
+  vtkm::cont::Algorithm::Copy(device, noSuchElementArray, arcs);
+  vtkm::cont::Algorithm::Copy(device, noSuchElementArray, superparents);
 } // Init()
 
 

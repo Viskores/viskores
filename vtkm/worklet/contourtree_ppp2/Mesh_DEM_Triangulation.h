@@ -86,7 +86,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/Invoker.h>
 
 #include <vtkm/worklet/contourtree_ppp2/PrintVectors.h>
 #include <vtkm/worklet/contourtree_ppp2/Types.h>
@@ -104,12 +104,10 @@ namespace worklet
 namespace contourtree_ppp2
 {
 
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 class Mesh_DEM_Triangulation
 {
 public:
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
-
   // common mesh size parameters
   vtkm::Id nVertices, nLogSteps;
 
@@ -132,7 +130,8 @@ public:
   }
 
   // sorts the data and initializes the sortIndex & indexReverse
-  void SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values);
+  void SortData(vtkm::cont::DeviceAdapterId device,
+                const vtkm::cont::ArrayHandle<T, StorageType>& values);
 
   //routine that dumps out the contents of the mesh
   void DebugPrint(const char* message, const char* fileName, long lineNum);
@@ -142,8 +141,8 @@ protected:
   virtual void DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values) = 0;
 }; // class Mesh_DEM_Triangulation
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-class Mesh_DEM_Triangulation_2D : public Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>
+template <typename T, typename StorageType>
+class Mesh_DEM_Triangulation_2D : public Mesh_DEM_Triangulation<T, StorageType>
 {
 public:
   // 2D mesh size parameters
@@ -154,7 +153,7 @@ public:
 
   // empty constructor
   Mesh_DEM_Triangulation_2D()
-    : Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>()
+    : Mesh_DEM_Triangulation<T, StorageType>()
     , nRows(0)
     , nCols(0)
   {
@@ -163,7 +162,7 @@ public:
 
   // base constructor
   Mesh_DEM_Triangulation_2D(vtkm::Id nrows, vtkm::Id ncols)
-    : Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>()
+    : Mesh_DEM_Triangulation<T, StorageType>()
     , nRows(nrows)
     , nCols(ncols)
   {
@@ -181,8 +180,8 @@ protected:
   virtual void DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values);
 }; // class Mesh_DEM_Triangulation_2D
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-class Mesh_DEM_Triangulation_3D : public Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>
+template <typename T, typename StorageType>
+class Mesh_DEM_Triangulation_3D : public Mesh_DEM_Triangulation<T, StorageType>
 {
 public:
   // 2D mesh size parameters
@@ -193,7 +192,7 @@ public:
 
   // empty constructor
   Mesh_DEM_Triangulation_3D()
-    : Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>()
+    : Mesh_DEM_Triangulation<T, StorageType>()
     , nRows(0)
     , nCols(0)
     , nSlices(0)
@@ -203,7 +202,7 @@ public:
 
   // base constructor
   Mesh_DEM_Triangulation_3D(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices)
-    : Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>()
+    : Mesh_DEM_Triangulation<T, StorageType>()
     , nRows(nrows)
     , nCols(ncols)
     , nSlices(nslices)
@@ -223,9 +222,33 @@ protected:
 }; // class Mesh_DEM_Triangulation_3D
 
 
+namespace detail
+{
+struct SortBySimplicityIndex
+{
+  template <typename DeviceAdapter, typename T, typename S, typename ToSortHandle>
+  bool operator()(DeviceAdapter device,
+                  vtkm::Id nVertices,
+                  const vtkm::cont::ArrayHandle<T, S>& values,
+                  ToSortHandle& sortOrder) const
+  {
+    // initialize the sort order
+    vtkm::cont::ArrayHandleIndex initVertexIds(
+      nVertices); // create linear sequence of numbers 0, 1, .. nVertices
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(initVertexIds, sortOrder);
+
+    mesh_dem_inc::SimulatedSimplicityIndexComparator<T, S, DeviceAdapter> valueComparator(
+      values.PrepareForInput(device));
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(sortOrder, valueComparator);
+    return true;
+  }
+};
+}
+
 // sorts the data and initialises the sortIndices & sortOrder
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>::SortData(
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation<T, StorageType>::SortData(
+  vtkm::cont::DeviceAdapterId device,
   const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
   // Define namespace alias for mesh dem worklets
@@ -242,24 +265,17 @@ void Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>::SortData(
   sortOrder.Allocate(nVertices);
   sortIndices.Allocate(nVertices);
 
-  // initialize the sort order
-  vtkm::cont::ArrayHandleIndex initVertexIds(
-    nVertices); // create linear sequence of numbers 0, 1, .. nVertices
-  DeviceAlgorithm::Copy(initVertexIds, sortOrder);
-
   // now sort the sort order vector by the values, i.e,. initialize the sortOrder member variable
-  mesh_dem_worklets::SimulatedSimplicityIndexComparator<T, StorageType, DeviceAdapter>
-    valueComparator(values.PrepareForInput(DeviceAdapter()));
-  DeviceAlgorithm::Sort(sortOrder, valueComparator);
+  vtkm::cont::TryExecuteOnDevice(
+    device, detail::SortBySimplicityIndex{}, nVertices, values, sortOrder);
 
   // now set the index lookup, i.e., initialize the sortIndices member variable
   // In serial this would be
   //  for (indexType vertex = 0; vertex < nVertices; vertex++)
   //            sortIndices[sortOrder[vertex]] = vertex;
   mesh_dem_worklets::SortIndices sortIndicesWorklet;
-  vtkm::worklet::DispatcherMapField<mesh_dem_worklets::SortIndices, DeviceAdapter>
-    sortIndicesDispatcher(sortIndicesWorklet);
-  sortIndicesDispatcher.Invoke(sortOrder, sortIndices);
+  vtkm::worklet::Invoker invoke(device);
+  invoke(sortIndicesWorklet, sortOrder, sortIndices);
 
   // Debug print statement
   DebugPrint("Data Sorted", __FILE__, __LINE__);
@@ -267,10 +283,10 @@ void Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>::SortData(
 } // SortData()
 
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>::DebugPrint(const char* message,
-                                                                       const char* fileName,
-                                                                       long lineNum)
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation<T, StorageType>::DebugPrint(const char* message,
+                                                        const char* fileName,
+                                                        long lineNum)
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "------------------------------------------------------" << std::endl;
@@ -298,8 +314,8 @@ void Mesh_DEM_Triangulation<T, StorageType, DeviceAdapter>::DebugPrint(const cha
 } // DebugPrint()
 
 // print mesh extends for 2D mesh
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh_DEM_Triangulation_2D<T, StorageType, DeviceAdapter>::DebugPrintExtends()
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation_2D<T, StorageType>::DebugPrintExtends()
 {
   printLabel("nRows");
   printIndexType(nRows);
@@ -310,8 +326,8 @@ void Mesh_DEM_Triangulation_2D<T, StorageType, DeviceAdapter>::DebugPrintExtends
 } // DebugPrintExtends for 2D
 
 // print mesh extends for 3D mesh
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh_DEM_Triangulation_3D<T, StorageType, DeviceAdapter>::DebugPrintExtends()
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintExtends()
 {
   printLabel("nRows");
   printIndexType(nRows);
@@ -324,8 +340,8 @@ void Mesh_DEM_Triangulation_3D<T, StorageType, DeviceAdapter>::DebugPrintExtends
   std::cout << std::endl;
 }
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh_DEM_Triangulation_2D<T, StorageType, DeviceAdapter>::DebugPrintValues(
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation_2D<T, StorageType>::DebugPrintValues(
   const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
 #ifdef DEBUG_PRINT
@@ -341,8 +357,8 @@ void Mesh_DEM_Triangulation_2D<T, StorageType, DeviceAdapter>::DebugPrintValues(
 #endif
 } // DebugPrintValues
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh_DEM_Triangulation_3D<T, StorageType, DeviceAdapter>::DebugPrintValues(
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintValues(
   const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
 #ifdef DEBUG_PRINT

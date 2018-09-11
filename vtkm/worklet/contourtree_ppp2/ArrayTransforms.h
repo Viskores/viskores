@@ -65,10 +65,10 @@
 #define vtkm_worklet_contourtree_ppp2_array_transforms_h
 
 // global libraries
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 // local includes
 #include "Types.h"
@@ -83,10 +83,12 @@ namespace contourtree_ppp2
 
 
 // permute routines
-template <typename ValueType, typename ArrayType, typename DeviceAdapter>
-void permuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& output)
+template <typename ValueType, typename ArrayType>
+void permuteArray(vtkm::cont::DeviceAdapterId device,
+                  const ArrayType& input,
+                  IdArrayType& permute,
+                  ArrayType& output)
 { // permuteValues()
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
   typedef vtkm::cont::ArrayHandleTransform<IdArrayType, MaskedIndexFunctor<ValueType>>
     transform_type;
   typedef vtkm::cont::ArrayHandlePermutation<transform_type, ArrayType> permute_type;
@@ -116,7 +118,7 @@ void permuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& outpu
   // fancy vtkm array so that we do not actually copy any data here
   permute_type permutedInput(maskedPermuteIndex, input);
   // Finally, copy the permuted values to the output array
-  DeviceAlgorithm::Copy(permutedInput, output);
+  vtkm::cont::Algorithm::Copy(device, permutedInput, output);
 } // permuteValues()
 
 // permuteValues from the orignial PPP2 code is equivilant to permuteArray<T, vtkm::cont:ArrayHandle<T, StorageType>, DeviceAdaptor>   and has therefore been removed

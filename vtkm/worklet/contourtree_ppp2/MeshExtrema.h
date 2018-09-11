@@ -68,9 +68,9 @@
 // local includes
 #include "PrintVectors.h"
 #include "Types.h"
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/contourtree_ppp2/PointerDoubling.h>
 #include <vtkm/worklet/contourtree_ppp2/meshextrema/SetStarts.h>
 
@@ -86,10 +86,10 @@ namespace worklet
 namespace contourtree_ppp2
 {
 
-template <typename DeviceAdapter>
 class MeshExtrema
 { // MeshExtrema
 public:
+  vtkm::worklet::Invoker Invoke;
   // arrays for peaks & pits
   IdArrayType peaks;
   IdArrayType pits;
@@ -98,7 +98,7 @@ public:
 
   // constructor
   VTKM_CONT
-  MeshExtrema(vtkm::Id meshSize);
+  MeshExtrema(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize);
 
   // routine to initialise the array before chaining
   template <class MeshType>
@@ -115,9 +115,9 @@ public:
 }; // MeshExtrema
 
 
-template <typename DeviceAdapter>
-MeshExtrema<DeviceAdapter>::MeshExtrema(vtkm::Id meshSize)
-  : peaks()
+MeshExtrema::MeshExtrema(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize)
+  : Invoke(device)
+  , peaks()
   , pits()
   , nVertices(meshSize)
   , nLogSteps(0)
@@ -132,13 +132,12 @@ MeshExtrema<DeviceAdapter>::MeshExtrema(vtkm::Id meshSize)
   pits.Allocate(nVertices);
   // TODO Check if we really need to set the peaks and pits to zero or whether it is enough to alloate them
   vtkm::cont::ArrayHandleConstant<vtkm::Id> constZeroArray(0, nVertices);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(constZeroArray, peaks);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(constZeroArray, pits);
+  vtkm::cont::Algorithm::Copy(device, constZeroArray, peaks);
+  vtkm::cont::Algorithm::Copy(device, constZeroArray, pits);
 } // MeshExtrema
 
 
-template <typename DeviceAdapter>
-void MeshExtrema<DeviceAdapter>::BuildRegularChains(bool isMaximal)
+void MeshExtrema::BuildRegularChains(bool isMaximal)
 { // BuildRegularChains()
   // Create vertex index array -- note, this is a fancy vtk-m array, i.e, the full array
   // is not actually allocated but the array only acts like a sequence of numbers
@@ -147,43 +146,37 @@ void MeshExtrema<DeviceAdapter>::BuildRegularChains(bool isMaximal)
 
   // Create the PointerDoubling worklet and corresponding dispatcher
   PointerDoubling pointerDoubler;
-  vtkm::worklet::DispatcherMapField<PointerDoubling, DeviceAdapter> pointerDoublerDispatcher(
-    pointerDoubler);
 
   // Iterate to perform pointer-doubling to build chains to extrema (i.e., maxima or minima)
   // depending on whether we are computing a JoinTree or a SplitTree
   for (vtkm::Id logStep = 0; logStep < this->nLogSteps; logStep++)
   {
-    pointerDoublerDispatcher.Invoke(
-      vertexIndexArray, // input
-      extrema);         // output. Update whole extrema array during pointer doubling
+    this->Invoke(pointerDoubler,
+                 vertexIndexArray, // input
+                 extrema);         // output. Update whole extrema array during pointer doubling
   }
   DebugPrint("Regular Chains Built", __FILE__, __LINE__);
 } // BuildRegularChains()
 
-template <typename DeviceAdapter>
 template <class MeshType>
-void MeshExtrema<DeviceAdapter>::SetStarts(MeshType& mesh, bool isMaximal)
+void MeshExtrema::SetStarts(MeshType& mesh, bool isMaximal)
 {
   mesh.setPrepareForExecutionBehavior(isMaximal);
   mesh_extrema_inc_ns::SetStarts setStartsWorklet;
-  vtkm::worklet::DispatcherMapField<mesh_extrema_inc_ns::SetStarts, DeviceAdapter>
-    setStartsDispatcher(setStartsWorklet);
   if (isMaximal)
   {
-    setStartsDispatcher.Invoke(mesh.sortIndices, mesh, peaks);
+    this->Invoke(setStartsWorklet, mesh.sortIndices, mesh, peaks);
   }
   else
   {
-    setStartsDispatcher.Invoke(mesh.sortIndices, mesh, pits);
+    this->Invoke(setStartsWorklet, mesh.sortIndices, mesh, pits);
   }
   DebugPrint("Regular Starts Set", __FILE__, __LINE__);
 }
 
 
 // debug routine
-template <typename DeviceAdapter>
-void MeshExtrema<DeviceAdapter>::DebugPrint(const char* message, const char* fileName, long lineNum)
+void MeshExtrema::DebugPrint(const char* message, const char* fileName, long lineNum)
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "---------------------------" << std::endl;

@@ -64,7 +64,6 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/worklet/ContourTreeUniformPPP2.h>
-#include <vtkm/worklet/contourtree_ppp2/ProcessContourTree.h>
 
 namespace vtkm
 {

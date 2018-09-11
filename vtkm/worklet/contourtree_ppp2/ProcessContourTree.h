@@ -682,9 +682,13 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, chainToBranch);
   auto chainToBranchPortal = chainToBranch.GetPortalControl();
   for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
+  {
     // test whether the supernode points to itself to find the top ends
     if (maskedIndex(whichBranchPortal.Get(supernode)) == supernode)
+    {
       chainToBranchPortal.Set(supernode, nBranches++);
+    }
+  }
 
   // V B.  Create the arrays for the branches
   auto noSuchElementArrayNBranches =
@@ -719,20 +723,21 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   supernodeSorter.Allocate(nSupernodes);
   auto supernodeSorterPortal = supernodeSorter.GetPortalControl();
   for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
+  {
     supernodeSorterPortal.Set(supernode, supernode);
+  }
 
   DeviceAlgorithm::Sort(supernodeSorter,
                         process_contourtree_inc_ns::SuperNodeBranchComparator<DeviceAdapter>(
                           whichBranch, contourTree.supernodes));
   IdArrayType permutedBranches;
   permutedBranches.Allocate(nSupernodes);
-  permuteArray<vtkm::Id, IdArrayType, DeviceAdapter>(
-    whichBranch, supernodeSorter, permutedBranches);
+  permuteArray<vtkm::Id>(DeviceAdapter{}, whichBranch, supernodeSorter, permutedBranches);
 
   IdArrayType permutedRegularID;
   permutedRegularID.Allocate(nSupernodes);
-  permuteArray<vtkm::Id, IdArrayType, DeviceAdapter>(
-    contourTree.supernodes, supernodeSorter, permutedRegularID);
+  permuteArray<vtkm::Id>(
+    DeviceAdapter{}, contourTree.supernodes, supernodeSorter, permutedRegularID);
 
 #ifdef DEBUG_PRINT
   std::cout << "VI A. Sorted into Branches" << std::endl;
@@ -744,8 +749,10 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
 
   // VI B. And reset the whichBranch to use the new branch IDs
   for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
+  {
     whichBranchPortal.Set(supernode,
                           chainToBranchPortal.Get(maskedIndex(whichBranchPortal.Get(supernode))));
+  }
 
   // VI C.  For each segment, the highest element sets up the upper end, the lowest element sets the low end
   for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)

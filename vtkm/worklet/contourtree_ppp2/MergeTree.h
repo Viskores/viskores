@@ -72,8 +72,8 @@
 
 //VTKM includes
 #include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 namespace vtkm
 {
@@ -82,7 +82,6 @@ namespace worklet
 namespace contourtree_ppp2
 {
 
-template <typename DeviceAdapter>
 class MergeTree
 { // class MergeTree
 public:
@@ -129,7 +128,7 @@ public:
   // ROUTINES
 
   // creates merge tree (empty)
-  MergeTree(vtkm::Id meshSize, bool IsJoinTree);
+  MergeTree(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize, bool IsJoinTree);
 
   // debug routine
   void DebugPrint(const char* message, const char* fileName, long lineNum);
@@ -146,8 +145,7 @@ public:
 
 
 // creates merge tree (empty)
-template <typename DeviceAdapter>
-MergeTree<DeviceAdapter>::MergeTree(vtkm::Id meshSize, bool IsJoinTree)
+MergeTree::MergeTree(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize, bool IsJoinTree)
   : isJoinTree(IsJoinTree)
   , supernodes()
   , superarcs()
@@ -157,23 +155,19 @@ MergeTree<DeviceAdapter>::MergeTree(vtkm::Id meshSize, bool IsJoinTree)
   , firstSuperchild()
 { // MergeTree()
   // Allocate the arcs array
-  arcs.Allocate(meshSize);
   // TODO it should be sufficient to just allocate arcs without initializing it with 0s
   vtkm::cont::ArrayHandleConstant<vtkm::Id> meshSizeNullArray(0, meshSize);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(meshSizeNullArray, arcs);
+  vtkm::cont::Algorithm::Copy(device, meshSizeNullArray, arcs);
 
   // Initialize the superparents with NO_SUCH_ELEMENT
-  superparents.Allocate(meshSize);
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT, meshSize);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(noSuchElementArray, superparents);
-
+  vtkm::cont::Algorithm::Copy(device, noSuchElementArray, superparents);
 
 } // MergeTree()
 
 
 // debug routine
-template <typename DeviceAdapter>
-void MergeTree<DeviceAdapter>::DebugPrint(const char* message, const char* fileName, long lineNum)
+void MergeTree::DebugPrint(const char* message, const char* fileName, long lineNum)
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "---------------------------" << std::endl;
@@ -207,12 +201,11 @@ void MergeTree<DeviceAdapter>::DebugPrint(const char* message, const char* fileN
 } // DebugPrint()
 
 
-template <typename DeviceAdapter>
 template <typename MeshType>
-void MergeTree<DeviceAdapter>::DebugPrintTree(const char* message,
-                                              const char* fileName,
-                                              long lineNum,
-                                              const MeshType& mesh)
+void MergeTree::DebugPrintTree(const char* message,
+                               const char* fileName,
+                               long lineNum,
+                               const MeshType& mesh)
 { //PrintMergeTree()
 #ifdef DEBUG_PRINT
   std::cout << "---------------------------" << std::endl;

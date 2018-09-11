@@ -84,10 +84,9 @@ namespace worklet
 namespace contourtree_ppp2
 {
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-class Mesh_DEM_Triangulation_3D_Freudenthal
-  : public Mesh_DEM_Triangulation_3D<T, StorageType, DeviceAdapter>,
-    public vtkm::cont::ExecutionObjectBase
+template <typename T, typename StorageType>
+class Mesh_DEM_Triangulation_3D_Freudenthal : public Mesh_DEM_Triangulation_3D<T, StorageType>,
+                                              public vtkm::cont::ExecutionObjectBase
 { // class Mesh_DEM_Triangulation
 public:
   // Constants and case tables
@@ -109,10 +108,12 @@ private:
 };                // class Mesh_DEM_Triangulation
 
 // creates input mesh
-template <typename T, typename StorageType, typename DeviceAdapter>
-Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType, DeviceAdapter>::
-  Mesh_DEM_Triangulation_3D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices)
-  : Mesh_DEM_Triangulation_3D<T, StorageType, DeviceAdapter>(nrows, ncols, nslices)
+template <typename T, typename StorageType>
+Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_3D_Freudenthal(
+  vtkm::Id nrows,
+  vtkm::Id ncols,
+  vtkm::Id nslices)
+  : Mesh_DEM_Triangulation_3D<T, StorageType>(nrows, ncols, nslices)
 
 {
   // Initialize the case tables in vtkm
@@ -125,19 +126,18 @@ Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType, DeviceAdapter>::
 }
 
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType, DeviceAdapter>::
-  setPrepareForExecutionBehavior(bool getMax)
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::setPrepareForExecutionBehavior(
+  bool getMax)
 {
   this->useGetMax = getMax;
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 template <typename DeviceTag>
 mesh_dem_3d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>
-  Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType, DeviceAdapter>::PrepareForExecution(
-    DeviceTag) const
+  Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
 {
   return mesh_dem_3d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>(
     this->nRows,
