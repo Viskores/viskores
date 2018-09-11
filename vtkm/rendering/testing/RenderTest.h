@@ -55,8 +55,11 @@ inline void SetCamera<vtkm::rendering::View3D>(vtkm::rendering::Camera& camera,
                                                const vtkm::Bounds& coordBounds,
                                                const vtkm::cont::Field&)
 {
+  vtkm::Bounds b = coordBounds;
+  b.Z.Min = 0;
+  b.Z.Max = 4;
   camera = vtkm::rendering::Camera();
-  camera.ResetToBounds(coordBounds);
+  camera.ResetToBounds(b);
   camera.Azimuth(static_cast<vtkm::Float32>(45.0));
   camera.Elevation(static_cast<vtkm::Float32>(45.0));
 }
@@ -102,6 +105,36 @@ void Render(const vtkm::cont::DataSet& ds,
             const std::string& outputFile)
 {
   MapperType mapper;
+  CanvasType canvas(512, 512);
+  vtkm::rendering::Scene scene;
+
+  scene.AddActor(vtkm::rendering::Actor(
+    ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm), colorTable));
+  vtkm::rendering::Camera camera;
+  SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fieldNm));
+  vtkm::rendering::Color background(1.0f, 1.0f, 1.0f, 1.0f);
+  vtkm::rendering::Color foreground(0.0f, 0.0f, 0.0f, 1.0f);
+  ViewType view(scene, mapper, canvas, camera, background, foreground);
+
+  // Print the title
+  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+    new vtkm::rendering::TextAnnotationScreen("Test Plot",
+                                              vtkm::rendering::Color(1, 1, 1, 1),
+                                              .075f,
+                                              vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
+                                              0.f);
+  view.AddAnnotation(titleAnnotation);
+  Render<MapperType, CanvasType, ViewType>(view, outputFile);
+}
+
+// A render test that allows for testing different mapper params
+template <typename MapperType, typename CanvasType, typename ViewType>
+void Render(MapperType& mapper,
+            const vtkm::cont::DataSet& ds,
+            const std::string& fieldNm,
+            const vtkm::cont::ColorTable& colorTable,
+            const std::string& outputFile)
+{
   CanvasType canvas(512, 512);
   vtkm::rendering::Scene scene;
 

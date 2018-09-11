@@ -21,7 +21,7 @@
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/ConnectivityProxy.h>
 #include <vtkm/rendering/Mapper.h>
-#include <vtkm/rendering/raytracing/ConnectivityTracerFactory.h>
+#include <vtkm/rendering/raytracing/ConnectivityTracer.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
 
@@ -34,9 +34,9 @@ struct ConnectivityProxy::InternalsType
 {
 protected:
   using ColorMapType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
-  using BaseType = vtkm::rendering::raytracing::ConnectivityBase;
+  using TracerType = vtkm::rendering::raytracing::ConnectivityTracer;
 
-  BaseType* Tracer;
+  TracerType Tracer;
   vtkm::cont::Field ScalarField;
   vtkm::cont::Field EmissionField;
   vtkm::cont::DynamicCellSet Cells;
@@ -47,29 +47,6 @@ protected:
   vtkm::cont::DataSet Dataset;
   vtkm::Range ScalarRange;
   bool CompositeBackground;
-
-  struct BoundsFunctor
-  {
-    vtkm::rendering::ConnectivityProxy::InternalsType* Internals;
-    const vtkm::cont::CoordinateSystem& Coordinates;
-
-    VTKM_CONT
-    BoundsFunctor(vtkm::rendering::ConnectivityProxy::InternalsType* self,
-                  const vtkm::cont::CoordinateSystem& coordinates)
-      : Internals(self)
-      , Coordinates(coordinates)
-    {
-    }
-
-    template <typename Device>
-    VTKM_CONT bool operator()(Device)
-    {
-      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-      Internals->SpatialBounds = Internals->Coords.GetBounds();
-      return true;
-    }
-  };
 
 public:
   InternalsType(vtkm::cont::DataSet& dataSet)
@@ -87,11 +64,9 @@ public:
     {
       this->SetScalarField(Dataset.GetField(0).GetName());
     }
-
-    Tracer = raytracing::ConnectivityTracerFactory::CreateTracer(Cells, Coords);
   }
 
-  ~InternalsType() { delete Tracer; }
+  ~InternalsType() {}
 
   void SetSampleDistance(const vtkm::Float32& distance)
   {
@@ -100,7 +75,7 @@ public:
       std::cout << "Volume Tracer Error: must set volume mode before setting sample dist\n";
       return;
     }
-    Tracer->SetSampleDistance(distance);
+    Tracer.SetSampleDistance(distance);
   }
 
   VTKM_CONT
@@ -120,14 +95,14 @@ public:
   VTKM_CONT
   void SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colormap)
   {
-    Tracer->SetColorMap(colormap);
+    Tracer.SetColorMap(colormap);
   }
 
   VTKM_CONT
   void SetCompositeBackground(bool on) { CompositeBackground = on; }
 
   VTKM_CONT
-  void SetDebugPrints(bool on) { Tracer->SetDebugOn(on); }
+  void SetDebugPrints(bool vtkmNotUsed(on)) { /*Tracer->SetDebugOn(on);*/}
 
   VTKM_CONT
   void SetEmissionField(const std::string& fieldName)
@@ -155,15 +130,18 @@ public:
 
     if (Mode == VOLUME_MODE)
     {
-      Tracer->SetVolumeData(this->ScalarField, this->ScalarRange);
+      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
     else
     {
-      Tracer->SetEnergyData(
-        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
+      Tracer.SetEnergyData(this->ScalarField,
+                           rays.Buffers.at(0).GetNumChannels(),
+                           this->Cells,
+                           this->Coords,
+                           this->EmissionField);
     }
 
-    Tracer->Trace(rays);
+    Tracer.Trace(rays);
   }
 
   VTKM_CONT
@@ -171,14 +149,18 @@ public:
   {
     if (Mode == VOLUME_MODE)
     {
-      Tracer->SetVolumeData(this->ScalarField, this->ScalarRange);
+      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
     else
     {
-      Tracer->SetEnergyData(
-        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
+      Tracer.SetEnergyData(this->ScalarField,
+                           rays.Buffers.at(0).GetNumChannels(),
+                           this->Cells,
+                           this->Coords,
+                           this->EmissionField);
     }
-    Tracer->Trace(rays);
+
+    Tracer.Trace(rays);
   }
 
   VTKM_CONT
@@ -193,20 +175,20 @@ public:
     vtkm::rendering::raytracing::Camera rayCamera;
     rayCamera.SetParameters(camera, *canvas);
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
-    rayCamera.CreateRays(rays, this->Coords);
+    rayCamera.CreateRays(rays, this->Coords.GetBounds());
     rays.Buffers.at(0).InitConst(0.f);
     raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvas);
 
     if (Mode == VOLUME_MODE)
     {
-      Tracer->SetVolumeData(this->ScalarField, this->ScalarRange);
+      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
     else
     {
       throw vtkm::cont::ErrorBadValue("ENERGY MODE Not implemented for this use case\n");
     }
 
-    Tracer->Trace(rays);
+    Tracer.Trace(rays);
 
     canvas->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
     if (CompositeBackground)

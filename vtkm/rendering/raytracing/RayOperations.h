@@ -21,7 +21,6 @@
 #define vtk_m_rendering_raytracing_Ray_Operations_h
 
 #include <vtkm/Matrix.h>
-#include <vtkm/cont/TryExecute.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/raytracing/ChannelBufferOperations.h>
@@ -117,10 +116,8 @@ public:
   template <typename Device, typename T>
   static void ResetStatus(Ray<T>& rays, vtkm::UInt8 status, Device)
   {
-    vtkm::worklet::DispatcherMapField<MemSet<vtkm::UInt8>> dispatcher(
-      (MemSet<vtkm::UInt8>(status)));
-    dispatcher.SetDevice(Device());
-    dispatcher.Invoke(rays.Status);
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> statusHandle(status, rays.NumRays);
+    vtkm::cont::Algorithm::Copy(Device(), statusHandle, rays.Status);
   }
 
   //
@@ -134,6 +131,14 @@ public:
     vtkm::worklet::DispatcherMapField<detail::RayStatusFilter> dispatcher{ (
       detail::RayStatusFilter{}) };
     dispatcher.SetDevice(Device());
+    dispatcher.Invoke(rays.HitIdx, rays.Status);
+  }
+
+  template <typename T>
+  static void UpdateRayStatus(Ray<T>& rays)
+  {
+    vtkm::worklet::DispatcherMapField<detail::RayStatusFilter> dispatcher{ (
+      detail::RayStatusFilter{}) };
     dispatcher.Invoke(rays.HitIdx, rays.Status);
   }
 

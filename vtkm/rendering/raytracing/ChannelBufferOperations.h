@@ -22,6 +22,7 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 
 #include <vtkm/rendering/raytracing/ChannelBuffer.h>
@@ -143,10 +144,8 @@ public:
   template <typename Device, typename Precision>
   static void InitConst(ChannelBuffer<Precision>& buffer, const Precision value, Device)
   {
-    vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetDispatcher(
-      (MemSet<Precision>(value)));
-    memSetDispatcher.SetDevice(Device());
-    memSetDispatcher.Invoke(buffer.Buffer);
+    vtkm::cont::ArrayHandleConstant<Precision> valueHandle(value, buffer.GetBufferLength());
+    vtkm::cont::Algorithm::Copy(Device(), valueHandle, buffer.Buffer);
   }
 };
 }

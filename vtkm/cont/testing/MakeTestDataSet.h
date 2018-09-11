@@ -74,6 +74,9 @@ public:
   vtkm::cont::DataSet Make3DExplicitDataSet4();
   vtkm::cont::DataSet Make3DExplicitDataSet5();
   vtkm::cont::DataSet Make3DExplicitDataSet6();
+  vtkm::cont::DataSet Make3DExplicitDataSet7();
+  vtkm::cont::DataSet Make3DExplicitDataSet8();
+  vtkm::cont::DataSet Make3DExplicitDataSetZoo();
   vtkm::cont::DataSet Make3DExplicitDataSetPolygonal();
   vtkm::cont::DataSet Make3DExplicitDataSetCowNose();
 };
@@ -921,6 +924,400 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet6()
   dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
   dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
 
+  return dataSet;
+}
+
+inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetZoo()
+{
+  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetBuilderExplicit dsb;
+  vtkm::cont::DataSetFieldAdd dsf;
+
+  // Coordinates
+  const int nVerts = 30;
+  const int nCells = 27;
+  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+
+  std::vector<CoordType> coords =
+
+    { { 0.00f, 0.00f, 0.00f }, { 1.00f, 0.00f, 0.00f }, { 2.00f, 0.00f, 0.00f },
+      { 0.00f, 0.00f, 1.00f }, { 1.00f, 0.00f, 1.00f }, { 2.00f, 0.00f, 1.00f },
+      { 0.00f, 1.00f, 0.00f }, { 1.00f, 1.00f, 0.00f }, { 2.00f, 1.00f, 0.00f },
+      { 0.00f, 1.00f, 1.00f }, { 1.00f, 1.00f, 1.00f }, { 2.00f, 1.00f, 1.00f },
+      { 0.00f, 2.00f, 0.00f }, { 1.00f, 2.00f, 0.00f }, { 2.00f, 2.00f, 0.00f },
+      { 0.00f, 2.00f, 1.00f }, { 1.00f, 2.00f, 1.00f }, { 2.00f, 2.00f, 1.00f },
+      { 1.00f, 3.00f, 1.00f }, { 2.75f, 0.00f, 1.00f }, { 3.00f, 0.00f, 0.75f },
+      { 3.00f, 0.25f, 1.00f }, { 3.00f, 1.00f, 1.00f }, { 3.00f, 1.00f, 0.00f },
+      { 2.57f, 2.00f, 1.00f }, { 3.00f, 1.75f, 1.00f }, { 3.00f, 1.75f, 0.75f },
+      { 3.00f, 0.00f, 0.00f }, { 2.57f, 0.42f, 0.57f }, { 2.59f, 1.43f, 0.71f } };
+
+  // Connectivity
+  std::vector<vtkm::UInt8> shapes;
+  std::vector<vtkm::IdComponent> numindices;
+  std::vector<vtkm::Id> conn;
+
+  shapes.push_back(vtkm::CELL_SHAPE_HEXAHEDRON);
+  numindices.push_back(8);
+  conn.push_back(0);
+  conn.push_back(3);
+  conn.push_back(4);
+  conn.push_back(1);
+  conn.push_back(6);
+  conn.push_back(9);
+  conn.push_back(10);
+  conn.push_back(7);
+
+  shapes.push_back(vtkm::CELL_SHAPE_HEXAHEDRON);
+  numindices.push_back(8);
+  conn.push_back(1);
+  conn.push_back(4);
+  conn.push_back(5);
+  conn.push_back(2);
+  conn.push_back(7);
+  conn.push_back(10);
+  conn.push_back(11);
+  conn.push_back(8);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(23);
+  conn.push_back(26);
+  conn.push_back(24);
+  conn.push_back(29);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(24);
+  conn.push_back(26);
+  conn.push_back(25);
+  conn.push_back(29);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(8);
+  conn.push_back(17);
+  conn.push_back(11);
+  conn.push_back(29);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(17);
+  conn.push_back(24);
+  conn.push_back(25);
+  conn.push_back(29);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(24);
+  conn.push_back(17);
+  conn.push_back(8);
+  conn.push_back(23);
+  conn.push_back(29);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(23);
+  conn.push_back(8);
+  conn.push_back(11);
+  conn.push_back(22);
+  conn.push_back(29);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(25);
+  conn.push_back(22);
+  conn.push_back(11);
+  conn.push_back(17);
+  conn.push_back(29);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(26);
+  conn.push_back(23);
+  conn.push_back(22);
+  conn.push_back(25);
+  conn.push_back(29);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(23);
+  conn.push_back(8);
+  conn.push_back(2);
+  conn.push_back(27);
+  conn.push_back(28);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(22);
+  conn.push_back(11);
+  conn.push_back(8);
+  conn.push_back(23);
+  conn.push_back(28);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(11);
+  conn.push_back(5);
+  conn.push_back(2);
+  conn.push_back(8);
+  conn.push_back(28);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(21);
+  conn.push_back(19);
+  conn.push_back(5);
+  conn.push_back(11);
+  conn.push_back(28);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(11);
+  conn.push_back(22);
+  conn.push_back(21);
+  conn.push_back(28);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(5);
+  conn.push_back(19);
+  conn.push_back(20);
+  conn.push_back(28);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(23);
+  conn.push_back(27);
+  conn.push_back(20);
+  conn.push_back(21);
+  conn.push_back(28);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(20);
+  conn.push_back(27);
+  conn.push_back(2);
+  conn.push_back(5);
+  conn.push_back(28);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(19);
+  conn.push_back(21);
+  conn.push_back(20);
+  conn.push_back(28);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(7);
+  conn.push_back(6);
+  conn.push_back(12);
+  conn.push_back(13);
+  conn.push_back(16);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(6);
+  conn.push_back(9);
+  conn.push_back(15);
+  conn.push_back(12);
+  conn.push_back(16);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(6);
+  conn.push_back(7);
+  conn.push_back(10);
+  conn.push_back(9);
+  conn.push_back(16);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(12);
+  conn.push_back(15);
+  conn.push_back(16);
+  conn.push_back(18);
+
+  shapes.push_back(vtkm::CELL_SHAPE_WEDGE);
+  numindices.push_back(6);
+  conn.push_back(8);
+  conn.push_back(14);
+  conn.push_back(17);
+  conn.push_back(7);
+  conn.push_back(13);
+  conn.push_back(16);
+
+  shapes.push_back(vtkm::CELL_SHAPE_WEDGE);
+  numindices.push_back(6);
+  conn.push_back(11);
+  conn.push_back(8);
+  conn.push_back(17);
+  conn.push_back(10);
+  conn.push_back(7);
+  conn.push_back(16);
+
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+
+  // Field data
+  vtkm::Float32 pointvar[nVerts] =
+
+    { 4.0,  5.0f, 9.5f, 5.5f, 6.0f, 9.5f, 5.0f, 5.5f, 5.7f, 6.5f, 6.4f, 6.9f, 6.6f, 6.1f, 7.1f,
+      7.2f, 7.3f, 7.4f, 9.1f, 9.2f, 9.3f, 5.4f, 9.5f, 9.6f, 6.7f, 9.8f, 6.0f, 4.3f, 4.9f, 4.1f };
+
+  vtkm::Float32 cellvar[nCells] =
+
+    { 4.0f, 5.0f, 9.5f, 5.5f, 6.0f, 9.5f, 5.0f, 5.5f, 5.7f, 6.5f, 6.4f, 6.9f, 6.6f, 6.1f,
+      7.1f, 7.2f, 7.3f, 7.4f, 9.1f, 9.2f, 9.3f, 5.4f, 9.5f, 9.6f, 6.7f, 9.8f, 6.0f };
+
+  dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
+  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
+
+  return dataSet;
+}
+
+inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet7()
+{
+  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetBuilderExplicit dsb;
+  vtkm::cont::DataSetFieldAdd dsf;
+
+  // Coordinates
+  const int nVerts = 8;
+  const int nCells = 8;
+
+  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  std::vector<CoordType> coords = { { -0.707f, -0.354f, -0.354f }, { 0.000f, -0.854f, 0.146f },
+                                    { 0.000f, -0.146f, 0.854f },   { -0.707f, 0.354f, 0.354f },
+                                    { 10.0f, 10.0f, 10.0f },       { 5.0f, 5.0f, 5.0f },
+                                    { 0.0f, 0.0f, 2.0f },          { 0.0f, 0.0f, -2.0f } };
+
+  // Connectivity
+  std::vector<vtkm::UInt8> shapes;
+  std::vector<vtkm::IdComponent> numindices;
+  std::vector<vtkm::Id> conn;
+
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(0);
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(1);
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(2);
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(3);
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(4);
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(5);
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(6);
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(7);
+
+
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+
+  // Field data
+  vtkm::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 10.f, 20.f, 33.f, 52.f };
+  vtkm::Float32 cellvar[nCells] = { 0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f };
+
+  dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
+  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
+
+  return dataSet;
+}
+
+inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet8()
+{
+  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetBuilderExplicit dsb;
+  vtkm::cont::DataSetFieldAdd dsf;
+
+  // Coordinates
+  const int nVerts = 8;
+  const int nCells = 10;
+  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  std::vector<CoordType> coords = { { -0.707f, -0.354f, -0.354f }, { 0.000f, -0.854f, 0.146f },
+                                    { 0.000f, -0.146f, 0.854f },   { -0.707f, 0.354f, 0.354f },
+                                    { 10.0f, 10.0f, 10.0f },       { 5.0f, 5.0f, 5.0f },
+                                    { 0.0f, 0.0f, 2.0f },          { 0.0f, 0.0f, -2.0f } };
+
+  // Connectivity
+  std::vector<vtkm::UInt8> shapes;
+  std::vector<vtkm::IdComponent> numindices;
+  std::vector<vtkm::Id> conn;
+
+  //I need two triangles because the leaf needs four nodes otherwise segfault?
+  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  numindices.push_back(2);
+  conn.push_back(0);
+  conn.push_back(1);
+
+  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  numindices.push_back(2);
+  conn.push_back(1);
+  conn.push_back(2);
+
+  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  numindices.push_back(2);
+  conn.push_back(2);
+  conn.push_back(3);
+
+  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  numindices.push_back(2);
+  conn.push_back(3);
+  conn.push_back(4);
+
+  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  numindices.push_back(2);
+  conn.push_back(4);
+  conn.push_back(5);
+
+  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  numindices.push_back(2);
+  conn.push_back(5);
+  conn.push_back(6);
+
+  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  numindices.push_back(2);
+  conn.push_back(6);
+  conn.push_back(7);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
+  numindices.push_back(3);
+  conn.push_back(2);
+  conn.push_back(5);
+  conn.push_back(4);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
+  numindices.push_back(3);
+  conn.push_back(4);
+  conn.push_back(5);
+  conn.push_back(6);
+
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+
+  // Field data
+  vtkm::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 94.0f, 71.0f, 47.0f, 57.0f };
+  vtkm::Float32 cellvar[nCells] = { 0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f };
+
+  dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
+  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
   return dataSet;
 }
 

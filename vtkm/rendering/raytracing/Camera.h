@@ -37,8 +37,6 @@ class VTKM_RENDERING_EXPORT Camera
 
 private:
   struct PixelDataFunctor;
-  template <typename Precision>
-  struct CreateRaysFunctor;
   vtkm::rendering::CanvasRayTracer Canvas;
   vtkm::Int32 Height;
   vtkm::Int32 Width;
@@ -134,19 +132,18 @@ public:
   bool GetIsViewDirty() const;
 
   VTKM_CONT
-  void CreateRays(Ray<vtkm::Float32>& rays, const vtkm::cont::CoordinateSystem& coords);
+  void CreateRays(Ray<vtkm::Float32>& rays, vtkm::Bounds bounds);
+
   VTKM_CONT
-  void CreateRays(Ray<vtkm::Float64>& rays, const vtkm::cont::CoordinateSystem& coords);
+  void CreateRays(Ray<vtkm::Float64>& rays, vtkm::Bounds bounds);
 
   VTKM_CONT
   void GetPixelData(const vtkm::cont::CoordinateSystem& coords,
                     vtkm::Int32& activePixels,
                     vtkm::Float32& aveRayDistance);
 
-  template <typename Precision, typename DeviceAdapter>
-  VTKM_CONT void CreateRaysOnDevice(Ray<Precision>& rays,
-                                    DeviceAdapter,
-                                    const vtkm::Bounds boundingBox);
+  template <typename Precision>
+  VTKM_CONT void CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds boundingBox);
 
   void CreateDebugRay(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<vtkm::Float32>& rays);
 
@@ -160,9 +157,8 @@ private:
   VTKM_CONT
   void FindSubset(const vtkm::Bounds& bounds);
 
-  template <typename DeviceAdapter, typename Precision>
+  template <typename Precision>
   VTKM_CONT void UpdateDimensions(Ray<Precision>& rays,
-                                  DeviceAdapter,
                                   const vtkm::Bounds& boundingBox,
                                   bool ortho2D);
 

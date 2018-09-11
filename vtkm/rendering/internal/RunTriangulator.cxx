@@ -30,47 +30,12 @@ namespace rendering
 namespace internal
 {
 
-namespace
-{
-
-struct TriangulatorFunctor
-{
-  vtkm::cont::DynamicCellSet CellSet;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
-  vtkm::Id NumberOfTriangles;
-
-  VTKM_CONT
-  TriangulatorFunctor(vtkm::cont::DynamicCellSet cellSet)
-    : CellSet(cellSet)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    vtkm::rendering::Triangulator<Device> triangulator;
-    triangulator.Run(this->CellSet, this->Indices, this->NumberOfTriangles);
-    return true;
-  }
-};
-
-} // anonymous namespace
-
 void RunTriangulator(const vtkm::cont::DynamicCellSet& cellSet,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
-                     vtkm::Id& numberOfTriangles,
-                     vtkm::cont::RuntimeDeviceTracker tracker)
+                     vtkm::Id& numberOfTriangles)
 {
-  // TODO: Should the rendering library support policies or some other way to
-  // configure with custom devices?
-  TriangulatorFunctor triangulatorFunctor(cellSet);
-  if (!vtkm::cont::TryExecute(triangulatorFunctor, tracker))
-  {
-    throw vtkm::cont::ErrorExecution("Failed to execute triangulator.");
-  }
-
-  indices = triangulatorFunctor.Indices;
-  numberOfTriangles = triangulatorFunctor.NumberOfTriangles;
+  vtkm::rendering::Triangulator triangulator;
+  triangulator.Run(cellSet, indices, numberOfTriangles);
 }
 }
 }

@@ -129,6 +129,20 @@ public:
     DebugHeight = -1;
   }
 
+
+  struct EnableIntersectionDataFunctor
+  {
+    template <typename Device>
+    VTKM_CONT bool operator()(Device, Ray<Precision>* self)
+    {
+      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+      self->EnableIntersectionData(Device());
+      return true;
+    }
+  };
+
+  void EnableIntersectionData() { vtkm::cont::TryExecute(EnableIntersectionDataFunctor(), this); }
+
   template <typename Device>
   void EnableIntersectionData(Device)
   {
@@ -185,11 +199,18 @@ public:
     this->Resize(size, Device());
   }
 
-
-  VTKM_CONT void Resize(const vtkm::Int32 size)
+  struct ResizeFunctor
   {
-    this->Resize(size, vtkm::cont::DeviceAdapterTagSerial());
-  }
+    template <typename Device>
+    VTKM_CONT bool operator()(Device, Ray<Precision>* self, const vtkm::Int32 size)
+    {
+      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+      self->Resize(size, Device());
+      return true;
+    }
+  };
+
+  VTKM_CONT void Resize(const vtkm::Int32 size) { vtkm::cont::TryExecute(ResizeFunctor(), size); }
 
   template <typename Device>
   VTKM_CONT void Resize(const vtkm::Int32 size, Device)
