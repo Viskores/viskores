@@ -34,7 +34,7 @@ namespace cont
 /// uniform orthogonal grid (extent, origin, and spacing) and implicitly
 /// computes these coordinates in its array portal.
 ///
-class ArrayHandleUniformPointCoordinates
+class VTKM_ALWAYS_EXPORT ArrayHandleUniformPointCoordinates
   : public vtkm::cont::ArrayHandle<
       vtkm::Vec<vtkm::FloatDefault, 3>,
       vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>

@@ -343,7 +343,7 @@ struct VTKM_ALWAYS_EXPORT StorageTagVirtualCoordinates
 };
 
 template <>
-class Storage<vtkm::Vec<vtkm::FloatDefault, 3>, StorageTagVirtualCoordinates>
+class VTKM_ALWAYS_EXPORT Storage<vtkm::Vec<vtkm::FloatDefault, 3>, StorageTagVirtualCoordinates>
 {
 public:
   using ValueType = vtkm::Vec<vtkm::FloatDefault, 3>;
@@ -378,7 +378,8 @@ private:
 
 //=============================================================================
 template <typename DeviceAdapter>
-class ArrayTransfer<vtkm::Vec<vtkm::FloatDefault, 3>, StorageTagVirtualCoordinates, DeviceAdapter>
+class VTKM_ALWAYS_EXPORT
+  ArrayTransfer<vtkm::Vec<vtkm::FloatDefault, 3>, StorageTagVirtualCoordinates, DeviceAdapter>
 {
 public:
   using ValueType = vtkm::Vec<vtkm::FloatDefault, 3>;
