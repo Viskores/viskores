@@ -31,6 +31,11 @@ namespace vtkm
 namespace rendering
 {
 
+/**
+ * \brief MapperCylinder renderers edges from a cell set
+ *        and renders them as cylinders via ray tracing.
+ *
+ */
 class VTKM_RENDERING_EXPORT MapperCylinder : public Mapper
 {
 public:
@@ -39,6 +44,7 @@ public:
   ~MapperCylinder();
 
   void SetCanvas(vtkm::rendering::Canvas* canvas) override;
+
   virtual vtkm::rendering::Canvas* GetCanvas() const override;
 
   /**

@@ -179,7 +179,6 @@ public:
 class LinearBVHBuilder::BVHData
 {
 public:
-  //TODO: make private
   vtkm::cont::ArrayHandle<vtkm::UInt32> mortonCodes;
   vtkm::cont::ArrayHandle<vtkm::Id> parent;
   vtkm::cont::ArrayHandle<vtkm::Id> leftChild;

@@ -31,6 +31,12 @@ namespace vtkm
 namespace rendering
 {
 
+/**
+ * \brief MapperQuad renderers quad facess from a cell set via ray tracing.
+ *        As opposed to breaking quads into two trianges, scalars are
+ *        interpolated using all 4 points of the quad resulting in more
+ *        accurate interpolation.
+ */
 class VTKM_RENDERING_EXPORT MapperQuad : public Mapper
 {
 public:

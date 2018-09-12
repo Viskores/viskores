@@ -29,6 +29,11 @@ namespace rendering
 namespace raytracing
 {
 
+/**
+ * \brief CylinderExtractor creates a line segments from
+ *        the edges of a cell set.
+ *
+ */
 class CylinderExtractor
 {
 protected:
@@ -36,19 +41,6 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Float32> Radii;
 
 public:
-  //
-  // Extract all nodes using a constant radius
-  //
-  //  void ExtractCoordinates(const vtkm::cont::CoordinateSystem& coords, const vtkm::Float32 radius);
-
-  //  //
-  //  // Set radius based on scalar field values. Each is interpolated from min to max
-  //  //
-  //  void ExtractCoordinates(const vtkm::cont::CoordinateSystem& coords,
-  //                          const vtkm::cont::Field& field,
-  //                          const vtkm::Float32 minRadius,
-  //                          const vtkm::Float32 maxRadius);
-
   //
   // Extract all vertex shapes with constant radius
   //

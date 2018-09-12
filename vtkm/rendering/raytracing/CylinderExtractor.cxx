@@ -114,9 +114,6 @@ public:
       segment[1] = cellIndices[0];
       segment[2] = cellIndices[1];
       outputIndices.Set(pointOffset, segment);
-
-      //outputIndices.Set(pointOffset, cellId);
-      //outputId2.Set(pointOffset, vtkm::Id2(cellId, cellId));
     }
     else if (shapeType.Id == vtkm::CELL_SHAPE_TRIANGLE)
     {
@@ -210,22 +207,6 @@ public:
 
 } //namespace detail
 
-//void CylinderExtractor::ExtractCoordinates(const vtkm::cont::CoordinateSystem& coords,
-//                                         const vtkm::Float32 radius)
-//{
-//  this->SetPointIdsFromCoords(coords);
-//  this->SetUniformRadius(radius);
-//}
-
-//TODO: I don't think I need varying radius
-//void CylinderExtractor::ExtractCoordinates(const vtkm::cont::CoordinateSystem& coords,
-//                                         const vtkm::cont::Field& field,
-//                                         const vtkm::Float32 minRadius,
-//                                         const vtkm::Float32 maxRadius)
-//{
-//  this->SetPointIdsFromCoords(coords);
-//  this->SetVaryingRadius(minRadius, maxRadius, field);
-//}
 
 void CylinderExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
                                      const vtkm::Float32 radius)
@@ -234,7 +215,6 @@ void CylinderExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
   vtkm::rendering::Cylinderizer geometrizer;
   geometrizer.Run(cells, this->CylIds, numOfSegments);
 
-  //this->SetCylinderIdsFromCells(cells);
   this->SetUniformRadius(radius);
 }
 
@@ -247,7 +227,6 @@ void CylinderExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
   vtkm::rendering::Cylinderizer geometrizer;
   geometrizer.Run(cells, this->CylIds, numOfSegments);
 
-  //this->SetCylinderIdsFromCells(cells);
   this->SetVaryingRadius(minRadius, maxRadius, field);
 }
 

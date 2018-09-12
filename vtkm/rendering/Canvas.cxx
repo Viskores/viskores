@@ -313,8 +313,6 @@ void Canvas::Activate()
 
 void Canvas::Clear()
 {
-  // TODO: Should the rendering library support policies or some other way to
-  // configure with custom devices?
   internal::ClearBuffers worklet;
   vtkm::worklet::DispatcherMapField<internal::ClearBuffers> dispatcher(worklet);
   dispatcher.Invoke(this->GetColorBuffer(), this->GetDepthBuffer());

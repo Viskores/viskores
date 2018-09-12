@@ -31,6 +31,13 @@ namespace vtkm
 namespace rendering
 {
 
+/**
+ * \brief MapperPonts renders points from a cell set.
+ *        This mapper can natively create points from
+ *        vertex cell shapes as well as use the points
+ *        defined by a coordinate system.
+ *
+ */
 class VTKM_RENDERING_EXPORT MapperPoint : public Mapper
 {
 public:
