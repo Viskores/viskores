@@ -67,30 +67,6 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 
-// macros for bit flags
-#ifndef VTKM_USE_64BIT_IDS // 32 bit Ids
-
-#define NO_SUCH_ELEMENT 0x80000000
-#define TERMINAL_ELEMENT 0x40000000
-#define IS_SUPERNODE 0x20000000
-#define IS_HYPERNODE 0x10000000
-#define IS_ASCENDING 0x08000000
-#define INDEX_MASK 0x07FFFFFF
-#define CV_OTHER_FLAG                                                                              \
-  0x10000000 // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
-
-#else // 64 bit Ids
-
-#define NO_SUCH_ELEMENT 0x8000000000000000LL
-#define TERMINAL_ELEMENT 0x4000000000000000LL
-#define IS_SUPERNODE 0x2000000000000000LL
-#define IS_HYPERNODE 0x1000000000000000LL
-#define IS_ASCENDING 0x0800000000000000LL
-#define INDEX_MASK 0x07FFFFFFFFFFFFFFLL
-#define CV_OTHER_FLAG                                                                              \
-  0x1000000000000000LL // Flag used by CombinedVector class used by the ContourTreeMesh to merge contour trees
-#endif
-
 namespace vtkm
 {
 namespace worklet
@@ -98,6 +74,16 @@ namespace worklet
 namespace contourtree_ppp2
 {
 
+// constexpr for bit flags
+// clang-format off
+constexpr vtkm::Id NO_SUCH_ELEMENT = std::numeric_limits<vtkm::Id>::min();
+constexpr vtkm::Id TERMINAL_ELEMENT = std::numeric_limits<vtkm::Id>::max() / 2 + 1; //0x40000000 || 0x4000000000000000
+constexpr vtkm::Id IS_SUPERNODE = std::numeric_limits<vtkm::Id>::max() / 4 + 1; //0x20000000 || 0x2000000000000000
+constexpr vtkm::Id IS_HYPERNODE = std::numeric_limits<vtkm::Id>::max() / 8 + 1; //0x10000000 || 0x1000000000000000
+constexpr vtkm::Id IS_ASCENDING = std::numeric_limits<vtkm::Id>::max() / 16 + 1; //0x08000000 || 0x0800000000000000
+constexpr vtkm::Id INDEX_MASK = std::numeric_limits<vtkm::Id>::max() / 16; //0x07FFFFFF || 0x07FFFFFFFFFFFFFF
+constexpr vtkm::Id CV_OTHER_FLAG = std::numeric_limits<vtkm::Id>::max() / 8 + 1; //0x10000000 || 0x1000000000000000
+// clang-format on
 
 typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
 
