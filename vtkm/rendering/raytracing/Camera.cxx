@@ -821,7 +821,6 @@ VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds b
                         this->SubsetMinY));
     dispatcher.Invoke(rays.DirX, rays.DirY, rays.DirZ, rays.PixelIdx); //X Y Z
 
-    std::cout << "c7\n";
     vtkm::cont::ArrayHandleConstant<Precision> posX(this->Position[0], rays.NumRays);
     vtkm::cont::Algorithm::Copy(posX, rays.OriginX);
 
@@ -830,8 +829,6 @@ VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds b
 
     vtkm::cont::ArrayHandleConstant<Precision> posZ(this->Position[2], rays.NumRays);
     vtkm::cont::Algorithm::Copy(posZ, rays.OriginZ);
-
-    std::cout << "c10\n";
   }
 
   time = timer.GetElapsedTime();
