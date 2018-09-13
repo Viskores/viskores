@@ -22,10 +22,12 @@
 #include <cstring>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
+#include <vtkm/rendering/internal/RunTriangulator.h>
+#include <vtkm/rendering/raytracing/BVHTraverser.h>
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/rendering/raytracing/ShapeIntersector.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -35,55 +37,6 @@ namespace rendering
 namespace raytracing
 {
 
-namespace
-{
-
-enum : vtkm::Int32
-{
-  END_FLAG2 = -1000000000
-};
-}
-
-template <typename TriIntersector>
-class TriLeafIntersector
-{
-public:
-  template <typename PointPortalType, typename LeafPortalType, typename Precision>
-  VTKM_EXEC inline void IntersectLeaf(const vtkm::Int32& currentNode,
-                                      const Precision& originX,
-                                      const Precision& originY,
-                                      const Precision& originZ,
-                                      const Precision& dirx,
-                                      const Precision& diry,
-                                      const Precision& dirz,
-                                      const PointPortalType& points,
-                                      vtkm::Id& hitIndex,
-                                      Precision& closestDistance,
-                                      Precision& minU,
-                                      Precision& minV,
-                                      LeafPortalType Leafs,
-                                      const Precision& minDistance) const
-  {
-    vtkm::Vec<Int32, 4> leafnode = Leafs.Get(currentNode);
-    vtkm::Vec<Precision, 3> a = vtkm::Vec<Precision, 3>(points.Get(leafnode[1]));
-    vtkm::Vec<Precision, 3> b = vtkm::Vec<Precision, 3>(points.Get(leafnode[2]));
-    vtkm::Vec<Precision, 3> c = vtkm::Vec<Precision, 3>(points.Get(leafnode[3]));
-    TriIntersector intersector;
-    Precision distance = -1.;
-    Precision u, v;
-
-    intersector.IntersectTri(a, b, c, dirx, diry, dirz, distance, u, v, originX, originY, originZ);
-
-    if (distance != -1. && distance < closestDistance && distance > minDistance)
-    {
-      closestDistance = distance;
-      minU = u;
-      minV = v;
-      hitIndex = currentNode;
-    }
-  }
-};
-
 class Moller
 {
 public:
@@ -91,15 +44,11 @@ public:
   VTKM_EXEC void IntersectTri(const vtkm::Vec<Precision, 3>& a,
                               const vtkm::Vec<Precision, 3>& b,
                               const vtkm::Vec<Precision, 3>& c,
-                              const Precision& dirx,
-                              const Precision& diry,
-                              const Precision& dirz,
+                              const vtkm::Vec<Precision, 3>& dir,
                               Precision& distance,
                               Precision& u,
                               Precision& v,
-                              const Precision& originX,
-                              const Precision& originY,
-                              const Precision& originZ) const
+                              const vtkm::Vec<Precision, 3>& origin) const
   {
     const vtkm::Float32 EPSILON2 = 0.0001f;
 
@@ -107,17 +56,15 @@ public:
     vtkm::Vec<Precision, 3> e2 = c - a;
 
     vtkm::Vec<Precision, 3> p;
-    p[0] = diry * e2[2] - dirz * e2[1];
-    p[1] = dirz * e2[0] - dirx * e2[2];
-    p[2] = dirx * e2[1] - diry * e2[0];
+    p[0] = dir[1] * e2[2] - dir[2] * e2[1];
+    p[1] = dir[2] * e2[0] - dir[0] * e2[2];
+    p[2] = dir[0] * e2[1] - dir[1] * e2[0];
     Precision dot = e1[0] * p[0] + e1[1] * p[1] + e1[2] * p[2];
     if (dot != 0.f)
     {
       dot = 1.f / dot;
       vtkm::Vec<Precision, 3> t;
-      t[0] = originX - a[0];
-      t[1] = originY - a[1];
-      t[2] = originZ - a[2];
+      t = origin - a;
 
       u = (t[0] * p[0] + t[1] * p[1] + t[2] * p[2]) * dot;
       if (u >= (0.f - EPSILON2) && u <= (1.f + EPSILON2))
@@ -127,7 +74,7 @@ public:
         q[0] = t[1] * e1[2] - t[2] * e1[1];
         q[1] = t[2] * e1[0] - t[0] * e1[2];
         q[2] = t[0] * e1[1] - t[1] * e1[0];
-        v = (dirx * q[0] + diry * q[1] + dirz * q[2]) * dot;
+        v = (dir[0] * q[0] + dir[1] * q[1] + dir[2] * q[2]) * dot;
         if (v >= (0.f - EPSILON2) && v <= (1.f + EPSILON2) && !(u + v > 1.f))
         {
           distance = (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) * dot;
@@ -145,127 +92,108 @@ public:
 //       constant for the ray
 
 
-template <typename Precision>
 class WaterTight
 {
 public:
-  VTKM_EXEC
-  inline void FindDir(const vtkm::Vec<Precision, 3>& dir,
-                      Precision& sx,
-                      Precision& sy,
-                      Precision& sz,
-                      vtkm::Int32& kx,
-                      vtkm::Int32& ky,
-                      vtkm::Int32& kz) const
+  template <typename Precision>
+  VTKM_EXEC inline void FindDir(const vtkm::Vec<Precision, 3>& dir,
+                                vtkm::Vec<Precision, 3>& s,
+                                vtkm::Vec<Int32, 3>& k) const
   {
     //Find max ray direction
-    kz = 0;
+    k[2] = 0;
     if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[1]))
     {
       if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[2]))
-        kz = 0;
+        k[2] = 0;
       else
-        kz = 2;
+        k[2] = 2;
     }
     else
     {
       if (vtkm::Abs(dir[1]) > vtkm::Abs(dir[2]))
-        kz = 1;
+        k[2] = 1;
       else
-        kz = 2;
+        k[2] = 2;
     }
 
-    kx = kz + 1;
-    if (kx == 3)
-      kx = 0;
-    ky = kx + 1;
-    if (ky == 3)
-      ky = 0;
+    k[0] = k[2] + 1;
+    if (k[0] == 3)
+      k[0] = 0;
+    k[1] = k[0] + 1;
+    if (k[1] == 3)
+      k[1] = 0;
 
-    if (dir[kz] < 0.f)
+    if (dir[k[2]] < 0.f)
     {
-      vtkm::Int32 temp = ky;
-      ky = kx;
-      kx = temp;
+      vtkm::Int32 temp = k[1];
+      k[1] = k[0];
+      k[0] = temp;
     }
 
-    sx = dir[kx] / dir[kz];
-    sy = dir[ky] / dir[kz];
-    sz = 1.f / dir[kz];
+    s[0] = dir[k[0]] / dir[k[2]];
+    s[1] = dir[k[1]] / dir[k[2]];
+    s[2] = 1.f / dir[k[2]];
   }
 
-  VTKM_EXEC_CONT
-  inline void IntersectTri(const vtkm::Vec<Precision, 3>& a,
-                           const vtkm::Vec<Precision, 3>& b,
-                           const vtkm::Vec<Precision, 3>& c,
-                           const Precision& dirx,
-                           const Precision& diry,
-                           const Precision& dirz,
-                           Precision& distance,
-                           Precision& u,
-                           Precision& v,
-                           const Precision& originX,
-                           const Precision& originY,
-                           const Precision& originZ) const
+  template <typename Precision>
+  VTKM_EXEC_CONT inline void IntersectTri(const vtkm::Vec<Precision, 3>& a,
+                                          const vtkm::Vec<Precision, 3>& b,
+                                          const vtkm::Vec<Precision, 3>& c,
+                                          const vtkm::Vec<Precision, 3>& dir,
+                                          Precision& distance,
+                                          Precision& u,
+                                          Precision& v,
+                                          const vtkm::Vec<Precision, 3>& origin) const
   {
-    vtkm::Vec<Precision, 3> dir;
-    dir[0] = dirx;
-    dir[1] = diry;
-    dir[2] = dirz;
+    vtkm::Vec<Int32, 3> k;
+    vtkm::Vec<Precision, 3> s;
     //Find max ray direction
-    int kz = 0;
+    k[2] = 0;
     if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[1]))
     {
       if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[2]))
-        kz = 0;
+        k[2] = 0;
       else
-        kz = 2;
+        k[2] = 2;
     }
     else
     {
       if (vtkm::Abs(dir[1]) > vtkm::Abs(dir[2]))
-        kz = 1;
+        k[2] = 1;
       else
-        kz = 2;
+        k[2] = 2;
     }
 
-    vtkm::Int32 kx = kz + 1;
-    if (kx == 3)
-      kx = 0;
-    vtkm::Int32 ky = kx + 1;
-    if (ky == 3)
-      ky = 0;
+    k[0] = k[2] + 1;
+    if (k[0] == 3)
+      k[0] = 0;
+    k[1] = k[0] + 1;
+    if (k[1] == 3)
+      k[1] = 0;
 
-    if (dir[kz] < 0.f)
+    if (dir[k[2]] < 0.f)
     {
-      vtkm::Int32 temp = ky;
-      ky = kx;
-      kx = temp;
+      vtkm::Int32 temp = k[1];
+      k[1] = k[0];
+      k[0] = temp;
     }
 
-    Precision Sx = dir[kx] / dir[kz];
-    Precision Sy = dir[ky] / dir[kz];
-    Precision Sz = 1.f / dir[kz];
-
-
+    s[0] = dir[k[0]] / dir[k[2]];
+    s[1] = dir[k[1]] / dir[k[2]];
+    s[2] = 1.f / dir[k[2]];
 
     vtkm::Vec<Precision, 3> A, B, C;
-    A[0] = a[0] - originX;
-    A[1] = a[1] - originY;
-    A[2] = a[2] - originZ;
-    B[0] = b[0] - originX;
-    B[1] = b[1] - originY;
-    B[2] = b[2] - originZ;
-    C[0] = c[0] - originX;
-    C[1] = c[1] - originY;
-    C[2] = c[2] - originZ;
+    A = a - origin;
+    B = b - origin;
+    C = c - origin;
 
-    const Precision Ax = A[kx] - Sx * A[kz];
-    const Precision Ay = A[ky] - Sy * A[kz];
-    const Precision Bx = B[kx] - Sx * B[kz];
-    const Precision By = B[ky] - Sy * B[kz];
-    const Precision Cx = C[kx] - Sx * C[kz];
-    const Precision Cy = C[ky] - Sy * C[kz];
+    const Precision Ax = A[k[0]] - s[0] * A[k[2]];
+    const Precision Ay = A[k[1]] - s[1] * A[k[2]];
+    const Precision Bx = B[k[0]] - s[0] * B[k[2]];
+    const Precision By = B[k[1]] - s[1] * B[k[2]];
+    const Precision Cx = C[k[0]] - s[0] * C[k[2]];
+    const Precision Cy = C[k[1]] - s[1] * C[k[2]];
 
     //scaled barycentric coords
     u = Cx * By - Cy * Bx;
@@ -295,9 +223,9 @@ public:
     if (det == 0.)
       invalid = true;
 
-    const Precision Az = Sz * A[kz];
-    const Precision Bz = Sz * B[kz];
-    const Precision Cz = Sz * C[kz];
+    const Precision Az = s[2] * A[k[2]];
+    const Precision Bz = s[2] * B[k[2]];
+    const Precision Cz = s[2] * C[k[2]];
 
     det = 1.f / det;
 
@@ -311,43 +239,28 @@ public:
       distance = -1.;
   }
 
-  VTKM_EXEC
-  inline void IntersectTriSn(const vtkm::Vec<Precision, 3>& a,
-                             const vtkm::Vec<Precision, 3>& b,
-                             const vtkm::Vec<Precision, 3>& c,
-                             const Precision& sx,
-                             const Precision& sy,
-                             const Precision& sz,
-                             const vtkm::Int32& kx,
-                             const vtkm::Int32& ky,
-                             const vtkm::Int32& kz,
-                             Precision& distance,
-                             Precision& u,
-                             Precision& v,
-                             const Precision& originX,
-                             const Precision& originY,
-                             const Precision& originZ) const
+  template <typename Precision>
+  VTKM_EXEC inline void IntersectTriSn(const vtkm::Vec<Precision, 3>& a,
+                                       const vtkm::Vec<Precision, 3>& b,
+                                       const vtkm::Vec<Precision, 3>& c,
+                                       const vtkm::Vec<Precision, 3>& s,
+                                       const vtkm::Vec<Int32, 3>& k,
+                                       Precision& distance,
+                                       Precision& u,
+                                       Precision& v,
+                                       const vtkm::Vec<Precision, 3>& origin) const
   {
-
-
-
     vtkm::Vec<Precision, 3> A, B, C;
-    A[0] = a[0] - originX;
-    A[1] = a[1] - originY;
-    A[2] = a[2] - originZ;
-    B[0] = b[0] - originX;
-    B[1] = b[1] - originY;
-    B[2] = b[2] - originZ;
-    C[0] = c[0] - originX;
-    C[1] = c[1] - originY;
-    C[2] = c[2] - originZ;
+    A = a - origin;
+    B = b - origin;
+    C = c - origin;
 
-    const Precision Ax = A[kx] - sx * A[kz];
-    const Precision Ay = A[ky] - sy * A[kz];
-    const Precision Bx = B[kx] - sx * B[kz];
-    const Precision By = B[ky] - sy * B[kz];
-    const Precision Cx = C[kx] - sx * C[kz];
-    const Precision Cy = C[ky] - sy * C[kz];
+    const Precision Ax = A[k[0]] - s[0] * A[k[2]];
+    const Precision Ay = A[k[1]] - s[1] * A[k[2]];
+    const Precision Bx = B[k[0]] - s[0] * B[k[2]];
+    const Precision By = B[k[1]] - s[1] * B[k[2]];
+    const Precision Cx = C[k[0]] - s[0] * C[k[2]];
+    const Precision Cy = C[k[1]] - s[1] * C[k[2]];
 
     //scaled barycentric coords
     u = Cx * By - Cy * Bx;
@@ -378,9 +291,9 @@ public:
     if (det == 0.)
       invalid = true;
 
-    const Precision Az = sz * A[kz];
-    const Precision Bz = sz * B[kz];
-    const Precision Cz = sz * C[kz];
+    const Precision Az = s[2] * A[k[2]];
+    const Precision Bz = s[2] * B[k[2]];
+    const Precision Cz = s[2] * C[k[2]];
 
     det = 1.f / det;
 
@@ -395,279 +308,205 @@ public:
   }
 }; //WaterTight
 
-//
-// Double precision specialization
-//
 template <>
-class WaterTight<vtkm::Float64>
+VTKM_EXEC inline void WaterTight::IntersectTri<vtkm::Float64>(
+  const vtkm::Vec<vtkm::Float64, 3>& a,
+  const vtkm::Vec<vtkm::Float64, 3>& b,
+  const vtkm::Vec<vtkm::Float64, 3>& c,
+  const vtkm::Vec<vtkm::Float64, 3>& dir,
+  vtkm::Float64& distance,
+  vtkm::Float64& u,
+  vtkm::Float64& v,
+  const vtkm::Vec<vtkm::Float64, 3>& origin) const
+{
+  //Find max ray direction
+  int kz = 0;
+  if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[1]))
+  {
+    if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[2]))
+      kz = 0;
+    else
+      kz = 2;
+  }
+  else
+  {
+    if (vtkm::Abs(dir[1]) > vtkm::Abs(dir[2]))
+      kz = 1;
+    else
+      kz = 2;
+  }
+
+  vtkm::Int32 kx = kz + 1;
+  if (kx == 3)
+    kx = 0;
+  vtkm::Int32 ky = kx + 1;
+  if (ky == 3)
+    ky = 0;
+
+  if (dir[kz] < 0.f)
+  {
+    vtkm::Int32 temp = ky;
+    ky = kx;
+    kx = temp;
+  }
+
+  vtkm::Float64 Sx = dir[kx] / dir[kz];
+  vtkm::Float64 Sy = dir[ky] / dir[kz];
+  vtkm::Float64 Sz = 1. / dir[kz];
+
+
+
+  vtkm::Vec<vtkm::Float64, 3> A, B, C;
+  A = a - origin;
+  B = b - origin;
+  C = c - origin;
+
+  const vtkm::Float64 Ax = A[kx] - Sx * A[kz];
+  const vtkm::Float64 Ay = A[ky] - Sy * A[kz];
+  const vtkm::Float64 Bx = B[kx] - Sx * B[kz];
+  const vtkm::Float64 By = B[ky] - Sy * B[kz];
+  const vtkm::Float64 Cx = C[kx] - Sx * C[kz];
+  const vtkm::Float64 Cy = C[ky] - Sy * C[kz];
+
+  //scaled barycentric coords
+  u = Cx * By - Cy * Bx;
+  v = Ax * Cy - Ay * Cx;
+
+  vtkm::Float64 w = Bx * Ay - By * Ax;
+
+  vtkm::Float64 low = vtkm::Min(u, vtkm::Min(v, w));
+  vtkm::Float64 high = vtkm::Max(u, vtkm::Max(v, w));
+  bool invalid = (low < 0.) && (high > 0.);
+
+  vtkm::Float64 det = u + v + w;
+
+  if (det == 0.)
+    invalid = true;
+
+  const vtkm::Float64 Az = Sz * A[kz];
+  const vtkm::Float64 Bz = Sz * B[kz];
+  const vtkm::Float64 Cz = Sz * C[kz];
+
+  det = 1. / det;
+
+  u = u * det;
+  v = v * det;
+
+  distance = (u * Az + v * Bz + w * det * Cz);
+  u = v;
+  v = w * det;
+  if (invalid)
+    distance = -1.;
+}
+
+template <typename Device>
+//class WaterTightTriLeafIntersector : public vtkm::exec::ExecutionObjectBase
+class WaterTightTriLeafIntersector
 {
 public:
-  VTKM_EXEC
-  inline void FindDir(const vtkm::Vec<vtkm::Float64, 3>& dir,
-                      vtkm::Float64& sx,
-                      vtkm::Float64& sy,
-                      vtkm::Float64& sz,
-                      vtkm::Int32& kx,
-                      vtkm::Int32& ky,
-                      vtkm::Int32& kz) const
+  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  Id4ArrayPortal Triangles;
+
+public:
+  WaterTightTriLeafIntersector(const Id4Handle& triangles)
+    : Triangles(triangles.PrepareForInput(Device()))
   {
-    //Find max ray direction
-    kz = 0;
-    if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[1]))
-    {
-      if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[2]))
-        kz = 0;
-      else
-        kz = 2;
-    }
-    else
-    {
-      if (vtkm::Abs(dir[1]) > vtkm::Abs(dir[2]))
-        kz = 1;
-      else
-        kz = 2;
-    }
-
-    kx = kz + 1;
-    if (kx == 3)
-      kx = 0;
-    ky = kx + 1;
-    if (ky == 3)
-      ky = 0;
-
-    if (dir[kz] < 0.f)
-    {
-      vtkm::Int32 temp = ky;
-      ky = kx;
-      kx = temp;
-    }
-
-    sx = dir[kx] / dir[kz];
-    sy = dir[ky] / dir[kz];
-    sz = 1.f / dir[kz];
   }
 
-  VTKM_EXEC
-  inline void IntersectTri(const vtkm::Vec<vtkm::Float64, 3>& a,
-                           const vtkm::Vec<vtkm::Float64, 3>& b,
-                           const vtkm::Vec<vtkm::Float64, 3>& c,
-                           const vtkm::Float64& dirx,
-                           const vtkm::Float64& diry,
-                           const vtkm::Float64& dirz,
-                           vtkm::Float64& distance,
-                           vtkm::Float64& u,
-                           vtkm::Float64& v,
-                           const vtkm::Float64& originX,
-                           const vtkm::Float64& originY,
-                           const vtkm::Float64& originZ) const
+  WaterTightTriLeafIntersector(const WaterTightTriLeafIntersector<Device>& other)
+    : Triangles(other.Triangles)
   {
-    vtkm::Vec<vtkm::Float64, 3> dir;
-    dir[0] = dirx;
-    dir[1] = diry;
-    dir[2] = dirz;
-    //Find max ray direction
-    int kz = 0;
-    if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[1]))
-    {
-      if (vtkm::Abs(dir[0]) > vtkm::Abs(dir[2]))
-        kz = 0;
-      else
-        kz = 2;
-    }
-    else
-    {
-      if (vtkm::Abs(dir[1]) > vtkm::Abs(dir[2]))
-        kz = 1;
-      else
-        kz = 2;
-    }
-
-    vtkm::Int32 kx = kz + 1;
-    if (kx == 3)
-      kx = 0;
-    vtkm::Int32 ky = kx + 1;
-    if (ky == 3)
-      ky = 0;
-
-    if (dir[kz] < 0.f)
-    {
-      vtkm::Int32 temp = ky;
-      ky = kx;
-      kx = temp;
-    }
-
-    vtkm::Float64 Sx = dir[kx] / dir[kz];
-    vtkm::Float64 Sy = dir[ky] / dir[kz];
-    vtkm::Float64 Sz = 1. / dir[kz];
-
-
-
-    vtkm::Vec<vtkm::Float64, 3> A, B, C;
-    A[0] = a[0] - originX;
-    A[1] = a[1] - originY;
-    A[2] = a[2] - originZ;
-    B[0] = b[0] - originX;
-    B[1] = b[1] - originY;
-    B[2] = b[2] - originZ;
-    C[0] = c[0] - originX;
-    C[1] = c[1] - originY;
-    C[2] = c[2] - originZ;
-
-    const vtkm::Float64 Ax = A[kx] - Sx * A[kz];
-    const vtkm::Float64 Ay = A[ky] - Sy * A[kz];
-    const vtkm::Float64 Bx = B[kx] - Sx * B[kz];
-    const vtkm::Float64 By = B[ky] - Sy * B[kz];
-    const vtkm::Float64 Cx = C[kx] - Sx * C[kz];
-    const vtkm::Float64 Cy = C[ky] - Sy * C[kz];
-
-    //scaled barycentric coords
-    u = Cx * By - Cy * Bx;
-    v = Ax * Cy - Ay * Cx;
-
-    vtkm::Float64 w = Bx * Ay - By * Ax;
-
-    vtkm::Float64 low = vtkm::Min(u, vtkm::Min(v, w));
-    vtkm::Float64 high = vtkm::Max(u, vtkm::Max(v, w));
-    bool invalid = (low < 0.) && (high > 0.);
-
-    vtkm::Float64 det = u + v + w;
-
-    if (det == 0.)
-      invalid = true;
-
-    const vtkm::Float64 Az = Sz * A[kz];
-    const vtkm::Float64 Bz = Sz * B[kz];
-    const vtkm::Float64 Cz = Sz * C[kz];
-
-    det = 1. / det;
-
-    u = u * det;
-    v = v * det;
-
-    distance = (u * Az + v * Bz + w * det * Cz);
-    u = v;
-    v = w * det;
-    if (invalid)
-      distance = -1.;
   }
 
-  VTKM_EXEC
-  inline void IntersectTriSn(const vtkm::Vec<vtkm::Float64, 3>& a,
-                             const vtkm::Vec<vtkm::Float64, 3>& b,
-                             const vtkm::Vec<vtkm::Float64, 3>& c,
-                             const vtkm::Float64& sx,
-                             const vtkm::Float64& sy,
-                             const vtkm::Float64& sz,
-                             const vtkm::Int32& kx,
-                             const vtkm::Int32& ky,
-                             const vtkm::Int32& kz,
-                             vtkm::Float64& distance,
-                             vtkm::Float64& u,
-                             vtkm::Float64& v,
-                             const vtkm::Float64& originX,
-                             const vtkm::Float64& originY,
-                             const vtkm::Float64& originZ) const
+  template <typename PointPortalType, typename LeafPortalType, typename Precision>
+  VTKM_EXEC inline void IntersectLeaf(const vtkm::Int32& currentNode,
+                                      const vtkm::Vec<Precision, 3>& origin,
+                                      const vtkm::Vec<Precision, 3>& dir,
+                                      const PointPortalType& points,
+                                      vtkm::Id& hitIndex,
+                                      Precision& closestDistance,
+                                      Precision& minU,
+                                      Precision& minV,
+                                      LeafPortalType leafs,
+                                      const Precision& minDistance) const
   {
+    const vtkm::Id triangleCount = leafs.Get(currentNode);
+    WaterTight intersector;
+    for (vtkm::Id i = 1; i <= triangleCount; ++i)
+    {
+      const vtkm::Id triIndex = leafs.Get(currentNode + i);
+      vtkm::Vec<Id, 4> triangle = Triangles.Get(triIndex);
+      vtkm::Vec<Precision, 3> a = vtkm::Vec<Precision, 3>(points.Get(triangle[1]));
+      vtkm::Vec<Precision, 3> b = vtkm::Vec<Precision, 3>(points.Get(triangle[2]));
+      vtkm::Vec<Precision, 3> c = vtkm::Vec<Precision, 3>(points.Get(triangle[3]));
+      Precision distance = -1.;
+      Precision u, v;
 
-    vtkm::Vec<vtkm::Float64, 3> A, B, C;
-    A[0] = a[0] - originX;
-    A[1] = a[1] - originY;
-    A[2] = a[2] - originZ;
-    B[0] = b[0] - originX;
-    B[1] = b[1] - originY;
-    B[2] = b[2] - originZ;
-    C[0] = c[0] - originX;
-    C[1] = c[1] - originY;
-    C[2] = c[2] - originZ;
-
-    const vtkm::Float64 Ax = A[kx] - sx * A[kz];
-    const vtkm::Float64 Ay = A[ky] - sy * A[kz];
-    const vtkm::Float64 Bx = B[kx] - sx * B[kz];
-    const vtkm::Float64 By = B[ky] - sy * B[kz];
-    const vtkm::Float64 Cx = C[kx] - sx * C[kz];
-    const vtkm::Float64 Cy = C[ky] - sy * C[kz];
-
-    //scaled barycentric coords
-    u = Cx * By - Cy * Bx;
-    v = Ax * Cy - Ay * Cx;
-    vtkm::Float64 w = Bx * Ay - By * Ax;
-    vtkm::Float64 low = vtkm::Min(u, vtkm::Min(v, w));
-    vtkm::Float64 high = vtkm::Max(u, vtkm::Max(v, w));
-
-    bool invalid = (low < 0.) && (high > 0.);
-
-    vtkm::Float64 det = u + v + w;
-
-    if (det == 0.)
-      invalid = true;
-
-    const vtkm::Float64 Az = sz * A[kz];
-    const vtkm::Float64 Bz = sz * B[kz];
-    const vtkm::Float64 Cz = sz * C[kz];
-
-    det = 1. / det;
-
-    u = u * det;
-    v = v * det;
-
-    distance = (u * Az + v * Bz + w * det * Cz);
-    u = v;
-    v = w * det;
-    if (invalid)
-      distance = -1.;
+      intersector.IntersectTri(a, b, c, dir, distance, u, v, origin);
+      if (distance != -1. && distance < closestDistance && distance > minDistance)
+      {
+        closestDistance = distance;
+        minU = u;
+        minV = v;
+        hitIndex = triIndex;
+      }
+    } // for
   }
+};
 
-}; //WaterTight
-
-template <typename BVHPortalType, typename RayPrecision>
-VTKM_EXEC inline bool IntersectAABB(const BVHPortalType& bvh,
-                                    const vtkm::Int32& currentNode,
-                                    const RayPrecision& originDirX,
-                                    const RayPrecision& originDirY,
-                                    const RayPrecision& originDirZ,
-                                    const RayPrecision& invDirx,
-                                    const RayPrecision& invDiry,
-                                    const RayPrecision& invDirz,
-                                    const RayPrecision& closestDistance,
-                                    bool& hitLeftChild,
-                                    bool& hitRightChild,
-                                    const RayPrecision& minDistance) //Find hit after this distance
+template <typename Device>
+//class MollerTriLeafIntersector : public vtkm::exec::ExecutionObjectBase
+class MollerTriLeafIntersector
 {
-  vtkm::Vec<vtkm::Float32, 4> first4 = bvh.Get(currentNode);
-  vtkm::Vec<vtkm::Float32, 4> second4 = bvh.Get(currentNode + 1);
-  vtkm::Vec<vtkm::Float32, 4> third4 = bvh.Get(currentNode + 2);
+  //protected:
+public:
+  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  Id4ArrayPortal Triangles;
 
-  RayPrecision xmin0 = first4[0] * invDirx - originDirX;
-  RayPrecision ymin0 = first4[1] * invDiry - originDirY;
-  RayPrecision zmin0 = first4[2] * invDirz - originDirZ;
-  RayPrecision xmax0 = first4[3] * invDirx - originDirX;
-  RayPrecision ymax0 = second4[0] * invDiry - originDirY;
-  RayPrecision zmax0 = second4[1] * invDirz - originDirZ;
+public:
+  MollerTriLeafIntersector(const Id4Handle& triangles)
+    : Triangles(triangles.PrepareForInput(Device()))
+  {
+  }
 
-  RayPrecision min0 = vtkm::Max(
-    vtkm::Max(vtkm::Max(vtkm::Min(ymin0, ymax0), vtkm::Min(xmin0, xmax0)), vtkm::Min(zmin0, zmax0)),
-    minDistance);
-  RayPrecision max0 = vtkm::Min(
-    vtkm::Min(vtkm::Min(vtkm::Max(ymin0, ymax0), vtkm::Max(xmin0, xmax0)), vtkm::Max(zmin0, zmax0)),
-    closestDistance);
-  hitLeftChild = (max0 >= min0);
+  template <typename PointPortalType, typename LeafPortalType, typename Precision>
+  VTKM_EXEC inline void IntersectLeaf(const vtkm::Int32& currentNode,
+                                      const vtkm::Vec<Precision, 3>& origin,
+                                      const vtkm::Vec<Precision, 3>& dir,
+                                      const PointPortalType& points,
+                                      vtkm::Id& hitIndex,
+                                      Precision& closestDistance,
+                                      Precision& minU,
+                                      Precision& minV,
+                                      LeafPortalType leafs,
+                                      const Precision& minDistance) const
+  {
+    const vtkm::Id triangleCount = leafs.Get(currentNode);
+    Moller intersector;
+    for (vtkm::Id i = 1; i <= triangleCount; ++i)
+    {
+      const vtkm::Id triIndex = leafs.Get(currentNode + i);
+      vtkm::Vec<Id, 4> triangle = Triangles.Get(triIndex);
+      vtkm::Vec<Precision, 3> a = vtkm::Vec<Precision, 3>(points.Get(triangle[1]));
+      vtkm::Vec<Precision, 3> b = vtkm::Vec<Precision, 3>(points.Get(triangle[2]));
+      vtkm::Vec<Precision, 3> c = vtkm::Vec<Precision, 3>(points.Get(triangle[3]));
+      Precision distance = -1.;
+      Precision u, v;
 
-  RayPrecision xmin1 = second4[2] * invDirx - originDirX;
-  RayPrecision ymin1 = second4[3] * invDiry - originDirY;
-  RayPrecision zmin1 = third4[0] * invDirz - originDirZ;
-  RayPrecision xmax1 = third4[1] * invDirx - originDirX;
-  RayPrecision ymax1 = third4[2] * invDiry - originDirY;
-  RayPrecision zmax1 = third4[3] * invDirz - originDirZ;
+      intersector.IntersectTri(a, b, c, dir, distance, u, v, origin);
 
-  RayPrecision min1 = vtkm::Max(
-    vtkm::Max(vtkm::Max(vtkm::Min(ymin1, ymax1), vtkm::Min(xmin1, xmax1)), vtkm::Min(zmin1, zmax1)),
-    minDistance);
-  RayPrecision max1 = vtkm::Min(
-    vtkm::Min(vtkm::Min(vtkm::Max(ymin1, ymax1), vtkm::Max(xmin1, xmax1)), vtkm::Max(zmin1, zmax1)),
-    closestDistance);
-  hitRightChild = (max1 >= min1);
-  return (min0 > min1);
-}
+      if (distance != -1. && distance < closestDistance && distance > minDistance)
+      {
+        closestDistance = distance;
+        minU = u;
+        minV = v;
+        hitIndex = triIndex;
+      }
+    } // for
+  }
+};
 
 template <typename T>
 VTKM_EXEC inline void swap(T& a, T& b)
@@ -701,396 +540,393 @@ inline vtkm::Float32 downFast(const vtkm::Float32& a)
   return a * (1.f - vtkm::Float32(2e-23));
 }
 
-template <typename Device, typename LeafIntesectorType>
-class TriangleIntersector
+namespace detail
+{
+
+class TriangleIntersectionData
 {
 public:
-  using Float4ArrayHandle = typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 4>>;
-  using Int2Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 2>>;
-  using Int4Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
-  using Float4ArrayPortal = typename Float4ArrayHandle::ExecutionTypes<Device>::PortalConst;
-  using Int2ArrayPortal = typename Int2Handle::ExecutionTypes<Device>::PortalConst;
-  using Int4ArrayPortal = typename Int4Handle::ExecutionTypes<Device>::PortalConst;
-
-  class Intersector : public vtkm::worklet::WorkletMapField
+  // Worklet to calutate the normals of a triagle if
+  // none are stored in the data set
+  class CalculateNormals : public vtkm::worklet::WorkletMapField
   {
-  private:
-    LeafIntesectorType LeafIntersector;
-    bool Occlusion;
-    Float4ArrayPortal FlatBVH;
-    Int4ArrayPortal Leafs;
-    VTKM_EXEC
-    inline vtkm::Float32 rcp(vtkm::Float32 f) const { return 1.0f / f; }
-    VTKM_EXEC
-    inline vtkm::Float32 rcp_safe(vtkm::Float32 f) const
-    {
-      return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
-    }
-    VTKM_EXEC
-    inline vtkm::Float64 rcp(vtkm::Float64 f) const { return 1.0 / f; }
-    VTKM_EXEC
-    inline vtkm::Float64 rcp_safe(vtkm::Float64 f) const
-    {
-      return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
-    }
-
   public:
     VTKM_CONT
-    Intersector(bool occlusion, LinearBVH& bvh)
-      : Occlusion(occlusion)
-      , FlatBVH(bvh.FlatBVH.PrepareForInput(Device()))
-      , Leafs(bvh.LeafNodes.PrepareForInput(Device()))
-    {
-    }
-    using ControlSignature = void(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldOut<>,
-                                  FieldIn<>,
+    CalculateNormals() {}
+    typedef void ControlSignature(FieldIn<>,
                                   FieldIn<>,
                                   FieldOut<>,
                                   FieldOut<>,
-                                  FieldOut<>,
-                                  WholeArrayIn<Vec3RenderingTypes>);
-    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
-
-
-    template <typename PointPortalType, typename Precision>
-    VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& rayDir,
-                              const vtkm::Vec<Precision, 3>& rayOrigin,
-                              Precision& distance,
-                              const Precision& minDistance,
-                              const Precision& maxDistance,
-                              Precision& minU,
-                              Precision& minV,
-                              vtkm::Id& hitIndex,
-                              const PointPortalType& points) const
-    {
-      Precision closestDistance = maxDistance;
-      distance = maxDistance;
-      hitIndex = -1;
-      Precision dirx = rayDir[0];
-      Precision diry = rayDir[1];
-      Precision dirz = rayDir[2];
-
-      Precision invDirx = rcp_safe(dirx);
-      Precision invDiry = rcp_safe(diry);
-      Precision invDirz = rcp_safe(dirz);
-      vtkm::Int32 currentNode;
-
-      vtkm::Int32 todo[64];
-      vtkm::Int32 stackptr = 0;
-      vtkm::Int32 barrier = END_FLAG2;
-      currentNode = 0;
-
-      todo[stackptr] = barrier;
-
-      Precision originX = rayOrigin[0];
-      Precision originY = rayOrigin[1];
-      Precision originZ = rayOrigin[2];
-      Precision originDirX = originX * invDirx;
-      Precision originDirY = originY * invDiry;
-      Precision originDirZ = originZ * invDirz;
-      while (currentNode != END_FLAG2)
-      {
-        if (currentNode > -1)
-        {
-
-
-          bool hitLeftChild, hitRightChild;
-          bool rightCloser = IntersectAABB(FlatBVH,
-                                           currentNode,
-                                           originDirX,
-                                           originDirY,
-                                           originDirZ,
-                                           invDirx,
-                                           invDiry,
-                                           invDirz,
-                                           closestDistance,
-                                           hitLeftChild,
-                                           hitRightChild,
-                                           minDistance);
-
-          if (!hitLeftChild && !hitRightChild)
-          {
-            currentNode = todo[stackptr];
-            stackptr--;
-          }
-          else
-          {
-            vtkm::Vec<vtkm::Float32, 4> children =
-              FlatBVH.Get(currentNode + 3); //Children.Get(currentNode);
-            vtkm::Int32 leftChild;
-            memcpy(&leftChild, &children[0], 4);
-            vtkm::Int32 rightChild;
-            memcpy(&rightChild, &children[1], 4);
-            currentNode = (hitLeftChild) ? leftChild : rightChild;
-            if (hitLeftChild && hitRightChild)
-            {
-              if (rightCloser)
-              {
-                currentNode = rightChild;
-                stackptr++;
-                todo[stackptr] = leftChild;
-              }
-              else
-              {
-                stackptr++;
-                todo[stackptr] = rightChild;
-              }
-            }
-          }
-        } // if inner node
-
-        if (currentNode < 0 && currentNode != barrier) //check register usage
-        {
-          currentNode = -currentNode - 1; //swap the neg address
-          LeafIntersector.IntersectLeaf(currentNode,
-                                        originX,
-                                        originY,
-                                        originZ,
-                                        dirx,
-                                        diry,
-                                        dirz,
-                                        points,
-                                        hitIndex,
-                                        closestDistance,
-                                        minU,
-                                        minV,
-                                        Leafs,
-                                        minDistance);
-          currentNode = todo[stackptr];
-          stackptr--;
-        } // if leaf node
-
-      } //while
-      if (hitIndex != -1)
-        distance = closestDistance;
-    } // ()
-  };
-  template <typename Precision>
-  class IntersectorHitIndex : public vtkm::worklet::WorkletMapField
-  {
-  private:
-    bool Occlusion;
-    Float4ArrayPortal FlatBVH;
-    Int4ArrayPortal Leafs;
-    LeafIntesectorType LeafIntersector;
-
-    VTKM_EXEC
-    inline vtkm::Float32 rcp(vtkm::Float32 f) const { return 1.0f / f; }
-    VTKM_EXEC
-    inline vtkm::Float64 rcp(vtkm::Float64 f) const { return 1.0 / f; }
-    VTKM_EXEC
-    inline vtkm::Float64 rcp_safe(vtkm::Float64 f) const
-    {
-      return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
-    }
-    VTKM_EXEC
-    inline vtkm::Float32 rcp_safe(vtkm::Float32 f) const
-    {
-      return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
-    }
-
-  public:
-    VTKM_CONT
-    IntersectorHitIndex(bool occlusion, LinearBVH& bvh)
-      : Occlusion(occlusion)
-      , FlatBVH(bvh.FlatBVH.PrepareForInput(Device()))
-      , Leafs(bvh.LeafNodes.PrepareForInput(Device()))
-    {
-    }
-    using ControlSignature = void(FieldIn<>,
                                   FieldOut<>,
                                   WholeArrayIn<Vec3RenderingTypes>,
-                                  FieldOut<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>);
-    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
-    template <typename PointPortalType>
-    VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& rayDir,
-                              vtkm::Id& hitIndex,
-                              const PointPortalType& points,
-                              Precision& distance,
-                              const Precision& minDistance,
-                              const Precision& maxDistance,
-                              const vtkm::Vec<Precision, 3>& origin) const
+                                  WholeArrayIn<>);
+    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+    template <typename Precision, typename PointPortalType, typename IndicesPortalType>
+    VTKM_EXEC inline void operator()(const vtkm::Id& hitIndex,
+                                     const vtkm::Vec<Precision, 3>& rayDir,
+                                     Precision& normalX,
+                                     Precision& normalY,
+                                     Precision& normalZ,
+                                     const PointPortalType& points,
+                                     const IndicesPortalType& indicesPortal) const
     {
-      Precision closestDistance = maxDistance;
-      hitIndex = -1;
-      Precision dirx = rayDir[0];
-      Precision diry = rayDir[1];
-      Precision dirz = rayDir[2];
+      if (hitIndex < 0)
+        return;
 
-      Precision invDirx = rcp_safe(dirx);
-      Precision invDiry = rcp_safe(diry);
-      Precision invDirz = rcp_safe(dirz);
-      int currentNode;
+      vtkm::Vec<Id, 4> indices = indicesPortal.Get(hitIndex);
+      vtkm::Vec<Precision, 3> a = points.Get(indices[1]);
+      vtkm::Vec<Precision, 3> b = points.Get(indices[2]);
+      vtkm::Vec<Precision, 3> c = points.Get(indices[3]);
 
-      vtkm::Int32 todo[64];
-      vtkm::Int32 stackptr = 0;
-      vtkm::Int32 barrier = END_FLAG2;
-      currentNode = 0;
+      vtkm::Vec<Precision, 3> normal = vtkm::TriangleNormal(a, b, c);
+      vtkm::Normalize(normal);
 
-      todo[stackptr] = barrier;
+      //flip the normal if its pointing the wrong way
+      if (vtkm::dot(normal, rayDir) > 0.f)
+        normal = -normal;
+      normalX = normal[0];
+      normalY = normal[1];
+      normalZ = normal[2];
+    }
+  }; //class CalculateNormals
 
-      Precision originX = origin[0];
-      Precision originY = origin[1];
-      Precision originZ = origin[2];
-      Precision originDirX = originX * invDirx;
-      Precision originDirY = originY * invDiry;
-      Precision originDirZ = originZ * invDirz;
-      while (currentNode != END_FLAG2)
-      {
-        if (currentNode > -1)
-        {
-          bool hitLeftChild, hitRightChild;
-          bool rightCloser = IntersectAABB(FlatBVH,
-                                           currentNode,
-                                           originDirX,
-                                           originDirY,
-                                           originDirZ,
-                                           invDirx,
-                                           invDiry,
-                                           invDirz,
-                                           closestDistance,
-                                           hitLeftChild,
-                                           hitRightChild,
-                                           minDistance);
+  template <typename Precision>
+  class LerpScalar : public vtkm::worklet::WorkletMapField
+  {
+  private:
+    Precision MinScalar;
+    Precision invDeltaScalar;
 
-          if (!hitLeftChild && !hitRightChild)
-          {
-            currentNode = todo[stackptr];
-            stackptr--;
-          }
-          else
-          {
-            vtkm::Vec<vtkm::Float32, 4> children =
-              FlatBVH.Get(currentNode + 3); //Children.Get(currentNode);
-            vtkm::Int32 leftChild;
-            memcpy(&leftChild, &children[0], 4);
-            vtkm::Int32 rightChild;
-            memcpy(&rightChild, &children[1], 4);
-            currentNode = (hitLeftChild) ? leftChild : rightChild;
-            if (hitLeftChild && hitRightChild)
-            {
-              if (rightCloser)
-              {
-                currentNode = rightChild;
-                stackptr++;
-                todo[stackptr] = leftChild;
-              }
-              else
-              {
-                stackptr++;
-                todo[stackptr] = rightChild;
-              }
-            }
-          }
-        } // if inner node
+  public:
+    VTKM_CONT
+    LerpScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
+      : MinScalar(minScalar)
+    {
+      //Make sure the we don't divide by zero on
+      //something like an iso-surface
+      if (maxScalar - MinScalar != 0.f)
+        invDeltaScalar = 1.f / (maxScalar - MinScalar);
+      else
+        invDeltaScalar = 0.f;
+    }
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldInOut<>,
+                                  WholeArrayIn<ScalarRenderingTypes>,
+                                  WholeArrayIn<>);
+    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+    template <typename ScalarPortalType, typename IndicesPortalType>
+    VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
+                              const Precision& u,
+                              const Precision& v,
+                              Precision& lerpedScalar,
+                              const ScalarPortalType& scalars,
+                              const IndicesPortalType& indicesPortal) const
+    {
+      if (hitIndex < 0)
+        return;
 
-        if (currentNode < 0 && currentNode != barrier) //check register usage
-        {
-          currentNode = -currentNode - 1; //swap the neg address
-          Precision minU, minV;
+      vtkm::Vec<Id, 4> indices = indicesPortal.Get(hitIndex);
 
-          LeafIntersector.IntersectLeaf(currentNode,
-                                        originX,
-                                        originY,
-                                        originZ,
-                                        dirx,
-                                        diry,
-                                        dirz,
-                                        points,
-                                        hitIndex,
-                                        closestDistance,
-                                        minU,
-                                        minV,
-                                        Leafs,
-                                        minDistance);
+      Precision n = 1.f - u - v;
+      Precision aScalar = Precision(scalars.Get(indices[1]));
+      Precision bScalar = Precision(scalars.Get(indices[2]));
+      Precision cScalar = Precision(scalars.Get(indices[3]));
+      lerpedScalar = aScalar * n + bScalar * u + cScalar * v;
+      //normalize
+      lerpedScalar = (lerpedScalar - MinScalar) * invDeltaScalar;
+    }
+  }; //class LerpScalar
 
-          currentNode = todo[stackptr];
-          stackptr--;
-        } // if leaf node
+  template <typename Precision>
+  class NodalScalar : public vtkm::worklet::WorkletMapField
+  {
+  private:
+    Precision MinScalar;
+    Precision invDeltaScalar;
 
-      } //while
-      if (hitIndex != -1)
-        distance = closestDistance;
-    } // ()
+  public:
+    VTKM_CONT
+    NodalScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
+      : MinScalar(minScalar)
+    {
+      //Make sure the we don't divide by zero on
+      //something like an iso-surface
+      if (maxScalar - MinScalar != 0.f)
+        invDeltaScalar = 1.f / (maxScalar - MinScalar);
+      else
+        invDeltaScalar = 1.f / minScalar;
+    }
 
-  }; //class Intersector
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldOut<>,
+                                  WholeArrayIn<ScalarRenderingTypes>,
+                                  WholeArrayIn<>);
+
+    typedef void ExecutionSignature(_1, _2, _3, _4);
+    template <typename ScalarPortalType, typename IndicesPortalType>
+    VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
+                              Precision& scalar,
+                              const ScalarPortalType& scalars,
+                              const IndicesPortalType& indicesPortal) const
+    {
+      if (hitIndex < 0)
+        return;
+
+      vtkm::Vec<Id, 4> indices = indicesPortal.Get(hitIndex);
+
+      //Todo: one normalization
+      scalar = Precision(scalars.Get(indices[0]));
+
+      //normalize
+      scalar = (scalar - MinScalar) * invDeltaScalar;
+    }
+  }; //class LerpScalar
+
+  template <typename Precision>
+  VTKM_CONT void Run(Ray<Precision>& rays,
+                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
+                     vtkm::cont::CoordinateSystem coordsHandle,
+                     const vtkm::cont::Field* scalarField,
+                     const vtkm::Range& scalarRange)
+  {
+    bool isSupportedField =
+      (scalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+       scalarField->GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+    if (!isSupportedField)
+      throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
+    bool isAssocPoints = scalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS;
+
+    // Find the triangle normal
+    vtkm::worklet::DispatcherMapField<CalculateNormals>(CalculateNormals())
+      .Invoke(
+        rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, coordsHandle, triangles);
+
+    // Calculate scalar value at intersection point
+    if (isAssocPoints)
+    {
+      vtkm::worklet::DispatcherMapField<LerpScalar<Precision>>(
+        LerpScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
+        .Invoke(rays.HitIdx, rays.U, rays.V, rays.Scalar, *scalarField, triangles);
+    }
+    else
+    {
+      vtkm::worklet::DispatcherMapField<NodalScalar<Precision>>(
+        NodalScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
+        .Invoke(rays.HitIdx, rays.Scalar, *scalarField, triangles);
+    }
+  } // Run
+
+}; // Class IntersectionData
+
+#define AABB_EPSILON 0.00001f
+class FindTriangleAABBs : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  FindTriangleAABBs() {}
+  typedef void ControlSignature(FieldIn<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                WholeArrayIn<Vec3RenderingTypes>);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+  template <typename PointPortalType>
+  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 4> indices,
+                            vtkm::Float32& xmin,
+                            vtkm::Float32& ymin,
+                            vtkm::Float32& zmin,
+                            vtkm::Float32& xmax,
+                            vtkm::Float32& ymax,
+                            vtkm::Float32& zmax,
+                            const PointPortalType& points) const
+  {
+    // cast to Float32
+    vtkm::Vec<vtkm::Float32, 3> point;
+    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[1]));
+    xmin = point[0];
+    ymin = point[1];
+    zmin = point[2];
+    xmax = xmin;
+    ymax = ymin;
+    zmax = zmin;
+    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[2]));
+    xmin = vtkm::Min(xmin, point[0]);
+    ymin = vtkm::Min(ymin, point[1]);
+    zmin = vtkm::Min(zmin, point[2]);
+    xmax = vtkm::Max(xmax, point[0]);
+    ymax = vtkm::Max(ymax, point[1]);
+    zmax = vtkm::Max(zmax, point[2]);
+    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[3]));
+    xmin = vtkm::Min(xmin, point[0]);
+    ymin = vtkm::Min(ymin, point[1]);
+    zmin = vtkm::Min(zmin, point[2]);
+    xmax = vtkm::Max(xmax, point[0]);
+    ymax = vtkm::Max(ymax, point[1]);
+    zmax = vtkm::Max(zmax, point[2]);
+
+
+    vtkm::Float32 xEpsilon, yEpsilon, zEpsilon;
+    const vtkm::Float32 minEpsilon = 1e-6f;
+    xEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (xmax - xmin));
+    yEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (ymax - ymin));
+    zEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (zmax - zmin));
+
+    xmin -= xEpsilon;
+    ymin -= yEpsilon;
+    zmin -= zEpsilon;
+    xmax += xEpsilon;
+    ymax += yEpsilon;
+    zmax += zEpsilon;
+  }
+}; //class FindAABBs
+#undef AABB_EPSILON
+
+} // namespace detail
+
+class TriangleIntersector : public ShapeIntersector
+{
+protected:
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Triangles;
+  bool UseWaterTight;
+
+public:
+  TriangleIntersector()
+    : UseWaterTight(false)
+  {
+  }
+
+  void SetUseWaterTight(bool useIt) { UseWaterTight = useIt; }
+
+  void SetData(const vtkm::cont::CoordinateSystem& coords,
+               vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles)
+  {
+
+    CoordsHandle = coords;
+    Triangles = triangles;
+
+    vtkm::rendering::raytracing::AABBs AABB;
+    vtkm::worklet::DispatcherMapField<detail::FindTriangleAABBs>(detail::FindTriangleAABBs())
+      .Invoke(Triangles,
+              AABB.xmins,
+              AABB.ymins,
+              AABB.zmins,
+              AABB.xmaxs,
+              AABB.ymaxs,
+              AABB.zmaxs,
+              CoordsHandle);
+
+    this->SetAABBs(AABB);
+  }
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> GetTriangles() { return Triangles; }
 
   class CellIndexFilter : public vtkm::worklet::WorkletMapField
   {
-  protected:
-    Int4ArrayPortal Leafs;
-
   public:
     VTKM_CONT
-    CellIndexFilter(LinearBVH& bvh)
-      : Leafs(bvh.LeafNodes.PrepareForInput(Device()))
-    {
-    }
-    using ControlSignature = void(FieldInOut<>);
-    using ExecutionSignature = void(_1);
-    VTKM_EXEC
-    void operator()(vtkm::Id& hitIndex) const
+    CellIndexFilter() {}
+    typedef void ControlSignature(FieldInOut<>, WholeArrayIn<>);
+    typedef void ExecutionSignature(_1, _2);
+    template <typename TrianglePortalType>
+    VTKM_EXEC void operator()(vtkm::Id& hitIndex, TrianglePortalType& triangles) const
     {
       vtkm::Id cellIndex = -1;
       if (hitIndex != -1)
       {
-        cellIndex = Leafs.Get(hitIndex)[0];
+        cellIndex = triangles.Get(hitIndex)[0];
       }
 
       hitIndex = cellIndex;
     }
   }; //class CellIndexFilter
 
-  template <typename DynamicCoordType, typename Precision>
-  VTKM_CONT void run(Ray<Precision>& rays, LinearBVH& bvh, DynamicCoordType coordsHandle)
+  struct IntersectFunctor
   {
-    vtkm::worklet::DispatcherMapField<Intersector> dispatcher(Intersector(false, bvh));
-    dispatcher.SetDevice(Device());
-    dispatcher.Invoke(rays.Dir,
-                      rays.Origin,
-                      rays.Distance,
-                      rays.MinDistance,
-                      rays.MaxDistance,
-                      rays.U,
-                      rays.V,
-                      rays.HitIdx,
-                      coordsHandle);
+    template <typename Device, typename Precision>
+    VTKM_CONT bool operator()(Device,
+                              TriangleIntersector* self,
+                              Ray<Precision>& rays,
+                              bool returnCellIndex)
+    {
+      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+      self->IntersectRays(rays, Device(), returnCellIndex);
+      return true;
+    }
+  };
+
+
+  VTKM_CONT void IntersectRays(Ray<vtkm::Float32>& rays, bool returnCellIndex = false) override
+  {
+    vtkm::cont::TryExecute(IntersectFunctor(), this, rays, returnCellIndex);
   }
 
-  template <typename DynamicCoordType, typename Precision>
-  VTKM_CONT void runHitOnly(Ray<Precision>& rays,
-                            LinearBVH& bvh,
-                            DynamicCoordType coordsHandle,
-                            bool returnCellIndex)
+
+  VTKM_CONT void IntersectRays(Ray<vtkm::Float64>& rays, bool returnCellIndex = false) override
+  {
+    vtkm::cont::TryExecute(IntersectFunctor(), this, rays, returnCellIndex);
+  }
+
+  template <typename Precision, typename Device>
+  VTKM_CONT void IntersectRays(Ray<Precision>& rays,
+                               Device vtkmNotUsed(Device),
+                               bool returnCellIndex)
   {
 
-    vtkm::worklet::DispatcherMapField<IntersectorHitIndex<Precision>> dispatcher(
-      IntersectorHitIndex<Precision>(false, bvh));
-    dispatcher.SetDevice(Device());
-    dispatcher.Invoke(rays.Dir,
-                      rays.HitIdx,
-                      coordsHandle,
-                      rays.Distance,
-                      rays.MinDistance,
-                      rays.MaxDistance,
-                      rays.Origin);
+    if (UseWaterTight)
+    {
+      WaterTightTriLeafIntersector<Device> leafIntersector(this->Triangles);
+
+      BVHTraverser<WaterTightTriLeafIntersector> traverser;
+      traverser.IntersectRays(rays, this->BVH, leafIntersector, this->CoordsHandle, Device());
+    }
+    else
+    {
+      MollerTriLeafIntersector<Device> leafIntersector(this->Triangles);
+
+      BVHTraverser<MollerTriLeafIntersector> traverser;
+      traverser.IntersectRays(rays, this->BVH, leafIntersector, this->CoordsHandle, Device());
+    }
     // Normally we return the index of the triangle hit,
     // but in some cases we are only interested in the cell
     if (returnCellIndex)
     {
-      vtkm::worklet::DispatcherMapField<CellIndexFilter> cellIndexFilterDispatcher(
-        (CellIndexFilter(bvh)));
-      cellIndexFilterDispatcher.SetDevice(Device());
-      cellIndexFilterDispatcher.Invoke(rays.HitIdx);
+      vtkm::worklet::DispatcherMapField<CellIndexFilter> cellIndexFilterDispatcher;
+      cellIndexFilterDispatcher.Invoke(rays.HitIdx, Triangles);
     }
     // Update ray status
-    RayOperations::UpdateRayStatus(rays, Device());
+    RayOperations::UpdateRayStatus(rays);
   }
+
+  VTKM_CONT void IntersectionData(Ray<vtkm::Float32>& rays,
+                                  const vtkm::cont::Field* scalarField,
+                                  const vtkm::Range& scalarRange) override
+  {
+    IntersectionDataImp(rays, scalarField, scalarRange);
+  }
+
+  VTKM_CONT void IntersectionData(Ray<vtkm::Float64>& rays,
+                                  const vtkm::cont::Field* scalarField,
+                                  const vtkm::Range& scalarRange) override
+  {
+    IntersectionDataImp(rays, scalarField, scalarRange);
+  }
+
+  template <typename Precision>
+  VTKM_CONT void IntersectionDataImp(Ray<Precision>& rays,
+                                     const vtkm::cont::Field* scalarField,
+                                     const vtkm::Range& scalarRange)
+  {
+    ShapeIntersector::IntersectionPoint(rays);
+    detail::TriangleIntersectionData intData;
+    intData.Run(rays, this->Triangles, this->CoordsHandle, scalarField, scalarRange);
+  }
+
+  vtkm::Id GetNumberOfShapes() const override { return Triangles.GetNumberOfValues(); }
 }; // class intersector
 }
 }

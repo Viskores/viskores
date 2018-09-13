@@ -20,11 +20,12 @@
 #ifndef vtk_m_rendering_Triangulator_h
 #define vtk_m_rendering_Triangulator_h
 
+#include <typeinfo>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/raytracing/MeshConnectivityBuilder.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -36,35 +37,11 @@ namespace rendering
 ///
 ///  This class creates a array of triangle indices from both 3D and 2D
 ///  explicit cell sets. This list can serve as input to opengl and the
-///  ray tracer scene renderers. TODO: Add regular grid support
+///  ray tracer scene renderers.
 ///
-template <typename Device>
 class Triangulator
 {
-private:
-  using IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
-  using Vec4ArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
-  using Vec4ArrayPortalType = typename Vec4ArrayHandle::ExecutionTypes<Device>::Portal;
-  using IdPortalConstType = typename IdArrayHandle::ExecutionTypes<Device>::PortalConst;
-
 public:
-  template <class T>
-  class MemSet : public vtkm::worklet::WorkletMapField
-  {
-    T Value;
-
-  public:
-    VTKM_CONT
-    MemSet(T value)
-      : Value(value)
-    {
-    }
-    using ControlSignature = void(FieldOut<>);
-    using ExecutionSignature = void(_1);
-    VTKM_EXEC
-    void operator()(T& outValue) const { outValue = Value; }
-  }; //class MemSet
-
   class CountTriangles : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
@@ -108,27 +85,21 @@ public:
   template <int DIM>
   class TrianglulateStructured : public vtkm::worklet::WorkletMapPointToCell
   {
-  private:
-    Vec4ArrayPortalType OutputIndices;
 
   public:
-    using ControlSignature = void(CellSetIn cellset, FieldInTo<>);
-    using ExecutionSignature = void(FromIndices, _2);
-    //using InputDomain = _1;
+    using ControlSignature = void(CellSetIn cellset, FieldInTo<>, WholeArrayOut<>);
+    using ExecutionSignature = void(FromIndices, _2, _3);
     VTKM_CONT
-    TrianglulateStructured(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& outputIndices)
-    {
-      this->OutputIndices =
-        outputIndices.PrepareForOutput(outputIndices.GetNumberOfValues(), Device());
-    }
+    TrianglulateStructured() {}
 
 #if defined(VTKM_MSVC)
 #pragma warning(push)
 #pragma warning(disable : 4127) //conditional expression is constant
 #endif
-    //TODO: Remove the if/then with templates.
-    template <typename CellNodeVecType>
-    VTKM_EXEC void operator()(const CellNodeVecType& cellIndices, const vtkm::Id& cellIndex) const
+    template <typename CellNodeVecType, typename OutIndicesPortal>
+    VTKM_EXEC void operator()(const CellNodeVecType& cellIndices,
+                              const vtkm::Id& cellIndex,
+                              OutIndicesPortal& outputIndices) const
     {
       vtkm::Vec<vtkm::Id, 4> triangle;
       if (DIM == 2)
@@ -139,10 +110,10 @@ public:
         triangle[2] = cellIndices[1];
         triangle[3] = cellIndices[2];
         triangle[0] = cellIndex;
-        OutputIndices.Set(triangleOffset, triangle);
+        outputIndices.Set(triangleOffset, triangle);
         // 0-3-2
         triangle[2] = cellIndices[3];
-        OutputIndices.Set(triangleOffset + 1, triangle);
+        outputIndices.Set(triangleOffset + 1, triangle);
       }
       else if (DIM == 3)
       {
@@ -152,62 +123,62 @@ public:
         triangle[2] = cellIndices[1];
         triangle[3] = cellIndices[5];
         triangle[0] = cellIndex;
-        OutputIndices.Set(triangleOffset, triangle);
+        outputIndices.Set(triangleOffset, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[5];
         triangle[3] = cellIndices[4];
-        OutputIndices.Set(triangleOffset + 1, triangle);
+        outputIndices.Set(triangleOffset + 1, triangle);
 
         triangle[1] = cellIndices[1];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[6];
-        OutputIndices.Set(triangleOffset + 2, triangle);
+        outputIndices.Set(triangleOffset + 2, triangle);
 
         triangle[1] = cellIndices[1];
         triangle[2] = cellIndices[6];
         triangle[3] = cellIndices[5];
-        OutputIndices.Set(triangleOffset + 3, triangle);
+        outputIndices.Set(triangleOffset + 3, triangle);
 
         triangle[1] = cellIndices[3];
         triangle[2] = cellIndices[7];
         triangle[3] = cellIndices[6];
-        OutputIndices.Set(triangleOffset + 4, triangle);
+        outputIndices.Set(triangleOffset + 4, triangle);
 
         triangle[1] = cellIndices[3];
         triangle[2] = cellIndices[6];
         triangle[3] = cellIndices[2];
-        OutputIndices.Set(triangleOffset + 5, triangle);
+        outputIndices.Set(triangleOffset + 5, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[4];
         triangle[3] = cellIndices[7];
-        OutputIndices.Set(triangleOffset + 6, triangle);
+        outputIndices.Set(triangleOffset + 6, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[7];
         triangle[3] = cellIndices[3];
-        OutputIndices.Set(triangleOffset + 7, triangle);
+        outputIndices.Set(triangleOffset + 7, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[3];
         triangle[3] = cellIndices[2];
-        OutputIndices.Set(triangleOffset + 8, triangle);
+        outputIndices.Set(triangleOffset + 8, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[1];
-        OutputIndices.Set(triangleOffset + 9, triangle);
+        outputIndices.Set(triangleOffset + 9, triangle);
 
         triangle[1] = cellIndices[4];
         triangle[2] = cellIndices[5];
         triangle[3] = cellIndices[6];
-        OutputIndices.Set(triangleOffset + 10, triangle);
+        outputIndices.Set(triangleOffset + 10, triangle);
 
         triangle[1] = cellIndices[4];
         triangle[2] = cellIndices[6];
         triangle[3] = cellIndices[7];
-        OutputIndices.Set(triangleOffset + 11, triangle);
+        outputIndices.Set(triangleOffset + 11, triangle);
       }
     }
 #if defined(VTKM_MSVC)
@@ -303,24 +274,19 @@ public:
 
   class Trianglulate : public vtkm::worklet::WorkletMapPointToCell
   {
-  private:
-    Vec4ArrayPortalType OutputIndices;
 
   public:
     VTKM_CONT
-    Trianglulate(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& outputIndices,
-                 const vtkm::Id& size)
-    {
-      this->OutputIndices = outputIndices.PrepareForOutput(size, Device());
-    }
-    using ControlSignature = void(CellSetIn cellset, FieldInCell<>);
-    using ExecutionSignature = void(_2, CellShape, PointIndices, WorkIndex);
+    Trianglulate() {}
+    using ControlSignature = void(CellSetIn cellset, FieldInCell<>, WholeArrayOut<>);
+    using ExecutionSignature = void(_2, CellShape, PointIndices, WorkIndex, _3);
 
-    template <typename VecType>
+    template <typename VecType, typename OutputPortal>
     VTKM_EXEC void operator()(const vtkm::Id& triangleOffset,
                               vtkm::CellShapeTagQuad vtkmNotUsed(shapeType),
                               const VecType& cellIndices,
-                              const vtkm::Id& cellId) const
+                              const vtkm::Id& cellId,
+                              OutputPortal& outputIndices) const
     {
       vtkm::Vec<vtkm::Id, 4> triangle;
 
@@ -329,17 +295,18 @@ public:
       triangle[2] = cellIndices[1];
       triangle[3] = cellIndices[2];
       triangle[0] = cellId;
-      OutputIndices.Set(triangleOffset, triangle);
+      outputIndices.Set(triangleOffset, triangle);
 
       triangle[2] = cellIndices[3];
-      OutputIndices.Set(triangleOffset + 1, triangle);
+      outputIndices.Set(triangleOffset + 1, triangle);
     }
 
-    template <typename VecType>
+    template <typename VecType, typename OutputPortal>
     VTKM_EXEC void operator()(const vtkm::Id& triangleOffset,
                               vtkm::CellShapeTagHexahedron vtkmNotUsed(shapeType),
                               const VecType& cellIndices,
-                              const vtkm::Id& cellId) const
+                              const vtkm::Id& cellId,
+                              OutputPortal& outputIndices) const
     {
       vtkm::Vec<vtkm::Id, 4> triangle;
 
@@ -347,69 +314,70 @@ public:
       triangle[2] = cellIndices[1];
       triangle[3] = cellIndices[5];
       triangle[0] = cellId;
-      OutputIndices.Set(triangleOffset, triangle);
+      outputIndices.Set(triangleOffset, triangle);
 
       triangle[1] = cellIndices[0];
       triangle[2] = cellIndices[5];
       triangle[3] = cellIndices[4];
-      OutputIndices.Set(triangleOffset + 1, triangle);
+      outputIndices.Set(triangleOffset + 1, triangle);
 
       triangle[1] = cellIndices[1];
       triangle[2] = cellIndices[2];
       triangle[3] = cellIndices[6];
-      OutputIndices.Set(triangleOffset + 2, triangle);
+      outputIndices.Set(triangleOffset + 2, triangle);
 
       triangle[1] = cellIndices[1];
       triangle[2] = cellIndices[6];
       triangle[3] = cellIndices[5];
-      OutputIndices.Set(triangleOffset + 3, triangle);
+      outputIndices.Set(triangleOffset + 3, triangle);
 
       triangle[1] = cellIndices[3];
       triangle[2] = cellIndices[7];
       triangle[3] = cellIndices[6];
-      OutputIndices.Set(triangleOffset + 4, triangle);
+      outputIndices.Set(triangleOffset + 4, triangle);
 
       triangle[1] = cellIndices[3];
       triangle[2] = cellIndices[6];
       triangle[3] = cellIndices[2];
-      OutputIndices.Set(triangleOffset + 5, triangle);
+      outputIndices.Set(triangleOffset + 5, triangle);
 
       triangle[1] = cellIndices[0];
       triangle[2] = cellIndices[4];
       triangle[3] = cellIndices[7];
-      OutputIndices.Set(triangleOffset + 6, triangle);
+      outputIndices.Set(triangleOffset + 6, triangle);
 
       triangle[1] = cellIndices[0];
       triangle[2] = cellIndices[7];
       triangle[3] = cellIndices[3];
-      OutputIndices.Set(triangleOffset + 7, triangle);
+      outputIndices.Set(triangleOffset + 7, triangle);
 
       triangle[1] = cellIndices[0];
       triangle[2] = cellIndices[3];
       triangle[3] = cellIndices[2];
-      OutputIndices.Set(triangleOffset + 8, triangle);
+      outputIndices.Set(triangleOffset + 8, triangle);
 
       triangle[1] = cellIndices[0];
       triangle[2] = cellIndices[2];
       triangle[3] = cellIndices[1];
-      OutputIndices.Set(triangleOffset + 9, triangle);
+      outputIndices.Set(triangleOffset + 9, triangle);
 
       triangle[1] = cellIndices[4];
       triangle[2] = cellIndices[5];
       triangle[3] = cellIndices[6];
-      OutputIndices.Set(triangleOffset + 10, triangle);
+      outputIndices.Set(triangleOffset + 10, triangle);
 
       triangle[1] = cellIndices[4];
       triangle[2] = cellIndices[6];
       triangle[3] = cellIndices[7];
-      OutputIndices.Set(triangleOffset + 11, triangle);
+      outputIndices.Set(triangleOffset + 11, triangle);
     }
 
-    template <typename VecType>
+    template <typename VecType, typename OutputPortal>
     VTKM_EXEC void operator()(const vtkm::Id& triangleOffset,
                               vtkm::CellShapeTagGeneric shapeType,
                               const VecType& cellIndices,
-                              const vtkm::Id& cellId) const
+                              const vtkm::Id& cellId,
+                              OutputPortal& outputIndices) const
     {
       vtkm::Vec<vtkm::Id, 4> triangle;
 
@@ -420,7 +388,7 @@ public:
         triangle[2] = cellIndices[1];
         triangle[3] = cellIndices[2];
         triangle[0] = cellId;
-        OutputIndices.Set(triangleOffset, triangle);
+        outputIndices.Set(triangleOffset, triangle);
       }
       if (shapeType.Id == vtkm::CELL_SHAPE_QUAD)
       {
@@ -429,10 +397,10 @@ public:
         triangle[2] = cellIndices[1];
         triangle[3] = cellIndices[2];
         triangle[0] = cellId;
-        OutputIndices.Set(triangleOffset, triangle);
+        outputIndices.Set(triangleOffset, triangle);
 
         triangle[2] = cellIndices[3];
-        OutputIndices.Set(triangleOffset + 1, triangle);
+        outputIndices.Set(triangleOffset + 1, triangle);
       }
       if (shapeType.Id == vtkm::CELL_SHAPE_TETRA)
       {
@@ -440,22 +408,22 @@ public:
         triangle[2] = cellIndices[3];
         triangle[3] = cellIndices[1];
         triangle[0] = cellId;
-        OutputIndices.Set(triangleOffset, triangle);
+        outputIndices.Set(triangleOffset, triangle);
 
         triangle[1] = cellIndices[1];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[3];
-        OutputIndices.Set(triangleOffset + 1, triangle);
+        outputIndices.Set(triangleOffset + 1, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[3];
-        OutputIndices.Set(triangleOffset + 2, triangle);
+        outputIndices.Set(triangleOffset + 2, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[1];
-        OutputIndices.Set(triangleOffset + 3, triangle);
+        outputIndices.Set(triangleOffset + 3, triangle);
       }
       if (shapeType.Id == vtkm::CELL_SHAPE_HEXAHEDRON)
       {
@@ -463,62 +431,62 @@ public:
         triangle[2] = cellIndices[1];
         triangle[3] = cellIndices[5];
         triangle[0] = cellId;
-        OutputIndices.Set(triangleOffset, triangle);
+        outputIndices.Set(triangleOffset, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[5];
         triangle[3] = cellIndices[4];
-        OutputIndices.Set(triangleOffset + 1, triangle);
+        outputIndices.Set(triangleOffset + 1, triangle);
 
         triangle[1] = cellIndices[1];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[6];
-        OutputIndices.Set(triangleOffset + 2, triangle);
+        outputIndices.Set(triangleOffset + 2, triangle);
 
         triangle[1] = cellIndices[1];
         triangle[2] = cellIndices[6];
         triangle[3] = cellIndices[5];
-        OutputIndices.Set(triangleOffset + 3, triangle);
+        outputIndices.Set(triangleOffset + 3, triangle);
 
         triangle[1] = cellIndices[3];
         triangle[2] = cellIndices[7];
         triangle[3] = cellIndices[6];
-        OutputIndices.Set(triangleOffset + 4, triangle);
+        outputIndices.Set(triangleOffset + 4, triangle);
 
         triangle[1] = cellIndices[3];
         triangle[2] = cellIndices[6];
         triangle[3] = cellIndices[2];
-        OutputIndices.Set(triangleOffset + 5, triangle);
+        outputIndices.Set(triangleOffset + 5, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[4];
         triangle[3] = cellIndices[7];
-        OutputIndices.Set(triangleOffset + 6, triangle);
+        outputIndices.Set(triangleOffset + 6, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[7];
         triangle[3] = cellIndices[3];
-        OutputIndices.Set(triangleOffset + 7, triangle);
+        outputIndices.Set(triangleOffset + 7, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[3];
         triangle[3] = cellIndices[2];
-        OutputIndices.Set(triangleOffset + 8, triangle);
+        outputIndices.Set(triangleOffset + 8, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[1];
-        OutputIndices.Set(triangleOffset + 9, triangle);
+        outputIndices.Set(triangleOffset + 9, triangle);
 
         triangle[1] = cellIndices[4];
         triangle[2] = cellIndices[5];
         triangle[3] = cellIndices[6];
-        OutputIndices.Set(triangleOffset + 10, triangle);
+        outputIndices.Set(triangleOffset + 10, triangle);
 
         triangle[1] = cellIndices[4];
         triangle[2] = cellIndices[6];
         triangle[3] = cellIndices[7];
-        OutputIndices.Set(triangleOffset + 11, triangle);
+        outputIndices.Set(triangleOffset + 11, triangle);
       }
       if (shapeType.Id == vtkm::CELL_SHAPE_WEDGE)
       {
@@ -526,42 +494,42 @@ public:
         triangle[2] = cellIndices[1];
         triangle[3] = cellIndices[2];
         triangle[0] = cellId;
-        OutputIndices.Set(triangleOffset, triangle);
+        outputIndices.Set(triangleOffset, triangle);
 
         triangle[1] = cellIndices[3];
         triangle[2] = cellIndices[5];
         triangle[3] = cellIndices[4];
-        OutputIndices.Set(triangleOffset + 1, triangle);
+        outputIndices.Set(triangleOffset + 1, triangle);
 
         triangle[1] = cellIndices[3];
         triangle[2] = cellIndices[0];
         triangle[3] = cellIndices[2];
-        OutputIndices.Set(triangleOffset + 2, triangle);
+        outputIndices.Set(triangleOffset + 2, triangle);
 
         triangle[1] = cellIndices[3];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[5];
-        OutputIndices.Set(triangleOffset + 3, triangle);
+        outputIndices.Set(triangleOffset + 3, triangle);
 
         triangle[1] = cellIndices[1];
         triangle[2] = cellIndices[4];
         triangle[3] = cellIndices[5];
-        OutputIndices.Set(triangleOffset + 4, triangle);
+        outputIndices.Set(triangleOffset + 4, triangle);
 
         triangle[1] = cellIndices[1];
         triangle[2] = cellIndices[5];
         triangle[3] = cellIndices[2];
-        OutputIndices.Set(triangleOffset + 5, triangle);
+        outputIndices.Set(triangleOffset + 5, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[3];
         triangle[3] = cellIndices[4];
-        OutputIndices.Set(triangleOffset + 6, triangle);
+        outputIndices.Set(triangleOffset + 6, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[4];
         triangle[3] = cellIndices[1];
-        OutputIndices.Set(triangleOffset + 7, triangle);
+        outputIndices.Set(triangleOffset + 7, triangle);
       }
       if (shapeType.Id == vtkm::CELL_SHAPE_PYRAMID)
       {
@@ -569,32 +537,32 @@ public:
         triangle[2] = cellIndices[4];
         triangle[3] = cellIndices[1];
         triangle[0] = cellId;
-        OutputIndices.Set(triangleOffset, triangle);
+        outputIndices.Set(triangleOffset, triangle);
 
         triangle[1] = cellIndices[1];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[4];
-        OutputIndices.Set(triangleOffset + 1, triangle);
+        outputIndices.Set(triangleOffset + 1, triangle);
 
         triangle[1] = cellIndices[2];
         triangle[2] = cellIndices[3];
         triangle[3] = cellIndices[4];
-        OutputIndices.Set(triangleOffset + 2, triangle);
+        outputIndices.Set(triangleOffset + 2, triangle);
 
         triangle[1] = cellIndices[0];
         triangle[2] = cellIndices[4];
         triangle[3] = cellIndices[3];
-        OutputIndices.Set(triangleOffset + 3, triangle);
+        outputIndices.Set(triangleOffset + 3, triangle);
 
         triangle[1] = cellIndices[3];
         triangle[2] = cellIndices[2];
         triangle[3] = cellIndices[1];
-        OutputIndices.Set(triangleOffset + 4, triangle);
+        outputIndices.Set(triangleOffset + 4, triangle);
 
         triangle[1] = cellIndices[3];
         triangle[2] = cellIndices[1];
         triangle[3] = cellIndices[0];
-        OutputIndices.Set(triangleOffset + 5, triangle);
+        outputIndices.Set(triangleOffset + 5, triangle);
       }
     }
   }; //class Trianglulate
@@ -608,16 +576,20 @@ public:
                          vtkm::Id& outputTriangles)
   {
     //Eliminate unseen triangles
-    vtkm::worklet::DispatcherMapField<IndicesSort>().Invoke(outputIndices);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Sort(outputIndices, IndicesLessThan());
+    vtkm::worklet::DispatcherMapField<IndicesSort> sortInvoker;
+    sortInvoker.Invoke(outputIndices);
+
+    vtkm::cont::Algorithm::Sort(outputIndices, IndicesLessThan());
     vtkm::cont::ArrayHandle<vtkm::UInt8> flags;
     flags.Allocate(outputTriangles);
-    vtkm::worklet::DispatcherMapField<MemSet<vtkm::UInt8>>(MemSet<vtkm::UInt8>(1)).Invoke(flags);
+
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> one(1, outputTriangles);
+    vtkm::cont::Algorithm::Copy(one, flags);
     //Unique triangles will have a flag = 1
     vtkm::worklet::DispatcherMapField<UniqueTriangles>().Invoke(outputIndices, flags);
 
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> subset;
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(outputIndices, flags, subset);
+    vtkm::cont::Algorithm::CopyIf(outputIndices, flags, subset);
     outputIndices = subset;
     outputTriangles = subset.GetNumberOfValues();
   }
@@ -630,13 +602,23 @@ public:
     bool fastPath = false;
     if (cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
     {
+      //vtkm::cont::CellSetStructured<3> cellSetStructured3D =
+      //  cellset.Cast<vtkm::cont::CellSetStructured<3>>();
+
+      //raytracing::MeshConnectivityBuilder<Device> builder;
+      //outputIndices = builder.ExternalTrianglesStructured(cellSetStructured3D);
+      //outputTriangles = outputIndices.GetNumberOfValues();
+      //fastPath = true;
       vtkm::cont::CellSetStructured<3> cellSetStructured3D =
         cellset.Cast<vtkm::cont::CellSetStructured<3>>();
+      const vtkm::Id numCells = cellSetStructured3D.GetNumberOfCells();
 
-      raytracing::MeshConnectivityBuilder<Device> builder;
-      outputIndices = builder.ExternalTrianglesStructured(cellSetStructured3D);
-      outputTriangles = outputIndices.GetNumberOfValues();
-      fastPath = true;
+      vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0, 1, numCells);
+      outputIndices.Allocate(numCells * 12);
+      vtkm::worklet::DispatcherMapTopology<TrianglulateStructured<3>>(TrianglulateStructured<3>())
+        .Invoke(cellSetStructured3D, cellIdxs, outputIndices);
+
+      outputTriangles = numCells * 12;
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetStructured<2>()))
     {
@@ -646,11 +628,12 @@ public:
 
       vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0, 1, numCells);
       outputIndices.Allocate(numCells * 2);
-      vtkm::worklet::DispatcherMapTopology<TrianglulateStructured<2>>(
-        TrianglulateStructured<2>(outputIndices))
-        .Invoke(cellSetStructured2D, cellIdxs);
+      vtkm::worklet::DispatcherMapTopology<TrianglulateStructured<2>>(TrianglulateStructured<2>())
+        .Invoke(cellSetStructured2D, cellIdxs, outputIndices);
 
       outputTriangles = numCells * 2;
+      // no need to do external faces on 2D cell set
+      fastPath = true;
     }
     else
     {
@@ -659,16 +642,14 @@ public:
         .Invoke(cellset, trianglesPerCell);
 
       vtkm::Id totalTriangles = 0;
-      totalTriangles =
-        vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(trianglesPerCell, vtkm::Id(0));
+      totalTriangles = vtkm::cont::Algorithm::Reduce(trianglesPerCell, vtkm::Id(0));
 
       vtkm::cont::ArrayHandle<vtkm::Id> cellOffsets;
-      vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(trianglesPerCell, cellOffsets);
+      vtkm::cont::Algorithm::ScanExclusive(trianglesPerCell, cellOffsets);
       outputIndices.Allocate(totalTriangles);
 
-      vtkm::worklet::DispatcherMapTopology<Trianglulate>(
-        Trianglulate(outputIndices, totalTriangles))
-        .Invoke(cellset, cellOffsets);
+      vtkm::worklet::DispatcherMapTopology<Trianglulate>(Trianglulate())
+        .Invoke(cellset, cellOffsets, outputIndices);
 
       outputTriangles = totalTriangles;
     }

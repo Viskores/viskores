@@ -39,11 +39,9 @@ namespace internal
 /// filters, and filters should be compiled in a library (for the same reason).
 ///
 VTKM_RENDERING_EXPORT
-void RunTriangulator(
-  const vtkm::cont::DynamicCellSet& cellSet,
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
-  vtkm::Id& numberOfTriangles,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
+void RunTriangulator(const vtkm::cont::DynamicCellSet& cellSet,
+                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
+                     vtkm::Id& numberOfTriangles);
 }
 }
 } // namespace vtkm::rendering::internal

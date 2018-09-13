@@ -21,13 +21,13 @@
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/CellIntersector.h>
 #include <vtkm/rendering/raytracing/CellSampler.h>
 #include <vtkm/rendering/raytracing/CellTables.h>
-#include <vtkm/rendering/raytracing/ConnectivityBase.h>
-#include <vtkm/rendering/raytracing/MeshConnectivityStructures.h>
+#include <vtkm/rendering/raytracing/MeshConnectivityBase.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
@@ -110,15 +110,11 @@ void RayTracking<FloatType>::Init(const vtkm::Id size,
   // Init the exit faces. This value is used to load the next cell
   // base on the cell and face it left
   //
-  vtkm::worklet::DispatcherMapField<MemSet<vtkm::Int32>> initExitFaceDispatcher(
-    MemSet<vtkm::Int32>(-1));
-  initExitFaceDispatcher.SetDevice(Device());
-  initExitFaceDispatcher.Invoke(ExitFace);
+  vtkm::cont::ArrayHandleConstant<vtkm::Int32> negOne(-1, size);
+  vtkm::cont::Algorithm::Copy(Device(), negOne, ExitFace);
 
-  vtkm::worklet::DispatcherMapField<MemSet<FloatType>> initExitDistanceDispatcher(
-    MemSet<FloatType>(-1));
-  initExitDistanceDispatcher.SetDevice(Device());
-  initExitDistanceDispatcher.Invoke(*ExitDist);
+  vtkm::cont::ArrayHandleConstant<FloatType> negOnef(-1.f, size);
+  vtkm::cont::Algorithm::Copy(Device(), negOnef, *ExitDist);
 }
 
 template <typename FloatType>
@@ -131,6 +127,20 @@ void RayTracking<FloatType>::Swap()
 }
 } //namespace detail
 
+template <typename FloatType, typename Device>
+void ConnectivityTracer::PrintRayStatus(Ray<FloatType>& rays, Device)
+{
+  vtkm::Id raysExited = RayOperations::GetStatusCount(rays, RAY_EXITED_MESH, Device());
+  vtkm::Id raysActive = RayOperations::GetStatusCount(rays, RAY_ACTIVE, Device());
+  vtkm::Id raysAbandoned = RayOperations::GetStatusCount(rays, RAY_ABANDONED, Device());
+  vtkm::Id raysExitedDom = RayOperations::GetStatusCount(rays, RAY_EXITED_DOMAIN, Device());
+  std::cout << "\r Ray Status " << std::setw(10) << std::left << " Lost " << std::setw(10)
+            << std::left << RaysLost << std::setw(10) << std::left << " Exited " << std::setw(10)
+            << std::left << raysExited << std::setw(10) << std::left << " Active " << std::setw(10)
+            << raysActive << std::setw(10) << std::left << " Abandoned " << std::setw(10)
+            << raysAbandoned << " Exited Domain " << std::setw(10) << std::left << raysExitedDom
+            << "\n";
+}
 
 //
 //  Advance Ray
@@ -160,16 +170,15 @@ public:
   }
 }; //class AdvanceRay
 
-template <vtkm::Int32 CellType, typename FloatType, typename MeshType>
+template <typename FloatType>
 class LocateCell : public vtkm::worklet::WorkletMapField
 {
 private:
-  MeshType MeshConn;
-  CellIntersector<CellType> Intersector;
+  const MeshConnectivityBase* MeshConn;
+  CellIntersector<255> Intersector;
 
 public:
-  template <typename ConnectivityType>
-  LocateCell(ConnectivityType& meshConn)
+  LocateCell(const MeshConnectivityBase* meshConn)
     : MeshConn(meshConn)
   {
   }
@@ -196,7 +205,7 @@ public:
   {
     if (enterFace != -1 && rayStatus == RAY_ACTIVE)
     {
-      currentCell = MeshConn.GetConnectingCell(currentCell, enterFace);
+      currentCell = MeshConn->GetConnectingCell(currentCell, enterFace);
       if (currentCell == -1)
         rayStatus = RAY_EXITED_MESH;
       enterFace = -1;
@@ -212,7 +221,7 @@ public:
     vtkm::Id cellConn[8];
     FloatType distances[6];
 
-    const vtkm::Int32 numIndices = MeshConn.GetCellIndices(cellConn, currentCell);
+    const vtkm::Int32 numIndices = MeshConn->GetCellIndices(cellConn, currentCell);
     //load local cell data
     for (int i = 0; i < numIndices; ++i)
     {
@@ -222,7 +231,7 @@ public:
       ypoints[i] = point[1];
       zpoints[i] = point[2];
     }
-    const vtkm::UInt8 cellShape = MeshConn.GetCellShape(currentCell);
+    const vtkm::UInt8 cellShape = MeshConn->GetCellShape(currentCell);
     Intersector.IntersectCell(xpoints, ypoints, zpoints, dir, origin, distances, cellShape);
 
     CellTables tables;
@@ -267,7 +276,7 @@ public:
   } //operator
 };  //class LocateCell
 
-template <vtkm::Int32 CellType, typename FloatType, typename Device, typename MeshType>
+template <typename FloatType, typename Device>
 class RayBumper : public vtkm::worklet::WorkletMapField
 {
 private:
@@ -276,15 +285,14 @@ private:
   FloatTypePortal DirectionsX;
   FloatTypePortal DirectionsY;
   FloatTypePortal DirectionsZ;
-  MeshType MeshConn;
-  CellIntersector<CellType> Intersector;
+  const MeshConnectivityBase* MeshConn;
+  CellIntersector<255> Intersector;
   const vtkm::UInt8 FailureStatus; // the status to assign ray if we fail to find the intersection
 public:
-  template <typename ConnectivityType>
   RayBumper(FloatTypeHandle dirsx,
             FloatTypeHandle dirsy,
             FloatTypeHandle dirsz,
-            ConnectivityType meshConn,
+            const MeshConnectivityBase* meshConn,
             vtkm::UInt8 failureStatus = RAY_ABANDONED)
     : DirectionsX(dirsx.PrepareForInPlace(Device()))
     , DirectionsY(dirsy.PrepareForInPlace(Device()))
@@ -327,25 +335,23 @@ public:
     FloatType distances[6];
 
     vtkm::Vec<FloatType, 3> centroid(0., 0., 0.);
-    const vtkm::Int32 numIndices = MeshConn.GetCellIndices(cellConn, currentCell);
-    if (numIndices > 0)
-    {
-      //load local cell data
-      for (int i = 0; i < numIndices; ++i)
-      {
-        BOUNDS_CHECK(vertices, cellConn[i]);
-        vtkm::Vec<FloatType, 3> point = vtkm::Vec<FloatType, 3>(vertices.Get(cellConn[i]));
-        centroid = centroid + point;
-        xpoints[i] = point[0];
-        ypoints[i] = point[1];
-        zpoints[i] = point[2];
-      }
 
-      FloatType invNumIndices = static_cast<FloatType>(1.) / static_cast<FloatType>(numIndices);
-      centroid[0] = centroid[0] * invNumIndices;
-      centroid[1] = centroid[1] * invNumIndices;
-      centroid[2] = centroid[2] * invNumIndices;
+    const vtkm::Int32 numIndices = MeshConn->GetCellIndices(cellConn, currentCell);
+    //load local cell data
+    for (int i = 0; i < numIndices; ++i)
+    {
+      BOUNDS_CHECK(vertices, cellConn[i]);
+      vtkm::Vec<FloatType, 3> point = vtkm::Vec<FloatType, 3>(vertices.Get(cellConn[i]));
+      centroid = centroid + point;
+      xpoints[i] = point[0];
+      ypoints[i] = point[1];
+      zpoints[i] = point[2];
     }
+
+    FloatType invNumIndices = static_cast<FloatType>(1.) / static_cast<FloatType>(numIndices);
+    centroid[0] = centroid[0] * invNumIndices;
+    centroid[1] = centroid[1] * invNumIndices;
+    centroid[2] = centroid[2] * invNumIndices;
 
     vtkm::Vec<FloatType, 3> toCentroid = centroid - origin;
     vtkm::Normalize(toCentroid);
@@ -361,7 +367,7 @@ public:
     DirectionsY.Set(pixelIndex, dir[1]);
     DirectionsZ.Set(pixelIndex, dir[2]);
 
-    const vtkm::UInt8 cellShape = MeshConn.GetCellShape(currentCell);
+    const vtkm::UInt8 cellShape = MeshConn->GetCellShape(currentCell);
     Intersector.IntersectCell(xpoints, ypoints, zpoints, dir, origin, distances, cellShape);
 
     CellTables tables;
@@ -677,7 +683,7 @@ public:
   }
 };
 
-template <vtkm::Int32 CellType, typename FloatType, typename Device, typename MeshType>
+template <typename FloatType, typename Device>
 class SampleCellAssocCells : public vtkm::worklet::WorkletMapField
 {
 private:
@@ -686,23 +692,22 @@ private:
   using ColorConstPortal = typename ColorHandle::ExecutionTypes<Device>::PortalConst;
   using ColorPortal = typename ColorBuffer::template ExecutionTypes<Device>::Portal;
 
-  CellSampler<CellType> Sampler;
+  CellSampler<255> Sampler;
   FloatType SampleDistance;
   FloatType MinScalar;
   FloatType InvDeltaScalar;
   ColorPortal FrameBuffer;
   ColorConstPortal ColorMap;
-  MeshType MeshConn;
+  const MeshConnectivityBase* MeshConn;
   vtkm::Int32 ColorMapSize;
 
 public:
-  template <typename ConnectivityType>
   SampleCellAssocCells(const FloatType& sampleDistance,
                        const FloatType& minScalar,
                        const FloatType& maxScalar,
                        ColorHandle& colorMap,
                        ColorBuffer& frameBuffer,
-                       ConnectivityType& meshConn)
+                       const MeshConnectivityBase* meshConn)
     : SampleDistance(sampleDistance)
     , MinScalar(minScalar)
     , ColorMap(colorMap.PrepareForInput(Device()))
@@ -795,7 +800,7 @@ public:
   }
 }; //class Sample cell
 
-template <vtkm::Int32 CellType, typename FloatType, typename Device, typename MeshType>
+template <typename FloatType, typename Device>
 class SampleCellAssocPoints : public vtkm::worklet::WorkletMapField
 {
 private:
@@ -804,9 +809,9 @@ private:
   using ColorConstPortal = typename ColorHandle::ExecutionTypes<Device>::PortalConst;
   using ColorPortal = typename ColorBuffer::template ExecutionTypes<Device>::Portal;
 
-  CellSampler<CellType> Sampler;
+  CellSampler<255> Sampler;
   FloatType SampleDistance;
-  MeshType MeshConn;
+  const MeshConnectivityBase* MeshConn;
   FloatType MinScalar;
   FloatType InvDeltaScalar;
   ColorPortal FrameBuffer;
@@ -814,13 +819,12 @@ private:
   vtkm::Id ColorMapSize;
 
 public:
-  template <typename ConnectivityType>
   SampleCellAssocPoints(const FloatType& sampleDistance,
                         const FloatType& minScalar,
                         const FloatType& maxScalar,
                         ColorHandle& colorMap,
                         ColorBuffer& frameBuffer,
-                        ConnectivityType& meshConn)
+                        const MeshConnectivityBase* meshConn)
     : SampleDistance(sampleDistance)
     , MeshConn(meshConn)
     , MinScalar(minScalar)
@@ -884,7 +888,7 @@ public:
     }
     //load local scalar cell data
     vtkm::Id cellConn[8];
-    const vtkm::Int32 numIndices = MeshConn.GetCellIndices(cellConn, currentCell);
+    const vtkm::Int32 numIndices = MeshConn->GetCellIndices(cellConn, currentCell);
     for (int i = 0; i < numIndices; ++i)
     {
       BOUNDS_CHECK(scalarPortal, cellConn[i]);
@@ -903,7 +907,7 @@ public:
       currentDistance = enterDistance;
     }
 
-    const vtkm::Int32 cellShape = MeshConn.GetCellShape(currentCell);
+    const vtkm::Int32 cellShape = MeshConn->GetCellShape(currentCell);
     while (enterDistance <= currentDistance && currentDistance <= exitDistance)
     {
       vtkm::Vec<FloatType, 3> sampleLoc = origin + currentDistance * dir;
@@ -955,37 +959,34 @@ public:
   }
 }; //class Sample cell
 
-template <vtkm::Int32 CellType, typename ConnectivityType>
 template <typename FloatType, typename Device>
-void ConnectivityTracer<CellType, ConnectivityType>::IntersectCell(
-  Ray<FloatType>& rays,
-  detail::RayTracking<FloatType>& tracker,
-  Device)
+void ConnectivityTracer::IntersectCell(Ray<FloatType>& rays,
+                                       detail::RayTracking<FloatType>& tracker,
+                                       const MeshConnectivityBase* meshConn,
+                                       Device)
 {
-  using LocateC = LocateCell<CellType, FloatType, MeshConnExec<ConnectivityType, Device>>;
+  using LocateC = LocateCell<FloatType>;
   vtkm::cont::Timer<Device> timer;
-  vtkm::worklet::DispatcherMapField<LocateC> dispatcher((LocateC(MeshConn)));
-  dispatcher.SetDevice(Device());
-  dispatcher.Invoke(rays.HitIdx,
-                    this->MeshConn.GetCoordinates(),
-                    rays.Dir,
-                    *(tracker.EnterDist),
-                    *(tracker.ExitDist),
-                    tracker.ExitFace,
-                    rays.Status,
-                    rays.Origin);
+  vtkm::worklet::DispatcherMapField<LocateC> locateDispatch(meshConn);
+  locateDispatch.SetDevice(Device());
+  locateDispatch.Invoke(rays.HitIdx,
+                        this->Coords,
+                        rays.Dir,
+                        *(tracker.EnterDist),
+                        *(tracker.ExitDist),
+                        tracker.ExitFace,
+                        rays.Status,
+                        rays.Origin);
 
   if (this->CountRayStatus)
     RaysLost = RayOperations::GetStatusCount(rays, RAY_LOST, Device());
   this->IntersectTime += timer.GetElapsedTime();
 }
 
-template <vtkm::Int32 CellType, typename ConnectivityType>
 template <typename FloatType, typename Device>
-void ConnectivityTracer<CellType, ConnectivityType>::AccumulatePathLengths(
-  Ray<FloatType>& rays,
-  detail::RayTracking<FloatType>& tracker,
-  Device)
+void ConnectivityTracer::AccumulatePathLengths(Ray<FloatType>& rays,
+                                               detail::RayTracking<FloatType>& tracker,
+                                               Device)
 {
   vtkm::worklet::DispatcherMapField<AddPathLengths<FloatType>> dispatcher(
     (AddPathLengths<FloatType>()));
@@ -994,41 +995,37 @@ void ConnectivityTracer<CellType, ConnectivityType>::AccumulatePathLengths(
     rays.Status, *(tracker.EnterDist), *(tracker.ExitDist), rays.GetBuffer("path_lengths").Buffer);
 }
 
-template <vtkm::Int32 CellType, typename ConnectivityType>
 template <typename FloatType, typename Device>
-void ConnectivityTracer<CellType, ConnectivityType>::FindLostRays(
-  Ray<FloatType>& rays,
-  detail::RayTracking<FloatType>& tracker,
-  Device)
+void ConnectivityTracer::FindLostRays(Ray<FloatType>& rays,
+                                      detail::RayTracking<FloatType>& tracker,
+                                      const MeshConnectivityBase* meshConn,
+                                      Device)
 {
-  using RayB = RayBumper<CellType, FloatType, Device, MeshConnExec<ConnectivityType, Device>>;
+  using RayB = RayBumper<FloatType, Device>;
   vtkm::cont::Timer<Device> timer;
 
-  vtkm::worklet::DispatcherMapField<RayB> dispatcher(
-    RayB(rays.DirX, rays.DirY, rays.DirZ, this->MeshConn));
-  dispatcher.SetDevice(Device());
-  dispatcher.Invoke(rays.HitIdx,
-                    this->MeshConn.GetCoordinates(),
-                    *(tracker.EnterDist),
-                    *(tracker.ExitDist),
-                    tracker.ExitFace,
-                    rays.Status,
-                    rays.Origin);
+  vtkm::worklet::DispatcherMapField<RayB> bumpDispatch(
+    RayB(rays.DirX, rays.DirY, rays.DirZ, meshConn));
+  bumpDispatch.SetDevice(Device());
+  bumpDispatch.Invoke(rays.HitIdx,
+                      this->Coords,
+                      *(tracker.EnterDist),
+                      *(tracker.ExitDist),
+                      tracker.ExitFace,
+                      rays.Status,
+                      rays.Origin);
 
   this->LostRayTime += timer.GetElapsedTime();
 }
 
-template <vtkm::Int32 CellType, typename ConnectivityType>
 template <typename FloatType, typename Device>
-void ConnectivityTracer<CellType, ConnectivityType>::SampleCells(
-  Ray<FloatType>& rays,
-  detail::RayTracking<FloatType>& tracker,
-  Device)
+void ConnectivityTracer::SampleCells(Ray<FloatType>& rays,
+                                     detail::RayTracking<FloatType>& tracker,
+                                     const MeshConnectivityBase* meshConn,
+                                     Device)
 {
-  using SampleP =
-    SampleCellAssocPoints<CellType, FloatType, Device, MeshConnExec<ConnectivityType, Device>>;
-  using SampleC =
-    SampleCellAssocCells<CellType, FloatType, Device, MeshConnExec<ConnectivityType, Device>>;
+  using SampleP = SampleCellAssocPoints<FloatType, Device>;
+  using SampleC = SampleCellAssocCells<FloatType, Device>;
   vtkm::cont::Timer<Device> timer;
 
   VTKM_ASSERT(rays.Buffers.at(0).GetNumChannels() == 4);
@@ -1041,10 +1038,10 @@ void ConnectivityTracer<CellType, ConnectivityType>::SampleCells(
               vtkm::Float32(this->ScalarBounds.Max),
               this->ColorMap,
               rays.Buffers.at(0).Buffer,
-              this->MeshConn));
+              meshConn));
     dispatcher.SetDevice(Device());
     dispatcher.Invoke(rays.HitIdx,
-                      this->MeshConn.GetCoordinates(),
+                      this->Coords,
                       this->ScalarField.GetData(),
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
@@ -1061,7 +1058,7 @@ void ConnectivityTracer<CellType, ConnectivityType>::SampleCells(
               vtkm::Float32(this->ScalarBounds.Max),
               this->ColorMap,
               rays.Buffers.at(0).Buffer,
-              this->MeshConn));
+              meshConn));
     dispatcher.SetDevice(Device());
     dispatcher.Invoke(rays.HitIdx,
                       this->ScalarField.GetData(),
@@ -1074,12 +1071,10 @@ void ConnectivityTracer<CellType, ConnectivityType>::SampleCells(
   this->SampleTime += timer.GetElapsedTime();
 }
 
-template <vtkm::Int32 CellType, typename ConnectivityType>
 template <typename FloatType, typename Device>
-void ConnectivityTracer<CellType, ConnectivityType>::IntegrateCells(
-  Ray<FloatType>& rays,
-  detail::RayTracking<FloatType>& tracker,
-  Device)
+void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
+                                        detail::RayTracking<FloatType>& tracker,
+                                        Device)
 {
   vtkm::cont::Timer<Device> timer;
   if (HasEmission)
@@ -1117,9 +1112,9 @@ void ConnectivityTracer<CellType, ConnectivityType>::IntegrateCells(
   IntegrateTime += timer.GetElapsedTime();
 }
 
-// template <vtkm::Int32 CellType, typename ConnectivityType>
+// template <vtkm::Int32 CellType>
 // template <typename FloatType>
-// void ConnectivityTracer<CellType,ConnectivityType>::PrintDebugRay(Ray<FloatType>& rays, vtkm::Id rayId)
+// void ConnectivityTracer<CellType>::PrintDebugRay(Ray<FloatType>& rays, vtkm::Id rayId)
 // {
 //   vtkm::Id index = -1;
 //   for (vtkm::Id i = 0; i < rays.NumRays; ++i)
@@ -1145,10 +1140,8 @@ void ConnectivityTracer<CellType, ConnectivityType>::IntegrateCells(
 //   std::cout << "+++++++++++++++++++++++++\n";
 // }
 
-template <vtkm::Int32 CellType, typename ConnectivityType>
 template <typename FloatType, typename Device>
-void ConnectivityTracer<CellType, ConnectivityType>::OffsetMinDistances(Ray<FloatType>& rays,
-                                                                        Device)
+void ConnectivityTracer::OffsetMinDistances(Ray<FloatType>& rays, Device)
 {
   vtkm::worklet::DispatcherMapField<AdvanceRay<FloatType>> dispatcher(
     AdvanceRay<FloatType>(FloatType(0.001)));
@@ -1156,22 +1149,26 @@ void ConnectivityTracer<CellType, ConnectivityType>::OffsetMinDistances(Ray<Floa
   dispatcher.Invoke(rays.Status, rays.MinDistance);
 }
 
-template <vtkm::Int32 CellType, typename ConnectivityType>
 template <typename Device, typename FloatType>
-void ConnectivityTracer<CellType, ConnectivityType>::RenderOnDevice(Ray<FloatType>& rays, Device)
+void ConnectivityTracer::RenderOnDevice(Ray<FloatType>& rays, Device)
 {
+  this->RaysLost = 0;
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("conn_tracer");
   logger->AddLogData("device", GetDeviceString(Device()));
   this->ResetTimers();
   vtkm::cont::Timer<Device> renderTimer;
 
-  this->SetBoundingBox(Device());
+  vtkm::cont::DeviceAdapterId devId = Device();
+
+  const MeshConnectivityBase* meshConn = MeshContainer->Construct(devId);
+
+  //this->SetBoundingBox(Device());
 
   bool hasPathLengths = rays.HasBuffer("path_lengths");
 
   vtkm::cont::Timer<Device> timer;
-  this->Init();
+  this->Init(); // sets sample distance
   //
   // All Rays begin as exited to force intersection
   //
@@ -1183,9 +1180,7 @@ void ConnectivityTracer<CellType, ConnectivityType>::RenderOnDevice(Ray<FloatTyp
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("init", time);
 
-  MeshConn.Construct(Device());
-
-
+  //CountRayStatus = true;
   bool cullMissedRays = true;
   bool workRemaining = true;
   if (this->CountRayStatus)
@@ -1200,7 +1195,7 @@ void ConnectivityTracer<CellType, ConnectivityType>::RenderOnDevice(Ray<FloatTyp
       //
       // if ray misses the external face it will be marked RAY_EXITED_MESH
       //
-      MeshConn.FindEntry(rays, Device());
+      MeshContainer->FindEntry(rays, devId);
       MeshEntryTime += entryTimer.GetElapsedTime();
     }
 
@@ -1228,17 +1223,17 @@ void ConnectivityTracer<CellType, ConnectivityType>::RenderOnDevice(Ray<FloatTyp
     {
       //
       // Rays the leave the mesh will be marked as RAYEXITED_MESH
-      this->IntersectCell(rays, rayTracker, Device());
+      this->IntersectCell(rays, rayTracker, meshConn, Device());
       //
       // If the ray was lost due to precision issues, we find it.
       // If it is marked RAY_ABANDONED, then something went wrong.
       //
-      this->FindLostRays(rays, rayTracker, Device());
+      this->FindLostRays(rays, rayTracker, meshConn, Device());
       //
       // integrate along the ray
       //
       if (this->Integrator == Volume)
-        this->SampleCells(rays, rayTracker, Device());
+        this->SampleCells(rays, rayTracker, meshConn, Device());
       else
         this->IntegrateCells(rays, rayTracker, Device());
 

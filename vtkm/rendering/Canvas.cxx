@@ -313,8 +313,9 @@ void Canvas::Activate()
 
 void Canvas::Clear()
 {
-  vtkm::worklet::DispatcherMapField<internal::ClearBuffers>().Invoke(this->GetColorBuffer(),
-                                                                     this->GetDepthBuffer());
+  internal::ClearBuffers worklet;
+  vtkm::worklet::DispatcherMapField<internal::ClearBuffers> dispatcher(worklet);
+  dispatcher.Invoke(this->GetColorBuffer(), this->GetDepthBuffer());
 }
 
 void Canvas::Finish()
@@ -323,9 +324,9 @@ void Canvas::Finish()
 
 void Canvas::BlendBackground()
 {
-  vtkm::worklet::DispatcherMapField<internal::BlendBackground>(
-    this->GetBackgroundColor().Components)
-    .Invoke(this->GetColorBuffer());
+  internal::BlendBackground worklet(GetBackgroundColor().Components);
+  vtkm::worklet::DispatcherMapField<internal::BlendBackground> dispatcher(worklet);
+  dispatcher.Invoke(this->GetColorBuffer());
 }
 
 void Canvas::ResizeBuffers(vtkm::Id width, vtkm::Id height)

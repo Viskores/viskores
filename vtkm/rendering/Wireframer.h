@@ -496,10 +496,8 @@ private:
 
     if (ShowInternalZones && !IsOverlay)
     {
-      using MemSet =
-        typename vtkm::rendering::Triangulator<DeviceTag>::template MemSet<vtkm::Int64>;
-      MemSet memSet(ClearValue);
-      vtkm::worklet::DispatcherMapField<MemSet>(memSet).Invoke(FrameBuffer);
+      vtkm::cont::ArrayHandleConstant<vtkm::Int64> clear(ClearValue, pixelCount);
+      vtkm::cont::Algorithm::Copy(clear, FrameBuffer);
     }
     else
     {

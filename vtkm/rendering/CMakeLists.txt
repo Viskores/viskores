@@ -59,15 +59,20 @@ set(headers
   ColorBarAnnotation.h
   ColorLegendAnnotation.h
   ConnectivityProxy.h
+  Cylinderizer.h
   DecodePNG.h
   LineRenderer.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
+  MapperCylinder.h
+  MapperPoint.h
+  MapperQuad.h
   MapperRayTracer.h
   MapperVolume.h
   MapperConnectivity.h
   MapperWireframer.h
+  Quadralizer.h
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
@@ -96,8 +101,12 @@ set(sources
   DecodePNG.cxx
   LineRenderer.cxx
   MapperConnectivity.cxx
+  MapperCylinder.cxx
+  MapperPoint.cxx
+  MapperQuad.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
+  #MapperWireframer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
@@ -107,10 +116,6 @@ set(sources
   View2D.cxx
   View3D.cxx
   WorldAnnotator.cxx
-
-  raytracing/ConnectivityBase.cxx
-  raytracing/ConnectivityTracerBase.cxx
-  raytracing/ConnectivityTracerFactory.cxx
   raytracing/Logger.cxx
   )
 
@@ -161,8 +166,18 @@ set(device_sources
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
   raytracing/ConnectivityTracer.cxx
-  raytracing/RayOperations.cxx
+  raytracing/CylinderExtractor.cxx
+  raytracing/CylinderIntersector.cxx
+  raytracing/MeshConnectivityBuilder.cxx
+  raytracing/MeshConnectivityContainers.cxx
+  raytracing/QuadExtractor.cxx
+  raytracing/QuadIntersector.cxx
   raytracing/RayTracer.cxx
+  raytracing/RayOperations.cxx
+  raytracing/ShapeIntersector.cxx
+  raytracing/SphereExtractor.cxx
+  raytracing/SphereIntersector.cxx
+  raytracing/TriangleExtractor.cxx
   raytracing/VolumeRendererStructured.cxx
   )
 

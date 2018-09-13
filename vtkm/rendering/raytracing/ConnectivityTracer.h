@@ -22,9 +22,10 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
+#include <iomanip>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/rendering/raytracing/ConnectivityTracerBase.h>
-#include <vtkm/rendering/raytracing/MeshConnectivityStructures.h>
+
+#include <vtkm/rendering/raytracing/MeshConnectivityContainers.h>
 
 #ifndef CELL_SHAPE_ZOO
 #define CELL_SHAPE_ZOO 255
@@ -81,53 +82,94 @@ public:
 } //namespace detail
 
 
-template <vtkm::Int32 CellType, typename ConnectivityType>
-class ConnectivityTracer : public ConnectivityTracerBase
+class ConnectivityTracer
 {
 public:
-  ConnectivityTracer(ConnectivityType& meshConn)
-    : ConnectivityTracerBase()
-    , MeshConn(meshConn)
+  ConnectivityTracer()
+    : MeshContainer(nullptr)
   {
   }
 
-  template <typename Device>
-  VTKM_CONT void SetBoundingBox(Device)
+  ~ConnectivityTracer()
   {
-    vtkm::Bounds coordsBounds = MeshConn.GetCoordinateBounds(Device());
-    BoundingBox[0] = vtkm::Float32(coordsBounds.X.Min);
-    BoundingBox[1] = vtkm::Float32(coordsBounds.X.Max);
-    BoundingBox[2] = vtkm::Float32(coordsBounds.Y.Min);
-    BoundingBox[3] = vtkm::Float32(coordsBounds.Y.Max);
-    BoundingBox[4] = vtkm::Float32(coordsBounds.Z.Min);
-    BoundingBox[5] = vtkm::Float32(coordsBounds.Z.Max);
-    BackgroundColor[0] = 1.f;
-    BackgroundColor[1] = 1.f;
-    BackgroundColor[2] = 1.f;
-    BackgroundColor[3] = 1.f;
+    if (MeshContainer != nullptr)
+    {
+      delete MeshContainer;
+    }
   }
 
-  void Trace(Ray<vtkm::Float32>& rays) override;
+  enum IntegrationMode
+  {
+    Volume,
+    Energy
+  };
 
-  void Trace(Ray<vtkm::Float64>& rays) override;
+  void SetVolumeData(const vtkm::cont::Field& scalarField,
+                     const vtkm::Range& scalarBounds,
+                     const vtkm::cont::DynamicCellSet& cellSet,
+                     const vtkm::cont::CoordinateSystem& coords);
 
-  ConnectivityType GetMeshConn() { return MeshConn; }
+  void SetEnergyData(const vtkm::cont::Field& absorption,
+                     const vtkm::Int32 numBins,
+                     const vtkm::cont::DynamicCellSet& cellSet,
+                     const vtkm::cont::CoordinateSystem& coords,
+                     const vtkm::cont::Field& emission);
 
-  vtkm::Id GetNumberOfMeshCells() override { return MeshConn.GetNumberOfCells(); }
+  void SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor);
+  void SetSampleDistance(const vtkm::Float32& distance);
+  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
+  // template <typename Device>
+  // VTKM_CONT void SetBoundingBox(Device)
+  // {
+  //   vtkm::Bounds coordsBounds = MeshConn->GetCoordinateBounds(Device());
+  //   BoundingBox[0] = vtkm::Float32(coordsBounds.X.Min);
+  //   BoundingBox[1] = vtkm::Float32(coordsBounds.X.Max);
+  //   BoundingBox[2] = vtkm::Float32(coordsBounds.Y.Min);
+  //   BoundingBox[3] = vtkm::Float32(coordsBounds.Y.Max);
+  //   BoundingBox[4] = vtkm::Float32(coordsBounds.Z.Min);
+  //   BoundingBox[5] = vtkm::Float32(coordsBounds.Z.Max);
+  //   BackgroundColor[0] = 1.f;
+  //   BackgroundColor[1] = 1.f;
+  //   BackgroundColor[2] = 1.f;
+  //   BackgroundColor[3] = 1.f;
+  // }
 
+  void Trace(Ray<vtkm::Float32>& rays);
+
+  void Trace(Ray<vtkm::Float64>& rays);
+
+  MeshConnContainer* GetMeshContainer() { return MeshContainer; }
+
+  void Init();
+
+  vtkm::Id GetNumberOfMeshCells() const;
+
+  void ResetTimers();
+  void LogTimers();
+
+  //vtkm::Id GetNumberOfMeshCells() override { return MeshConn.GetNumberOfCells(); }
 private:
   friend struct detail::RenderFunctor;
   template <typename FloatType, typename Device>
-  void IntersectCell(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  void IntersectCell(Ray<FloatType>& rays,
+                     detail::RayTracking<FloatType>& tracker,
+                     const MeshConnectivityBase* meshConn,
+                     Device);
 
   template <typename FloatType, typename Device>
   void AccumulatePathLengths(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
 
   template <typename FloatType, typename Device>
-  void FindLostRays(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  void FindLostRays(Ray<FloatType>& rays,
+                    detail::RayTracking<FloatType>& tracker,
+                    const MeshConnectivityBase* meshConn,
+                    Device);
 
   template <typename FloatType, typename Device>
-  void SampleCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  void SampleCells(Ray<FloatType>& rays,
+                   detail::RayTracking<FloatType>& tracker,
+                   const MeshConnectivityBase* meshConn,
+                   Device);
 
   template <typename FloatType, typename Device>
   void IntegrateCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
@@ -135,24 +177,60 @@ private:
   template <typename FloatType, typename Device>
   void OffsetMinDistances(Ray<FloatType>& rays, Device);
 
+  template <typename FloatType, typename Device>
+  void PrintRayStatus(Ray<FloatType>& rays, Device);
+
+protected:
   template <typename Device, typename FloatType>
   void RenderOnDevice(Ray<FloatType>& rays, Device);
 
-  ConnectivityType MeshConn;
+  // Data set info
+  vtkm::cont::Field ScalarField;
+  vtkm::cont::Field EmissionField;
+  vtkm::cont::DynamicCellSet CellSet;
+  vtkm::cont::CoordinateSystem Coords;
+  vtkm::Range ScalarBounds;
+  vtkm::Float32 BoundingBox[6];
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
+  vtkm::cont::ArrayHandle<vtkm::Id> PreviousCellIds;
+
+  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
+  vtkm::Float32 SampleDistance;
+  vtkm::Id RaysLost;
+  IntegrationMode Integrator;
+  //
+  // flags
+  bool CountRayStatus;
+  bool MeshConnIsConstructed;
+  bool DebugFiltersOn;
+  bool ReEnterMesh; // Do not try to re-enter the mesh
+  bool CreatePartialComposites;
+  bool FieldAssocPoints;
+  bool HasEmission; // Mode for integrating through energy bins
+
+  // timers
+  vtkm::Float64 IntersectTime;
+  vtkm::Float64 IntegrateTime;
+  vtkm::Float64 SampleTime;
+  vtkm::Float64 LostRayTime;
+  vtkm::Float64 MeshEntryTime;
+
+  MeshConnContainer* MeshContainer;
 }; // class ConnectivityTracer<CellType,ConnectivityType>
 
 #ifndef vtk_m_rendering_raytracing_ConnectivityTracer_cxx
 //extern explicit instantiations of ConnectivityTracer
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_ZOO, UnstructuredMeshConn>;
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_HEXAHEDRON, UnstructuredMeshConnSingleType>;
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_WEDGE, UnstructuredMeshConnSingleType>;
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_TETRA, UnstructuredMeshConnSingleType>;
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_STRUCTURED, StructuredMeshConn>;
+//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
+//  ConnectivityTracer<CELL_SHAPE_ZOO>;
+//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
+//  ConnectivityTracer<CELL_SHAPE_HEXAHEDRON>;
+//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
+//  ConnectivityTracer<CELL_SHAPE_WEDGE>;
+//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
+//  ConnectivityTracer<CELL_SHAPE_TETRA>;
+//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
+//  ConnectivityTracer<CELL_SHAPE_STRUCTURED>;
 #endif
 }
 }

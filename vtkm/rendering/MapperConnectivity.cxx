@@ -24,10 +24,8 @@
 #include <vtkm/rendering/MapperConnectivity.h>
 #include <vtkm/rendering/View.h>
 
-#include <vtkm/rendering/raytracing/Camera.h>
-#include <vtkm/rendering/raytracing/ConnectivityTracerFactory.h>
-
 #include <cstdlib>
+#include <vtkm/rendering/raytracing/Camera.h>
 
 namespace vtkm
 {
