@@ -340,22 +340,18 @@ public:
     //load local cell data
     for (int i = 0; i < numIndices; ++i)
     {
-      //load local cell data
-      for (int i = 0; i < numIndices; ++i)
-      {
-        BOUNDS_CHECK(vertices, cellConn[i]);
-        vtkm::Vec<FloatType, 3> point = vtkm::Vec<FloatType, 3>(vertices.Get(cellConn[i]));
-        centroid = centroid + point;
-        xpoints[i] = point[0];
-        ypoints[i] = point[1];
-        zpoints[i] = point[2];
-      }
-
-      FloatType invNumIndices = static_cast<FloatType>(1.) / static_cast<FloatType>(numIndices);
-      centroid[0] = centroid[0] * invNumIndices;
-      centroid[1] = centroid[1] * invNumIndices;
-      centroid[2] = centroid[2] * invNumIndices;
+      BOUNDS_CHECK(vertices, cellConn[i]);
+      vtkm::Vec<FloatType, 3> point = vtkm::Vec<FloatType, 3>(vertices.Get(cellConn[i]));
+      centroid = centroid + point;
+      xpoints[i] = point[0];
+      ypoints[i] = point[1];
+      zpoints[i] = point[2];
     }
+
+    FloatType invNumIndices = static_cast<FloatType>(1.) / static_cast<FloatType>(numIndices);
+    centroid[0] = centroid[0] * invNumIndices;
+    centroid[1] = centroid[1] * invNumIndices;
+    centroid[2] = centroid[2] * invNumIndices;
 
     vtkm::Vec<FloatType, 3> toCentroid = centroid - origin;
     vtkm::Normalize(toCentroid);
