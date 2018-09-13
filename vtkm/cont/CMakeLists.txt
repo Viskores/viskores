@@ -83,6 +83,7 @@ set(headers
   ErrorFilterExecution.h
   ErrorExecution.h
   ErrorInternal.h
+  ExecutionAndControlObjectBase.h
   ExecutionObjectBase.h
   Field.h
   FieldRangeCompute.h

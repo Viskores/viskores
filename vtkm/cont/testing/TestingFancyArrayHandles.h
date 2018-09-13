@@ -38,6 +38,7 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -73,7 +74,7 @@ struct ValueSquared
 struct ValueScale
 {
   ValueScale()
-    : Factor()
+    : Factor(1.0)
   {
   }
 
@@ -101,6 +102,111 @@ struct ValueScale
 
 private:
   vtkm::Float64 Factor;
+};
+
+struct InverseValueScale
+{
+  InverseValueScale()
+    : InverseFactor(1.0)
+  {
+  }
+
+  InverseValueScale(vtkm::Float64 factor)
+    : InverseFactor(1.0 / factor)
+  {
+  }
+
+  template <typename ValueType>
+  VTKM_EXEC_CONT ValueType operator()(const ValueType& v) const
+  {
+    using Traits = vtkm::VecTraits<ValueType>;
+    using TTraits = vtkm::TypeTraits<ValueType>;
+    using ComponentType = typename Traits::ComponentType;
+
+    ValueType result = TTraits::ZeroInitialization();
+    for (vtkm::IdComponent i = 0; i < Traits::GetNumberOfComponents(v); ++i)
+    {
+      vtkm::Float64 vi = static_cast<vtkm::Float64>(Traits::GetComponent(v, i));
+      vtkm::Float64 ri = vi * this->InverseFactor;
+      Traits::SetComponent(result, i, static_cast<ComponentType>(ri));
+    }
+    return result;
+  }
+
+private:
+  vtkm::Float64 InverseFactor;
+};
+
+template <typename ValueType>
+struct VirtualTransformFunctorBase : public vtkm::VirtualObjectBase
+{
+  VirtualTransformFunctorBase() = default;
+
+  VTKM_EXEC_CONT
+  virtual ValueType operator()(const ValueType& v) const = 0;
+};
+
+template <typename ValueType, typename FunctorType>
+struct VirtualTransformFunctor : VirtualTransformFunctorBase<ValueType>
+{
+  FunctorType Functor;
+
+  VTKM_CONT
+  VirtualTransformFunctor(const FunctorType& functor)
+    : Functor(functor)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  ValueType operator()(const ValueType& v) const override { return this->Functor(v); }
+};
+
+template <typename ValueType>
+struct TransformExecObject : public vtkm::cont::ExecutionAndControlObjectBase
+{
+  vtkm::cont::VirtualObjectHandle<VirtualTransformFunctorBase<ValueType>> VirtualFunctor;
+
+  VTKM_CONT TransformExecObject() = default;
+
+  template <typename FunctorType>
+  VTKM_CONT TransformExecObject(const FunctorType& functor)
+  {
+    // Need to make sure the serial device is supported, since that is what is used on the
+    // control side.
+    vtkm::cont::ScopedGlobalRuntimeDeviceTracker scopedTracker;
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().ResetDevice(vtkm::cont::DeviceAdapterTagSerial());
+    this->VirtualFunctor.Reset(new VirtualTransformFunctor<ValueType, FunctorType>(functor));
+  }
+
+  struct FunctorWrapper
+  {
+    const VirtualTransformFunctorBase<ValueType>* FunctorPointer;
+
+    FunctorWrapper() = default;
+
+    VTKM_CONT
+    FunctorWrapper(const VirtualTransformFunctorBase<ValueType>* functorPointer)
+      : FunctorPointer(functorPointer)
+    {
+    }
+
+    template <typename InValueType>
+    VTKM_EXEC ValueType operator()(const InValueType& value) const
+    {
+      return (*this->FunctorPointer)(value);
+    }
+  };
+
+  template <typename DeviceAdapterTag>
+  VTKM_CONT FunctorWrapper PrepareForExecution(DeviceAdapterTag device) const
+  {
+    return FunctorWrapper(this->VirtualFunctor.PrepareForExecution(device));
+  }
+
+  VTKM_CONT FunctorWrapper PrepareForControl() const
+  {
+    return FunctorWrapper(this->VirtualFunctor.Get());
+  }
 };
 }
 
@@ -452,6 +558,44 @@ private:
       vtkm::cont::ArrayHandle<ValueType> input;
       vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<ValueType>, FunctorType>
         transformed = vtkm::cont::make_ArrayHandleTransform(input, functor);
+
+      input.Allocate(length);
+      SetPortal(input.GetPortalControl());
+
+      vtkm::cont::printSummary_ArrayHandle(transformed, std::cout);
+      std::cout << std::endl;
+
+      vtkm::cont::ArrayHandle<ValueType> result;
+
+      vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
+      dispatcher.Invoke(transformed, result);
+
+      //verify that the control portal works
+      for (vtkm::Id i = 0; i < length; ++i)
+      {
+        const ValueType result_v = result.GetPortalConstControl().Get(i);
+        const ValueType correct_value = functor(TestValue(i, ValueType()));
+        const ValueType control_value = transformed.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Transform Handle Control Failed");
+      }
+    }
+  };
+
+  struct TestTransformVirtualAsInput
+  {
+    template <typename ValueType>
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      using FunctorType = fancy_array_detail::ValueScale;
+      using VirtualFunctorType = fancy_array_detail::TransformExecObject<ValueType>;
+
+      const vtkm::Id length = ARRAY_SIZE;
+      FunctorType functor(2.0);
+      VirtualFunctorType virtualFunctor(functor);
+
+      vtkm::cont::ArrayHandle<ValueType> input;
+      auto transformed = vtkm::cont::make_ArrayHandleTransform(input, virtualFunctor);
 
       input.Allocate(length);
       SetPortal(input.GetPortalControl());
@@ -917,6 +1061,88 @@ private:
     }
   };
 
+  struct TestTransformAsOutput
+  {
+    template <typename ValueType>
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      using FunctorType = fancy_array_detail::ValueScale;
+      using InverseFunctorType = fancy_array_detail::InverseValueScale;
+
+      const vtkm::Id length = ARRAY_SIZE;
+      FunctorType functor(2.0);
+      InverseFunctorType inverseFunctor(2.0);
+
+      vtkm::cont::ArrayHandle<ValueType> input;
+      input.Allocate(length);
+      SetPortal(input.GetPortalControl());
+
+      vtkm::cont::ArrayHandle<ValueType> output;
+      auto transformed = vtkm::cont::make_ArrayHandleTransform(output, functor, inverseFunctor);
+
+      vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
+      dispatcher.Invoke(input, transformed);
+
+      vtkm::cont::printSummary_ArrayHandle(transformed, std::cout);
+      std::cout << std::endl;
+
+      //verify that the control portal works
+      for (vtkm::Id i = 0; i < length; ++i)
+      {
+        const ValueType result_v = output.GetPortalConstControl().Get(i);
+        const ValueType correct_value = inverseFunctor(TestValue(i, ValueType()));
+        const ValueType control_value = transformed.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(functor(result_v), control_value),
+                         "Transform Handle Control Failed");
+      }
+    }
+  };
+
+  struct TestTransformVirtualAsOutput
+  {
+    template <typename ValueType>
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      using FunctorType = fancy_array_detail::ValueScale;
+      using InverseFunctorType = fancy_array_detail::InverseValueScale;
+
+      using VirtualFunctorType = fancy_array_detail::TransformExecObject<ValueType>;
+
+      const vtkm::Id length = ARRAY_SIZE;
+      FunctorType functor(2.0);
+      InverseFunctorType inverseFunctor(2.0);
+
+      VirtualFunctorType virtualFunctor(functor);
+      VirtualFunctorType virtualInverseFunctor(inverseFunctor);
+
+      vtkm::cont::ArrayHandle<ValueType> input;
+      input.Allocate(length);
+      SetPortal(input.GetPortalControl());
+
+      vtkm::cont::ArrayHandle<ValueType> output;
+      auto transformed =
+        vtkm::cont::make_ArrayHandleTransform(output, virtualFunctor, virtualInverseFunctor);
+
+      vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
+      dispatcher.Invoke(input, transformed);
+
+      vtkm::cont::printSummary_ArrayHandle(transformed, std::cout);
+      std::cout << std::endl;
+
+      //verify that the control portal works
+      for (vtkm::Id i = 0; i < length; ++i)
+      {
+        const ValueType result_v = output.GetPortalConstControl().Get(i);
+        const ValueType correct_value = inverseFunctor(TestValue(i, ValueType()));
+        const ValueType control_value = transformed.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(functor(result_v), control_value),
+                         "Transform Handle Control Failed");
+      }
+    }
+  };
+
   struct TestZipAsOutput
   {
     template <typename KeyType, typename ValueType>
@@ -1048,6 +1274,12 @@ private:
         TestingFancyArrayHandles<DeviceAdapterTag>::TestTransformAsInput(), HandleTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleTransform with virtual as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestTransformVirtualAsInput(),
+        HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleTransform with Counting as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(
         TestingFancyArrayHandles<DeviceAdapterTag>::TestCountingTransformAsInput(),
@@ -1104,6 +1336,17 @@ private:
       std::cout << "Testing ArrayHandleView as Output" << std::endl;
       vtkm::testing::Testing::TryTypes(
         TestingFancyArrayHandles<DeviceAdapterTag>::TestViewAsOutput(), HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleTransform as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestTransformAsOutput(), HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleTransform with virtual as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestTransformVirtualAsOutput(),
+        HandleTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleDiscard as Output" << std::endl;

@@ -38,24 +38,25 @@ template <typename Device, typename T>
 inline auto DoPrepareArgForExec(T&& object, std::true_type)
   -> decltype(std::declval<T>().PrepareForExecution(Device()))
 {
+  VTKM_IS_EXECUTION_OBJECT(T);
   return object.PrepareForExecution(Device{});
 }
 
 template <typename Device, typename T>
 inline T&& DoPrepareArgForExec(T&& object, std::false_type)
 {
+  static_assert(!vtkm::cont::internal::IsExecutionObjectBase<T>::value,
+                "Internal error: failed to detect execution object.");
   return std::forward<T>(object);
 }
 
 template <typename Device, typename T>
-auto PrepareArgForExec(T&& object) -> decltype(DoPrepareArgForExec<Device>(
-  std::forward<T>(object),
-  typename std::is_base_of<vtkm::cont::ExecutionObjectBase, typename std::decay<T>::type>::type{}))
+auto PrepareArgForExec(T&& object)
+  -> decltype(DoPrepareArgForExec<Device>(std::forward<T>(object),
+                                          vtkm::cont::internal::IsExecutionObjectBase<T>{}))
 {
-  return DoPrepareArgForExec<Device>(
-    std::forward<T>(object),
-    typename std::is_base_of<vtkm::cont::ExecutionObjectBase,
-                             typename std::decay<T>::type>::type{});
+  return DoPrepareArgForExec<Device>(std::forward<T>(object),
+                                     vtkm::cont::internal::IsExecutionObjectBase<T>{});
 }
 
 struct CopyFunctor
