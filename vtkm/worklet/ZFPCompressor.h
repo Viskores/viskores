@@ -31,16 +31,12 @@
 
 #include <vtkm/worklet/zfp/ZFPBlockWriter.h>
 #include <vtkm/worklet/zfp/ZFPFunctions.h>
+#include <vtkm/worklet/zfp/ZFPStructs.h>
 #include <vtkm/worklet/zfp/ZFPTypeInfo.h>
 
 using ZFPWord = vtkm::UInt64;
 
 #include <stdio.h>
-
-#define ZFP_MIN_BITS 0    /* minimum number of bits per block */
-#define ZFP_MAX_BITS 4171 /* maximum number of bits per block */
-#define ZFP_MAX_PREC 64   /* maximum precision supported */
-#define ZFP_MIN_EXP -1074 /* minimum floating-point base-2 exponent */
 
 namespace vtkm
 {
@@ -48,36 +44,6 @@ namespace worklet
 {
 namespace detail
 {
-
-struct Bitstream
-{
-};
-
-struct ZFPStream
-{
-  vtkm::UInt32 minbits;
-  vtkm::UInt32 maxbits;
-  vtkm::UInt32 maxprec;
-  vtkm::Int32 minexp;
-
-  template <typename T>
-  vtkm::Float64 SetRate(const vtkm::Float64 rate, const vtkm::Int32 dims, T vtkmNotUsed(valueType))
-  {
-    vtkm::UInt32 n = 1u << (2 * dims);
-    vtkm::UInt32 bits = (uint)floor(n * rate + 0.5);
-    bits = zfp::MinBits<T>(bits);
-    //if (wra) {
-    //  /* for write random access, round up to next multiple of stream word size */
-    //  bits += (uint)stream_word_bits - 1;
-    //  bits &= ~(stream_word_bits - 1);
-    //}
-    minbits = bits;
-    maxbits = bits;
-    maxprec = ZFP_MAX_PREC;
-    minexp = ZFP_MIN_EXP;
-    return (double)bits / n;
-  }
-};
 
 size_t CalcMem3d(const vtkm::Id3 dims, const int bits_per_block)
 {
@@ -255,7 +221,8 @@ public:
                 const vtkm::Float64 requestedRate,
                 const vtkm::Id3 dims)
   {
-    detail::ZFPStream stream;
+    DataDump(data, "uncompressed");
+    zfp::ZFPStream stream;
     const vtkm::Int32 topoDims = 3;
     ;
     vtkm::Float64 actualRate = stream.SetRate(requestedRate, topoDims, vtkm::Float64());
@@ -323,7 +290,6 @@ public:
     std::cout << "Compress time " << time << " sec\n";
     std::cout << "Compress rate " << rate << " GB / sec\n";
     DataDump(output, "compressed");
-    DataDump(data, "uncompressed");
   }
 };
 } // namespace worklet
