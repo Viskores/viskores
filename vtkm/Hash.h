@@ -77,7 +77,7 @@ VTKM_EXEC_CONT inline vtkm::HashType HashFNV1a64(const InVecType& inVec)
 
 // If you get a compile error saying that there is no implementation of the class HashChooser,
 // then you have tried to make a hash from an invalid type (like a float).
-template <typename NumericTag, vtkm::Id DataSize>
+template <typename NumericTag, std::size_t DataSize>
 struct HashChooser;
 
 template <>
