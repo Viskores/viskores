@@ -18,8 +18,6 @@
 //  this software.
 //============================================================================
 
-#define VTKM_STORAGE VTKM_STORAGE_ERROR
-
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
@@ -29,6 +27,12 @@
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
 #include <vtkm/cont/testing/Testing.h>
+
+#if defined(VTKM_STORAGE)
+#undef VTKM_STORAGE
+#endif
+
+#define VTKM_STORAGE VTKM_STORAGE_ERROR
 
 namespace
 {

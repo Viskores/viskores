@@ -25,108 +25,27 @@ using namespace vtkm::cont::testing::serialization;
 namespace
 {
 
-struct TestEqualCellSet
+using FieldTypeList = vtkm::ListTagBase<vtkm::Float32>;
+using FieldStorageList = VTKM_DEFAULT_STORAGE_LIST_TAG;
+using CellSetTypes = vtkm::ListTagBase<vtkm::cont::CellSetExplicit<>,
+                                       vtkm::cont::CellSetSingleType<>,
+                                       vtkm::cont::CellSetStructured<1>,
+                                       vtkm::cont::CellSetStructured<2>,
+                                       vtkm::cont::CellSetStructured<3>>;
+
+using DataSetWrapper =
+  vtkm::cont::SerializableDataSet<FieldTypeList, FieldStorageList, CellSetTypes>;
+
+VTKM_CONT void TestEqualDataSet(const DataSetWrapper& ds1, const DataSetWrapper& ds2)
 {
-  template <typename ShapeST, typename CountST, typename ConnectivityST, typename OffsetST>
-  void operator()(
-    const vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>& cs1,
-    const vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>& cs2) const
-  {
-    vtkm::TopologyElementTagPoint p2cFrom{};
-    vtkm::TopologyElementTagCell p2cTo{};
-
-    VTKM_TEST_ASSERT(cs1.GetName() == cs2.GetName(), "cellset names don't match");
-    VTKM_TEST_ASSERT(cs1.GetNumberOfPoints() == cs2.GetNumberOfPoints(),
-                     "cellset number of points don't match");
-    TestEqualArrayHandle{}(cs1.GetShapesArray(p2cFrom, p2cTo), cs2.GetShapesArray(p2cFrom, p2cTo));
-    TestEqualArrayHandle{}(cs1.GetNumIndicesArray(p2cFrom, p2cTo),
-                           cs2.GetNumIndicesArray(p2cFrom, p2cTo));
-    TestEqualArrayHandle{}(cs1.GetConnectivityArray(p2cFrom, p2cTo),
-                           cs2.GetConnectivityArray(p2cFrom, p2cTo));
-    TestEqualArrayHandle{}(cs1.GetIndexOffsetArray(p2cFrom, p2cTo),
-                           cs2.GetIndexOffsetArray(p2cFrom, p2cTo));
-  }
-
-  template <vtkm::IdComponent DIMENSION>
-  void operator()(const vtkm::cont::CellSetStructured<DIMENSION>& cs1,
-                  const vtkm::cont::CellSetStructured<DIMENSION>& cs2) const
-  {
-    VTKM_TEST_ASSERT(cs1.GetName() == cs2.GetName(), "cellset names don't match");
-    VTKM_TEST_ASSERT(cs1.GetPointDimensions() == cs2.GetPointDimensions(),
-                     "CellSetStructured: point dimensions don't match");
-  }
-
-  template <typename CellSetTypes>
-  void operator()(const vtkm::cont::DynamicCellSetBase<CellSetTypes>& cs1,
-                  const vtkm::cont::DynamicCellSetBase<CellSetTypes>& cs2)
-  {
-    cs1.CastAndCall(*this, cs2);
-  }
-
-  template <typename CellSet, typename CellSetTypes>
-  void operator()(const CellSet& cs, const vtkm::cont::DynamicCellSetBase<CellSetTypes>& dcs)
-  {
-    this->operator()(cs, dcs.template Cast<CellSet>());
-  }
-};
-
-template <typename FieldTypeList, typename FieldStorageList, typename CellSetTypes>
-void TestEqualDataSet(
-  const vtkm::cont::SerializableDataSet<FieldTypeList, FieldStorageList, CellSetTypes>& s1,
-  const vtkm::cont::SerializableDataSet<FieldTypeList, FieldStorageList, CellSetTypes>& s2)
-{
-  const auto& ds1 = s1.DataSet;
-  const auto& ds2 = s2.DataSet;
-
-  VTKM_TEST_ASSERT(ds1.GetNumberOfCoordinateSystems() == ds2.GetNumberOfCoordinateSystems(),
-                   "datasets' number of coordinate systems don't match");
-  for (vtkm::IdComponent i = 0; i < ds1.GetNumberOfCoordinateSystems(); ++i)
-  {
-    TestEqualArrayHandle{}(ds1.GetCoordinateSystem(i).GetData(),
-                           ds2.GetCoordinateSystem(i).GetData());
-  }
-  VTKM_TEST_ASSERT(ds1.GetNumberOfCellSets() == ds2.GetNumberOfCellSets(),
-                   "datasets' number of cellsets don't match");
-  for (vtkm::IdComponent i = 0; i < ds1.GetNumberOfCellSets(); ++i)
-  {
-    TestEqualCellSet{}(ds1.GetCellSet(i).ResetCellSetList(CellSetTypes{}),
-                       ds2.GetCellSet(i).ResetCellSetList(CellSetTypes{}));
-  }
-  VTKM_TEST_ASSERT(ds1.GetNumberOfFields() == ds2.GetNumberOfFields(),
-                   "datasets' number of fields don't match");
-  for (vtkm::IdComponent i = 0; i < ds1.GetNumberOfFields(); ++i)
-  {
-    auto f1 = ds1.GetField(i);
-    auto f2 = ds2.GetField(i);
-    VTKM_TEST_ASSERT(f1.GetName() == f2.GetName(), "field names don't match");
-    VTKM_TEST_ASSERT(f1.GetAssociation() == f1.GetAssociation(), "fields' association don't match");
-    if (f1.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
-    {
-      VTKM_TEST_ASSERT(f1.GetAssocCellSet() == f2.GetAssocCellSet(),
-                       "fields' associated cellset names don't match");
-    }
-    else if (f1.GetAssociation() == vtkm::cont::Field::Association::LOGICAL_DIM)
-    {
-      VTKM_TEST_ASSERT(f1.GetAssocLogicalDim() == f2.GetAssocLogicalDim(),
-                       "fields' associated logical dims don't match");
-    }
-    TestEqualArrayHandle{}(
-      f1.GetData().ResetTypeAndStorageLists(FieldTypeList{}, FieldStorageList{}),
-      f2.GetData().ResetTypeAndStorageLists(FieldTypeList{}, FieldStorageList{}));
-  }
+  auto result = vtkm::cont::testing::test_equal_DataSets(
+    ds1.DataSet, ds2.DataSet, CellSetTypes{}, FieldTypeList{}, FieldStorageList{});
+  VTKM_TEST_ASSERT(result, result.GetMergedMessage());
 }
 
 void RunTest(const vtkm::cont::DataSet& ds)
 {
-  using TypeList = vtkm::ListTagBase<vtkm::Float32>;
-  using StorageList = VTKM_DEFAULT_STORAGE_LIST_TAG;
-  using CellSetTypes = vtkm::ListTagBase<vtkm::cont::CellSetExplicit<>,
-                                         vtkm::cont::CellSetSingleType<>,
-                                         vtkm::cont::CellSetStructured<1>,
-                                         vtkm::cont::CellSetStructured<2>,
-                                         vtkm::cont::CellSetStructured<3>>;
-  TestSerialization(vtkm::cont::SerializableDataSet<TypeList, StorageList, CellSetTypes>(ds),
-                    TestEqualDataSet<TypeList, StorageList, CellSetTypes>);
+  TestSerialization(DataSetWrapper(ds), TestEqualDataSet);
 }
 
 void TestDataSetSerialization()

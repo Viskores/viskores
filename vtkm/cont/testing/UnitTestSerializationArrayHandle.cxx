@@ -52,6 +52,18 @@ namespace
 {
 
 //-----------------------------------------------------------------------------
+struct TestEqualArrayHandle
+{
+public:
+  template <typename ArrayHandle1, typename ArrayHandle2>
+  VTKM_CONT void operator()(const ArrayHandle1& array1, const ArrayHandle2& array2) const
+  {
+    auto result = vtkm::cont::testing::test_equal_ArrayHandles(array1, array2);
+    VTKM_TEST_ASSERT(result, result.GetMergedMessage());
+  }
+};
+
+//-----------------------------------------------------------------------------
 template <typename T>
 inline void RunTest(const T& obj)
 {

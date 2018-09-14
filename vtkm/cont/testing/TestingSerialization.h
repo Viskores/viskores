@@ -215,46 +215,6 @@ void TestSerialization(const T& obj, const TestEqualFunctor& test)
 
   test(block.send, block.received);
 }
-
-//-----------------------------------------------------------------------------
-struct TestEqualArrayHandle
-{
-public:
-  template <typename T, typename S>
-  void operator()(const vtkm::cont::ArrayHandle<T, S>& a1,
-                  const vtkm::cont::ArrayHandle<T, S>& a2) const try
-  {
-    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == a2.GetNumberOfValues(),
-                     "vtkm::cont::ArrayHandle sizes don't match");
-    auto portal1 = a1.GetPortalConstControl();
-    auto portal2 = a2.GetPortalConstControl();
-    for (vtkm::Id i = 0; i < portal1.GetNumberOfValues(); ++i)
-    {
-      VTKM_TEST_ASSERT(test_equal(portal1.Get(i), portal2.Get(i)),
-                       "vtkm::cont::ArrayHandle values don't match");
-    }
-  }
-  catch (...)
-  {
-    vtkm::cont::printSummary_ArrayHandle(a1, std::cout, true);
-    vtkm::cont::printSummary_ArrayHandle(a2, std::cout, true);
-    throw;
-  }
-
-  template <typename TypeList, typename StorageList>
-  void operator()(const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& a1,
-                  const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& a2) const
-  {
-    a1.CastAndCall(*this, a2);
-  }
-
-  template <typename T, typename S, typename TypeList, typename StorageList>
-  void operator()(const vtkm::cont::ArrayHandle<T, S>& a,
-                  const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& da) const
-  {
-    this->operator()(a, da.template Cast<vtkm::cont::ArrayHandle<T, S>>());
-  }
-};
 }
 }
 }
