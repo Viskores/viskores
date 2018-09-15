@@ -27,6 +27,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecVariable.h>
 
+#include <vtkm/internal/Assume.h>
+
 namespace vtkm
 {
 namespace internal
@@ -80,6 +82,8 @@ public:
   VTKM_EXEC_CONT
   vtkm::Vec<vtkm::Id, NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
   {
+    VTKM_ASSUME(index >= 0);
+
     vtkm::Vec<vtkm::Id, NUM_POINTS_IN_CELL> pointIds;
     pointIds[0] = index;
     pointIds[1] = pointIds[0] + 1;
@@ -89,6 +93,8 @@ public:
   VTKM_EXEC_CONT
   vtkm::IdComponent GetNumberOfCellsOnPoint(vtkm::Id pointIndex) const
   {
+    VTKM_ASSUME(pointIndex >= 0);
+
     if ((pointIndex > 0) && (pointIndex < this->PointDimensions - 1))
     {
       return 2;
@@ -102,6 +108,9 @@ public:
   VTKM_EXEC_CONT
   vtkm::VecVariable<vtkm::Id, MAX_CELL_TO_POINT> GetCellsOfPoint(vtkm::Id index) const
   {
+    VTKM_ASSUME(index >= 0);
+    VTKM_ASSUME(this->PointDimensions > 1);
+
     vtkm::VecVariable<vtkm::Id, MAX_CELL_TO_POINT> cellIds;
 
     if (index > 0)
@@ -115,6 +124,7 @@ public:
 
     return cellIds;
   }
+
 
   VTKM_EXEC_CONT
   vtkm::Id FlatToLogicalPointIndex(vtkm::Id flatPointIndex) const { return flatPointIndex; }
