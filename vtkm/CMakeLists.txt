@@ -81,6 +81,7 @@ vtkm_declare_headers(
 #first add all the components vtkm that are shared between control and exec
 add_subdirectory(thirdparty/diy)
 add_subdirectory(thirdparty/taotuple)
+add_subdirectory(thirdparty/loguru) # TODO add cmake option to disable logging.
 add_subdirectory(testing)
 add_subdirectory(internal)
 
