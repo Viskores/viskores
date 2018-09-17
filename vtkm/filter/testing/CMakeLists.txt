@@ -37,6 +37,7 @@ set(unit_tests
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
   UnitTestGradient.cxx
+  UnitTestGhostZone.cxx
   UnitTestHistogramFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestMarchingCubesFilter.cxx
