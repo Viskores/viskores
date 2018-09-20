@@ -102,7 +102,7 @@ public:
   void SetCompositeBackground(bool on) { CompositeBackground = on; }
 
   VTKM_CONT
-  void SetDebugPrints(bool vtkmNotUsed(on)) { /*Tracer->SetDebugOn(on);*/}
+  void SetDebugPrints(bool on) { Tracer.SetDebugOn(on); }
 
   VTKM_CONT
   void SetEmissionField(const std::string& fieldName)

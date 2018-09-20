@@ -87,6 +87,7 @@ class ConnectivityTracer
 public:
   ConnectivityTracer()
     : MeshContainer(nullptr)
+    , CountRayStatus(false)
   {
   }
 
@@ -118,21 +119,6 @@ public:
   void SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor);
   void SetSampleDistance(const vtkm::Float32& distance);
   void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
-  // template <typename Device>
-  // VTKM_CONT void SetBoundingBox(Device)
-  // {
-  //   vtkm::Bounds coordsBounds = MeshConn->GetCoordinateBounds(Device());
-  //   BoundingBox[0] = vtkm::Float32(coordsBounds.X.Min);
-  //   BoundingBox[1] = vtkm::Float32(coordsBounds.X.Max);
-  //   BoundingBox[2] = vtkm::Float32(coordsBounds.Y.Min);
-  //   BoundingBox[3] = vtkm::Float32(coordsBounds.Y.Max);
-  //   BoundingBox[4] = vtkm::Float32(coordsBounds.Z.Min);
-  //   BoundingBox[5] = vtkm::Float32(coordsBounds.Z.Max);
-  //   BackgroundColor[0] = 1.f;
-  //   BackgroundColor[1] = 1.f;
-  //   BackgroundColor[2] = 1.f;
-  //   BackgroundColor[3] = 1.f;
-  // }
 
   void Trace(Ray<vtkm::Float32>& rays);
 
@@ -142,12 +128,13 @@ public:
 
   void Init();
 
+  void SetDebugOn(bool on) { CountRayStatus = on; }
+
   vtkm::Id GetNumberOfMeshCells() const;
 
   void ResetTimers();
   void LogTimers();
 
-  //vtkm::Id GetNumberOfMeshCells() override { return MeshConn.GetNumberOfCells(); }
 private:
   friend struct detail::RenderFunctor;
   template <typename FloatType, typename Device>
@@ -199,6 +186,8 @@ protected:
   vtkm::Float32 SampleDistance;
   vtkm::Id RaysLost;
   IntegrationMode Integrator;
+
+  MeshConnContainer* MeshContainer;
   //
   // flags
   bool CountRayStatus;
@@ -216,22 +205,7 @@ protected:
   vtkm::Float64 LostRayTime;
   vtkm::Float64 MeshEntryTime;
 
-  MeshConnContainer* MeshContainer;
 }; // class ConnectivityTracer<CellType,ConnectivityType>
-
-#ifndef vtk_m_rendering_raytracing_ConnectivityTracer_cxx
-//extern explicit instantiations of ConnectivityTracer
-//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-//  ConnectivityTracer<CELL_SHAPE_ZOO>;
-//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-//  ConnectivityTracer<CELL_SHAPE_HEXAHEDRON>;
-//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-//  ConnectivityTracer<CELL_SHAPE_WEDGE>;
-//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-//  ConnectivityTracer<CELL_SHAPE_TETRA>;
-//extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-//  ConnectivityTracer<CELL_SHAPE_STRUCTURED>;
-#endif
 }
 }
 } // namespace vtkm::rendering::raytracing
