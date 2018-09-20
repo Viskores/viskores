@@ -1163,8 +1163,6 @@ void ConnectivityTracer::RenderOnDevice(Ray<FloatType>& rays, Device)
 
   const MeshConnectivityBase* meshConn = MeshContainer->Construct(devId);
 
-  //this->SetBoundingBox(Device());
-
   bool hasPathLengths = rays.HasBuffer("path_lengths");
 
   vtkm::cont::Timer<Device> timer;
