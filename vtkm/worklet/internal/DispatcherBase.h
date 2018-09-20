@@ -485,6 +485,10 @@ inline void deduce(Trampoline&& trampoline, ContParams&& sig, Args&&... args)
 #pragma diag_suppress 2885
 #endif
 
+#if (__CUDACC_VER_MAJOR__ >= 10)
+#pragma diag_suppress 2905
+#endif
+
 #endif
 //This is a separate function as the pragma guards can cause nvcc
 //to have an internal compiler error (codegen #3028)
