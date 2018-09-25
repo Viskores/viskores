@@ -340,6 +340,76 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetExplicit<
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename ShapeST, typename CountST, typename ConnectivityST, typename OffsetST>
+struct TypeString<vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "CS_Explicit<" +
+      TypeString<vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST>>::Get() + "_ST," +
+      TypeString<vtkm::cont::ArrayHandle<vtkm::IdComponent, CountST>>::Get() + "_ST," +
+      TypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST," +
+      TypeString<vtkm::cont::ArrayHandle<vtkm::Id, OffsetST>>::Get() + "_ST>";
+
+    return name;
+  }
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename ShapeST, typename CountST, typename ConnectivityST, typename OffsetST>
+struct Serialization<vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>>
+{
+private:
+  using Type = vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
+  {
+    diy::save(bb, cs.GetName());
+    diy::save(bb, cs.GetNumberOfPoints());
+    diy::save(bb,
+              cs.GetShapesArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
+    diy::save(
+      bb, cs.GetNumIndicesArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
+    diy::save(
+      bb, cs.GetConnectivityArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
+    diy::save(
+      bb, cs.GetIndexOffsetArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
+  {
+    std::string name;
+    diy::load(bb, name);
+    vtkm::Id numberOfPoints = 0;
+    diy::load(bb, numberOfPoints);
+    vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST> shapes;
+    diy::load(bb, shapes);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent, CountST> counts;
+    diy::load(bb, counts);
+    vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST> connectivity;
+    diy::load(bb, connectivity);
+    vtkm::cont::ArrayHandle<vtkm::Id, OffsetST> offsets;
+    diy::load(bb, offsets);
+
+    cs = Type(name);
+    cs.Fill(numberOfPoints, shapes, counts, connectivity, offsets);
+  }
+};
+
+} // diy
+
 #include <vtkm/cont/CellSetExplicit.hxx>
 
 #endif //vtk_m_cont_CellSetExplicit_h

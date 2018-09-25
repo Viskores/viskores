@@ -181,15 +181,16 @@ struct ArrayHandleCartesianProductTraits
   using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
 };
 
-template <typename T, typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-class Storage<T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>>
+template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
+class Storage<vtkm::Vec<typename FirstHandleType::ValueType, 3>,
+              StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>>
 {
   VTKM_IS_ARRAY_HANDLE(FirstHandleType);
   VTKM_IS_ARRAY_HANDLE(SecondHandleType);
   VTKM_IS_ARRAY_HANDLE(ThirdHandleType);
 
 public:
-  using ValueType = T;
+  using ValueType = vtkm::Vec<typename FirstHandleType::ValueType, 3>;
 
   using PortalType =
     vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
@@ -277,21 +278,22 @@ private:
   ThirdHandleType ThirdArray;
 };
 
-template <typename T,
-          typename FirstHandleType,
+template <typename FirstHandleType,
           typename SecondHandleType,
           typename ThirdHandleType,
           typename Device>
-class ArrayTransfer<T,
+class ArrayTransfer<vtkm::Vec<typename FirstHandleType::ValueType, 3>,
                     StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>,
                     Device>
 {
+public:
+  using ValueType = vtkm::Vec<typename FirstHandleType::ValueType, 3>;
+
+private:
   using StorageTag = StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>;
-  using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
-  using ValueType = T;
-
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
@@ -427,5 +429,75 @@ VTKM_CONT
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH1, typename AH2, typename AH3>
+struct TypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_CartesianProduct<" + TypeString<AH1>::Get() + "," +
+      TypeString<AH2>::Get() + "," + TypeString<AH3>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH1, typename AH2, typename AH3>
+struct TypeString<
+  vtkm::cont::ArrayHandle<vtkm::Vec<typename AH1::ValueType, 3>,
+                          vtkm::cont::internal::StorageTagCartesianProduct<AH1, AH2, AH3>>>
+  : TypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename AH1, typename AH2, typename AH3>
+struct Serialization<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+{
+private:
+  using Type = typename vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    diy::save(bb, storage.GetFirstArray());
+    diy::save(bb, storage.GetSecondArray());
+    diy::save(bb, storage.GetThirdArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH1 array1;
+    AH2 array2;
+    AH3 array3;
+
+    diy::load(bb, array1);
+    diy::load(bb, array2);
+    diy::load(bb, array3);
+
+    obj = vtkm::cont::make_ArrayHandleCartesianProduct(array1, array2, array3);
+  }
+};
+
+template <typename AH1, typename AH2, typename AH3>
+struct Serialization<
+  vtkm::cont::ArrayHandle<vtkm::Vec<typename AH1::ValueType, 3>,
+                          vtkm::cont::internal::StorageTagCartesianProduct<AH1, AH2, AH3>>>
+  : Serialization<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+{
+};
+} // diy
 
 #endif //vtk_m_cont_ArrayHandleCartesianProduct_h

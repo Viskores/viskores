@@ -112,6 +112,54 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetStructured<3>;
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <vtkm::IdComponent DIMENSION>
+struct TypeString<vtkm::cont::CellSetStructured<DIMENSION>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "CS_Structured<" + std::to_string(DIMENSION) + ">";
+    return name;
+  }
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <vtkm::IdComponent DIMENSION>
+struct Serialization<vtkm::cont::CellSetStructured<DIMENSION>>
+{
+private:
+  using Type = vtkm::cont::CellSetStructured<DIMENSION>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
+  {
+    diy::save(bb, cs.GetName());
+    diy::save(bb, cs.GetPointDimensions());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
+  {
+    std::string name;
+    diy::load(bb, name);
+    typename Type::SchedulingRangeType dims;
+    diy::load(bb, dims);
+    cs = Type(name);
+    cs.SetPointDimensions(dims);
+  }
+};
+
+} // diy
+
 #include <vtkm/cont/CellSetStructured.hxx>
 
 #endif //vtk_m_cont_CellSetStructured_h

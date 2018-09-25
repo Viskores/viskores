@@ -723,4 +723,121 @@ VTKM_CONT ArrayHandleCompositeVector<ArrayTs...> make_ArrayHandleCompositeVector
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename... AHs>
+struct TypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name =
+      "AH_CompositeVector<" + internal::GetVariadicTypeString(AHs{}...) + ">";
+    return name;
+  }
+};
+
+template <typename... AHs>
+struct TypeString<vtkm::cont::ArrayHandle<
+  typename vtkm::cont::internal::compvec::GetValueType<vtkmstd::tuple<AHs...>>::ValueType,
+  vtkm::cont::internal::StorageTagCompositeVector<vtkmstd::tuple<AHs...>>>>
+  : TypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+namespace internal
+{
+
+template <typename Functor, typename TupleType, typename... Args>
+inline void TupleForEachImpl(TupleType&& t,
+                             std::integral_constant<size_t, 0>,
+                             Functor&& f,
+                             Args&&... args)
+{
+  f(vtkmstd::get<0>(t), std::forward<Args>(args)...);
+}
+
+template <typename Functor, typename TupleType, size_t Index, typename... Args>
+inline void TupleForEachImpl(TupleType&& t,
+                             std::integral_constant<size_t, Index>,
+                             Functor&& f,
+                             Args&&... args)
+{
+  TupleForEachImpl(std::forward<TupleType>(t),
+                   std::integral_constant<size_t, Index - 1>{},
+                   std::forward<Functor>(f),
+                   std::forward<Args>(args)...);
+  f(vtkmstd::get<Index>(t), std::forward<Args>(args)...);
+}
+
+template <typename Functor, typename TupleType, typename... Args>
+inline void TupleForEach(TupleType&& t, Functor&& f, Args&&... args)
+{
+  constexpr auto size = vtkmstd::tuple_size<typename std::decay<TupleType>::type>::value;
+
+  TupleForEachImpl(std::forward<TupleType>(t),
+                   std::integral_constant<size_t, size - 1>{},
+                   std::forward<Functor>(f),
+                   std::forward<Args>(args)...);
+}
+} // internal
+
+template <typename... AHs>
+struct Serialization<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
+{
+private:
+  using Type = typename vtkm::cont::ArrayHandleCompositeVector<AHs...>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+  struct SaveFunctor
+  {
+    template <typename AH>
+    void operator()(const AH& ah, BinaryBuffer& bb) const
+    {
+      diy::save(bb, ah);
+    }
+  };
+
+  struct LoadFunctor
+  {
+    template <typename AH>
+    void operator()(AH& ah, BinaryBuffer& bb) const
+    {
+      diy::load(bb, ah);
+    }
+  };
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    internal::TupleForEach(obj.GetStorage().GetArrayTuple(), SaveFunctor{}, bb);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    vtkmstd::tuple<AHs...> arrayTuple;
+    internal::TupleForEach(arrayTuple, LoadFunctor{}, bb);
+    obj = BaseType(typename BaseType::StorageType(arrayTuple));
+  }
+};
+
+template <typename... AHs>
+struct Serialization<vtkm::cont::ArrayHandle<
+  typename vtkm::cont::internal::compvec::GetValueType<vtkmstd::tuple<AHs...>>::ValueType,
+  vtkm::cont::internal::StorageTagCompositeVector<vtkmstd::tuple<AHs...>>>>
+  : Serialization<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
+{
+};
+} // diy
+
 #endif //vtk_m_ArrayHandleCompositeVector_h

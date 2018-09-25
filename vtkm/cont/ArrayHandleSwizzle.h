@@ -398,4 +398,70 @@ make_ArrayHandleSwizzle(const ArrayHandleType& array,
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH, vtkm::IdComponent NComps>
+struct TypeString<vtkm::cont::ArrayHandleSwizzle<AH, NComps>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name =
+      "AH_Swizzle<" + TypeString<AH>::Get() + "," + std::to_string(NComps) + ">";
+    return name;
+  }
+};
+
+template <typename AH, vtkm::IdComponent NComps>
+struct TypeString<vtkm::cont::ArrayHandle<
+  vtkm::Vec<typename vtkm::VecTraits<typename AH::ValueType>::ComponentType, NComps>,
+  vtkm::cont::StorageTagSwizzle<AH, NComps>>>
+  : TypeString<vtkm::cont::ArrayHandleSwizzle<AH, NComps>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename AH, vtkm::IdComponent NComps>
+struct Serialization<vtkm::cont::ArrayHandleSwizzle<AH, NComps>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleSwizzle<AH, NComps>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    diy::save(bb, storage.GetArray());
+    diy::save(bb, storage.GetMap());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH array;
+    diy::load(bb, array);
+    vtkm::Vec<vtkm::IdComponent, NComps> map;
+    diy::load(bb, map);
+    obj = vtkm::cont::make_ArrayHandleSwizzle(array, map);
+  }
+};
+
+template <typename AH, vtkm::IdComponent NComps>
+struct Serialization<vtkm::cont::ArrayHandle<
+  vtkm::Vec<typename vtkm::VecTraits<typename AH::ValueType>::ComponentType, NComps>,
+  vtkm::cont::StorageTagSwizzle<AH, NComps>>>
+  : Serialization<vtkm::cont::ArrayHandleSwizzle<AH, NComps>>
+{
+};
+
+} // diy
+
 #endif // vtk_m_cont_ArrayHandleSwizzle_h

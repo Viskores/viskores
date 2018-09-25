@@ -129,4 +129,30 @@ struct DynamicTransformTraits<vtkm::cont::CoordinateSystem>
 } // namespace cont
 } // namespace vtkm
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace diy
+{
+
+template <>
+struct Serialization<vtkm::cont::CoordinateSystem>
+{
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::CoordinateSystem& cs)
+  {
+    diy::save(bb, cs.GetName());
+    diy::save(bb, cs.GetData());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::CoordinateSystem& cs)
+  {
+    std::string name;
+    diy::load(bb, name);
+    vtkm::cont::ArrayHandleVirtualCoordinates array;
+    diy::load(bb, array);
+    cs = vtkm::cont::CoordinateSystem(name, array);
+  }
+};
+
+} // diy
+
 #endif //vtk_m_cont_CoordinateSystem_h

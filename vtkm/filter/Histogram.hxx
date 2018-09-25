@@ -27,7 +27,7 @@
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
-#include <vtkm/cont/diy/Serialization.h>
+#include <vtkm/cont/Serialization.h>
 #include <vtkm/filter/internal/CreateResult.h>
 
 // clang-format off
