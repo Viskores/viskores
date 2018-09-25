@@ -44,7 +44,7 @@ namespace detail
 class SurfaceColor
 {
 public:
-  class MapScalarToColor : public vtkm::worklet::WorkletMapField
+  class Shade : public vtkm::worklet::WorkletMapField
   {
   private:
     vtkm::Vec<vtkm::Float32, 3> LightPosition;
@@ -57,9 +57,9 @@ public:
 
   public:
     VTKM_CONT
-    MapScalarToColor(const vtkm::Vec<vtkm::Float32, 3>& lightPosition,
-                     const vtkm::Vec<vtkm::Float32, 3>& cameraPosition,
-                     const vtkm::Vec<vtkm::Float32, 3>& lookAt)
+    Shade(const vtkm::Vec<vtkm::Float32, 3>& lightPosition,
+          const vtkm::Vec<vtkm::Float32, 3>& cameraPosition,
+          const vtkm::Vec<vtkm::Float32, 3>& lookAt)
       : LightPosition(lightPosition)
       , CameraPosition(cameraPosition)
       , LookAt(lookAt)
@@ -139,24 +139,74 @@ public:
       colors.Set(offset + 3, color[3]);
     }
 
+  }; //class Shade
+
+  class MapScalarToColor : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    VTKM_CONT
+    MapScalarToColor() {}
+
+    using ControlSignature = void(FieldIn<>, FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
+    using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
+
+    template <typename ColorPortalType, typename Precision, typename ColorMapPortalType>
+    VTKM_EXEC void operator()(const vtkm::Id& hitIdx,
+                              const Precision& scalar,
+                              ColorPortalType& colors,
+                              ColorMapPortalType colorMap,
+                              const vtkm::Id& idx) const
+    {
+
+      if (hitIdx < 0)
+      {
+        return;
+      }
+
+      vtkm::Vec<Precision, 4> color;
+      vtkm::Id offset = idx * 4;
+
+      vtkm::Int32 colorMapSize = static_cast<vtkm::Int32>(colorMap.GetNumberOfValues());
+      vtkm::Int32 colorIdx = vtkm::Int32(scalar * Precision(colorMapSize - 1));
+
+      // clamp color index
+      colorIdx = vtkm::Max(0, colorIdx);
+      colorIdx = vtkm::Min(colorMapSize - 1, colorIdx);
+      color = colorMap.Get(colorIdx);
+
+      colors.Set(offset + 0, color[0]);
+      colors.Set(offset + 1, color[1]);
+      colors.Set(offset + 2, color[2]);
+      colors.Set(offset + 3, color[3]);
+    }
+
   }; //class MapScalarToColor
 
   template <typename Precision>
   VTKM_CONT void run(Ray<Precision>& rays,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap,
-                     const vtkm::rendering::raytracing::Camera& camera)
+                     const vtkm::rendering::raytracing::Camera& camera,
+                     bool shade)
   {
-    // TODO: support light positions
-    vtkm::Vec<vtkm::Float32, 3> scale(2, 2, 2);
-    vtkm::Vec<vtkm::Float32, 3> lightPosition = camera.GetPosition() + scale * camera.GetUp();
-    vtkm::worklet::DispatcherMapField<MapScalarToColor>(
-      MapScalarToColor(lightPosition, camera.GetPosition(), camera.GetLookAt()))
-      .Invoke(rays.HitIdx,
-              rays.Scalar,
-              rays.Normal,
-              rays.Intersection,
-              rays.Buffers.at(0).Buffer,
-              colorMap);
+    if (shade)
+    {
+      // TODO: support light positions
+      vtkm::Vec<vtkm::Float32, 3> scale(2, 2, 2);
+      vtkm::Vec<vtkm::Float32, 3> lightPosition = camera.GetPosition() + scale * camera.GetUp();
+      vtkm::worklet::DispatcherMapField<Shade>(
+        Shade(lightPosition, camera.GetPosition(), camera.GetLookAt()))
+        .Invoke(rays.HitIdx,
+                rays.Scalar,
+                rays.Normal,
+                rays.Intersection,
+                rays.Buffers.at(0).Buffer,
+                colorMap);
+    }
+    else
+    {
+      vtkm::worklet::DispatcherMapField<MapScalarToColor>(MapScalarToColor())
+        .Invoke(rays.HitIdx, rays.Scalar, rays.Buffers.at(0).Buffer, colorMap);
+    }
   }
 }; // class SurfaceColor
 
@@ -164,6 +214,7 @@ public:
 
 RayTracer::RayTracer()
   : NumberOfShapes(0)
+  , Shade(true)
 {
 }
 
@@ -203,6 +254,11 @@ void RayTracer::Render(Ray<vtkm::Float32>& rays)
 void RayTracer::Render(Ray<vtkm::Float64>& rays)
 {
   RenderOnDevice(rays);
+}
+
+void RayTracer::SetShadingOn(bool on)
+{
+  Shade = on;
 }
 
 vtkm::Id RayTracer::GetNumberOfShapes() const
@@ -253,7 +309,7 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
 
       // Calculate the color at the intersection  point
       detail::SurfaceColor surfaceColor;
-      surfaceColor.run(rays, ColorMap, camera);
+      surfaceColor.run(rays, ColorMap, camera, this->Shade);
 
       time = timer.GetElapsedTime();
       logger->AddLogData("shade", time);

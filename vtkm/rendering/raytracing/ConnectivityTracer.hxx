@@ -775,11 +775,11 @@ public:
     while (enterDistance <= currentDistance && currentDistance <= exitDistance)
     {
       //composite
-      sampleColor[3] *= (1.f - color[3]);
-      color[0] = color[0] + sampleColor[0] * sampleColor[3];
-      color[1] = color[1] + sampleColor[1] * sampleColor[3];
-      color[2] = color[2] + sampleColor[2] * sampleColor[3];
-      color[3] = sampleColor[3] + color[3];
+      vtkm::Float32 alpha = sampleColor[3] * (1.f - color[3]);
+      color[0] = color[0] + sampleColor[0] * alpha;
+      color[1] = color[1] + sampleColor[1] * alpha;
+      color[2] = color[2] + sampleColor[2] * alpha;
+      color[3] = alpha + color[3];
 
       if (color[3] > 1.)
       {

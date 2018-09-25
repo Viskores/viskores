@@ -43,6 +43,7 @@ protected:
   vtkm::Id NumberOfShapes;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
   vtkm::Range ScalarRange;
+  bool Shade;
 
   template <typename Precision>
   void RenderOnDevice(Ray<Precision>& rays);
@@ -64,6 +65,9 @@ public:
 
   VTKM_CONT
   void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
+
+  VTKM_CONT
+  void SetShadingOn(bool on);
 
   VTKM_CONT
   void Render(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays);
