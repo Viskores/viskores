@@ -27,11 +27,12 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
-
 
 #include <cstring>
 #include <iostream>
@@ -43,6 +44,42 @@ static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> BasisParticles;
 static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> BasisParticlesOriginal;
 static vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
 
+class ValidityCheck : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn<> end_point, FieldIn<> steps, FieldInOut<> output);
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  inline VTKM_CONT void SetBounds(vtkm::Bounds b) { bounds = b; }
+
+  template <typename PosType, typename StepType, typename ValidityType>
+  VTKM_EXEC void operator()(const PosType& end_point,
+                            const StepType& steps,
+                            ValidityType& res) const
+  {
+    if (steps > 0 && res == 1)
+    {
+      if (end_point[0] >= bounds.X.Min && end_point[0] <= bounds.X.Max &&
+          end_point[1] >= bounds.Y.Min && end_point[1] <= bounds.Y.Max &&
+          end_point[2] >= bounds.Z.Min && end_point[2] <= bounds.Z.Max)
+      {
+        res = 1;
+      }
+      else
+      {
+        res = 0;
+      }
+    }
+    else
+    {
+      res = 0;
+    }
+  }
+
+private:
+  vtkm::Bounds bounds;
+};
 
 namespace vtkm
 {
@@ -267,53 +304,50 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   PortalType_ID portal_stepstaken = particle_stepstaken.GetPortalControl();
   PortalType_ID portal_validity = BasisParticlesValidity.GetPortalControl();
 
+  vtkm::cont::DataSet outputData;
+  vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
 
-  int connectivity_index = 0;
-  std::vector<vtkm::Id> connectivity;
-  std::vector<vtkm::Vec<T, 3>> pointCoordinates;
-  std::vector<vtkm::UInt8> shapes;
-  std::vector<vtkm::IdComponent> numIndices;
-
-  // This whole loops needs to be replaced with data parallel function calls.
-  for (vtkm::Id index = 0; index < res.positions.GetNumberOfValues(); index++)
+  if (cycle % this->writeFrequency == 0)
   {
-    auto start_point = start_position.Get(index);
-    auto end_point = end_position.Get(index);
-    auto steps = portal_stepstaken.Get(index);
+    int connectivity_index = 0;
+    std::vector<vtkm::Id> connectivity;
+    std::vector<vtkm::Vec<T, 3>> pointCoordinates;
+    std::vector<vtkm::UInt8> shapes;
+    std::vector<vtkm::IdComponent> numIndices;
 
-    if (steps > 0 && portal_validity.Get(index) == 1)
+    for (vtkm::Id index = 0; index < res.positions.GetNumberOfValues(); index++)
     {
-      if (end_point[0] >= bounds.X.Min && end_point[0] <= bounds.X.Max &&
-          end_point[1] >= bounds.Y.Min && end_point[1] <= bounds.Y.Max &&
-          end_point[2] >= bounds.Z.Min && end_point[2] <= bounds.Z.Max)
+      auto start_point = start_position.Get(index);
+      auto end_point = end_position.Get(index);
+      auto steps = portal_stepstaken.Get(index);
+
+      if (steps > 0 && portal_validity.Get(index) == 1)
       {
-        connectivity.push_back(connectivity_index);
-        connectivity.push_back(connectivity_index + 1);
-        connectivity_index += 2;
-        pointCoordinates.push_back(
-          vtkm::Vec<T, 3>((float)start_point[0], (float)start_point[1], (float)start_point[2]));
-        pointCoordinates.push_back(
-          vtkm::Vec<T, 3>((float)end_point[0], (float)end_point[1], (float)end_point[2]));
-        shapes.push_back(vtkm::CELL_SHAPE_LINE);
-        numIndices.push_back(2);
+        if (end_point[0] >= bounds.X.Min && end_point[0] <= bounds.X.Max &&
+            end_point[1] >= bounds.Y.Min && end_point[1] <= bounds.Y.Max &&
+            end_point[2] >= bounds.Z.Min && end_point[2] <= bounds.Z.Max)
+        {
+          connectivity.push_back(connectivity_index);
+          connectivity.push_back(connectivity_index + 1);
+          connectivity_index += 2;
+          pointCoordinates.push_back(
+            vtkm::Vec<T, 3>((float)start_point[0], (float)start_point[1], (float)start_point[2]));
+          pointCoordinates.push_back(
+            vtkm::Vec<T, 3>((float)end_point[0], (float)end_point[1], (float)end_point[2]));
+          shapes.push_back(vtkm::CELL_SHAPE_LINE);
+          numIndices.push_back(2);
+        }
+        else
+        {
+          portal_validity.Set(index, 0);
+        }
       }
       else
       {
         portal_validity.Set(index, 0);
       }
     }
-    else
-    {
-      portal_validity.Set(index, 0);
-    }
-  }
 
-  vtkm::cont::DataSet outputData;
-  vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
-
-
-  if (cycle % this->writeFrequency == 0)
-  {
     outputData = dataSetBuilder.Create(pointCoordinates, shapes, numIndices, connectivity);
     std::stringstream file_path;
     file_path << "output/basisflows_" << this->rank << "_";
@@ -333,6 +367,11 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   }
   else
   {
+    ValidityCheck check;
+    check.SetBounds(bounds);
+    vtkm::worklet::DispatcherMapField<ValidityCheck> dispatcher(check);
+    dispatcher.SetDevice(device);
+    dispatcher.Invoke(particle_positions, particle_stepstaken, BasisParticlesValidity);
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(particle_positions, BasisParticles);
   }
 
