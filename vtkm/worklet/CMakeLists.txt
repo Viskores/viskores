@@ -25,7 +25,7 @@ set(headers
   CellMeasure.h
   Clip.h
   ContourTreeUniform.h
-  ContourTreeUniformPPP2.h
+  ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
   CosmoTools.h
   CrossProduct.h
@@ -95,7 +95,7 @@ set(header_impls
 add_subdirectory(internal)
 add_subdirectory(contour)
 add_subdirectory(contourtree)
-add_subdirectory(contourtree_ppp2)
+add_subdirectory(contourtree_augmented)
 add_subdirectory(cosmotools)
 add_subdirectory(gradient)
 add_subdirectory(splatkernels)
