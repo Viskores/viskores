@@ -76,7 +76,7 @@ public:
   LinearBVHBuilder() {}
 
   template <typename Device>
-  VTKM_CONT void SortAABBS(BVHData& bvh, Device vtkmNotUsed(device));
+  VTKM_CONT void SortAABBS(BVHData& bvh, Device vtkmNotUsed(device), bool);
 
   template <typename Device>
   VTKM_CONT void BuildHierarchy(BVHData& bvh);
@@ -555,8 +555,11 @@ public:
 }; // class TreeBuilder
 
 template <typename Device>
-VTKM_CONT void LinearBVHBuilder::SortAABBS(BVHData& bvh, Device vtkmNotUsed(device))
+VTKM_CONT void LinearBVHBuilder::SortAABBS(BVHData& bvh,
+                                           Device vtkmNotUsed(device),
+                                           bool singleAABB)
 {
+
   //create array of indexes to be sorted with morton codes
   vtkm::cont::ArrayHandle<vtkm::Id> iterator;
   iterator.PrepareForOutput(bvh.GetNumberOfPrimitives(), Device());
@@ -641,9 +644,18 @@ VTKM_CONT void LinearBVHBuilder::SortAABBS(BVHData& bvh, Device vtkmNotUsed(devi
   temp1 = temp2;
 
   // Create the leaf references
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> iter(0, 1, arraySize);
   bvh.leafs.PrepareForOutput(arraySize * 2, Device());
-
+  // we only actually have a single primitive, but the algorithm
+  // requires 2. Make sure they both point to the original
+  // primitive
+  if (singleAABB)
+  {
+    auto iterPortal = iterator.GetPortalControl();
+    for (int i = 0; i < 2; ++i)
+    {
+      iterPortal.Set(i, 0);
+    }
+  }
   vtkm::worklet::DispatcherMapField<CreateLeafs> createDis;
   createDis.SetDevice(Device());
   createDis.Invoke(iterator, bvh.leafs);
@@ -661,13 +673,46 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   logger->OpenLogEntry("bvh_constuct");
 
   vtkm::cont::Timer<Device> constructTimer;
-
+  //
+  //
+  // This algorithm needs at least 2 AABBs
+  //
+  bool singleAABB = false;
   vtkm::Id numberOfAABBs = linearBVH.GetNumberOfAABBs();
+  if (numberOfAABBs == 1)
+  {
+    numberOfAABBs = 2;
+    singleAABB = true;
+    vtkm::Float32 xmin = linearBVH.AABB.xmins.GetPortalControl().Get(0);
+    vtkm::Float32 ymin = linearBVH.AABB.ymins.GetPortalControl().Get(0);
+    vtkm::Float32 zmin = linearBVH.AABB.zmins.GetPortalControl().Get(0);
+    vtkm::Float32 xmax = linearBVH.AABB.xmaxs.GetPortalControl().Get(0);
+    vtkm::Float32 ymax = linearBVH.AABB.ymaxs.GetPortalControl().Get(0);
+    vtkm::Float32 zmax = linearBVH.AABB.zmaxs.GetPortalControl().Get(0);
+
+    linearBVH.AABB.xmins.Allocate(2);
+    linearBVH.AABB.ymins.Allocate(2);
+    linearBVH.AABB.zmins.Allocate(2);
+    linearBVH.AABB.xmaxs.Allocate(2);
+    linearBVH.AABB.ymaxs.Allocate(2);
+    linearBVH.AABB.zmaxs.Allocate(2);
+    for (int i = 0; i < 2; ++i)
+    {
+      linearBVH.AABB.xmins.GetPortalControl().Set(i, xmin);
+      linearBVH.AABB.ymins.GetPortalControl().Set(i, ymin);
+      linearBVH.AABB.zmins.GetPortalControl().Set(i, zmin);
+      linearBVH.AABB.xmaxs.GetPortalControl().Set(i, xmax);
+      linearBVH.AABB.ymaxs.GetPortalControl().Set(i, ymax);
+      linearBVH.AABB.zmaxs.GetPortalControl().Set(i, zmax);
+    }
+  }
+
 
   logger->AddLogData("bvh_num_aabbs", numberOfAABBs);
 
   const vtkm::Id numBBoxes = numberOfAABBs;
   BVHData bvh(numBBoxes, linearBVH.GetAABBs(), device);
+
 
   vtkm::cont::Timer<Device> timer;
   // Find the extent of all bounding boxes to generate normalization for morton codes
@@ -723,7 +768,7 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
 
   linearBVH.Allocate(bvh.GetNumberOfPrimitives(), Device());
 
-  SortAABBS(bvh, Device());
+  SortAABBS(bvh, Device(), singleAABB);
 
   time = timer.GetElapsedTime();
   logger->AddLogData("sort_aabbs", time);
@@ -846,35 +891,6 @@ void LinearBVH::ConstructOnDevice(Device device)
       "Linear BVH: coordinates and triangles must be set before calling construct!");
   if (!IsConstructed)
   {
-    //
-    // This algorithm needs at least 2 AABBs
-    //
-    vtkm::Id numAABBs = this->GetNumberOfAABBs();
-    if (numAABBs == 1)
-    {
-      vtkm::Float32 xmin = AABB.xmins.GetPortalControl().Get(0);
-      vtkm::Float32 ymin = AABB.ymins.GetPortalControl().Get(0);
-      vtkm::Float32 zmin = AABB.zmins.GetPortalControl().Get(0);
-      vtkm::Float32 xmax = AABB.xmaxs.GetPortalControl().Get(0);
-      vtkm::Float32 ymax = AABB.ymaxs.GetPortalControl().Get(0);
-      vtkm::Float32 zmax = AABB.zmaxs.GetPortalControl().Get(0);
-
-      AABB.xmins.Allocate(2);
-      AABB.ymins.Allocate(2);
-      AABB.zmins.Allocate(2);
-      AABB.xmaxs.Allocate(2);
-      AABB.ymaxs.Allocate(2);
-      AABB.zmaxs.Allocate(2);
-      for (int i = 0; i < 2; ++i)
-      {
-        AABB.xmins.GetPortalControl().Set(i, xmin);
-        AABB.ymins.GetPortalControl().Set(i, ymin);
-        AABB.zmins.GetPortalControl().Set(i, zmin);
-        AABB.xmaxs.GetPortalControl().Set(i, xmax);
-        AABB.ymaxs.GetPortalControl().Set(i, ymax);
-        AABB.zmaxs.GetPortalControl().Set(i, zmax);
-      }
-    }
     detail::LinearBVHBuilder builder;
     builder.RunOnDevice(*this, device);
     IsConstructed = true;
