@@ -115,7 +115,7 @@ public:
 }; // MeshExtrema
 
 
-MeshExtrema::MeshExtrema(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize)
+inline MeshExtrema::MeshExtrema(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize)
   : Invoke(device)
   , peaks()
   , pits()
@@ -137,7 +137,7 @@ MeshExtrema::MeshExtrema(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize)
 } // MeshExtrema
 
 
-void MeshExtrema::BuildRegularChains(bool isMaximal)
+inline void MeshExtrema::BuildRegularChains(bool isMaximal)
 { // BuildRegularChains()
   // Create vertex index array -- note, this is a fancy vtk-m array, i.e, the full array
   // is not actually allocated but the array only acts like a sequence of numbers
@@ -159,7 +159,7 @@ void MeshExtrema::BuildRegularChains(bool isMaximal)
 } // BuildRegularChains()
 
 template <class MeshType>
-void MeshExtrema::SetStarts(MeshType& mesh, bool isMaximal)
+inline void MeshExtrema::SetStarts(MeshType& mesh, bool isMaximal)
 {
   mesh.setPrepareForExecutionBehavior(isMaximal);
   mesh_extrema_inc_ns::SetStarts setStartsWorklet;
@@ -176,7 +176,7 @@ void MeshExtrema::SetStarts(MeshType& mesh, bool isMaximal)
 
 
 // debug routine
-void MeshExtrema::DebugPrint(const char* message, const char* fileName, long lineNum)
+inline void MeshExtrema::DebugPrint(const char* message, const char* fileName, long lineNum)
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "---------------------------" << std::endl;

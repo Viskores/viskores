@@ -145,7 +145,7 @@ public:
 
 
 // creates merge tree (empty)
-MergeTree::MergeTree(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize, bool IsJoinTree)
+inline MergeTree::MergeTree(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize, bool IsJoinTree)
   : isJoinTree(IsJoinTree)
   , supernodes()
   , superarcs()
@@ -167,7 +167,7 @@ MergeTree::MergeTree(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize, bool
 
 
 // debug routine
-void MergeTree::DebugPrint(const char* message, const char* fileName, long lineNum)
+inline void MergeTree::DebugPrint(const char* message, const char* fileName, long lineNum)
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "---------------------------" << std::endl;
@@ -202,10 +202,10 @@ void MergeTree::DebugPrint(const char* message, const char* fileName, long lineN
 
 
 template <typename MeshType>
-void MergeTree::DebugPrintTree(const char* message,
-                               const char* fileName,
-                               long lineNum,
-                               const MeshType& mesh)
+inline void MergeTree::DebugPrintTree(const char* message,
+                                      const char* fileName,
+                                      long lineNum,
+                                      const MeshType& mesh)
 { //PrintMergeTree()
 #ifdef DEBUG_PRINT
   std::cout << "---------------------------" << std::endl;
