@@ -29,6 +29,7 @@ set(unit_tests
   UnitTestCellMeasure.cxx
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
+  UnitTestContourTreeUniformAugmented.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
   UnitTestCrossProduct.cxx

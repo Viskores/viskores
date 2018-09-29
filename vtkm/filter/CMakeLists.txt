@@ -25,6 +25,7 @@ set(headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   ContourTreeUniform.h
+  ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
   CrossProduct.h
   DotProduct.h
@@ -77,6 +78,7 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
+  ContourTreeUniformAugmented.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
   DotProduct.hxx
