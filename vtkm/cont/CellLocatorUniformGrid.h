@@ -37,6 +37,9 @@ class CellLocatorUniformGrid : public vtkm::cont::CellLocator
 {
 public:
   VTKM_CONT
+  CellLocatorUniformGrid() = default;
+
+  VTKM_CONT
   void Build() override
   {
     vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
@@ -58,9 +61,6 @@ public:
     RangeTransform[2] = static_cast<vtkm::FloatDefault>(celldims[2]) /
       static_cast<vtkm::FloatDefault>(Bounds.Z.Length());
 
-    // Since we are calculating the cell Id, and the number of cells is
-    // 1 less than the number of points in each direction, the -1 from dims
-    // is necessary.
     PlaneSize = celldims[0] * celldims[1];
     RowSize = celldims[0];
   }
