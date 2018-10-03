@@ -81,8 +81,8 @@ template <typename DeviceAdapter>
 class HyperArcSuperNodeComparator
 {
 public:
-  typedef
-    typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst IdArrayPortalType;
+  using IdArrayPortalType =
+    typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   IdArrayPortalType treeHyperparentsPortal;
   IdArrayPortalType graphSuperIDPortal;

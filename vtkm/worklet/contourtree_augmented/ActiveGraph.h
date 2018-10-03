@@ -556,7 +556,7 @@ void ActiveGraph::TransferRegularPoints()
 // compacts the active vertex list
 void ActiveGraph::CompactActiveVertices()
 { // CompactActiveVertices()
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexType;
+  using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
   // create a temporary array the same size
   vtkm::cont::ArrayHandle<vtkm::Id> newActiveVertices;
@@ -803,7 +803,7 @@ struct SuperNodeSort
 // uses active graph to set superarcs & hyperparents in merge tree
 void ActiveGraph::SetSuperArcs(MergeTree& tree)
 { // SetSuperArcs()
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermutedIdArrayType;
+  using PermutedIdArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
   //      1.      set the hyperparents
   // allocate space for the hyperparents
@@ -914,7 +914,7 @@ struct SuperArcSort
 // uses active graph to set arcs in merge tree
 void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
 { // SetArcs()
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexType;
+  using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
   // reference to the correct array in the extrema
   const IdArrayType& extrema = isJoinGraph ? meshExtrema.peaks : meshExtrema.pits;

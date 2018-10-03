@@ -60,23 +60,16 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_3D_marchingcubes_execution_obect_mesh_structure_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_3D_marchingcubes_execution_obect_mesh_structure_h
+#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_MeshStructureMarchingCubes_h
+#define vtkm_worklet_contourtree_augmented_mesh_dem_MeshStructureMarchingCubes_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/ExecutionObject_MeshStructure_3D.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem/MeshStructure3D.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/marchingcubes_3D/Types.h>
-
-
-//Define namespace alias for the marching cubes types to make the code a bit more readable
-namespace m3d_marchingcubes_inc_ns =
-  vtkm::worklet::contourtree_augmented::mesh_dem_3d_marchingcubes_inc;
-namespace mesh_dem_inc_ns = vtkm::worklet::contourtree_augmented::mesh_dem_inc;
-namespace cpp2_ns = vtkm::worklet::contourtree_augmented;
 
 namespace vtkm
 {
@@ -84,56 +77,61 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_3d_marchingcubes_inc
-{
 
 // Worklet for computing the sort indices from the sort order
 template <typename DeviceAdapter>
-class ExecutionObject_MeshStructure
-  : public mesh_dem_inc_ns::ExecutionObject_MeshStructure_3D<DeviceAdapter>
+class MeshStructureMarchingCubes : public mesh_dem::MeshStructure3D<DeviceAdapter>
 {
 public:
   // edgeBoundaryDetectionMasks types
-  typedef
-    typename edgeBoundaryDetectionMasksType::template ExecutionTypes<DeviceAdapter>::PortalConst
-      edgeBoundaryDetectionMasksPortalType;
-  // Sort indices types
-  typedef typename cpp2_ns::IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst
-    sortIndicesPortalType;
+  using edgeBoundaryDetectionMasksPortalType =
+    typename m3d_marchingcubes::edgeBoundaryDetectionMasksType::template ExecutionTypes<
+      DeviceAdapter>::PortalConst;
+
+  // Sort indicies types
+  using sortIndicesPortalType =
+    typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+
   // cubeVertexPermutations types
-  typedef typename cubeVertexPermutationsType::template ExecutionTypes<DeviceAdapter>::PortalConst
-    cubeVertexPermutationsPortalType;
+  using cubeVertexPermutationsPortalType =
+    typename m3d_marchingcubes::cubeVertexPermutationsType::template ExecutionTypes<
+      DeviceAdapter>::PortalConst;
+
   // linkVertexConnection types
-  typedef typename linkVertexConnectionsType::template ExecutionTypes<DeviceAdapter>::PortalConst
-    linkVertexConnectionsPortalType;
+  using linkVertexConnectionsPortalType =
+    typename m3d_marchingcubes::linkVertexConnectionsType::template ExecutionTypes<
+      DeviceAdapter>::PortalConst;
   // inCubeConnection types
-  typedef typename inCubeConnectionsType::template ExecutionTypes<DeviceAdapter>::PortalConst
-    inCubeConnectionsPortalType;
+
+  using inCubeConnectionsPortalType =
+    typename m3d_marchingcubes::inCubeConnectionsType::template ExecutionTypes<
+      DeviceAdapter>::PortalConst;
 
 
 
   // Default constructor needed to make the CUDA build work
   VTKM_EXEC_CONT
-  ExecutionObject_MeshStructure()
-    : mesh_dem_inc_ns::ExecutionObject_MeshStructure_3D<DeviceAdapter>()
+  MeshStructureMarchingCubes()
+    : mesh_dem::MeshStructure3D<DeviceAdapter>()
     , getMax(false)
   {
   }
 
   // Main constructore used in the code
   VTKM_EXEC_CONT
-  ExecutionObject_MeshStructure(vtkm::Id nrows,
-                                vtkm::Id ncols,
-                                vtkm::Id nslices,
-                                bool getmax,
-                                const cpp2_ns::IdArrayType& sortIndices,
-                                const edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn,
-                                const cubeVertexPermutationsType& cubeVertexPermutationsIn,
-                                const linkVertexConnectionsType& linkVertexConnectionsSixIn,
-                                const linkVertexConnectionsType& linkVertexConnectionsEighteenIn,
-                                const inCubeConnectionsType& inCubeConnectionsSixIn,
-                                const inCubeConnectionsType& inCubeConnectionsEighteenIn)
-    : mesh_dem_inc_ns::ExecutionObject_MeshStructure_3D<DeviceAdapter>(nrows, ncols, nslices)
+  MeshStructureMarchingCubes(
+    vtkm::Id nrows,
+    vtkm::Id ncols,
+    vtkm::Id nslices,
+    bool getmax,
+    const IdArrayType& sortIndices,
+    const m3d_marchingcubes::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn,
+    const m3d_marchingcubes::cubeVertexPermutationsType& cubeVertexPermutationsIn,
+    const m3d_marchingcubes::linkVertexConnectionsType& linkVertexConnectionsSixIn,
+    const m3d_marchingcubes::linkVertexConnectionsType& linkVertexConnectionsEighteenIn,
+    const m3d_marchingcubes::inCubeConnectionsType& inCubeConnectionsSixIn,
+    const m3d_marchingcubes::inCubeConnectionsType& inCubeConnectionsEighteenIn)
+    : mesh_dem::MeshStructure3D<DeviceAdapter>(nrows, ncols, nslices)
     , getMax(getmax)
   {
     sortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
@@ -148,11 +146,16 @@ public:
   }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return N_FACE_NEIGHBOURS; }
+  constexpr vtkm::Id GetMaxNumberOfNeighbours() const
+  {
+    return m3d_marchingcubes::N_FACE_NEIGHBOURS;
+  }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id vertex, vtkm::Id nbrNo) const
-  { // GetNeighbourIndex
+  {
+    using namespace m3d_marchingcubes;
+    // GetNeighbourIndex
     switch (nbrNo)
     {
       // Edge connected neighbours
@@ -230,7 +233,9 @@ public:
 
   VTKM_EXEC
   inline vtkm::Id GetExtremalNeighbour(vtkm::Id vertex) const
-  { // GetExtremalNeighbour()
+  {
+    using namespace m3d_marchingcubes;
+    // GetExtremalNeighbour()
     // convert to a sort index
     vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
 
@@ -266,7 +271,9 @@ public:
   inline vtkm::Pair<vtkm::Id, vtkm::Id> GetNeighbourComponentsMaskAndDegree(
     vtkm::Id vertex,
     bool getMaxComponents) const
-  { // GetNeighbourComponentsMaskAndDegree()
+  {
+    using namespace m3d_marchingcubes;
+    // GetNeighbourComponentsMaskAndDegree()
     // convert to a sort index
     vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
 
@@ -389,9 +396,8 @@ private:
   bool getMax;
 
 
-}; // ExecutionObjec_MeshStructure_3Dt
+}; // MeshStructureMarchingCubes
 
-} // namespace mesh_dem_3d_marchingcubes_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

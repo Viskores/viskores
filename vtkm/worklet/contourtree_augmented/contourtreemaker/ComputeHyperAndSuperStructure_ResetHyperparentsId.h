@@ -83,7 +83,7 @@ public:
                                 WholeArrayInOut<IdType> contourTreeHyperparents // (input/output)
                                 );                                              // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

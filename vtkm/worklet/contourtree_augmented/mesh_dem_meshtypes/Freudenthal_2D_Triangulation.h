@@ -67,14 +67,9 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/freudenthal_2D/ExecutionObject_MeshStructure.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/freudenthal_2D/Types.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshStructureFreudenthal2D.h>
 
 #include <vtkm/cont/ExecutionObjectBase.h>
-
-//Define namespace alias for the freudenthal and mergetree inc to make the code a bit more readable
-namespace m2d_freudenthal_inc_ns =
-  vtkm::worklet::contourtree_augmented::mesh_dem_2d_freudenthal_inc;
 
 namespace vtkm
 {
@@ -89,14 +84,13 @@ class Mesh_DEM_Triangulation_2D_Freudenthal : public Mesh_DEM_Triangulation_2D<T
 { // class Mesh_DEM_Triangulation
 public:
   // Constants and case tables
-  m2d_freudenthal_inc_ns::edgeBoundaryDetectionMasksType edgeBoundaryDetectionMasks;
+  m2d_freudenthal::edgeBoundaryDetectionMasksType edgeBoundaryDetectionMasks;
 
   //Mesh dependent helper functions
   void setPrepareForExecutionBehavior(bool getMax);
 
   template <typename DeviceTag>
-  mesh_dem_2d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag> PrepareForExecution(
-    DeviceTag) const;
+  MeshStructureFreudenthal2D<DeviceTag> PrepareForExecution(DeviceTag) const;
 
   Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols);
 
@@ -113,7 +107,7 @@ Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_2D
 
 {
   edgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
-    m2d_freudenthal_inc_ns::edgeBoundaryDetectionMasks, m2d_freudenthal_inc_ns::N_INCIDENT_EDGES);
+    m2d_freudenthal::edgeBoundaryDetectionMasks, m2d_freudenthal::N_INCIDENT_EDGES);
 }
 
 template <typename T, typename StorageType>
@@ -126,16 +120,15 @@ void Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::setPrepareForExecuti
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
 template <typename T, typename StorageType>
 template <typename DeviceTag>
-mesh_dem_2d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>
+MeshStructureFreudenthal2D<DeviceTag>
   Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
 {
-  return mesh_dem_2d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>(
-    this->nRows,
-    this->nCols,
-    m2d_freudenthal_inc_ns::N_INCIDENT_EDGES,
-    this->useGetMax,
-    this->sortIndices,
-    edgeBoundaryDetectionMasks);
+  return MeshStructureFreudenthal2D<DeviceTag>(this->nRows,
+                                               this->nCols,
+                                               m2d_freudenthal::N_INCIDENT_EDGES,
+                                               this->useGetMax,
+                                               this->sortIndices,
+                                               edgeBoundaryDetectionMasks);
 }
 
 

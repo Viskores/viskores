@@ -66,6 +66,9 @@ set(headers
   Freudenthal_2D_Triangulation.h
   Freudenthal_3D_Triangulation.h
   MarchingCubes_3D_Triangulation.h
+  MeshStructureFreudenthal2D.h
+  MeshStructureFreudenthal3D.h
+  MeshStructureMarchingCubes.h
   )
 
 #-----------------------------------------------------------------------------

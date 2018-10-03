@@ -84,7 +84,7 @@ public:
   typedef void ControlSignature(WholeArrayInOut<IdType> hyperarcs,   // (input/output) hyperacrs
                                 WholeArrayIn<IdType> activeIndices); // (input) activeIndices
   typedef void ExecutionSignature(_1, InputIndex, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

@@ -81,9 +81,8 @@ template <typename DeviceAdapter>
 class ContourTreeSuperNodeComparator
 {
 public:
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
-      IdPortalType;
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   IdPortalType hyperparentsPortal;
   IdPortalType supernodesPortal;

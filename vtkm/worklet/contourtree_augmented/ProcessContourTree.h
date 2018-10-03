@@ -491,7 +491,7 @@ void ProcessContourTree::ComputeVolumeBranchDecomposition(
   IdArrayType& branchSaddle,
   IdArrayType& branchParent)
 { // ComputeVolumeBranchDecomposition()
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
   auto superarcsPortal = contourTree.superarcs.GetPortalConstControl();
   auto superarcDependentWeightPortal = superarcDependentWeight.GetPortalConstControl();

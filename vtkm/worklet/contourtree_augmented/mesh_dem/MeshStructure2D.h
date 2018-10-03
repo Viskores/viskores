@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_inc_execution_object_mesh_3d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_inc_execution_object_mesh_3d_h
+#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
+#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
 
 #include <vtkm/Types.h>
 
@@ -72,54 +72,45 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_inc
+namespace mesh_dem
 {
 
 // Worklet for computing the sort indices from the sort order
 template <typename DeviceAdapter>
-class ExecutionObject_MeshStructure_3D
+class MeshStructure2D
 {
 public:
   VTKM_EXEC_CONT
-  ExecutionObject_MeshStructure_3D()
+  MeshStructure2D()
     : nRows(0)
     , nCols(0)
-    , nSlices(0)
   {
   }
 
   VTKM_EXEC_CONT
-  ExecutionObject_MeshStructure_3D(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices)
+  MeshStructure2D(vtkm::Id nrows, vtkm::Id ncols)
     : nRows(nrows)
     , nCols(ncols)
-    , nSlices(nslices)
   {
   }
 
-  // vertex row - integer modulus by (nRows&nCols) and integer divide by columns
+  // vertex row - integer divide by columns
   VTKM_EXEC
-  vtkm::Id vertexRow(vtkm::Id v) const { return (v % (nRows * nCols)) / nCols; }
+  inline vtkm::Id vertexRow(vtkm::Id v) const { return v / nCols; }
 
-  // vertex column -- integer modulus by columns
+  // verteck column -- integer modulus by columns
   VTKM_EXEC
-  vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
-
-  // vertex slice -- integer divide by (nRows*nCols)
-  VTKM_EXEC
-  vtkm::Id vertexSlice(vtkm::Id v) const { return v / (nRows * nCols); }
+  inline vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
 
   //vertex ID - row * ncols + col
   VTKM_EXEC
-  vtkm::Id vertexId(vtkm::Id s, vtkm::Id r, vtkm::Id c) const
-  {
-    return (s * nRows + r) * nCols + c;
-  }
+  inline vtkm::Id vertexId(vtkm::Id r, vtkm::Id c) const { return r * nCols + c; }
 
-  vtkm::Id nRows, nCols, nSlices;
+  vtkm::Id nRows, nCols;
 
-}; // Mesh_DEM_2D_ExecutionObject
+}; // MeshStructure2D
 
-} // namespace mesh_dem_triangulation_worklets
+} // namespace mesh_dem
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

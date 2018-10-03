@@ -89,7 +89,7 @@ public:
                                 WholeArrayOut<IdType> hyperarcs,    // (output) hyperarcs
                                 WholeArrayOut<IdType> outdegree);   // (output) outdegree
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

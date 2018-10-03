@@ -81,9 +81,8 @@ template <typename DeviceAdapter>
 class SuperNodeBranchComparator
 { // SuperNodeBranchComparator
 public:
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
-      IdPortalType;
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
   IdPortalType whichBranchPortal;
   IdPortalType supernodesPortal;
 

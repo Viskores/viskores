@@ -89,7 +89,7 @@ public:
     WholeArrayOut<IdType> newHyperarcs               // (output)
     );                                               // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

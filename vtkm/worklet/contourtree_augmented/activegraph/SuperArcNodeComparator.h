@@ -82,9 +82,8 @@ template <typename DeviceAdapter>
 class SuperArcNodeComparator
 {
 public:
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
-      IdPortalType;
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   IdPortalType superparentsPortal;
   bool isJoinSweep;

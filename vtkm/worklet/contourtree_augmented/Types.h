@@ -85,11 +85,10 @@ constexpr vtkm::Id INDEX_MASK = std::numeric_limits<vtkm::Id>::max() / 16; //0x0
 constexpr vtkm::Id CV_OTHER_FLAG = std::numeric_limits<vtkm::Id>::max() / 8 + 1; //0x10000000 || 0x1000000000000000
 // clang-format on
 
-typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
+using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
-typedef typename vtkm::Pair<vtkm::Id, vtkm::Id>
-  EdgePair; // here EdgePair.first=low and EdgePair.second=high
-typedef typename vtkm::cont::ArrayHandle<EdgePair> EdgePairArray; // Array of edge pairs
+using EdgePair = vtkm::Pair<vtkm::Id, vtkm::Id>; // here EdgePair.first=low and EdgePair.second=high
+using EdgePairArray = vtkm::cont::ArrayHandle<EdgePair>; // Array of edge pairs
 
 // inline functions for retrieving flags or index
 VTKM_EXEC_CONT

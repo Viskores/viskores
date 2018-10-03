@@ -73,16 +73,16 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_2d_freudenthal_inc
+namespace m2d_freudenthal
 {
-typedef typename vtkm::cont::ArrayHandle<vtkm::Int8> edgeBoundaryDetectionMasksType;
+using edgeBoundaryDetectionMasksType = typename vtkm::cont::ArrayHandle<vtkm::Int8>;
 
-static const vtkm::Int32 N_INCIDENT_EDGES = 6;
+static constexpr vtkm::Int32 N_INCIDENT_EDGES = 6;
 
-static const vtkm::Int8 leftBit = 1 << 0;
-static const vtkm::Int8 rightBit = 1 << 1;
-static const vtkm::Int8 topBit = 1 << 2;
-static const vtkm::Int8 bottomBit = 1 << 3;
+static constexpr vtkm::Int8 leftBit = 1 << 0;
+static constexpr vtkm::Int8 rightBit = 1 << 1;
+static constexpr vtkm::Int8 topBit = 1 << 2;
+static constexpr vtkm::Int8 bottomBit = 1 << 3;
 
 static const vtkm::Int8 edgeBoundaryDetectionMasks[N_INCIDENT_EDGES] = {
   rightBit, bottomBit | rightBit, bottomBit, leftBit, leftBit | topBit, topBit

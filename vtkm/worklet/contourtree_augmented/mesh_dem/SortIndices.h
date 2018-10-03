@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_inc_sort_indices_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_inc_sort_indices_h
+#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_sort_indices_h
+#define vtkm_worklet_contourtree_augmented_mesh_dem_sort_indices_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -71,7 +71,7 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_inc
+namespace mesh_dem
 {
 
 // Worklet for computing the sort indices from the sort order
@@ -82,7 +82,7 @@ public:
     WholeArrayIn<IdType> sortOrder,     // (input) index into active vertices
     WholeArrayOut<IdType> sortIndices); // (output) whether critical
   typedef void ExecutionSignature(_1, InputIndex, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

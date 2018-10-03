@@ -85,7 +85,7 @@ public:
     WholeArrayIn<IdType> graphHyperarcs,    // (input) hyperarcs from the portal
     WholeArrayIn<IdType> graphSuperID);     // (input) active graph superID
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

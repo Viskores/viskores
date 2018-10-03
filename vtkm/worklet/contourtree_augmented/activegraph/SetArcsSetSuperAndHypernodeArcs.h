@@ -86,7 +86,7 @@ public:
     WholeArrayOut<IdType> treeArcs,          // (output) arcs of the tree
     WholeArrayOut<IdType> treeSuperparents); // (output) superparents of the tree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

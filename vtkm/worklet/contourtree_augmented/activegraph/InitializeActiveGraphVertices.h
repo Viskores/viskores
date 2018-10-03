@@ -91,7 +91,7 @@ public:
     WholeArrayOut<IdType> hyperarcs,       // (output) hyperacrs
     WholeArrayOut<IdType> activeVertices); // (output) activeVertices
   typedef void ExecutionSignature(_1, _2, _3, _4, InputIndex, _5, _6, _7, _8, _9);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

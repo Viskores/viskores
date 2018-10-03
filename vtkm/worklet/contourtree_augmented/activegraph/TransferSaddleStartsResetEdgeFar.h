@@ -85,7 +85,7 @@ public:
                                 WholeArrayIn<IdType> hyperarcs,   // (input) hyperarcs
                                 WholeArrayInOut<IdType> edgeFar); // (output) edge far
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT
