@@ -91,7 +91,7 @@ static const vtkm::Int8 leftBit = 1 << 0;
 static const vtkm::Int8 rightBit = 1 << 1;
 
 /* neighbourOffsets will be used as a 2D array of [N_INCIDENT_EDGES, 3]
-   * The array is flattened here to ease converstion in vtk-m
+   * The array is flattened here to ease conversion in vtk-m
    */
 static const vtkm::IdComponent neighbourOffsets[N_INCIDENT_EDGES * 3] = {
   -1, -1, -1, 0, -1, 0, -1, -1, 0, -1, 0, 0, -1, 0, -1, 0, 0, -1, 0, -1, -1,

@@ -118,7 +118,7 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
       openmp::CopyHelper(inputPortal, outputPortal, 0, 0, keys.GetNumberOfValues());
     }
 
-    // Sort the keys and indicies:
+    // Sort the keys and indices:
     ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, indexArray);
     parallel_sort(zipHandle,
                   vtkm::cont::internal::KeyCompare<T, vtkm::Id, BinaryCompare>(binary_compare),

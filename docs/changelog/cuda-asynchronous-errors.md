@@ -1,7 +1,7 @@
 # Worklets are now asynchronous in Cuda
 
 Worklets are now fully asynchronous in the cuda backend. This means that
-worklet errors are reported asynchonously. Existing errors are checked for
+worklet errors are reported asynchronously. Existing errors are checked for
 before invocation of a new worklet and at explicit synchronization points like
 `DeviceAdapterAlgorithm<>::Synchronize()`.
 

@@ -121,7 +121,7 @@ public:
   // i.e. the inverse permutation for sortOrder
   IdArrayType sortIndices;
 
-  //empty contructor
+  //empty constructor
   Mesh_DEM_Triangulation()
     : nVertices(0)
     , nLogSteps(0)

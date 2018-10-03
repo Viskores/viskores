@@ -95,7 +95,7 @@ public:
   SetSuperArcsSetTreeSuperarcs() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& /*graphVertex*/, // FIXME: Remove unused paramter?
+  VTKM_EXEC void operator()(const vtkm::Id& /*graphVertex*/, // FIXME: Remove unused parameter?
                             const vtkm::Id supernode,
                             const InFieldPortalType& hyperarcsPortal,
                             const InFieldPortalType& treeHyperparentsPortal,

@@ -105,7 +105,7 @@ void permuteArray(vtkm::cont::DeviceAdapterId device,
     output.Shrink(permNumValues);
   } // else the output has already the correct size
 
-  // The following is equivilant to doing the following in serial
+  // The following is equivalent to doing the following in serial
   //
   // for (vtkm::Id entry = 0; entry < permute.size(); entry++)
   //     output[entry] = input[maskedIndex(permute[entry])];
@@ -121,13 +121,13 @@ void permuteArray(vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Algorithm::Copy(device, permutedInput, output);
 } // permuteValues()
 
-// permuteValues from the orignial PPP2 code is equivilant to permuteArray<T, vtkm::cont:ArrayHandle<T, StorageType>, DeviceAdaptor>   and has therefore been removed
+// permuteValues from the original PPP2 code is equivalent to permuteArray<T, vtkm::cont:ArrayHandle<T, StorageType>, DeviceAdaptor>   and has therefore been removed
 /*template <typename T, typename StorageType, typename DeviceAdapter>
 void permuteValues(const vtkm::cont::ArrayHandle<T,StorageType> &input, IdArrayType &permute, vtkm::cont::ArrayHandle<T,StorageType> &output)
 {}
 */
 
-// permuteIndicies from the original PPP2 code is equivilant to permuteArray<vtkm::Id, IdArrayType, DeviceAdaptor> and has therefore been removed
+// permuteIndicies from the original PPP2 code is equivalent to permuteArray<vtkm::Id, IdArrayType, DeviceAdaptor> and has therefore been removed
 /* template <typename DeviceAdapter>
 void permuteIndices(IdArrayType &input, IdArrayType &permute, IdArrayType &output)
 {}

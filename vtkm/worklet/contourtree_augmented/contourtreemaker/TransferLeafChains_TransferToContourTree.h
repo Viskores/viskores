@@ -134,7 +134,7 @@ public:
 
   template <typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& superID,
-                            const vtkm::Id /*activeID*/, // FIXME: Remove unsued paramter?
+                            const vtkm::Id /*activeID*/, // FIXME: Remove unused parameter?
                             const OutFieldPortalType& contourTreeHyperparentsPortal,
                             const OutFieldPortalType& contourTreeHyperarcsPortal,
                             const OutFieldPortalType& contourTreeSuperarcsPortal,

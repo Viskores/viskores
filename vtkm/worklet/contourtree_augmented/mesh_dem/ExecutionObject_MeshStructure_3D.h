@@ -100,7 +100,7 @@ public:
   VTKM_EXEC
   vtkm::Id vertexRow(vtkm::Id v) const { return (v % (nRows * nCols)) / nCols; }
 
-  // vertex column -- interger modulus by columns
+  // vertex column -- integer modulus by columns
   VTKM_EXEC
   vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
 

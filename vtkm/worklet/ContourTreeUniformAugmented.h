@@ -195,8 +195,8 @@ private:
     // Start the timer
     vtkm::cont::Timer<DeviceAdapter> totalTime;
 
-    // Stage 1: Load the data into the mesh. This is done in the Run() method above and accesible
-    //          here via the mesh parameter. The actual data load is perfomed outside of the
+    // Stage 1: Load the data into the mesh. This is done in the Run() method above and accessible
+    //          here via the mesh parameter. The actual data load is performed outside of the
     //          worklet in the example contour tree app (or whoever uses the worklet)
 
     // Stage 2 : Sort the data on the mesh to initialize sortIndex & indexReverse on the mesh

@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
               << std::endl;
     std::cout << "--printCT         Print the contour tree. (Default=False)" << std::endl;
 #ifdef ENABLE_SET_NUM_THREADS
-    std::cout << "--numThreads      Specifiy the number of threads to use. Available only with TBB."
+    std::cout << "--numThreads      Specify the number of threads to use. Available only with TBB."
               << std::endl;
 #endif
     return 0;

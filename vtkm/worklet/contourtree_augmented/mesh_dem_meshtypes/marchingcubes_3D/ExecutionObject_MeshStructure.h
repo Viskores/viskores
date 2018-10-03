@@ -97,7 +97,7 @@ public:
   typedef
     typename edgeBoundaryDetectionMasksType::template ExecutionTypes<DeviceAdapter>::PortalConst
       edgeBoundaryDetectionMasksPortalType;
-  // Sort indicies types
+  // Sort indices types
   typedef typename cpp2_ns::IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst
     sortIndicesPortalType;
   // cubeVertexPermutations types

@@ -326,7 +326,7 @@ public:
     catch (std::exception& e)
     {
       std::cout << "\n"
-                << "An exception occuring during a benchmark:\n\t" << e.what() << "\n"
+                << "An exception occurring during a benchmark:\n\t" << e.what() << "\n"
                 << "Attempting to continue with remaining benchmarks...\n\n";
     }
   }

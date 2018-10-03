@@ -139,7 +139,7 @@ public:
                                                IdArrayType& branchSaddle,
                                                IdArrayType& branchParent);
 
-  // create explicit representation of the branch decompostion from the array representation
+  // create explicit representation of the branch decomposition from the array representation
   template <typename T, typename StorageType>
   static process_contourtree_inc_ns::Branch<T>* ComputeBranchDecomposition(
     const IdArrayType& contourTreeSuperparents,

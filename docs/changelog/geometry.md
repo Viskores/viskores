@@ -28,7 +28,7 @@ demonstrated/tested in `vtkm/testing/TestingGeometry.h`:
 + `Sphere<CoordType, Dimension>`.
   Instances of this struct represent a *d*-dimensional sphere.
   Its state is the coordinates of its center plus a radius.
-  It is also aliased with a `using` statment to `Circle<CoordType>`
+  It is also aliased with a `using` statement to `Circle<CoordType>`
   for the specific case of 2-D.
 
 These structures provide useful queries and generally
