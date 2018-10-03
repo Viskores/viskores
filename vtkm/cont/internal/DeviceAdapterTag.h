@@ -63,6 +63,8 @@ struct DeviceAdapterId
   DeviceAdapterNameType GetName() const;
 
 protected:
+  friend DeviceAdapterId make_DeviceAdapterId(vtkm::Int8 id);
+
   constexpr explicit DeviceAdapterId(vtkm::Int8 id)
     : Value(id)
   {
@@ -71,6 +73,11 @@ protected:
 private:
   vtkm::Int8 Value;
 };
+
+DeviceAdapterId make_DeviceAdapterId(vtkm::Int8 id)
+{
+  return DeviceAdapterId(id);
+}
 
 template <typename DeviceAdapter>
 struct DeviceAdapterTraits;
