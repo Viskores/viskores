@@ -21,6 +21,7 @@
 #define vtk_m_cont_TryExecute_h
 
 #include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
@@ -33,7 +34,8 @@ namespace detail
 {
 
 VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::cont::DeviceAdapterId,
-                                                vtkm::cont::RuntimeDeviceTracker&);
+                                                vtkm::cont::RuntimeDeviceTracker&,
+                                                const std::string& functorName);
 
 template <typename DeviceTag, typename Functor, typename... Args>
 inline bool TryExecuteIfValid(std::true_type,
@@ -51,7 +53,7 @@ inline bool TryExecuteIfValid(std::true_type,
     }
     catch (...)
     {
-      detail::HandleTryExecuteException(tag, tracker);
+      detail::HandleTryExecuteException(tag, tracker, vtkm::cont::TypeName<Functor>());
     }
   }
 

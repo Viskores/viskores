@@ -81,6 +81,9 @@ vtkm_declare_headers(
 #first add all the components vtkm that are shared between control and exec
 add_subdirectory(thirdparty/diy)
 add_subdirectory(thirdparty/taotuple)
+if(VTKm_ENABLE_LOGGING)
+  add_subdirectory(thirdparty/loguru)
+endif()
 add_subdirectory(testing)
 add_subdirectory(internal)
 

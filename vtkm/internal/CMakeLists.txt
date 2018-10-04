@@ -37,6 +37,8 @@ if(VTKM_ENABLE_CUDA)
   string(REGEX REPLACE "([0-9]+)\\.([0-9]+).*" "\\2" VTKM_CUDA_VERSION_MINOR ${CMAKE_CUDA_COMPILER_VERSION})
 endif()
 
+set(VTKM_ENABLE_LOGGING ${VTKm_ENABLE_LOGGING})
+
 vtkm_get_kit_name(kit_name kit_dir)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
   ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h

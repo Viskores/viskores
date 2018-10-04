@@ -27,6 +27,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/StorageListTag.h>
 
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -266,11 +267,13 @@ public:
       detail::DynamicArrayHandleTryCast<Type, Storage>(this->ArrayContainer);
     if (downcastArray == nullptr)
     {
+      VTKM_LOG_CAST_FAIL(*this, decltype(downcastArray));
       throw vtkm::cont::ErrorBadType("Bad cast of dynamic array.");
     }
     // Technically, this method returns a copy of the \c ArrayHandle. But
     // because \c ArrayHandle acts like a shared pointer, it is valid to
     // do the copy.
+    VTKM_LOG_CAST_SUCC(*this, *downcastArray);
     return *downcastArray;
   }
 
@@ -422,6 +425,7 @@ struct DynamicArrayHandleTry
       downcastType downcastContainer = dynamic_cast<downcastType>(container);
       if (downcastContainer)
       {
+        VTKM_LOG_CAST_SUCC(*container, *downcastContainer);
         f(downcastContainer->Array, std::forward<Args>(args)...);
         called = true;
       }
@@ -473,6 +477,7 @@ VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(Functo
   if (!called)
   {
     // throw an exception
+    VTKM_LOG_CAST_FAIL(*this, crossProduct);
     detail::ThrowCastAndCallException(ptr, &typeid(TypeList), &typeid(StorageList));
   }
 }

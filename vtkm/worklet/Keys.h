@@ -27,6 +27,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Logging.h>
 
 #include <vtkm/exec/internal/ReduceByKeyLookup.h>
 
@@ -104,6 +105,8 @@ public:
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArrays");
+
     switch (sort)
     {
       case SortType::Unstable:
@@ -127,6 +130,8 @@ public:
   VTKM_CONT void BuildArraysInPlace(KeyArrayType& keys, SortType sort, Device)
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
+
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInPlace");
 
     switch (sort)
     {
@@ -207,6 +212,8 @@ private:
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInternal");
+
     const vtkm::Id numKeys = keys.GetNumberOfValues();
 
     Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numKeys), this->SortedValuesMap);
@@ -232,6 +239,8 @@ private:
   VTKM_CONT void BuildArraysInternalStable(const KeyArrayType& keys, Device)
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
+
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInternalStable");
 
     const vtkm::Id numKeys = keys.GetNumberOfValues();
 

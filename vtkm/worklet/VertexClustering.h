@@ -33,6 +33,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/Logging.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -345,6 +346,8 @@ public:
                           const vtkm::Id3& nDivisions,
                           DeviceAdapter)
   {
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "VertexClustering Worklet");
+
     /// determine grid resolution for clustering
     GridInfo gridInfo;
     {

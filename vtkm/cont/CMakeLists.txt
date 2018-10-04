@@ -89,6 +89,7 @@ set(headers
   FieldRangeCompute.h
   FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
+  Logging.h
   MultiBlock.h
   PointLocator.h
   PointLocatorUniformGrid.h
@@ -138,6 +139,7 @@ set(sources
   internal/ArrayManagerExecutionShareWithControl.cxx
   internal/DeviceAdapterTag.cxx
   internal/SimplePolymorphicContainer.cxx
+  Logging.cxx
   MultiBlock.cxx
   PresetColorTables.cxx
   RuntimeDeviceTracker.cxx

@@ -23,6 +23,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/cont/internal/DynamicTransform.h>
@@ -481,8 +482,10 @@ public:
     auto wrapper = this->GetArrayHandleWrapper<ArrayHandleType>();
     if (!wrapper)
     {
+      VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
       throw vtkm::cont::ErrorBadType("dynamic cast failed");
     }
+    VTKM_LOG_CAST_SUCC(*this, wrapper->GetArray());
     return ArrayHandleType(wrapper->GetArray());
   }
 
