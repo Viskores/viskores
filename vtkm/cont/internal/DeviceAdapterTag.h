@@ -74,7 +74,7 @@ private:
   vtkm::Int8 Value;
 };
 
-DeviceAdapterId make_DeviceAdapterId(vtkm::Int8 id)
+inline DeviceAdapterId make_DeviceAdapterId(vtkm::Int8 id)
 {
   return DeviceAdapterId(id);
 }
