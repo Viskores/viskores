@@ -246,9 +246,8 @@ int main(int argc, char* argv[])
 
   // Compute the number of vertices, i.e., xdim * ydim * zdim
   auto nDims = dims.size();
-  std::vector<vtkm::Float32>::size_type nVertices =
-    std::vector<vtkm::Float32>::size_type(std::accumulate(
-      dims.begin(), dims.end(), 1, std::multiplies<std::vector<vtkm::Float32>::size_type>()));
+  std::vector<vtkm::Float32>::size_type nVertices = std::vector<vtkm::Float32>::size_type(
+    std::accumulate(dims.begin(), dims.end(), vtkm::Id(1), std::multiplies<vtkm::Id>()));
 
   // Print the mesh metadata
   std::cout << "Number of dimensions: " << nDims << std::endl;
