@@ -66,6 +66,8 @@
 set(headers
   ExecutionObject_MeshStructure.h
   Types.h
+  # Testing on windows causes access issues with compiler database files for some reason
+  TESTABLE OFF
   )
 
 #-----------------------------------------------------------------------------
