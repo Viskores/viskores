@@ -370,7 +370,7 @@ void ColorTableBase::FindColors(double value,
     rgb2 = this->NaNColor;
   }
   else if (this->ColorSize == 0)
-  { //If we have no entires use the below range value
+  { //If we have no entries use the below range value
     rgb1 = this->BelowRangeColor;
     rgb2 = this->BelowRangeColor;
   }

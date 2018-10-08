@@ -106,7 +106,7 @@ public:
   {
   }
 
-  // Main constructure used in the code
+  // Main constructor used in the code
   VTKM_EXEC_CONT
   ExecutionObject_MeshStructure(vtkm::Id nrows,
                                 vtkm::Id ncols,

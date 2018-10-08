@@ -130,7 +130,7 @@ typedef typename vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::I
                                                  cubeVertexPermutations_PermVecLength>
   cubeVertexPermutationsType;
 /* cubeVertexPermutations will be used as a 2D array of [8, 7]
-   * The array is flattened here to ease converstion in vtk-m
+   * The array is flattened here to ease conversion in vtk-m
    */
 static const vtkm::IdComponent cubeVertexPermutations[cubeVertexPermutations_NumPermutations *
                                                       cubeVertexPermutations_PermVecLength] = {
@@ -148,7 +148,7 @@ typedef typename vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::I
                                                  vertexConnections_VecLength>
   linkVertexConnectionsType;
 /* linkVertexConnectionsSix[ will be used as a 2D array of [3, 3]
-   * The array is flattened here to ease converstion in vtk-m
+   * The array is flattened here to ease conversion in vtk-m
    */
 static const vtkm::IdComponent linkVertexConnectionsSix[linkVertexConnectionsSix_NumPairs *
                                                         vertexConnections_VecLength] = { 0, 1, 0,
@@ -157,7 +157,7 @@ static const vtkm::IdComponent linkVertexConnectionsSix[linkVertexConnectionsSix
 // number of vertex connection pairs contained in linkVertexConnectionsSix
 static const vtkm::UInt8 linkVertexConnectionsEighteen_NumPairs = 15;
 /* linkVertexConnectionsEighteen[ will be used as a 2D array of [3, 3]
-   * The array is flattened here to ease converstion in vtk-m
+   * The array is flattened here to ease conversion in vtk-m
    */
 static const vtkm::IdComponent
   linkVertexConnectionsEighteen[linkVertexConnectionsEighteen_NumPairs *

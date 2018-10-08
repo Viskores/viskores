@@ -264,7 +264,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     RectilinearGridEvalType eval(coords, cells, field);
     RK4IntegratorType rk4(eval, static_cast<vtkm::Float32>(this->stepSize));
     /*
-  * If Euler step is preffered.
+  * If Euler step is preferred.
   EulerIntegratorType euler(eval, static_cast<vtkm::FloatDefault>(this->stepSize));
   */
     res = particleadvection.Run(rk4, basisParticleArray, 1, device); // Taking a single step

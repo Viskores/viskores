@@ -257,7 +257,7 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   IdArrayType outDegrees; // TODO Should we change this to an unsigned type
   outDegrees.Allocate(mesh.nVertices);
 
-  // Initalize the nerighborhoodMasks and outDegrees arrays
+  // Initialize the nerighborhoodMasks and outDegrees arrays
   mesh.setPrepareForExecutionBehavior(isJoinGraph);
   active_graph_inc_ns::InitializeNeighbourhoodMasksAndOutDegrees initNeighMasksAndOutDegWorklet(
     isJoinGraph);
@@ -469,7 +469,7 @@ void ActiveGraph::TransferSaddleStarts()
   // std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(newOutdegree.GetPortalControl()),
   //                 vtkm::cont::ArrayPortalToIteratorEnd(newOutdegree.GetPortalControl()) - 1,
   //                 vtkm::cont::ArrayPortalToIteratorBegin(newFirstEdge.GetPortalControl()) + 1);
-  // VTK:M verison of the prefix sum
+  // VTK:M version of the prefix sum
   vtkm::cont::Algorithm::ScanExclusive(this->Invoke.GetDevice(), newOutdegree, newFirstEdge);
 
   vtkm::Id nEdgesToSort = 0;

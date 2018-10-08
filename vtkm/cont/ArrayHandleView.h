@@ -164,7 +164,7 @@ public:
     this->Array.ReleaseResources();
   }
 
-  // Requried for later use in ArrayTransfer class.
+  // Required for later use in ArrayTransfer class.
   VTKM_CONT
   const ArrayHandleType& GetArray() const
   {

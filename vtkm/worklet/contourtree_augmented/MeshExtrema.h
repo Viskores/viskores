@@ -130,7 +130,7 @@ inline MeshExtrema::MeshExtrema(vtkm::cont::DeviceAdapterId device, vtkm::Id mes
   // Allocate memory for the peaks and pits
   peaks.Allocate(nVertices);
   pits.Allocate(nVertices);
-  // TODO Check if we really need to set the peaks and pits to zero or whether it is enough to alloate them
+  // TODO Check if we really need to set the peaks and pits to zero or whether it is enough to allocate them
   vtkm::cont::ArrayHandleConstant<vtkm::Id> constZeroArray(0, nVertices);
   vtkm::cont::Algorithm::Copy(device, constZeroArray, peaks);
   vtkm::cont::Algorithm::Copy(device, constZeroArray, pits);

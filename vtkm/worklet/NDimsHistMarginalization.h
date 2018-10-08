@@ -58,7 +58,7 @@ public:
   //                      1 indicates marginal variable, otherwise 0.
   //   conditionFunc: The Condition function for non-marginal variable.
   //                  This func takes two arguments (vtkm::Id var, vtkm::Id binId) and return bool
-  //                  var is index of variable and binId is bin index in the varaiable var
+  //                  var is index of variable and binId is bin index in the variable var
   //                  return true indicates considering this bin into final marginal histogram
   //                  more details can refer to example in UnitTestNDimsHistMarginalization.cxx
   //   marginalBinId, marginalFreqs: return marginalized histogram in the fashion of sparse representation

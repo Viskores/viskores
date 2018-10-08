@@ -2036,7 +2036,7 @@ private:
     VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
 
     // This is spcifically to test the cuda-backend but should pass for all backends
-    std::cout << "Testing if execution errors are eventually propogated to the host "
+    std::cout << "Testing if execution errors are eventually propagated to the host "
               << "without explicit synchronization\n";
     message = "";
     int nkernels = 0;

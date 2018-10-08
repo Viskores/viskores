@@ -127,7 +127,7 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_
                                  m3d_marchingcubes_inc_ns::N_ALL_NEIGHBOURS);
   cubeVertexPermutations = vtkm::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes_inc_ns::
-      cubeVertexPermutations_PermVecLength>( // create 2D array of vectors of lenghts ...PermVecLength
+      cubeVertexPermutations_PermVecLength>( // create 2D array of vectors of lengths ...PermVecLength
     vtkm::cont::make_ArrayHandle(
       m3d_marchingcubes_inc_ns::cubeVertexPermutations, // the array to convert
       m3d_marchingcubes_inc_ns::cubeVertexPermutations_NumPermutations *
@@ -135,7 +135,7 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_
       ));
   linkVertexConnectionsSix = vtkm::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes_inc_ns::
-      vertexConnections_VecLength>( // create 2D array of vectors o lenght ...VecLength
+      vertexConnections_VecLength>( // create 2D array of vectors o length ...VecLength
     vtkm::cont::make_ArrayHandle(
       m3d_marchingcubes_inc_ns::linkVertexConnectionsSix, // the array to convert
       m3d_marchingcubes_inc_ns::linkVertexConnectionsSix_NumPairs *
@@ -143,7 +143,7 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_
       ));
   linkVertexConnectionsEighteen = vtkm::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes_inc_ns::
-      vertexConnections_VecLength>( // create 2D array of vectors o lenght ...VecLength
+      vertexConnections_VecLength>( // create 2D array of vectors o length ...VecLength
     vtkm::cont::make_ArrayHandle(
       m3d_marchingcubes_inc_ns::linkVertexConnectionsEighteen, // the array to convert
       m3d_marchingcubes_inc_ns::linkVertexConnectionsEighteen_NumPairs *

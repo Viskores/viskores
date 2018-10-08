@@ -102,7 +102,7 @@ if(VTKM_COMPILER_IS_MSVC)
   target_compile_definitions(vtkm_developer_flags INTERFACE "_SCL_SECURE_NO_WARNINGS"
                                                             "_CRT_SECURE_NO_WARNINGS")
 
-  #CMake COMPILE_LANGUAGE doesn't work with MSVC, ans since we want these flags
+  #CMake COMPILE_LANGUAGE doesn't work with MSVC, and since we want these flags
   #only for C++ compilation we have to resort to setting CMAKE_CXX_FLAGS :(
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4702 /wd4505")
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/wd4702 /wd4505\" -Xcudafe=\"--diag_suppress=1394 --diag_suppress=766 --display_error_number\"")

@@ -1187,7 +1187,7 @@ struct ConvertToInt {
   template <> \
   struct ConvertToInt<Type> {  enum { value = 0 }; }
 
-// Silence warnings about convering float to int.
+// Silence warnings about converting float to int.
 FMT_DISABLE_CONVERSION_TO_INT(float);
 FMT_DISABLE_CONVERSION_TO_INT(double);
 FMT_DISABLE_CONVERSION_TO_INT(long double);

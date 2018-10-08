@@ -1,6 +1,6 @@
-#Interfaces for VTK-m spatial search strucutres added
+#Interfaces for VTK-m spatial search structures added
 
-The objective for this feature was to add a commom interface for the VTK-m
+The objective for this feature was to add a common interface for the VTK-m
 spatial search strucutes for ease of use for the users.
 VTK-m now distinguishes locators into two types, cell locators and point 
 locators. Cell locators can be used to query a containing cell for a point, 
@@ -16,7 +16,7 @@ a cell locator, or a point locator and provided an easy way to use them in the
 execution environment.
 
 By deriving new search structures from these locator interfaces, it makes it
-easier for users to build the underlying strucutres as well, abstracting away
+easier for users to build the underlying structures as well, abstracting away
 complicated details. After providing all the required data from a 
 `vtkm::cont::DataSet` object, the user only need to call the `Update` method 
 on the object of `vtkm::cont::CellLocator`, or `vtkm::cont::PointLocator`.

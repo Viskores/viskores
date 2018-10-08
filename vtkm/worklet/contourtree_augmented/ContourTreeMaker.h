@@ -288,7 +288,7 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
   // now we establish the reverse index array
   IdArrayType superSortIndex;
   superSortIndex.Allocate(contourTree.supernodes.GetNumberOfValues());
-  // The following copy is equivilant to
+  // The following copy is equivalent to
   // for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
   //   superSortIndex[contourTree.hypernodes[supernode]] = supernode;
 
@@ -399,7 +399,7 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
 
 
   // now reuse the superSortIndex array for hypernode IDs
-  // The following copy is equivilant to
+  // The following copy is equivalent to
   // for (vtkm::Id hypernode = 0; hypernode < contourTree.hypernodes.size(); hypernode++)
   //            superSortIndex[contourTree.hypernodes[hypernode]] = hypernode;
   // source data array is a simple linear index from 0 to #hypernodes
@@ -450,7 +450,7 @@ void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema)
 { // ComputeRegularStructure()
   // First step - use the superstructure to set the superparent for all supernodes
   auto supernodesIndex = vtkm::cont::ArrayHandleIndex(
-    contourTree.supernodes.GetNumberOfValues()); // Counting array of lenght #supernodes to
+    contourTree.supernodes.GetNumberOfValues()); // Counting array of length #supernodes to
   auto permutedSuperparents = vtkm::cont::make_ArrayHandlePermutation(
     contourTree.supernodes,
     contourTree.superparents); // superparents array permmuted by the supernodes array
@@ -651,7 +651,7 @@ void ContourTreeMaker::AugmentMergeTrees()
   vtkm::cont::Algorithm::Copy(device, noSuchElementArray, contourTree.hyperarcs);
   vtkm::cont::Algorithm::Copy(device, noSuchElementArray, contourTree.whenTransferred);
 
-  // TODO We should only need to allocate the updegree/downdegree arrays. We initalize them with 0 here to ensure consistency of debug output
+  // TODO We should only need to allocate the updegree/downdegree arrays. We initialize them with 0 here to ensure consistency of debug output
   //updegree.Allocate(nSupernodes);
   //downdegree.Allocate(nSupernodes);
   vtkm::cont::Algorithm::Copy(
@@ -718,7 +718,7 @@ struct LeafChainsToContourTree
 void ContourTreeMaker::TransferLeafChains(bool isJoin)
 { // ContourTreeMaker::TransferLeafChains()
   // we need to compute the chains in both directions, so we have two vectors:
-  // TODO below we initalize the outbound and inbound arrays with 0 to ensure consistency of debug output. Check if this is needed.
+  // TODO below we initialize the outbound and inbound arrays with 0 to ensure consistency of debug output. Check if this is needed.
   IdArrayType outbound;
   vtkm::cont::Algorithm::Copy(
     this->Invoke.GetDevice(),
@@ -853,7 +853,7 @@ void ContourTreeMaker::CompressActiveSupernodes()
   // Permute the wasNotTransferred array handle so that the lookup is based on the value of the indices in the active supernodes array
   auto notTransferredActiveSupernodes =
     vtkm::cont::make_ArrayHandlePermutation(activeSupernodes, wasNotTransferred);
-  // Keep only the indicies of the active supernodes that have not been transferred yet
+  // Keep only the indices of the active supernodes that have not been transferred yet
   vtkm::cont::Algorithm::CopyIf(this->Invoke.GetDevice(),
                                 activeSupernodes,
                                 notTransferredActiveSupernodes,
