@@ -101,7 +101,11 @@ bool CudaAllocator::IsManagedPointer(const void* ptr)
     return false;
   }
   VTKM_CUDA_CALL(err /*= cudaPointerGetAttributes(&attr, ptr)*/);
+#if CUDART_VERSION < 10000 // isManaged deprecated in CUDA 10.
   return attr.isManaged != 0;
+#else // attr.type doesn't exist before CUDA 10
+  return attr.type == cudaMemoryTypeManaged;
+#endif
 }
 
 void* CudaAllocator::Allocate(std::size_t numBytes)
