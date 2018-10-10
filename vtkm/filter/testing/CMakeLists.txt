@@ -52,6 +52,7 @@ set(unit_tests
   UnitTestPointElevationFilter.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
+  UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx

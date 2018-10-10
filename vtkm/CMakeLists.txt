@@ -31,6 +31,7 @@ set(headers
   BaseComponent.h
   BinaryPredicates.h
   BinaryOperators.h
+  Bitset.h
   Bounds.h
   CellShape.h
   CellTraits.h

@@ -75,7 +75,7 @@ template <typename S>
 class FilterTraits<PointTransform<S>>
 {
 public:
-  //Point Elevation can only convert Float and Double Vec3 arrays
+  //PointTransformation can only convert Float and Double Vec3 arrays
   using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }

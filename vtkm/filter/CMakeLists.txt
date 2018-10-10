@@ -59,6 +59,7 @@ set(headers
   PolicyBase.h
   PolicyDefault.h
   Probe.h
+  SplitSharpEdges.h
   Streamline.h
   SurfaceNormals.h
   Tetrahedralize.h
@@ -107,6 +108,7 @@ set(header_template_sources
   PointElevation.hxx
   PointTransform.hxx
   Probe.hxx
+  SplitSharpEdges.hxx
   Streamline.hxx
   SurfaceNormals.hxx
   Tetrahedralize.hxx

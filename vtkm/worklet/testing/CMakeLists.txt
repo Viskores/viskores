@@ -62,6 +62,7 @@ set(unit_tests
   UnitTestScatterCounting.cxx
   UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
+  UnitTestSplitSharpEdges.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestSurfaceNormals.cxx
