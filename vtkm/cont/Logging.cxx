@@ -129,6 +129,14 @@ void InitLogging(int& argc, char* argv[])
 #endif // VTKM_ENABLE_LOGGING
 }
 
+void InitLogging()
+{
+  int argc = 1;
+  char dummy[1] = { '\0' };
+  char* argv[2] = { dummy, nullptr };
+  InitLogging(argc, argv);
+}
+
 VTKM_CONT
 void SetStderrLogLevel(LogLevel level)
 {

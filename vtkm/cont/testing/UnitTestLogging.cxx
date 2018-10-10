@@ -82,12 +82,11 @@ void RunTests()
 
 } // end anon namespace
 
-int UnitTestLogging(int argc, char* argv[])
+int UnitTestLogging(int, char* [])
 {
-  vtkm::cont::InitLogging(argc, argv);
-  vtkm::cont::SetLogThreadName("main thread");
+  // Test that parameterless init works:
+  vtkm::cont::InitLogging();
 
-  //  return vtkm::cont::testing::Testing::Run(RunTests);
   RunTests();
   return 0;
 }
