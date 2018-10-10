@@ -159,7 +159,7 @@
 ///
 /// \code
 /// {
-///   VTKM_LOG_SCOPE(vtkm::cont::Perf,
+///   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
 ///                  "Executing filter %s",
 ///                  vtkm::cont::TypeName(myFilter).c_str());
 ///   myFilter.Execute();
@@ -321,10 +321,21 @@ enum class LogLevel
  * Initializes logging. Sets up custom log level and thread names. Parses any
  * "-v [LogLevel]" arguments to set the stderr log level. This argument may
  * be either numeric, or the 4-character string printed in the output.
+ *
+ * If the parameterless overload is used, the `-v` parsing is not used, but
+ * other functionality should still work.
+ *
+ * @note This function is not threadsafe and should only be called from a single
+ * thread (ideally the main thread).
+ * @{
  */
 VTKM_CONT_EXPORT
 VTKM_CONT
 void InitLogging(int& argc, char* argv[]);
+VTKM_CONT_EXPORT
+VTKM_CONT
+void InitLogging();
+/**@}*/
 
 /**
  * Set the range of log levels that will be printed to stderr. All levels
