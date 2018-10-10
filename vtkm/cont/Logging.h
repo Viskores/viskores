@@ -159,7 +159,7 @@
 ///
 /// \code
 /// {
-///   VTKM_LOG_SCOPE(vtkm::cont::Perf,
+///   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
 ///                  "Executing filter %s",
 ///                  vtkm::cont::TypeName(myFilter).c_str());
 ///   myFilter.Execute();
