@@ -23,6 +23,7 @@
 
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
 {
@@ -39,7 +40,7 @@ public:
   Streamline();
 
   VTKM_CONT
-  void SetStepSize(vtkm::Float64 s) { this->StepSize = s; }
+  void SetStepSize(vtkm::worklet::particleadvection::ScalarType s) { this->StepSize = s; }
 
   VTKM_CONT
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
@@ -66,7 +67,7 @@ public:
 
 private:
   vtkm::worklet::Streamline Worklet;
-  vtkm::Float64 StepSize;
+  vtkm::worklet::particleadvection::ScalarType StepSize;
   vtkm::Id NumberOfSteps;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Seeds;
 };

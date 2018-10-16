@@ -52,8 +52,6 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using FieldType = vtkm::Float32;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
-  using FieldPortalConstType =
-    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   // These lines read two datasets, which are BOVs.
   // Currently VTKm does not support providing time series datasets
@@ -73,11 +71,8 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
 
   // The only change in this example and the vanilla particle advection example is
   // this example makes use of the TemporalGridEvaluator.
-  using GridEvaluator =
-    vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldPortalConstType,
-                                                            FieldType,
-                                                            DeviceAdapter>;
-  using Integrator = vtkm::worklet::particleadvection::EulerIntegrator<GridEvaluator, FieldType>;
+  using GridEvaluator = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldHandle>;
+  using Integrator = vtkm::worklet::particleadvection::EulerIntegrator<GridEvaluator>;
 
   GridEvaluator eval(ds1.GetCoordinateSystem(),
                      ds1.GetCellSet(0),
@@ -114,7 +109,7 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
   else
   {
     vtkm::worklet::Streamline streamline;
-    vtkm::worklet::StreamlineResult<FieldType> res =
+    vtkm::worklet::StreamlineResult res =
       streamline.Run(integrator, seedArray, numSteps, DeviceAdapter());
     vtkm::cont::DataSet outData;
     vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
