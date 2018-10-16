@@ -73,23 +73,23 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_3d_marchingcubes_inc
+namespace m3d_marchingcubes
 {
 
 // Constants and case tables
-static const vtkm::Int8 frontBit = 1 << 4;
-static const vtkm::Int8 backBit = 1 << 5;
-static const vtkm::Int8 topBit = 1 << 2;
-static const vtkm::Int8 bottomBit = 1 << 3;
-static const vtkm::Int8 leftBit = 1 << 0;
-static const vtkm::Int8 rightBit = 1 << 1;
+static constexpr vtkm::Int8 frontBit = 1 << 4;
+static constexpr vtkm::Int8 backBit = 1 << 5;
+static constexpr vtkm::Int8 topBit = 1 << 2;
+static constexpr vtkm::Int8 bottomBit = 1 << 3;
+static constexpr vtkm::Int8 leftBit = 1 << 0;
+static constexpr vtkm::Int8 rightBit = 1 << 1;
 
-static const vtkm::IdComponent N_EDGE_NEIGHBOURS = 6;
-static const vtkm::IdComponent N_FACE_NEIGHBOURS = 18;
-static const vtkm::IdComponent N_ALL_NEIGHBOURS = 26;
+static constexpr vtkm::IdComponent N_EDGE_NEIGHBOURS = 6;
+static constexpr vtkm::IdComponent N_FACE_NEIGHBOURS = 18;
+static constexpr vtkm::IdComponent N_ALL_NEIGHBOURS = 26;
 
 // edgeBoundaryDetectionMasks
-static const vtkm::Int8 edgeBoundaryDetectionMasks[N_ALL_NEIGHBOURS] = {
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int8 edgeBoundaryDetectionMasks[N_ALL_NEIGHBOURS] = {
   frontBit,
   topBit,
   leftBit,
@@ -118,76 +118,80 @@ static const vtkm::Int8 edgeBoundaryDetectionMasks[N_ALL_NEIGHBOURS] = {
   backBit | bottomBit | rightBit
 };
 // VTK-M type for the edgeBoundaryDetectionMasks
-typedef typename vtkm::cont::ArrayHandle<vtkm::Int8> edgeBoundaryDetectionMasksType;
+using edgeBoundaryDetectionMasksType = vtkm::cont::ArrayHandle<vtkm::Int8>;
 
 
 // Number of permutation vectors in cubeVertexPermutations
-static const vtkm::UInt8 cubeVertexPermutations_NumPermutations = 8;
+constexpr vtkm::UInt8 cubeVertexPermutations_NumPermutations = 8;
 // Length of a single permutation vector in the cubeVertexPermutations array
-static const vtkm::UInt8 cubeVertexPermutations_PermVecLength = 7;
+constexpr vtkm::UInt8 cubeVertexPermutations_PermVecLength = 7;
 // VTK-M type for the cubeVertexPermutations
-typedef typename vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::IdComponent>,
-                                                 cubeVertexPermutations_PermVecLength>
-  cubeVertexPermutationsType;
+using cubeVertexPermutationsType =
+  vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::IdComponent>,
+                                  cubeVertexPermutations_PermVecLength>;
 /* cubeVertexPermutations will be used as a 2D array of [8, 7]
    * The array is flattened here to ease conversion in vtk-m
    */
-static const vtkm::IdComponent cubeVertexPermutations[cubeVertexPermutations_NumPermutations *
-                                                      cubeVertexPermutations_PermVecLength] = {
-  3, 4, 5, 13, 16, 17, 25, 3, 4, 0, 13, 8, 9, 21, 3, 1, 5, 11, 16, 14, 23, 2, 4, 5, 12, 15, 17, 24,
-  3, 1, 0, 11, 8,  6,  19, 2, 4, 0, 12, 7, 9, 20, 2, 1, 5, 10, 15, 14, 22, 2, 1, 0, 10, 7,  6,  18
-};
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent
+  cubeVertexPermutations[cubeVertexPermutations_NumPermutations *
+                         cubeVertexPermutations_PermVecLength] = {
+    3,  4,  5, 13, 16, 17, 25, 3,  4,  0,  13, 8, 9,  21, 3,  1,  5, 11, 16,
+    14, 23, 2, 4,  5,  12, 15, 17, 24, 3,  1,  0, 11, 8,  6,  19, 2, 4,  0,
+    12, 7,  9, 20, 2,  1,  5,  10, 15, 14, 22, 2, 1,  0,  10, 7,  6, 18
+  };
 
 
 // number of vertex connection pairs contained in linkVertexConnectionsSix
-static const vtkm::UInt8 linkVertexConnectionsSix_NumPairs = 3;
+constexpr vtkm::UInt8 linkVertexConnectionsSix_NumPairs = 3;
 // number of components defining a vertex connection
-static const vtkm::UInt8 vertexConnections_VecLength = 2;
+constexpr vtkm::UInt8 vertexConnections_VecLength = 2;
 // VTKM-M type for the linkVertexConnectionsEighteen and linkVertexConnectionsSix
-typedef typename vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::IdComponent>,
-                                                 vertexConnections_VecLength>
-  linkVertexConnectionsType;
+using linkVertexConnectionsType =
+  typename vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::IdComponent>,
+                                           vertexConnections_VecLength>;
 /* linkVertexConnectionsSix[ will be used as a 2D array of [3, 3]
    * The array is flattened here to ease conversion in vtk-m
    */
-static const vtkm::IdComponent linkVertexConnectionsSix[linkVertexConnectionsSix_NumPairs *
-                                                        vertexConnections_VecLength] = { 0, 1, 0,
-                                                                                         2, 1, 2 };
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent
+  linkVertexConnectionsSix[linkVertexConnectionsSix_NumPairs * vertexConnections_VecLength] = {
+    0, 1, 0, 2, 1, 2
+  };
 
 // number of vertex connection pairs contained in linkVertexConnectionsSix
-static const vtkm::UInt8 linkVertexConnectionsEighteen_NumPairs = 15;
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt8 linkVertexConnectionsEighteen_NumPairs = 15;
 /* linkVertexConnectionsEighteen[ will be used as a 2D array of [3, 3]
    * The array is flattened here to ease conversion in vtk-m
    */
-static const vtkm::IdComponent
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent
   linkVertexConnectionsEighteen[linkVertexConnectionsEighteen_NumPairs *
                                 vertexConnections_VecLength] = { 0, 1, 0, 2, 0, 3, 0, 4, 0, 5,
                                                                  1, 2, 1, 3, 1, 4, 1, 5, 2, 3,
                                                                  2, 4, 2, 5, 3, 4, 3, 5, 4, 5 };
 
 // VTKM-M type for the inCubeConnectionsEighteen and inCubeConnectionsSix
-typedef typename vtkm::cont::ArrayHandle<vtkm::UInt32> inCubeConnectionsType;
-static const vtkm::UInt8 inCubeConnectionsSix_NumElements = 128;
-static const vtkm::UInt32 inCubeConnectionsSix[inCubeConnectionsSix_NumElements] = {
+using inCubeConnectionsType = typename vtkm::cont::ArrayHandle<vtkm::UInt32>;
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt8 inCubeConnectionsSix_NumElements = 128;
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt32 inCubeConnectionsSix[inCubeConnectionsSix_NumElements] = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 1, 0, 2, 0, 7,
   0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 0, 4, 7, 0, 0, 0, 0, 0, 2, 4, 7, 0, 0, 0, 1, 0, 2, 4, 7,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 1, 0, 2, 4, 7,
   0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 2, 4, 7, 0, 0, 0, 1, 0, 2, 4, 7, 0, 0, 0, 1, 0, 2, 4, 7
 };
 
-static const vtkm::UInt8 inCubeConnectionsEighteen_NumElements = 128;
-static const vtkm::UInt32 inCubeConnectionsEighteen[inCubeConnectionsEighteen_NumElements] = {
-  0,     0,     0,     1,     0,     2,     32,    35,    0,     4,     64,    69,    0,
-  518,   608,   615,   0,     8,     0,     137,   1024,  1034,  1184,  1195,  4096,  4108,
-  4288,  4301,  5632,  5646,  5856,  5871,  0,     0,     256,   273,   2048,  2066,  2336,
-  2355,  8192,  8212,  8512,  8533,  10752, 10774, 11104, 11127, 16384, 16408, 16768, 16793,
-  19456, 19482, 19872, 19899, 28672, 28700, 29120, 29149, 32256, 32286, 32736, 32767, 0,
-  0,     0,     1,     0,     2,     32,    35,    0,     4,     64,    69,    512,   518,
-  608,   615,   0,     8,     128,   137,   1024,  1034,  1184,  1195,  4096,  4108,  4288,
-  4301,  5632,  5646,  5856,  5871,  0,     16,    256,   273,   2048,  2066,  2336,  2355,
-  8192,  8212,  8512,  8533,  10752, 10774, 11104, 11127, 16384, 16408, 16768, 16793, 19456,
-  19482, 19872, 19899, 28672, 28700, 29120, 29149, 32256, 32286, 32736, 32767
-};
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt8 inCubeConnectionsEighteen_NumElements = 128;
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt32
+  inCubeConnectionsEighteen[inCubeConnectionsEighteen_NumElements] = {
+    0,     0,     0,     1,     0,     2,     32,    35,    0,     4,     64,    69,    0,
+    518,   608,   615,   0,     8,     0,     137,   1024,  1034,  1184,  1195,  4096,  4108,
+    4288,  4301,  5632,  5646,  5856,  5871,  0,     0,     256,   273,   2048,  2066,  2336,
+    2355,  8192,  8212,  8512,  8533,  10752, 10774, 11104, 11127, 16384, 16408, 16768, 16793,
+    19456, 19482, 19872, 19899, 28672, 28700, 29120, 29149, 32256, 32286, 32736, 32767, 0,
+    0,     0,     1,     0,     2,     32,    35,    0,     4,     64,    69,    512,   518,
+    608,   615,   0,     8,     128,   137,   1024,  1034,  1184,  1195,  4096,  4108,  4288,
+    4301,  5632,  5646,  5856,  5871,  0,     16,    256,   273,   2048,  2066,  2336,  2355,
+    8192,  8212,  8512,  8533,  10752, 10774, 11104, 11127, 16384, 16408, 16768, 16793, 19456,
+    19482, 19872, 19899, 28672, 28700, 29120, 29149, 32256, 32286, 32736, 32767
+  };
 
 
 

@@ -71,12 +71,8 @@
 
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/freudenthal_3D/ExecutionObject_MeshStructure.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshStructureFreudenthal3D.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/freudenthal_3D/Types.h>
-
-//Define namespace alias for the freudenthal types to make the code a bit more readable
-namespace m3d_freudenthal_inc_ns =
-  vtkm::worklet::contourtree_augmented::mesh_dem_3d_freudenthal_inc;
 
 namespace vtkm
 {
@@ -91,16 +87,15 @@ class Mesh_DEM_Triangulation_3D_Freudenthal : public Mesh_DEM_Triangulation_3D<T
 { // class Mesh_DEM_Triangulation
 public:
   // Constants and case tables
-  m3d_freudenthal_inc_ns::edgeBoundaryDetectionMasksType edgeBoundaryDetectionMasks;
-  m3d_freudenthal_inc_ns::neighbourOffsetsType neighbourOffsets;
-  m3d_freudenthal_inc_ns::linkComponentCaseTableType linkComponentCaseTable;
+  m3d_freudenthal::edgeBoundaryDetectionMasksType edgeBoundaryDetectionMasks;
+  m3d_freudenthal::neighbourOffsetsType neighbourOffsets;
+  m3d_freudenthal::linkComponentCaseTableType linkComponentCaseTable;
 
   // Mesh helper functions
   void setPrepareForExecutionBehavior(bool getMax);
 
   template <typename DeviceTag>
-  mesh_dem_3d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag> PrepareForExecution(
-    DeviceTag) const;
+  MeshStructureFreudenthal3D<DeviceTag> PrepareForExecution(DeviceTag) const;
 
   Mesh_DEM_Triangulation_3D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices);
 
@@ -119,11 +114,11 @@ Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_3D
 {
   // Initialize the case tables in vtkm
   edgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
-    m3d_freudenthal_inc_ns::edgeBoundaryDetectionMasks, m3d_freudenthal_inc_ns::N_INCIDENT_EDGES);
+    m3d_freudenthal::edgeBoundaryDetectionMasks, m3d_freudenthal::N_INCIDENT_EDGES);
   neighbourOffsets = vtkm::cont::make_ArrayHandleGroupVec<3>(vtkm::cont::make_ArrayHandle(
-    m3d_freudenthal_inc_ns::neighbourOffsets, m3d_freudenthal_inc_ns::N_INCIDENT_EDGES * 3));
-  linkComponentCaseTable = vtkm::cont::make_ArrayHandle(
-    m3d_freudenthal_inc_ns::linkComponentCaseTable, m3d_freudenthal_inc_ns::LINK_COMPONENT_CASES);
+    m3d_freudenthal::neighbourOffsets, m3d_freudenthal::N_INCIDENT_EDGES * 3));
+  linkComponentCaseTable = vtkm::cont::make_ArrayHandle(m3d_freudenthal::linkComponentCaseTable,
+                                                        m3d_freudenthal::LINK_COMPONENT_CASES);
 }
 
 
@@ -137,19 +132,18 @@ void Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::setPrepareForExecuti
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
 template <typename T, typename StorageType>
 template <typename DeviceTag>
-mesh_dem_3d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>
+MeshStructureFreudenthal3D<DeviceTag>
   Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
 {
-  return mesh_dem_3d_freudenthal_inc::ExecutionObject_MeshStructure<DeviceTag>(
-    this->nRows,
-    this->nCols,
-    this->nSlices,
-    m3d_freudenthal_inc_ns::N_INCIDENT_EDGES,
-    this->useGetMax,
-    this->sortIndices,
-    edgeBoundaryDetectionMasks,
-    neighbourOffsets,
-    linkComponentCaseTable);
+  return MeshStructureFreudenthal3D<DeviceTag>(this->nRows,
+                                               this->nCols,
+                                               this->nSlices,
+                                               m3d_freudenthal::N_INCIDENT_EDGES,
+                                               this->useGetMax,
+                                               this->sortIndices,
+                                               edgeBoundaryDetectionMasks,
+                                               neighbourOffsets,
+                                               linkComponentCaseTable);
 }
 
 

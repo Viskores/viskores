@@ -869,7 +869,7 @@ void ContourTreeMaker::CompressActiveSupernodes()
 
 void ContourTreeMaker::FindDegrees()
 { // ContourTreeMaker::FindDegrees()
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexArray;
+  using PermuteIndexArray = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
   // retrieve the size to register for speed
   vtkm::Id nActiveSupernodes = activeSupernodes.GetNumberOfValues();

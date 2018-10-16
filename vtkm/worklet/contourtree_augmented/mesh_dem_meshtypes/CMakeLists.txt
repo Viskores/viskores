@@ -66,11 +66,27 @@ set(headers
   Freudenthal_2D_Triangulation.h
   Freudenthal_3D_Triangulation.h
   MarchingCubes_3D_Triangulation.h
+  MeshStructureFreudenthal2D.h
+  MeshStructureFreudenthal3D.h
+  MeshStructureMarchingCubes.h
   )
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})
 
-add_subdirectory(freudenthal_2D)
-add_subdirectory(freudenthal_3D)
-add_subdirectory(marchingcubes_3D)
+
+#-----------------------------------------------------------------------------
+set(extra_headers
+    freudenthal_2D/Types.h
+    freudenthal_3D/Types.h
+    marchingcubes_3D/Types.h
+    )
+
+#we do the following to work around a couple of issues.
+#1. vtkm_declare_headers will do a flat install into the current respective
+#   build directory
+vtkm_get_kit_name(name dir_prefix)
+vtkm_add_header_build_test(${name} ${dir_prefix} FALSE ${extra_headers})
+vtkm_install_headers("${dir_prefix}/freudenthal_2D" freudenthal_2D/Types.h)
+vtkm_install_headers("${dir_prefix}/freudenthal_3D" freudenthal_3D/Types.h)
+vtkm_install_headers("${dir_prefix}/marchingcubes_3D" marchingcubes_3D/Types.h)

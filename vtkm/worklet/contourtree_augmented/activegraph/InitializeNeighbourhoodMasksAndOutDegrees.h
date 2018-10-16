@@ -85,7 +85,7 @@ public:
     WholeArrayOut<IdType> neighbourhoodMasks, // (output) neighbourhoodMask for each vertex
     WholeArrayOut<IdType> outDegrees);        // (outpur) outDegress for each vertex
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

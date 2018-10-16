@@ -84,7 +84,7 @@ public:
     ExecObject meshStructure,          // (input) execution object with the mesh structure
     WholeArrayOut<IdType> meshExtema); // (output) whether critical
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

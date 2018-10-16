@@ -73,32 +73,32 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_3d_freudenthal_inc
+namespace m3d_freudenthal
 {
-typedef typename vtkm::cont::ArrayHandle<vtkm::Int8> edgeBoundaryDetectionMasksType;
-typedef typename vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::IdComponent>, 3>
-  neighbourOffsetsType;
-typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16> linkComponentCaseTableType;
+using edgeBoundaryDetectionMasksType = vtkm::cont::ArrayHandle<vtkm::Int8>;
+using neighbourOffsetsType =
+  vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::IdComponent>, 3>;
+using linkComponentCaseTableType = vtkm::cont::ArrayHandle<vtkm::UInt16>;
 
 // 3D_Freudenthal constants
-static const vtkm::Int32 N_INCIDENT_EDGES = 14;
+static constexpr vtkm::Int32 N_INCIDENT_EDGES = 14;
 
-static const vtkm::Int8 frontBit = 1 << 4;
-static const vtkm::Int8 backBit = 1 << 5;
-static const vtkm::Int8 topBit = 1 << 2;
-static const vtkm::Int8 bottomBit = 1 << 3;
-static const vtkm::Int8 leftBit = 1 << 0;
-static const vtkm::Int8 rightBit = 1 << 1;
+static constexpr vtkm::Int8 frontBit = 1 << 4;
+static constexpr vtkm::Int8 backBit = 1 << 5;
+static constexpr vtkm::Int8 topBit = 1 << 2;
+static constexpr vtkm::Int8 bottomBit = 1 << 3;
+static constexpr vtkm::Int8 leftBit = 1 << 0;
+static constexpr vtkm::Int8 rightBit = 1 << 1;
 
 /* neighbourOffsets will be used as a 2D array of [N_INCIDENT_EDGES, 3]
    * The array is flattened here to ease conversion in vtk-m
    */
-static const vtkm::IdComponent neighbourOffsets[N_INCIDENT_EDGES * 3] = {
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent neighbourOffsets[N_INCIDENT_EDGES * 3] = {
   -1, -1, -1, 0, -1, 0, -1, -1, 0, -1, 0, 0, -1, 0, -1, 0, 0, -1, 0, -1, -1,
   0,  0,  1,  0, 1,  0, 0,  1,  1, 1,  0, 0, 1,  0, 1,  1, 1, 0,  1, 1,  1
 };
 
-static const vtkm::Int8 edgeBoundaryDetectionMasks[N_INCIDENT_EDGES] = {
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int8 edgeBoundaryDetectionMasks[N_INCIDENT_EDGES] = {
   frontBit | topBit | leftBit,
   topBit,
   frontBit | topBit,
@@ -115,8 +115,8 @@ static const vtkm::Int8 edgeBoundaryDetectionMasks[N_INCIDENT_EDGES] = {
   backBit | bottomBit | rightBit
 };
 
-static const vtkm::Int32 LINK_COMPONENT_CASES = 16384;
-const vtkm::UInt16 linkComponentCaseTable[LINK_COMPONENT_CASES] = {
+constexpr vtkm::Int32 LINK_COMPONENT_CASES = 16384;
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt16 linkComponentCaseTable[LINK_COMPONENT_CASES] = {
   0,    1,    2,    2,    4,    4,    4,    4,    8,    8,    10,   8,    8,    8,    8,    8,
   16,   16,   18,   16,   20,   16,   20,   16,   16,   16,   18,   16,   16,   16,   16,   16,
   32,   32,   34,   32,   36,   32,   36,   32,   40,   32,   42,   32,   40,   32,   40,   32,

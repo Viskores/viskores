@@ -83,7 +83,7 @@ public:
   typedef void ControlSignature(FieldIn<IdType> activeVertices,     // (input) activeVertices
                                 WholeArrayInOut<IdType> hyperacrs); // (input/output) hyperarcs
   typedef void ExecutionSignature(_1, InputIndex, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

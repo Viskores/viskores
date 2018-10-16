@@ -95,7 +95,7 @@
 
 
 //Define namespace alias for the freudenthal types to make the code a bit more readable
-namespace mesh_dem_inc_ns = vtkm::worklet::contourtree_augmented::mesh_dem_inc;
+namespace mesh_dem_ns = vtkm::worklet::contourtree_augmented::mesh_dem;
 
 namespace vtkm
 {
@@ -149,7 +149,7 @@ public:
   vtkm::Id nRows, nCols;
 
   // Maximum outdegree
-  static const int MAX_OUTDEGREE = 3;
+  static constexpr int MAX_OUTDEGREE = 3;
 
   // empty constructor
   Mesh_DEM_Triangulation_2D()
@@ -188,7 +188,7 @@ public:
   vtkm::Id nRows, nCols, nSlices;
 
   // Maximum outdegree
-  static const int MAX_OUTDEGREE = 6; // True for Freudenthal and Marching Cubes
+  static constexpr int MAX_OUTDEGREE = 6; // True for Freudenthal and Marching Cubes
 
   // empty constructor
   Mesh_DEM_Triangulation_3D()
@@ -237,7 +237,7 @@ struct SortBySimplicityIndex
       nVertices); // create linear sequence of numbers 0, 1, .. nVertices
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(initVertexIds, sortOrder);
 
-    mesh_dem_inc::SimulatedSimplicityIndexComparator<T, S, DeviceAdapter> valueComparator(
+    mesh_dem::SimulatedSimplicityIndexComparator<T, S, DeviceAdapter> valueComparator(
       values.PrepareForInput(device));
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(sortOrder, valueComparator);
     return true;
@@ -252,7 +252,7 @@ void Mesh_DEM_Triangulation<T, StorageType>::SortData(
   const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
   // Define namespace alias for mesh dem worklets
-  namespace mesh_dem_worklets = vtkm::worklet::contourtree_augmented::mesh_dem_inc;
+  namespace mesh_dem_worklets = vtkm::worklet::contourtree_augmented::mesh_dem;
 
   // Make sure that the values have the correct size
   assert(values.GetNumberOfValues() == nVertices);

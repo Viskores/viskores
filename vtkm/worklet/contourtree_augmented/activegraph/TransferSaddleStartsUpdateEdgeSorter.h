@@ -88,7 +88,7 @@ public:
                                 WholeArrayIn<IdType> newOutDegree, // (input) new out degree
                                 WholeArrayOut<IdType> edgeSorter); // (output) edge sorter
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

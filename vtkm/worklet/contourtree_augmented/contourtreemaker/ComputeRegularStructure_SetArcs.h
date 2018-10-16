@@ -85,7 +85,7 @@ public:
                                 WholeArrayIn<IdType> contourTreeSupernodes,   // (input)
                                 WholeArrayOut<IdType> contourTreeArcs);       // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id numArcs; // contourTree.arcs.GetNumberOfValues()
 

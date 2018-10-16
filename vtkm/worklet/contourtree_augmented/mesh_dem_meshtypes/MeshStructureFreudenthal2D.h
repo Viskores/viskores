@@ -60,21 +60,16 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_2D_freudenthal_execution_obect_mesh_structure_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_2D_freudenthal_execution_obect_mesh_structure_h
+#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal2D_h
+#define vtkm_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal2D_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/ExecutionObject_MeshStructure_2D.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem/MeshStructure2D.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/freudenthal_2D/Types.h>
 
-
-
-//Define namespace alias for the freudenthal types to make the code a bit more readable
-namespace mesh_dem_inc_ns = vtkm::worklet::contourtree_augmented::mesh_dem_inc;
-namespace cpp2_ns = vtkm::worklet::contourtree_augmented;
 
 namespace vtkm
 {
@@ -82,39 +77,37 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_2d_freudenthal_inc
-{
 
 // Worklet for computing the sort indices from the sort order
 template <typename DeviceAdapter>
-class ExecutionObject_MeshStructure
-  : public mesh_dem_inc_ns::ExecutionObject_MeshStructure_2D<DeviceAdapter>
+class MeshStructureFreudenthal2D : public mesh_dem::MeshStructure2D<DeviceAdapter>
 {
 public:
-  typedef typename cpp2_ns::IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst
-    sortIndicesPortalType;
-  typedef
-    typename edgeBoundaryDetectionMasksType::template ExecutionTypes<DeviceAdapter>::PortalConst
-      edgeBoundaryDetectionMasksPortalType;
+  using sortIndicesPortalType =
+    typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using edgeBoundaryDetectionMasksPortalType =
+    typename m2d_freudenthal::edgeBoundaryDetectionMasksType::template ExecutionTypes<
+      DeviceAdapter>::PortalConst;
 
   // Default constucture. Needed for the CUDA built to work
   VTKM_EXEC_CONT
-  ExecutionObject_MeshStructure()
-    : mesh_dem_inc_ns::ExecutionObject_MeshStructure_2D<DeviceAdapter>()
+  MeshStructureFreudenthal2D()
+    : mesh_dem::MeshStructure2D<DeviceAdapter>()
     , getMax(false)
-    , nIncidentEdges(N_INCIDENT_EDGES)
+    , nIncidentEdges(m2d_freudenthal::N_INCIDENT_EDGES)
   {
   }
 
   // Main constructor used in the code
   VTKM_EXEC_CONT
-  ExecutionObject_MeshStructure(vtkm::Id nrows,
-                                vtkm::Id ncols,
-                                vtkm::Int32 nincident_edges,
-                                bool getmax,
-                                const cpp2_ns::IdArrayType& sortIndices,
-                                const edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn)
-    : mesh_dem_inc_ns::ExecutionObject_MeshStructure_2D<DeviceAdapter>(nrows, ncols)
+  MeshStructureFreudenthal2D(
+    vtkm::Id nrows,
+    vtkm::Id ncols,
+    vtkm::Int32 nincident_edges,
+    bool getmax,
+    const IdArrayType& sortIndices,
+    const m2d_freudenthal::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn)
+    : mesh_dem::MeshStructure2D<DeviceAdapter>(nrows, ncols)
     , getMax(getmax)
     , nIncidentEdges(nincident_edges)
   {
@@ -124,7 +117,7 @@ public:
   }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return N_INCIDENT_EDGES; }
+  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return m2d_freudenthal::N_INCIDENT_EDGES; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id vertex, vtkm::Id edgeNo) const
@@ -171,7 +164,9 @@ public:
   // sets outgoing paths for saddles
   VTKM_EXEC
   inline vtkm::Id GetExtremalNeighbour(vtkm::Id vertex) const
-  { // operator()
+  {
+    using namespace m2d_freudenthal;
+    // operator()
     // convert to a sort index
     vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
 
@@ -213,7 +208,9 @@ public:
   inline vtkm::Pair<vtkm::Id, vtkm::Id> GetNeighbourComponentsMaskAndDegree(
     vtkm::Id vertex,
     bool getMaxComponents) const
-  { // GetNeighbourComponentsMaskAndDegree()
+  {
+    using namespace m2d_freudenthal;
+    // GetNeighbourComponentsMaskAndDegree()
     // get data portals
     // convert to a sort index
     vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
@@ -303,7 +300,6 @@ private:
 
 }; // ExecutionObjec_MeshStructure_3Dt
 
-} // namespace mesh_dem_2d_freudenthal_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

@@ -89,9 +89,9 @@ void permuteArray(vtkm::cont::DeviceAdapterId device,
                   IdArrayType& permute,
                   ArrayType& output)
 { // permuteValues()
-  typedef vtkm::cont::ArrayHandleTransform<IdArrayType, MaskedIndexFunctor<ValueType>>
-    transform_type;
-  typedef vtkm::cont::ArrayHandlePermutation<transform_type, ArrayType> permute_type;
+  using transform_type =
+    vtkm::cont::ArrayHandleTransform<IdArrayType, MaskedIndexFunctor<ValueType>>;
+  using permute_type = vtkm::cont::ArrayHandlePermutation<transform_type, ArrayType>;
 
   // resize the output, i.e., output.resize(permute.size());
   vtkm::Id permNumValues = permute.GetNumberOfValues();

@@ -63,8 +63,8 @@
 ##  Oliver Ruebel (LBNL)
 ##==============================================================================
 set(headers
-  ExecutionObject_MeshStructure_2D.h
-  ExecutionObject_MeshStructure_3D.h
+  MeshStructure2D.h
+  MeshStructure3D.h
   SimulatedSimplicityComperator.h
   SortIndices.h
   )

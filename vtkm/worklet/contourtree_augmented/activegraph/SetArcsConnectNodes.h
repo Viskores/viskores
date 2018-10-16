@@ -88,7 +88,7 @@ public:
     WholeArrayIn<IdType> treeSupernodes);  // (input) tree supernodes
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT

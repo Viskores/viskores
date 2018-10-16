@@ -85,7 +85,7 @@ public:
     WholeArrayOut<IdType>
       upOrDowndegree); // (output) updegree in the case of the join tree and downdegree in the case of the split tree
   typedef void ExecutionSignature(_1, InputIndex, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nActiveSupernodes;
 

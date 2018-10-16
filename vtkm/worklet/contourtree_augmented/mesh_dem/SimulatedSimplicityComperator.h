@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_inc_simlated_simplicity_comperator_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_inc_simlated_simplicity_comperator_h
+#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_simlated_simplicity_comperator_h
+#define vtkm_worklet_contourtree_augmented_mesh_dem_simlated_simplicity_comperator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 
@@ -71,7 +71,7 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_inc
+namespace mesh_dem
 {
 
 
@@ -80,8 +80,8 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 class SimulatedSimplicityIndexComparator
 {
 public:
-  typedef typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst ValuePortalType;
+  using ValuePortalType = typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst;
 
   ValuePortalType values;
 

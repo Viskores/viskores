@@ -90,7 +90,7 @@ public:
                                 WholeArrayIn<IdType> meshExtremaPits);           // (input)
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id numHypernodes; // contourTree.hypernodes.GetNumberOfValues()
   vtkm::Id numSupernodes; // contourTree.supernodes.GetNumberOfValues()

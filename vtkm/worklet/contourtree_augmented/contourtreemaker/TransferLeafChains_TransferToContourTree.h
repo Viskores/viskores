@@ -97,12 +97,11 @@ public:
                                 );
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // vtkm only allows 9 parameters for the operator so we need to do these inputs manually via the constructor
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
-      IdPortalType;
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
   IdPortalType outdegreePortal;
   IdPortalType indegreePortal;
   IdPortalType outboundPortal;

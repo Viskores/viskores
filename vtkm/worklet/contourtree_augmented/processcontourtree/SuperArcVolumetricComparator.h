@@ -81,11 +81,10 @@ template <typename DeviceAdapter>
 class SuperArcVolumetricComparator
 { // SuperArcVolumetricComparator
 public:
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
-      IdPortalType;
-  typedef typename EdgePairArray::template ExecutionTypes<DeviceAdapter>::PortalConst
-    EdgePairArrayPortalType;
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using EdgePairArrayPortalType =
+    typename EdgePairArray::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   IdPortalType weightPortal;
   bool pairsAtLowEnd;

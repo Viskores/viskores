@@ -87,7 +87,7 @@ public:
     WholeArrayIn<IdType> treeSupernodes,       // (input) supernodes from the tree
     WholeArrayInOut<IdType> treeSuperparents); // (input/output) superparents from the tree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   bool isJoinGraph;
   vtkm::Id nSupernodes;
