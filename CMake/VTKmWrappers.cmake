@@ -95,6 +95,13 @@ endfunction()
 function(vtkm_add_header_build_test name dir_prefix use_cuda)
   set(hfiles ${ARGN})
 
+  #only attempt to add a test build executable if we have any headers to
+  #test. this might not happen when everything depends on thrust.
+  list(LENGTH hfiles num_srcs)
+  if (${num_srcs} EQUAL 0)
+    return()
+  endif()
+
   set(ext "cxx")
   if(use_cuda)
     set(ext "cu")
@@ -104,10 +111,9 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   foreach (header ${hfiles})
     get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
     if( NOT cant_be_tested )
-      get_filename_component(headername ${header} NAME_WE)
-      get_filename_component(headerextension ${header} EXT)
-      string(SUBSTRING ${headerextension} 1 -1 headerextension)
-      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}_${headerextension}.${ext})
+      string(REPLACE "/" "_" headername "${header}")
+      string(REPLACE "." "_" headername "${headername}")
+      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext})
 
       #By using file generate we will not trigger CMake execution when
       #a header gets touched
@@ -118,9 +124,10 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
 //This is used by headers that include thrust to properly define a proper
 //device backend / system
 #define VTKM_TEST_HEADER_BUILD
-#include <${dir_prefix}/${headername}.${headerextension}>
+#include <${dir_prefix}/${header}>
 int ${headername}_${headerextension}_testbuild_symbol;"
         )
+
       list(APPEND srcs ${src})
     endif()
   endforeach()
@@ -128,13 +135,6 @@ int ${headername}_${headerextension}_testbuild_symbol;"
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
-
-  #only attempt to add a test build executable if we have any headers to
-  #test. this might not happen when everything depends on thrust.
-  list(LENGTH srcs num_srcs)
-  if (${num_srcs} EQUAL 0)
-    return()
-  endif()
 
   if(TARGET TestBuild_${name})
     #If the target already exists just add more sources to it
@@ -206,6 +206,7 @@ function(vtkm_generate_export_header lib_name)
 
 endfunction(vtkm_generate_export_header)
 
+#-----------------------------------------------------------------------------
 function(vtkm_install_headers dir_prefix)
   if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     set(hfiles ${ARGN})
