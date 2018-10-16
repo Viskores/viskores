@@ -139,6 +139,8 @@ set(sources
   internal/ArrayManagerExecutionShareWithControl.cxx
   internal/DeviceAdapterTag.cxx
   internal/SimplePolymorphicContainer.cxx
+  internal/SimplePolymorphicContainer.cxx
+  internal/VirtualObjectTransfer.cxx
   Logging.cxx
   MultiBlock.cxx
   PresetColorTables.cxx
