@@ -94,5 +94,9 @@ if (TARGET vtkm::openmp)
   vtkm_unit_tests(NAME Worklets BACKEND OPENMP SOURCES ${unit_tests})
 endif()
 if (TARGET vtkm::cuda)
+  # TODO: This test has been temporarily removed from CUDA because of problems with the compiler.
+  # This should be re-added (i.e. the line taking the test out removed) as soon as the issues with
+  # the compiler are resolved.
+  list(REMOVE_ITEM unit_tests UnitTestParticleAdvection.cxx)
   vtkm_unit_tests(NAME Worklets BACKEND CUDA SOURCES ${unit_tests})
 endif()
