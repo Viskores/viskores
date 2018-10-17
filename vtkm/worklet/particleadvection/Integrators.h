@@ -279,7 +279,8 @@ public:
     using FieldEvaluateExecType =
       decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device()));
     using Superclass =
-      Integrator::ExecObjectBaseImpl<FieldEvaluateExecType, RK4Integrator::ExecObject<Device>>;
+      Integrator::ExecObjectBaseImpl<FieldEvaluateExecType,
+                                     typename RK4Integrator::template ExecObject<Device>>;
 
   public:
     VTKM_EXEC_CONT
@@ -360,14 +361,15 @@ public:
   template <typename Device>
   class ExecObject : public Integrator::ExecObjectBaseImpl<
                        decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device())),
-                       EulerIntegrator::ExecObject<Device>>
+                       typename EulerIntegrator::template ExecObject<Device>>
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
     using FieldEvaluateExecType =
       decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device()));
     using Superclass =
-      Integrator::ExecObjectBaseImpl<FieldEvaluateExecType, EulerIntegrator::ExecObject<Device>>;
+      Integrator::ExecObjectBaseImpl<FieldEvaluateExecType,
+                                     typename EulerIntegrator::template ExecObject<Device>>;
 
   public:
     VTKM_EXEC_CONT
