@@ -86,12 +86,11 @@ public:
   ContourTreePPP2(bool useMarchingCubes = false, bool computeRegularStructure = true);
 
   // Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag);
+                                          vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   const vtkm::worklet::contourtree_augmented::ContourTree& GetContourTree() const;
   const vtkm::worklet::contourtree_augmented::IdArrayType& GetSortOrder() const;

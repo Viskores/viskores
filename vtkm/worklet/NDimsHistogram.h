@@ -22,10 +22,11 @@
 #define vtk_m_worklet_NDimsHistogram_h
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -43,27 +44,23 @@ namespace worklet
 class NDimsHistogram
 {
 public:
-  template <typename DeviceAdapter>
-  void SetNumOfDataPoints(vtkm::Id _numDataPoints, DeviceAdapter vtkmNotUsed(device))
+  void SetNumOfDataPoints(vtkm::Id _numDataPoints)
   {
-    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     NumDataPoints = _numDataPoints;
 
     // Initialize bin1DIndex array
     vtkm::cont::ArrayHandleConstant<vtkm::Id> constant0Array(0, NumDataPoints);
-    DeviceAlgorithms::Copy(constant0Array, Bin1DIndex);
+    vtkm::cont::ArrayCopy(constant0Array, Bin1DIndex);
   }
 
   // Add a field and the bin number for this field
   // Return: rangeOfRange is min max value of this array
   //         binDelta is delta of a bin
-  template <typename HandleType, typename DeviceAdapter>
+  template <typename HandleType>
   void AddField(const HandleType& fieldArray,
                 vtkm::Id numberOfBins,
                 vtkm::Range& rangeOfValues,
-                vtkm::Float64& binDelta,
-                DeviceAdapter vtkmNotUsed(device))
+                vtkm::Float64& binDelta)
   {
     NumberOfBins.push_back(numberOfBins);
 
@@ -73,9 +70,9 @@ public:
     }
     else
     {
-      CastAndCall(fieldArray.ResetTypeList(vtkm::TypeListTagScalarAll()),
-                  vtkm::worklet::histogram::ComputeBins<DeviceAdapter>(
-                    Bin1DIndex, numberOfBins, rangeOfValues, binDelta));
+      CastAndCall(
+        fieldArray.ResetTypeList(vtkm::TypeListTagScalarAll()),
+        vtkm::worklet::histogram::ComputeBins(Bin1DIndex, numberOfBins, rangeOfValues, binDelta));
     }
   }
 
@@ -88,21 +85,17 @@ public:
   //           the length of all arrays in binId and freqs array must be the same
   //           if the length of fieldNames is n (compute a n-dimensional hisotgram)
   //           freqs[i] is the frequency of the bin with bin Ids{ binId[0][i], binId[1][i], ... binId[n-1][i] }
-  template <typename DeviceAdapter>
   void Run(std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& binId,
-           vtkm::cont::ArrayHandle<vtkm::Id>& freqs,
-           DeviceAdapter vtkmNotUsed(device))
+           vtkm::cont::ArrayHandle<vtkm::Id>& freqs)
   {
-    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     binId.resize(NumberOfBins.size());
 
     // Sort the resulting bin(1D) array for counting
-    DeviceAlgorithms::Sort(Bin1DIndex);
+    vtkm::cont::Algorithm::Sort(Bin1DIndex);
 
     // Count frequency of each bin
     vtkm::cont::ArrayHandleConstant<vtkm::Id> constArray(1, NumDataPoints);
-    DeviceAlgorithms::ReduceByKey(Bin1DIndex, constArray, Bin1DIndex, freqs, vtkm::Add());
+    vtkm::cont::Algorithm::ReduceByKey(Bin1DIndex, constArray, Bin1DIndex, freqs, vtkm::Add());
 
     //convert back to multi variate binId
     for (vtkm::Id i = static_cast<vtkm::Id>(NumberOfBins.size()) - 1; i >= 0; i--)
@@ -111,7 +104,6 @@ public:
       vtkm::worklet::histogram::ConvertHistBinToND binWorklet(nFieldBins);
       vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND>
         convertHistBinToNDDispatcher(binWorklet);
-      convertHistBinToNDDispatcher.SetDevice(DeviceAdapter());
       size_t vectorId = static_cast<size_t>(i);
       convertHistBinToNDDispatcher.Invoke(Bin1DIndex, Bin1DIndex, binId[vectorId]);
     }

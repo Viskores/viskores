@@ -194,16 +194,15 @@ void TestNDimsEntropy()
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
   vtkm::worklet::NDimsEntropy ndEntropy;
-  ndEntropy.SetNumOfDataPoints(ds.GetField(0).GetData().GetNumberOfValues(),
-                               VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndEntropy.SetNumOfDataPoints(ds.GetField(0).GetData().GetNumberOfValues());
 
   // Add field one by one
-  ndEntropy.AddField(ds.GetField("fieldA").GetData(), 10, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  ndEntropy.AddField(ds.GetField("fieldB").GetData(), 10, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  ndEntropy.AddField(ds.GetField("fieldC").GetData(), 10, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndEntropy.AddField(ds.GetField("fieldA").GetData(), 10);
+  ndEntropy.AddField(ds.GetField("fieldB").GetData(), 10);
+  ndEntropy.AddField(ds.GetField("fieldC").GetData(), 10);
 
   // Run worklet to calculate multi-variate entropy
-  vtkm::Float64 entropy = ndEntropy.Run(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::Float64 entropy = ndEntropy.Run();
 
   VTKM_TEST_ASSERT(fabs(entropy - 7.457857) < 0.001,
                    "N-Dimentional entropy calculation is incorrect");
@@ -212,5 +211,6 @@ void TestNDimsEntropy()
 
 int UnitTestNDimsEntropy(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(TestNDimsEntropy);
 }

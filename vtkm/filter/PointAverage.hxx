@@ -36,13 +36,12 @@ inline VTKM_CONT PointAverage::PointAverage()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   if (!fieldMetadata.IsCellField())
   {
@@ -56,7 +55,6 @@ inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
   vtkm::cont::ArrayHandle<T> outArray;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointAverage> dispatcher(this->Worklet);
-  dispatcher.SetDevice(DeviceAdapter());
 
   dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellSet, policy), inField, outArray);
 

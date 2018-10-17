@@ -98,7 +98,7 @@ public:
 
   // constructor
   VTKM_CONT
-  MeshExtrema(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize);
+  MeshExtrema(vtkm::Id meshSize);
 
   // routine to initialise the array before chaining
   template <class MeshType>
@@ -115,9 +115,8 @@ public:
 }; // MeshExtrema
 
 
-inline MeshExtrema::MeshExtrema(vtkm::cont::DeviceAdapterId device, vtkm::Id meshSize)
-  : Invoke(device)
-  , peaks()
+inline MeshExtrema::MeshExtrema(vtkm::Id meshSize)
+  : peaks()
   , pits()
   , nVertices(meshSize)
   , nLogSteps(0)
@@ -132,8 +131,8 @@ inline MeshExtrema::MeshExtrema(vtkm::cont::DeviceAdapterId device, vtkm::Id mes
   pits.Allocate(nVertices);
   // TODO Check if we really need to set the peaks and pits to zero or whether it is enough to allocate them
   vtkm::cont::ArrayHandleConstant<vtkm::Id> constZeroArray(0, nVertices);
-  vtkm::cont::Algorithm::Copy(device, constZeroArray, peaks);
-  vtkm::cont::Algorithm::Copy(device, constZeroArray, pits);
+  vtkm::cont::Algorithm::Copy(constZeroArray, peaks);
+  vtkm::cont::Algorithm::Copy(constZeroArray, pits);
 } // MeshExtrema
 
 

@@ -109,6 +109,8 @@
 #ifndef vtkm_worklet_contourtree_mergetree_h
 #define vtkm_worklet_contourtree_mergetree_h
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DataSet.h>
@@ -130,12 +132,10 @@ namespace worklet
 namespace contourtree
 {
 
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 class MergeTree
 {
 public:
-  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   // original data array
   const vtkm::cont::ArrayHandle<T, StorageType>& values;
 
@@ -178,13 +178,12 @@ public:
 };
 
 // creates merge tree
-template <typename T, typename StorageType, typename DeviceAdapter>
-MergeTree<T, StorageType, DeviceAdapter>::MergeTree(
-  const vtkm::cont::ArrayHandle<T, StorageType>& Values,
-  vtkm::Id NRows,
-  vtkm::Id NCols,
-  vtkm::Id NSlices,
-  bool IsJoinTree)
+template <typename T, typename StorageType>
+MergeTree<T, StorageType>::MergeTree(const vtkm::cont::ArrayHandle<T, StorageType>& Values,
+                                     vtkm::Id NRows,
+                                     vtkm::Id NCols,
+                                     vtkm::Id NSlices,
+                                     bool IsJoinTree)
   : values(Values)
   , nRows(NRows)
   , nCols(NCols)
@@ -202,14 +201,14 @@ MergeTree<T, StorageType, DeviceAdapter>::MergeTree(
   extrema.Allocate(nVertices);
   saddles.Allocate(nVertices);
 
-  DeviceAlgorithm::Copy(nullArray, mergeArcs);
-  DeviceAlgorithm::Copy(nullArray, extrema);
-  DeviceAlgorithm::Copy(nullArray, saddles);
+  vtkm::cont::ArrayCopy(nullArray, mergeArcs);
+  vtkm::cont::ArrayCopy(nullArray, extrema);
+  vtkm::cont::ArrayCopy(nullArray, saddles);
 }
 
 // routine that does pointer-doubling in the saddles array
-template <typename T, typename StorageType, typename DeviceAdapter>
-void MergeTree<T, StorageType, DeviceAdapter>::BuildRegularChains()
+template <typename T, typename StorageType>
+void MergeTree<T, StorageType>::BuildRegularChains()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -225,7 +224,6 @@ void MergeTree<T, StorageType, DeviceAdapter>::BuildRegularChains()
   vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
   ChainDoubler chainDoubler;
   vtkm::worklet::DispatcherMapField<ChainDoubler> chainDoublerDispatcher(chainDoubler);
-  chainDoublerDispatcher.SetDevice(DeviceAdapter());
 
   // 3. Apply pointer-doubling to build chains to maxima, rocking between two arrays
   for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
@@ -236,8 +234,8 @@ void MergeTree<T, StorageType, DeviceAdapter>::BuildRegularChains()
 } // BuildRegularChains()
 
 // routine that computes the augmented merge tree from the merge graph
-template <typename T, typename StorageType, typename DeviceAdapter>
-void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedSuperarcs()
+template <typename T, typename StorageType>
+void MergeTree<T, StorageType>::ComputeAugmentedSuperarcs()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -258,7 +256,6 @@ void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedSuperarcs()
   JoinSuperArcFinder<T> joinSuperArcFinder(isJoinTree);
   vtkm::worklet::DispatcherMapField<JoinSuperArcFinder<T>> joinSuperArcFinderDispatcher(
     joinSuperArcFinder);
-  joinSuperArcFinderDispatcher.SetDevice(DeviceAdapter());
   vtkm::cont::ArrayHandleIndex vertexIndexArray(nExtrema);
 
   joinSuperArcFinderDispatcher.Invoke(vertexIndexArray, // input
@@ -277,9 +274,8 @@ void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedSuperarcs()
 // this is separate from the previous routine because it also gets called separately
 // once saddle & extrema are set for a given set of vertices, the merge arcs can be
 // computed for any subset of those vertices that contains all of the critical points
-template <typename T, typename StorageType, typename DeviceAdapter>
-void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedArcs(
-  vtkm::cont::ArrayHandle<vtkm::Id>& vertices)
+template <typename T, typename StorageType>
+void MergeTree<T, StorageType>::ComputeAugmentedArcs(vtkm::cont::ArrayHandle<vtkm::Id>& vertices)
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -292,25 +288,21 @@ void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedArcs(
   // create a vector of indices for sorting
   vtkm::Id nCriticalVerts = vertices.GetNumberOfValues();
   vtkm::cont::ArrayHandle<vtkm::Id> vertexSorter;
-  DeviceAlgorithm::Copy(vertices, vertexSorter);
+  vtkm::cont::ArrayCopy(vertices, vertexSorter);
 
   // We sort by pseudo-maximum to establish the extents
-  DeviceAlgorithm::Sort(
-    vertexSorter,
-    VertexMergeComparator<T, StorageType, DeviceAdapter>(values.PrepareForInput(DeviceAdapter()),
-                                                         extrema.PrepareForInput(DeviceAdapter()),
-                                                         isJoinTree));
+  vtkm::cont::Algorithm::Sort(vertexSorter,
+                              VertexMergeComparator<T, StorageType>(values, extrema, isJoinTree));
 #ifdef DEBUG_PRINT
   DebugPrint("Sorting Complete");
 #endif
 
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noVertArray(NO_VERTEX_ASSIGNED, nVertices);
-  DeviceAlgorithm::Copy(noVertArray, mergeArcs);
+  vtkm::cont::ArrayCopy(noVertArray, mergeArcs);
 
   vtkm::cont::ArrayHandleIndex critVertexIndexArray(nCriticalVerts);
   JoinArcConnector joinArcConnector;
   vtkm::worklet::DispatcherMapField<JoinArcConnector> joinArcConnectorDispatcher(joinArcConnector);
-  joinArcConnectorDispatcher.SetDevice(DeviceAdapter());
 
   joinArcConnectorDispatcher.Invoke(critVertexIndexArray, // input
                                     vertexSorter,         // input (whole array)
@@ -323,8 +315,8 @@ void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedArcs(
 } // ComputeAugmentedArcs()
 
 // debug routine
-template <typename T, typename StorageType, typename DeviceAdapter>
-void MergeTree<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
+template <typename T, typename StorageType>
+void MergeTree<T, StorageType>::DebugPrint(const char* message)
 {
   std::cout << "---------------------------" << std::endl;
   std::cout << std::string(message) << std::endl;

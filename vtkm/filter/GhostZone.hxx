@@ -80,13 +80,12 @@ inline VTKM_CONT GhostZone::GhostZone()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet GhostZone::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  DeviceAdapter)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //get the cells and coordinates of the dataset
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -97,14 +96,12 @@ inline VTKM_CONT vtkm::cont::DataSet GhostZone::DoExecute(
     cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
                                 field,
                                 fieldMeta.GetAssociation(),
-                                RemoveAllGhosts(),
-                                DeviceAdapter());
+                                RemoveAllGhosts());
   else if (this->GetRemoveByType())
     cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
                                 field,
                                 fieldMeta.GetAssociation(),
-                                RemoveGhostByType(this->GetRemoveType()),
-                                DeviceAdapter());
+                                RemoveGhostByType(this->GetRemoveType()));
   else
     throw vtkm::cont::ErrorFilterExecution("Unsupported ghost cell removal type");
 
@@ -114,8 +111,8 @@ inline VTKM_CONT vtkm::cont::DataSet GhostZone::DoExecute(
   if (this->GetConvertOutputToUnstructured())
   {
     vtkm::cont::CellSetExplicit<> explicitCells;
-    //vtkm::worklet::CellDeepCopy::Run(cellOut, explicitCells, DeviceAdapter());
-    explicitCells = this->ConvertOutputToUnstructured(cellOut, DeviceAdapter());
+    //vtkm::worklet::CellDeepCopy::Run(cellOut, explicitCells);
+    explicitCells = this->ConvertOutputToUnstructured(cellOut);
     output.AddCellSet(explicitCells);
   }
   else
@@ -125,12 +122,11 @@ inline VTKM_CONT vtkm::cont::DataSet GhostZone::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool GhostZone::DoMapField(vtkm::cont::DataSet& result,
                                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                             const vtkm::filter::FieldMetadata& fieldMeta,
-                                            const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                            DeviceAdapter device)
+                                            vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   if (fieldMeta.IsPointField())
   {
@@ -140,7 +136,7 @@ inline VTKM_CONT bool GhostZone::DoMapField(vtkm::cont::DataSet& result,
   }
   else if (fieldMeta.IsCellField())
   {
-    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input, device);
+    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input);
     result.AddField(fieldMeta.AsField(out));
     return true;
   }
@@ -150,10 +146,8 @@ inline VTKM_CONT bool GhostZone::DoMapField(vtkm::cont::DataSet& result,
   }
 }
 
-template <typename DeviceAdapter>
 inline VTKM_CONT vtkm::cont::CellSetExplicit<> GhostZone::ConvertOutputToUnstructured(
-  vtkm::cont::DynamicCellSet& inCells,
-  DeviceAdapter tag)
+  vtkm::cont::DynamicCellSet& inCells)
 {
   using PermStructured2d = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>>;
   using PermStructured3d = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>>;
@@ -165,22 +159,22 @@ inline VTKM_CONT vtkm::cont::CellSetExplicit<> GhostZone::ConvertOutputToUnstruc
   if (inCells.IsSameType(PermStructured2d()))
   {
     PermStructured2d perm = inCells.Cast<PermStructured2d>();
-    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells, tag);
+    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells);
   }
   else if (inCells.IsSameType(PermStructured3d()))
   {
     PermStructured3d perm = inCells.Cast<PermStructured3d>();
-    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells, tag);
+    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells);
   }
   else if (inCells.IsSameType(PermExplicit()))
   {
     PermExplicit perm = inCells.Cast<PermExplicit>();
-    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells, tag);
+    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells);
   }
   else if (inCells.IsSameType(PermExplicitSingle()))
   {
     PermExplicitSingle perm = inCells.Cast<PermExplicitSingle>();
-    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells, tag);
+    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells);
   }
   else
     throw vtkm::cont::ErrorFilterExecution("Unsupported permutation cell type");

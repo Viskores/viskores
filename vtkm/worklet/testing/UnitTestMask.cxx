@@ -32,7 +32,6 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingMask
 {
 public:
@@ -51,12 +50,11 @@ public:
 
     // Output data set permutation
     vtkm::worklet::Mask maskCells;
-    OutCellSetType outCellSet = maskCells.Run(cellSet, 2, DeviceAdapter());
+    OutCellSetType outCellSet = maskCells.Run(cellSet, 2);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
-    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray =
-      maskCells.ProcessCellField(cellvar, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = maskCells.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for Mask");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
@@ -78,12 +76,11 @@ public:
 
     // Output data set with cell set permuted
     vtkm::worklet::Mask maskCells;
-    OutCellSetType outCellSet = maskCells.Run(cellSet, 9, DeviceAdapter());
+    OutCellSetType outCellSet = maskCells.Run(cellSet, 9);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
-    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray =
-      maskCells.ProcessCellField(cellvar, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = maskCells.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 7), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 7 &&
@@ -106,12 +103,11 @@ public:
 
     // Output data set with cell set permuted
     vtkm::worklet::Mask maskCells;
-    OutCellSetType outCellSet = maskCells.Run(cellSet, 2, DeviceAdapter());
+    OutCellSetType outCellSet = maskCells.Run(cellSet, 2);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
-    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray =
-      maskCells.ProcessCellField(cellvar, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = maskCells.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 2), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
@@ -129,5 +125,6 @@ public:
 
 int UnitTestMask(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestingMask<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  return vtkm::cont::testing::Testing::Run(TestingMask());
 }

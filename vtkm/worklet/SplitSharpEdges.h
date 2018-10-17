@@ -30,6 +30,8 @@
 #include <vtkm/CellTraits.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/exec/CellEdge.h>
 
@@ -444,44 +446,41 @@ public:
             typename CoordsComType,
             typename CoordsInStorageType,
             typename CoordsOutStorageType,
-            typename NewCellSetType,
-            typename DeviceAdapter>
+            typename NewCellSetType>
   void Run(
     const CellSetType& oldCellset,
     const vtkm::FloatDefault featureAngle,
     const FaceNormalsType& faceNormals,
     const vtkm::cont::ArrayHandle<vtkm::Vec<CoordsComType, 3>, CoordsInStorageType>& oldCoords,
     vtkm::cont::ArrayHandle<vtkm::Vec<CoordsComType, 3>, CoordsOutStorageType>& newCoords,
-    NewCellSetType& newCellset,
-    DeviceAdapter)
+    NewCellSetType& newCellset)
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     vtkm::FloatDefault featureAngleR =
       featureAngle / static_cast<vtkm::FloatDefault>(180.0) * vtkm::Pi<vtkm::FloatDefault>();
 
     ClassifyPoint classifyPoint(vtkm::Cos(featureAngleR));
     vtkm::worklet::DispatcherMapTopology<ClassifyPoint> cpDispatcher(classifyPoint);
-    cpDispatcher.SetDevice(DeviceAdapter());
 
     // Array of newPointNums and cellNeedUpdateNums
     vtkm::cont::ArrayHandle<vtkm::Id> newPointNums, cellNeedUpdateNums;
     cpDispatcher.Invoke(oldCellset, oldCellset, faceNormals, newPointNums, cellNeedUpdateNums);
 
-    vtkm::Id totalNewPointsNum = Algorithm::Reduce(newPointNums, vtkm::Id(0), vtkm::Add());
+    vtkm::Id totalNewPointsNum =
+      vtkm::cont::Algorithm::Reduce(newPointNums, vtkm::Id(0), vtkm::Add());
     // Allocate the size for the updateCellTopologyArray
-    vtkm::Id cellsNeedUpdateNum = Algorithm::Reduce(cellNeedUpdateNums, vtkm::Id(0), vtkm::Add());
+    vtkm::Id cellsNeedUpdateNum =
+      vtkm::cont::Algorithm::Reduce(cellNeedUpdateNums, vtkm::Id(0), vtkm::Add());
 
     vtkm::cont::ArrayHandle<vtkm::Id3> cellTopologyUpdateTuples;
     cellTopologyUpdateTuples.Allocate(cellsNeedUpdateNum);
 
     vtkm::cont::ArrayHandle<vtkm::Id> newpointStartingIndexs, pointCellsStartingIndexs;
-    Algorithm::ScanExclusive(newPointNums, newpointStartingIndexs);
-    Algorithm::ScanExclusive(cellNeedUpdateNums, pointCellsStartingIndexs);
+    vtkm::cont::Algorithm::ScanExclusive(newPointNums, newpointStartingIndexs);
+    vtkm::cont::Algorithm::ScanExclusive(cellNeedUpdateNums, pointCellsStartingIndexs);
 
     SplitSharpEdge splitSharpEdge(vtkm::Cos(featureAngleR), oldCoords.GetNumberOfValues());
 
     vtkm::worklet::DispatcherMapTopology<SplitSharpEdge> sseDispatcher(splitSharpEdge);
-    sseDispatcher.SetDevice(DeviceAdapter());
     sseDispatcher.Invoke(oldCellset,
                          oldCellset,
                          faceNormals,
@@ -500,7 +499,7 @@ public:
     }
 
     newCoords.Allocate(oldCoords.GetNumberOfValues() + totalNewPointsNum);
-    Algorithm::CopySubRange(oldCoords, 0, oldCoords.GetNumberOfValues(), newCoords);
+    vtkm::cont::Algorithm::CopySubRange(oldCoords, 0, oldCoords.GetNumberOfValues(), newCoords);
     vtkm::Id newCoordsIndex = oldCoords.GetNumberOfValues();
     auto oldCoordsPortal = oldCoords.GetPortalConstControl();
     auto newCoordsPortal = newCoords.GetPortalControl();
@@ -516,7 +515,7 @@ public:
     }
 
     // Create the new cellset
-    CellDeepCopy::Run(oldCellset, newCellset, DeviceAdapter());
+    CellDeepCopy::Run(oldCellset, newCellset);
     // FIXME: Since the non const get array function is not in CellSetExplict.h,
     // here I just get a non-const copy of the array handle.
     auto connectivityArrayHandle = newCellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
@@ -543,19 +542,16 @@ public:
     }
   }
 
-  template <typename ValueType, typename StorageTag, typename DeviceTag>
+  template <typename ValueType, typename StorageTag>
   vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageTag> in,
-    DeviceTag) const
+    const vtkm::cont::ArrayHandle<ValueType, StorageTag> in) const
   {
-    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
-
     // Use a temporary permutation array to simplify the mapping:
     auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->NewPointsIdArray, in);
 
     // Copy into an array with default storage:
     vtkm::cont::ArrayHandle<ValueType> result;
-    Algo::Copy(tmp, result);
+    vtkm::cont::ArrayCopy(tmp, result);
 
     return result;
   }

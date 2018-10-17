@@ -18,10 +18,6 @@
 //  this software.
 //============================================================================
 
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
@@ -49,7 +45,6 @@ int renderAndWriteDataSet(const vtkm::cont::DataSet& dataset)
 
 void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using FieldType = vtkm::Float32;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
 
@@ -104,13 +99,12 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
   if (advectType == 0)
   {
     vtkm::worklet::ParticleAdvection particleAdvection;
-    particleAdvection.Run(integrator, seedArray, numSteps, DeviceAdapter());
+    particleAdvection.Run(integrator, seedArray, numSteps);
   }
   else
   {
     vtkm::worklet::Streamline streamline;
-    vtkm::worklet::StreamlineResult res =
-      streamline.Run(integrator, seedArray, numSteps, DeviceAdapter());
+    vtkm::worklet::StreamlineResult res = streamline.Run(integrator, seedArray, numSteps);
     vtkm::cont::DataSet outData;
     vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
     outData.AddCellSet(res.polyLines);

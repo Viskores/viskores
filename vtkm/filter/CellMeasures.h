@@ -47,13 +47,12 @@ public:
   void SetCellMeasureName(const std::string& name) { this->SetOutputFieldName(name); }
   const std::string& GetCellMeasureName() const { return this->GetOutputFieldName(); }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
     const vtkm::cont::DataSet& input,
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
     const vtkm::filter::FieldMetadata& fieldMeta,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter& tag);
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 };
 
 template <typename IntegrationType>

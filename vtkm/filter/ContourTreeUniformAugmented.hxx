@@ -62,6 +62,7 @@
 
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/filter/ContourTreeUniformAugmented.h>
 #include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/worklet/ContourTreeUniformAugmented.h>
 
@@ -100,16 +101,15 @@ const std::vector<std::pair<std::string, vtkm::Float64>>& ContourTreePPP2::GetTi
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-vtkm::cont::DataSet ContourTreePPP2::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+template <typename T, typename StorageType, typename DerivedPolicy>
+vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
+                                               const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                               const vtkm::filter::FieldMetadata& fieldMeta,
+                                               vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
+  // TODO: This should be switched to use the logging macros defined in vtkm/cont/logging.h
   // Start the timer
-  vtkm::cont::Timer<DeviceAdapter> timer;
+  vtkm::cont::Timer<> timer;
   Timings.clear();
 
   // Check that the field is Ok
@@ -132,7 +132,6 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(
               this->ContourTreeData,
               this->MeshSortOrder,
               this->NumIterations,
-              device,
               nRows,
               nCols,
               nSlices,

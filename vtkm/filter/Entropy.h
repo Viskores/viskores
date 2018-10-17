@@ -42,12 +42,11 @@ public:
   VTKM_CONT
   void SetNumberOfBins(vtkm::Id count) { this->NumberOfBins = count; }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag);
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   vtkm::Id NumberOfBins;

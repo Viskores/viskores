@@ -83,6 +83,8 @@
 #ifndef vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_h
 #define vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_h
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -130,8 +132,7 @@ public:
   }
 
   // sorts the data and initializes the sortIndex & indexReverse
-  void SortData(vtkm::cont::DeviceAdapterId device,
-                const vtkm::cont::ArrayHandle<T, StorageType>& values);
+  void SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values);
 
   //routine that dumps out the contents of the mesh
   void DebugPrint(const char* message, const char* fileName, long lineNum);
@@ -222,33 +223,9 @@ protected:
 }; // class Mesh_DEM_Triangulation_3D
 
 
-namespace detail
-{
-struct SortBySimplicityIndex
-{
-  template <typename DeviceAdapter, typename T, typename S, typename ToSortHandle>
-  bool operator()(DeviceAdapter device,
-                  vtkm::Id nVertices,
-                  const vtkm::cont::ArrayHandle<T, S>& values,
-                  ToSortHandle& sortOrder) const
-  {
-    // initialize the sort order
-    vtkm::cont::ArrayHandleIndex initVertexIds(
-      nVertices); // create linear sequence of numbers 0, 1, .. nVertices
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(initVertexIds, sortOrder);
-
-    mesh_dem::SimulatedSimplicityIndexComparator<T, S, DeviceAdapter> valueComparator(
-      values.PrepareForInput(device));
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(sortOrder, valueComparator);
-    return true;
-  }
-};
-}
-
 // sorts the data and initialises the sortIndices & sortOrder
 template <typename T, typename StorageType>
 void Mesh_DEM_Triangulation<T, StorageType>::SortData(
-  vtkm::cont::DeviceAdapterId device,
   const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
   // Define namespace alias for mesh dem worklets
@@ -266,15 +243,18 @@ void Mesh_DEM_Triangulation<T, StorageType>::SortData(
   sortIndices.Allocate(nVertices);
 
   // now sort the sort order vector by the values, i.e,. initialize the sortOrder member variable
-  vtkm::cont::TryExecuteOnDevice(
-    device, detail::SortBySimplicityIndex{}, nVertices, values, sortOrder);
+  vtkm::cont::ArrayHandleIndex initVertexIds(nVertices); // create sequence 0, 1, .. nVertices
+  vtkm::cont::ArrayCopy(initVertexIds, sortOrder);
+
+  vtkm::cont::Algorithm::Sort(sortOrder,
+                              mesh_dem::SimulatedSimplicityIndexComparator<T, StorageType>(values));
 
   // now set the index lookup, i.e., initialize the sortIndices member variable
   // In serial this would be
   //  for (indexType vertex = 0; vertex < nVertices; vertex++)
   //            sortIndices[sortOrder[vertex]] = vertex;
   mesh_dem_worklets::SortIndices sortIndicesWorklet;
-  vtkm::worklet::Invoker invoke(device);
+  vtkm::worklet::Invoker invoke;
   invoke(sortIndicesWorklet, sortOrder, sortIndices);
 
   // Debug print statement

@@ -66,6 +66,7 @@
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
@@ -78,8 +79,8 @@ namespace process_contourtree_inc
 {
 
 template <typename DeviceAdapter>
-class SuperArcVolumetricComparator
-{ // SuperArcVolumetricComparator
+class SuperArcVolumetricComparatorImpl
+{ // SuperArcVolumetricComparatorImpl
 public:
   using IdPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
@@ -91,7 +92,9 @@ public:
   EdgePairArrayPortalType superarcListPortal;
 
   // constructor
-  SuperArcVolumetricComparator(IdArrayType& Weight, EdgePairArray& SuperarcList, bool PairsAtLowEnd)
+  SuperArcVolumetricComparatorImpl(const IdArrayType& Weight,
+                                   const EdgePairArray& SuperarcList,
+                                   bool PairsAtLowEnd)
     : pairsAtLowEnd(PairsAtLowEnd)
   { // constructor
     weightPortal = Weight.PrepareForInput(DeviceAdapter());
@@ -156,9 +159,33 @@ public:
       return false;
     } // pairs at high end
   }   // operator()
-};    // SuperArcVolumetricComparator
+};    // SuperArcVolumetricComparatorImpl
 
+class SuperArcVolumetricComparator : public vtkm::cont::ExecutionObjectBase
+{ // SuperArcVolumetricComparator
+public:
+  // constructor
+  SuperArcVolumetricComparator(const IdArrayType& weight,
+                               const EdgePairArray& superArcList,
+                               bool pairsAtLowEnd)
+    : Weight(weight)
+    , SuperArcList(superArcList)
+    , PairsAtLowEnd(pairsAtLowEnd)
+  {
+  }
 
+  template <typename DeviceAdapter>
+  VTKM_CONT SuperArcVolumetricComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  {
+    return SuperArcVolumetricComparatorImpl<DeviceAdapter>(
+      this->Weight, this->SuperArcList, this->PairsAtLowEnd);
+  }
+
+private:
+  IdArrayType Weight;
+  EdgePairArray SuperArcList;
+  bool PairsAtLowEnd;
+}; // SuperArcVolumetricComparator
 
 } // namespace process_contourtree_inc
 } // namespace contourtree_augmented

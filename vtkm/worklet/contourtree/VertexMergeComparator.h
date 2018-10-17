@@ -80,6 +80,7 @@
 #define vtkm_worklet_contourtree_vertex_merge_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -97,51 +98,86 @@ namespace contourtree
 //
 //=======================================================================================
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-class VertexMergeComparator
+template <typename T, typename StorageType>
+class VertexMergeComparator : public vtkm::cont::ExecutionObjectBase
 {
 public:
-  using ValuePortalType = typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using ValueArrayType = vtkm::cont::ArrayHandle<T, StorageType>;
+  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
-  ValuePortalType values;
-  IdPortalType extrema;
-  bool isJoinTree;
+  ValueArrayType Values;
+  IdArrayType Extrema;
+  bool IsJoinTree;
 
-  VTKM_EXEC_CONT
-  VertexMergeComparator(ValuePortalType Values, IdPortalType Extrema, bool IsJoinTree)
-    : values(Values)
-    , extrema(Extrema)
-    , isJoinTree(IsJoinTree)
+  VTKM_CONT
+  VertexMergeComparator(ValueArrayType values, IdArrayType extrema, bool isJoinTree)
+    : Values(values)
+    , Extrema(extrema)
+    , IsJoinTree(isJoinTree)
   {
   }
 
-  VTKM_EXEC
-  bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
+  template <typename DeviceAdapter>
+  class ExecObject
   {
-    // retrieve the pseudo-extremum the vertex belongs to
-    vtkm::Id pseudoExtI = extrema.Get(i);
-    vtkm::Id pseudoExtJ = extrema.Get(j);
+  public:
+    using ValuePortalType =
+      typename ValueArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+    using IdPortalType = typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-    if (pseudoExtI < pseudoExtJ)
-      return false ^ isJoinTree;
-    if (pseudoExtJ < pseudoExtI)
-      return true ^ isJoinTree;
+    ValuePortalType Values;
+    IdPortalType Extrema;
+    bool IsJoinTree;
 
-    T valueI = values.Get(i);
-    T valueJ = values.Get(j);
+    VTKM_CONT
+    ExecObject(ValuePortalType values, IdPortalType extrema, bool isJoinTree)
+      : Values(values)
+      , Extrema(extrema)
+      , IsJoinTree(isJoinTree)
+    {
+    }
 
-    if (valueI < valueJ)
-      return false ^ isJoinTree;
-    if (valueI > valueJ)
-      return true ^ isJoinTree;
-    if (i < j)
-      return false ^ isJoinTree;
-    if (j < i)
-      return true ^ isJoinTree;
-    return false; // true ^ isJoinTree;
+    VTKM_EXEC
+    bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
+    {
+      // retrieve the pseudo-extremum the vertex belongs to
+      vtkm::Id pseudoExtI = this->Extrema.Get(i);
+      vtkm::Id pseudoExtJ = this->Extrema.Get(j);
+
+      if (pseudoExtI < pseudoExtJ)
+        return false ^ this->IsJoinTree;
+      if (pseudoExtJ < pseudoExtI)
+        return true ^ this->IsJoinTree;
+
+      T valueI = this->Values.Get(i);
+      T valueJ = this->Values.Get(j);
+
+      if (valueI < valueJ)
+      {
+        return false ^ this->IsJoinTree;
+      }
+      if (valueI > valueJ)
+      {
+        return true ^ this->IsJoinTree;
+      }
+      if (i < j)
+      {
+        return false ^ this->IsJoinTree;
+      }
+      if (j < i)
+      {
+        return true ^ this->IsJoinTree;
+      }
+      return false; // true ^ isJoinTree;
+    }
+  };
+
+  template <typename DeviceAdapter>
+  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  {
+    return ExecObject<DeviceAdapter>(this->Values.PrepareForInput(DeviceAdapter()),
+                                     this->Extrema.PrepareForInput(DeviceAdapter()),
+                                     this->IsJoinTree);
   }
 }; // VertexMergeComparator
 }

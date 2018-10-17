@@ -64,6 +64,7 @@
 #define vtkm_worklet_contourtree_augmented_active_graph_inc_edge_peak_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
@@ -78,7 +79,7 @@ namespace active_graph_inc
 
 // comparator used for initial sort of data values
 template <typename DeviceAdapter>
-class EdgePeakComparator
+class EdgePeakComparatorImpl
 {
 public:
   using IdPortalType =
@@ -90,7 +91,7 @@ public:
 
   // constructor - takes vectors as parameters
   VTKM_CONT
-  EdgePeakComparator(const IdArrayType& edgeFar, const IdArrayType& edgeNear, bool joinGraph)
+  EdgePeakComparatorImpl(const IdArrayType& edgeFar, const IdArrayType& edgeNear, bool joinGraph)
     : isJoinGraph(joinGraph)
   { // constructor
     edgeFarPortal = edgeFar.PrepareForInput(DeviceAdapter());
@@ -143,6 +144,29 @@ public:
   } // operator()
 };  // EdgePeakComparator
 
+class EdgePeakComparator : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  // constructor - takes vectors as parameters
+  VTKM_CONT
+  EdgePeakComparator(const IdArrayType& edgeFar, const IdArrayType& edgeNear, bool joinGraph)
+    : EdgeFar(edgeFar)
+    , EdgeNear(edgeNear)
+    , JoinGraph(joinGraph)
+  {
+  }
+
+  template <typename DeviceAdapter>
+  VTKM_CONT EdgePeakComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  {
+    return EdgePeakComparatorImpl<DeviceAdapter>(this->EdgeFar, this->EdgeNear, this->JoinGraph);
+  }
+
+private:
+  IdArrayType EdgeFar;
+  IdArrayType EdgeNear;
+  bool JoinGraph;
+}; // EdgePeakComparator
 
 } // namespace active_graph_inc
 } // namespace contourtree_augmented

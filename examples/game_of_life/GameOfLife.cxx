@@ -122,23 +122,12 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 
 class GameOfLife : public vtkm::filter::FilterDataSet<GameOfLife>
 {
-  bool PrintedDeviceMsg = false;
-
 public:
-  template <typename Policy, typename Device>
+  template <typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          vtkm::filter::PolicyBase<Policy> policy,
-                                          Device)
+                                          vtkm::filter::PolicyBase<Policy> policy)
 
   {
-    if (!this->PrintedDeviceMsg)
-    {
-      using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<Device>;
-      std::cout << "Running GameOfLife filter on device adapter: " << DeviceAdapterTraits::GetName()
-                << std::endl;
-      this->PrintedDeviceMsg = true;
-    }
-
     using DispatcherType = vtkm::worklet::DispatcherPointNeighborhood<UpdateLifeState>;
 
 
@@ -154,7 +143,6 @@ public:
 
     //Update the game state
     DispatcherType dispatcher;
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
 
     //save the results
@@ -171,12 +159,11 @@ public:
     return output;
   }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet&,
                             const vtkm::cont::ArrayHandle<T, StorageType>&,
                             const vtkm::filter::FieldMetadata&,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                            DeviceAdapter)
+                            vtkm::filter::PolicyBase<DerivedPolicy>)
   {
     return false;
   }

@@ -72,7 +72,6 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
 
 void TestWarpVector()
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   std::cout << "Testing WarpVector Worklet" << std::endl;
   using vecType = vtkm::Vec<vtkm::FloatDefault, 3>;
 
@@ -90,7 +89,7 @@ void TestWarpVector()
     vtkm::cont::make_ArrayHandleConstant(vector, nov);
 
   vtkm::worklet::WarpVector warpWorklet;
-  warpWorklet.Run(ds.GetCoordinateSystem(), vectorAH, scale, result, DeviceAdapter());
+  warpWorklet.Run(ds.GetCoordinateSystem(), vectorAH, scale, result);
   auto resultPortal = result.GetPortalConstControl();
   for (vtkm::Id i = 0; i < nov; i++)
   {
@@ -107,5 +106,6 @@ void TestWarpVector()
 
 int UnitTestWarpVector(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(TestWarpVector);
 }

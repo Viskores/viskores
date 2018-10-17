@@ -60,7 +60,6 @@ vtkm::cont::DataSet MakeWarpScalarTestDataSet()
 
 void TestWarpScalar()
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   std::cout << "Testing WarpScalar Worklet" << std::endl;
   using vecType = vtkm::Vec<vtkm::FloatDefault, 3>;
 
@@ -83,8 +82,7 @@ void TestWarpScalar()
   auto sFAPortal = scaleFactorArray.GetPortalControl();
 
   vtkm::worklet::WarpScalar warpWorklet;
-  warpWorklet.Run(
-    ds.GetCoordinateSystem(), normalAH, scaleFactor, scaleAmount, result, DeviceAdapter());
+  warpWorklet.Run(ds.GetCoordinateSystem(), normalAH, scaleFactor, scaleAmount, result);
   auto resultPortal = result.GetPortalConstControl();
 
   for (vtkm::Id i = 0; i < nov; i++)
@@ -102,5 +100,6 @@ void TestWarpScalar()
 
 int UnitTestWarpScalar(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(TestWarpScalar);
 }

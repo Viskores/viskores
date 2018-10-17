@@ -48,55 +48,13 @@ inline VTKM_CONT FilterDataSet<Derived>::~FilterDataSet()
 }
 
 //-----------------------------------------------------------------------------
-namespace detail
-{
-template <typename Derived, typename DerivedPolicy>
-struct FilterDataSetPrepareForExecutionFunctor
-{
-  vtkm::cont::DataSet Result;
-  Derived* Self;
-  const vtkm::cont::DataSet& Input;
-  const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
-
-  VTKM_CONT
-  FilterDataSetPrepareForExecutionFunctor(Derived* self,
-                                          const vtkm::cont::DataSet& input,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
-    : Self(self)
-    , Input(input)
-    , Policy(policy)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    this->Result = this->Self->DoExecute(this->Input, this->Policy, Device());
-    // `DoExecute` is expected to throw an exception on any failure. If it
-    // returned anything, it's taken as a success and we won't try executing on
-    // other available devices.
-    return true;
-  }
-
-private:
-  void operator=(FilterDataSetPrepareForExecutionFunctor<Derived, DerivedPolicy>&) = delete;
-};
-} // namespace detail
-
 template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet FilterDataSet<Derived>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  // When we move to C++11, this could probably be an anonymous class
-  detail::FilterDataSetPrepareForExecutionFunctor<Derived, DerivedPolicy> functor(
-    static_cast<Derived*>(this), input, policy);
-
-  vtkm::cont::TryExecute(
-    functor, this->GetRuntimeDeviceTracker(), typename DerivedPolicy::DeviceAdapterList());
-
-  return functor.Result;
+  return (static_cast<Derived*>(this))->DoExecute(input, policy);
 }
 
 //-----------------------------------------------------------------------------
@@ -114,8 +72,7 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
   using Traits = vtkm::filter::FilterTraits<Derived>;
-  vtkm::cont::CastAndCall(
-    vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->GetRuntimeDeviceTracker());
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy, Traits()), functor);
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been

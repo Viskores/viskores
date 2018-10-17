@@ -27,7 +27,6 @@
 namespace
 {
 
-template <typename DeviceAdapter>
 void TestPointGradientUniform2D()
 {
   std::cout << "Testing PointGradient Worklet on 2D structured data" << std::endl;
@@ -39,8 +38,7 @@ void TestPointGradientUniform2D()
   dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
 
   vtkm::worklet::PointGradient gradient;
-  auto result =
-    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray, DeviceAdapter());
+  auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
 
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10, 30, 0 }, { 10, 30, 0 } };
   for (int i = 0; i < 2; ++i)
@@ -50,7 +48,6 @@ void TestPointGradientUniform2D()
   }
 }
 
-template <typename DeviceAdapter>
 void TestPointGradientUniform3D()
 {
   std::cout << "Testing PointGradient Worklet on 3D structured data" << std::endl;
@@ -62,8 +59,7 @@ void TestPointGradientUniform3D()
   dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
 
   vtkm::worklet::PointGradient gradient;
-  auto result =
-    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray, DeviceAdapter());
+  auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
 
   vtkm::Vec<vtkm::Float32, 3> expected[4] = {
     { 10.0f, 30.f, 60.1f },
@@ -78,7 +74,6 @@ void TestPointGradientUniform3D()
   }
 }
 
-template <typename DeviceAdapter>
 void TestPointGradientUniform3DWithVectorField()
 {
   std::cout << "Testing PointGradient Worklet with a vector field on 3D structured data"
@@ -98,8 +93,7 @@ void TestPointGradientUniform3DWithVectorField()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> input = vtkm::cont::make_ArrayHandle(vec);
 
   vtkm::worklet::PointGradient gradient;
-  auto result =
-    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, DeviceAdapter());
+  auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);
 
 
   vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> expected[4] = {
@@ -122,7 +116,6 @@ void TestPointGradientUniform3DWithVectorField()
   }
 }
 
-template <typename DeviceAdapter>
 void TestPointGradientUniform3DWithVectorField2()
 {
   std::cout << "Testing PointGradient Worklet with a vector field on 3D structured data"
@@ -150,8 +143,8 @@ void TestPointGradientUniform3DWithVectorField2()
   extraOutput.SetComputeQCriterion(true);
 
   vtkm::worklet::PointGradient gradient;
-  auto result = gradient.Run(
-    dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, extraOutput, DeviceAdapter());
+  auto result =
+    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, extraOutput);
 
   //Verify that the result is 0 size
   VTKM_TEST_ASSERT((result.GetNumberOfValues() == 0), "Gradient field shouldn't be generated");
@@ -200,7 +193,6 @@ void TestPointGradientUniform3DWithVectorField2()
   }
 }
 
-template <typename DeviceAdapter>
 void TestPointGradientExplicit()
 {
   std::cout << "Testing PointGradient Worklet on Explicit data" << std::endl;
@@ -212,8 +204,7 @@ void TestPointGradientExplicit()
   dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
 
   vtkm::worklet::PointGradient gradient;
-  auto result =
-    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray, DeviceAdapter());
+  auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
 
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
   for (int i = 0; i < 2; ++i)
@@ -225,16 +216,16 @@ void TestPointGradientExplicit()
 
 void TestPointGradient()
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  TestPointGradientUniform2D<DeviceAdapter>();
-  TestPointGradientUniform3D<DeviceAdapter>();
-  TestPointGradientUniform3DWithVectorField<DeviceAdapter>();
-  TestPointGradientUniform3DWithVectorField2<DeviceAdapter>();
-  TestPointGradientExplicit<DeviceAdapter>();
+  TestPointGradientUniform2D();
+  TestPointGradientUniform3D();
+  TestPointGradientUniform3DWithVectorField();
+  TestPointGradientUniform3DWithVectorField2();
+  TestPointGradientExplicit();
 }
 }
 
 int UnitTestPointGradient(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(TestPointGradient);
 }

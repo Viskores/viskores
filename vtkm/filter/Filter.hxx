@@ -247,8 +247,7 @@ void CallPostExecute(Derived* self,
 //----------------------------------------------------------------------------
 template <typename Derived>
 inline VTKM_CONT Filter<Derived>::Filter()
-  : Tracker(vtkm::cont::GetGlobalRuntimeDeviceTracker())
-  , FieldsToPass(vtkm::filter::FieldSelection::MODE_ALL)
+  : FieldsToPass(vtkm::filter::FieldSelection::MODE_ALL)
 {
 }
 

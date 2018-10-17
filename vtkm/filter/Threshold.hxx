@@ -65,23 +65,19 @@ inline VTKM_CONT Threshold::Threshold()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Threshold::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  DeviceAdapter)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //get the cells and coordinates of the dataset
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
   ThresholdRange predicate(this->GetLowerThreshold(), this->GetUpperThreshold());
-  vtkm::cont::DynamicCellSet cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                                                         field,
-                                                         fieldMeta.GetAssociation(),
-                                                         predicate,
-                                                         DeviceAdapter());
+  vtkm::cont::DynamicCellSet cellOut = this->Worklet.Run(
+    vtkm::filter::ApplyPolicy(cells, policy), field, fieldMeta.GetAssociation(), predicate);
 
   vtkm::cont::DataSet output;
   output.AddCellSet(cellOut);
@@ -90,12 +86,11 @@ inline VTKM_CONT vtkm::cont::DataSet Threshold::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool Threshold::DoMapField(vtkm::cont::DataSet& result,
                                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                             const vtkm::filter::FieldMetadata& fieldMeta,
-                                            const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                            DeviceAdapter device)
+                                            vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   if (fieldMeta.IsPointField())
   {
@@ -105,7 +100,7 @@ inline VTKM_CONT bool Threshold::DoMapField(vtkm::cont::DataSet& result,
   }
   else if (fieldMeta.IsCellField())
   {
-    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input, device);
+    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input);
     result.AddField(fieldMeta.AsField(out));
     return true;
   }

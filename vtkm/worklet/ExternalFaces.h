@@ -26,6 +26,8 @@
 
 #include <vtkm/exec/CellFace.h>
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -36,7 +38,6 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Timer.h>
 
@@ -141,11 +142,11 @@ struct ExternalFaces
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    template <typename CountArrayType, typename Device>
-    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray, Device)
+    template <typename CountArrayType>
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
     {
       VTKM_IS_ARRAY_HANDLE(CountArrayType);
-      return ScatterType(countArray, Device());
+      return ScatterType(countArray);
     }
 
     VTKM_CONT
@@ -495,11 +496,11 @@ public:
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    template <typename CountArrayType, typename Device>
-    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray, Device)
+    template <typename CountArrayType>
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
     {
       VTKM_IS_ARRAY_HANDLE(CountArrayType);
-      return ScatterType(countArray, Device());
+      return ScatterType(countArray);
     }
 
     template <typename CellSetType, typename OriginCellsType, typename OriginFacesType>
@@ -654,19 +655,17 @@ public:
   bool GetPassPolyData() const { return this->PassPolyData; }
 
   //----------------------------------------------------------------------------
-  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  template <typename ValueType, typename StorageType>
   vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& in,
-    const DeviceAdapter&) const
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& in) const
   {
-    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     // Use a temporary permutation array to simplify the mapping:
     auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->CellIdMap, in);
 
     // Copy into an array with default storage:
     vtkm::cont::ArrayHandle<ValueType> result;
-    Algo::Copy(tmp, result);
+    vtkm::cont::ArrayCopy(tmp, result);
 
     return result;
   }
@@ -682,15 +681,13 @@ public:
   template <typename ShapeStorage,
             typename NumIndicesStorage,
             typename ConnectivityStorage,
-            typename OffsetsStorage,
-            typename DeviceAdapter>
+            typename OffsetsStorage>
   VTKM_CONT void Run(const vtkm::cont::CellSetStructured<3>& inCellSet,
                      const vtkm::cont::CoordinateSystem& coord,
                      vtkm::cont::CellSetExplicit<ShapeStorage,
                                                  NumIndicesStorage,
                                                  ConnectivityStorage,
-                                                 OffsetsStorage>& outCellSet,
-                     DeviceAdapter)
+                                                 OffsetsStorage>& outCellSet)
   {
     vtkm::Vec<vtkm::Float64, 3> MinPoint;
     vtkm::Vec<vtkm::Float64, 3> MaxPoint;
@@ -739,15 +736,13 @@ public:
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numExternalFaces;
     vtkm::worklet::DispatcherMapTopology<NumExternalFacesPerStructuredCell>
       numExternalFacesDispatcher((NumExternalFacesPerStructuredCell(MinPoint, MaxPoint)));
-    numExternalFacesDispatcher.SetDevice(DeviceAdapter());
 
     numExternalFacesDispatcher.Invoke(inCellSet, numExternalFaces, coordData);
 
-    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-    vtkm::Id numberOfExternalFaces = DeviceAlgorithms::Reduce(numExternalFaces, 0, vtkm::Sum());
+    vtkm::Id numberOfExternalFaces =
+      vtkm::cont::Algorithm::Reduce(numExternalFaces, 0, vtkm::Sum());
 
-    auto scatterCellToExternalFace =
-      BuildConnectivityStructured::MakeScatter(numExternalFaces, DeviceAdapter());
+    auto scatterCellToExternalFace = BuildConnectivityStructured::MakeScatter(numExternalFaces);
 
     // Maps output cells to input cells. Store this for cell field mapping.
     this->CellIdMap = scatterCellToExternalFace.GetOutputToInputMap();
@@ -765,7 +760,6 @@ public:
     vtkm::worklet::DispatcherMapTopology<BuildConnectivityStructured>
       buildConnectivityStructuredDispatcher(BuildConnectivityStructured(MinPoint, MaxPoint),
                                             scatterCellToExternalFace);
-    buildConnectivityStructuredDispatcher.SetDevice(DeviceAdapter());
 
     buildConnectivityStructuredDispatcher.Invoke(
       inCellSet,
@@ -783,14 +777,12 @@ public:
             typename ShapeStorage,
             typename NumIndicesStorage,
             typename ConnectivityStorage,
-            typename OffsetsStorage,
-            typename DeviceAdapter>
+            typename OffsetsStorage>
   VTKM_CONT void Run(const InCellSetType& inCellSet,
                      vtkm::cont::CellSetExplicit<ShapeStorage,
                                                  NumIndicesStorage,
                                                  ConnectivityStorage,
-                                                 OffsetsStorage>& outCellSet,
-                     DeviceAdapter)
+                                                 OffsetsStorage>& outCellSet)
   {
     using PointCountArrayType = vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage>;
     using ShapeArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage>;
@@ -800,11 +792,10 @@ public:
     //Create a worklet to map the number of faces to each cell
     vtkm::cont::ArrayHandle<vtkm::IdComponent> facesPerCell;
     vtkm::worklet::DispatcherMapTopology<NumFacesPerCell> numFacesDispatcher;
-    numFacesDispatcher.SetDevice(DeviceAdapter());
 
     numFacesDispatcher.Invoke(inCellSet, facesPerCell);
 
-    vtkm::worklet::ScatterCounting scatterCellToFace(facesPerCell, DeviceAdapter());
+    vtkm::worklet::ScatterCounting scatterCellToFace(facesPerCell);
     facesPerCell.ReleaseResources();
 
     PointCountArrayType polyDataPointCount;
@@ -817,11 +808,10 @@ public:
     {
       vtkm::cont::ArrayHandle<vtkm::IdComponent> isPolyDataCell;
       vtkm::worklet::DispatcherMapTopology<IsPolyDataCell> isPolyDataCellDispatcher;
-      isPolyDataCellDispatcher.SetDevice(DeviceAdapter());
 
       isPolyDataCellDispatcher.Invoke(inCellSet, isPolyDataCell);
 
-      vtkm::worklet::ScatterCounting scatterPolyDataCells(isPolyDataCell, DeviceAdapter());
+      vtkm::worklet::ScatterCounting scatterPolyDataCells(isPolyDataCell);
 
       isPolyDataCell.ReleaseResources();
 
@@ -829,7 +819,6 @@ public:
       {
         vtkm::worklet::DispatcherMapTopology<CountPolyDataCellPoints>
           countPolyDataCellPointsDispatcher(scatterPolyDataCells);
-        countPolyDataCellPointsDispatcher.SetDevice(DeviceAdapter());
 
         countPolyDataCellPointsDispatcher.Invoke(inCellSet, polyDataPointCount);
 
@@ -838,7 +827,6 @@ public:
 
         vtkm::worklet::DispatcherMapTopology<PassPolyDataCells> passPolyDataCellsDispatcher(
           scatterPolyDataCells);
-        passPolyDataCellsDispatcher.SetDevice(DeviceAdapter());
 
         polyDataConnectivity.Allocate(polyDataConnectivitySize);
 
@@ -876,24 +864,21 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> originCells;
     vtkm::cont::ArrayHandle<vtkm::IdComponent> originFaces;
     vtkm::worklet::DispatcherMapTopology<FaceHash> faceHashDispatcher(scatterCellToFace);
-    faceHashDispatcher.SetDevice(DeviceAdapter());
 
     faceHashDispatcher.Invoke(inCellSet, faceHashes, originCells, originFaces);
 
-    vtkm::worklet::Keys<vtkm::HashType> faceKeys(faceHashes, DeviceAdapter());
+    vtkm::worklet::Keys<vtkm::HashType> faceKeys(faceHashes);
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> faceOutputCount;
     vtkm::worklet::DispatcherReduceByKey<FaceCounts> faceCountDispatcher;
-    faceCountDispatcher.SetDevice(DeviceAdapter());
 
     faceCountDispatcher.Invoke(faceKeys, inCellSet, originCells, originFaces, faceOutputCount);
 
-    auto scatterCullInternalFaces = NumPointsPerFace::MakeScatter(faceOutputCount, DeviceAdapter());
+    auto scatterCullInternalFaces = NumPointsPerFace::MakeScatter(faceOutputCount);
 
     PointCountArrayType facePointCount;
     vtkm::worklet::DispatcherReduceByKey<NumPointsPerFace> pointsPerFaceDispatcher(
       scatterCullInternalFaces);
-    pointsPerFaceDispatcher.SetDevice(DeviceAdapter());
 
     pointsPerFaceDispatcher.Invoke(faceKeys, inCellSet, originCells, originFaces, facePointCount);
 
@@ -910,7 +895,6 @@ public:
 
     vtkm::worklet::DispatcherReduceByKey<BuildConnectivity> buildConnectivityDispatcher(
       scatterCullInternalFaces);
-    buildConnectivityDispatcher.SetDevice(DeviceAdapter());
 
     vtkm::cont::ArrayHandle<vtkm::Id> faceToCellIdMap;
 
@@ -932,22 +916,20 @@ public:
     else
     {
       // Join poly data to face data output
-      using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
       vtkm::cont::ArrayHandleConcatenate<ShapeArrayType, ShapeArrayType> faceShapesArray(
         faceShapes, polyDataShapes);
       ShapeArrayType joinedShapesArray;
-      DeviceAlgorithm::Copy(faceShapesArray, joinedShapesArray);
+      vtkm::cont::ArrayCopy(faceShapesArray, joinedShapesArray);
 
       vtkm::cont::ArrayHandleConcatenate<PointCountArrayType, PointCountArrayType> pointCountArray(
         facePointCount, polyDataPointCount);
       PointCountArrayType joinedPointCountArray;
-      DeviceAlgorithm::Copy(pointCountArray, joinedPointCountArray);
+      vtkm::cont::ArrayCopy(pointCountArray, joinedPointCountArray);
 
       vtkm::cont::ArrayHandleConcatenate<ConnectivityArrayType, ConnectivityArrayType>
         connectivityArray(faceConnectivity, polyDataConnectivity);
       ConnectivityArrayType joinedConnectivity;
-      DeviceAlgorithm::Copy(connectivityArray, joinedConnectivity);
+      vtkm::cont::ArrayCopy(connectivityArray, joinedConnectivity);
 
       // Adjust poly data offsets array with face connectivity size before join
       using TransformBiasArrayType =
@@ -958,13 +940,13 @@ public:
       vtkm::cont::ArrayHandleConcatenate<OffsetsArrayType, TransformBiasArrayType> offsetsArray(
         faceOffsets, adjustedPolyDataOffsets);
       OffsetsArrayType joinedOffsets;
-      DeviceAlgorithm::Copy(offsetsArray, joinedOffsets);
+      vtkm::cont::ArrayCopy(offsetsArray, joinedOffsets);
 
       vtkm::cont::ArrayHandleConcatenate<vtkm::cont::ArrayHandle<vtkm::Id>,
                                          vtkm::cont::ArrayHandle<vtkm::Id>>
         cellIdMapArray(faceToCellIdMap, polyDataCellIdMap);
       vtkm::cont::ArrayHandle<vtkm::Id> joinedCellIdMap;
-      DeviceAlgorithm::Copy(cellIdMapArray, joinedCellIdMap);
+      vtkm::cont::ArrayCopy(cellIdMapArray, joinedCellIdMap);
 
       outCellSet.Fill(inCellSet.GetNumberOfPoints(),
                       joinedShapesArray,

@@ -72,7 +72,6 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -101,13 +100,12 @@ public:
    * of whether the data is 2D, 3D, or 3D_MC. This function just calls
    * Run2D, Run3D, or Run3D_MC depending on the type
    */
-  template <typename FieldType, typename StorageType, typename DeviceAdapter>
+  template <typename FieldType, typename StorageType>
   void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
            std::vector<std::pair<std::string, vtkm::Float64>>& timings,
            contourtree_augmented::ContourTree& contourTree,
            contourtree_augmented::IdArrayType& sortOrder,
            vtkm::Id& nIterations,
-           const DeviceAdapter& device,
            const vtkm::Id nRows,
            const vtkm::Id nCols,
            const vtkm::Id nSlices = 1,
@@ -126,7 +124,6 @@ public:
                             contourTree,
                             sortOrder,
                             nIterations,
-                            device,
                             nRows,
                             nCols,
                             1,
@@ -144,7 +141,6 @@ public:
                             contourTree,
                             sortOrder,
                             nIterations,
-                            device,
                             nRows,
                             nCols,
                             nSlices,
@@ -162,7 +158,6 @@ public:
                             contourTree,
                             sortOrder,
                             nIterations,
-                            device,
                             nRows,
                             nCols,
                             nSlices,
@@ -178,13 +173,12 @@ private:
   *  computing the contour tree after the mesh has been constructed using the approbrite
   *  contour tree mesh class
   */
-  template <typename FieldType, typename StorageType, typename DeviceAdapter, typename MeshClass>
+  template <typename FieldType, typename StorageType, typename MeshClass>
   void RunContourTree(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
                       std::vector<std::pair<std::string, vtkm::Float64>>& timings,
                       contourtree_augmented::ContourTree& contourTree,
                       contourtree_augmented::IdArrayType& sortOrder,
                       vtkm::Id& nIterations,
-                      const DeviceAdapter& device,
                       const vtkm::Id /*nRows*/,   // FIXME: Remove unused parameter?
                       const vtkm::Id /*nCols*/,   // FIXME: Remove unused parameter?
                       const vtkm::Id /*nSlices*/, // FIXME: Remove unused parameter?
@@ -192,8 +186,9 @@ private:
                       bool computeRegularStructure)
   {
     using namespace vtkm::worklet::contourtree_augmented;
+    // TODO: This should be switched to use the logging macros defined in vtkm/cont/logging.h
     // Start the timer
-    vtkm::cont::Timer<DeviceAdapter> totalTime;
+    vtkm::cont::Timer<> totalTime;
 
     // Stage 1: Load the data into the mesh. This is done in the Run() method above and accessible
     //          here via the mesh parameter. The actual data load is performed outside of the
@@ -201,13 +196,13 @@ private:
 
     // Stage 2 : Sort the data on the mesh to initialize sortIndex & indexReverse on the mesh
     // Start the timer for the mesh sort
-    vtkm::cont::Timer<DeviceAdapter> timer;
-    mesh.SortData(device, fieldArray);
+    vtkm::cont::Timer<> timer;
+    mesh.SortData(fieldArray);
     timings.push_back(std::pair<std::string, vtkm::Float64>("Sort Data", timer.GetElapsedTime()));
     timer.Reset();
 
     // Stage 3: Assign every mesh vertex to a peak
-    MeshExtrema extrema(device, mesh.nVertices);
+    MeshExtrema extrema(mesh.nVertices);
     extrema.SetStarts(mesh, true);
     extrema.BuildRegularChains(true);
     timings.push_back(
@@ -215,8 +210,8 @@ private:
     timer.Reset();
 
     // Stage 4: Identify join saddles & construct Active Join Graph
-    MergeTree joinTree(device, mesh.nVertices, true);
-    ActiveGraph joinGraph(device, true);
+    MergeTree joinTree(mesh.nVertices, true);
+    ActiveGraph joinGraph(true);
     joinGraph.Initialise(mesh, extrema);
     timings.push_back(std::pair<std::string, vtkm::Float64>("Join Tree Initialize Active Graph",
                                                             timer.GetElapsedTime()));
@@ -245,8 +240,8 @@ private:
     timer.Reset();
 
     // Stage 7:     Identify split saddles & construct Active Split Graph
-    MergeTree splitTree(device, mesh.nVertices, false);
-    ActiveGraph splitGraph(device, false);
+    MergeTree splitTree(mesh.nVertices, false);
+    ActiveGraph splitGraph(false);
     splitGraph.Initialise(mesh, extrema);
     timings.push_back(std::pair<std::string, vtkm::Float64>("Split Tree Initialize Active Graph",
                                                             timer.GetElapsedTime()));
@@ -268,8 +263,8 @@ private:
     timer.Reset();
 
     // Stage 9: Join & Split Tree are Augmented, then combined to construct Contour Tree
-    contourTree.Init(device, mesh.nVertices);
-    ContourTreeMaker treeMaker(device, contourTree, joinTree, splitTree);
+    contourTree.Init(mesh.nVertices);
+    ContourTreeMaker treeMaker(contourTree, joinTree, splitTree);
     // 9.1 First we compute the hyper- and super- structure
     treeMaker.ComputeHyperAndSuperStructure();
     timings.push_back(std::pair<std::string, vtkm::Float64>(

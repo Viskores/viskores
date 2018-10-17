@@ -118,17 +118,15 @@ inline VTKM_CONT void PointTransform<S>::SetTransform(const vtkm::Matrix<S, 4, 4
 
 //-----------------------------------------------------------------------------
 template <typename S>
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet PointTransform<S>::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter&)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   vtkm::cont::ArrayHandle<T> outArray;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::PointTransform<S>> dispatcher(this->Worklet);
-  dispatcher.SetDevice(DeviceAdapter());
 
   dispatcher.Invoke(field, outArray);
 

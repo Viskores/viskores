@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -202,20 +203,19 @@ inline void Lagrangian::InitializeUniformSeeds(const vtkm::cont::DataSet& input)
 
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
 
   if (cycle == 0)
   {
     InitializeUniformSeeds(input);
     BasisParticlesOriginal.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(BasisParticles, BasisParticlesOriginal);
+    vtkm::cont::ArrayCopy(BasisParticles, BasisParticlesOriginal);
   }
 
   if (!fieldMeta.IsPointField())
@@ -229,7 +229,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
       "Write frequency can not be 0. Use SetWriteFrequency().");
   }
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> basisParticleArray;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(BasisParticles, basisParticleArray);
+  vtkm::cont::ArrayCopy(BasisParticles, basisParticleArray);
 
   cycle += 1;
   std::cout << "Cycle : " << cycle << std::endl;
@@ -262,7 +262,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   * If Euler step is preferred.
   EulerIntegratorType euler(eval, static_cast<vtkm::FloatDefault>(this->stepSize));
   */
-    res = particleadvection.Run(rk4, basisParticleArray, 1, device); // Taking a single step
+    res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
   }
   else if (coords.GetData().IsType<UniformType>())
   {
@@ -278,7 +278,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   * If Euler step is preferred.
   EulerIntegratorType euler(eval, static_cast<vtkm::FloatDefault>(this->stepSize));
   */
-    res = particleadvection.Run(rk4, basisParticleArray, 1, device); // Taking a single step
+    res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
   }
   else
   {
@@ -347,12 +347,11 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     {
       InitializeUniformSeeds(input);
       BasisParticlesOriginal.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(BasisParticles,
-                                                              BasisParticlesOriginal);
+      vtkm::cont::ArrayCopy(BasisParticles, BasisParticlesOriginal);
     }
     else
     {
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(particle_positions, BasisParticles);
+      vtkm::cont::ArrayCopy(particle_positions, BasisParticles);
     }
   }
   else
@@ -360,21 +359,19 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     ValidityCheck check;
     check.SetBounds(bounds);
     vtkm::worklet::DispatcherMapField<ValidityCheck> dispatcher(check);
-    dispatcher.SetDevice(device);
     dispatcher.Invoke(particle_positions, particle_stepstaken, BasisParticlesValidity);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(particle_positions, BasisParticles);
+    vtkm::cont::ArrayCopy(particle_positions, BasisParticles);
   }
 
   return outputData;
 }
 
 //---------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool Lagrangian::DoMapField(vtkm::cont::DataSet&,
                                              const vtkm::cont::ArrayHandle<T, StorageType>&,
                                              const vtkm::filter::FieldMetadata&,
-                                             const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                             const DeviceAdapter&)
+                                             const vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

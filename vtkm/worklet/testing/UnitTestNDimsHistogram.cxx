@@ -74,33 +74,20 @@ void TestNDimsHistogram()
   vtkm::worklet::NDimsHistogram ndHistogram;
 
   // Set the number of data points
-  ndHistogram.SetNumOfDataPoints(ds.GetField(0).GetData().GetNumberOfValues(),
-                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.SetNumOfDataPoints(ds.GetField(0).GetData().GetNumberOfValues());
 
   // Add field one by one
   vtkm::Range rangeFieldA;
   vtkm::Float64 deltaFieldA;
-  ndHistogram.AddField(ds.GetField("fieldA").GetData(),
-                       4,
-                       rangeFieldA,
-                       deltaFieldA,
-                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.AddField(ds.GetField("fieldA").GetData(), 4, rangeFieldA, deltaFieldA);
 
   vtkm::Range rangeFieldB;
   vtkm::Float64 deltaFieldB;
-  ndHistogram.AddField(ds.GetField("fieldB").GetData(),
-                       4,
-                       rangeFieldB,
-                       deltaFieldB,
-                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.AddField(ds.GetField("fieldB").GetData(), 4, rangeFieldB, deltaFieldB);
 
   vtkm::Range rangeFieldC;
   vtkm::Float64 deltaFieldC;
-  ndHistogram.AddField(ds.GetField("fieldC").GetData(),
-                       4,
-                       rangeFieldC,
-                       deltaFieldC,
-                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.AddField(ds.GetField("fieldC").GetData(), 4, rangeFieldC, deltaFieldC);
 
   // the return binIds and freqs is sparse distribution representation
   // (we do not keep the 0 frequency entities)
@@ -109,7 +96,7 @@ void TestNDimsHistogram()
   // freqs[j] is the frequency of this bin IDs combination
   std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> binIds;
   vtkm::cont::ArrayHandle<vtkm::Id> freqs;
-  ndHistogram.Run(binIds, freqs, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.Run(binIds, freqs);
 
   // Ground truth ND histogram
   vtkm::Id gtNonSparseBins = 33;
@@ -140,5 +127,6 @@ void TestNDimsHistogram()
 
 int UnitTestNDimsHistogram(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(TestNDimsHistogram);
 }

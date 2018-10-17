@@ -38,13 +38,12 @@ inline VTKM_CONT SplitSharpEdges::SplitSharpEdges()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& vtkmNotUsed(fieldMeta),
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  DeviceAdapter)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // Get the cells and coordinates of the dataset
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -56,8 +55,7 @@ inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
                     field,
                     input.GetCoordinateSystem().GetData(),
                     newCoords,
-                    newCellset,
-                    DeviceAdapter());
+                    newCellset);
 
   vtkm::cont::DataSet output;
   output.AddCellSet(newCellset);
@@ -67,18 +65,17 @@ inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool SplitSharpEdges::DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  DeviceAdapter device)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   if (fieldMeta.IsPointField())
   {
     // We copy the input handle to the result dataset, reusing the metadata
-    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessPointField(input, device);
+    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessPointField(input);
     result.AddField(fieldMeta.AsField(out));
     return true;
   }

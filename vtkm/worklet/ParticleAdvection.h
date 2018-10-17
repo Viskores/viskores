@@ -76,14 +76,10 @@ public:
 
   ParticleAdvection() {}
 
-  template <typename IntegratorType,
-            typename FieldType,
-            typename PointStorage,
-            typename DeviceAdapter>
+  template <typename IntegratorType, typename FieldType, typename PointStorage>
   ParticleAdvectionResult Run(const IntegratorType& it,
                               vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-                              const vtkm::Id& nSteps,
-                              DeviceAdapter tag)
+                              const vtkm::Id& nSteps)
   {
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
 
@@ -92,24 +88,20 @@ public:
 
     //Allocate status and steps arrays.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> init(0, numSeeds);
-    vtkm::cont::ArrayCopy(init, stepsTaken, tag);
+    vtkm::cont::ArrayCopy(init, stepsTaken);
 
     //Allocate memory to store the time for temporal integration.
     vtkm::cont::ArrayHandleConstant<ScalarType> time(0, numSeeds);
-    vtkm::cont::ArrayCopy(time, timeArray, tag);
+    vtkm::cont::ArrayCopy(time, timeArray);
 
-    return Run(it, pts, stepsTaken, timeArray, nSteps, tag);
+    return Run(it, pts, stepsTaken, timeArray, nSteps);
   }
 
-  template <typename IntegratorType,
-            typename FieldType,
-            typename PointStorage,
-            typename DeviceAdapter>
+  template <typename IntegratorType, typename FieldType, typename PointStorage>
   ParticleAdvectionResult Run(const IntegratorType& it,
                               vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
                               vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
-                              const vtkm::Id& nSteps,
-                              DeviceAdapter tag)
+                              const vtkm::Id& nSteps)
   {
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
 
@@ -117,18 +109,17 @@ public:
     //Allocate memory to store the time for temporal integration.
     vtkm::cont::ArrayHandleConstant<ScalarType> time(0, numSeeds);
     timeArray.Allocate(numSeeds);
-    vtkm::cont::ArrayCopy(time, timeArray, tag);
+    vtkm::cont::ArrayCopy(time, timeArray);
 
-    return Run(it, pts, inputSteps, timeArray, nSteps, tag);
+    return Run(it, pts, inputSteps, timeArray, nSteps);
   }
 
-  template <typename IntegratorType, typename DeviceAdapter>
+  template <typename IntegratorType>
   ParticleAdvectionResult Run(const IntegratorType& it,
                               vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& pts,
                               vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
                               vtkm::cont::ArrayHandle<ScalarType>& inputTime,
-                              const vtkm::Id& nSteps,
-                              DeviceAdapter tag)
+                              const vtkm::Id& nSteps)
   {
     vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType> worklet;
 
@@ -138,27 +129,23 @@ public:
     //Allocate status arrays.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
     status.Allocate(numSeeds);
-    vtkm::cont::ArrayCopy(statusOK, status, tag);
+    vtkm::cont::ArrayCopy(statusOK, status);
 
-    worklet.Run(it, pts, nSteps, status, inputSteps, inputTime, tag);
+    worklet.Run(it, pts, nSteps, status, inputSteps, inputTime);
     //Create output.
     return ParticleAdvectionResult(pts, status, inputSteps, inputTime);
   }
 
-  template <typename IntegratorType,
-            typename FieldType,
-            typename PointStorage,
-            typename DeviceAdapter>
+  template <typename IntegratorType, typename FieldType, typename PointStorage>
   ParticleAdvectionResult Run(const IntegratorType& it,
                               vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
                               vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
                               vtkm::cont::ArrayHandle<ScalarType>& inputTime,
-                              const vtkm::Id& nSteps,
-                              DeviceAdapter tag)
+                              const vtkm::Id& nSteps)
   {
     vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> ptsCopy;
-    vtkm::cont::ArrayCopy(pts, ptsCopy, tag);
-    return Run(it, ptsCopy, inputSteps, inputTime, nSteps, tag);
+    vtkm::cont::ArrayCopy(pts, ptsCopy);
+    return Run(it, ptsCopy, inputSteps, inputTime, nSteps);
   }
 };
 
@@ -215,77 +202,58 @@ public:
 
   Streamline() {}
 
-  template <typename IntegratorType,
-            typename FieldType,
-            typename PointStorage,
-            typename DeviceAdapter>
+  template <typename IntegratorType, typename FieldType, typename PointStorage>
   StreamlineResult Run(const IntegratorType& it,
                        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& seedArray,
-                       const vtkm::Id& nSteps,
-                       DeviceAdapter tag)
+                       const vtkm::Id& nSteps)
   {
-    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
     //Allocate status and steps arrays.
     vtkm::cont::ArrayHandle<vtkm::Id> status, steps;
 
     vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
-    status.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(statusOK, status);
+    vtkm::cont::ArrayCopy(statusOK, status);
 
     vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds);
-    steps.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(zero, steps);
+    vtkm::cont::ArrayCopy(zero, steps);
 
     //Allocate memory to store the time for temporal integration.
     vtkm::cont::ArrayHandle<ScalarType> timeArray;
     vtkm::cont::ArrayHandleConstant<ScalarType> time(0, numSeeds);
-    timeArray.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(time, timeArray);
+    vtkm::cont::ArrayCopy(time, timeArray);
 
-    return Run(it, seedArray, steps, timeArray, nSteps, tag);
+    return Run(it, seedArray, steps, timeArray, nSteps);
   }
 
-  template <typename IntegratorType,
-            typename FieldType,
-            typename PointStorage,
-            typename DeviceAdapter>
+  template <typename IntegratorType, typename FieldType, typename PointStorage>
   StreamlineResult Run(const IntegratorType& it,
                        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& seedArray,
                        vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
-                       const vtkm::Id& nSteps,
-                       DeviceAdapter tag)
+                       const vtkm::Id& nSteps)
   {
-    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
     //Allocate and initializr status array.
     vtkm::cont::ArrayHandle<vtkm::Id> status;
     vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
-    status.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(statusOK, status);
+    vtkm::cont::ArrayCopy(statusOK, status);
 
     //Allocate memory to store the time for temporal integration.
     vtkm::cont::ArrayHandle<ScalarType> timeArray;
     vtkm::cont::ArrayHandleConstant<ScalarType> time(0, numSeeds);
-    timeArray.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(time, timeArray);
+    vtkm::cont::ArrayCopy(time, timeArray);
 
-    return Run(it, seedArray, inputSteps, timeArray, nSteps, tag);
+    return Run(it, seedArray, inputSteps, timeArray, nSteps);
   }
 
-  template <typename IntegratorType, typename DeviceAdapter>
+  template <typename IntegratorType>
   StreamlineResult Run(const IntegratorType& it,
                        vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& seedArray,
                        vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
                        vtkm::cont::ArrayHandle<ScalarType>& inputTime,
-                       const vtkm::Id& nSteps,
-                       DeviceAdapter tag)
+                       const vtkm::Id& nSteps)
   {
-    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType> worklet;
 
     vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> positions;
@@ -295,28 +263,23 @@ public:
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
     vtkm::cont::ArrayHandle<vtkm::Id> status;
     vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
-    status.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(statusOK, status);
+    vtkm::cont::ArrayCopy(statusOK, status);
 
-    worklet.Run(it, seedArray, nSteps, positions, polyLines, status, inputSteps, inputTime, tag);
+    worklet.Run(it, seedArray, nSteps, positions, polyLines, status, inputSteps, inputTime);
 
     return StreamlineResult(positions, polyLines, status, inputSteps, inputTime);
   }
 
-  template <typename IntegratorType,
-            typename FieldType,
-            typename PointStorage,
-            typename DeviceAdapter>
+  template <typename IntegratorType, typename FieldType, typename PointStorage>
   StreamlineResult Run(const IntegratorType& it,
                        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& seedArray,
                        vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
                        vtkm::cont::ArrayHandle<ScalarType>& inputTime,
-                       const vtkm::Id& nSteps,
-                       DeviceAdapter tag)
+                       const vtkm::Id& nSteps)
   {
     vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> seedCopy;
-    vtkm::cont::ArrayCopy(seedArray, seedCopy, tag);
-    return Run(it, seedCopy, inputSteps, inputTime, nSteps, tag);
+    vtkm::cont::ArrayCopy(seedArray, seedCopy);
+    return Run(it, seedCopy, inputSteps, inputTime, nSteps);
   }
 };
 }

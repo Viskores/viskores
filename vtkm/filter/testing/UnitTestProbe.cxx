@@ -19,6 +19,7 @@
 //============================================================================
 #include <vtkm/filter/Probe.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -54,36 +55,23 @@ vtkm::cont::DataSet MakeGeometryDataSet()
   return geometry;
 }
 
-struct ConvertImpl
-{
-  template <typename DeviceAdapter>
-  bool operator()(DeviceAdapter device,
-                  const vtkm::cont::DataSet& uds,
-                  vtkm::cont::DataSet& eds) const
-  {
-    vtkm::cont::CellSetExplicit<> cs(uds.GetCellSet().GetName());
-    vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs, device);
-    eds.AddCellSet(cs);
-
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> points;
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(uds.GetCoordinateSystem().GetData(),
-                                                            points);
-    eds.AddCoordinateSystem(
-      vtkm::cont::CoordinateSystem(uds.GetCoordinateSystem().GetName(), points));
-
-    for (vtkm::IdComponent i = 0; i < uds.GetNumberOfFields(); ++i)
-    {
-      eds.AddField(uds.GetField(i));
-    }
-
-    return true;
-  }
-};
-
 vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& uds)
 {
   vtkm::cont::DataSet eds;
-  vtkm::cont::TryExecute(ConvertImpl(), uds, eds);
+  vtkm::cont::CellSetExplicit<> cs(uds.GetCellSet().GetName());
+  vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs);
+  eds.AddCellSet(cs);
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> points;
+  vtkm::cont::ArrayCopy(uds.GetCoordinateSystem().GetData(), points);
+  eds.AddCoordinateSystem(
+    vtkm::cont::CoordinateSystem(uds.GetCoordinateSystem().GetName(), points));
+
+  for (vtkm::IdComponent i = 0; i < uds.GetNumberOfFields(); ++i)
+  {
+    eds.AddField(uds.GetField(i));
+  }
+
   return eds;
 }
 

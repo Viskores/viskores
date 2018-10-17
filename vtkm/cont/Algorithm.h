@@ -88,6 +88,11 @@ struct CopySubRangeFunctor
 {
   bool valid;
 
+  CopySubRangeFunctor()
+    : valid(false)
+  {
+  }
+
   template <typename Device, typename... Args>
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
@@ -202,8 +207,9 @@ template <typename T>
 struct ScanExclusiveFunctor
 {
   T result;
+
   ScanExclusiveFunctor()
-    : result(T(0))
+    : result(T())
   {
   }
 

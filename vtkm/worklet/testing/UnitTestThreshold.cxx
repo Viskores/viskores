@@ -53,7 +53,6 @@ private:
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingThreshold
 {
 public:
@@ -73,15 +72,14 @@ public:
     dataset.GetField("pointvar").GetData().CopyTo(pointvar);
 
     vtkm::worklet::Threshold threshold;
-    OutCellSetType outCellSet = threshold.Run(
-      cellset, pointvar, vtkm::cont::Field::Association::POINTS, HasValue(60.1f), DeviceAdapter());
+    OutCellSetType outCellSet =
+      threshold.Run(cellset, pointvar, vtkm::cont::Field::Association::POINTS, HasValue(60.1f));
 
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 1, "Wrong number of cells");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
-    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray =
-      threshold.ProcessCellField(cellvar, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = threshold.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
                        cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
@@ -104,15 +102,14 @@ public:
     dataset.GetField("pointvar").GetData().CopyTo(pointvar);
 
     vtkm::worklet::Threshold threshold;
-    OutCellSetType outCellSet = threshold.Run(
-      cellset, pointvar, vtkm::cont::Field::Association::POINTS, HasValue(20.1f), DeviceAdapter());
+    OutCellSetType outCellSet =
+      threshold.Run(cellset, pointvar, vtkm::cont::Field::Association::POINTS, HasValue(20.1f));
 
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 2, "Wrong number of cells");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
-    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray =
-      threshold.ProcessCellField(cellvar, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = threshold.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
                        cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
@@ -136,16 +133,12 @@ public:
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
 
     vtkm::worklet::Threshold threshold;
-    OutCellSetType outCellSet = threshold.Run(cellset,
-                                              cellvar,
-                                              vtkm::cont::Field::Association::CELL_SET,
-                                              HasValue(100.1f),
-                                              DeviceAdapter());
+    OutCellSetType outCellSet =
+      threshold.Run(cellset, cellvar, vtkm::cont::Field::Association::CELL_SET, HasValue(100.1f));
 
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 1, "Wrong number of cells");
 
-    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray =
-      threshold.ProcessCellField(cellvar, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = threshold.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
                        cellFieldArray.GetPortalConstControl().Get(0) == 100.1f,
@@ -163,5 +156,6 @@ public:
 
 int UnitTestThreshold(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestingThreshold<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  return vtkm::cont::testing::Testing::Run(TestingThreshold());
 }

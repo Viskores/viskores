@@ -64,6 +64,7 @@
 #define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_node_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
@@ -78,7 +79,7 @@ namespace contourtree_maker_inc
 
 // comparator used for initial sort of data values
 template <typename DeviceAdapter>
-class ContourTreeNodeComparator
+class ContourTreeNodeComparatorImpl
 {
 public:
   using IdPortalType =
@@ -89,7 +90,7 @@ public:
 
   // constructor
   VTKM_CONT
-  ContourTreeNodeComparator(const IdArrayType& superparents, const IdArrayType& superarcs)
+  ContourTreeNodeComparatorImpl(const IdArrayType& superparents, const IdArrayType& superarcs)
   {
     superparentsPortal = superparents.PrepareForInput(DeviceAdapter());
     superarcsPortal = superarcs.PrepareForInput(DeviceAdapter());
@@ -117,8 +118,29 @@ public:
     else
       return false;
   } // operator()
-};  // ContourTreeNodeComparator
+};  // ContourTreeNodeComparatorImpl
 
+class ContourTreeNodeComparator : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  // constructor
+  VTKM_CONT
+  ContourTreeNodeComparator(const IdArrayType& superparents, const IdArrayType& superarcs)
+    : Superparents(superparents)
+    , Superarcs(superarcs)
+  {
+  }
+
+  template <typename DeviceAdapter>
+  VTKM_CONT ContourTreeNodeComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  {
+    return ContourTreeNodeComparatorImpl<DeviceAdapter>(this->Superparents, this->Superarcs);
+  }
+
+private:
+  IdArrayType Superparents;
+  IdArrayType Superarcs;
+}; // ContourTreeNodeComparator
 
 } // namespace contourtree_maker_inc
 } // namespace contourtree_augmented

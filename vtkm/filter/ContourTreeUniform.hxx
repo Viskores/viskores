@@ -81,13 +81,12 @@ ContourTreeMesh2D::ContourTreeMesh2D()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -108,7 +107,7 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
 
   vtkm::worklet::ContourTreeMesh2D worklet;
-  worklet.Run(field, nRows, nCols, saddlePeak, device);
+  worklet.Run(field, nRows, nCols, saddlePeak);
 
   return internal::CreateResult(input,
                                 saddlePeak,
@@ -123,13 +122,12 @@ ContourTreeMesh3D::ContourTreeMesh3D()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -151,7 +149,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
 
   vtkm::worklet::ContourTreeMesh3D worklet;
-  worklet.Run(field, nRows, nCols, nSlices, saddlePeak, device);
+  worklet.Run(field, nRows, nCols, nSlices, saddlePeak);
 
   return internal::CreateResult(input,
                                 saddlePeak,

@@ -20,6 +20,7 @@
 #ifndef vtk_m_worklet_Probe_h
 #define vtk_m_worklet_Probe_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellLocatorHelper.h>
 
@@ -51,20 +52,18 @@ private:
     return {};
   }
 
-  template <typename CellSetType, typename PointsType, typename PointsStorage, typename Device>
+  template <typename CellSetType, typename PointsType, typename PointsStorage>
   void RunImpl(const CellSetType& cells,
                const vtkm::cont::CoordinateSystem& coords,
-               const vtkm::cont::ArrayHandle<PointsType, PointsStorage>& points,
-               Device device)
+               const vtkm::cont::ArrayHandle<PointsType, PointsStorage>& points)
   {
     this->InputCellSet = vtkm::cont::DynamicCellSet(cells);
 
     vtkm::cont::CellLocatorHelper locator;
     locator.SetCellSet(this->InputCellSet);
     locator.SetCoordinates(coords);
-    locator.Build(device);
-    locator.FindCells(
-      points, this->CellIds, this->ParametricCoordinates, device, GetCellSetListTag(cells));
+    locator.Build();
+    locator.FindCells(points, this->CellIds, this->ParametricCoordinates, GetCellSetListTag(cells));
   }
 
   //============================================================================
@@ -137,45 +136,41 @@ public:
   };
 
 private:
-  template <typename CellSetType, typename Device>
+  template <typename CellSetType>
   void RunImpl(const CellSetType& cells,
                const vtkm::cont::CoordinateSystem& coords,
-               const vtkm::cont::ArrayHandleUniformPointCoordinates::Superclass& points,
-               Device)
+               const vtkm::cont::ArrayHandleUniformPointCoordinates::Superclass& points)
   {
     this->InputCellSet = vtkm::cont::DynamicCellSet(cells);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(
+    vtkm::cont::ArrayCopy(
       vtkm::cont::make_ArrayHandleConstant(vtkm::Id(-1), points.GetNumberOfValues()),
       this->CellIds);
     this->ParametricCoordinates.Allocate(points.GetNumberOfValues());
 
     vtkm::worklet::DispatcherMapTopology<ProbeUniformPoints> dispatcher;
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(cells, coords, points, this->CellIds, this->ParametricCoordinates);
   }
 
   //============================================================================
   struct RunImplCaller
   {
-    template <typename PointsArrayType, typename CellSetType, typename Device>
+    template <typename PointsArrayType, typename CellSetType>
     void operator()(const PointsArrayType& points,
                     Probe& worklet,
                     const CellSetType& cells,
-                    const vtkm::cont::CoordinateSystem& coords,
-                    Device device) const
+                    const vtkm::cont::CoordinateSystem& coords) const
     {
-      worklet.RunImpl(cells, coords, points, device);
+      worklet.RunImpl(cells, coords, points);
     }
   };
 
 public:
-  template <typename CellSetType, typename PointsArrayType, typename Device>
+  template <typename CellSetType, typename PointsArrayType>
   void Run(const CellSetType& cells,
            const vtkm::cont::CoordinateSystem& coords,
-           const PointsArrayType& points,
-           Device device)
+           const PointsArrayType& points)
   {
-    vtkm::cont::CastAndCall(points, RunImplCaller(), *this, cells, coords, device);
+    vtkm::cont::CastAndCall(points, RunImplCaller(), *this, cells, coords);
   }
 
   //============================================================================
@@ -208,16 +203,13 @@ public:
   /// Intepolate the input point field data at the points of the geometry
   template <typename T,
             typename Storage,
-            typename Device,
             typename InputCellSetTypeList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
   vtkm::cont::ArrayHandle<T> ProcessPointField(
     const vtkm::cont::ArrayHandle<T, Storage>& field,
-    Device,
     InputCellSetTypeList icsTypes = InputCellSetTypeList()) const
   {
     vtkm::cont::ArrayHandle<T> result;
     vtkm::worklet::DispatcherMapField<InterpolatePointField> dispatcher;
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(this->CellIds,
                       this->ParametricCoordinates,
                       this->InputCellSet.ResetCellSetList(icsTypes),
@@ -252,13 +244,12 @@ public:
   /// associated with its containing cell. For points that fall on cell edges, the containing
   /// cell is chosen arbitrarily.
   ///
-  template <typename T, typename Storage, typename Device>
-  vtkm::cont::ArrayHandle<T> ProcessCellField(const vtkm::cont::ArrayHandle<T, Storage>& field,
-                                              Device) const
+  template <typename T, typename Storage>
+  vtkm::cont::ArrayHandle<T> ProcessCellField(
+    const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
     vtkm::cont::ArrayHandle<T> result;
     vtkm::worklet::DispatcherMapField<MapCellField> dispatcher;
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(this->CellIds, field, result);
 
     return result;
@@ -277,12 +268,10 @@ public:
   /// Get an array of flags marking the invalid points (points that do not fall inside any of
   /// the cells of the input). The flag value is the same as the HIDDEN flag in VTK and VISIT.
   ///
-  template <typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenPointsField(DeviceAdapter) const
+  vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenPointsField() const
   {
     vtkm::cont::ArrayHandle<vtkm::UInt8> field;
     vtkm::worklet::DispatcherMapField<HiddenPointsWorklet> dispatcher;
-    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(this->CellIds, field);
     return field;
   }
@@ -313,12 +302,11 @@ public:
   /// Get an array of flags marking the invalid cells. Invalid cells are the cells with at least
   /// one invalid point. The flag value is the same as the HIDDEN flag in VTK and VISIT.
   ///
-  template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenCellsField(CellSetType cellset, DeviceAdapter) const
+  template <typename CellSetType>
+  vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenCellsField(CellSetType cellset) const
   {
     vtkm::cont::ArrayHandle<vtkm::UInt8> field;
     vtkm::worklet::DispatcherMapTopology<HiddenCellsWorklet> dispatcher;
-    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(cellset, this->CellIds, field);
     return field;
   }

@@ -36,17 +36,16 @@ inline VTKM_CONT Entropy::Entropy()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Entropy::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::worklet::FieldEntropy worklet;
 
-  vtkm::Float64 e = worklet.Run(field, this->NumberOfBins, device);
+  vtkm::Float64 e = worklet.Run(field, this->NumberOfBins);
 
   //the entropy vector only contain one element, the entorpy of the input field
   vtkm::cont::ArrayHandle<vtkm::Float64> entropy;

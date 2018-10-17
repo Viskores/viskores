@@ -323,24 +323,25 @@ void TestFieldHistogram()
 
   vtkm::worklet::FieldHistogram histogram;
   // Run data
-  histogram.Run(p_poisson, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  histogram.Run(p_poisson, numberOfBins, range, delta, bins);
   std::cout << "Poisson distributed POINT data:" << std::endl;
   PrintHistogram(bins, numberOfBins, range, delta);
 
-  histogram.Run(p_normal, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  histogram.Run(p_normal, numberOfBins, range, delta, bins);
   std::cout << "Normal distributed POINT data:" << std::endl;
   PrintHistogram(bins, numberOfBins, range, delta);
 
-  histogram.Run(p_chiSquare, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  histogram.Run(p_chiSquare, numberOfBins, range, delta, bins);
   std::cout << "Chi Square distributed POINT data:" << std::endl;
   PrintHistogram(bins, numberOfBins, range, delta);
 
-  histogram.Run(p_uniform, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  histogram.Run(p_uniform, numberOfBins, range, delta, bins);
   std::cout << "Uniform distributed POINT data:" << std::endl;
   PrintHistogram(bins, numberOfBins, range, delta);
 } // TestFieldHistogram
 
 int UnitTestFieldHistogram(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(TestFieldHistogram);
 }

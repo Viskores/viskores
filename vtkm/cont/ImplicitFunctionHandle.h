@@ -72,6 +72,73 @@ VTKM_CONT ImplicitFunctionHandle make_ImplicitFunctionHandle(Args&&... args)
   return ImplicitFunctionHandle(
     new ImplicitFunctionType(std::forward<Args>(args)...), true, DeviceAdapterList());
 }
+
+//============================================================================
+/// A helpful wrapper that returns a functor that calls the (virtual) value method of a given
+/// ImplicitFunction. Can be passed to things that expect a functor instead of an ImplictFunction
+/// class (like an array transform).
+///
+class VTKM_ALWAYS_EXPORT ImplicitFunctionValueHandle
+  : public vtkm::cont::ExecutionAndControlObjectBase
+{
+  vtkm::cont::ImplicitFunctionHandle Handle;
+
+public:
+  ImplicitFunctionValueHandle() = default;
+
+  ImplicitFunctionValueHandle(const ImplicitFunctionHandle& handle)
+    : Handle(handle)
+  {
+  }
+
+  template <typename ImplicitFunctionType,
+            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+  explicit ImplicitFunctionValueHandle(ImplicitFunctionType* function,
+                                       bool acquireOwnership = true,
+                                       DeviceAdapterList devices = DeviceAdapterList())
+    : Handle(function, acquireOwnership, devices)
+  {
+  }
+
+  VTKM_CONT const vtkm::cont::ImplicitFunctionHandle& GetHandle() const { return this->Handle; }
+
+  VTKM_CONT
+  vtkm::ImplicitFunctionValue PrepareForExecution(vtkm::cont::DeviceAdapterId device) const
+  {
+    return vtkm::ImplicitFunctionValue(this->Handle.PrepareForExecution(device));
+  }
+
+  VTKM_CONT vtkm::ImplicitFunctionValue PrepareForControl() const
+  {
+    return vtkm::ImplicitFunctionValue(this->Handle.PrepareForControl());
+  }
+};
+
+template <typename ImplicitFunctionType,
+          typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+VTKM_CONT ImplicitFunctionValueHandle
+make_ImplicitFunctionValueHandle(ImplicitFunctionType&& func,
+                                 DeviceAdapterList devices = DeviceAdapterList())
+{
+  using IFType = typename std::remove_reference<ImplicitFunctionType>::type;
+  return ImplicitFunctionValueHandle(
+    new IFType(std::forward<ImplicitFunctionType>(func)), true, devices);
+}
+
+template <typename ImplicitFunctionType, typename... Args>
+VTKM_CONT ImplicitFunctionValueHandle make_ImplicitFunctionValueHandle(Args&&... args)
+{
+  return ImplicitFunctionValueHandle(new ImplicitFunctionType(std::forward<Args>(args)...),
+                                     true,
+                                     VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+}
+
+template <typename ImplicitFunctionType, typename DeviceAdapterList, typename... Args>
+VTKM_CONT ImplicitFunctionValueHandle make_ImplicitFunctionValueHandle(Args&&... args)
+{
+  return ImplicitFunctionValueHandle(
+    new ImplicitFunctionType(std::forward<Args>(args)...), true, DeviceAdapterList());
+}
 }
 } // vtkm::cont
 

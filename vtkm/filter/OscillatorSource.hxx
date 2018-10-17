@@ -75,17 +75,15 @@ inline VTKM_CONT void OscillatorSource::AddDecaying(vtkm::Float64 x,
 
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet OscillatorSource::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::OscillatorSource> dispatcher(this->Worklet);
-  dispatcher.SetDevice(DeviceAdapter());
 
   //todo, we need to use the policy to determine the valid conversions
   //that the dispatcher should do

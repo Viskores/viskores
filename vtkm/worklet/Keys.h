@@ -20,13 +20,13 @@
 #ifndef vtk_m_worklet_Keys_h
 #define vtk_m_worklet_Keys_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Logging.h>
 
 #include <vtkm/exec/internal/ReduceByKeyLookup.h>
@@ -91,20 +91,21 @@ public:
   /// sorted. This is the equivalent of calling
   /// `BuildArrays(keys, SortType::Unstable, device)`.
   ///
-  template <typename KeyStorage, typename Device>
-  VTKM_CONT Keys(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& keys, Device)
+  template <typename KeyStorage>
+  VTKM_CONT Keys(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& keys,
+                 vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
-    this->BuildArrays(keys, SortType::Unstable, Device());
+    this->BuildArrays(keys, SortType::Unstable, device);
   }
 
   /// Build the internal arrays without modifying the input. This is more
   /// efficient for stable sorted arrays, but requires an extra copy of the
   /// keys for unstable sorting.
-  template <typename KeyArrayType, typename Device>
-  VTKM_CONT void BuildArrays(const KeyArrayType& keys, SortType sort, Device)
+  template <typename KeyArrayType>
+  VTKM_CONT void BuildArrays(const KeyArrayType& keys,
+                             SortType sort,
+                             vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArrays");
 
     switch (sort)
@@ -112,13 +113,13 @@ public:
       case SortType::Unstable:
       {
         KeyArrayHandleType mutableKeys;
-        Algorithm::Copy(keys, mutableKeys);
+        vtkm::cont::Algorithm::Copy(device, keys, mutableKeys);
 
-        this->BuildArraysInternal(mutableKeys, Device());
+        this->BuildArraysInternal(mutableKeys, device);
       }
       break;
       case SortType::Stable:
-        this->BuildArraysInternalStable(keys, Device());
+        this->BuildArraysInternalStable(keys, device);
         break;
     }
   }
@@ -126,26 +127,28 @@ public:
   /// Build the internal arrays and also sort the input keys. This is more
   /// efficient for unstable sorting, but requires an extra copy for stable
   /// sorting.
-  template <typename KeyArrayType, typename Device>
-  VTKM_CONT void BuildArraysInPlace(KeyArrayType& keys, SortType sort, Device)
+  template <typename KeyArrayType>
+  VTKM_CONT void BuildArraysInPlace(
+    KeyArrayType& keys,
+    SortType sort,
+    vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInPlace");
 
     switch (sort)
     {
       case SortType::Unstable:
-        this->BuildArraysInternal(keys, Device());
+        this->BuildArraysInternal(keys, device);
         break;
       case SortType::Stable:
       {
-        this->BuildArraysInternalStable(keys, Device());
+        this->BuildArraysInternalStable(keys, device);
         KeyArrayHandleType tmp;
         // Copy into a temporary array so that the permutation array copy
         // won't alias input/output memory:
-        Algorithm::Copy(keys, tmp);
-        Algorithm::Copy(vtkm::cont::make_ArrayHandlePermutation(this->SortedValuesMap, tmp), keys);
+        vtkm::cont::Algorithm::Copy(device, keys, tmp);
+        vtkm::cont::Algorithm::Copy(
+          device, vtkm::cont::make_ArrayHandlePermutation(this->SortedValuesMap, tmp), keys);
       }
       break;
     }
@@ -207,56 +210,58 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> Offsets;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> Counts;
 
-  template <typename KeyArrayType, typename Device>
-  VTKM_CONT void BuildArraysInternal(KeyArrayType& keys, Device)
+  template <typename KeyArrayType>
+  VTKM_CONT void BuildArraysInternal(KeyArrayType& keys, vtkm::cont::DeviceAdapterId device)
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInternal");
 
     const vtkm::Id numKeys = keys.GetNumberOfValues();
 
-    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numKeys), this->SortedValuesMap);
+    vtkm::cont::Algorithm::Copy(
+      device, vtkm::cont::ArrayHandleIndex(numKeys), this->SortedValuesMap);
 
     // TODO: Do we need the ability to specify a comparison functor for sort?
-    Algorithm::SortByKey(keys, this->SortedValuesMap);
+    vtkm::cont::Algorithm::SortByKey(device, keys, this->SortedValuesMap);
 
     // Find the unique keys and the number of values per key.
-    Algorithm::ReduceByKey(keys,
-                           vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
-                           this->UniqueKeys,
-                           this->Counts,
-                           vtkm::Sum());
+    vtkm::cont::Algorithm::ReduceByKey(
+      device,
+      keys,
+      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
+      this->UniqueKeys,
+      this->Counts,
+      vtkm::Sum());
 
     // Get the offsets from the counts with a scan.
-    vtkm::Id offsetsTotal = Algorithm::ScanExclusive(
-      vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
+    vtkm::Id offsetsTotal = vtkm::cont::Algorithm::ScanExclusive(
+      device, vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
     VTKM_ASSERT(offsetsTotal == numKeys); // Sanity check
     (void)offsetsTotal;                   // Shut up, compiler
   }
 
-  template <typename KeyArrayType, typename Device>
-  VTKM_CONT void BuildArraysInternalStable(const KeyArrayType& keys, Device)
+  template <typename KeyArrayType>
+  VTKM_CONT void BuildArraysInternalStable(const KeyArrayType& keys,
+                                           vtkm::cont::DeviceAdapterId device)
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInternalStable");
 
     const vtkm::Id numKeys = keys.GetNumberOfValues();
 
     // Produce a stable sorted map of the keys:
-    this->SortedValuesMap = StableSortIndices<Device>::Sort(keys);
+    this->SortedValuesMap = StableSortIndices::Sort(device, keys);
     auto sortedKeys = vtkm::cont::make_ArrayHandlePermutation(this->SortedValuesMap, keys);
 
     // Find the unique keys and the number of values per key.
-    Algorithm::ReduceByKey(sortedKeys,
-                           vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
-                           this->UniqueKeys,
-                           this->Counts,
-                           vtkm::Sum());
+    vtkm::cont::Algorithm::ReduceByKey(
+      device,
+      sortedKeys,
+      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
+      this->UniqueKeys,
+      this->Counts,
+      vtkm::Sum());
 
     // Get the offsets from the counts with a scan.
-    vtkm::Id offsetsTotal = Algorithm::ScanExclusive(
+    vtkm::Id offsetsTotal = vtkm::cont::Algorithm::ScanExclusive(
       vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
     VTKM_ASSERT(offsetsTotal == numKeys); // Sanity check
     (void)offsetsTotal;                   // Shut up, compiler
