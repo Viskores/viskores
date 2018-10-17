@@ -247,8 +247,7 @@ void TestCellGradient()
 }
 }
 
-int UnitTestCellGradient(int, char* [])
+int UnitTestCellGradient(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestCellGradient);
+  return vtkm::cont::testing::Testing::Run(TestCellGradient, argc, argv);
 }

@@ -209,8 +209,7 @@ void TestNDimsEntropy()
 } // TestNDimsEntropy
 }
 
-int UnitTestNDimsEntropy(int, char* [])
+int UnitTestNDimsEntropy(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestNDimsEntropy);
+  return vtkm::cont::testing::Testing::Run(TestNDimsEntropy, argc, argv);
 }

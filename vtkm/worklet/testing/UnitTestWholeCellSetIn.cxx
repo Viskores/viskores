@@ -361,7 +361,7 @@ void RunWholeCellSetInTests()
   TryStructuredGrid1D();
 }
 
-int UnitTestWholeCellSetIn(int, char* [])
+int UnitTestWholeCellSetIn(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunWholeCellSetInTests);
+  return vtkm::cont::testing::Testing::Run(RunWholeCellSetInTests, argc, argv);
 }

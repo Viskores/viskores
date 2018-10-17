@@ -30,8 +30,6 @@
 
 void TestVertexClustering()
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-
   const vtkm::Id3 divisions(3, 3, 3);
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose();
@@ -142,7 +140,7 @@ void TestVertexClustering()
 
 } // TestVertexClustering
 
-int UnitTestVertexClustering(int, char* [])
+int UnitTestVertexClustering(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVertexClustering);
+  return vtkm::cont::testing::Testing::Run(TestVertexClustering, argc, argv);
 }

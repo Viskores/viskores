@@ -24,7 +24,6 @@
 #define vtk_m_worklet_connectivity_InnerJoin_h
 
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -35,7 +34,6 @@ namespace worklet
 {
 namespace connectivity
 {
-template <typename DeviceAdapter>
 class InnerJoin
 {
 public:
@@ -66,7 +64,7 @@ public:
     }
   };
 
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   // TODO: not mutating input keys and values?
   template <typename Key, typename Value1, typename Value2>
@@ -89,9 +87,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> counts;
     Algorithm::Transform(ubs, lbs, counts, vtkm::Subtract());
 
-    vtkm::worklet::ScatterCounting scatter{ counts, DeviceAdapter() };
+    vtkm::worklet::ScatterCounting scatter{ counts };
     vtkm::worklet::DispatcherMapField<Merge> mergeDisp(scatter);
-    mergeDisp.SetDevice(DeviceAdapter());
     mergeDisp.Invoke(key1, value1, lbs, value2, keyOut, value1Out, value2Out);
   }
 };

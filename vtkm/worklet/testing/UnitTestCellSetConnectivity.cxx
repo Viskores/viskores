@@ -123,7 +123,6 @@ static vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 }
 
 
-template <typename DeviceAdapter>
 class TestCellSetConnectivity
 {
 public:
@@ -141,10 +140,9 @@ public:
 
     auto cellSet = outputData.GetCellSet().Cast<vtkm::cont::CellSetSingleType<>>();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
-    vtkm::worklet::connectivity::CellSetConnectivity().Run(
-      cellSet, componentArray, DeviceAdapter());
+    vtkm::worklet::connectivity::CellSetConnectivity().Run(cellSet, componentArray);
 
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
     Algorithm::Sort(componentArray);
     Algorithm::Unique(componentArray);
     VTKM_TEST_ASSERT(componentArray.GetNumberOfValues() == 8,
@@ -157,10 +155,9 @@ public:
 
     auto cellSet = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
-    vtkm::worklet::connectivity::CellSetConnectivity().Run(
-      cellSet, componentArray, DeviceAdapter());
+    vtkm::worklet::connectivity::CellSetConnectivity().Run(cellSet, componentArray);
 
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
     Algorithm::Sort(componentArray);
     Algorithm::Unique(componentArray);
     VTKM_TEST_ASSERT(componentArray.GetNumberOfValues() == 1,
@@ -173,10 +170,9 @@ public:
 
     auto cellSet = dataSet.GetCellSet();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
-    vtkm::worklet::connectivity::CellSetConnectivity().Run(
-      cellSet, componentArray, DeviceAdapter());
+    vtkm::worklet::connectivity::CellSetConnectivity().Run(cellSet, componentArray);
 
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
     Algorithm::Sort(componentArray);
     Algorithm::Unique(componentArray);
     VTKM_TEST_ASSERT(componentArray.GetNumberOfValues() == 1,
@@ -191,8 +187,7 @@ public:
   }
 };
 
-int UnitTestCellSetConnectivity(int, char* [])
+int UnitTestCellSetConnectivity(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestCellSetConnectivity<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestCellSetConnectivity(), argc, argv);
 }

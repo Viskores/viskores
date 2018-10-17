@@ -1556,7 +1556,7 @@ public:
         return false; // overflow protection: don't accept number of options that doesn't fit signed int
 
       buffer[parser.op_count] = option;
-      int idx = buffer[parser.op_count].desc->index;
+      int idx = static_cast<int>(buffer[parser.op_count].desc->index);
       if (options[idx])
         options[idx].append(buffer[parser.op_count]);
       else

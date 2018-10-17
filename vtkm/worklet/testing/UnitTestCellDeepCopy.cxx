@@ -98,8 +98,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestCellDeepCopy(int, char* [])
+int UnitTestCellDeepCopy(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(RunTest);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

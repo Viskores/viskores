@@ -66,8 +66,7 @@ public:
                              vtkm::worklet::wavelets::DWTMode ext1Method,
                              vtkm::worklet::wavelets::DWTMode ext2Method,
                              bool pretendSigPaddedZero,
-                             bool padZeroAtExt2,
-                             vtkm::cont::DeviceAdapterId device)
+                             bool padZeroAtExt2)
   {
     // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
     VTKM_ASSERT(!pretendSigPaddedZero || !padZeroAtExt2);
@@ -78,7 +77,7 @@ public:
       if (pretendSigPaddedZero || padZeroAtExt2) // plane of size 1*dimY*dimZ
       {
         ext2.Allocate(sigPretendDimY * sigPretendDimZ);
-        WaveletBase::DeviceAssignZero3DPlaneX(ext2, 1, sigPretendDimY, sigPretendDimZ, 0, device);
+        WaveletBase::DeviceAssignZero3DPlaneX(ext2, 1, sigPretendDimY, sigPretendDimZ, 0);
       }
       else
       {
@@ -117,7 +116,6 @@ public:
                                dir,
                                false); // not treating input signal as having zeros
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext1, sigIn);
     }
 
@@ -145,7 +143,6 @@ public:
                                dir,
                                false);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2, sigIn);
     }
     else if (!pretendSigPaddedZero && padZeroAtExt2)
@@ -170,7 +167,6 @@ public:
                                dir,
                                false);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2, sigIn);
     }
     else // pretendSigPaddedZero
@@ -194,14 +190,13 @@ public:
                                dir,
                                true); // pretend sig is padded a zero
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2Temp, sigIn);
 
       // Give ext2 one layer thicker to hold the pretend zeros from signal.
       ext2.Allocate((extDimX + 1) * extDimY * extDimZ);
       WaveletBase::DeviceCubeCopyTo(
-        ext2Temp, extDimX, extDimY, extDimZ, ext2, extDimX + 1, extDimY, extDimZ, 1, 0, 0, device);
-      WaveletBase::DeviceAssignZero3DPlaneX(ext2, extDimX + 1, extDimY, extDimZ, 0, device);
+        ext2Temp, extDimX, extDimY, extDimZ, ext2, extDimX + 1, extDimY, extDimZ, 1, 0, 0);
+      WaveletBase::DeviceAssignZero3DPlaneX(ext2, extDimX + 1, extDimY, extDimZ, 0);
     }
     return 0;
   }
@@ -224,8 +219,7 @@ public:
                            vtkm::worklet::wavelets::DWTMode ext1Method,
                            vtkm::worklet::wavelets::DWTMode ext2Method,
                            bool pretendSigPaddedZero,
-                           bool padZeroAtExt2,
-                           vtkm::cont::DeviceAdapterId device)
+                           bool padZeroAtExt2)
   {
     // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
     VTKM_ASSERT(!pretendSigPaddedZero || !padZeroAtExt2);
@@ -236,7 +230,7 @@ public:
       if (pretendSigPaddedZero || padZeroAtExt2) // plane of size dimX*dimZ
       {
         ext2.Allocate(sigPretendDimX * 1 * sigPretendDimZ);
-        WaveletBase::DeviceAssignZero3DPlaneY(ext2, sigPretendDimX, 1, sigPretendDimZ, 0, device);
+        WaveletBase::DeviceAssignZero3DPlaneY(ext2, sigPretendDimX, 1, sigPretendDimZ, 0);
       }
       else
       {
@@ -275,7 +269,6 @@ public:
                                dir,
                                false); // not treating input signal as having zeros
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext1, sigIn);
     }
 
@@ -303,7 +296,6 @@ public:
                                dir,
                                false);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2, sigIn);
     }
     else if (!pretendSigPaddedZero && padZeroAtExt2)
@@ -328,7 +320,6 @@ public:
                                dir,
                                false);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2, sigIn);
     }
     else // pretendSigPaddedZero
@@ -352,14 +343,13 @@ public:
                                dir,
                                true); // pretend sig is padded a zero
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2Temp, sigIn);
 
       // Give ext2 one layer thicker to hold the pretend zeros from signal.
       ext2.Allocate(extDimX * (extDimY + 1) * extDimZ);
       WaveletBase::DeviceCubeCopyTo(
-        ext2Temp, extDimX, extDimY, extDimZ, ext2, extDimX, extDimY + 1, extDimZ, 0, 1, 0, device);
-      WaveletBase::DeviceAssignZero3DPlaneY(ext2, extDimX, extDimY + 1, extDimZ, 0, device);
+        ext2Temp, extDimX, extDimY, extDimZ, ext2, extDimX, extDimY + 1, extDimZ, 0, 1, 0);
+      WaveletBase::DeviceAssignZero3DPlaneY(ext2, extDimX, extDimY + 1, extDimZ, 0);
     }
     return 0;
   }
@@ -382,8 +372,7 @@ public:
                              vtkm::worklet::wavelets::DWTMode ext1Method,
                              vtkm::worklet::wavelets::DWTMode ext2Method,
                              bool pretendSigPaddedZero,
-                             bool padZeroAtExt2,
-                             vtkm::cont::DeviceAdapterId device)
+                             bool padZeroAtExt2)
   {
     // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
     VTKM_ASSERT(!pretendSigPaddedZero || !padZeroAtExt2);
@@ -394,7 +383,7 @@ public:
       if (pretendSigPaddedZero || padZeroAtExt2) // plane of size dimX * dimY
       {
         ext2.Allocate(sigPretendDimX * sigPretendDimY * 1);
-        WaveletBase::DeviceAssignZero3DPlaneZ(ext2, sigPretendDimX, sigPretendDimY, 1, 0, device);
+        WaveletBase::DeviceAssignZero3DPlaneZ(ext2, sigPretendDimX, sigPretendDimY, 1, 0);
       }
       else
       {
@@ -433,7 +422,6 @@ public:
                                dir,
                                false); // not treating input signal as having zeros
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext1, sigIn);
     }
 
@@ -461,7 +449,6 @@ public:
                                dir,
                                false);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2, sigIn);
     }
     else if (!pretendSigPaddedZero && padZeroAtExt2)
@@ -486,7 +473,6 @@ public:
                                dir,
                                false);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2, sigIn);
     }
     else // pretendSigPaddedZero
@@ -510,14 +496,13 @@ public:
                                dir,
                                true); // pretend sig is padded a zero
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2Temp, sigIn);
 
       // Give ext2 one layer thicker to hold the pretend zeros from signal.
       ext2.Allocate(extDimX * extDimY * (extDimZ + 1));
       WaveletBase::DeviceCubeCopyTo(
-        ext2Temp, extDimX, extDimY, extDimZ, ext2, extDimX, extDimY, extDimZ + 1, 0, 0, 1, device);
-      WaveletBase::DeviceAssignZero3DPlaneZ(ext2, extDimX, extDimY, extDimZ + 1, 0, device);
+        ext2Temp, extDimX, extDimY, extDimZ, ext2, extDimX, extDimY, extDimZ + 1, 0, 0, 1);
+      WaveletBase::DeviceAssignZero3DPlaneZ(ext2, extDimX, extDimY, extDimZ + 1, 0);
     }
     return 0;
   }
@@ -559,8 +544,7 @@ public:
                       vtkm::Id sigPretendDimY,
                       vtkm::Id sigPretendDimZ,
                       ArrayOutType& coeffOut,
-                      bool discardSigIn, // discard sigIn on devices
-                      vtkm::cont::DeviceAdapterId device)
+                      bool discardSigIn) // discard sigIn on devices
   {
     std::vector<vtkm::Id> L(27, 0);
 
@@ -642,8 +626,7 @@ public:
                               WaveletBase::wmode,
                               WaveletBase::wmode,
                               false,
-                              false,
-                              device);
+                              false);
       LeftRightXFormType worklet(filterLen,
                                  L[0],
                                  oddLow,
@@ -663,7 +646,6 @@ public:
                                  sigPretendDimY,
                                  sigPretendDimZ);
       LeftRightDispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(leftExt,
                         sigIn,
@@ -700,8 +682,7 @@ public:
                             WaveletBase::wmode,
                             WaveletBase::wmode,
                             false,
-                            false,
-                            device);
+                            false);
       TopDownXFormType worklet(filterLen,
                                L[1],
                                oddLow,
@@ -721,7 +702,6 @@ public:
                                addLen,
                                sigPretendDimZ);
       TopDownDispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(topExt,
                         afterX,
@@ -753,8 +733,7 @@ public:
                               WaveletBase::wmode,
                               WaveletBase::wmode,
                               false,
-                              false,
-                              device);
+                              false);
       FrontBackXFormType worklet(filterLen,
                                  L[1],
                                  oddLow,
@@ -774,7 +753,6 @@ public:
                                  sigPretendDimY,
                                  addLen);
       FrontBackDispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(frontExt,
                         afterY,
@@ -800,8 +778,7 @@ public:
                        vtkm::Id inStartZ,
                        const std::vector<vtkm::Id>& L,
                        ArrayOutType& sigOut,
-                       bool discardCoeffIn, // can we discard coeffIn?
-                       vtkm::cont::DeviceAdapterId device)
+                       bool discardCoeffIn) // can we discard coeffIn?
   {
     //VTKM_ASSERT( L.size() == 27 );
     //VTKM_ASSERT( inDimX * inDimY * inDimZ == coeffIn.GetNumberOfValues() );
@@ -850,8 +827,7 @@ public:
                                   ext3DimZ,
                                   ext4DimZ,
                                   filterLen,
-                                  wmode,
-                                  device);
+                                  wmode);
       FrontBackXFormType worklet(filterLen,
                                  extDimX,
                                  extDimY,
@@ -878,7 +854,6 @@ public:
                                  inStartY,
                                  inStartZ); // coeffIn
       FrontBackDispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(ext1,
                         ext2,
@@ -925,8 +900,7 @@ public:
                                 ext3DimY,
                                 ext4DimY,
                                 filterLen,
-                                wmode,
-                                device);
+                                wmode);
       TopDownXFormType worklet(filterLen,
                                extDimX,
                                ext1DimY,
@@ -953,7 +927,6 @@ public:
                                0,
                                0);
       TopDownDispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(ext1,
                         ext2,
@@ -994,8 +967,7 @@ public:
                                   ext3DimX,
                                   ext4DimX,
                                   filterLen,
-                                  wmode,
-                                  device);
+                                  wmode);
       sigOut.Allocate(inPretendDimX * inPretendDimY * inPretendDimZ);
       LeftRightXFormType worklet(filterLen,
                                  ext1DimX,
@@ -1023,7 +995,6 @@ public:
                                  0,
                                  0);
       LeftRightDispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(ext1,
                         ext2,
@@ -1056,8 +1027,7 @@ public:
                     vtkm::worklet::wavelets::DWTMode ext2Method,
                     bool pretendSigPaddedZero,
                     bool padZeroAtExt2,
-                    bool modeLR, // true = left-right, false = top-down
-                    vtkm::cont::DeviceAdapterId device)
+                    bool modeLR) // true = left-right, false = top-down
   {
     // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
     VTKM_ASSERT(!pretendSigPaddedZero || !padZeroAtExt2);
@@ -1070,12 +1040,12 @@ public:
         if (modeLR) // right extension
         {
           ext2.Allocate(sigPretendDimY);
-          WaveletBase::DeviceAssignZero2DColumn(ext2, 1, sigPretendDimY, 0, device);
+          WaveletBase::DeviceAssignZero2DColumn(ext2, 1, sigPretendDimY, 0);
         }
         else // bottom extension
         {
           ext2.Allocate(sigPretendDimX);
-          WaveletBase::DeviceAssignZero2DRow(ext2, sigPretendDimX, 1, 0, device);
+          WaveletBase::DeviceAssignZero2DRow(ext2, sigPretendDimX, 1, 0);
         }
       }
       else
@@ -1118,7 +1088,6 @@ public:
                                dir,
                                false); // not treating sigIn as having zeros
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext1, sigIn);
     }
 
@@ -1150,7 +1119,6 @@ public:
                                dir,
                                false);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2, sigIn);
     }
     else if (!pretendSigPaddedZero && padZeroAtExt2)
@@ -1180,7 +1148,6 @@ public:
                                dir,
                                false);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2, sigIn);
       /* Pad a zero at the end of cDTemp, when cDTemp is forced to have the same
          length as cATemp. For example, with odd length signal, cA is 1 element
@@ -1224,22 +1191,21 @@ public:
                                dir,
                                true); // pretend sig is padded a zero
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       dispatcher.Invoke(ext2Temp, sigIn);
 
       if (modeLR)
       {
         ext2.Allocate((extDimX + 1) * extDimY);
         WaveletBase::DeviceRectangleCopyTo(
-          ext2Temp, extDimX, extDimY, ext2, extDimX + 1, extDimY, 1, 0, device);
-        WaveletBase::DeviceAssignZero2DColumn(ext2, extDimX + 1, extDimY, 0, device);
+          ext2Temp, extDimX, extDimY, ext2, extDimX + 1, extDimY, 1, 0);
+        WaveletBase::DeviceAssignZero2DColumn(ext2, extDimX + 1, extDimY, 0);
       }
       else
       {
         ext2.Allocate(extDimX * (extDimY + 1));
         WaveletBase::DeviceRectangleCopyTo(
-          ext2Temp, extDimX, extDimY, ext2, extDimX, extDimY + 1, 0, 1, device);
-        WaveletBase::DeviceAssignZero2DRow(ext2, extDimX, extDimY + 1, 0, device);
+          ext2Temp, extDimX, extDimY, ext2, extDimX, extDimY + 1, 0, 1);
+        WaveletBase::DeviceAssignZero2DRow(ext2, extDimX, extDimY + 1, 0);
       }
     }
     return 0;
@@ -1253,8 +1219,7 @@ public:
                     vtkm::worklet::wavelets::DWTMode leftExtMethod,
                     vtkm::worklet::wavelets::DWTMode rightExtMethod,
                     bool attachZeroRightLeft,
-                    bool attachZeroRightRight,
-                    vtkm::cont::DeviceAdapterId device)
+                    bool attachZeroRightRight)
   {
     // "right extension" can be attached a zero on either end, but not both ends.
     VTKM_ASSERT(!attachZeroRightRight || !attachZeroRightLeft);
@@ -1271,7 +1236,7 @@ public:
       {
         leftExtend.Allocate(0);
         rightExtend.Allocate(1);
-        WaveletBase::DeviceAssignZero(rightExtend, 0, device);
+        WaveletBase::DeviceAssignZero(rightExtend, 0);
       }
       else
       {
@@ -1301,7 +1266,6 @@ public:
       {
         LeftSYMH worklet(addLen);
         vtkm::worklet::DispatcherMapField<LeftSYMH> dispatcher(worklet);
-        dispatcher.SetDevice(device);
         dispatcher.Invoke(leftExtend, sigIn);
         break;
       }
@@ -1309,7 +1273,6 @@ public:
       {
         LeftSYMW worklet(addLen);
         vtkm::worklet::DispatcherMapField<LeftSYMW> dispatcher(worklet);
-        dispatcher.SetDevice(device);
         dispatcher.Invoke(leftExtend, sigIn);
         break;
       }
@@ -1317,7 +1280,6 @@ public:
       {
         LeftASYMH worklet(addLen);
         vtkm::worklet::DispatcherMapField<LeftASYMH> dispatcher(worklet);
-        dispatcher.SetDevice(device);
         dispatcher.Invoke(leftExtend, sigIn);
         break;
       }
@@ -1325,7 +1287,6 @@ public:
       {
         LeftASYMW worklet(addLen);
         vtkm::worklet::DispatcherMapField<LeftASYMW> dispatcher(worklet);
-        dispatcher.SetDevice(device);
         dispatcher.Invoke(leftExtend, sigIn);
         break;
       }
@@ -1354,7 +1315,6 @@ public:
         {
           RightSYMH worklet(sigInLen);
           vtkm::worklet::DispatcherMapField<RightSYMH> dispatcher(worklet);
-          dispatcher.SetDevice(device);
           dispatcher.Invoke(rightExtend, sigIn);
           break;
         }
@@ -1362,7 +1322,6 @@ public:
         {
           RightSYMW worklet(sigInLen);
           vtkm::worklet::DispatcherMapField<RightSYMW> dispatcher(worklet);
-          dispatcher.SetDevice(device);
           dispatcher.Invoke(rightExtend, sigIn);
           break;
         }
@@ -1370,7 +1329,6 @@ public:
         {
           RightASYMH worklet(sigInLen);
           vtkm::worklet::DispatcherMapField<RightASYMH> dispatcher(worklet);
-          dispatcher.SetDevice(device);
           dispatcher.Invoke(rightExtend, sigIn);
           break;
         }
@@ -1378,7 +1336,6 @@ public:
         {
           RightASYMW worklet(sigInLen);
           vtkm::worklet::DispatcherMapField<RightASYMW> dispatcher(worklet);
-          dispatcher.SetDevice(device);
           dispatcher.Invoke(rightExtend, sigIn);
           break;
         }
@@ -1390,7 +1347,7 @@ public:
       }
       if (attachZeroRightRight)
       {
-        WaveletBase::DeviceAssignZero(rightExtend, addLen, device);
+        WaveletBase::DeviceAssignZero(rightExtend, addLen);
       }
     }
     else // attachZeroRightLeft mode
@@ -1399,7 +1356,7 @@ public:
       // attach a zero at the end of sigIn
       ExtensionArrayType singleValArray;
       singleValArray.Allocate(1);
-      WaveletBase::DeviceAssignZero(singleValArray, 0, device);
+      WaveletBase::DeviceAssignZero(singleValArray, 0);
       ConcatArray sigInPlusOne(sigIn, singleValArray);
 
       // allocate memory for extension
@@ -1411,7 +1368,6 @@ public:
         {
           RightSYMH worklet(sigInLen + 1);
           vtkm::worklet::DispatcherMapField<RightSYMH> dispatcher(worklet);
-          dispatcher.SetDevice(device);
           dispatcher.Invoke(rightExtend, sigInPlusOne);
           break;
         }
@@ -1419,7 +1375,6 @@ public:
         {
           RightSYMW worklet(sigInLen + 1);
           vtkm::worklet::DispatcherMapField<RightSYMW> dispatcher(worklet);
-          dispatcher.SetDevice(device);
           dispatcher.Invoke(rightExtend, sigInPlusOne);
           break;
         }
@@ -1427,7 +1382,6 @@ public:
         {
           RightASYMH worklet(sigInLen + 1);
           vtkm::worklet::DispatcherMapField<RightASYMH> dispatcher(worklet);
-          dispatcher.SetDevice(device);
           dispatcher.Invoke(rightExtend, sigInPlusOne);
           break;
         }
@@ -1435,7 +1389,6 @@ public:
         {
           RightASYMW worklet(sigInLen + 1);
           vtkm::worklet::DispatcherMapField<RightASYMW> dispatcher(worklet);
-          dispatcher.SetDevice(device);
           dispatcher.Invoke(rightExtend, sigInPlusOne);
           break;
         }
@@ -1449,8 +1402,8 @@ public:
       // make a copy of rightExtend with a zero attached to the left
       ExtensionArrayType rightExtendPlusOne;
       rightExtendPlusOne.Allocate(addLen + 1);
-      WaveletBase::DeviceCopyStartX(rightExtend, rightExtendPlusOne, 1, device);
-      WaveletBase::DeviceAssignZero(rightExtendPlusOne, 0, device);
+      WaveletBase::DeviceCopyStartX(rightExtend, rightExtendPlusOne, 1);
+      WaveletBase::DeviceAssignZero(rightExtendPlusOne, 0);
       rightExtend = rightExtendPlusOne;
     }
 
@@ -1465,8 +1418,7 @@ public:
   template <typename SignalArrayType, typename CoeffArrayType>
   vtkm::Float64 DWT1D(const SignalArrayType& sigIn, // Input
                       CoeffArrayType& coeffOut,     // Output: cA followed by cD
-                      std::vector<vtkm::Id>& L,     // Output: how many cA and cD.
-                      vtkm::cont::DeviceAdapterId device)
+                      std::vector<vtkm::Id>& L)     // Output: how many cA and cD.
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if (GetWaveletMaxLevel(sigInLen) < 1)
@@ -1526,7 +1478,7 @@ public:
     ConcatType2 sigInExtended;
 
     this->Extend1D(
-      sigIn, sigInExtended, addLen, WaveletBase::wmode, WaveletBase::wmode, false, false, device);
+      sigIn, sigInExtended, addLen, WaveletBase::wmode, WaveletBase::wmode, false, false);
     //VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
 
     // initialize a worklet for forward transform
@@ -1536,7 +1488,6 @@ public:
     coeffOut.Allocate(sigExtendedLen);
     vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform> dispatcher(
       forwardTransform);
-    dispatcher.SetDevice(device);
     // put a timer
     vtkm::cont::Timer<> timer;
     dispatcher.Invoke(sigInExtended,
@@ -1556,8 +1507,7 @@ public:
   template <typename CoeffArrayType, typename SignalArrayType>
   vtkm::Float64 IDWT1D(const CoeffArrayType& coeffIn, // Input, cA followed by cD
                        std::vector<vtkm::Id>& L,      // Input, how many cA and cD
-                       SignalArrayType& sigOut,       // Output
-                       vtkm::cont::DeviceAdapterId device)
+                       SignalArrayType& sigOut)       // Output
   {
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
     bool doSymConv = false;
@@ -1640,24 +1590,24 @@ public:
     if (doSymConv) // Actually extend cA and cD
     {
       // first extend cA to be cATemp
-      this->Extend1D(cA, cATemp, addLen, cALeftMode, cARightMode, false, false, device);
+      this->Extend1D(cA, cATemp, addLen, cALeftMode, cARightMode, false, false);
 
       // Then extend cD based on extension needs
       if (cDPadLen > 0)
       {
         // Add back the missing final cD, 0.0, before doing extension
-        this->Extend1D(cD, cDTemp, addLen, cDLeftMode, cDRightMode, true, false, device);
+        this->Extend1D(cD, cDTemp, addLen, cDLeftMode, cDRightMode, true, false);
       }
       else
       {
         vtkm::Id cDTempLenWouldBe = L[1] + 2 * addLen;
         if (cDTempLenWouldBe == cDTempLen)
         {
-          this->Extend1D(cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, false, device);
+          this->Extend1D(cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, false);
         }
         else if (cDTempLenWouldBe == cDTempLen - 1)
         {
-          this->Extend1D(cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, true, device);
+          this->Extend1D(cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, true);
         }
         else
         {
@@ -1692,7 +1642,6 @@ public:
       vtkm::worklet::wavelets::InverseTransformOdd inverseXformOdd(filterLen, L[0], cATempLen);
       vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd> dispatcher(
         inverseXformOdd);
-      dispatcher.SetDevice(device);
       // use a timer
       vtkm::cont::Timer<> timer;
       dispatcher.Invoke(coeffInExtended,
@@ -1707,7 +1656,6 @@ public:
         filterLen, L[0], cATempLen, !doSymConv);
       vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformEven> dispatcher(
         inverseXformEven);
-      dispatcher.SetDevice(device);
       // use a timer
       vtkm::cont::Timer<> timer;
       dispatcher.Invoke(coeffInExtended,
@@ -1754,8 +1702,7 @@ public:
                       vtkm::Id sigPretendDimX,
                       vtkm::Id sigPretendDimY,
                       ArrayOutType& coeffOut,
-                      std::vector<vtkm::Id>& L,
-                      vtkm::cont::DeviceAdapterId device)
+                      std::vector<vtkm::Id>& L)
   {
     L[0] = WaveletBase::GetApproxLength(sigPretendDimX);
     L[2] = L[0];
@@ -1804,8 +1751,7 @@ public:
                      WaveletBase::wmode,
                      false,
                      false,
-                     true, // Extend in left-right direction
-                     device);
+                     true); // Extend in left-right direction
       ForwardXForm worklet(filterLen,
                            L[0],
                            oddLow,
@@ -1821,7 +1767,6 @@ public:
                            addLen,
                            sigPretendDimY);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(leftExt,
                         sigIn,
@@ -1850,8 +1795,7 @@ public:
                      WaveletBase::wmode,
                      false,
                      false,
-                     false, // Extend in top-down direction
-                     device);
+                     false); // Extend in top-down direction
       ForwardXForm worklet(filterLen,
                            L[1],
                            oddLow,
@@ -1867,7 +1811,6 @@ public:
                            sigPretendDimX,
                            addLen);
       DispatcherType dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(topExt,
                         afterX,
@@ -1890,8 +1833,7 @@ public:
                        vtkm::Id inStartX,
                        vtkm::Id inStartY,
                        const std::vector<vtkm::Id>& L,
-                       ArrayOutType& sigOut,
-                       vtkm::cont::DeviceAdapterId device)
+                       ArrayOutType& sigOut)
   {
     vtkm::Id inPretendDimX = L[0] + L[4];
     vtkm::Id inPretendDimY = L[1] + L[3];
@@ -1927,8 +1869,7 @@ public:
                                 ext3DimY,
                                 ext4DimY,
                                 filterLen,
-                                wmode,
-                                device);
+                                wmode);
 
       afterY.Allocate(inPretendDimX * inPretendDimY);
       IDWT2DWorklet worklet(filterLen,
@@ -1950,7 +1891,6 @@ public:
                             inStartY, // coeffIn
                             false);   // top-down
       Dispatcher dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(ext1,
                         ext2,
@@ -1986,8 +1926,7 @@ public:
                                   ext3DimX,
                                   ext4DimX,
                                   filterLen,
-                                  wmode,
-                                  device);
+                                  wmode);
       sigOut.Allocate(inPretendDimX * inPretendDimY);
       IDWT2DWorklet worklet(filterLen,
                             ext1DimX,
@@ -2008,7 +1947,6 @@ public:
                             0,
                             true); // left-right
       Dispatcher dispatcher(worklet);
-      dispatcher.SetDevice(device);
       timer.Reset();
       dispatcher.Invoke(ext1,
                         ext2,
@@ -2045,8 +1983,7 @@ public:
                              vtkm::Id& ext3DimX,
                              vtkm::Id& ext4DimX, // output
                              vtkm::Id filterLen,
-                             DWTMode mode,
-                             vtkm::cont::DeviceAdapterId device)
+                             DWTMode mode)
   {
     VTKM_ASSERT(inPretendDimX == (cADimX + cDDimX));
 
@@ -2106,8 +2043,7 @@ public:
                    cARight,
                    false,
                    false,
-                   true,
-                   device);
+                   true);
 
     ext1DimX = ext2DimX = addLen;
 
@@ -2129,8 +2065,7 @@ public:
                      cDRight,
                      true,
                      false,
-                     true,
-                     device);
+                     true);
       ext3DimX = addLen;
       ext4DimX = addLen + 1;
     }
@@ -2153,8 +2088,7 @@ public:
                        cDRight,
                        false,
                        false,
-                       true,
-                       device);
+                       true);
         ext3DimX = ext4DimX = addLen;
       }
       else if (cDExtendedWouldBe == cDExtendedDimX - 1)
@@ -2173,8 +2107,7 @@ public:
                        cDRight,
                        false,
                        true,
-                       true,
-                       device);
+                       true);
         ext3DimX = addLen;
         ext4DimX = addLen + 1;
       }
@@ -2206,8 +2139,7 @@ public:
                            vtkm::Id& ext3DimY,
                            vtkm::Id& ext4DimY, // output
                            vtkm::Id filterLen,
-                           DWTMode mode,
-                           vtkm::cont::DeviceAdapterId device)
+                           DWTMode mode)
   {
     VTKM_ASSERT(inPretendDimY == (cADimY + cDDimY));
 
@@ -2265,8 +2197,7 @@ public:
                    cADownMode,
                    false,
                    false,
-                   false,
-                   device);
+                   false);
     ext1DimY = ext2DimY = addLen;
 
     // extend cD
@@ -2287,8 +2218,7 @@ public:
                      cDDownMode,
                      true,
                      false,
-                     false,
-                     device);
+                     false);
       ext3DimY = addLen;
       ext4DimY = addLen + 1;
     }
@@ -2311,8 +2241,7 @@ public:
                        cDDownMode,
                        false,
                        false,
-                       false,
-                       device);
+                       false);
         ext3DimY = ext4DimY = addLen;
       }
       else if (cDExtendedWouldBe == cDExtendedDimY - 1)
@@ -2331,8 +2260,7 @@ public:
                        cDDownMode,
                        false,
                        true,
-                       false,
-                       device);
+                       false);
         ext3DimY = addLen;
         ext4DimY = addLen + 1;
       }
@@ -2367,8 +2295,7 @@ public:
                              vtkm::Id& ext3DimX,
                              vtkm::Id& ext4DimX, // output
                              vtkm::Id filterLen,
-                             DWTMode mode,
-                             vtkm::cont::DeviceAdapterId device)
+                             DWTMode mode)
   {
     VTKM_ASSERT(inPretendDimX == (cADimX + cDDimX));
 
@@ -2432,8 +2359,7 @@ public:
                             cALeftMode,
                             cARightMode,
                             false,
-                            false,
-                            device);
+                            false);
     ext1DimX = ext2DimX = addLen;
 
     // extend cD
@@ -2485,8 +2411,7 @@ public:
                             cDLeftMode,
                             cDRightMode,
                             pretendSigPaddedZero,
-                            padZeroAtExt2,
-                            device);
+                            padZeroAtExt2);
   }
 
   template <typename ArrayInType, typename ArrayOutType>
@@ -2511,8 +2436,7 @@ public:
                            vtkm::Id& ext3DimY,
                            vtkm::Id& ext4DimY, // output
                            vtkm::Id filterLen,
-                           DWTMode mode,
-                           vtkm::cont::DeviceAdapterId device)
+                           DWTMode mode)
   {
     VTKM_ASSERT(inPretendDimY == (cADimY + cDDimY));
 
@@ -2576,8 +2500,7 @@ public:
                           cATopMode,
                           cADownMode,
                           false,
-                          false,
-                          device);
+                          false);
     ext1DimY = ext2DimY = addLen;
 
     // extend cD
@@ -2629,8 +2552,7 @@ public:
                           cDTopMode,
                           cDDownMode,
                           pretendSigPaddedZero,
-                          padZeroAtExt2,
-                          device);
+                          padZeroAtExt2);
   }
 
   template <typename ArrayInType, typename ArrayOutType>
@@ -2655,8 +2577,7 @@ public:
                              vtkm::Id& ext3DimZ,
                              vtkm::Id& ext4DimZ, // output
                              vtkm::Id filterLen,
-                             DWTMode mode,
-                             vtkm::cont::DeviceAdapterId device)
+                             DWTMode mode)
   {
     VTKM_ASSERT(inPretendDimZ == (cADimZ + cDDimZ));
 
@@ -2720,8 +2641,7 @@ public:
                             cAFrontMode,
                             cABackMode,
                             false,
-                            false,
-                            device);
+                            false);
     ext1DimZ = ext2DimZ = addLen;
 
     // extend cD
@@ -2773,8 +2693,7 @@ public:
                             cDFrontMode,
                             cDBackMode,
                             pretendSigPaddedZero,
-                            padZeroAtExt2,
-                            device);
+                            padZeroAtExt2);
   }
 };
 

@@ -23,6 +23,7 @@
 #include <vtkm/testing/TestingMath.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/testing/Testing.h>
 
 int UnitTestMath(int, char* [])
 {

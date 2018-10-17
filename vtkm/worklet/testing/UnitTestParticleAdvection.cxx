@@ -509,8 +509,7 @@ void TestParticleAdvection()
   TestParticleWorklets();
 }
 
-int UnitTestParticleAdvection(int, char* [])
+int UnitTestParticleAdvection(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestParticleAdvection);
+  return vtkm::cont::testing::Testing::Run(TestParticleAdvection, argc, argv);
 }

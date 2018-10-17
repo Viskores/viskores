@@ -411,12 +411,11 @@ void TestMarchingCubesExplicit()
 
 void TestMarchingCubes()
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   TestMarchingCubesUniformGrid();
   TestMarchingCubesExplicit();
 }
 
-int UnitTestMarchingCubes(int, char* [])
+int UnitTestMarchingCubes(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestMarchingCubes);
+  return vtkm::cont::testing::Testing::Run(TestMarchingCubes, argc, argv);
 }

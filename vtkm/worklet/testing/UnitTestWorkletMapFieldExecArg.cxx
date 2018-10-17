@@ -20,6 +20,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -102,11 +103,9 @@ struct DoTestWorklet
   }
 };
 
-void TestWorkletMapFieldExecArg()
+void TestWorkletMapFieldExecArg(vtkm::cont::DeviceAdapterId id)
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
-  std::cout << "Testing Worklet with WholeArray on device adapter: "
-            << DeviceAdapterTraits::GetName() << std::endl;
+  std::cout << "Testing Worklet with WholeArray on device adapter: " << id.GetName() << std::endl;
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(map_exec_field::DoTestWorklet<TestExecObjectWorklet>(),
@@ -115,7 +114,8 @@ void TestWorkletMapFieldExecArg()
 
 } // anonymous namespace
 
-int UnitTestWorkletMapFieldExecArg(int, char* [])
+int UnitTestWorkletMapFieldExecArg(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(map_exec_field::TestWorkletMapFieldExecArg);
+  return vtkm::cont::testing::Testing::RunOnDevice(
+    map_exec_field::TestWorkletMapFieldExecArg, argc, argv);
 }

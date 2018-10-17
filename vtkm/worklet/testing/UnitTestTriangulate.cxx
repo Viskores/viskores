@@ -88,8 +88,7 @@ public:
   }
 };
 
-int UnitTestTriangulate(int, char* [])
+int UnitTestTriangulate(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestingTriangulate());
+  return vtkm::cont::testing::Testing::Run(TestingTriangulate(), argc, argv);
 }

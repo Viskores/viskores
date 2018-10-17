@@ -211,8 +211,7 @@ public:
 
 } // anonymous namespace
 
-int UnitTestProbe(int, char* [])
+int UnitTestProbe(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestProbe::Run);
+  return vtkm::cont::testing::Testing::Run(TestProbe::Run, argc, argv);
 }

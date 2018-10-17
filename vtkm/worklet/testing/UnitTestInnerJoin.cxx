@@ -24,7 +24,6 @@
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 
 
-template <typename DeviceAdapter>
 class TestInnerJoin
 {
 public:
@@ -51,7 +50,7 @@ public:
 
   void TestTwoArrays() const
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
 
     std::vector<vtkm::Id> A = { 8, 3, 6, 8, 9, 5, 12, 10, 14 };
     std::vector<vtkm::Id> B = { 7, 11, 9, 8, 5, 1, 0, 5 };
@@ -68,8 +67,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> outA;
     vtkm::cont::ArrayHandle<vtkm::Id> outB;
 
-    vtkm::worklet::connectivity::InnerJoin<DeviceAdapter>().Run(
-      A_arr, idxA, B_arr, idxB, joinedIndex, outA, outB);
+    vtkm::worklet::connectivity::InnerJoin().Run(A_arr, idxA, B_arr, idxB, joinedIndex, outA, outB);
 
     vtkm::Id expectedIndex[] = { 5, 5, 8, 8, 9 };
     VTKM_TEST_ASSERT(TestArrayHandle(joinedIndex, expectedIndex, 5), "Wrong joined keys");
@@ -84,7 +82,7 @@ public:
   void operator()() const { this->TestTwoArrays(); }
 };
 
-int UnitTestInnerJoin(int, char* [])
+int UnitTestInnerJoin(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestInnerJoin<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestInnerJoin(), argc, argv);
 }

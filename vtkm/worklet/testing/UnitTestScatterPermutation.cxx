@@ -118,7 +118,7 @@ void TestScatterPermutation()
 
 } // anonymous namespace
 
-int UnitTestScatterPermutation(int, char* [])
+int UnitTestScatterPermutation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestScatterPermutation);
+  return vtkm::cont::testing::Testing::Run(TestScatterPermutation, argc, argv);
 }

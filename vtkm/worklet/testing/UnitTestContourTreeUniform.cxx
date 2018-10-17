@@ -182,8 +182,7 @@ public:
 };
 }
 
-int UnitTestContourTreeUniform(int, char* [])
+int UnitTestContourTreeUniform(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniform());
+  return vtkm::cont::testing::Testing::Run(TestContourTreeUniform(), argc, argv);
 }

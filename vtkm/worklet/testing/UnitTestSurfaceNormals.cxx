@@ -75,7 +75,6 @@ void TestSmoothSurfaceNormals(const vtkm::cont::DataSet& dataset,
 
 void TestSurfaceNormals()
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   vtkm::cont::DataSet dataset =
     vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
@@ -87,7 +86,7 @@ void TestSurfaceNormals()
 
 } // anonymous namespace
 
-int UnitTestSurfaceNormals(int, char* [])
+int UnitTestSurfaceNormals(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals);
+  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals, argc, argv);
 }

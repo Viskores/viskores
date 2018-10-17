@@ -192,13 +192,12 @@ struct TestToRGB
   {
   }
 
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   template <typename T>
   VTKM_CONT void operator()(T) const
   {
     //use each component to generate the output
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> output;
-    this->Worklet.Run(make_data<T>(this->Worklet.GetRange()), output, DeviceAdapter());
+    this->Worklet.Run(make_data<T>(this->Worklet.GetRange()), output);
     bool valid = verify(output);
     VTKM_TEST_ASSERT(valid, "scalar RGB failed");
   }
@@ -213,7 +212,7 @@ struct TestToRGB
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> output;
 
     //use all components to generate the output
-    this->Worklet.Run(input, output, DeviceAdapter());
+    this->Worklet.Run(input, output);
     valid = verify(output);
     VTKM_TEST_ASSERT(valid, "all components RGB failed");
 
@@ -233,7 +232,7 @@ struct TestToRGB
       }
 
       vtkm::worklet::ScalarsToColors magWorklet(magr);
-      magWorklet.RunMagnitude(input, output, DeviceAdapter());
+      magWorklet.RunMagnitude(input, output);
       // vtkm::cont::printSummary_ArrayHandle(output, std::cout, true);
 
       auto portal2 = output.GetPortalControl();
@@ -256,7 +255,7 @@ struct TestToRGB
     int end = (N % 2 == 0) ? (N - 1) : N;
     for (int i = 0; i < end; ++i)
     {
-      this->Worklet.RunComponent(input, i, output, DeviceAdapter());
+      this->Worklet.RunComponent(input, i, output);
       valid = verify(output);
       VTKM_TEST_ASSERT(valid, "per component RGB failed");
     }
@@ -277,13 +276,12 @@ struct TestToRGBA
   {
   }
 
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   template <typename T>
   VTKM_CONT void operator()(T) const
   {
     //use each component to generate the output
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> output;
-    this->Worklet.Run(make_data<T>(this->Worklet.GetRange()), output, DeviceAdapter());
+    this->Worklet.Run(make_data<T>(this->Worklet.GetRange()), output);
 
     bool valid = verify(this->Worklet.GetAlpha(), output);
     VTKM_TEST_ASSERT(valid, "scalar RGBA failed");
@@ -300,7 +298,7 @@ struct TestToRGBA
     // vtkm::cont::printSummary_ArrayHandle(input, std::cout, true);
 
     //use all components to generate the output
-    this->Worklet.Run(input, output, DeviceAdapter());
+    this->Worklet.Run(input, output);
     valid = verify(this->Worklet.GetAlpha(), output);
     VTKM_TEST_ASSERT(valid, "all components RGBA failed");
 
@@ -320,7 +318,7 @@ struct TestToRGBA
       }
 
       vtkm::worklet::ScalarsToColors magWorklet(magr);
-      magWorklet.RunMagnitude(input, output, DeviceAdapter());
+      magWorklet.RunMagnitude(input, output);
       // vtkm::cont::printSummary_ArrayHandle(output, std::cout, true);
 
       auto portal2 = output.GetPortalControl();
@@ -343,7 +341,7 @@ struct TestToRGBA
     int end = (N % 2 == 0) ? (N - 1) : N;
     for (int i = 0; i < end; ++i)
     {
-      this->Worklet.RunComponent(input, i, output, DeviceAdapter());
+      this->Worklet.RunComponent(input, i, output);
       valid = verify(this->Worklet.GetAlpha(), output);
       VTKM_TEST_ASSERT(valid, "per component RGB failed");
     }
@@ -405,7 +403,7 @@ void TestScalarsToColors()
 }
 }
 
-int UnitTestScalarsToColors(int, char* [])
+int UnitTestScalarsToColors(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestScalarsToColors);
+  return vtkm::cont::testing::Testing::Run(TestScalarsToColors, argc, argv);
 }

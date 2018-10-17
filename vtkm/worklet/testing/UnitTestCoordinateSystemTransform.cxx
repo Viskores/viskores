@@ -208,8 +208,7 @@ void TestCoordinateSystemTransform()
     dsSph.GetCoordinateSystem(), sphToCarPts, revResult, { false, true, true });
 }
 
-int UnitTestCoordinateSystemTransform(int, char* [])
+int UnitTestCoordinateSystemTransform(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestCoordinateSystemTransform);
+  return vtkm::cont::testing::Testing::Run(TestCoordinateSystemTransform, argc, argv);
 }

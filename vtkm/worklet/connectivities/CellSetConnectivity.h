@@ -35,21 +35,17 @@ namespace connectivity
 class CellSetConnectivity
 {
 public:
-  template <typename CellSetType, typename DeviceAdapter>
-  void Run(const CellSetType& cellSet,
-           vtkm::cont::ArrayHandle<vtkm::Id>& componentArray,
-           DeviceAdapter) const
+  template <typename CellSetType>
+  void Run(const CellSetType& cellSet, vtkm::cont::ArrayHandle<vtkm::Id>& componentArray) const
   {
     vtkm::cont::ArrayHandle<vtkm::Id> numIndicesArray;
     vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivityArray;
 
     // create cell to cell connectivity graph (dual graph)
-    CellSetDualGraph<DeviceAdapter>().Run(
-      cellSet, numIndicesArray, indexOffsetArray, connectivityArray);
+    CellSetDualGraph().Run(cellSet, numIndicesArray, indexOffsetArray, connectivityArray);
     // find the connected component of the dual graph
-    GraphConnectivity<DeviceAdapter>().Run(
-      numIndicesArray, indexOffsetArray, connectivityArray, componentArray);
+    GraphConnectivity().Run(numIndicesArray, indexOffsetArray, connectivityArray, componentArray);
   }
 };
 }

@@ -96,7 +96,7 @@ void TestCellAverage()
 }
 }
 
-int UnitTestCellAverage(int, char* [])
+int UnitTestCellAverage(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellAverage);
+  return vtkm::cont::testing::Testing::Run(TestCellAverage, argc, argv);
 }

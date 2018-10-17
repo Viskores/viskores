@@ -178,11 +178,11 @@ struct ScaleBiasFunctor
   T operator()(T value) const { return (Scale * value + Bias); }
 };
 
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 class CosmoTools
 {
 public:
-  using DeviceAlgorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  using DeviceAlgorithm = vtkm::cont::Algorithm;
   const vtkm::Id NUM_NEIGHBORS = 9;
 
   // geometry of domain
@@ -254,14 +254,14 @@ public:
 // Constructor for all particles in the system
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-CosmoTools<T, StorageType, DeviceAdapter>::CosmoTools(const vtkm::Id NParticles,
-                                                      const T mass,
-                                                      const vtkm::Id pmin,
-                                                      const T bb,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& X,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& Y,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& Z)
+template <typename T, typename StorageType>
+CosmoTools<T, StorageType>::CosmoTools(const vtkm::Id NParticles,
+                                       const T mass,
+                                       const vtkm::Id pmin,
+                                       const T bb,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& X,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& Y,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& Z)
   : nParticles(NParticles)
   , particleMass(mass)
   , minPartPerHalo(pmin)
@@ -277,12 +277,12 @@ CosmoTools<T, StorageType, DeviceAdapter>::CosmoTools(const vtkm::Id NParticles,
 // Constructor for particles in a single halo
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-CosmoTools<T, StorageType, DeviceAdapter>::CosmoTools(const vtkm::Id NParticles,
-                                                      const T mass,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& X,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& Y,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& Z)
+template <typename T, typename StorageType>
+CosmoTools<T, StorageType>::CosmoTools(const vtkm::Id NParticles,
+                                       const T mass,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& X,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& Y,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& Z)
   : nParticles(NParticles)
   , particleMass(mass)
   , minPartPerHalo(10)

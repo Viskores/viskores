@@ -76,13 +76,12 @@ void TryKeyType(KeyType)
 
   // Create Keys object
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
-  vtkm::cont::ArrayCopy(keysArray, sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::cont::ArrayCopy(keysArray, sortedKeys);
+  vtkm::worklet::Keys<KeyType> keys(sortedKeys);
   VTKM_TEST_ASSERT(keys.GetInputRange() == NUM_UNIQUE, "Keys has bad input range.");
 
   // Create values array
   vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault> valuesArray(0.0f, 1.0f, ARRAY_SIZE);
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   std::cout << "  Try average with Keys object" << std::endl;
   CheckAverageByKey(keys.GetUniqueKeys(), vtkm::worklet::AverageByKey::Run(keys, valuesArray));
@@ -105,7 +104,7 @@ void DoTest()
 
 } // anonymous namespace
 
-int UnitTestAverageByKey(int, char* [])
+int UnitTestAverageByKey(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(DoTest);
+  return vtkm::cont::testing::Testing::Run(DoTest, argc, argv);
 }

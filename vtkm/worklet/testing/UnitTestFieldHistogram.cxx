@@ -340,8 +340,7 @@ void TestFieldHistogram()
   PrintHistogram(bins, numberOfBins, range, delta);
 } // TestFieldHistogram
 
-int UnitTestFieldHistogram(int, char* [])
+int UnitTestFieldHistogram(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestFieldHistogram);
+  return vtkm::cont::testing::Testing::Run(TestFieldHistogram, argc, argv);
 }

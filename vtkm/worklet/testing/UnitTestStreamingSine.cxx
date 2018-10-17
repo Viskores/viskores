@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -77,7 +78,7 @@ void TestStreamingSine()
   }
   input = vtkm::cont::make_ArrayHandle(data);
 
-  using DeviceAlgorithms = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  using DeviceAlgorithms = vtkm::cont::Algorithm;
   vtkm::worklet::SineWorklet sineWorklet;
   vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
   dispatcher.SetNumberOfBlocks(NBlocks);
@@ -123,7 +124,7 @@ void TestStreamingSine()
                    "Wrong sum for streaming reduce with binary operator");
 }
 
-int UnitTestStreamingSine(int, char* [])
+int UnitTestStreamingSine(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestStreamingSine);
+  return vtkm::cont::testing::Testing::Run(TestStreamingSine, argc, argv);
 }
