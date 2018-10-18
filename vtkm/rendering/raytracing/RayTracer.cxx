@@ -117,7 +117,8 @@ public:
       vtkm::Vec<Precision, 3> reflect = 2.f * vtkm::dot(lightDir, normal) * normal - lightDir;
       vtkm::Normalize(reflect);
       Precision cosPhi = vtkm::dot(reflect, viewDir);
-      Precision specularConstant = Precision(pow(vtkm::Max(cosPhi, zero), SpecularExponent));
+      Precision specularConstant =
+        vtkm::Pow(vtkm::Max(cosPhi, zero), static_cast<Precision>(SpecularExponent));
       vtkm::Int32 colorMapSize = static_cast<vtkm::Int32>(colorMap.GetNumberOfValues());
       vtkm::Int32 colorIdx = vtkm::Int32(scalar * Precision(colorMapSize - 1));
 
