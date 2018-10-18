@@ -58,10 +58,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -71,10 +70,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
@@ -84,10 +82,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };

@@ -77,10 +77,9 @@ public:
   /// all values with a matching key. This tag specifies an \c ArrayHandle
   /// object that holds the values.
   ///
-  template <typename TypeList = AllTypes>
   struct ValuesIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -94,10 +93,9 @@ public:
   ///
   /// This tag might not work with scatter operations.
   ///
-  template <typename TypeList = AllTypes>
   struct ValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -111,10 +109,9 @@ public:
   ///
   /// This tag might not work with scatter operations.
   ///
-  template <typename TypeList = AllTypes>
   struct ValuesOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -129,10 +126,9 @@ public:
   /// an input array with entries for each reduced value. This could be useful
   /// to access values from a previous run of WorkletReduceByKey.
   ///
-  template <typename TypeList = AllTypes>
   struct ReducedValuesIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -147,10 +143,9 @@ public:
   /// an input/output array with entries for each reduced value. This could be
   /// useful to access values from a previous run of WorkletReduceByKey.
   ///
-  template <typename TypeList = AllTypes>
   struct ReducedValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };
@@ -162,10 +157,9 @@ public:
   /// then produces a "reduced" value per key. This tag specifies an \c
   /// ArrayHandle object that holds the values.
   ///
-  template <typename TypeList = AllTypes>
   struct ReducedValuesOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
