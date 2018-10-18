@@ -20,7 +20,11 @@ worklet. To facilitate the update of this code to these new changes (not to
 mention all the code in VTK-m) a script is provided to automatically remove
 these template parameters from VTK-m code.
 
-*** Add information about script ***
+This script is at
+[Utilities/Scripts/update-control-signature-tags.sh](../../Utilities/Scripts/update-control-signature-tags.sh).
+It needs to be run in a Unix-compatible shell. It takes a single argument,
+which is a top level directory to modify files. The script processes all C++
+source files recursively from that directory.
 
 ## Change in executable size
 
