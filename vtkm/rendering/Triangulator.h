@@ -246,8 +246,7 @@ public:
     VTKM_CONT
     UniqueTriangles() {}
 
-    using ControlSignature = void(WholeArrayIn<vtkm::ListTagBase<vtkm::Vec<vtkm::Id, 4>>>,
-                                  WholeArrayOut);
+    using ControlSignature = void(WholeArrayIn, WholeArrayOut);
     using ExecutionSignature = void(_1, _2, WorkIndex);
 
     VTKM_EXEC

@@ -60,30 +60,6 @@ public:
   }
 };
 
-class TestMapFieldWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
-{
-public:
-  using ControlSignature = void(FieldIn, FieldOut, FieldInOut);
-  using ExecutionSignature = _2(_1, _3, WorkIndex);
-
-  template <typename T1, typename T3>
-  VTKM_EXEC T1 operator()(const T1& in, T3& inout, vtkm::Id workIndex) const
-  {
-    if (!test_equal(in, TestValue(workIndex, T1()) + T1(100)))
-    {
-      this->RaiseError("Got wrong input value.");
-    }
-
-    if (!test_equal(inout, TestValue(workIndex, T3()) + T3(100)))
-    {
-      this->RaiseError("Got wrong in-out value.");
-    }
-    inout = inout - T3(100);
-
-    return in - T1(100);
-  }
-};
-
 namespace mapfield
 {
 static constexpr vtkm::Id ARRAY_SIZE = 10;
@@ -197,26 +173,8 @@ void TestWorkletMapField(vtkm::cont::DeviceAdapterId id)
 {
   std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
-  std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorklet>(),
                                    vtkm::TypeListTagCommon());
-
-  std::cout << "--- Worklet accepting some types." << std::endl;
-  vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorkletLimitedTypes>(),
-                                   vtkm::TypeListTagFieldScalar());
-
-  std::cout << "--- Sending bad type to worklet." << std::endl;
-  try
-  {
-    //can only test with variant arrays, as static arrays will fail to compile
-    DoVariantTestWorklet<TestMapFieldWorkletLimitedTypes> badWorkletTest;
-    badWorkletTest(vtkm::Vec<vtkm::Float32, 3>());
-    VTKM_TEST_FAIL("Did not throw expected error.");
-  }
-  catch (vtkm::cont::ErrorBadType& error)
-  {
-    std::cout << "Got expected error: " << error.GetMessage() << std::endl;
-  }
 }
 
 } // mapfield namespace

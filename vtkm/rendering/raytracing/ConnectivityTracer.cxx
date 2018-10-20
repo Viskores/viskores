@@ -1196,7 +1196,7 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
               vtkm::Float32(this->ScalarBounds.Max)));
     dispatcher.Invoke(rays.HitIdx,
                       this->Coords,
-                      this->ScalarField.GetData(),
+                      this->ScalarField.GetData().ResetTypes(ScalarRenderingTypes()),
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
                       tracker.CurrentDistance,
@@ -1215,7 +1215,7 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
               vtkm::Float32(this->ScalarBounds.Max)));
 
     dispatcher.Invoke(rays.HitIdx,
-                      this->ScalarField.GetData(),
+                      this->ScalarField.GetData().ResetTypes(ScalarRenderingTypes()),
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
                       tracker.CurrentDistance,
@@ -1243,8 +1243,8 @@ void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
                       rays.Distance,
-                      this->ScalarField.GetData(),
-                      this->EmissionField.GetData(),
+                      this->ScalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                      this->EmissionField.GetData().ResetTypes(ScalarRenderingTypes()),
                       absorp,
                       emission,
                       rays.HitIdx);
@@ -1257,7 +1257,7 @@ void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
                       rays.Distance,
-                      this->ScalarField.GetData(),
+                      this->ScalarField.GetData().ResetTypes(ScalarRenderingTypes()),
                       rays.Buffers.at(0).Buffer,
                       rays.HitIdx);
   }

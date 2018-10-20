@@ -492,7 +492,8 @@ void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
 
   vtkm::worklet::DispatcherMapField<detail::GetScalar<Precision>>(
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-    .Invoke(rays.HitIdx, rays.Scalar, *scalarField, CylIds);
+    .Invoke(
+      rays.HitIdx, rays.Scalar, scalarField->GetData().ResetTypes(ScalarRenderingTypes()), CylIds);
 }
 
 void CylinderIntersector::IntersectionData(Ray<vtkm::Float32>& rays,

@@ -100,7 +100,7 @@ VTKM_CONT CellSetType* DynamicCellSetTryCast(
 ///
 /// By default, \c DynamicCellSet will assume that the value type in the array
 /// matches one of the types specified by \c VTKM_DEFAULT_CELL_SET_LIST_TAG.
-/// This list can be changed by using the \c ResetTypeList method. It is
+/// This list can be changed by using the \c ResetCellSetList method. It is
 /// worthwhile to match these lists closely to the possible types that might be
 /// used. If a type is missing you will get a runtime error. If there are more
 /// types than necessary, then the template mechanism will create a lot of

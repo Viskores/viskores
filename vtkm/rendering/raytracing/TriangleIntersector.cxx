@@ -360,13 +360,21 @@ public:
     {
       vtkm::worklet::DispatcherMapField<LerpScalar<Precision>>(
         LerpScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.U, rays.V, rays.Scalar, *scalarField, triangles);
+        .Invoke(rays.HitIdx,
+                rays.U,
+                rays.V,
+                rays.Scalar,
+                scalarField->GetData().ResetTypes(ScalarRenderingTypes()),
+                triangles);
     }
     else
     {
       vtkm::worklet::DispatcherMapField<NodalScalar<Precision>>(
         NodalScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.Scalar, *scalarField, triangles);
+        .Invoke(rays.HitIdx,
+                rays.Scalar,
+                scalarField->GetData().ResetTypes(ScalarRenderingTypes()),
+                triangles);
     }
   } // Run
 

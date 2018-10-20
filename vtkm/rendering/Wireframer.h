@@ -397,9 +397,7 @@ public:
   VTKM_CONT
   BufferConverter() {}
 
-  using ControlSignature = void(FieldIn,
-                                WholeArrayOut,
-                                WholeArrayOut<vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 4>>>);
+  using ControlSignature = void(FieldIn, WholeArrayOut, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, _3, WorkIndex);
 
   template <typename DepthBufferPortalType, typename ColorBufferPortalType>
@@ -553,7 +551,8 @@ private:
                                    Camera.GetClippingRange());
     vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
     plotterDispatcher.SetDevice(DeviceTag());
-    plotterDispatcher.Invoke(PointIndices, Coordinates, ScalarField.GetData());
+    plotterDispatcher.Invoke(
+      PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
 
     BufferConverter converter;
     vtkm::worklet::DispatcherMapField<BufferConverter> converterDispatcher(converter);

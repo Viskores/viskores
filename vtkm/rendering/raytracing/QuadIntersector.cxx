@@ -454,7 +454,10 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
 
   vtkm::worklet::DispatcherMapField<detail::GetScalar<Precision>>(
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-    .Invoke(rays.HitIdx, rays.Scalar, *scalarField, QuadIds);
+    .Invoke(rays.HitIdx,
+            rays.Scalar,
+            scalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+            QuadIds);
 }
 
 void QuadIntersector::IntersectionData(Ray<vtkm::Float32>& rays,

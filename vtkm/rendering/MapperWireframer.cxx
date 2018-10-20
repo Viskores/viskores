@@ -277,7 +277,10 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     //
     vtkm::worklet::DispatcherMapField<Convert1DCoordinates>(
       Convert1DCoordinates(this->LogarithmY, this->LogarithmX))
-      .Invoke(coords.GetData(), inScalarField.GetData(), newCoords, newScalars);
+      .Invoke(coords.GetData(),
+              inScalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+              newCoords,
+              newScalars);
 
     actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
     actualField = vtkm::cont::Field(

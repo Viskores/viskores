@@ -91,7 +91,7 @@ struct DoTestWorklet
     outputHandle = vtkm::cont::ArrayHandle<T>();
     outputHandle.Allocate(ARRAY_SIZE);
 
-    vtkm::cont::VariantArrayHandle outputFieldDynamic(outputFieldArray);
+    vtkm::cont::VariantArrayHandleBase<vtkm::ListTagBase<T>> outputFieldDynamic(outputFieldArray);
     dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldDynamic);
 
     std::cout << "Check dynamic array result." << std::endl;

@@ -26,6 +26,37 @@ It needs to be run in a Unix-compatible shell. It takes a single argument,
 which is a top level directory to modify files. The script processes all C++
 source files recursively from that directory.
 
+## Selecting data types for auxiliary filter fields
+
+The main rational for making these changes is that the types of the inputs
+to worklets is almost always already determined by the calling filter.
+However, although it is straightforward to specify the type of the "main"
+(active) scalars in a filter, it is less clear what to do for additional
+fields if a filter needs a second or third field.
+
+Typically, in the case of a second or third field, it is up to the
+`DoExecute` method in the filter implementation to apply a policy to that
+field. When applying a policy, you give it a policy object (nominally
+passed by the user) and a traits of the filter. Generally, the accepted
+list of types for a field should be part of the filter's traits For
+example, consider the `WarpVector` filter. This filter only works on
+`Vec`s of size 3, so its traits class looks like this.
+
+``` cpp
+template <>
+class FilterTraits<WarpVector>
+{
+public:
+  // WarpVector can only applies to Float and Double Vec3 arrays
+  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
+};
+```
+
+However, the `WarpVector` filter also requires two fields instead of one.
+The first (active) field is handled by its superclass (`FilterField`), but
+the second (auxiliary) field must be managed in the `DoExecute`. Generally,
+this can be done by simply applying the policy with the filter traits.
+
 ## Change in executable size
 
 The whole intention of these template parameters in the first place was to

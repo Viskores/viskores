@@ -121,8 +121,8 @@ static void TestMaxPointOrCell()
 
   vtkm::worklet::DispatcherMapTopology<::test_uniform::MaxPointOrCellValue> dispatcher;
   dispatcher.Invoke(
-    dataSet.GetField("cellvar"),
-    dataSet.GetField("pointvar"),
+    dataSet.GetField("cellvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    dataSet.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
     // We know that the cell set is a structured 2D grid and
     // The worklet does not work with general types because
     // of the way we get cell indices. We need to make that

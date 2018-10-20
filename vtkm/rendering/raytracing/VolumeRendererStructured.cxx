@@ -846,7 +846,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                rays.MinDistance,
                                rays.MaxDistance,
                                rays.Buffers.at(0).Buffer,
-                               *ScalarField);
+                               ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
     }
     else
     {
@@ -861,7 +861,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                 rays.MinDistance,
                 rays.MaxDistance,
                 rays.Buffers.at(0).Buffer,
-                *ScalarField);
+                ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
     }
   }
   else
@@ -884,7 +884,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                rays.MinDistance,
                                rays.MaxDistance,
                                rays.Buffers.at(0).Buffer,
-                               *ScalarField);
+                               ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
     }
     else
     {
@@ -896,12 +896,13 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                                SampleDistance,
                                                                locator));
       rectilinearLocatorDispatcher.SetDevice(Device());
-      rectilinearLocatorDispatcher.Invoke(rays.Dir,
-                                          rays.Origin,
-                                          rays.MinDistance,
-                                          rays.MaxDistance,
-                                          rays.Buffers.at(0).Buffer,
-                                          *ScalarField);
+      rectilinearLocatorDispatcher.Invoke(
+        rays.Dir,
+        rays.Origin,
+        rays.MinDistance,
+        rays.MaxDistance,
+        rays.Buffers.at(0).Buffer,
+        ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
     }
   }
 
