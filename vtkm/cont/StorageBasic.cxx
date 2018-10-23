@@ -118,11 +118,11 @@ StorageBasicBase::~StorageBasicBase()
   this->ReleaseResources();
 }
 
-StorageBasicBase::StorageBasicBase(StorageBasicBase&& src)
-  : Array(src.Array)
-  , AllocatedByteSize(src.AllocatedByteSize)
-  , NumberOfValues(src.NumberOfValues)
-  , DeleteFunction(src.DeleteFunction)
+StorageBasicBase::StorageBasicBase(StorageBasicBase&& src) noexcept
+  : Array(src.Array),
+    AllocatedByteSize(src.AllocatedByteSize),
+    NumberOfValues(src.NumberOfValues),
+    DeleteFunction(src.DeleteFunction)
 
 {
   src.Array = nullptr;
@@ -146,7 +146,7 @@ StorageBasicBase::StorageBasicBase(const StorageBasicBase& src)
   }
 }
 
-StorageBasicBase StorageBasicBase::operator=(StorageBasicBase&& src)
+StorageBasicBase& StorageBasicBase::operator=(StorageBasicBase&& src) noexcept
 {
   this->ReleaseResources();
   this->Array = src.Array;
@@ -161,7 +161,7 @@ StorageBasicBase StorageBasicBase::operator=(StorageBasicBase&& src)
   return *this;
 }
 
-StorageBasicBase StorageBasicBase::operator=(const StorageBasicBase& src)
+StorageBasicBase& StorageBasicBase::operator=(const StorageBasicBase& src)
 {
   if (src.DeleteFunction)
   {
