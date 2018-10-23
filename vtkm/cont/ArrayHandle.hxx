@@ -38,7 +38,7 @@ ArrayHandle<T, S>::ArrayHandle(const ArrayHandle<T, S>& src)
 }
 
 template <typename T, typename S>
-ArrayHandle<T, S>::ArrayHandle(ArrayHandle<T, S>&& src)
+ArrayHandle<T, S>::ArrayHandle(ArrayHandle<T, S>&& src) noexcept
   : Internals(std::move(src.Internals))
 {
 }
@@ -53,7 +53,7 @@ ArrayHandle<T, S>::ArrayHandle(const typename ArrayHandle<T, S>::StorageType& st
 }
 
 template <typename T, typename S>
-ArrayHandle<T, S>::ArrayHandle(typename ArrayHandle<T, S>::StorageType&& storage)
+ArrayHandle<T, S>::ArrayHandle(typename ArrayHandle<T, S>::StorageType&& storage) noexcept
   : Internals(new InternalStruct)
 {
   this->Internals->ControlArray = std::move(storage);
@@ -74,7 +74,7 @@ ArrayHandle<T, S>& ArrayHandle<T, S>::operator=(const ArrayHandle<T, S>& src)
 }
 
 template <typename T, typename S>
-ArrayHandle<T, S>& ArrayHandle<T, S>::operator=(ArrayHandle<T, S>&& src)
+ArrayHandle<T, S>& ArrayHandle<T, S>::operator=(ArrayHandle<T, S>&& src) noexcept
 {
   this->Internals = std::move(src.Internals);
   return *this;

@@ -40,19 +40,19 @@ ArrayHandle<T, StorageTagBasic>::ArrayHandle(const Thisclass& src)
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(Thisclass&& src)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(Thisclass&& src) noexcept
   : Internals(std::move(src.Internals))
 {
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(const StorageType& storage)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(const StorageType& storage) noexcept
   : Internals(new internal::ArrayHandleImpl(storage))
 {
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(StorageType&& storage)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(StorageType&& storage) noexcept
   : Internals(new internal::ArrayHandleImpl(std::move(storage)))
 {
 }
@@ -70,7 +70,8 @@ ArrayHandle<T, StorageTagBasic>& ArrayHandle<T, StorageTagBasic>::operator=(cons
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>& ArrayHandle<T, StorageTagBasic>::operator=(Thisclass&& src)
+ArrayHandle<T, StorageTagBasic>& ArrayHandle<T, StorageTagBasic>::operator=(
+  Thisclass&& src) noexcept
 {
   this->Internals = std::move(src.Internals);
   return *this;
