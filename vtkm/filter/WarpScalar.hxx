@@ -21,6 +21,8 @@
 #include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
+#include <vtkm/filter/WarpScalar.h>
+
 namespace vtkm
 {
 namespace filter
@@ -51,11 +53,13 @@ inline VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(
   auto normalF = inDataSet.GetField(this->NormalFieldName, this->NormalFieldAssociation);
   auto sfF = inDataSet.GetField(this->ScalarFactorFieldName, this->ScalarFactorFieldAssociation);
   vtkm::cont::ArrayHandle<vecType> result;
-  this->Worklet.Run(field,
-                    vtkm::filter::ApplyPolicy(normalF, policy),
-                    vtkm::filter::ApplyPolicy(sfF, policy),
-                    this->ScaleAmount,
-                    result);
+  this->Worklet.Run(
+    field,
+    vtkm::filter::ApplyPolicy(normalF, policy, vtkm::filter::FilterTraits<WarpScalar>()),
+    vtkm::filter::ApplyPolicy(
+      sfF, policy, vtkm::filter::FilterTraits<WarpScalar, WarpScalarScalarFieldTag>()),
+    this->ScaleAmount,
+    result);
 
   return internal::CreateResult(inDataSet,
                                 result,

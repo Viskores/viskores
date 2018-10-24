@@ -61,16 +61,16 @@ ApplyPolicy(const vtkm::cont::Field& field, const vtkm::filter::PolicyBase<Deriv
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename FilterType>
+template <typename DerivedPolicy, typename FilterType, typename FieldTag>
 VTKM_CONT vtkm::cont::DynamicArrayHandleBase<
-  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType>::TypeList,
+  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList,
   typename DerivedPolicy::FieldStorageList>
 ApplyPolicy(const vtkm::cont::Field& field,
             const vtkm::filter::PolicyBase<DerivedPolicy>&,
-            const vtkm::filter::FilterTraits<FilterType>&)
+            const vtkm::filter::FilterTraits<FilterType, FieldTag>&)
 {
   using TypeList =
-    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType>::TypeList;
+    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList;
 
   using StorageList = typename DerivedPolicy::FieldStorageList;
   return field.GetData().ResetTypeAndStorageLists(TypeList(), StorageList());
