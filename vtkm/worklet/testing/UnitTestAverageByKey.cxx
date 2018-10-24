@@ -84,15 +84,12 @@ void TryKeyType(KeyType)
   vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault> valuesArray(0.0f, 1.0f, ARRAY_SIZE);
 
   std::cout << "  Try average with Keys object" << std::endl;
-  CheckAverageByKey(
-    keys.GetUniqueKeys(),
-    vtkm::worklet::AverageByKey::Run(keys, valuesArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
+  CheckAverageByKey(keys.GetUniqueKeys(), vtkm::worklet::AverageByKey::Run(keys, valuesArray));
 
   std::cout << "  Try average with device adapter's reduce by keys" << std::endl;
   vtkm::cont::ArrayHandle<KeyType> outputKeys;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputValues;
-  vtkm::worklet::AverageByKey::Run(
-    keysArray, valuesArray, outputKeys, outputValues, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::worklet::AverageByKey::Run(keysArray, valuesArray, outputKeys, outputValues);
   CheckAverageByKey(outputKeys, outputValues);
 }
 
