@@ -27,7 +27,6 @@
 
 using Handle64 = vtkm::cont::ArrayHandle<vtkm::Float64>;
 
-template <typename Device>
 void Test3D()
 {
   std::cout << "Testing ZFP 3d:" << std::endl;
@@ -40,7 +39,7 @@ void Test3D()
   auto dynField = dataset.GetField("pointvar").GetData();
   ;
 
-  vtkm::worklet::ZFPCompressor<Device> compressor;
+  vtkm::worklet::ZFPCompressor compressor;
 
   vtkm::Float64 rate = 4;
   if (dynField.IsSameType(Handle64()))
@@ -58,7 +57,7 @@ void Test3D()
 
 void TestZFP()
 {
-  Test3D<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>();
+  Test3D();
 }
 
 int UnitTestZFPCompressor(int, char* [])

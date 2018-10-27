@@ -21,7 +21,9 @@
 #define vtk_m_worklet_zfp_compressor_h
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/AtomicArray.h>
 #include <vtkm/cont/Timer.h>
@@ -213,7 +215,6 @@ void DataDump(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
   fclose(fp);
 }
 
-template <typename Device>
 class ZFPCompressor
 {
 public:
@@ -256,19 +257,14 @@ public:
     std::cout << "Output size " << outsize << "\n";
 
     vtkm::cont::ArrayHandle<vtkm::Int64> output;
-    output.PrepareForOutput(outsize, Device());
-
-    vtkm::worklet::DispatcherMapField<detail::MemSet<vtkm::Int64>> memsetDispatcher(
-      detail::MemSet<vtkm::Int64>(0));
-    memsetDispatcher.SetDevice(Device());
-    memsetDispatcher.Invoke(output);
-
-
+    // hopefully this inits/allocates the mem only on the device
+    vtkm::cont::ArrayHandleConstant<vtkm::Int64> zero(0, outsize);
+    vtkm::cont::Algorithm::Copy(zero, output);
+    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
     {
-      vtkm::cont::Timer<Device> timer;
+      Timer timer;
       vtkm::cont::ArrayHandleCounting<vtkm::Id> one(0, 1, 1);
       vtkm::worklet::DispatcherMapField<detail::MemTransfer> dis;
-      dis.SetDevice(Device());
       dis.Invoke(one, data);
 
       vtkm::Float64 time = timer.GetElapsedTime();
@@ -278,11 +274,11 @@ public:
     // launch 1 thread per zfp block
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
-    vtkm::cont::Timer<Device> timer;
+    Timer timer;
     vtkm::worklet::DispatcherMapField<detail::Encode3> compressDispatcher(
       detail::Encode3(dims, paddedDims, stream.maxbits));
-    compressDispatcher.SetDevice(Device());
     compressDispatcher.Invoke(blockCounter, data, output);
+
     vtkm::Float64 time = timer.GetElapsedTime();
     size_t total_bytes = data.GetNumberOfValues() * sizeof(vtkm::Float64);
     vtkm::Float64 gB = vtkm::Float64(total_bytes) / (1024. * 1024. * 1024.);
