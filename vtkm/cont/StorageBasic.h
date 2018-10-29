@@ -83,10 +83,10 @@ public:
 
   VTKM_CONT ~StorageBasicBase();
 
-  VTKM_CONT StorageBasicBase(StorageBasicBase&& src);
+  VTKM_CONT StorageBasicBase(StorageBasicBase&& src) noexcept;
   VTKM_CONT StorageBasicBase(const StorageBasicBase& src);
-  VTKM_CONT StorageBasicBase operator=(StorageBasicBase&& src);
-  VTKM_CONT StorageBasicBase operator=(const StorageBasicBase& src);
+  VTKM_CONT StorageBasicBase& operator=(StorageBasicBase&& src) noexcept;
+  VTKM_CONT StorageBasicBase& operator=(const StorageBasicBase& src);
 
   /// \brief Return the number of bytes allocated for this storage object(Capacity).
   ///
@@ -178,6 +178,8 @@ public:
 public:
   /// \brief construct storage that VTK-m is responsible for
   VTKM_CONT Storage();
+  VTKM_CONT Storage(const Storage<ValueT, vtkm::cont::StorageTagBasic>& src);
+  VTKM_CONT Storage(Storage<ValueT, vtkm::cont::StorageTagBasic>&& src) noexcept;
 
   /// \brief construct storage that VTK-m is not responsible for
   VTKM_CONT Storage(const ValueType* array, vtkm::Id numberOfValues);
@@ -185,6 +187,9 @@ public:
   /// \brief construct storage that was previously allocated and now VTK-m is
   ///  responsible for
   VTKM_CONT Storage(const ValueType* array, vtkm::Id numberOfValues, void (*deleteFunction)(void*));
+
+  VTKM_CONT Storage& operator=(const Storage<ValueT, vtkm::cont::StorageTagBasic>& src);
+  VTKM_CONT Storage& operator=(Storage<ValueT, vtkm::cont::StorageTagBasic>&& src);
 
   VTKM_CONT void Allocate(vtkm::Id numberOfValues);
 

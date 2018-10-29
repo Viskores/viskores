@@ -294,7 +294,7 @@ public:
   /// with CUDA), then the automatically generated move constructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  ArrayHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src);
+  ArrayHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src) noexcept;
 
   /// Special constructor for subclass specializations that need to set the
   /// initial state of the control array. When this constructor is used, it
@@ -307,7 +307,7 @@ public:
   /// initial state of the control array. When this constructor is used, it
   /// is assumed that the control array is valid.
   ///
-  ArrayHandle(StorageType&& storage);
+  ArrayHandle(StorageType&& storage) noexcept;
 
   /// Destructs an empty ArrayHandle.
   ///
@@ -328,7 +328,7 @@ public:
   ///
   VTKM_CONT
   vtkm::cont::ArrayHandle<ValueType, StorageTag>& operator=(
-    vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src);
+    vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src) noexcept;
 
   /// Like a pointer, two \c ArrayHandles are considered equal if they point
   /// to the same location in memory.
