@@ -20,6 +20,8 @@
 
 set(headers
   ZFPBlockWriter.h
+  ZFPEncode.h
+  ZFPEncode3.h
   ZFPFunctions.h
   ZFPStructs.h
   ZFPTypeInfo.h
