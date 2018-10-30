@@ -127,6 +127,7 @@ set(sources
   CellSet.cxx
   CellSetStructured.cxx
   ColorTable.cxx
+  ColorTablePresets.cxx
   DataSet.cxx
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
@@ -145,7 +146,6 @@ set(sources
   internal/VirtualObjectTransfer.cxx
   Logging.cxx
   MultiBlock.cxx
-  PresetColorTables.cxx
   RuntimeDeviceInformation.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx

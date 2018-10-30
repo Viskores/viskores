@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 #include <algorithm>
+#include <cctype>
 #include <memory>
 
 #include <vtkm/cont/ColorTable.h>
@@ -32,12 +33,12 @@ namespace vtkm
 namespace cont
 {
 
-namespace detail
+namespace internal
 {
-bool loadColorTablePreset(vtkm::cont::ColorTable::Preset preset, vtkm::cont::ColorTable& table);
 std::set<std::string> GetPresetNames();
-bool loadColorTablePreset(std::string name, vtkm::cont::ColorTable& table);
-}
+bool LoadColorTablePreset(vtkm::cont::ColorTable::Preset preset, vtkm::cont::ColorTable& table);
+bool LoadColorTablePreset(std::string name, vtkm::cont::ColorTable& table);
+} // namespace internal
 
 //----------------------------------------------------------------------------
 ColorTable::ColorTable(vtkm::cont::ColorTable::Preset preset)
@@ -103,26 +104,54 @@ ColorTable::ColorTable(const vtkm::Range& range,
 }
 
 //----------------------------------------------------------------------------
+ColorTable::ColorTable(const std::string& name,
+                       vtkm::cont::ColorSpace colorSpace,
+                       const vtkm::Vec<double, 3>& nanColor,
+                       const std::vector<double>& rgbPoints,
+                       const std::vector<double>& alphaPoints)
+  : Impl(std::make_shared<detail::ColorTableInternals>())
+{
+  this->SetName(name);
+  this->SetColorSpace(colorSpace);
+  this->SetNaNColor(nanColor);
+  this->FillColorTableFromDataPointer(static_cast<vtkm::Int32>(rgbPoints.size()), rgbPoints.data());
+  this->FillOpacityTableFromDataPointer(static_cast<vtkm::Int32>(alphaPoints.size()),
+                                        alphaPoints.data());
+}
+
+//----------------------------------------------------------------------------
 ColorTable::~ColorTable()
 {
 }
 
 //----------------------------------------------------------------------------
-bool ColorTable::LoadPreset(vtkm::cont::ColorTable::Preset preset)
+const std::string& ColorTable::GetName() const
 {
-  return detail::loadColorTablePreset(preset, *this);
+  return this->Impl->Name;
 }
 
 //----------------------------------------------------------------------------
-std::set<std::string> ColorTable::GetPresets() const
+void ColorTable::SetName(const std::string& name)
 {
-  return detail::GetPresetNames();
+  this->Impl->Name = name;
+}
+
+//----------------------------------------------------------------------------
+bool ColorTable::LoadPreset(vtkm::cont::ColorTable::Preset preset)
+{
+  return internal::LoadColorTablePreset(preset, *this);
+}
+
+//----------------------------------------------------------------------------
+std::set<std::string> ColorTable::GetPresets()
+{
+  return internal::GetPresetNames();
 }
 
 //----------------------------------------------------------------------------
 bool ColorTable::LoadPreset(const std::string& name)
 {
-  return detail::loadColorTablePreset(name, *this);
+  return internal::LoadColorTablePreset(name, *this);
 }
 
 //----------------------------------------------------------------------------
@@ -358,8 +387,8 @@ vtkm::Int32 ColorTable::AddPoint(double x, const vtkm::Vec<float, 3>& rgb)
     }
     else
     {
-      this->Impl->ColorNodePos.emplace(pos, x);
       this->Impl->ColorRGB.emplace(this->Impl->ColorRGB.begin() + std::distance(begin, pos), rgb);
+      this->Impl->ColorNodePos.emplace(pos, x);
     }
   }
   this->Impl->TableRange.Include(x); //update range to include x
@@ -541,11 +570,11 @@ vtkm::Int32 ColorTable::AddPointAlpha(double x, float alpha, float midpoint, flo
     }
     else
     {
-      this->Impl->OpacityNodePos.emplace(pos, x);
       this->Impl->OpacityAlpha.emplace(this->Impl->OpacityAlpha.begin() + std::distance(begin, pos),
                                        alpha);
       this->Impl->OpacityMidSharp.emplace(
         this->Impl->OpacityMidSharp.begin() + std::distance(begin, pos), midsharp);
+      this->Impl->OpacityNodePos.emplace(pos, x);
     }
   }
   this->Impl->OpacityArraysChanged = true;
@@ -749,7 +778,7 @@ bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const double* pt
   }
   this->ClearAlpha();
 
-  std::size_t size = static_cast<std::size_t>(n / 2);
+  std::size_t size = static_cast<std::size_t>(n / 4);
   this->Impl->OpacityNodePos.reserve(size);
   this->Impl->OpacityAlpha.reserve(size);
   this->Impl->OpacityMidSharp.reserve(size);
@@ -774,7 +803,7 @@ bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const float* ptr
   this->ClearAlpha();
 
 
-  std::size_t size = static_cast<std::size_t>(n / 2);
+  std::size_t size = static_cast<std::size_t>(n / 4);
   this->Impl->OpacityNodePos.reserve(size);
   this->Impl->OpacityAlpha.reserve(size);
   this->Impl->OpacityMidSharp.reserve(size);
