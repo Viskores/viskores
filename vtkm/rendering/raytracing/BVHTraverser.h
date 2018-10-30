@@ -84,8 +84,6 @@ public:
   class Intersector : public vtkm::worklet::WorkletMapField
   {
   private:
-    bool Occlusion;
-
     VTKM_EXEC
     inline vtkm::Float32 rcp(vtkm::Float32 f) const { return 1.0f / f; }
     VTKM_EXEC
@@ -103,10 +101,7 @@ public:
 
   public:
     VTKM_CONT
-    Intersector(bool occlusion)
-      : Occlusion(occlusion)
-    {
-    }
+    Intersector() {}
     using ControlSignature = void(FieldIn<>,
                                   FieldIn<>,
                                   FieldOut<>,
@@ -237,7 +232,7 @@ public:
                                LeafIntersectorType& leafIntersector,
                                vtkm::cont::CoordinateSystem& coordsHandle)
   {
-    vtkm::worklet::DispatcherMapField<Intersector> intersectDispatch(Intersector(false));
+    vtkm::worklet::DispatcherMapField<Intersector> intersectDispatch;
     intersectDispatch.Invoke(rays.Dir,
                              rays.Origin,
                              rays.Distance,
