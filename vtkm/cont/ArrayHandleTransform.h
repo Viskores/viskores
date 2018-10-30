@@ -28,6 +28,8 @@
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
+#include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
+
 namespace vtkm
 {
 namespace cont

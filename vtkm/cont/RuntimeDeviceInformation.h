@@ -20,14 +20,8 @@
 #ifndef vtk_m_cont_RuntimeDeviceInformation_h
 #define vtk_m_cont_RuntimeDeviceInformation_h
 
-#include <vtkm/cont/DeviceAdapter.h>
-
-//Bring in each device adapters runtime class
-#include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
-#include <vtkm/cont/openmp/internal/DeviceAdapterRuntimeDetectorOpenMP.h>
-#include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
-#include <vtkm/cont/tbb/internal/DeviceAdapterRuntimeDetectorTBB.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm
 {
@@ -40,24 +34,18 @@ namespace cont
 /// or a Accelerator Card.
 ///
 ///
-template <class Device>
-class RuntimeDeviceInformation
+
+class VTKM_CONT_EXPORT RuntimeDeviceInformation
 {
 public:
   VTKM_CONT
-  RuntimeDeviceInformation()
-    : RuntimeImplementation()
-  {
-  }
+  RuntimeDeviceInformation() {}
 
   /// Returns true if the given device adapter is supported on the current
   /// machine.
   ///
   VTKM_CONT
-  bool Exists() const { return this->RuntimeImplementation.Exists(); }
-
-private:
-  vtkm::cont::DeviceAdapterRuntimeDetector<Device> RuntimeImplementation;
+  bool Exists(DeviceAdapterId id) const;
 };
 }
 } // namespace vtkm::cont

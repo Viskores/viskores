@@ -146,6 +146,7 @@ set(sources
   Logging.cxx
   MultiBlock.cxx
   PresetColorTables.cxx
+  RuntimeDeviceInformation.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
   TryExecute.cxx
