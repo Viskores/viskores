@@ -511,6 +511,15 @@ void ChannelBuffer<Precision>::SetNumChannels(const vtkm::Int32 numChannels)
   ResizeChannelFunctor<Precision> functor(this, numChannels);
   vtkm::cont::TryExecute(functor);
 }
+
+template <typename Precision>
+ChannelBuffer<Precision> ChannelBuffer<Precision>::Copy()
+{
+  ChannelBuffer res(NumChannels, Size);
+  vtkm::cont::Algorithm::Copy(this->Buffer, res.Buffer);
+  return res;
+}
+
 // Instantiate supported types
 template class ChannelBuffer<vtkm::Float32>;
 template class ChannelBuffer<vtkm::Float64>;

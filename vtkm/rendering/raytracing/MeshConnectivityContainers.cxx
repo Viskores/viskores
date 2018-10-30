@@ -39,41 +39,28 @@ MeshConnContainer::MeshConnContainer(){};
 MeshConnContainer::~MeshConnContainer(){};
 
 template <typename T>
-VTKM_CONT void MeshConnContainer::FindEntryImpl(Ray<T>& rays,
-                                                const vtkm::cont::DeviceAdapterId deviceId)
+VTKM_CONT void MeshConnContainer::FindEntryImpl(Ray<T>& rays)
 {
   bool getCellIndex = true;
 
   Intersector.SetUseWaterTight(true);
 
-  switch (deviceId.GetValue())
-  {
-#ifdef VTKM_ENABLE_TBB
-    case VTKM_DEVICE_ADAPTER_TBB:
-      Intersector.IntersectRays(rays, vtkm::cont::DeviceAdapterTagTBB(), getCellIndex);
-      break;
-#endif
-#ifdef VTKM_ENABLE_CUDA
-    case VTKM_DEVICE_ADAPTER_CUDA:
-      Intersector.IntersectRays(rays, vtkm::cont::DeviceAdapterTagCuda(), getCellIndex);
-      break;
-#endif
-    default:
-      Intersector.IntersectRays(rays, vtkm::cont::DeviceAdapterTagSerial(), getCellIndex);
-      break;
-  }
+  Intersector.IntersectRays(rays, getCellIndex);
 }
 
-void MeshConnContainer::FindEntry(Ray<vtkm::Float32>& rays,
-                                  const vtkm::cont::DeviceAdapterId deviceId)
+MeshWrapper MeshConnContainer::PrepareForExecution(const vtkm::cont::DeviceAdapterId deviceId)
 {
-  this->FindEntryImpl(rays, deviceId);
+  return MeshWrapper(const_cast<MeshConnectivityBase*>(this->Construct(deviceId)));
 }
 
-void MeshConnContainer::FindEntry(Ray<vtkm::Float64>& rays,
-                                  const vtkm::cont::DeviceAdapterId deviceId)
+void MeshConnContainer::FindEntry(Ray<vtkm::Float32>& rays)
 {
-  this->FindEntryImpl(rays, deviceId);
+  this->FindEntryImpl(rays);
+}
+
+void MeshConnContainer::FindEntry(Ray<vtkm::Float64>& rays)
+{
+  this->FindEntryImpl(rays);
 }
 
 VTKM_CONT
@@ -81,13 +68,13 @@ UnstructuredContainer::UnstructuredContainer(const vtkm::cont::CellSetExplicit<>
                                              const vtkm::cont::CoordinateSystem& coords,
                                              IdHandle& faceConn,
                                              IdHandle& faceOffsets,
-                                             Id4Handle& externalTriangles)
+                                             Id4Handle& triangles)
   : FaceConnectivity(faceConn)
   , FaceOffsets(faceOffsets)
   , Cellset(cellset)
   , Coords(coords)
 {
-  this->ExternalTriangles = externalTriangles;
+  this->Triangles = triangles;
   //
   // Grab the cell arrays
   //
@@ -97,7 +84,7 @@ UnstructuredContainer::UnstructuredContainer(const vtkm::cont::CellSetExplicit<>
     Cellset.GetIndexOffsetArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
   Shapes = Cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
-  Intersector.SetData(Coords, ExternalTriangles);
+  Intersector.SetData(Coords, Triangles);
 }
 
 UnstructuredContainer::~UnstructuredContainer(){};
@@ -107,6 +94,19 @@ const MeshConnectivityBase* UnstructuredContainer::Construct(
 {
   switch (deviceId.GetValue())
   {
+#ifdef VTKM_ENABLE_OPENMP
+    case VTKM_DEVICE_ADAPTER_OPENMP:
+      using OMP = vtkm::cont::DeviceAdapterTagOpenMP;
+      {
+        MeshConnUnstructured<OMP> conn(this->FaceConnectivity,
+                                       this->FaceOffsets,
+                                       this->CellConn,
+                                       this->CellOffsets,
+                                       this->Shapes);
+        Handle = make_MeshConnHandle(conn);
+      }
+      return Handle.PrepareForExecution(OMP());
+#endif
 #ifdef VTKM_ENABLE_TBB
     case VTKM_DEVICE_ADAPTER_TBB:
       using TBB = vtkm::cont::DeviceAdapterTagTBB;
@@ -157,13 +157,13 @@ UnstructuredSingleContainer::UnstructuredSingleContainer(
   const vtkm::cont::CellSetSingleType<>& cellset,
   const vtkm::cont::CoordinateSystem& coords,
   IdHandle& faceConn,
-  Id4Handle& externalTriangles)
+  Id4Handle& triangles)
   : FaceConnectivity(faceConn)
   , Coords(coords)
   , Cellset(cellset)
 {
 
-  this->ExternalTriangles = externalTriangles;
+  this->Triangles = triangles;
 
   this->Intersector.SetUseWaterTight(true);
 
@@ -192,7 +192,7 @@ UnstructuredSingleContainer::UnstructuredSingleContainer(
   logger->OpenLogEntry("mesh_conn_construction");
   vtkm::cont::Timer<cont::DeviceAdapterTagSerial> timer;
 
-  Intersector.SetData(Coords, ExternalTriangles);
+  Intersector.SetData(Coords, Triangles);
 }
 
 const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
@@ -200,6 +200,20 @@ const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
 {
   switch (deviceId.GetValue())
   {
+#ifdef VTKM_ENABLE_OPENMP
+    case VTKM_DEVICE_ADAPTER_OPENMP:
+      using OMP = vtkm::cont::DeviceAdapterTagOpenMP;
+      {
+        MeshConnSingleType<OMP> conn(this->FaceConnectivity,
+                                     this->CellConnectivity,
+                                     this->CellOffsets,
+                                     this->ShapeId,
+                                     this->NumIndices,
+                                     this->NumFaces);
+        Handle = make_MeshConnHandle(conn);
+      }
+      return Handle.PrepareForExecution(OMP());
+#endif
 #ifdef VTKM_ENABLE_TBB
     case VTKM_DEVICE_ADAPTER_TBB:
       using TBB = vtkm::cont::DeviceAdapterTagTBB;
@@ -245,18 +259,18 @@ const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
 
 StructuredContainer::StructuredContainer(const vtkm::cont::CellSetStructured<3>& cellset,
                                          const vtkm::cont::CoordinateSystem& coords,
-                                         Id4Handle& externalTriangles)
+                                         Id4Handle& triangles)
   : Coords(coords)
   , Cellset(cellset)
 {
 
-  ExternalTriangles = externalTriangles;
+  Triangles = triangles;
   Intersector.SetUseWaterTight(true);
 
   PointDims = Cellset.GetPointDimensions();
   CellDims = Cellset.GetCellDimensions();
 
-  this->Intersector.SetData(Coords, ExternalTriangles);
+  this->Intersector.SetData(Coords, Triangles);
 }
 
 const MeshConnectivityBase* StructuredContainer::Construct(
@@ -268,6 +282,10 @@ const MeshConnectivityBase* StructuredContainer::Construct(
 
   switch (deviceId.GetValue())
   {
+#ifdef VTKM_ENABLE_OPENMP
+    case VTKM_DEVICE_ADAPTER_OPENMP:
+      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagOpenMP());
+#endif
 #ifdef VTKM_ENABLE_TBB
     case VTKM_DEVICE_ADAPTER_TBB:
       return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagTBB());

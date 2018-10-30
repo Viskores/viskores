@@ -20,8 +20,9 @@
 #ifndef vtk_m_rendering_raytracing_Cell_Intersector_h
 #define vtk_m_rendering_raytracing_Cell_Intersector_h
 
+#include <vtkm/CellShape.h>
 #include <vtkm/rendering/raytracing/CellTables.h>
-#include <vtkm/rendering/raytracing/TriangleIntersector.h>
+#include <vtkm/rendering/raytracing/TriangleIntersections.h>
 
 namespace vtkm
 {

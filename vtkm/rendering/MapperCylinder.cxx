@@ -29,12 +29,8 @@
 #include <vtkm/rendering/raytracing/CylinderExtractor.h>
 #include <vtkm/rendering/raytracing/CylinderIntersector.h>
 #include <vtkm/rendering/raytracing/Logger.h>
-#include <vtkm/rendering/raytracing/QuadExtractor.h>
-#include <vtkm/rendering/raytracing/QuadIntersector.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
-#include <vtkm/rendering/raytracing/SphereExtractor.h>
-#include <vtkm/rendering/raytracing/SphereIntersector.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
 
 namespace vtkm

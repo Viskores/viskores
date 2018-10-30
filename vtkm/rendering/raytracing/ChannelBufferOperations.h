@@ -103,23 +103,21 @@ public:
 class ChannelBufferOperations
 {
 public:
-  template <typename Device, typename Precision>
+  template <typename Precision>
   static void Compact(ChannelBuffer<Precision>& buffer,
                       vtkm::cont::ArrayHandle<UInt8>& masks,
-                      const vtkm::Id& newSize,
-                      Device)
+                      const vtkm::Id& newSize)
   {
     vtkm::cont::ArrayHandle<vtkm::Id> offsets;
-    offsets.PrepareForOutput(buffer.Size, Device());
+    offsets.Allocate(buffer.Size);
     vtkm::cont::ArrayHandleCast<vtkm::Id, vtkm::cont::ArrayHandle<vtkm::UInt8>> castedMasks(masks);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(castedMasks, offsets);
+    vtkm::cont::Algorithm::ScanExclusive(castedMasks, offsets);
 
     vtkm::cont::ArrayHandle<Precision> compactedBuffer;
-    compactedBuffer.PrepareForOutput(newSize * buffer.NumChannels, Device());
+    compactedBuffer.Allocate(newSize * buffer.NumChannels);
 
     vtkm::worklet::DispatcherMapField<detail::CompactBuffer> dispatcher(
       detail::CompactBuffer(buffer.NumChannels));
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(masks, buffer.Buffer, offsets, compactedBuffer);
     buffer.Buffer = compactedBuffer;
     buffer.Size = newSize;

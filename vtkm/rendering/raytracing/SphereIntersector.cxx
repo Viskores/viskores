@@ -141,6 +141,8 @@ public:
   IdArrayPortal PointIds;
   FloatPortal Radii;
 
+  SphereLeafIntersector() {}
+
   SphereLeafIntersector(const IdHandle& pointIds, const FloatHandle& radii)
     : PointIds(pointIds.PrepareForInput(Device()))
     , Radii(radii.PrepareForInput(Device()))
@@ -193,17 +195,25 @@ public:
   }
 };
 
-struct IntersectFunctor
+class SphereLeafWrapper : public vtkm::cont::ExecutionObjectBase
 {
-  template <typename Device, typename Precision>
-  VTKM_CONT bool operator()(Device,
-                            SphereIntersector* self,
-                            Ray<Precision>& rays,
-                            bool returnCellIndex)
+protected:
+  using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using FloatHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
+  IdHandle PointIds;
+  FloatHandle Radii;
+
+public:
+  SphereLeafWrapper(IdHandle& pointIds, FloatHandle radii)
+    : PointIds(pointIds)
+    , Radii(radii)
   {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    self->IntersectRaysImp(Device(), rays, returnCellIndex);
-    return true;
+  }
+
+  template <typename Device>
+  VTKM_CONT SphereLeafIntersector<Device> PrepareForExecution(Device) const
+  {
+    return SphereLeafIntersector<Device>(PointIds, Radii);
   }
 };
 
@@ -321,24 +331,22 @@ void SphereIntersector::SetData(const vtkm::cont::CoordinateSystem& coords,
 
 void SphereIntersector::IntersectRays(Ray<vtkm::Float32>& rays, bool returnCellIndex)
 {
-  vtkm::cont::TryExecute(detail::IntersectFunctor(), this, rays, returnCellIndex);
+  IntersectRaysImp(rays, returnCellIndex);
 }
 
 void SphereIntersector::IntersectRays(Ray<vtkm::Float64>& rays, bool returnCellIndex)
 {
-  vtkm::cont::TryExecute(detail::IntersectFunctor(), this, rays, returnCellIndex);
+  IntersectRaysImp(rays, returnCellIndex);
 }
 
-template <typename Device, typename Precision>
-void SphereIntersector::IntersectRaysImp(Device,
-                                         Ray<Precision>& rays,
-                                         bool vtkmNotUsed(returnCellIndex))
+template <typename Precision>
+void SphereIntersector::IntersectRaysImp(Ray<Precision>& rays, bool vtkmNotUsed(returnCellIndex))
 {
 
-  detail::SphereLeafIntersector<Device> leafIntersector(this->PointIds, Radii);
+  detail::SphereLeafWrapper leafIntersector(this->PointIds, Radii);
 
-  BVHTraverser<detail::SphereLeafIntersector> traverser;
-  traverser.IntersectRays(rays, this->BVH, leafIntersector, this->CoordsHandle, Device());
+  BVHTraverser traverser;
+  traverser.IntersectRays(rays, this->BVH, leafIntersector, this->CoordsHandle);
 
   RayOperations::UpdateRayStatus(rays);
 }

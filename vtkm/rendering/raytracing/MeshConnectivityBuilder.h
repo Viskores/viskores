@@ -48,7 +48,7 @@ public:
 
   vtkm::cont::ArrayHandle<vtkm::Id> GetFaceOffsets();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> GetExternalTriangles();
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> GetTriangles();
 
 protected:
   VTKM_CONT
@@ -63,7 +63,7 @@ protected:
 
   vtkm::cont::ArrayHandle<vtkm::Id> FaceConnectivity;
   vtkm::cont::ArrayHandle<vtkm::Id> FaceOffsets;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> OutsideTriangles;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Triangles;
 };
 }
 }

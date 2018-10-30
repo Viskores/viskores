@@ -78,28 +78,13 @@ VTKM_EXEC inline bool IntersectAABB(const BVHPortalType& bvh,
   return (min0 > min1);
 }
 
-template <template <typename> class LeafIntersectorType>
 class BVHTraverser
 {
 public:
-  template <typename Device>
   class Intersector : public vtkm::worklet::WorkletMapField
   {
-  public:
-    typedef typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 4>> Float4ArrayHandle;
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 2>> Int2Handle;
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdHandle;
-    typedef typename Float4ArrayHandle::ExecutionTypes<Device>::PortalConst Float4ArrayPortal;
-    typedef typename Int2Handle::ExecutionTypes<Device>::PortalConst Int2ArrayPortal;
-    typedef typename IdHandle::ExecutionTypes<Device>::PortalConst IdArrayPortal;
-    typedef typename Id4Handle::ExecutionTypes<Device>::PortalConst Id4ArrayPortal;
-
   private:
     bool Occlusion;
-    Float4ArrayPortal FlatBVH;
-    IdArrayPortal Leafs;
-    LeafIntersectorType<Device> LeafIntersector;
 
     VTKM_EXEC
     inline vtkm::Float32 rcp(vtkm::Float32 f) const { return 1.0f / f; }
@@ -118,11 +103,8 @@ public:
 
   public:
     VTKM_CONT
-    Intersector(bool occlusion, LinearBVH& bvh, LeafIntersectorType<Device>& leafIntersector)
+    Intersector(bool occlusion)
       : Occlusion(occlusion)
-      , FlatBVH(bvh.FlatBVH.PrepareForInput(Device()))
-      , Leafs(bvh.Leafs.PrepareForInput(Device()))
-      , LeafIntersector(leafIntersector)
     {
     }
     using ControlSignature = void(FieldIn<>,
@@ -133,11 +115,18 @@ public:
                                   FieldOut<>,
                                   FieldOut<>,
                                   FieldOut<>,
-                                  WholeArrayIn<Vec3RenderingTypes>);
-    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+                                  WholeArrayIn<Vec3RenderingTypes>,
+                                  ExecObject leafIntersector,
+                                  WholeArrayIn<>,
+                                  WholeArrayIn<>);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12);
 
 
-    template <typename PointPortalType, typename Precision>
+    template <typename PointPortalType,
+              typename Precision,
+              typename LeafType,
+              typename InnerNodePortalType,
+              typename LeafPortalType>
     VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& dir,
                               const vtkm::Vec<Precision, 3>& origin,
                               Precision& distance,
@@ -146,7 +135,10 @@ public:
                               Precision& minU,
                               Precision& minV,
                               vtkm::Id& hitIndex,
-                              const PointPortalType& points) const
+                              const PointPortalType& points,
+                              LeafType& leafIntersector,
+                              const InnerNodePortalType& flatBVH,
+                              const LeafPortalType& leafs) const
     {
       Precision closestDistance = maxDistance;
       distance = maxDistance;
@@ -174,7 +166,7 @@ public:
 
 
           bool hitLeftChild, hitRightChild;
-          bool rightCloser = IntersectAABB(FlatBVH,
+          bool rightCloser = IntersectAABB(flatBVH,
                                            currentNode,
                                            originDir,
                                            invDir,
@@ -191,7 +183,7 @@ public:
           else
           {
             vtkm::Vec<vtkm::Float32, 4> children =
-              FlatBVH.Get(currentNode + 3); //Children.Get(currentNode);
+              flatBVH.Get(currentNode + 3); //Children.Get(currentNode);
             vtkm::Int32 leftChild;
             memcpy(&leftChild, &children[0], 4);
             vtkm::Int32 rightChild;
@@ -217,7 +209,7 @@ public:
         if (currentNode < 0 && currentNode != barrier) //check register usage
         {
           currentNode = -currentNode - 1; //swap the neg address
-          LeafIntersector.IntersectLeaf(currentNode,
+          leafIntersector.IntersectLeaf(currentNode,
                                         origin,
                                         dir,
                                         points,
@@ -225,7 +217,7 @@ public:
                                         closestDistance,
                                         minU,
                                         minV,
-                                        Leafs,
+                                        leafs,
                                         minDistance);
           currentNode = todo[stackptr];
           stackptr--;
@@ -239,16 +231,13 @@ public:
   };
 
 
-  template <typename Precision, typename Device>
+  template <typename Precision, typename LeafIntersectorType>
   VTKM_CONT void IntersectRays(Ray<Precision>& rays,
                                LinearBVH& bvh,
-                               LeafIntersectorType<Device> leafIntersector,
-                               vtkm::cont::CoordinateSystem& coordsHandle,
-                               Device vtkmNotUsed(Device))
+                               LeafIntersectorType& leafIntersector,
+                               vtkm::cont::CoordinateSystem& coordsHandle)
   {
-    vtkm::worklet::DispatcherMapField<Intersector<Device>> intersectDispatch(
-      Intersector<Device>(false, bvh, leafIntersector));
-    intersectDispatch.SetDevice(Device());
+    vtkm::worklet::DispatcherMapField<Intersector> intersectDispatch(Intersector(false));
     intersectDispatch.Invoke(rays.Dir,
                              rays.Origin,
                              rays.Distance,
@@ -257,7 +246,10 @@ public:
                              rays.U,
                              rays.V,
                              rays.HitIdx,
-                             coordsHandle);
+                             coordsHandle,
+                             leafIntersector,
+                             bvh.FlatBVH,
+                             bvh.Leafs);
   }
 }; // BVHTraverser
 #undef END_FLAG

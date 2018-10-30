@@ -40,10 +40,10 @@ namespace rendering
 namespace raytracing
 {
 
-struct IsExternal
+struct IsUnique
 {
   VTKM_EXEC_CONT
-  inline bool operator()(const vtkm::Id& x) const { return (x < 0); }
+  inline bool operator()(const vtkm::Int32& x) const { return (x < 0); }
 }; //struct IsExternal
 
 class CountFaces : public vtkm::worklet::WorkletMapField
@@ -93,8 +93,9 @@ public:
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
-                                WholeArrayOut<>);
-  using ExecutionSignature = void(_1, _2, WorkIndex, _3, _4, _5, _6);
+                                WholeArrayOut<>,
+                                WholeArrayInOut<>);
+  using ExecutionSignature = void(_1, _2, WorkIndex, _3, _4, _5, _6, _7);
 
   VTKM_EXEC
   inline vtkm::Int32 GetShapeOffset(const vtkm::UInt8& shapeType) const
@@ -145,14 +146,16 @@ public:
             typename ConnPortalType,
             typename ShapePortalType,
             typename OffsetPortalType,
-            typename ExternalFaceFlagType>
+            typename ExternalFaceFlagType,
+            typename UniqueFacesType>
   VTKM_EXEC inline void operator()(const MortonPortalType& mortonCodes,
                                    FaceIdPairsPortalType& faceIdPairs,
                                    const vtkm::Id& index,
                                    const ConnPortalType& connectivity,
                                    const ShapePortalType& shapes,
                                    const OffsetPortalType& offsets,
-                                   ExternalFaceFlagType& flags) const
+                                   ExternalFaceFlagType& flags,
+                                   UniqueFacesType& uniqueFaces) const
   {
     if (index == 0)
     {
@@ -252,6 +255,10 @@ public:
       flags.Set(currentIndex, myCell);
       BOUNDS_CHECK(flags, index);
       flags.Set(index, connectedCell);
+
+      // for unstructured, we want all unique faces to intersect with
+      // just choose one and mark as unique so the other gets culled.
+      uniqueFaces.Set(index, 1);
     }
   }
 }; //class Neighbor
@@ -522,7 +529,8 @@ VTKM_CONT void GenerateFaceConnnectivity(
   vtkm::cont::ArrayHandle<vtkm::Id>& faceConnectivity,
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>>& cellFaceId,
   vtkm::Float32 BoundingBox[6],
-  vtkm::cont::ArrayHandle<vtkm::Id>& faceOffsets)
+  vtkm::cont::ArrayHandle<vtkm::Id>& faceOffsets,
+  vtkm::cont::ArrayHandle<vtkm::Int32>& uniqueFaces)
 {
 
   vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
@@ -578,8 +586,8 @@ VTKM_CONT void GenerateFaceConnnectivity(
   vtkm::cont::ArrayHandle<vtkm::UInt32> faceMortonCodes;
   cellFaceId.Allocate(totalFaces);
   faceMortonCodes.Allocate(totalFaces);
-  //cellFaceId.PrepareForOutput(totalFaces, DeviceAdapter());
-  //faceMortonCodes.PrepareForOutput(totalFaces, DeviceAdapter());
+  uniqueFaces.Allocate(totalFaces);
+
   vtkm::worklet::DispatcherMapTopology<MortonCodeFace>(MortonCodeFace(inverseExtent, minPoint))
     .Invoke(cellSet, coordinates, cellOffsets, faceMortonCodes, cellFaceId);
 
@@ -594,19 +602,21 @@ VTKM_CONT void GenerateFaceConnnectivity(
   vtkm::cont::ArrayHandleConstant<vtkm::Id> negOne(-1, totalFaces);
   vtkm::cont::Algorithm::Copy(negOne, faceConnectivity);
 
+  vtkm::cont::ArrayHandleConstant<vtkm::Int32> negOne32(-1, totalFaces);
+  vtkm::cont::Algorithm::Copy(negOne32, uniqueFaces);
+
   vtkm::worklet::DispatcherMapField<MortonNeighbor>(MortonNeighbor())
-    .Invoke(faceMortonCodes, cellFaceId, conn, shapes, shapeOffsets, faceConnectivity);
+    .Invoke(faceMortonCodes, cellFaceId, conn, shapes, shapeOffsets, faceConnectivity, uniqueFaces);
 
   vtkm::Float64 time = timer.GetElapsedTime();
   Logger::GetInstance()->AddLogData("gen_face_conn", time);
 }
 
 template <typename ShapeHandleType, typename OffsetsHandleType, typename ConnHandleType>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractExternalFaces(
+VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractFaces(
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>>
-    cellFaceId, // Map of cell, face, and connecting cell
-  vtkm::cont::ArrayHandle<vtkm::Id>
-    faceConnectivity, // -1 if the face does not connect to any other face
+    cellFaceId,                                     // Map of cell, face, and connecting cell
+  vtkm::cont::ArrayHandle<vtkm::Int32> uniqueFaces, // -1 if the face is unique
   const ShapeHandleType& shapes,
   const ConnHandleType& conn,
   const OffsetsHandleType& shapeOffsets)
@@ -614,7 +624,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractExternalFaces(
 
   vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>> externalFacePairs;
-  vtkm::cont::Algorithm::CopyIf(cellFaceId, faceConnectivity, externalFacePairs, IsExternal());
+  vtkm::cont::Algorithm::CopyIf(cellFaceId, uniqueFaces, externalFacePairs, IsUnique());
 
   // We need to count the number of triangle per external face
   // If it is a single cell type and it is a tet or hex, this is a special case
@@ -690,6 +700,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
 
   vtkm::cont::ArrayHandle<vtkm::Id> faceConnectivity;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>> cellFaceId;
+  vtkm::cont::ArrayHandle<vtkm::Int32> uniqueFaces;
 
   GenerateFaceConnnectivity(cellSetUnstructured,
                             shapes,
@@ -699,13 +710,13 @@ void MeshConnectivityBuilder::BuildConnectivity(
                             faceConnectivity,
                             cellFaceId,
                             BoundingBox,
-                            FaceOffsets);
+                            FaceOffsets,
+                            uniqueFaces);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> externalTriangles;
-  //External Faces
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles;
+  //Faces
 
-  externalTriangles =
-    ExtractExternalFaces(cellFaceId, faceConnectivity, shapes, conn, shapeOffsets);
+  triangles = ExtractFaces(cellFaceId, uniqueFaces, shapes, conn, shapeOffsets);
 
 
   // scatter the coonectivity into the original order
@@ -713,7 +724,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
     .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
   FaceConnectivity = faceConnectivity;
-  OutsideTriangles = externalTriangles;
+  Triangles = triangles;
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->CloseLogEntry(time);
@@ -748,6 +759,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
 
   vtkm::cont::ArrayHandle<vtkm::Id> faceConnectivity;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>> cellFaceId;
+  vtkm::cont::ArrayHandle<vtkm::Int32> uniqueFaces;
 
   GenerateFaceConnnectivity(cellSetUnstructured,
                             shapes,
@@ -757,20 +769,20 @@ void MeshConnectivityBuilder::BuildConnectivity(
                             faceConnectivity,
                             cellFaceId,
                             BoundingBox,
-                            FaceOffsets);
+                            FaceOffsets,
+                            uniqueFaces);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> externalTriangles;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles;
   //
-  //External Faces
-  externalTriangles =
-    ExtractExternalFaces(cellFaceId, faceConnectivity, shapes, conn, shapeOffsets);
+  //Faces
+  triangles = ExtractFaces(cellFaceId, uniqueFaces, shapes, conn, shapeOffsets);
 
   // scatter the coonectivity into the original order
   vtkm::worklet::DispatcherMapField<WriteFaceConn>(WriteFaceConn())
     .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
   FaceConnectivity = faceConnectivity;
-  OutsideTriangles = externalTriangles;
+  Triangles = triangles;
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->CloseLogEntry(time);
@@ -829,9 +841,9 @@ vtkm::cont::ArrayHandle<vtkm::Id> MeshConnectivityBuilder::GetFaceOffsets()
   return FaceOffsets;
 }
 
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> MeshConnectivityBuilder::GetExternalTriangles()
+vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> MeshConnectivityBuilder::GetTriangles()
 {
-  return OutsideTriangles;
+  return Triangles;
 }
 
 VTKM_CONT
@@ -894,21 +906,20 @@ MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
   {
     vtkm::cont::CellSetExplicit<> cells = cellset.Cast<vtkm::cont::CellSetExplicit<>>();
     this->BuildConnectivity(cells, coordinates.GetData(), coordBounds);
-    meshConn = new UnstructuredContainer(
-      cells, coordinates, FaceConnectivity, FaceOffsets, OutsideTriangles);
+    meshConn =
+      new UnstructuredContainer(cells, coordinates, FaceConnectivity, FaceOffsets, Triangles);
   }
   else if (type == UnstructuredSingle)
   {
     vtkm::cont::CellSetSingleType<> cells = cellset.Cast<vtkm::cont::CellSetSingleType<>>();
     this->BuildConnectivity(cells, coordinates.GetData(), coordBounds);
-    meshConn =
-      new UnstructuredSingleContainer(cells, coordinates, FaceConnectivity, OutsideTriangles);
+    meshConn = new UnstructuredSingleContainer(cells, coordinates, FaceConnectivity, Triangles);
   }
   else if (type == Structured)
   {
     vtkm::cont::CellSetStructured<3> cells = cellset.Cast<vtkm::cont::CellSetStructured<3>>();
-    OutsideTriangles = this->ExternalTrianglesStructured(cells);
-    meshConn = new StructuredContainer(cells, coordinates, OutsideTriangles);
+    Triangles = this->ExternalTrianglesStructured(cells);
+    meshConn = new StructuredContainer(cells, coordinates, Triangles);
   }
   else
   {

@@ -83,6 +83,8 @@ public:
                                         const vtkm::Id outputSize,
                                         Precision initValue = 1.f);
 
+  ChannelBuffer<Precision> Copy();
+
   void InitConst(const Precision value);
   void InitChannels(const vtkm::cont::ArrayHandle<Precision>& signature);
   void Normalize(bool invert);

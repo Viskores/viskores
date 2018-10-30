@@ -21,7 +21,6 @@
 #include <vtkm/rendering/MapperPoint.h>
 
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/internal/RunTriangulator.h>
@@ -31,7 +30,6 @@
 #include <vtkm/rendering/raytracing/RayTracer.h>
 #include <vtkm/rendering/raytracing/SphereExtractor.h>
 #include <vtkm/rendering/raytracing/SphereIntersector.h>
-#include <vtkm/rendering/raytracing/TriangleExtractor.h>
 
 namespace vtkm
 {
