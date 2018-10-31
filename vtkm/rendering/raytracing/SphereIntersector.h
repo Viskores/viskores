@@ -48,8 +48,8 @@ public:
 
   void IntersectRays(Ray<vtkm::Float64>& rays, bool returnCellIndex = false) override;
 
-  template <typename Device, typename Precision>
-  void IntersectRaysImp(Device, Ray<Precision>& rays, bool returnCellIndex);
+  template <typename Precision>
+  void IntersectRaysImp(Ray<Precision>& rays, bool returnCellIndex);
 
 
   template <typename Precision>

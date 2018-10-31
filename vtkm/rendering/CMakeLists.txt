@@ -178,6 +178,7 @@ set(device_sources
   raytracing/SphereExtractor.cxx
   raytracing/SphereIntersector.cxx
   raytracing/TriangleExtractor.cxx
+  raytracing/TriangleIntersector.cxx
   raytracing/VolumeRendererStructured.cxx
   )
 

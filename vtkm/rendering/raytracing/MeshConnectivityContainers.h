@@ -31,7 +31,7 @@ namespace rendering
 namespace raytracing
 {
 
-class MeshConnContainer
+class MeshConnContainer : vtkm::cont::ExecutionObjectBase
 {
 public:
   MeshConnContainer();
@@ -39,17 +39,19 @@ public:
 
   virtual const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId) = 0;
 
+  MeshWrapper PrepareForExecution(const vtkm::cont::DeviceAdapterId deviceId);
+
   template <typename T>
-  VTKM_CONT void FindEntryImpl(Ray<T>& rays, const vtkm::cont::DeviceAdapterId deviceId);
+  VTKM_CONT void FindEntryImpl(Ray<T>& rays);
 
-  void FindEntry(Ray<vtkm::Float32>& rays, const vtkm::cont::DeviceAdapterId deviceId);
+  void FindEntry(Ray<vtkm::Float32>& rays);
 
-  void FindEntry(Ray<vtkm::Float64>& rays, const vtkm::cont::DeviceAdapterId deviceId);
+  void FindEntry(Ray<vtkm::Float64>& rays);
 
 protected:
   using Id4Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
   // Mesh Boundary
-  Id4Handle ExternalTriangles;
+  Id4Handle Triangles;
   TriangleIntersector Intersector;
   MeshConnHandle Handle;
 };
@@ -83,7 +85,7 @@ public:
                         const vtkm::cont::CoordinateSystem& coords,
                         IdHandle& faceConn,
                         IdHandle& faceOffsets,
-                        Id4Handle& externalTriangles);
+                        Id4Handle& triangles);
 
   virtual ~UnstructuredContainer();
 
@@ -108,7 +110,7 @@ public:
   VTKM_CONT
   StructuredContainer(const vtkm::cont::CellSetStructured<3>& cellset,
                       const vtkm::cont::CoordinateSystem& coords,
-                      Id4Handle& externalTriangles);
+                      Id4Handle& triangles);
 
   const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId) override;
 

@@ -37,7 +37,10 @@ namespace rendering
 {
 namespace raytracing
 {
-
+//
+// Base class for different types of face-to-connecting-cell
+// and other mesh information
+//
 class VTKM_ALWAYS_EXPORT MeshConnectivityBase : public VirtualObjectBase
 {
 public:
@@ -49,6 +52,35 @@ public:
 
   VTKM_EXEC_CONT
   virtual vtkm::UInt8 GetCellShape(const vtkm::Id& cellId) const = 0;
+};
+
+// A simple concrete type to wrap MeshConnectivityBase so we can
+// pass an ExeObject to worklets.
+class MeshWrapper
+{
+private:
+  MeshConnectivityBase* MeshConn;
+
+public:
+  MeshWrapper() {}
+
+  MeshWrapper(MeshConnectivityBase* meshConn)
+    : MeshConn(meshConn){};
+
+  VTKM_EXEC_CONT
+  vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const
+  {
+    return MeshConn->GetConnectingCell(cellId, face);
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const
+  {
+    return MeshConn->GetCellIndices(cellIndices, cellId);
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::UInt8 GetCellShape(const vtkm::Id& cellId) const { return MeshConn->GetCellShape(cellId); }
 };
 
 class VTKM_ALWAYS_EXPORT MeshConnStructured : public MeshConnectivityBase

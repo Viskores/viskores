@@ -34,8 +34,126 @@ namespace raytracing
 namespace detail
 {
 
+class FindCylinderAABBs : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  FindCylinderAABBs() {}
+  typedef void ControlSignature(FieldIn<>,
+                                FieldIn<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                FieldOut<>,
+                                WholeArrayIn<Vec3RenderingTypes>);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+  template <typename PointPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id3 cylId,
+                            const vtkm::Float32& radius,
+                            vtkm::Float32& xmin,
+                            vtkm::Float32& ymin,
+                            vtkm::Float32& zmin,
+                            vtkm::Float32& xmax,
+                            vtkm::Float32& ymax,
+                            vtkm::Float32& zmax,
+                            const PointPortalType& points) const
+  {
+    // cast to Float32
+    vtkm::Vec<vtkm::Float32, 3> point1, point2;
+    vtkm::Vec<vtkm::Float32, 3> temp;
+
+    point1 = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(cylId[1]));
+    point2 = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(cylId[2]));
+
+    temp[0] = radius;
+    temp[1] = 0.0f;
+    temp[2] = 0.0f;
+    xmin = ymin = zmin = vtkm::Infinity32();
+    xmax = ymax = zmax = vtkm::NegativeInfinity32();
+
+
+    //set first point to max and min
+    Bounds(point1, radius, xmin, ymin, zmin, xmax, ymax, zmax);
+
+    Bounds(point2, radius, xmin, ymin, zmin, xmax, ymax, zmax);
+  }
+
+  VTKM_EXEC void Bounds(const vtkm::Vec<vtkm::Float32, 3>& point,
+                        const vtkm::Float32& radius,
+                        vtkm::Float32& xmin,
+                        vtkm::Float32& ymin,
+                        vtkm::Float32& zmin,
+                        vtkm::Float32& xmax,
+                        vtkm::Float32& ymax,
+                        vtkm::Float32& zmax) const
+  {
+    vtkm::Vec<vtkm::Float32, 3> temp, p;
+    temp[0] = radius;
+    temp[1] = 0.0f;
+    temp[2] = 0.0f;
+    p = point + temp;
+
+    xmin = vtkm::Min(xmin, p[0]);
+    xmax = vtkm::Max(xmax, p[0]);
+    ymin = vtkm::Min(ymin, p[1]);
+    ymax = vtkm::Max(ymax, p[1]);
+    zmin = vtkm::Min(zmin, p[2]);
+    zmax = vtkm::Max(zmax, p[2]);
+
+    p = point - temp;
+    xmin = vtkm::Min(xmin, p[0]);
+    xmax = vtkm::Max(xmax, p[0]);
+    ymin = vtkm::Min(ymin, p[1]);
+    ymax = vtkm::Max(ymax, p[1]);
+    zmin = vtkm::Min(zmin, p[2]);
+    zmax = vtkm::Max(zmax, p[2]);
+
+    temp[0] = 0.f;
+    temp[1] = radius;
+    temp[2] = 0.f;
+
+    p = point + temp;
+    xmin = vtkm::Min(xmin, p[0]);
+    xmax = vtkm::Max(xmax, p[0]);
+    ymin = vtkm::Min(ymin, p[1]);
+    ymax = vtkm::Max(ymax, p[1]);
+    zmin = vtkm::Min(zmin, p[2]);
+    zmax = vtkm::Max(zmax, p[2]);
+
+    p = point - temp;
+    xmin = vtkm::Min(xmin, p[0]);
+    xmax = vtkm::Max(xmax, p[0]);
+    ymin = vtkm::Min(ymin, p[1]);
+    ymax = vtkm::Max(ymax, p[1]);
+    zmin = vtkm::Min(zmin, p[2]);
+    zmax = vtkm::Max(zmax, p[2]);
+
+    temp[0] = 0.f;
+    temp[1] = 0.f;
+    temp[2] = radius;
+
+    p = point + temp;
+    xmin = vtkm::Min(xmin, p[0]);
+    xmax = vtkm::Max(xmax, p[0]);
+    ymin = vtkm::Min(ymin, p[1]);
+    ymax = vtkm::Max(ymax, p[1]);
+    zmin = vtkm::Min(zmin, p[2]);
+    zmax = vtkm::Max(zmax, p[2]);
+
+    p = point - temp;
+    xmin = vtkm::Min(xmin, p[0]);
+    xmax = vtkm::Max(xmax, p[0]);
+    ymin = vtkm::Min(ymin, p[1]);
+    ymax = vtkm::Max(ymax, p[1]);
+    zmin = vtkm::Min(zmin, p[2]);
+    zmax = vtkm::Max(zmax, p[2]);
+  }
+}; //class FindAABBs
+
 template <typename Device>
-class CylinderLeafIntersector : public vtkm::cont::ExecutionObjectBase
+class CylinderLeafIntersector
 {
 public:
   using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id3>;
@@ -44,6 +162,8 @@ public:
   using FloatPortal = typename FloatHandle::ExecutionTypes<Device>::PortalConst;
   IdArrayPortal CylIds;
   FloatPortal Radii;
+
+  CylinderLeafIntersector() {}
 
   CylinderLeafIntersector(const IdHandle& cylIds, const FloatHandle& radii)
     : CylIds(cylIds.PrepareForInput(Device()))
@@ -183,17 +303,25 @@ public:
   }
 };
 
-struct IntersectFunctor
+class CylinderLeafWrapper : public vtkm::cont::ExecutionObjectBase
 {
-  template <typename Device, typename Precision>
-  VTKM_CONT bool operator()(Device,
-                            CylinderIntersector* self,
-                            Ray<Precision>& rays,
-                            bool returnCellIndex)
+protected:
+  using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id3>;
+  using FloatHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
+  IdHandle CylIds;
+  FloatHandle Radii;
+
+public:
+  CylinderLeafWrapper(IdHandle& cylIds, FloatHandle radii)
+    : CylIds(cylIds)
+    , Radii(radii)
   {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    self->IntersectRaysImp(Device(), rays, returnCellIndex);
-    return true;
+  }
+
+  template <typename Device>
+  VTKM_CONT CylinderLeafIntersector<Device> PrepareForExecution(Device) const
+  {
+    return CylinderLeafIntersector<Device>(CylIds, Radii);
   }
 };
 
@@ -302,27 +430,47 @@ CylinderIntersector::~CylinderIntersector()
 {
 }
 
+void CylinderIntersector::SetData(const vtkm::cont::CoordinateSystem& coords,
+                                  vtkm::cont::ArrayHandle<vtkm::Id3> cylIds,
+                                  vtkm::cont::ArrayHandle<vtkm::Float32> radii)
+{
+  this->Radii = radii;
+  this->CylIds = cylIds;
+  this->CoordsHandle = coords;
+  AABBs AABB;
+
+  vtkm::worklet::DispatcherMapField<detail::FindCylinderAABBs>(detail::FindCylinderAABBs())
+    .Invoke(this->CylIds,
+            this->Radii,
+            AABB.xmins,
+            AABB.ymins,
+            AABB.zmins,
+            AABB.xmaxs,
+            AABB.ymaxs,
+            AABB.zmaxs,
+            CoordsHandle);
+
+  this->SetAABBs(AABB);
+}
 
 void CylinderIntersector::IntersectRays(Ray<vtkm::Float32>& rays, bool returnCellIndex)
 {
-  vtkm::cont::TryExecute(detail::IntersectFunctor(), this, rays, returnCellIndex);
+  IntersectRaysImp(rays, returnCellIndex);
 }
 
 void CylinderIntersector::IntersectRays(Ray<vtkm::Float64>& rays, bool returnCellIndex)
 {
-  vtkm::cont::TryExecute(detail::IntersectFunctor(), this, rays, returnCellIndex);
+  IntersectRaysImp(rays, returnCellIndex);
 }
 
-template <typename Device, typename Precision>
-void CylinderIntersector::IntersectRaysImp(Device,
-                                           Ray<Precision>& rays,
-                                           bool vtkmNotUsed(returnCellIndex))
+template <typename Precision>
+void CylinderIntersector::IntersectRaysImp(Ray<Precision>& rays, bool vtkmNotUsed(returnCellIndex))
 {
 
-  detail::CylinderLeafIntersector<Device> leafIntersector(this->CylIds, Radii);
+  detail::CylinderLeafWrapper leafIntersector(this->CylIds, Radii);
 
-  BVHTraverser<detail::CylinderLeafIntersector> traverser;
-  traverser.IntersectRays(rays, this->BVH, leafIntersector, this->CoordsHandle, Device());
+  BVHTraverser traverser;
+  traverser.IntersectRays(rays, this->BVH, leafIntersector, this->CoordsHandle);
 
   RayOperations::UpdateRayStatus(rays);
 }

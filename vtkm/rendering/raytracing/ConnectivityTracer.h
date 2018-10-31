@@ -22,18 +22,11 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
-#include <iomanip>
 #include <vtkm/cont/ArrayHandle.h>
 
 #include <vtkm/rendering/raytracing/MeshConnectivityContainers.h>
+#include <vtkm/rendering/raytracing/PartialComposite.h>
 
-#ifndef CELL_SHAPE_ZOO
-#define CELL_SHAPE_ZOO 255
-#endif
-
-#ifndef CELL_SHAPE_STRUCTURED
-#define CELL_SHAPE_STRUCTURED 254
-#endif
 
 namespace vtkm
 {
@@ -68,26 +61,29 @@ public:
     ExitDist = &Distance2;
   }
 
-  template <typename Device>
   void Compact(vtkm::cont::ArrayHandle<FloatType>& compactedDistances,
-               vtkm::cont::ArrayHandle<UInt8>& masks,
-               Device);
+               vtkm::cont::ArrayHandle<UInt8>& masks);
 
-  template <typename Device>
-  void Init(const vtkm::Id size, vtkm::cont::ArrayHandle<FloatType>& distances, Device);
+  void Init(const vtkm::Id size, vtkm::cont::ArrayHandle<FloatType>& distances);
 
   void Swap();
 };
 
 } //namespace detail
 
-
-class ConnectivityTracer
+/**
+ * \brief ConnectivityTracer is volumetric ray tracer for unstructured
+ *        grids. Capabilities include volume rendering and integrating
+ *        absorption and emission of N energy groups for simulated
+ *        radiograhy.
+ */
+class VTKM_RENDERING_EXPORT ConnectivityTracer
 {
 public:
   ConnectivityTracer()
     : MeshContainer(nullptr)
     , CountRayStatus(false)
+    , UnitScalar(1.f)
   {
   }
 
@@ -120,57 +116,75 @@ public:
   void SetSampleDistance(const vtkm::Float32& distance);
   void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
 
-  void Trace(Ray<vtkm::Float32>& rays);
-
-  void Trace(Ray<vtkm::Float64>& rays);
-
   MeshConnContainer* GetMeshContainer() { return MeshContainer; }
 
   void Init();
 
   void SetDebugOn(bool on) { CountRayStatus = on; }
 
+  void SetUnitScalar(const vtkm::Float32 unitScalar) { UnitScalar = unitScalar; }
+
+
   vtkm::Id GetNumberOfMeshCells() const;
 
   void ResetTimers();
   void LogTimers();
 
+  ///
+  /// Traces rays fully through the mesh. Rays can exit and re-enter
+  /// multiple times before leaving the domain. This is fast path for
+  /// structured meshs or meshes that are not interlocking.
+  /// Note: rays will be compacted
+  ///
+  template <typename FloatType>
+  void FullTrace(Ray<FloatType>& rays);
+
+  ///
+  /// Integrates rays through the mesh. If rays leave the mesh and
+  /// re-enter, then those become two separate partial composites.
+  /// This is need to support domain decompositions that are like
+  /// puzzle pieces. Note: rays will be compacted
+  ///
+  template <typename FloatType>
+  std::vector<PartialComposite<FloatType>> PartialTrace(Ray<FloatType>& rays);
+
+  ///
+  /// Integrates the active rays though the mesh until all rays
+  /// have exited.
+  ///  Precondition: rays.HitIdx is set to a valid mesh cell
+  ///
+  template <typename FloatType>
+  void IntegrateMeshSegment(Ray<FloatType>& rays);
+
+  ///
+  /// Find the entry point in the mesh
+  ///
+  template <typename FloatType>
+  void FindMeshEntry(Ray<FloatType>& rays);
+
 private:
-  friend struct detail::RenderFunctor;
-  template <typename FloatType, typename Device>
-  void IntersectCell(Ray<FloatType>& rays,
-                     detail::RayTracking<FloatType>& tracker,
-                     const MeshConnectivityBase* meshConn,
-                     Device);
+  template <typename FloatType>
+  void IntersectCell(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void AccumulatePathLengths(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  template <typename FloatType>
+  void AccumulatePathLengths(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void FindLostRays(Ray<FloatType>& rays,
-                    detail::RayTracking<FloatType>& tracker,
-                    const MeshConnectivityBase* meshConn,
-                    Device);
+  template <typename FloatType>
+  void FindLostRays(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void SampleCells(Ray<FloatType>& rays,
-                   detail::RayTracking<FloatType>& tracker,
-                   const MeshConnectivityBase* meshConn,
-                   Device);
+  template <typename FloatType>
+  void SampleCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void IntegrateCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  template <typename FloatType>
+  void IntegrateCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void OffsetMinDistances(Ray<FloatType>& rays, Device);
+  template <typename FloatType>
+  void OffsetMinDistances(Ray<FloatType>& rays);
 
-  template <typename FloatType, typename Device>
-  void PrintRayStatus(Ray<FloatType>& rays, Device);
+  template <typename FloatType>
+  void PrintRayStatus(Ray<FloatType>& rays);
 
 protected:
-  template <typename Device, typename FloatType>
-  void RenderOnDevice(Ray<FloatType>& rays, Device);
-
   // Data set info
   vtkm::cont::Field ScalarField;
   vtkm::cont::Field EmissionField;
@@ -180,7 +194,6 @@ protected:
   vtkm::Float32 BoundingBox[6];
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
-  vtkm::cont::ArrayHandle<vtkm::Id> PreviousCellIds;
 
   vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
   vtkm::Float32 SampleDistance;
@@ -204,6 +217,7 @@ protected:
   vtkm::Float64 SampleTime;
   vtkm::Float64 LostRayTime;
   vtkm::Float64 MeshEntryTime;
+  vtkm::Float32 UnitScalar;
 
 }; // class ConnectivityTracer<CellType,ConnectivityType>
 }

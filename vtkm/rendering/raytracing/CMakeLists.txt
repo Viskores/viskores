@@ -35,6 +35,7 @@ set(headers
   MeshConnectivityContainers.h
   MeshConnectivityBase.h
   MortonCodes.h
+  PartialComposite.h
   QuadExtractor.h
   QuadIntersector.h
   Ray.h
@@ -46,6 +47,7 @@ set(headers
   SphereExtractor.h
   SphereIntersector.h
   TriangleExtractor.h
+  TriangleIntersections.h
   TriangleIntersector.h
   VolumeRendererStructured.h
   Worklets.h
