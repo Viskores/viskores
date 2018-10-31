@@ -112,6 +112,7 @@ set(template_sources
   BoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
+  ColorTable.hxx
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
