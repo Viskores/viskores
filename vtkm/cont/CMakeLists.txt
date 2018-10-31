@@ -125,6 +125,7 @@ set(sources
   BoundsGlobalCompute.cxx
   CellSet.cxx
   CellSetStructured.cxx
+  ColorTable.cxx
   DataSet.cxx
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
@@ -154,7 +155,6 @@ set(sources
 set(device_sources
   ArrayRangeCompute.cxx
   CellSetExplicit.cxx
-  ColorTable.cxx
   CoordinateSystem.cxx
   )
 
