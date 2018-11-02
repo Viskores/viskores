@@ -154,6 +154,16 @@ public:
   // WarpScalar can only applies to Float and Double Vec3 arrays
   using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
+
+struct WarpScalarScalarFieldTag
+{
+};
+
+template <>
+struct FilterTraits<WarpScalar, WarpScalarScalarFieldTag>
+{
+  using InputFieldTypeList = vtkm::TypeListTagFieldScalar;
+};
 }
 }
 

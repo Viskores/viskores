@@ -42,7 +42,7 @@ public:
   class WarpScalarImp : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<Vec3>, FieldIn<Vec3>, FieldIn<Scalar>, FieldOut<Vec3>);
+    using ControlSignature = void(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
     using ExecutionSignature = void(_1, _2, _3, _4);
     VTKM_CONT
     WarpScalarImp(vtkm::FloatDefault scaleAmount)

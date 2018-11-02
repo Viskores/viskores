@@ -28,7 +28,11 @@ namespace vtkm
 namespace filter
 {
 
-template <typename Filter>
+struct DefaultFieldTag
+{
+};
+
+template <typename Filter, typename FieldTag = DefaultFieldTag>
 class FilterTraits
 {
 public:
@@ -38,10 +42,10 @@ public:
   using InputFieldTypeList = vtkm::ListTagUniversal;
 };
 
-template <typename DerivedPolicy, typename FilterType>
+template <typename DerivedPolicy, typename FilterType, typename FieldTag>
 struct DeduceFilterFieldTypes
 {
-  using FList = typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList;
+  using FList = typename vtkm::filter::FilterTraits<FilterType, FieldTag>::InputFieldTypeList;
   using PList = typename DerivedPolicy::FieldTypeList;
 
   using TypeList = vtkm::ListTagIntersect<FList, PList>;
