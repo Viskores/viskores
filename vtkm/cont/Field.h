@@ -73,33 +73,17 @@ public:
     LOGICAL_DIM
   };
 
+  VTKM_CONT
+  Field() = default;
+
   /// constructors for points / whole mesh
   VTKM_CONT
-  Field(std::string name, Association association, const vtkm::cont::DynamicArrayHandle& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName()
-    , AssocLogicalDim(-1)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->FieldAssociation == Association::WHOLE_MESH ||
-                this->FieldAssociation == Association::POINTS);
-  }
+  Field(std::string name, Association association, const vtkm::cont::DynamicArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name, Association association, const ArrayHandle<T, Storage>& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName()
-    , AssocLogicalDim(-1)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
+    : Field(name, association, vtkm::cont::DynamicArrayHandle{ data })
   {
-    VTKM_ASSERT((this->FieldAssociation == Association::WHOLE_MESH) ||
-                (this->FieldAssociation == Association::POINTS));
   }
 
   /// constructors for cell set associations
@@ -107,32 +91,15 @@ public:
   Field(std::string name,
         Association association,
         const std::string& cellSetName,
-        const vtkm::cont::DynamicArrayHandle& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName(cellSetName)
-    , AssocLogicalDim(-1)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->FieldAssociation == Association::CELL_SET);
-  }
+        const vtkm::cont::DynamicArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   const std::string& cellSetName,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName(cellSetName)
-    , AssocLogicalDim(-1)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
+    : Field(name, association, cellSetName, vtkm::cont::DynamicArrayHandle{ data })
   {
-    VTKM_ASSERT(this->FieldAssociation == Association::CELL_SET);
   }
 
   /// constructors for logical dimension associations
@@ -140,44 +107,15 @@ public:
   Field(std::string name,
         Association association,
         vtkm::IdComponent logicalDim,
-        const vtkm::cont::DynamicArrayHandle& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName()
-    , AssocLogicalDim(logicalDim)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->FieldAssociation == Association::LOGICAL_DIM);
-  }
+        const vtkm::cont::DynamicArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   vtkm::IdComponent logicalDim,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocLogicalDim(logicalDim)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
+    : Field(name, association, logicalDim, vtkm::cont::DynamicArrayHandle{ data })
   {
-    VTKM_ASSERT(this->FieldAssociation == Association::LOGICAL_DIM);
-  }
-
-  VTKM_CONT
-  Field()
-    : Name()
-    , FieldAssociation(Association::ANY)
-    , AssocCellSetName()
-    , AssocLogicalDim()
-    , Data()
-    , Range()
-    , ModifiedFlag(true)
-  {
-    //Generate an empty field
   }
 
   VTKM_CONT
@@ -287,13 +225,13 @@ public:
 private:
   std::string Name; ///< name of field
 
-  Association FieldAssociation;
+  Association FieldAssociation = Association::ANY;
   std::string AssocCellSetName;      ///< only populate if assoc is cells
   vtkm::IdComponent AssocLogicalDim; ///< only populate if assoc is logical dim
 
   vtkm::cont::DynamicArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
-  mutable bool ModifiedFlag;
+  mutable bool ModifiedFlag = true;
 
   template <typename TypeList, typename StorageList>
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRangeImpl(TypeList, StorageList) const
