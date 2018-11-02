@@ -109,8 +109,8 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void ResetDevice(DeviceAdapterTag device)
   {
-    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
-    this->SetDeviceState(device, runtimeDevice.Exists());
+    vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+    this->SetDeviceState(device, runtimeDevice.Exists(DeviceAdapterTag()));
   }
 
   /// Reset the tracker to its default state for default devices.
@@ -192,8 +192,8 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void ForceDevice(DeviceAdapterTag device)
   {
-    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
-    this->ForceDeviceImpl(device, runtimeDevice.Exists());
+    vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+    this->ForceDeviceImpl(device, runtimeDevice.Exists(DeviceAdapterTag()));
   }
 
   VTKM_CONT_EXPORT

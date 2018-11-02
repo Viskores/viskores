@@ -23,6 +23,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/internal/DeviceAdapterError.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
