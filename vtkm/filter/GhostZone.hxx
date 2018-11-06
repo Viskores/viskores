@@ -111,7 +111,6 @@ inline VTKM_CONT vtkm::cont::DataSet GhostZone::DoExecute(
   if (this->GetConvertOutputToUnstructured())
   {
     vtkm::cont::CellSetExplicit<> explicitCells;
-    //vtkm::worklet::CellDeepCopy::Run(cellOut, explicitCells);
     explicitCells = this->ConvertOutputToUnstructured(cellOut);
     output.AddCellSet(explicitCells);
   }
