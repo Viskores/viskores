@@ -33,17 +33,20 @@ namespace cont
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
   using Superclass = vtkm::cont::Field;
+  using CoordinatesTypeList =
+    vtkm::ListTagBase<vtkm::cont::ArrayHandleVirtualCoordinates::ValueType>;
 
 public:
   VTKM_CONT
   CoordinateSystem();
 
-  VTKM_CONT CoordinateSystem(std::string name,
-                             const vtkm::cont::ArrayHandleVirtualCoordinates::Superclass& data);
+  VTKM_CONT CoordinateSystem(
+    std::string name,
+    const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>& data);
 
-  template <typename TypeList, typename StorageList>
+  template <typename TypeList>
   VTKM_CONT CoordinateSystem(std::string name,
-                             const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& data);
+                             const vtkm::cont::ArrayHandleVariantBase<TypeList>& data);
 
   template <typename T, typename Storage>
   VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data);
@@ -60,23 +63,35 @@ public:
   VTKM_CONT
   vtkm::cont::ArrayHandleVirtualCoordinates GetData() const;
 
-  VTKM_CONT void SetData(const vtkm::cont::ArrayHandleVirtualCoordinates::Superclass& newdata);
+  VTKM_CONT void SetData(
+    const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>& newdata);
 
-  template <typename T, typename StorageTag>
-  VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, StorageTag>& newdata);
-
-  VTKM_CONT
-  template <typename TypeList, typename StorageList>
-  void SetData(const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& newdata);
+  template <typename T, typename Storage>
+  VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, Storage>& newdata);
 
   VTKM_CONT
-  void GetRange(vtkm::Range* range) const;
+  template <typename TypeList>
+  void SetData(const vtkm::cont::ArrayHandleVariantBase<TypeList>& newdata);
 
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
+  void GetRange(vtkm::Range* range) const
+  {
+    this->Superclass::GetRange(range, CoordinatesTypeList());
+  }
 
   VTKM_CONT
-  vtkm::Bounds GetBounds() const;
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const
+  {
+    return this->Superclass::GetRange(CoordinatesTypeList());
+  }
+
+  VTKM_CONT
+  vtkm::Bounds GetBounds() const
+  {
+    vtkm::Range ranges[3];
+    this->GetRange(ranges);
+    return vtkm::Bounds(ranges[0], ranges[1], ranges[2]);
+  }
 
   virtual void PrintSummary(std::ostream& out) const override;
 

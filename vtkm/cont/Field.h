@@ -26,9 +26,10 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/ArrayRangeCompute.hxx>
 
 namespace vtkm
 {
@@ -38,25 +39,17 @@ namespace cont
 namespace internal
 {
 
-class ComputeRange
+struct ComputeRange
 {
-public:
-  ComputeRange(ArrayHandle<vtkm::Range>& range)
-    : Range(&range)
-  {
-  }
-
   template <typename ArrayHandleType>
-  void operator()(const ArrayHandleType& input) const
+  void operator()(const ArrayHandleType& input, vtkm::cont::ArrayHandle<vtkm::Range>& range) const
   {
-    *this->Range = vtkm::cont::ArrayRangeCompute(input);
+    range = vtkm::cont::ArrayRangeCompute(input);
   }
-
-private:
-  vtkm::cont::ArrayHandle<vtkm::Range>* Range;
 };
 
 } // namespace internal
+
 
 /// A \c Field encapsulates an array on some piece of the mesh, such as
 /// the points, a cell set, a point logical dimension, or the whole mesh.
@@ -78,11 +71,13 @@ public:
 
   /// constructors for points / whole mesh
   VTKM_CONT
-  Field(std::string name, Association association, const vtkm::cont::DynamicArrayHandle& data);
+  Field(std::string name, Association association, const vtkm::cont::ArrayHandleVariant& data);
 
   template <typename T, typename Storage>
-  VTKM_CONT Field(std::string name, Association association, const ArrayHandle<T, Storage>& data)
-    : Field(name, association, vtkm::cont::DynamicArrayHandle{ data })
+  VTKM_CONT Field(std::string name,
+                  Association association,
+                  const vtkm::cont::ArrayHandle<T, Storage>& data)
+    : Field(name, association, vtkm::cont::ArrayHandleVariant{ data })
   {
   }
 
@@ -91,14 +86,14 @@ public:
   Field(std::string name,
         Association association,
         const std::string& cellSetName,
-        const vtkm::cont::DynamicArrayHandle& data);
+        const vtkm::cont::ArrayHandleVariant& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   const std::string& cellSetName,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, cellSetName, vtkm::cont::DynamicArrayHandle{ data })
+    : Field(name, association, cellSetName, vtkm::cont::ArrayHandleVariant{ data })
   {
   }
 
@@ -107,14 +102,14 @@ public:
   Field(std::string name,
         Association association,
         vtkm::IdComponent logicalDim,
-        const vtkm::cont::DynamicArrayHandle& data);
+        const vtkm::cont::ArrayHandleVariant& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   vtkm::IdComponent logicalDim,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, logicalDim, vtkm::cont::DynamicArrayHandle{ data })
+    : Field(name, association, logicalDim, vtkm::cont::ArrayHandleVariant{ data })
   {
   }
 
@@ -126,40 +121,19 @@ public:
   VTKM_CONT Field& operator=(const vtkm::cont::Field& src);
   VTKM_CONT Field& operator=(vtkm::cont::Field&& src) noexcept;
 
-  VTKM_CONT
-  const std::string& GetName() const { return this->Name; }
+  VTKM_CONT const std::string& GetName() const { return this->Name; }
+  VTKM_CONT Association GetAssociation() const { return this->FieldAssociation; }
+  VTKM_CONT std::string GetAssocCellSet() const { return this->AssocCellSetName; }
+  VTKM_CONT vtkm::IdComponent GetAssocLogicalDim() const { return this->AssocLogicalDim; }
+  const vtkm::cont::ArrayHandleVariant& GetData() const;
+  vtkm::cont::ArrayHandleVariant& GetData();
 
-  VTKM_CONT
-  Association GetAssociation() const { return this->FieldAssociation; }
 
-  VTKM_CONT
-  std::string GetAssocCellSet() const { return this->AssocCellSetName; }
-
-  VTKM_CONT
-  vtkm::IdComponent GetAssocLogicalDim() const { return this->AssocLogicalDim; }
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList, StorageList) const
+  template <typename TypeList>
+  VTKM_CONT void GetRange(vtkm::Range* range, TypeList) const
   {
-    VTKM_IS_LIST_TAG(TypeList);
-    VTKM_IS_LIST_TAG(StorageList);
-
-    return this->GetRangeImpl(TypeList(), StorageList());
-  }
-
-  VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(VTKM_DEFAULT_TYPE_LIST_TAG,
-                                                       VTKM_DEFAULT_STORAGE_LIST_TAG) const;
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT void GetRange(vtkm::Range* range, TypeList, StorageList) const
-  {
-    VTKM_IS_LIST_TAG(TypeList);
-    VTKM_IS_LIST_TAG(StorageList);
-
-    this->GetRange(TypeList(), StorageList());
-
-    vtkm::Id length = this->Range.GetNumberOfValues();
+    this->GetRangeImpl(TypeList());
+    const vtkm::Id length = this->Range.GetNumberOfValues();
     for (vtkm::Id i = 0; i < length; ++i)
     {
       range[i] = this->Range.GetPortalConstControl().Get(i);
@@ -169,28 +143,19 @@ public:
   template <typename TypeList>
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
   {
-    VTKM_IS_LIST_TAG(TypeList);
-
-    return this->GetRange(TypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
+    return this->GetRangeImpl(TypeList());
   }
 
-  template <typename TypeList>
-  VTKM_CONT void GetRange(vtkm::Range* range, TypeList) const
+  VTKM_CONT
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const
   {
-    VTKM_IS_LIST_TAG(TypeList);
+    return this->GetRangeImpl(VTKM_DEFAULT_TYPE_LIST_TAG());
+  };
 
-    this->GetRange(range, TypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-  }
-
-  VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
-
-  VTKM_CONT
-  void GetRange(vtkm::Range* range) const;
-
-  const vtkm::cont::DynamicArrayHandle& GetData() const;
-
-  vtkm::cont::DynamicArrayHandle& GetData();
+  VTKM_CONT void GetRange(vtkm::Range* range) const
+  {
+    return this->GetRange(range, VTKM_DEFAULT_TYPE_LIST_TAG());
+  };
 
   template <typename T, typename StorageTag>
   VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, StorageTag>& newdata)
@@ -200,16 +165,9 @@ public:
   }
 
   VTKM_CONT
-  void SetData(const vtkm::cont::DynamicArrayHandle& newdata)
+  void SetData(const vtkm::cont::ArrayHandleVariant& newdata)
   {
     this->Data = newdata;
-    this->ModifiedFlag = true;
-  }
-
-  template <typename T>
-  VTKM_CONT void CopyData(const T* ptr, vtkm::Id nvals)
-  {
-    this->Data = vtkm::cont::make_ArrayHandle(ptr, nvals, true);
     this->ModifiedFlag = true;
   }
 
@@ -219,8 +177,7 @@ public:
   VTKM_CONT
   virtual void ReleaseResourcesExecution()
   {
-    // TODO: Call ReleaseResourcesExecution on the data when
-    // the DynamicArrayHandle class is able to do so.
+    this->Data.ReleaseResourcesExecution();
     this->Range.ReleaseResourcesExecution();
   }
 
@@ -231,20 +188,19 @@ private:
   std::string AssocCellSetName;      ///< only populate if assoc is cells
   vtkm::IdComponent AssocLogicalDim; ///< only populate if assoc is logical dim
 
-  vtkm::cont::DynamicArrayHandle Data;
+  vtkm::cont::ArrayHandleVariant Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag = true;
 
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRangeImpl(TypeList, StorageList) const
+  template <typename TypeList>
+  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRangeImpl(TypeList) const
   {
     VTKM_IS_LIST_TAG(TypeList);
-    VTKM_IS_LIST_TAG(StorageList);
 
     if (this->ModifiedFlag)
     {
-      internal::ComputeRange computeRange(this->Range);
-      this->Data.ResetTypeAndStorageLists(TypeList(), StorageList()).CastAndCall(computeRange);
+      vtkm::cont::CastAndCall(
+        this->Data.ResetTypes(TypeList()), internal::ComputeRange{}, this->Range);
       this->ModifiedFlag = false;
     }
 
@@ -255,7 +211,7 @@ private:
 template <typename Functor, typename... Args>
 void CastAndCall(const vtkm::cont::Field& field, Functor&& f, Args&&... args)
 {
-  field.GetData().CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
+  vtkm::cont::CastAndCall(field.GetData(), std::forward<Functor>(f), std::forward<Args>(args)...);
 }
 
 //@{
@@ -325,15 +281,21 @@ vtkm::cont::Field make_Field(std::string name,
 }
 //@}
 
+} // namespace cont
+} // namespace vtkm
+
+
+namespace vtkm
+{
+namespace cont
+{
 namespace internal
 {
-
 template <>
 struct DynamicTransformTraits<vtkm::cont::Field>
 {
   using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
-
 } // namespace internal
 } // namespace cont
 } // namespace vtkm
@@ -344,9 +306,7 @@ namespace vtkm
 {
 namespace cont
 {
-
-template <typename TypeList = VTKM_DEFAULT_TYPE_LIST_TAG,
-          typename StorageList = VTKM_DEFAULT_STORAGE_LIST_TAG>
+template <typename TypeList = VTKM_DEFAULT_TYPE_LIST_TAG>
 struct SerializableField
 {
   SerializableField() = default;
@@ -358,17 +318,17 @@ struct SerializableField
 
   vtkm::cont::Field Field;
 };
-}
-} // vtkm::cont
+} // namespace cont
+} // namespace vtkm
 
 namespace diy
 {
 
-template <typename TypeList, typename StorageList>
-struct Serialization<vtkm::cont::SerializableField<TypeList, StorageList>>
+template <typename TypeList>
+struct Serialization<vtkm::cont::SerializableField<TypeList>>
 {
 private:
-  using Type = vtkm::cont::SerializableField<TypeList, StorageList>;
+  using Type = vtkm::cont::SerializableField<TypeList>;
 
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& serializable)
@@ -385,7 +345,7 @@ public:
     {
       diy::save(bb, field.GetAssocLogicalDim());
     }
-    diy::save(bb, field.GetData().ResetTypeAndStorageLists(TypeList{}, StorageList{}));
+    diy::save(bb, field.GetData().ResetTypes(TypeList{}));
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& serializable)
@@ -398,26 +358,26 @@ public:
     diy::load(bb, assocVal);
 
     auto assoc = static_cast<vtkm::cont::Field::Association>(assocVal);
-    vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList> data;
+    vtkm::cont::ArrayHandleVariantBase<TypeList> data;
     if (assoc == vtkm::cont::Field::Association::CELL_SET)
     {
       std::string assocCellSetName;
       diy::load(bb, assocCellSetName);
       diy::load(bb, data);
       field =
-        vtkm::cont::Field(name, assoc, assocCellSetName, vtkm::cont::DynamicArrayHandle(data));
+        vtkm::cont::Field(name, assoc, assocCellSetName, vtkm::cont::ArrayHandleVariant(data));
     }
     else if (assoc == vtkm::cont::Field::Association::LOGICAL_DIM)
     {
       vtkm::IdComponent assocLogicalDim;
       diy::load(bb, assocLogicalDim);
       diy::load(bb, data);
-      field = vtkm::cont::Field(name, assoc, assocLogicalDim, vtkm::cont::DynamicArrayHandle(data));
+      field = vtkm::cont::Field(name, assoc, assocLogicalDim, vtkm::cont::ArrayHandleVariant(data));
     }
     else
     {
       diy::load(bb, data);
-      field = vtkm::cont::Field(name, assoc, vtkm::cont::DynamicArrayHandle(data));
+      field = vtkm::cont::Field(name, assoc, vtkm::cont::ArrayHandleVariant(data));
     }
   }
 };

@@ -59,6 +59,12 @@ public:
   ArrayHandle()
     : Storage(nullptr){};
 
+
+  /// virtual destructor, as required to make sure derived classes that
+  /// might have member variables are properly cleaned up.
+  //
+  virtual ~ArrayHandle() = default;
+
   ///Move existing shared_ptr of vtkm::cont::StorageVirtual to be
   ///owned by this ArrayHandleVirtual.
   ///This is generally how derived class construct a valid ArrayHandleVirtual
@@ -107,22 +113,19 @@ public:
   VTKM_CONT bool IsType() const
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-    //We need to go long the way to find the StorageType
-    //as StorageType is private on lots of derived ArrayHandles
-    //See Issue #314
-
     using VT = typename ArrayHandleType::ValueType;
     static_assert(
       std::is_same<VT, T>::value,
       "ArrayHandleVirtual<ValueType> can only be casted to an ArrayHandle of the same ValueType.");
 
+    //We need to determine if we are checking that `ArrayHandleType`
+    //is a virtual array handle since that is an easy check.
+    //Or if we have to go ask the storage if they are holding
+    //
     using ST = typename ArrayHandleType::StorageTag;
-    return this->Storage->IsType(typeid(vtkm::cont::internal::Storage<VT, ST>));
+    using is_base = std::is_same<vtkm::cont::StorageTagVirtual, ST>;
+    return this->IsSameType<ArrayHandleType>(is_base{});
   }
-
-  /// Returns a view on the internal storage of the ArrayHandleVirtual
-  ///
-  VTKM_CONT const StorageType* GetStorage() const { return this->Storage.get(); }
 
   /// Returns a new instance of an ArrayHandleVirtual with the same storage
   ///
@@ -133,37 +136,9 @@ public:
       : ArrayHandle<T, ::vtkm::cont::StorageTagVirtual>();
   }
 
-  // Return a ArrayPortalRef that wraps the real virtual portal. We need a stack object for
-  // the following reasons:
-  // 1. Device Adapter algorithms only support const AH<T,S>& and not const AH<T,S>*
-  // 2. Devices will want to get the length of a portal before execution, but for CUDA
-  //  we can't ask this information of the portal as it only valid on the device, instead
-  //  we have to store this information also in the ref wrapper
-  vtkm::ArrayPortalRef<T> PrepareForInput(vtkm::cont::DeviceAdapterId devId) const
-  {
-    return make_ArrayPortalRef(
-      static_cast<const vtkm::ArrayPortalVirtual<T>*>(this->Storage->PrepareForInput(devId)),
-      this->GetNumberOfValues());
-  }
-
-  vtkm::ArrayPortalRef<T> PrepareForOutput(vtkm::Id numberOfValues,
-                                           vtkm::cont::DeviceAdapterId devId)
-  {
-    return make_ArrayPortalRef(static_cast<const vtkm::ArrayPortalVirtual<T>*>(
-                                 this->Storage->PrepareForOutput(numberOfValues, devId)),
-                               numberOfValues);
-  }
-
-  vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
-
-  /// Releases any resources being used in the execution environment (that are
-  /// not being shared by the control environment).
+  /// Returns a view on the internal storage of the ArrayHandleVirtual
   ///
-  void ReleaseResourcesExecution() { return this->Storage->ReleaseResourcesExecution(); }
-
-  /// Releases all resources in both the control and execution environments.
-  ///
-  void ReleaseResources() { return this->Storage->ReleaseResources(); }
+  VTKM_CONT const StorageType* GetStorage() const { return this->Storage.get(); }
 
   /// Get the array portal of the control array.
   /// Since worklet invocations are asynchronous and this routine is a synchronization point,
@@ -187,8 +162,114 @@ public:
       this->GetNumberOfValues());
   }
 
+  /// Returns the number of entries in the array.
+  ///
+  vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
+
+  /// \brief Allocates an array large enough to hold the given number of values.
+  ///
+  /// The allocation may be done on an already existing array, but can wipe out
+  /// any data already in the array. This method can throw
+  /// ErrorBadAllocation if the array cannot be allocated or
+  /// ErrorBadValue if the allocation is not feasible (for example, the
+  /// array storage is read-only).
+  ///
+  VTKM_CONT
+  void Allocate(vtkm::Id numberOfValues) { return this->Storage->Allocate(numberOfValues); }
+
+  /// \brief Reduces the size of the array without changing its values.
+  ///
+  /// This method allows you to resize the array without reallocating it. The
+  /// number of entries in the array is changed to \c numberOfValues. The data
+  /// in the array (from indices 0 to \c numberOfValues - 1) are the same, but
+  /// \c numberOfValues must be equal or less than the preexisting size
+  /// (returned from GetNumberOfValues). That is, this method can only be used
+  /// to shorten the array, not lengthen.
+  void Shrink(vtkm::Id numberOfValues) { return this->Storage->Shrink(numberOfValues); }
+
+  /// Releases any resources being used in the execution environment (that are
+  /// not being shared by the control environment).
+  ///
+  void ReleaseResourcesExecution() { return this->Storage->ReleaseResourcesExecution(); }
+
+  /// Releases all resources in both the control and execution environments.
+  ///
+  void ReleaseResources() { return this->Storage->ReleaseResources(); }
+
+  /// Prepares this array to be used as an input to an operation in the
+  /// execution environment. If necessary, copies data to the execution
+  /// environment. Can throw an exception if this array does not yet contain
+  /// any data. Returns a portal that can be used in code running in the
+  /// execution environment.
+  ///
+  /// Return a ArrayPortalRef that wraps the real virtual portal. We need a stack object for
+  /// the following reasons:
+  /// 1. Device Adapter algorithms only support const AH<T,S>& and not const AH<T,S>*
+  /// 2. Devices will want to get the length of a portal before execution, but for CUDA
+  ///  we can't ask this information of the portal as it only valid on the device, instead
+  ///  we have to store this information also in the ref wrapper
+  vtkm::ArrayPortalRef<T> PrepareForInput(vtkm::cont::DeviceAdapterId devId) const
+  {
+    return make_ArrayPortalRef(
+      static_cast<const vtkm::ArrayPortalVirtual<T>*>(this->Storage->PrepareForInput(devId)),
+      this->GetNumberOfValues());
+  }
+
+  /// Prepares (allocates) this array to be used as an output from an operation
+  /// in the execution environment. The internal state of this class is set to
+  /// have valid data in the execution array with the assumption that the array
+  /// will be filled soon (i.e. before any other methods of this object are
+  /// called). Returns a portal that can be used in code running in the
+  /// execution environment.
+  ///
+  vtkm::ArrayPortalRef<T> PrepareForOutput(vtkm::Id numberOfValues,
+                                           vtkm::cont::DeviceAdapterId devId)
+  {
+    return make_ArrayPortalRef(static_cast<const vtkm::ArrayPortalVirtual<T>*>(
+                                 this->Storage->PrepareForOutput(numberOfValues, devId)),
+                               numberOfValues);
+  }
+
+  /// Prepares this array to be used in an in-place operation (both as input
+  /// and output) in the execution environment. If necessary, copies data to
+  /// the execution environment. Can throw an exception if this array does not
+  /// yet contain any data. Returns a portal that can be used in code running
+  /// in the execution environment.
+  ///
+  vtkm::ArrayPortalRef<T> PrepareForInPlace(vtkm::cont::DeviceAdapterId devId)
+  {
+    return make_ArrayPortalRef(
+      static_cast<const vtkm::ArrayPortalVirtual<T>*>(this->Storage->PrepareForInput(devId)),
+      this->GetNumberOfValues());
+  }
+
+  /// Returns the DeviceAdapterId for the current device. If there is no device
+  /// with an up-to-date copy of the data, VTKM_DEVICE_ADAPTER_UNDEFINED is
+  /// returned.
+  VTKM_CONT
+  DeviceAdapterId GetDeviceAdapterId() const { return this->Storage->GetDeviceAdapterId(); }
+
 protected:
   std::shared_ptr<StorageType> Storage = nullptr;
+
+private:
+  template <typename ArrayHandleType>
+  bool IsSameType(std::true_type vtkmNotUsed(inheritsFromArrayHandleVirtual)) const
+  {
+    //All classes that derive from ArrayHandleVirtual have virtual methods so we can use
+    //typeid directly
+    return typeid(*this) == typeid(ArrayHandleType);
+  }
+
+  template <typename ArrayHandleType>
+  bool IsSameType(std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const
+  {
+    //We need to go long the way to find the StorageType
+    //as StorageType is private on lots of derived ArrayHandles
+    //See Issue #314
+    using ST = typename ArrayHandleType::StorageTag;
+    return this->Storage->IsType(typeid(vtkm::cont::internal::Storage<T, ST>));
+  }
 };
 
 template <typename T>

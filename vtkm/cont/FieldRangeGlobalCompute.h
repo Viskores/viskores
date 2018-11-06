@@ -45,20 +45,6 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const std::string& name,
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
-  const vtkm::cont::DataSet& dataset,
-  const std::string& name,
-  vtkm::cont::Field::Association assoc,
-  TypeList,
-  StorageList)
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  VTKM_IS_LIST_TAG(StorageList);
-
-  return detail::FieldRangeGlobalComputeImpl(dataset, name, assoc, TypeList(), StorageList());
-}
-
 template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::DataSet& dataset,
@@ -67,9 +53,9 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   TypeList)
 {
   VTKM_IS_LIST_TAG(TypeList);
-  return detail::FieldRangeGlobalComputeImpl(
-    dataset, name, assoc, TypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
+  return detail::FieldRangeGlobalComputeImpl(dataset, name, assoc, TypeList());
 }
+
 //@}
 
 //{@
@@ -86,20 +72,6 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const std::string& name,
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
-  const vtkm::cont::MultiBlock& multiblock,
-  const std::string& name,
-  vtkm::cont::Field::Association assoc,
-  TypeList,
-  StorageList)
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  VTKM_IS_LIST_TAG(StorageList);
-
-  return detail::FieldRangeGlobalComputeImpl(multiblock, name, assoc, TypeList(), StorageList());
-}
-
 template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::MultiBlock& multiblock,
@@ -108,8 +80,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   TypeList)
 {
   VTKM_IS_LIST_TAG(TypeList);
-  return detail::FieldRangeGlobalComputeImpl(
-    multiblock, name, assoc, TypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
+  return detail::FieldRangeGlobalComputeImpl(multiblock, name, assoc, TypeList());
 }
 //@}
 }

@@ -48,22 +48,22 @@ struct MakeArrayHandleVirtualCoordinatesFunctor
   }
 };
 
-template <typename TypeList, typename StorageList>
+template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates MakeArrayHandleVirtualCoordinates(
-  const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& array)
+  const vtkm::cont::ArrayHandleVariantBase<TypeList>& array)
 {
   vtkm::cont::ArrayHandleVirtualCoordinates output;
-  vtkm::cont::CastAndCall(array.ResetTypeList(vtkm::TypeListTagFieldVec3{}),
+  vtkm::cont::CastAndCall(array.ResetTypes(vtkm::TypeListTagFieldVec3{}),
                           MakeArrayHandleVirtualCoordinatesFunctor{},
                           output);
   return output;
 }
 } // namespace detail
 
-template <typename TypeList, typename StorageList>
+template <typename TypeList>
 VTKM_CONT CoordinateSystem::CoordinateSystem(
   std::string name,
-  const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& data)
+  const vtkm::cont::ArrayHandleVariantBase<TypeList>& data)
   : Superclass(name, Association::POINTS, detail::MakeArrayHandleVirtualCoordinates(data))
 {
 }
@@ -81,9 +81,9 @@ VTKM_CONT void CoordinateSystem::SetData(const vtkm::cont::ArrayHandle<T, Storag
   this->SetData(vtkm::cont::ArrayHandleVirtualCoordinates(newdata));
 }
 
-template <typename TypeList, typename StorageList>
+template <typename TypeList>
 VTKM_CONT void CoordinateSystem::SetData(
-  const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& newdata)
+  const vtkm::cont::ArrayHandleVariantBase<TypeList>& newdata)
 {
   this->SetData(detail::MakeArrayHandleVirtualCoordinates(newdata));
 }
