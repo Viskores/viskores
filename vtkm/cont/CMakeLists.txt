@@ -22,6 +22,7 @@ set(headers
   Algorithm.h
   ArrayCopy.h
   ArrayHandle.h
+  ArrayHandleAny.h
   ArrayHandleCast.h
   ArrayHandleCartesianProduct.h
   ArrayHandleCompositeVector.h
@@ -111,6 +112,7 @@ set(headers
 
 set(template_sources
   ArrayHandle.hxx
+  ArrayHandleAny.hxx
   ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
   BoundingIntervalHierarchy.hxx
