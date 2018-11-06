@@ -45,6 +45,7 @@ set(headers
   ReverseConnectivityBuilder.h
   SimplePolymorphicContainer.h
   StorageError.h
+  TransferInfo.h
   VirtualObjectTransfer.h
   VirtualObjectTransferShareWithControl.h
   )

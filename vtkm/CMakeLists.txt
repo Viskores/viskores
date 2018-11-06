@@ -58,6 +58,7 @@ set(headers
   VecAxisAlignedPointCoordinates.h
   VecFromPortal.h
   VecFromPortalPermute.h
+  VecFromVirtPortal.h
   VectorAnalysis.h
   VecTraits.h
   VecVariable.h

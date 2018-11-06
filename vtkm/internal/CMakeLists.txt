@@ -56,8 +56,10 @@ unset(VTKM_NO_ASSERT)
 
 
 set(headers
+  ArrayPortalHelpers.h
   ArrayPortalUniformPointCoordinates.h
   ArrayPortalValueReference.h
+  ArrayPortalVirtual.h
   Assume.h
   brigand.hpp
   ConfigureFor32.h

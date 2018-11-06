@@ -17,40 +17,40 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ErrorBadType_h
-#define vtk_m_cont_ErrorBadType_h
+#ifndef vtk_m_internal_ArrayPortalHelpers_h
+#define vtk_m_internal_ArrayPortalHelpers_h
 
-#include <vtkm/cont/Error.h>
+
+#include <vtkm/VecTraits.h>
+#include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm
 {
-namespace cont
+namespace internal
 {
 
-VTKM_SILENCE_WEAK_VTABLE_WARNING_START
-
-/// This class is thrown when VTK-m encounters data of a type that is
-/// incompatible with the current operation.
-///
-class VTKM_ALWAYS_EXPORT ErrorBadType : public Error
+template <typename PortalType>
+struct PortalSupportsGets
 {
-public:
-  ErrorBadType(const std::string& message)
-    : Error(message)
-  {
-  }
+  template <typename U, typename S = decltype(std::declval<U>().Get(vtkm::Id{}))>
+  static std::true_type has(int);
+  template <typename U>
+  static std::false_type has(...);
+  using type = decltype(has<PortalType>(0));
 };
 
-VTKM_SILENCE_WEAK_VTABLE_WARNING_END
-
-/// Throws an ErrorBadType exception with the following message:
-/// Cast failed: \c baseType --> \c derivedType".
-/// This is generally caused by asking for a casting of a ArrayHandleVariant
-/// with an insufficient type list.
-//
-VTKM_CONT_EXPORT void throwFailedDynamicCast(const std::string& baseType,
-                                             const std::string& derivedType);
+template <typename PortalType>
+struct PortalSupportsSets
+{
+  template <typename U,
+            typename S = decltype(std::declval<U>().Set(vtkm::Id{},
+                                                        std::declval<typename U::ValueType>()))>
+  static std::true_type has(int);
+  template <typename U>
+  static std::false_type has(...);
+  using type = decltype(has<PortalType>(0));
+};
 }
-} // namespace vtkm::cont
+} // namespace vtkm::internal
 
-#endif //vtk_m_cont_ErrorBadType_h
+#endif //vtk_m_internal_ArrayPortalHelpers_h
