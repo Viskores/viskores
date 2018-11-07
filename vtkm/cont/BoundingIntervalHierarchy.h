@@ -24,8 +24,10 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
+
 #include <vtkm/cont/BoundingIntervalHierarchyNode.h>
 #include <vtkm/cont/CellLocator.h>
+
 #include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchy.h>
 
 namespace vtkm
