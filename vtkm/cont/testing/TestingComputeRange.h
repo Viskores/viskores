@@ -26,7 +26,7 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/testing/Testing.h>
 
-// Required for implementation of ArrayRangeCompute for "odd" arrays
+// Required for implementation of ArrayRangeCompute for virtual arrays
 #include <vtkm/cont/ArrayRangeCompute.hxx>
 
 #include <algorithm>
@@ -94,7 +94,7 @@ private:
       vtkm::cont::make_Field("TestField", vtkm::cont::Field::Association::POINTS, fieldData, nvals);
 
     vtkm::Range result[NumberOfComponents];
-    field.GetRange(result, CustomTypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
+    field.GetRange(result, CustomTypeList());
 
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
