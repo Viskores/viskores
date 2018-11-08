@@ -52,6 +52,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const ArrayHandleType& input,
   vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
 
+
 // Precompiled versions of ArrayRangeCompute
 #define VTKM_ARRAY_RANGE_COMPUTE_EXPORT_T(T, Storage)                                              \
   VTKM_CONT_EXPORT                                                                                 \
@@ -94,16 +95,18 @@ VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt8, 4, vtkm::cont::StorageTagBasic)
 VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float32, 4, vtkm::cont::StorageTagBasic);
 VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasic);
 
-VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::FloatDefault,
-                                    3,
-                                    vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag);
-
-VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::FloatDefault,
-                                    3,
-                                    vtkm::cont::ArrayHandleVirtualCoordinates::StorageTag);
 
 #undef VTKM_ARRAY_RANGE_COMPUTE_EXPORT_T
 #undef VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC
+
+// Implementation of uniform point coordinates
+VTKM_CONT_EXPORT
+VTKM_CONT
+vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>,
+                                vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>& array,
+  vtkm::cont::RuntimeDeviceTracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
+
 
 // Implementation of composite vectors
 VTKM_CONT_EXPORT
