@@ -60,8 +60,7 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
   {
     vtkm::UInt8 shape = shapes.GetPortalConstControl().Get(i);
     vtkm::IdComponent numInds = numIndices.GetPortalConstControl().Get(i);
-    vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl connPortal =
-      connectivity.GetPortalConstControl();
+    auto connPortal = connectivity.GetPortalConstControl();
     switch (shape)
     {
       case vtkm::CELL_SHAPE_VERTEX:
@@ -219,9 +218,7 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
 
 inline bool IsSingleShape(const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes)
 {
-  vtkm::cont::ArrayHandle<vtkm::UInt8>::PortalConstControl shapesPortal =
-    shapes.GetPortalConstControl();
-
+  auto shapesPortal = shapes.GetPortalConstControl();
   vtkm::UInt8 shape0 = shapesPortal.Get(0);
   for (vtkm::Id i = 1; i < shapes.GetNumberOfValues(); ++i)
   {
