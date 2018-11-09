@@ -51,8 +51,9 @@ add_library(vtkm_compiler_flags INTERFACE)
 # When building libraries/tests that are part of the VTK-m repository
 # inherit the properties from vtkm_developer_flags and vtkm_vectorization_flags.
 # The flags are intended only for VTK-m itself and are not needed by consumers.
-# We will export vtkm_vectorization_flags in general so consumer can enable
-# vectorization if they so desire
+# We will export vtkm_developer_flags, and vtkm_vectorization_flags in general
+# so consumer can either enable vectorization or use VTK-m's build flags if
+# they so desire
 if (VTKm_ENABLE_DEVELOPER_FLAGS)
   target_link_libraries(vtkm_compiler_flags
     INTERFACE $<BUILD_INTERFACE:vtkm_developer_flags>)
@@ -92,26 +93,29 @@ add_library(vtkm_developer_flags INTERFACE)
 # about failures to vectorize.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
     CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)
-  target_compile_options(vtkm_developer_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>>)
+  target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.99)
-  target_compile_options(vtkm_developer_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>>)
+  target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>)
 endif()
 
 if(VTKM_COMPILER_IS_MSVC)
   target_compile_definitions(vtkm_developer_flags INTERFACE "_SCL_SECURE_NO_WARNINGS"
                                                             "_CRT_SECURE_NO_WARNINGS")
 
-  #CMake COMPILE_LANGUAGE doesn't work with MSVC, and since we want these flags
-  #only for C++ compilation we have to resort to setting CMAKE_CXX_FLAGS :(
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4702 /wd4505")
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/wd4702 /wd4505\" -Xcudafe=\"--diag_suppress=1394 --diag_suppress=766 --display_error_number\"")
+  #Setup MSVC warnings with CUDA and CXX
+  target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd4702 -wd4505>)
+  if(TARGET vtkm::cuda)
+    target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-wd4702,-wd4505  -Xcudafe=--display_error_number,--diag_suppress=1394,--diag_suppress=766>)
+  endif()
 
   if(MSVC_VERSION LESS 1900)
     # In VS2013 the C4127 warning has a bug in the implementation and
     # generates false positive warnings for lots of template code
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4127")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/wd4127\"")
+    target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd4127>)
+    if(TARGET vtkm::cuda)
+      target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-wd4127>)
+    endif()
   endif()
 
 elseif(VTKM_COMPILER_IS_ICC)
@@ -137,13 +141,9 @@ elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
     (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.99) )
     list(APPEND cxx_flags -Wno-strict-overflow)
   endif()
-  target_compile_options(vtkm_developer_flags
-    INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>>
-    )
+  target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>)
   if(TARGET vtkm::cuda)
-    target_compile_options(vtkm_developer_flags
-      INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags}>>
-      )
+    target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags}>)
   endif()
 endif()
 
