@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <mutex>
 #include <set>
 #include <sstream>
 
@@ -154,10 +155,10 @@ struct ColorTablePreset
   }
 };
 
-VTKM_CONT const std::vector<ColorTablePreset> GetColorTablePresetsVector()
+VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& presets)
 {
   // clang-format off
-  static std::vector<ColorTablePreset> presets = {
+  presets = std::vector<ColorTablePreset>{
     { vtkm::cont::ColorTable::Preset::COOL_TO_WARM,
       "Cool to Warm",
       vtkm::cont::ColorSpace::DIVERGING,
@@ -1344,6 +1345,14 @@ VTKM_CONT const std::vector<ColorTablePreset> GetColorTablePresetsVector()
     }
   };
   // clang-format on
+}
+
+VTKM_CONT const std::vector<ColorTablePreset> GetColorTablePresetsVector()
+{
+  static std::once_flag calledPresets;
+  static std::vector<ColorTablePreset> presets;
+
+  std::call_once(calledPresets, BuildColorTablePresetsVector, std::ref(presets));
 
   return presets;
 }
