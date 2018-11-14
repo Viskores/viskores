@@ -40,160 +40,150 @@ namespace arg
 //Todo we need to have this class handle different BoundaryTypes
 struct BoundaryState
 {
-  enum OnWhichBoundaries
-  {
-    NONE = 1,
-    X_MIN = 1 << 1,
-    X_MAX = 1 << 2,
-    Y_MIN = 1 << 3,
-    Y_MAX = 1 << 4,
-    Z_MIN = 1 << 5,
-    Z_MAX = 1 << 6
-  };
-
   VTKM_EXEC
   BoundaryState(const vtkm::Id3& ijk, const vtkm::Id3& pdims, int neighborhoodSize)
     : IJK(ijk)
     , PointDimensions(pdims)
-    , Boundaries(OnWhichBoundaries::NONE)
+    , NeighborhoodSize(neighborhoodSize)
   {
-    //Maybe we should use function binding here, we could bind to the correct
-    //clamp function based on our boundary condition and if lay on the boundary
-    if (ijk[0] - neighborhoodSize < 0)
+    for (vtkm::IdComponent dim = 0; dim < 3; ++dim)
     {
-      this->Boundaries |= OnWhichBoundaries::X_MIN;
-    }
-
-    if (ijk[0] + neighborhoodSize >= PointDimensions[0])
-    {
-      this->Boundaries |= OnWhichBoundaries::X_MAX;
-    }
-
-    if (ijk[1] - neighborhoodSize < 0)
-    {
-      this->Boundaries |= OnWhichBoundaries::Y_MIN;
-    }
-
-    if (ijk[1] + neighborhoodSize >= PointDimensions[1])
-    {
-      this->Boundaries |= OnWhichBoundaries::Y_MAX;
-    }
-
-    if (ijk[2] - neighborhoodSize < 0)
-    {
-      this->Boundaries |= OnWhichBoundaries::Z_MIN;
-    }
-
-    if (ijk[2] + neighborhoodSize >= PointDimensions[2])
-    {
-      this->Boundaries |= OnWhichBoundaries::Z_MAX;
+      if (neighborhoodSize < ijk[dim])
+      {
+        this->MinNeighborhood[dim] = -neighborhoodSize;
+      }
+      else
+      {
+        this->MinNeighborhood[dim] = static_cast<vtkm::IdComponent>(-ijk[dim]);
+      }
+      if (neighborhoodSize < pdims[dim] - ijk[dim] - 1)
+      {
+        this->MaxNeighborhood[dim] = neighborhoodSize;
+      }
+      else
+      {
+        this->MaxNeighborhood[dim] = static_cast<vtkm::IdComponent>(pdims[dim] - ijk[dim] - 1);
+      }
     }
   }
 
-  //Note: Due to C4800 This methods are in the form of ( ) != 0, instead of
-  //just returning the value
-  ///Returns true if we could access boundary elements in the X positive direction
-  VTKM_EXEC
-  inline bool OnXPositive() const { return (this->Boundaries & OnWhichBoundaries::X_MAX) != 0; }
+  /// Returns the minimum neighbor index in the X direction (between -neighborhood size and 0)
+  ///
+  VTKM_EXEC vtkm::IdComponent MinNeighborX() const { return this->MinNeighborhood[0]; }
 
-  ///Returns true if we could access boundary elements in the X negative direction
-  VTKM_EXEC
-  inline bool OnXNegative() const { return (this->Boundaries & OnWhichBoundaries::X_MIN) != 0; }
+  /// Returns the minimum neighbor index in the Z direction (between -neighborhood size and 0)
+  ///
+  VTKM_EXEC vtkm::IdComponent MinNeighborY() const { return this->MinNeighborhood[1]; }
 
-  ///Returns true if we could access boundary elements in the Y positive direction
-  VTKM_EXEC
-  inline bool OnYPositive() const { return (this->Boundaries & OnWhichBoundaries::Y_MAX) != 0; }
+  /// Returns the minimum neighbor index in the Z direction (between -neighborhood size and 0)
+  ///
+  VTKM_EXEC vtkm::IdComponent MinNeighborZ() const { return this->MinNeighborhood[2]; }
 
-  ///Returns true if we could access boundary elements in the Y negative direction
-  VTKM_EXEC
-  inline bool OnYNegative() const { return (this->Boundaries & OnWhichBoundaries::Y_MIN) != 0; }
+  /// Returns the maximum neighbor index in the X direction (between 0 and neighborhood size)
+  ///
+  VTKM_EXEC vtkm::IdComponent MaxNeighborX() const { return this->MaxNeighborhood[0]; }
 
-  ///Returns true if we could access boundary elements in the Z positive direction
-  VTKM_EXEC
-  inline bool OnZPositive() const { return (this->Boundaries & OnWhichBoundaries::Z_MAX) != 0; }
+  /// Returns the maximum neighbor index in the Z direction (between 0 and neighborhood size)
+  ///
+  VTKM_EXEC vtkm::IdComponent MaxNeighborY() const { return this->MaxNeighborhood[1]; }
 
-  ///Returns true if we could access boundary elements in the Z negative direction
-  VTKM_EXEC
-  inline bool OnZNegative() const { return (this->Boundaries & OnWhichBoundaries::Z_MIN) != 0; }
+  /// Returns the maximum neighbor index in the Z direction (between 0 and neighborhood size)
+  ///
+  VTKM_EXEC vtkm::IdComponent MaxNeighborZ() const { return this->MaxNeighborhood[2]; }
 
+  /// Returns true if the neighborhood extends past the positive X direction.
+  ///
+  VTKM_EXEC bool OnXPositive() const { return this->MaxNeighborX() < this->NeighborhoodSize; }
 
-  ///Returns true if we could access boundary elements in the X direction
-  VTKM_EXEC
-  inline bool OnX() const { return this->OnXPositive() || this->OnXNegative(); }
+  /// Returns true if the neighborhood extends past the negative X direction.
+  ///
+  VTKM_EXEC bool OnXNegative() const { return -this->MinNeighborX() < this->NeighborhoodSize; }
 
-  ///Returns true if we could access boundary elements in the Y direction
-  VTKM_EXEC
-  inline bool OnY() const { return this->OnYPositive() || this->OnYNegative(); }
+  /// Returns true if the neighborhood extends past the positive Y direction.
+  ///
+  VTKM_EXEC bool OnYPositive() const { return this->MaxNeighborY() < this->NeighborhoodSize; }
 
-  ///Returns true if we could access boundary elements in the Z direction
-  VTKM_EXEC
-  inline bool OnZ() const { return this->OnZPositive() || this->OnZNegative(); }
+  /// Returns true if the neighborhood extends past the negative Y direction.
+  ///
+  VTKM_EXEC bool OnYNegative() const { return -this->MinNeighborY() < this->NeighborhoodSize; }
+
+  /// Returns true if the neighborhood extends past the positive Z direction.
+  ///
+  VTKM_EXEC bool OnZPositive() const { return this->MaxNeighborZ() < this->NeighborhoodSize; }
+
+  /// Returns true if the neighborhood extends past the negative Z direction.
+  ///
+  VTKM_EXEC bool OnZNegative() const { return -this->MinNeighborZ() < this->NeighborhoodSize; }
+
+  /// Returns true if the neighborhood extends past either X boundary.
+  ///
+  VTKM_EXEC bool OnX() const { return this->OnXNegative() || this->OnXPositive(); }
+
+  /// Returns true if the neighborhood extends past either Y boundary.
+  ///
+  VTKM_EXEC bool OnY() const { return this->OnYNegative() || this->OnYPositive(); }
+
+  /// Returns true if the neighborhood extends past either Z boundary.
+  ///
+  VTKM_EXEC bool OnZ() const { return this->OnZNegative() || this->OnZPositive(); }
 
   //todo: This needs to work with BoundaryConstantValue
   //todo: This needs to work with BoundaryPeroidic
-  VTKM_EXEC
-  void Clamp(vtkm::Id& i, vtkm::Id& j, vtkm::Id& k) const
+
+  //@{
+  /// Takes a local neighborhood index (in the ranges of -neighborhood size to neighborhood size)
+  /// and returns the ijk of the equivalent point in the full data set. If the given value is out
+  /// of range, the value is clamped to the nearest boundary. For example, if given a neighbor
+  /// index that is past the minimum x range of the data, the index at the minimum x boundary is
+  /// returned.
+  ///
+  VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndexClamp(
+    const vtkm::Vec<vtkm::IdComponent, 3>& neighbor) const
   {
-    //BoundaryClamp implementation
-    //Clamp each item to a valid range, the index coming in is offsets from the
-    //center IJK index
-    i += this->IJK[0];
-    j += this->IJK[1];
-    k += this->IJK[2];
-
-    if (this->Boundaries != OnWhichBoundaries::NONE)
-    {
-      i = (i < 0) ? 0 : i;
-      i = (i < this->PointDimensions[0]) ? i : (this->PointDimensions[0] - 1);
-
-      j = (j < 0) ? 0 : j;
-      j = (j < this->PointDimensions[1]) ? j : (this->PointDimensions[1] - 1);
-
-      k = (k < 0) ? 0 : k;
-      k = (k < this->PointDimensions[2]) ? k : (this->PointDimensions[2] - 1);
-    }
+    vtkm::Vec<vtkm::IdComponent, 3> clampedNeighbor =
+      vtkm::Max(this->MinNeighborhood, vtkm::Min(this->MaxNeighborhood, neighbor));
+    return this->IJK + clampedNeighbor;
   }
 
-  VTKM_EXEC
-  void Clamp(vtkm::Id3& index) const { this->Clamp(index[0], index[1], index[2]); }
-
+  VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndexClamp(vtkm::IdComponent neighborI,
+                                                    vtkm::IdComponent neighborJ,
+                                                    vtkm::IdComponent neighborK) const
+  {
+    return this->NeighborIndexToFullIndexClamp(vtkm::make_Vec(neighborI, neighborJ, neighborK));
+  }
+  //@}
 
   //todo: This needs to work with BoundaryConstantValue
   //todo: This needs to work with BoundaryPeroidic
-  VTKM_EXEC
-  vtkm::Id ClampAndFlatten(vtkm::Id i, vtkm::Id j, vtkm::Id k) const
+
+  //@{
+  /// Takes a local neighborhood index (in the ranges of -neighborhood size to neighborhood size)
+  /// and returns the flat index of the equivalent point in the full data set. If the given value
+  /// is out of range, the value is clamped to the nearest boundary. For example, if given a
+  /// neighbor index that is past the minimum x range of the data, the index at the minimum x
+  /// boundary is returned.
+  ///
+  VTKM_EXEC vtkm::Id NeighborIndexToFlatIndexClamp(
+    const vtkm::Vec<vtkm::IdComponent, 3>& neighbor) const
   {
-    //BoundaryClamp implementation
-    //Clamp each item to a valid range, the index coming in is offsets from the
-    //center IJK index
-    i += this->IJK[0];
-    j += this->IJK[1];
-    k += this->IJK[2];
+    vtkm::Id3 full = this->NeighborIndexToFullIndexClamp(neighbor);
 
-    if (this->Boundaries != OnWhichBoundaries::NONE)
-    {
-      i = (i < 0) ? 0 : i;
-      i = (i < this->PointDimensions[0]) ? i : (this->PointDimensions[0] - 1);
-
-      j = (j < 0) ? 0 : j;
-      j = (j < this->PointDimensions[1]) ? j : (this->PointDimensions[1] - 1);
-
-      k = (k < 0) ? 0 : k;
-      k = (k < this->PointDimensions[2]) ? k : (this->PointDimensions[2] - 1);
-    }
-
-    return (k * this->PointDimensions[1] + j) * this->PointDimensions[0] + i;
+    return (full[2] * this->PointDimensions[1] + full[1]) * this->PointDimensions[0] + full[0];
   }
 
-  VTKM_EXEC
-  vtkm::Id ClampAndFlatten(const vtkm::Id3& index) const
+  VTKM_EXEC vtkm::Id NeighborIndexToFlatIndexClamp(vtkm::IdComponent neighborI,
+                                                   vtkm::IdComponent neighborJ,
+                                                   vtkm::IdComponent neighborK) const
   {
-    return this->ClampAndFlatten(index[0], index[1], index[2]);
+    return this->NeighborIndexToFlatIndexClamp(vtkm::make_Vec(neighborI, neighborJ, neighborK));
   }
+  //@}
 
   vtkm::Id3 IJK;
   vtkm::Id3 PointDimensions;
-  vtkm::Int32 Boundaries;
+  vtkm::Vec<vtkm::IdComponent, 3> MinNeighborhood;
+  vtkm::Vec<vtkm::IdComponent, 3> MaxNeighborhood;
+  vtkm::IdComponent NeighborhoodSize;
 };
 
 namespace detail
