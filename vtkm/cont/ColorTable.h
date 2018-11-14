@@ -112,20 +112,23 @@ public:
   enum struct Preset
   {
     DEFAULT,
-    VIRIDIS,
     COOL_TO_WARM,
-    COOL_TO_WARN_EXTENDED,
-    COLD_AND_HOT,
+    COOL_TO_WARM_EXTENDED,
+    VIRIDIS,
     INFERNO,
+    PLASMA,
     BLACK_BODY_RADIATION,
-    SAMSEL_FIRE,
-    LINEAR_YGB,
-    BLACK_BLUE_AND_WHITE,
-    LINEAR_GREEN,
     X_RAY,
+    GREEN,
+    BLACK_BLUE_WHITE,
+    BLUE_TO_ORANGE,
+    GRAY_TO_RED,
+    COLD_AND_HOT,
+    BLUE_GREEN_ORANGE,
+    YELLOW_GRAY_BLUE,
+    RAINBOW_UNIFORM,
     JET,
-    RAINBOW_DESATURATED,
-    RAINBOW
+    RAINBOW_DESATURATED
   };
 
   /// \brief Construct a color table from a preset
@@ -145,20 +148,24 @@ public:
   /// Note: Names are case insensitive
   /// Currently supports the following color tables:
   ///
+  /// "Default"
   /// "Cool to Warm"
-  /// "Black-Body Radiation"
-  /// "Samsel Fire" [ known previously as "Black, Orange and White"]
+  /// "Cool to Warm Extended"
+  /// "Viridis"
   /// "Inferno"
-  /// "Linear YGB"
-  /// "Cold and Hot"
-  /// "Rainbow Desaturated"
-  /// "Cool to Warm (Extended)"
+  /// "Plasma"
+  /// "Black-Body Radiation"
   /// "X Ray"
-  /// "Black, Blue and White"
-  /// "Virdis"
-  /// "Linear Green"
+  /// "Green"
+  /// "Black - Blue - White"
+  /// "Blue to Orange"
+  /// "Gray to Red"
+  /// "Cold and Hot"
+  /// "Blue - Green - Orange"
+  /// "Yellow - Gray - Blue"
+  /// "Rainbow Uniform"
   /// "Jet"
-  /// "Rainbow"
+  /// "Rainbow Desaturated"
   ///
   explicit ColorTable(const std::string& name);
 
@@ -192,8 +199,21 @@ public:
              const vtkm::Vec<float, 4>& rgba2,
              ColorSpace space = ColorSpace::LAB);
 
+  /// Construct a color table with a list of colors and alphas. For this version you must also
+  /// specify a name.
+  ///
+  /// This constructor is mostly used for presets.
+  ColorTable(const std::string& name,
+             vtkm::cont::ColorSpace colorSpace,
+             const vtkm::Vec<double, 3>& nanColor,
+             const std::vector<double>& rgbPoints,
+             const std::vector<double>& alphaPoints = { 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.5, 0.0 });
+
 
   ~ColorTable();
+
+  const std::string& GetName() const;
+  void SetName(const std::string& name);
 
   bool LoadPreset(vtkm::cont::ColorTable::Preset preset);
 
@@ -202,7 +222,7 @@ public:
   /// This list will include all presets defined in vtkm::cont::ColorTable::Preset and could
   /// include extras as well.
   ///
-  std::set<std::string> GetPresets() const;
+  static std::set<std::string> GetPresets();
 
   /// Load a preset color table
   ///
@@ -213,20 +233,25 @@ public:
   /// Note: Names are case insensitive
   ///
   /// Currently supports the following color tables:
+  /// "Default"
   /// "Cool to Warm"
-  /// "Black-Body Radiation"
-  /// "Samsel Fire" [ known previously as "Black, Orange and White"]
+  /// "Cool to Warm Extended"
+  /// "Viridis"
   /// "Inferno"
-  /// "Linear YGB"
-  /// "Cold and Hot"
-  /// "Rainbow Desaturated"
-  /// "Cool to Warm (Extended)"
+  /// "Plasma"
+  /// "Black-Body Radiation"
   /// "X Ray"
-  /// "Black, Blue and White"
-  /// "Virdis"
-  /// "Linear Green"
+  /// "Green"
+  /// "Black - Blue - White"
+  /// "Blue to Orange"
+  /// "Gray to Red"
+  /// "Cold and Hot"
+  /// "Blue - Green - Orange"
+  /// "Yellow - Gray - Blue"
+  /// "Rainbow Uniform"
   /// "Jet"
-  /// "Rainbow"
+  /// "Rainbow Desaturated"
+  ///
   bool LoadPreset(const std::string& name);
 
   /// Make a deep copy of the current color table
@@ -455,27 +480,31 @@ public:
 
   /// Fill the Opacity table from a double pointer
   ///
-  /// The double pointer is required to have the layout out of [X1, A1,
-  /// X2, A2, ..., Xn, An] where n is the number of nodes. The midpoint
-  /// of each node will be set to 0.5 and the sharpness to 0.0 (linear).
+  /// The double pointer is required to have the layout out of [X1, A1, M1, S1, X2, A2, M2, S2,
+  /// ..., Xn, An, Mn, Sn] where n is the number of nodes. The Xi values represent the value to
+  /// map, the Ai values represent alpha (opacity) value, the Mi values represent midpoints, and
+  /// the Si values represent sharpness. Use 0.5 for midpoint and 0.0 for sharpness to have linear
+  /// interpolation of the alpha.
+  ///
   /// This will remove any existing opacity control points.
   ///
-  /// Note: n represents the length of the array, so ( n/2 == number of control points )
+  /// Note: n represents the length of the array, so ( n/4 == number of control points )
   ///
-  /// Note: This is provided as a interoperability method with VTK
   /// Will return false and not modify anything if n is <= 0 or ptr == nullptr
   bool FillOpacityTableFromDataPointer(vtkm::Int32 n, const double* ptr);
 
   /// Fill the Opacity table from a float pointer
   ///
-  /// The double pointer is required to have the layout out of [X1, A1,
-  /// X2, A2, ..., Xn, An] where n is the number of nodes. The midpoint
-  /// of each node will be set to 0.5 and the sharpness to 0.0 (linear).
+  /// The float pointer is required to have the layout out of [X1, A1, M1, S1, X2, A2, M2, S2,
+  /// ..., Xn, An, Mn, Sn] where n is the number of nodes. The Xi values represent the value to
+  /// map, the Ai values represent alpha (opacity) value, the Mi values represent midpoints, and
+  /// the Si values represent sharpness. Use 0.5 for midpoint and 0.0 for sharpness to have linear
+  /// interpolation of the alpha.
+  ///
   /// This will remove any existing opacity control points.
   ///
-  /// Note: n represents the length of the array, so ( n/2 == number of control points )
+  /// Note: n represents the length of the array, so ( n/4 == number of control points )
   ///
-  /// Note: This is provided as a interoperability method with VTK
   /// Will return false and not modify anything if n is <= 0 or ptr == nullptr
   bool FillOpacityTableFromDataPointer(vtkm::Int32 n, const float* ptr);
 

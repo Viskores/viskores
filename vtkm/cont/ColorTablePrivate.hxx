@@ -35,6 +35,7 @@ namespace detail
 {
 struct ColorTableInternals
 {
+  std::string Name;
 
   ColorSpace CSpace = ColorSpace::LAB;
   vtkm::Range TableRange = { 1.0, 0.0 };
