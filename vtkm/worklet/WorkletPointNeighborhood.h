@@ -164,12 +164,9 @@ public:
   };
 };
 
-template <int Neighborhood_>
 class WorkletPointNeighborhood : public WorkletPointNeighborhoodBase
 {
 public:
-  static constexpr vtkm::IdComponent Neighborhood = Neighborhood_;
-
   /// \brief A control signature tag for neighborhood input values.
   ///
   /// A \c WorkletPointNeighborhood operates allowing access to a adjacent point
@@ -186,7 +183,7 @@ public:
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
-    using FetchTag = vtkm::exec::arg::FetchTagArrayNeighborhoodIn<Neighborhood>;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayNeighborhoodIn;
   };
 
   /// Point neighborhood worklets use the related thread indices class.
@@ -197,7 +194,7 @@ public:
             typename OutToInArrayType,
             typename VisitArrayType,
             vtkm::IdComponent Dimension>
-  VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood<Neighborhood> GetThreadIndices(
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood GetThreadIndices(
     const IndexType& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
@@ -206,14 +203,10 @@ public:
                                              Dimension>& inputDomain, //this should be explicitly
     const T& globalThreadIndexOffset = 0) const
   {
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood<Neighborhood>(
+    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
       threadIndex, outToIn, visit, inputDomain, globalThreadIndexOffset);
   }
 };
-
-
-using WorkletPointNeighborhood3x3x3 = WorkletPointNeighborhood<1>;
-using WorkletPointNeighborhood5x5x5 = WorkletPointNeighborhood<2>;
 }
 }
 

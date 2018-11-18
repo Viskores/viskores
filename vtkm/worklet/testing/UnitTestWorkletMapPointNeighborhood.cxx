@@ -36,7 +36,7 @@
 namespace test_pointneighborhood
 {
 
-struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood3x3x3
+struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood
 {
 
   using ControlSignature = void(FieldInNeighborhood<Scalar> neighbors,
@@ -49,73 +49,53 @@ struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 
   template <typename FieldIn, typename FieldOut>
   VTKM_EXEC void operator()(const vtkm::exec::arg::BoundaryState& boundary,
-                            const vtkm::exec::arg::Neighborhood<1, FieldIn>& inputField,
+                            const vtkm::exec::arg::Neighborhood<FieldIn>& inputField,
                             FieldOut& output) const
   {
     using ValueType = typename FieldIn::ValueType;
 
     auto* nboundary = inputField.Boundary;
 
-    if (!(nboundary->OnXPositive() == boundary.OnXPositive()))
+    if (!(nboundary->InXBoundary(1) == boundary.InXBoundary(1)))
     {
       this->RaiseError("Got invalid XPos boundary state");
     }
 
-    if (!(nboundary->OnXNegative() == boundary.OnXNegative()))
-    {
-      this->RaiseError("Got invalid XNeg boundary state");
-    }
-
-    if (!(nboundary->OnYPositive() == boundary.OnYPositive()))
+    if (!(nboundary->InYBoundary(1) == boundary.InYBoundary(1)))
     {
       this->RaiseError("Got invalid YPos boundary state");
     }
 
-    if (!(nboundary->OnYNegative() == boundary.OnYNegative()))
-    {
-      this->RaiseError("Got invalid YNeg boundary state");
-    }
-
-    if (!(nboundary->OnZPositive() == boundary.OnZPositive()))
+    if (!(nboundary->InZBoundary(1) == boundary.InZBoundary(1)))
     {
       this->RaiseError("Got invalid ZPos boundary state");
     }
 
-    if (!(nboundary->OnZNegative() == boundary.OnZNegative()))
+    if (!(nboundary->InBoundary(1) == boundary.InBoundary(1)))
     {
-      this->RaiseError("Got invalid ZNeg boundary state");
+      this->RaiseError("Got invalid boundary state");
     }
 
 
-    if (!(nboundary->OnX() == boundary.OnX()))
-    {
-      this->RaiseError("Got invalid X boundary state");
-    }
-    if (!(nboundary->OnY() == boundary.OnY()))
-    {
-      this->RaiseError("Got invalid Y boundary state");
-    }
-    if (!(nboundary->OnZ() == boundary.OnZ()))
-    {
-      this->RaiseError("Got invalid Z boundary state");
-    }
-
+    auto minNeighbors = boundary.MinNeighborIndices(1);
+    auto maxNeighbors = boundary.MaxNeighborIndices(1);
 
     ValueType maxV = inputField.Get(0, 0, 0); //our value
-    for (vtkm::IdComponent k = 0; k < 3; ++k)
+    for (vtkm::IdComponent k = minNeighbors[2]; k <= maxNeighbors[2]; ++k)
     {
-      for (vtkm::IdComponent j = 0; j < 3; ++j)
+      for (vtkm::IdComponent j = minNeighbors[1]; j <= maxNeighbors[1]; ++j)
       {
-        maxV = vtkm::Max(maxV, inputField.Get(-1, j - 1, k - 1));
-        maxV = vtkm::Max(maxV, inputField.Get(0, j - 1, k - 1));
-        maxV = vtkm::Max(maxV, inputField.Get(1, j - 1, k - 1));
+        for (vtkm::IdComponent i = minNeighbors[0]; i <= maxNeighbors[0]; ++i)
+        {
+          maxV = vtkm::Max(maxV, inputField.Get(i, j, k));
+        }
       }
     }
     output = static_cast<FieldOut>(maxV);
   }
 };
 
-struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood5x5x5
+struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood
 {
   using ControlSignature = void(CellSetIn topology, FieldIn<Vec3> pointCoords);
   using ExecutionSignature =
@@ -130,7 +110,7 @@ struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood5
     const vtkm::Id& workIndex,
     const vtkm::Id& inputIndex,
     const vtkm::Id& outputIndex,
-    const vtkm::exec::arg::ThreadIndicesPointNeighborhood<2>& vtkmNotUsed(threadIndices),
+    const vtkm::exec::arg::ThreadIndicesPointNeighborhood& vtkmNotUsed(threadIndices),
     const vtkm::Id& visitIndex) const
   {
     if (workIndex != inputIndex)
@@ -151,7 +131,7 @@ struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood5
   using ScatterType = vtkm::worklet::ScatterIdentity;
 };
 
-struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood5x5x5
+struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood
 {
   using ControlSignature = void(CellSetIn topology, FieldIn<Vec3> pointCoords);
   using ExecutionSignature =
@@ -166,7 +146,7 @@ struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood5x
     const vtkm::Id& workIndex,
     const vtkm::Id& inputIndex,
     const vtkm::Id& outputIndex,
-    const vtkm::exec::arg::ThreadIndicesPointNeighborhood<2>& vtkmNotUsed(threadIndices),
+    const vtkm::exec::arg::ThreadIndicesPointNeighborhood& vtkmNotUsed(threadIndices),
     const vtkm::Id& visitIndex) const
   {
     if ((workIndex / 3) != inputIndex)

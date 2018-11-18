@@ -60,23 +60,33 @@ void verify_neighbors(NeighborhoodType neighbors, vtkm::Id index, vtkm::Id3 inde
   T expected;
   auto* boundary = neighbors.Boundary;
 
-  //Verify the boundar flags first
-  VTKM_TEST_ASSERT(test_equal(index3d[0] == (POINT_DIMS[0] - 1), boundary->OnXPositive()),
-                   "Got invalid X+ boundary");
-  VTKM_TEST_ASSERT(test_equal(index3d[0] == 0, boundary->OnXNegative()), "Got invalid X- boundary");
-  VTKM_TEST_ASSERT(test_equal(index3d[1] == (POINT_DIMS[1] - 1), boundary->OnYPositive()),
-                   "Got invalid Y+ boundary");
-  VTKM_TEST_ASSERT(test_equal(index3d[1] == 0, boundary->OnYNegative()), "Got invalid Y- boundary");
-  VTKM_TEST_ASSERT(test_equal(index3d[2] == (POINT_DIMS[2] - 1), boundary->OnZPositive()),
-                   "Got invalid Z+ boundary");
-  VTKM_TEST_ASSERT(test_equal(index3d[2] == 0, boundary->OnZNegative()), "Got invalid Z- boundary");
+  //Verify the boundary flags first
+  VTKM_TEST_ASSERT(((index3d[0] != 0) && (index3d[0] != (POINT_DIMS[0] - 1))) ==
+                     boundary->InXBoundary(1),
+                   "Got invalid X boundary");
+  VTKM_TEST_ASSERT(((index3d[1] != 0) && (index3d[1] != (POINT_DIMS[1] - 1))) ==
+                     boundary->InYBoundary(1),
+                   "Got invalid Y boundary");
+  VTKM_TEST_ASSERT(((index3d[2] != 0) && (index3d[2] != (POINT_DIMS[2] - 1))) ==
+                     boundary->InZBoundary(1),
+                   "Got invalid Z boundary");
+
+  VTKM_TEST_ASSERT(((boundary->MinNeighborIndices(1)[0] == -1) &&
+                    (boundary->MaxNeighborIndices(1)[0] == 1)) == boundary->InXBoundary(1),
+                   "Got invalid min/max X indices");
+  VTKM_TEST_ASSERT(((boundary->MinNeighborIndices(1)[1] == -1) &&
+                    (boundary->MaxNeighborIndices(1)[1] == 1)) == boundary->InYBoundary(1),
+                   "Got invalid min/max Y indices");
+  VTKM_TEST_ASSERT(((boundary->MinNeighborIndices(1)[2] == -1) &&
+                    (boundary->MaxNeighborIndices(1)[2] == 1)) == boundary->InZBoundary(1),
+                   "Got invalid min/max Z indices");
 
   T forwardX = neighbors.Get(1, 0, 0);
-  expected = boundary->OnXPositive() ? TestValue(index, T()) : TestValue(index + 1, T());
+  expected = (index3d[0] == POINT_DIMS[0] - 1) ? TestValue(index, T()) : TestValue(index + 1, T());
   VTKM_TEST_ASSERT(test_equal(forwardX, expected), "Got invalid value from Load.");
 
   T backwardsX = neighbors.Get(-1, 0, 0);
-  expected = boundary->OnXNegative() ? TestValue(index, T()) : TestValue(index - 1, T());
+  expected = (index3d[0] == 0) ? TestValue(index, T()) : TestValue(index - 1, T());
   VTKM_TEST_ASSERT(test_equal(backwardsX, expected), "Got invalid value from Load.");
 }
 
@@ -88,9 +98,9 @@ struct FetchArrayNeighborhoodInTests
   {
     TestPortal<T> execObject;
 
-    using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayNeighborhoodIn<1>,
+    using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayNeighborhoodIn,
                                              vtkm::exec::arg::AspectTagDefault,
-                                             vtkm::exec::arg::ThreadIndicesPointNeighborhood<1>,
+                                             vtkm::exec::arg::ThreadIndicesPointNeighborhood,
                                              TestPortal<T>>;
 
     FetchType fetch;
@@ -117,7 +127,7 @@ struct FetchArrayNeighborhoodInTests
           for (vtkm::Id i = 0; i < POINT_DIMS[0]; i++, index++)
           {
             index3d[0] = i;
-            vtkm::exec::arg::ThreadIndicesPointNeighborhood<1> indices(
+            vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(
               index3d, vtkm::internal::NullType(), vtkm::internal::NullType(), connectivity);
 
             auto neighbors = fetch.Load(indices, execObject);
@@ -139,7 +149,7 @@ struct FetchArrayNeighborhoodInTests
     //Verify that 1D scheduling works with neighborhoods
     for (vtkm::Id index = 0; index < (POINT_DIMS[0] * POINT_DIMS[1] * POINT_DIMS[2]); index++)
     {
-      vtkm::exec::arg::ThreadIndicesPointNeighborhood<1> indices(
+      vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(
         index, TestIndexPortal(), TestIndexPortal(), connectivity);
 
       auto neighbors = fetch.Load(indices, execObject);

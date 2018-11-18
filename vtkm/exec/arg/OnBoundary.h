@@ -49,13 +49,13 @@ struct OnBoundary : vtkm::exec::arg::ExecutionSignatureTagBase
   using AspectTag = vtkm::exec::arg::AspectTagOnBoundary;
 };
 
-template <typename FetchTag, int NSize, typename ExecObjectType>
+template <typename FetchTag, typename ExecObjectType>
 struct Fetch<FetchTag,
              vtkm::exec::arg::AspectTagOnBoundary,
-             vtkm::exec::arg::ThreadIndicesPointNeighborhood<NSize>,
+             vtkm::exec::arg::ThreadIndicesPointNeighborhood,
              ExecObjectType>
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesPointNeighborhood<NSize>;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesPointNeighborhood;
 
   using ValueType = vtkm::exec::arg::BoundaryState;
 

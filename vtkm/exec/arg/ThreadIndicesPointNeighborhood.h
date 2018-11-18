@@ -41,91 +41,96 @@ namespace arg
 struct BoundaryState
 {
   VTKM_EXEC
-  BoundaryState(const vtkm::Id3& ijk, const vtkm::Id3& pdims, int neighborhoodSize)
+  BoundaryState(const vtkm::Id3& ijk, const vtkm::Id3& pdims)
     : IJK(ijk)
     , PointDimensions(pdims)
-    , NeighborhoodSize(neighborhoodSize)
   {
-    for (vtkm::IdComponent dim = 0; dim < 3; ++dim)
-    {
-      if (neighborhoodSize < ijk[dim])
-      {
-        this->MinNeighborhood[dim] = -neighborhoodSize;
-      }
-      else
-      {
-        this->MinNeighborhood[dim] = static_cast<vtkm::IdComponent>(-ijk[dim]);
-      }
-      if (neighborhoodSize < pdims[dim] - ijk[dim] - 1)
-      {
-        this->MaxNeighborhood[dim] = neighborhoodSize;
-      }
-      else
-      {
-        this->MaxNeighborhood[dim] = static_cast<vtkm::IdComponent>(pdims[dim] - ijk[dim] - 1);
-      }
-    }
   }
 
-  /// Returns the minimum neighbor index in the X direction (between -neighborhood size and 0)
+  //@{
+  /// Returns true if a neighborhood of the given number of layers is contained within the bounds
+  /// of the cell set in the X, Y, or Z direction. Returns false if the neighborhood extends ouside
+  /// of the boundary of the data in the X, Y, or Z direction.
   ///
-  VTKM_EXEC vtkm::IdComponent MinNeighborX() const { return this->MinNeighborhood[0]; }
+  /// The number of layers defines the size of the neighborhood in terms of how far away it extends
+  /// from the center. So if there is 1 layer, the neighborhood extends 1 unit away from the center
+  /// in each direction and is 3x3x3. If there are 2 layers, the neighborhood extends 2 units for a
+  /// size of 5x5x5.
+  ///
+  VTKM_EXEC bool InXBoundary(vtkm::IdComponent numLayers) const
+  {
+    return (((this->IJK[0] - numLayers) >= 0) &&
+            ((this->IJK[0] + numLayers) < this->PointDimensions[0]));
+  }
+  VTKM_EXEC bool InYBoundary(vtkm::IdComponent numLayers) const
+  {
+    return (((this->IJK[1] - numLayers) >= 0) &&
+            ((this->IJK[1] + numLayers) < this->PointDimensions[1]));
+  }
+  VTKM_EXEC bool InZBoundary(vtkm::IdComponent numLayers) const
+  {
+    return (((this->IJK[2] - numLayers) >= 0) &&
+            ((this->IJK[2] + numLayers) < this->PointDimensions[2]));
+  }
+  //@}
 
-  /// Returns the minimum neighbor index in the Z direction (between -neighborhood size and 0)
+  /// Returns true if a neighborhood of the given number of layers is contained within the bounds
+  /// of the cell set. Returns false if the neighborhood extends ouside of the boundary of the
+  /// data.
   ///
-  VTKM_EXEC vtkm::IdComponent MinNeighborY() const { return this->MinNeighborhood[1]; }
+  /// The number of layers defines the size of the neighborhood in terms of how far away it extends
+  /// from the center. So if there is 1 layer, the neighborhood extends 1 unit away from the center
+  /// in each direction and is 3x3x3. If there are 2 layers, the neighborhood extends 2 units for a
+  /// size of 5x5x5.
+  ///
+  VTKM_EXEC bool InBoundary(vtkm::IdComponent numLayers) const
+  {
+    return this->InXBoundary(numLayers) && this->InYBoundary(numLayers) &&
+      this->InZBoundary(numLayers);
+  }
 
-  /// Returns the minimum neighbor index in the Z direction (between -neighborhood size and 0)
+  /// Returns the minimum neighborhood indices that are within the bounds of the data.
   ///
-  VTKM_EXEC vtkm::IdComponent MinNeighborZ() const { return this->MinNeighborhood[2]; }
+  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> MinNeighborIndices(vtkm::IdComponent numLayers) const
+  {
+    vtkm::Vec<vtkm::IdComponent, 3> minIndices;
 
-  /// Returns the maximum neighbor index in the X direction (between 0 and neighborhood size)
-  ///
-  VTKM_EXEC vtkm::IdComponent MaxNeighborX() const { return this->MaxNeighborhood[0]; }
+    for (vtkm::IdComponent component = 0; component < 3; ++component)
+    {
+      if (this->IJK[component] >= numLayers)
+      {
+        minIndices[component] = -numLayers;
+      }
+      else
+      {
+        minIndices[component] = static_cast<vtkm::IdComponent>(-this->IJK[component]);
+      }
+    }
 
-  /// Returns the maximum neighbor index in the Z direction (between 0 and neighborhood size)
-  ///
-  VTKM_EXEC vtkm::IdComponent MaxNeighborY() const { return this->MaxNeighborhood[1]; }
+    return minIndices;
+  }
 
-  /// Returns the maximum neighbor index in the Z direction (between 0 and neighborhood size)
+  /// Returns the minimum neighborhood indices that are within the bounds of the data.
   ///
-  VTKM_EXEC vtkm::IdComponent MaxNeighborZ() const { return this->MaxNeighborhood[2]; }
+  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> MaxNeighborIndices(vtkm::IdComponent numLayers) const
+  {
+    vtkm::Vec<vtkm::IdComponent, 3> maxIndices;
 
-  /// Returns true if the neighborhood extends past the positive X direction.
-  ///
-  VTKM_EXEC bool OnXPositive() const { return this->MaxNeighborX() < this->NeighborhoodSize; }
+    for (vtkm::IdComponent component = 0; component < 3; ++component)
+    {
+      if ((this->PointDimensions[component] - this->IJK[component] - 1) >= numLayers)
+      {
+        maxIndices[component] = numLayers;
+      }
+      else
+      {
+        maxIndices[component] = static_cast<vtkm::IdComponent>(this->PointDimensions[component] -
+                                                               this->IJK[component] - 1);
+      }
+    }
 
-  /// Returns true if the neighborhood extends past the negative X direction.
-  ///
-  VTKM_EXEC bool OnXNegative() const { return -this->MinNeighborX() < this->NeighborhoodSize; }
-
-  /// Returns true if the neighborhood extends past the positive Y direction.
-  ///
-  VTKM_EXEC bool OnYPositive() const { return this->MaxNeighborY() < this->NeighborhoodSize; }
-
-  /// Returns true if the neighborhood extends past the negative Y direction.
-  ///
-  VTKM_EXEC bool OnYNegative() const { return -this->MinNeighborY() < this->NeighborhoodSize; }
-
-  /// Returns true if the neighborhood extends past the positive Z direction.
-  ///
-  VTKM_EXEC bool OnZPositive() const { return this->MaxNeighborZ() < this->NeighborhoodSize; }
-
-  /// Returns true if the neighborhood extends past the negative Z direction.
-  ///
-  VTKM_EXEC bool OnZNegative() const { return -this->MinNeighborZ() < this->NeighborhoodSize; }
-
-  /// Returns true if the neighborhood extends past either X boundary.
-  ///
-  VTKM_EXEC bool OnX() const { return this->OnXNegative() || this->OnXPositive(); }
-
-  /// Returns true if the neighborhood extends past either Y boundary.
-  ///
-  VTKM_EXEC bool OnY() const { return this->OnYNegative() || this->OnYPositive(); }
-
-  /// Returns true if the neighborhood extends past either Z boundary.
-  ///
-  VTKM_EXEC bool OnZ() const { return this->OnZNegative() || this->OnZPositive(); }
+    return maxIndices;
+  }
 
   //todo: This needs to work with BoundaryConstantValue
   //todo: This needs to work with BoundaryPeroidic
@@ -140,9 +145,9 @@ struct BoundaryState
   VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndexClamp(
     const vtkm::Vec<vtkm::IdComponent, 3>& neighbor) const
   {
-    vtkm::Vec<vtkm::IdComponent, 3> clampedNeighbor =
-      vtkm::Max(this->MinNeighborhood, vtkm::Min(this->MaxNeighborhood, neighbor));
-    return this->IJK + clampedNeighbor;
+    vtkm::Id3 fullIndex = this->IJK + neighbor;
+
+    return vtkm::Max(vtkm::Id3(0), vtkm::Min(this->PointDimensions - vtkm::Id3(1), fullIndex));
   }
 
   VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndexClamp(vtkm::IdComponent neighborI,
@@ -181,9 +186,6 @@ struct BoundaryState
 
   vtkm::Id3 IJK;
   vtkm::Id3 PointDimensions;
-  vtkm::Vec<vtkm::IdComponent, 3> MinNeighborhood;
-  vtkm::Vec<vtkm::IdComponent, 3> MaxNeighborhood;
-  vtkm::IdComponent NeighborhoodSize;
 };
 
 namespace detail
@@ -213,7 +215,6 @@ inline VTKM_EXEC vtkm::Id3 To3D(vtkm::Vec<vtkm::Id, 1> index)
 /// \brief Container for thread information in a WorkletPointNeighborhood.
 ///
 ///
-template <int NeighborhoodSize>
 class ThreadIndicesPointNeighborhood
 {
 
@@ -227,7 +228,7 @@ public:
                                              vtkm::TopologyElementTagPoint,
                                              Dimension>& connectivity,
     vtkm::Id globalThreadIndexOffset = 0)
-    : State(outIndex, detail::To3D(connectivity.GetPointDimensions()), NeighborhoodSize)
+    : State(outIndex, detail::To3D(connectivity.GetPointDimensions()))
     , InputIndex(0)
     , OutputIndex(0)
     , VisitIndex(0)
@@ -252,8 +253,7 @@ public:
                                              Dimension>& connectivity,
     vtkm::Id globalThreadIndexOffset = 0)
     : State(detail::To3D(connectivity.FlatToLogicalToIndex(outToIn.Get(outIndex))),
-            detail::To3D(connectivity.GetPointDimensions()),
-            NeighborhoodSize)
+            detail::To3D(connectivity.GetPointDimensions()))
     , InputIndex(outToIn.Get(outIndex))
     , OutputIndex(outIndex)
     , VisitIndex(static_cast<vtkm::IdComponent>(visit.Get(outIndex)))
@@ -271,8 +271,7 @@ public:
                                              Dimension>& connectivity,
     vtkm::Id globalThreadIndexOffset = 0)
     : State(detail::To3D(connectivity.FlatToLogicalToIndex(inIndex)),
-            detail::To3D(connectivity.GetPointDimensions()),
-            NeighborhoodSize)
+            detail::To3D(connectivity.GetPointDimensions()))
     , InputIndex(inIndex)
     , OutputIndex(outIndex)
     , VisitIndex(visitIndex)

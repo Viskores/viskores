@@ -43,7 +43,7 @@ template <int Dimension>
 class ImageGraft;
 
 template <>
-class ImageGraft<2> : public vtkm::worklet::WorkletPointNeighborhood3x3x3
+class ImageGraft<2> : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
   using ControlSignature = void(CellSetIn,

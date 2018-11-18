@@ -479,7 +479,12 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   for (vtkm::Id i = 0; i < numVerts; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(normals.GetPortalConstControl().Get(i), expected[i], 0.001),
-                     "Result does not match expected values");
+                     "Result (",
+                     normals.GetPortalConstControl().Get(i),
+                     ") does not match expected value (",
+                     expected[i],
+                     ") vert ",
+                     i);
   }
 
   // Test the other normals generation method

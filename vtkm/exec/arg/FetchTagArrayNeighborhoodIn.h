@@ -37,12 +37,11 @@ namespace arg
 /// \c FetchTagArrayNeighborhoodIn is a tag used with the \c Fetch class to retrieve
 /// values from an neighborhood.
 ///
-template <int NeighborhoodSize>
 struct FetchTagArrayNeighborhoodIn
 {
 };
 
-template <int NeighborhoodSize, typename ExecObjectType>
+template <typename ExecObjectType>
 struct Neighborhood
 {
   VTKM_EXEC
@@ -57,18 +56,12 @@ struct Neighborhood
   VTKM_EXEC
   ValueType Get(vtkm::IdComponent i, vtkm::IdComponent j, vtkm::IdComponent k) const
   {
-    VTKM_ASSERT(i <= NeighborhoodSize && i >= -NeighborhoodSize);
-    VTKM_ASSERT(j <= NeighborhoodSize && j >= -NeighborhoodSize);
-    VTKM_ASSERT(k <= NeighborhoodSize && k >= -NeighborhoodSize);
     return Portal.Get(this->Boundary->NeighborIndexToFlatIndexClamp(i, j, k));
   }
 
   VTKM_EXEC
   ValueType Get(const vtkm::Id3& ijk) const
   {
-    VTKM_ASSERT(ijk[0] <= NeighborhoodSize && ijk[0] >= -NeighborhoodSize);
-    VTKM_ASSERT(ijk[1] <= NeighborhoodSize && ijk[1] >= -NeighborhoodSize);
-    VTKM_ASSERT(ijk[2] <= NeighborhoodSize && ijk[2] >= -NeighborhoodSize);
     return Portal.Get(this->Boundary->NeighborIndexToFlatIndexClamp(ijk));
   }
 
@@ -79,8 +72,8 @@ struct Neighborhood
 /// \brief Specialization of Neighborhood for ArrayPortalUniformPointCoordinates
 /// We can use fast paths inside ArrayPortalUniformPointCoordinates to allow
 /// for very fast computation of the coordinates reachable by the neighborhood
-template <int NeighborhoodSize>
-struct Neighborhood<NeighborhoodSize, vtkm::internal::ArrayPortalUniformPointCoordinates>
+template <>
+struct Neighborhood<vtkm::internal::ArrayPortalUniformPointCoordinates>
 {
   VTKM_EXEC
   Neighborhood(const vtkm::internal::ArrayPortalUniformPointCoordinates& portal,
@@ -108,14 +101,14 @@ struct Neighborhood<NeighborhoodSize, vtkm::internal::ArrayPortalUniformPointCoo
   vtkm::internal::ArrayPortalUniformPointCoordinates Portal;
 };
 
-template <int NeighborhoodSize, typename ExecObjectType>
-struct Fetch<vtkm::exec::arg::FetchTagArrayNeighborhoodIn<NeighborhoodSize>,
+template <typename ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagArrayNeighborhoodIn,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesPointNeighborhood<NeighborhoodSize>,
+             vtkm::exec::arg::ThreadIndicesPointNeighborhood,
              ExecObjectType>
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesPointNeighborhood<NeighborhoodSize>;
-  using ValueType = Neighborhood<NeighborhoodSize, ExecObjectType>;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesPointNeighborhood;
+  using ValueType = Neighborhood<ExecObjectType>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
