@@ -72,6 +72,16 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
       IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
       IMPORTED_LOCATION_RELEASE "${real_path}"
       )
+  elseif(EXISTS "${TBB_LIBRARY}")
+    #When VTK-m is mixed with OSPray we could use the OSPray FindTBB file
+    #which doesn't define TBB_LIBRARY_RELEASE but instead defined only
+    #TBB_LIBRARY
+    vtkm_extract_real_library("${TBB_LIBRARY}" real_path)
+    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+    set_target_properties(vtkm::tbb PROPERTIES
+      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+      IMPORTED_LOCATION_RELEASE "${real_path}"
+      )
   endif()
 
   if(EXISTS "${TBB_LIBRARY_DEBUG}")
