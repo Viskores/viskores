@@ -52,7 +52,7 @@ public:
   VTKM_EXEC inline void operator()(const VecType& pos, OutType& out) const
   {
     VecType tmp = eye_pos - pos;
-    out = vtkm::Sqrt(vtkm::dot(tmp, tmp));
+    out = static_cast<OutType>(vtkm::Sqrt(vtkm::dot(tmp, tmp)));
   }
 
   const vtkm::Vec<vtkm::Float32, 3> eye_pos;
