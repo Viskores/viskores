@@ -232,8 +232,7 @@ void TestCosmo_2DHaloFind()
                            linkingLength,
                            resultHaloId,
                            resultMBP,
-                           resultPot,
-                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+                           resultPot);
 
   VTKM_TEST_ASSERT(TestArrayHandle(haloIdArray, resultHaloId, nCells), "Incorrect Halo Ids");
   VTKM_TEST_ASSERT(TestArrayHandle(mbpArray, resultMBP, nCells), "Incorrect MBP Ids");
@@ -285,8 +284,7 @@ void TestCosmo_3DHaloFind()
                            linkingLength,
                            resultHaloId,
                            resultMBP,
-                           resultPot,
-                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+                           resultPot);
 
   VTKM_TEST_ASSERT(TestArrayHandle(haloIdArray, resultHaloId, nCells), "Incorrect Halo Ids");
   VTKM_TEST_ASSERT(TestArrayHandle(mbpArray, resultMBP, nCells), "Incorrect MBP Ids");
@@ -322,21 +320,11 @@ void TestCosmo_3DCenterFind()
   vtkm::Float32 particleMass = 1.0f;
 
   vtkm::worklet::CosmoTools cosmoTools;
-  cosmoTools.RunMBPCenterFinderNxN(xLocArray,
-                                   yLocArray,
-                                   zLocArray,
-                                   nCells,
-                                   particleMass,
-                                   nxnResult,
-                                   VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  cosmoTools.RunMBPCenterFinderNxN(
+    xLocArray, yLocArray, zLocArray, nCells, particleMass, nxnResult);
 
-  cosmoTools.RunMBPCenterFinderMxN(xLocArray,
-                                   yLocArray,
-                                   zLocArray,
-                                   nCells,
-                                   particleMass,
-                                   mxnResult,
-                                   VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  cosmoTools.RunMBPCenterFinderMxN(
+    xLocArray, yLocArray, zLocArray, nCells, particleMass, mxnResult);
 
   VTKM_TEST_ASSERT(test_equal(nxnResult.first, mxnResult.first),
                    "NxN and MxN got different results");
@@ -350,7 +338,7 @@ void TestCosmoTools()
   TestCosmo_3DCenterFind();
 }
 
-int UnitTestCosmoTools(int, char* [])
+int UnitTestCosmoTools(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCosmoTools);
+  return vtkm::cont::testing::Testing::Run(TestCosmoTools, argc, argv);
 }

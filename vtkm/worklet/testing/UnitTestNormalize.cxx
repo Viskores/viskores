@@ -139,7 +139,7 @@ void TestNormalWorklets()
 }
 }
 
-int UnitTestNormalize(int, char* [])
+int UnitTestNormalize(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestNormalWorklets);
+  return vtkm::cont::testing::Testing::Run(TestNormalWorklets, argc, argv);
 }

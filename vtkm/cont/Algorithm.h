@@ -187,6 +187,54 @@ struct StreamingScanExclusiveFunctor
       vtkm::cont::DeviceAdapterAlgorithm<Device>::StreamingScanExclusive(numBlocks, input, output);
     return true;
   }
+
+  template <typename Device, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT bool operator()(Device,
+                            const vtkm::Id numBlocks,
+                            const vtkm::cont::ArrayHandle<T, CIn>& input,
+                            vtkm::cont::ArrayHandle<T, COut>& output,
+                            BinaryFunctor binary_functor,
+                            const T& initialValue)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::StreamingScanExclusive(
+      numBlocks, input, output, binary_functor, initialValue);
+    return true;
+  }
+};
+
+template <typename U>
+struct StreamingReduceFunctor
+{
+  U result;
+  StreamingReduceFunctor()
+    : result(U(0))
+  {
+  }
+  template <typename Device, typename T, class CIn>
+  VTKM_CONT bool operator()(Device,
+                            const vtkm::Id numBlocks,
+                            const vtkm::cont::ArrayHandle<T, CIn>& input,
+                            U initialValue)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    result =
+      vtkm::cont::DeviceAdapterAlgorithm<Device>::StreamingReduce(numBlocks, input, initialValue);
+    return true;
+  }
+
+  template <typename Device, typename T, class CIn, class BinaryFunctor>
+  VTKM_CONT bool operator()(Device,
+                            const vtkm::Id numBlocks,
+                            const vtkm::cont::ArrayHandle<T, CIn>& input,
+                            U InitialValue,
+                            BinaryFunctor binaryFunctor)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::StreamingReduce(
+      numBlocks, input, InitialValue, binaryFunctor);
+    return true;
+  }
 };
 
 struct ScanInclusiveByKeyFunctor
@@ -559,6 +607,7 @@ struct Algorithm
     vtkm::cont::TryExecuteOnDevice(devId, functor, numBlocks, input, output);
     return functor.result;
   }
+
   template <typename T, class CIn, class COut>
   VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
                                             const vtkm::cont::ArrayHandle<T, CIn>& input,
@@ -567,6 +616,46 @@ struct Algorithm
     return StreamingScanExclusive(vtkm::cont::DeviceAdapterTagAny(), numBlocks, input, output);
   }
 
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
+                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                            vtkm::cont::ArrayHandle<T, COut>& output,
+                                            BinaryFunctor binary_functor,
+                                            const T& initialValue)
+  {
+    detail::StreamingScanExclusiveFunctor<T> functor;
+    vtkm::cont::TryExecuteOnDevice(vtkm::cont::DeviceAdapterTagAny(),
+                                   functor,
+                                   numBlocks,
+                                   input,
+                                   output,
+                                   binary_functor,
+                                   initialValue);
+    return functor.result;
+  }
+
+  template <typename T, typename U, class CIn>
+  VTKM_CONT static U StreamingReduce(const vtkm::Id numBlocks,
+                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     U initialValue)
+  {
+    detail::StreamingReduceFunctor<U> functor;
+    vtkm::cont::TryExecuteOnDevice(
+      vtkm::cont::DeviceAdapterTagAny(), functor, numBlocks, input, initialValue);
+    return functor.result;
+  }
+
+  template <typename T, typename U, class CIn, class BinaryFunctor>
+  VTKM_CONT static U StreamingReduce(const vtkm::Id numBlocks,
+                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     U initialValue,
+                                     BinaryFunctor binaryFunctor)
+  {
+    detail::StreamingReduceFunctor<U> functor;
+    vtkm::cont::TryExecuteOnDevice(
+      vtkm::cont::DeviceAdapterTagAny(), functor, numBlocks, input, initialValue, binaryFunctor);
+    return functor.result;
+  }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanInclusive(vtkm::cont::DeviceAdapterId devId,

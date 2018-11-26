@@ -124,7 +124,7 @@ void TestCrossProductWorklets()
 }
 }
 
-int UnitTestCrossProduct(int, char* [])
+int UnitTestCrossProduct(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCrossProductWorklets);
+  return vtkm::cont::testing::Testing::Run(TestCrossProductWorklets, argc, argv);
 }

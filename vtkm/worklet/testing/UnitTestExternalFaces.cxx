@@ -201,14 +201,15 @@ void TestExternalFaces3()
 
 void TestExternalFaces()
 {
+  // Ignore the device passed in.
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(MyDeviceAdapter());
   TestExternalFaces1();
   TestExternalFaces2();
   TestExternalFaces3();
 }
 }
 
-int UnitTestExternalFaces(int, char* [])
+int UnitTestExternalFaces(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(MyDeviceAdapter());
-  return vtkm::cont::testing::Testing::Run(TestExternalFaces);
+  return vtkm::cont::testing::Testing::Run(TestExternalFaces, argc, argv);
 }

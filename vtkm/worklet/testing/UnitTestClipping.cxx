@@ -354,8 +354,7 @@ void TestClipping()
   TestClippingWithImplicitFunctionInverted();
 }
 
-int UnitTestClipping(int, char* [])
+int UnitTestClipping(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestClipping);
+  return vtkm::cont::testing::Testing::Run(TestClipping, argc, argv);
 }

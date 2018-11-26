@@ -23,6 +23,7 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
@@ -34,10 +35,12 @@ namespace vtkm
 namespace cont
 {
 
+class RuntimeDeviceTracker;
 namespace detail
 {
 
 struct RuntimeDeviceTrackerInternals;
+struct RuntimeDeviceTrackerFunctor;
 }
 
 /// A class that can be used to determine if a given device adapter
@@ -49,6 +52,8 @@ struct RuntimeDeviceTrackerInternals;
 ///
 class VTKM_ALWAYS_EXPORT RuntimeDeviceTracker
 {
+  friend struct detail::RuntimeDeviceTrackerFunctor;
+
 public:
   VTKM_CONT_EXPORT
   VTKM_CONT
@@ -195,6 +200,9 @@ public:
     vtkm::cont::RuntimeDeviceInformation runtimeDevice;
     this->ForceDeviceImpl(device, runtimeDevice.Exists(DeviceAdapterTag()));
   }
+
+  VTKM_CONT_EXPORT
+  VTKM_CONT void ForceDevice(DeviceAdapterId id);
 
   VTKM_CONT_EXPORT
   VTKM_CONT

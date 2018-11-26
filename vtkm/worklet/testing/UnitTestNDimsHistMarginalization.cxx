@@ -299,8 +299,7 @@ void TestNDimsHistMarginalization()
 } // TestNDimsHistMarginalization
 }
 
-int UnitTestNDimsHistMarginalization(int, char* [])
+int UnitTestNDimsHistMarginalization(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestNDimsHistMarginalization);
+  return vtkm::cont::testing::Testing::Run(TestNDimsHistMarginalization, argc, argv);
 }

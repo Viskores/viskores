@@ -249,8 +249,7 @@ public:
   }
 };
 
-int UnitTestExtractPoints(int, char* [])
+int UnitTestExtractPoints(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestingExtractPoints());
+  return vtkm::cont::testing::Testing::Run(TestingExtractPoints(), argc, argv);
 }

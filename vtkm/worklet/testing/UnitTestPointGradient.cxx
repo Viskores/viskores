@@ -224,8 +224,7 @@ void TestPointGradient()
 }
 }
 
-int UnitTestPointGradient(int, char* [])
+int UnitTestPointGradient(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestPointGradient);
+  return vtkm::cont::testing::Testing::Run(TestPointGradient, argc, argv);
 }

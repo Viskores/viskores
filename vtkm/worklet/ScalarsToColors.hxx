@@ -60,10 +60,9 @@ inline bool needShiftScale(T, vtkm::Float32, vtkm::Float32)
 }
 /// \brief Use each component to generate RGBA colors
 ///
-template <typename T, typename S, typename Device>
+template <typename T, typename S>
 void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
-                          vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut,
-                          Device) const
+                          vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const
 {
   using namespace vtkm::worklet::colorconversion;
   //If our shift is 0 and our scale == 1 no need to apply them
@@ -73,23 +72,20 @@ void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
   {
     vtkm::worklet::DispatcherMapField<ShiftScaleToRGBA> dispatcher(
       ShiftScaleToRGBA(this->Shift, this->Scale, this->Alpha));
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(values, rgbaOut);
   }
   else
   {
     vtkm::worklet::DispatcherMapField<ConvertToRGBA> dispatcher(ConvertToRGBA(this->Alpha));
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(values, rgbaOut);
   }
 }
 
 /// \brief Use each component to generate RGB colors
 ///
-template <typename T, typename S, typename Device>
+template <typename T, typename S>
 void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
-                          vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut,
-                          Device) const
+                          vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const
 {
   using namespace vtkm::worklet::colorconversion;
   using BaseT = typename vtkm::BaseComponent<T>::Type;
@@ -98,23 +94,21 @@ void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
   {
     vtkm::worklet::DispatcherMapField<ShiftScaleToRGB> dispatcher(
       ShiftScaleToRGB(this->Shift, this->Scale));
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(values, rgbOut);
   }
   else
   {
     vtkm::worklet::DispatcherMapField<ConvertToRGB> dispatcher;
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(values, rgbOut);
   }
 }
 
 /// \brief Use magnitude of a vector to generate RGBA colors
 ///
-template <typename T, int N, typename S, typename Device>
-void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut,
-                                   Device) const
+template <typename T, int N, typename S>
+void ScalarsToColors::RunMagnitude(
+  const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const
 {
   //magnitude is a complex situation. the default scale factor is incorrect
   //
@@ -126,14 +120,12 @@ void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>
   {
     vtkm::worklet::DispatcherMapField<ShiftScaleToRGBA> dispatcher(
       ShiftScaleToRGBA(this->Shift, this->Scale, this->Alpha));
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(
       vtkm::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbaOut);
   }
   else
   {
     vtkm::worklet::DispatcherMapField<ConvertToRGBA> dispatcher(ConvertToRGBA(this->Alpha));
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(
       vtkm::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbaOut);
   }
@@ -141,10 +133,9 @@ void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>
 
 /// \brief Use magnitude of a vector to generate RGB colors
 ///
-template <typename T, int N, typename S, typename Device>
+template <typename T, int N, typename S>
 void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut,
-                                   Device) const
+                                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const
 {
 
   using namespace vtkm::worklet::colorconversion;
@@ -154,14 +145,12 @@ void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>
   {
     vtkm::worklet::DispatcherMapField<ShiftScaleToRGB> dispatcher(
       ShiftScaleToRGB(this->Shift, this->Scale));
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(
       vtkm::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbOut);
   }
   else
   {
     vtkm::worklet::DispatcherMapField<ConvertToRGB> dispatcher;
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(
       vtkm::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbOut);
   }
@@ -169,28 +158,25 @@ void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>
 
 /// \brief Use a single component of a vector to generate RGBA colors
 ///
-template <typename T, int N, typename S, typename Device>
-void ScalarsToColors::RunComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                                   vtkm::IdComponent comp,
-                                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut,
-                                   Device device) const
+template <typename T, int N, typename S>
+void ScalarsToColors::RunComponent(
+  const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+  vtkm::IdComponent comp,
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const
 {
   this->Run(vtkm::cont::make_ArrayHandleTransform(values, colorconversion::ComponentPortal(comp)),
-            rgbaOut,
-            device);
+            rgbaOut);
 }
 
 /// \brief Use a single component of a vector to generate RGB colors
 ///
-template <typename T, int N, typename S, typename Device>
+template <typename T, int N, typename S>
 void ScalarsToColors::RunComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                                    vtkm::IdComponent comp,
-                                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut,
-                                   Device device) const
+                                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const
 {
   this->Run(vtkm::cont::make_ArrayHandleTransform(values, colorconversion::ComponentPortal(comp)),
-            rgbOut,
-            device);
+            rgbOut);
 }
 }
 }

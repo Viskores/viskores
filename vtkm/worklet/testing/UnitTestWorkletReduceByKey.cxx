@@ -26,6 +26,7 @@
 #include <vtkm/worklet/Keys.h>
 
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -136,9 +137,9 @@ void TryKeyType(KeyType)
   vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
-  vtkm::cont::ArrayCopy(keyArray, sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::cont::ArrayCopy(keyArray, sortedKeys);
 
-  vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::worklet::Keys<KeyType> keys(sortedKeys);
 
   vtkm::cont::ArrayHandle<KeyType> valuesToModify;
   valuesToModify.Allocate(ARRAY_SIZE);
@@ -185,11 +186,9 @@ void TryKeyType(KeyType)
   CheckPortal(keyPairOut.GetPortalConstControl());
 }
 
-void TestReduceByKey()
+void TestReduceByKey(vtkm::cont::DeviceAdapterId id)
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
-  std::cout << "Testing Map Field on device adapter: " << DeviceAdapterTraits::GetName()
-            << std::endl;
+  std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
   std::cout << "Testing vtkm::Id keys." << std::endl;
   TryKeyType(vtkm::Id());
@@ -206,7 +205,7 @@ void TestReduceByKey()
 
 } // anonymous namespace
 
-int UnitTestWorkletReduceByKey(int, char* [])
+int UnitTestWorkletReduceByKey(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestReduceByKey);
+  return vtkm::cont::testing::Testing::RunOnDevice(TestReduceByKey, argc, argv);
 }

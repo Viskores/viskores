@@ -28,6 +28,7 @@
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -194,11 +195,10 @@ static void TestMaxNeighborValue();
 static void TestScatterIdentityNeighbor();
 static void TestScatterUnfiormNeighbor();
 
-void TestWorkletPointNeighborhood()
+void TestWorkletPointNeighborhood(vtkm::cont::DeviceAdapterId id)
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
-  std::cout << "Testing Point Neighborhood Worklet on device adapter: "
-            << DeviceAdapterTraits::GetName() << std::endl;
+  std::cout << "Testing Point Neighborhood Worklet on device adapter: " << id.GetName()
+            << std::endl;
 
   TestMaxNeighborValue();
   TestScatterIdentityNeighbor();
@@ -278,7 +278,7 @@ static void TestScatterUnfiormNeighbor()
 
 } // anonymous namespace
 
-int UnitTestWorkletMapPointNeighborhood(int, char* [])
+int UnitTestWorkletMapPointNeighborhood(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestWorkletPointNeighborhood);
+  return vtkm::cont::testing::Testing::RunOnDevice(TestWorkletPointNeighborhood, argc, argv);
 }

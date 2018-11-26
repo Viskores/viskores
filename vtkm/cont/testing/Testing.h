@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Error.h>
+#include <vtkm/testing/OptionParser.h>
 #include <vtkm/testing/Testing.h>
 #include <vtkm/thirdparty/diy/Configure.h>
 
@@ -44,16 +45,122 @@ namespace cont
 {
 namespace testing
 {
+namespace {
+using namespace vtkm::testing::option;
+// Lean parser related code
+enum optionIndex {DEVICE};
+struct Arg: public vtkm::testing::option::Arg
+{
+  static ArgStatus Required(const Option& option, bool)
+  {
+    return option.arg == 0 ? vtkm::testing::option::ARG_ILLEGAL : vtkm::testing::option::ARG_OK;
+  }
+};
+static Descriptor Usage[] =
+{
+  {DEVICE, 0, "d", "device", Arg::Required, " -- device \t specify a device to run on."},
+  {0,0,0,0,0,0}
+};
+}
 
 struct Testing
 {
 public:
+
   template <class Func>
-  static VTKM_CONT int Run(Func function)
+  static VTKM_CONT int Run(Func function, int argc = 0, char* argv[] = nullptr)
   {
+    argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
+    Stats  stats(Usage, argc, argv);
+    Option* options = new Option[stats.options_max];
+    Option* buffer = new Option[stats.buffer_max];
+
+    Parser parse(Usage, argc, argv, options, buffer);
+
+    if (parse.error())
+    {
+      return 1;
+    }
+
+    if (options[DEVICE])
+    {
+      Option* deviceOption = options[DEVICE];
+      vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::make_DeviceAdapterIdFromName(std::string(deviceOption->arg));
+      vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(deviceId);
+    }
+
+    std::vector<std::string> nonOptions;
+    for (int i = 0; i < parse.nonOptionsCount();i++)
+    {
+      nonOptions.push_back(std::string(parse.nonOption(i)));
+    }
+
+    delete[] options;
+    delete[] buffer;
+
     try
     {
       function();
+    }
+    catch (vtkm::testing::Testing::TestFailure& error)
+    {
+      std::cout << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << std::endl
+                << error.GetMessage() << std::endl;
+      return 1;
+    }
+    catch (vtkm::cont::Error& error)
+    {
+      std::cout << "***** Uncaught VTKm exception thrown." << std::endl
+                << error.GetMessage() << std::endl;
+      return 1;
+    }
+    catch (std::exception& error)
+    {
+      std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+    }
+    catch (...)
+    {
+      std::cout << "***** Unidentified exception thrown." << std::endl;
+      return 1;
+    }
+    return 0;
+  }
+
+  template <class Func>
+  static VTKM_CONT int RunOnDevice(Func function, int argc = 0, char* argv[] = nullptr)
+  {
+    argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
+    Stats  stats(Usage, argc, argv);
+    Option* options = new Option[stats.options_max];
+    Option* buffer = new Option[stats.buffer_max];
+
+    Parser parse(Usage, argc, argv, options, buffer);
+
+    if (parse.error())
+    {
+      return 1;
+    }
+
+    vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::make_DeviceAdapterId(VTKM_DEVICE_ADAPTER_ERROR);
+    if (options[DEVICE])
+    {
+      Option* deviceOption = options[DEVICE];
+      deviceId = vtkm::cont::make_DeviceAdapterIdFromName(std::string(deviceOption->arg));
+      vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(deviceId);
+    }
+
+    std::vector<std::string> nonOptions;
+    for (int i = 0; i < parse.nonOptionsCount();i++)
+    {
+      nonOptions.push_back(std::string(parse.nonOption(i)));
+    }
+
+    delete[] options;
+    delete[] buffer;
+
+    try
+    {
+      function(deviceId);
     }
     catch (vtkm::testing::Testing::TestFailure& error)
     {

@@ -22,6 +22,7 @@
 #define vtk_m_worklet_FieldStatistics_h
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -37,7 +38,7 @@ namespace worklet
 {
 
 //simple functor that prints basic statistics
-template <typename FieldType, typename DeviceAdapter>
+template <typename FieldType>
 class FieldStatistics
 {
 public:
@@ -117,7 +118,7 @@ public:
   template <typename Storage>
   void Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray, StatInfo& statinfo)
   {
-    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using DeviceAlgorithms = vtkm::cont::Algorithm;
     using FieldPortal = typename vtkm::cont::ArrayHandle<FieldType, Storage>::PortalConstControl;
 
     // Copy original data to array for sorting
@@ -154,7 +155,6 @@ public:
     // Raw moments via Worklet
     vtkm::worklet::DispatcherMapField<CalculatePowers> calculatePowersDispatcher(
       CalculatePowers(4));
-    calculatePowersDispatcher.SetDevice(DeviceAdapter());
     calculatePowersDispatcher.Invoke(fieldArray, pow1Array, pow2Array, pow3Array, pow4Array);
 
     // Accumulate the results using ScanInclusive
@@ -166,7 +166,6 @@ public:
     // Subtract the mean from every value and leave in tempArray
     vtkm::worklet::DispatcherMapField<SubtractConst> subtractConstDispatcher(
       SubtractConst(statinfo.mean));
-    subtractConstDispatcher.SetDevice(DeviceAdapter());
     subtractConstDispatcher.Invoke(fieldArray, tempArray);
 
     // Calculate sums of powers on the (value - mean) array

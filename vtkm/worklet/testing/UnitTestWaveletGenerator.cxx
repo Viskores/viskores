@@ -21,31 +21,44 @@
 #include <vtkm/worklet/WaveletGenerator.h>
 
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/testing/Testing.h>
 
-namespace
+namespace detail
 {
+
+struct WaveletGeneratorFunctor
+{
+  vtkm::cont::DataSet Ds;
+  template <typename DeviceAdapter>
+  bool operator()(DeviceAdapter)
+  {
+    vtkm::worklet::WaveletGenerator gen;
+    Ds = gen.GenerateDataSet<DeviceAdapter>();
+    return true;
+  }
+};
+}
 
 void WaveletGeneratorTest()
 {
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  vtkm::cont::Timer<> timer;
+  detail::WaveletGeneratorFunctor wgFunctor;
+  vtkm::cont::TryExecute(wgFunctor);
 
-  vtkm::worklet::WaveletGenerator gen;
 
-  vtkm::cont::Timer<Device> timer;
-  auto ds = gen.GenerateDataSet<Device>();
   double time = timer.GetElapsedTime();
 
   std::cout << "Default wavelet took " << time << "s.\n";
 
   {
-    auto coords = ds.GetCoordinateSystem("coords");
+    auto coords = wgFunctor.Ds.GetCoordinateSystem("coords");
     auto data = coords.GetData();
     VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261), "Incorrect number of points.");
   }
 
   {
-    auto cells = ds.GetCellSet(ds.GetCellSetIndex("cells"));
+    auto cells = wgFunctor.Ds.GetCellSet(wgFunctor.Ds.GetCellSetIndex("cells"));
     VTKM_TEST_ASSERT(test_equal(cells.GetNumberOfCells(), 8000), "Incorrect number of cells.");
   }
 
@@ -53,7 +66,7 @@ void WaveletGeneratorTest()
   {
     using ScalarHandleType = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
 
-    auto field = ds.GetField("scalars", vtkm::cont::Field::Association::POINTS);
+    auto field = wgFunctor.Ds.GetField("scalars", vtkm::cont::Field::Association::POINTS);
     auto dynData = field.GetData();
     VTKM_TEST_ASSERT(dynData.IsType<ScalarHandleType>(), "Invalid scalar handle type.");
     ScalarHandleType handle = dynData.Cast<ScalarHandleType>();
@@ -75,9 +88,7 @@ void WaveletGeneratorTest()
   }
 }
 
-} // end anon namespace
-
-int UnitTestWaveletGenerator(int, char* [])
+int UnitTestWaveletGenerator(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(WaveletGeneratorTest);
+  return vtkm::cont::testing::Testing::Run(WaveletGeneratorTest, argc, argv);
 }

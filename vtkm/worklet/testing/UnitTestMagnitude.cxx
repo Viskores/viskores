@@ -63,7 +63,7 @@ void TestMagnitude()
 }
 }
 
-int UnitTestMagnitude(int, char* [])
+int UnitTestMagnitude(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestMagnitude);
+  return vtkm::cont::testing::Testing::Run(TestMagnitude, argc, argv);
 }

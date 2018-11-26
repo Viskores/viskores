@@ -125,8 +125,7 @@ void TestNDimsHistogram()
 } // TestNDHistogram
 }
 
-int UnitTestNDimsHistogram(int, char* [])
+int UnitTestNDimsHistogram(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestNDimsHistogram);
+  return vtkm::cont::testing::Testing::Run(TestNDimsHistogram, argc, argv);
 }

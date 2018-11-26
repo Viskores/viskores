@@ -260,8 +260,7 @@ public:
   }
 };
 
-int UnitTestExtractGeometry(int, char* [])
+int UnitTestExtractGeometry(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestingExtractGeometry());
+  return vtkm::cont::testing::Testing::Run(TestingExtractGeometry(), argc, argv);
 }

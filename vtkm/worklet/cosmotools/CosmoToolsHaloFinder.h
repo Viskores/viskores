@@ -76,11 +76,10 @@ namespace cosmotools
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::HaloFinder(
-  vtkm::cont::ArrayHandle<vtkm::Id>& resultHaloId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& resultMBP,
-  vtkm::cont::ArrayHandle<T>& resultPot)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::HaloFinder(vtkm::cont::ArrayHandle<vtkm::Id>& resultHaloId,
+                                            vtkm::cont::ArrayHandle<vtkm::Id>& resultMBP,
+                                            vtkm::cont::ArrayHandle<T>& resultPot)
 {
   // Package locations for worklets
   using CompositeLocationType =
@@ -109,7 +108,6 @@ void CosmoTools<T, StorageType, DeviceAdapter>::HaloFinder(
   MarkActiveNeighbors<T> markActiveNeighbors(numBinsX, numBinsY, numBinsZ, NUM_NEIGHBORS, linkLen);
   vtkm::worklet::DispatcherMapField<MarkActiveNeighbors<T>> markActiveNeighborsDispatcher(
     markActiveNeighbors);
-  markActiveNeighborsDispatcher.SetDevice(DeviceAdapter());
   markActiveNeighborsDispatcher.Invoke(
     indexArray,    // (input) index into all particles
     partId,        // (input) particle id sorted by bin
@@ -135,7 +133,6 @@ void CosmoTools<T, StorageType, DeviceAdapter>::HaloFinder(
     // Connect each particle to another close particle to build halos
     GraftParticles<T> graftParticles(numBinsX, numBinsY, numBinsZ, NUM_NEIGHBORS, linkLen);
     vtkm::worklet::DispatcherMapField<GraftParticles<T>> graftParticlesDispatcher(graftParticles);
-    graftParticlesDispatcher.SetDevice(DeviceAdapter());
 
     graftParticlesDispatcher.Invoke(indexArray,   // (input) index into particles
                                     partId,       // (input) particle id sorted by bin
@@ -157,7 +154,6 @@ void CosmoTools<T, StorageType, DeviceAdapter>::HaloFinder(
     // determine if any particles are still migrating to halos
     IsStar isStar;
     vtkm::worklet::DispatcherMapField<IsStar> isStarDispatcher(isStar);
-    isStarDispatcher.SetDevice(DeviceAdapter());
     isStarDispatcher.Invoke(indexArray,
                             haloIdCurrent, // input (whole array)
                             haloIdLast,    // input (whole array)
@@ -174,7 +170,6 @@ void CosmoTools<T, StorageType, DeviceAdapter>::HaloFinder(
     {
       PointerJump pointerJump;
       vtkm::worklet::DispatcherMapField<PointerJump> pointerJumpDispatcher(pointerJump);
-      pointerJumpDispatcher.SetDevice(DeviceAdapter());
       pointerJumpDispatcher.Invoke(indexArray, haloIdCurrent); // input (whole array)
       DeviceAlgorithm::Copy(haloIdCurrent, haloIdLast);
     }
@@ -198,12 +193,11 @@ void CosmoTools<T, StorageType, DeviceAdapter>::HaloFinder(
 // Bin all particles in the system for halo finding
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesAll(
-  vtkm::cont::ArrayHandle<vtkm::Id>& partId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& leftNeighbor,
-  vtkm::cont::ArrayHandle<vtkm::Id>& rightNeighbor)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::BinParticlesAll(vtkm::cont::ArrayHandle<vtkm::Id>& partId,
+                                                 vtkm::cont::ArrayHandle<vtkm::Id>& binId,
+                                                 vtkm::cont::ArrayHandle<vtkm::Id>& leftNeighbor,
+                                                 vtkm::cont::ArrayHandle<vtkm::Id>& rightNeighbor)
 {
   // Compute number of bins and ranges for each bin
   vtkm::Vec<T, 2> result;
@@ -246,7 +240,6 @@ void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesAll(
                              numBinsY,
                              numBinsZ); // Size of superimposed mesh
   vtkm::worklet::DispatcherMapField<ComputeBins<T>> computeBinsDispatcher(computeBins);
-  computeBinsDispatcher.SetDevice(DeviceAdapter());
   computeBinsDispatcher.Invoke(xLoc,   // input
                                yLoc,   // input
                                zLoc,   // input
@@ -279,13 +272,11 @@ void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesAll(
   ComputeNeighborBins computeNeighborBins(numBinsX, numBinsY, numBinsZ, NUM_NEIGHBORS);
   vtkm::worklet::DispatcherMapField<ComputeNeighborBins> computeNeighborBinsDispatcher(
     computeNeighborBins);
-  computeNeighborBinsDispatcher.SetDevice(DeviceAdapter());
   computeNeighborBinsDispatcher.Invoke(countArray, binId, leftNeighbor);
 
   // Compute indices of all right neighbor bins
   ComputeBinRange computeBinRange(numBinsX);
   vtkm::worklet::DispatcherMapField<ComputeBinRange> computeBinRangeDispatcher(computeBinRange);
-  computeBinRangeDispatcher.SetDevice(DeviceAdapter());
   computeBinRangeDispatcher.Invoke(leftNeighbor, rightNeighbor);
 
   // Convert bin range to particle range within the bins
@@ -300,12 +291,11 @@ void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesAll(
 // Method uses ReduceByKey() and Scatter()
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByHalo(
-  vtkm::cont::ArrayHandle<vtkm::Id>& partId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& haloId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& mbpId,
-  vtkm::cont::ArrayHandle<T>& minPotential)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(vtkm::cont::ArrayHandle<vtkm::Id>& partId,
+                                                        vtkm::cont::ArrayHandle<vtkm::Id>& haloId,
+                                                        vtkm::cont::ArrayHandle<vtkm::Id>& mbpId,
+                                                        vtkm::cont::ArrayHandle<T>& minPotential)
 {
   // Sort particles into groups according to halo id using an index into WholeArrays
   DeviceAlgorithm::SortByKey(haloId, partId);
@@ -335,10 +325,9 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByHalo(
 #endif
 
   // Setup the ScatterCounting worklets needed to expand the ReduceByKeyResults
-  vtkm::worklet::ScatterCounting scatter(particlesPerHalo, DeviceAdapter());
+  vtkm::worklet::ScatterCounting scatter(particlesPerHalo);
   vtkm::worklet::DispatcherMapField<ScatterWorklet<vtkm::Id>> scatterWorkletIdDispatcher(scatter);
   vtkm::worklet::DispatcherMapField<ScatterWorklet<T>> scatterWorkletDispatcher(scatter);
-  scatterWorkletDispatcher.SetDevice(DeviceAdapter());
 
   // Calculate the minimum particle index per halo id and scatter
   DeviceAlgorithm::ScanExclusive(particlesPerHalo, tempI);
@@ -363,7 +352,6 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByHalo(
   ComputePotential<T> computePotential(particleMass);
   vtkm::worklet::DispatcherMapField<ComputePotential<T>> computePotentialDispatcher(
     computePotential);
-  computePotentialDispatcher.SetDevice(DeviceAdapter());
 
   computePotentialDispatcher.Invoke(indexArray,
                                     partId,      // input (whole array)
@@ -386,7 +374,6 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByHalo(
   EqualsMinimumPotential<T> equalsMinimumPotential;
   vtkm::worklet::DispatcherMapField<EqualsMinimumPotential<T>> equalsMinimumPotentialDispatcher(
     equalsMinimumPotential);
-  equalsMinimumPotentialDispatcher.SetDevice(DeviceAdapter());
 
   equalsMinimumPotentialDispatcher.Invoke(partId, potential, minPotential, mbpId);
 

@@ -228,8 +228,7 @@ public:
   }
 };
 
-int UnitTestExtractStructured(int, char* [])
+int UnitTestExtractStructured(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(TestingExtractStructured());
+  return vtkm::cont::testing::Testing::Run(TestingExtractStructured(), argc, argv);
 }

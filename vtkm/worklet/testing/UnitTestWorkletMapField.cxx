@@ -20,6 +20,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -100,8 +101,8 @@ struct DoStaticTestWorklet
     vtkm::cont::ArrayHandle<T> outputHandle, outputHandleAsPtr;
     vtkm::cont::ArrayHandle<T> inoutHandle, inoutHandleAsPtr;
 
-    vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    vtkm::cont::ArrayCopy(inputHandle, inoutHandleAsPtr, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+    vtkm::cont::ArrayCopy(inputHandle, inoutHandleAsPtr);
 
     std::cout << "Create and run dispatchers." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
@@ -155,7 +156,7 @@ struct DoDynamicTestWorklet
     vtkm::cont::DynamicArrayHandle inputDynamic(inputHandle);
 
     { //Verify we can pass by value
-      vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
       vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
       dispatcher.Invoke(inputDynamic, outputDynamic, inoutDynamic);
@@ -164,7 +165,7 @@ struct DoDynamicTestWorklet
     }
 
     { //Verify we can pass by pointer
-      vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
       vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
       dispatcher.Invoke(&inputDynamic, &outputDynamic, &inoutDynamic);
@@ -187,11 +188,9 @@ struct DoTestWorklet
   }
 };
 
-void TestWorkletMapField()
+void TestWorkletMapField(vtkm::cont::DeviceAdapterId id)
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
-  std::cout << "Testing Map Field on device adapter: " << DeviceAdapterTraits::GetName()
-            << std::endl;
+  std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorklet>(),
@@ -217,7 +216,7 @@ void TestWorkletMapField()
 
 } // mapfield namespace
 
-int UnitTestWorkletMapField(int, char* [])
+int UnitTestWorkletMapField(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(mapfield::TestWorkletMapField);
+  return vtkm::cont::testing::Testing::RunOnDevice(mapfield::TestWorkletMapField, argc, argv);
 }

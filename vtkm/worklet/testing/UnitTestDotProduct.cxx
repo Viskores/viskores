@@ -109,7 +109,7 @@ void TestDotProductWorklets()
 }
 }
 
-int UnitTestDotProduct(int, char* [])
+int UnitTestDotProduct(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDotProductWorklets);
+  return vtkm::cont::testing::Testing::Run(TestDotProductWorklets, argc, argv);
 }
