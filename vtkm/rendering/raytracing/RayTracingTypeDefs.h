@@ -27,8 +27,8 @@
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/TryExecute.h>
 
 namespace vtkm
@@ -149,73 +149,6 @@ struct RayStatusType : vtkm::ListTagBase<vtkm::UInt8>
 struct ScalarRenderingTypes : vtkm::ListTagBase<ScalarF, ScalarD>
 {
 };
-
-//Restrict Coordinate types to explicit for volume renderer
-namespace detail
-{
-
-using ArrayHandleCompositeVectorFloat32_3Default =
-  vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                         vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                         vtkm::cont::ArrayHandle<vtkm::Float32>>;
-
-using ArrayHandleCompositeVectorFloat64_3Default =
-  vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                         vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                         vtkm::cont::ArrayHandle<vtkm::Float64>>;
-
-struct StructuredStorageListTagCoordinateSystem
-  : vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-                      vtkm::cont::ArrayHandleCartesianProduct<
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::StorageTag>
-{
-};
-/*
- * This would be for support of curvilinear meshes
-struct StructuredStorageListTagCoordinateSystem
-    : vtkm::ListTagJoin<
-        VTKM_DEFAULT_STORAGE_LIST_TAG,
-    vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-                      vtkm::cont::ArrayHandleCartesianProduct<
-                          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                          vtkm::cont::ArrayHandle<vtkm::FloatDefault> >::StorageTag > >
-{ };*/
-} // namespace detail
-
-
-/*
- * This is a less restrictive type list for Explicit meshes
-struct ExplicitCoordinatesType : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,3>,
-                                                   vtkm::Vec<vtkm::Float64,3> > {};
-
-
-struct StorageListTagExplicitCoordinateSystem
-    : vtkm::ListTagBase<vtkm::cont::StorageTagBasic,
-                        detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
-                        detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag >{ };
-*/
-//Super restrictive
-
-struct ExplicitCoordinatesType
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
-{
-};
-struct StorageListTagExplicitCoordinateSystem : vtkm::ListTagBase<vtkm::cont::StorageTagBasic>
-{
-};
-
-
-using StructuredStorage = detail::StructuredStorageListTagCoordinateSystem;
-
-using DynamicArrayHandleStructuredCoordinateSystem =
-  vtkm::cont::DynamicArrayHandleBase<ExplicitCoordinatesType, StructuredStorage>;
-
-using DynamicArrayHandleExplicitCoordinateSystem =
-  vtkm::cont::DynamicArrayHandleBase<ExplicitCoordinatesType,
-                                     StorageListTagExplicitCoordinateSystem>;
 }
 }
 } //namespace vtkm::rendering::raytracing
