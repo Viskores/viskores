@@ -103,7 +103,8 @@ void DataDump(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
 class ZFPCompressor
 {
 public:
-  void Compress(const vtkm::cont::ArrayHandle<vtkm::Float64>& data,
+  template <typename Scalar>
+  void Compress(const vtkm::cont::ArrayHandle<Scalar>& data,
                 const vtkm::Float64 requestedRate,
                 const vtkm::Id3 dims)
   {

@@ -145,6 +145,30 @@ inline VTKM_EXEC int scalar_sizeof<int>()
 }
 
 template <typename T>
+inline VTKM_EXEC bool is_float();
+
+template <>
+inline VTKM_EXEC bool is_float<double>()
+{
+  return true;
+}
+template <>
+inline VTKM_EXEC bool is_float<long long int>()
+{
+  return true;
+}
+template <>
+inline VTKM_EXEC bool is_float<float>()
+{
+  return false;
+}
+template <>
+inline VTKM_EXEC bool is_float<int>()
+{
+  return false;
+}
+
+template <typename T>
 struct zfp_traits;
 
 template <>

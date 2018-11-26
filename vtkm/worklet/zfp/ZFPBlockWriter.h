@@ -54,6 +54,7 @@ struct BlockWriter
   {
     m_word_index = (block_idx * maxbits) / (sizeof(Word) * 8);
     // debug_index = m_word_index;
+    //std::cout<<"** Block "<<block_idx<<" start "<<m_word_index<<"\n";
     m_start_bit = vtkm::Int32((block_idx * maxbits) % (sizeof(Word) * 8));
   }
 
@@ -88,6 +89,7 @@ struct BlockWriter
   {
     UIntInt newval;
     UIntInt old;
+    (void)old;
     newval.uintpart = value;
     Portal.Add(index, newval.intpart);
     //old.uintpart = 0;
@@ -102,7 +104,7 @@ struct BlockWriter
 
   inline VTKM_EXEC
     //void write_bits(const unsigned int &bits, const uint &n_bits, const uint &bit_offset)
-    vtkm::Int32
+    vtkm::UInt64
     write_bits(const vtkm::UInt64& bits, const uint& n_bits)
   {
     //std::cout<<"write nbits "<<n_bits<<" "<<m_current_bit<<"\n";
@@ -148,7 +150,7 @@ struct BlockWriter
       //debug_index = write_index +1;
     }
     m_current_bit += n_bits;
-    return vtkm::Int32(bits >> (Word)n_bits);
+    return bits >> (Word)n_bits;
   }
 
   // TODO: optimize

@@ -101,8 +101,6 @@ public:
                             const InputScalarPortal& scalars,
                             BitstreamPortal& stream) const
   {
-    std::cout << "****************************************\n";
-    (void)stream;
     using Scalar = typename InputScalarPortal::ValueType;
     constexpr vtkm::Int32 BlockSize = 64;
     Scalar fblock[BlockSize];
@@ -128,45 +126,33 @@ public:
       partial = true;
     if (logicalStart[2] + 4 > Dims[2])
       partial = true;
-    std::cout << "Dims " << Dims << "\n";
+    //std::cout<<"Dims "<<Dims<<"\n";
     if (partial)
     {
-      const vtkm::Int32 nx = logicalStart[0] + 4 > Dims[0] ? Dims[0] - logicalStart[0] : 4;
-      const vtkm::Int32 ny = logicalStart[1] + 4 > Dims[1] ? Dims[1] - logicalStart[1] : 4;
-      const vtkm::Int32 nz = logicalStart[2] + 4 > Dims[2] ? Dims[2] - logicalStart[2] : 4;
-      std::cout << "Partial block " << logicalStart << " offset " << offset << "\n";
-      std::cout << "Nx " << nx << " " << ny << " " << nz << "\n";
+      const vtkm::Int32 nx =
+        logicalStart[0] + 4 > Dims[0] ? Dims[0] - logicalStart[0] : vtkm::Int32(4);
+      const vtkm::Int32 ny =
+        logicalStart[1] + 4 > Dims[1] ? Dims[1] - logicalStart[1] : vtkm::Int32(4);
+      const vtkm::Int32 nz =
+        logicalStart[2] + 4 > Dims[2] ? Dims[2] - logicalStart[2] : vtkm::Int32(4);
+      //std::cout<<"Partial block "<<logicalStart<<" offset "<<offset<<"\n";
+      //std::cout<<"Nx "<<nx<<" "<<ny<<" "<<nz<<"\n";
       GatherPartial3(fblock, scalars, Dims, offset, nx, ny, nz);
     }
     else
     {
-      std::cout << "FULL block " << zfpBlock << "\n";
+      //std::cout<<"FULL block "<<zfpBlock<<"\n";
       Gather3(fblock, scalars, Dims, offset);
     }
 
-    //for(int i = 0; i < 64; ++i) std::cout<< fblock[i]<<" ";
+    //for(int i = 0; i < 64; ++i)
+    //{
+    //  std::cout<<" "<<fblock[i];
+    //}
     //std::cout<<"\n";
-    // encode block
-    vtkm::Int32 emax = zfp::MaxExponent<BlockSize, Scalar>(fblock);
-    vtkm::Int32 maxprec =
-      zfp::precision(emax, zfp::get_precision<Scalar>(), zfp::get_min_exp<Scalar>());
-    vtkm::UInt32 e = maxprec ? emax + zfp::get_ebias<Scalar>() : 0;
+    zfp::ZFPBlockEncoder<BlockSize, Scalar, BitstreamPortal> encoder;
 
-    zfp::BlockWriter<BlockSize, BitstreamPortal> blockWriter(stream, MaxBits, blockIdx);
-    //blockWriter.print();
-    const vtkm::UInt32 ebits = zfp::get_ebits<Scalar>() + 1;
-    blockWriter.write_bits(2 * e + 1, ebits);
-    //std::cout<<"EBITS "<<ebits<<"\n";
-    //std::cout<<"Max exponent "<<2*e+1<<" emax "<<emax<<" maxprec "<<maxprec<<" e "<<e<<"\n";
-    //zfp::print_bits(2*e+1);
-    //blockWriter.print();
-
-    using Int = typename zfp::zfp_traits<Scalar>::Int;
-    Int iblock[BlockSize];
-    zfp::fwd_cast<Int, Scalar, BlockSize>(iblock, fblock, emax);
-
-    zfp::encode_block<BitstreamPortal, Scalar, Int, BlockSize>(
-      blockWriter, iblock, maxprec, MaxBits - ebits);
+    encoder.encode(fblock, MaxBits, blockIdx, stream);
     //blockWriter.print(0);
     //blockWriter.print(1);
   }

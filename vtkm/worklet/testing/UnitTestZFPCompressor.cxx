@@ -27,12 +27,13 @@
 
 using Handle64 = vtkm::cont::ArrayHandle<vtkm::Float64>;
 
-void Test3D()
+template <typename Scalar>
+void Test3D(int rate)
 {
   std::cout << "Testing ZFP 3d:" << std::endl;
   //vtkm::Id3 dims(4,4,4);
-  vtkm::Id3 dims(4, 4, 7);
-  //vtkm::Id3 dims(4,4,8);
+  //vtkm::Id3 dims(4,4,7);
+  vtkm::Id3 dims(8, 8, 8);
   //vtkm::Id3 dims(256,256,256);
   //vtkm::Id3 dims(128,128,128);
   vtkm::cont::testing::MakeTestDataSet testDataSet;
@@ -42,23 +43,29 @@ void Test3D()
 
   vtkm::worklet::ZFPCompressor compressor;
 
-  vtkm::Float64 rate = 4;
   if (dynField.IsSameType(Handle64()))
   {
-    Handle64 array = dynField.Cast<Handle64>();
-    //std::cout<<"\n";
-    for (int i = 0; i < 64; ++i)
+    Handle64 field = dynField.Cast<Handle64>();
+    vtkm::cont::ArrayHandle<Scalar> handle;
+    const vtkm::Id size = field.GetNumberOfValues();
+    handle.Allocate(size);
+
+    auto fPortal = field.GetPortalControl();
+    auto hPortal = handle.GetPortalControl();
+    for (vtkm::Id i = 0; i < size; ++i)
     {
-      std::cout << array.GetPortalControl().Get(i) << " ";
+      hPortal.Set(i, static_cast<Scalar>(fPortal.Get(i)));
     }
-    std::cout << "\n";
-    compressor.Compress(array, rate, dims);
+    compressor.Compress(handle, rate, dims);
   }
 }
 
 void TestZFP()
 {
-  Test3D();
+  //Test3D<vtkm::Float64>(4);
+  Test3D<vtkm::Float32>(4);
+  //Test3D<vtkm::Int64>(4);
+  //Test3D<vtkm::Int32>(4);
 }
 
 int UnitTestZFPCompressor(int, char* [])
