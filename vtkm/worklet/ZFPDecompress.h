@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_worklet_zfp_compressor_h
-#define vtk_m_worklet_zfp_compressor_h
+#ifndef vtk_m_worklet_zfp_decompressor_h
+#define vtk_m_worklet_zfp_decompressor_h
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/Algorithm.h>
@@ -30,7 +30,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
-#include <vtkm/worklet/zfp/ZFPEncode3.h>
+#include <vtkm/worklet/zfp/ZFPDecode3.h>
 
 using ZFPWord = vtkm::UInt64;
 
@@ -40,80 +40,88 @@ namespace vtkm
 {
 namespace worklet
 {
+#if 0
 namespace detail
 {
 
-size_t CalcMem3d(const vtkm::Id3 dims, const int bits_per_block)
-{
-  const size_t vals_per_block = 64;
-  const size_t size = dims[0] * dims[1] * dims[2];
-  size_t total_blocks = size / vals_per_block;
-  const size_t bits_per_word = sizeof(ZFPWord) * 8;
-  const size_t total_bits = bits_per_block * total_blocks;
-  const size_t alloc_size = total_bits / bits_per_word;
-  return alloc_size * sizeof(ZFPWord);
-}
-
-class MemTransfer : public vtkm::worklet::WorkletMapField
-{
-public:
-  VTKM_CONT
-  MemTransfer() {}
-  using ControlSignature = void(FieldIn<>, WholeArrayInOut<>);
-  using ExecutionSignature = void(_1, _2);
-
-  template <typename PortalType>
-  VTKM_EXEC void operator()(const vtkm::Id id, PortalType& outValue) const
+  size_t CalcMem3d(const vtkm::Id3 dims,
+                   const int bits_per_block)
   {
-    (void)id;
-    (void)outValue;
+    const size_t vals_per_block = 64;
+    const size_t size = dims[0] * dims[1] * dims[2];
+    size_t total_blocks = size / vals_per_block;
+    const size_t bits_per_word = sizeof(ZFPWord) * 8;
+    const size_t total_bits = bits_per_block * total_blocks;
+    const size_t alloc_size = total_bits / bits_per_word;
+    return alloc_size * sizeof(ZFPWord);
   }
-}; //class MemTransfer
+
+  class MemTransfer : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    VTKM_CONT
+    MemTransfer()
+    {
+    }
+    using ControlSignature = void(FieldIn<>, WholeArrayInOut<>);
+    using ExecutionSignature = void(_1, _2);
+
+    template<typename PortalType>
+    VTKM_EXEC
+    void operator()(const vtkm::Id id,
+                    PortalType& outValue) const
+    {
+      (void) id;
+      (void) outValue;
+    }
+  }; //class MemTransfer
 
 } // namespace detail
 
-template <typename T>
-T* GetVTKMPointer(vtkm::cont::ArrayHandle<T>& handle)
+template<typename T>
+T *
+GetVTKMPointer(vtkm::cont::ArrayHandle<T> &handle)
 {
   typedef typename vtkm::cont::ArrayHandle<T> HandleType;
-  typedef typename HandleType::template ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial>::Portal
-    PortalType;
+  typedef typename HandleType::template ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial>::Portal PortalType;
   typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
-  IteratorType iter =
-    vtkm::cont::ArrayPortalToIterators<PortalType>(handle.GetPortalControl()).GetBegin();
+  IteratorType iter = vtkm::cont::ArrayPortalToIterators<PortalType>(handle.GetPortalControl()).GetBegin();
   return &(*iter);
 }
 
-template <typename T>
-void DataDump(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
+template<typename T>
+void
+DataDump(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
 {
 
-  T* ptr = GetVTKMPointer(handle);
+  T *ptr = GetVTKMPointer(handle);
   vtkm::Id osize = handle.GetNumberOfValues();
-  FILE* fp = fopen(fileName.c_str(), "wb");
-  ;
-  if (fp != NULL)
+  FILE *fp = fopen(fileName.c_str(), "wb");;
+  if(fp != NULL)
   {
     fwrite(ptr, sizeof(T), osize, fp);
   }
 
   fclose(fp);
 }
+#endif
 
-class ZFPCompressor
+class ZFPDecompressor
 {
 public:
   template <typename Scalar>
-  vtkm::cont::ArrayHandle<vtkm::Int64> Compress(const vtkm::cont::ArrayHandle<Scalar>& data,
-                                                const vtkm::Float64 requestedRate,
-                                                const vtkm::Id3 dims)
+  void Decompress(const vtkm::cont::ArrayHandle<vtkm::Int64>& encodedData,
+                  vtkm::cont::ArrayHandle<Scalar>& output,
+                  const vtkm::Float64 requestedRate,
+                  vtkm::Id3 dims)
   {
-    DataDump(data, "uncompressed");
+    //DataDump(data, "uncompressed");
     zfp::ZFPStream stream;
     const vtkm::Int32 topoDims = 3;
+    ;
     vtkm::Float64 actualRate = stream.SetRate(requestedRate, topoDims, vtkm::Float64());
-    //VTKM_ASSERT(
-    std::cout << "ArraySize " << data.GetNumberOfValues() << "\n";
+
+    std::cout << "ArraySize " << encodedData.GetNumberOfValues() << "\n";
     std::cout << "Array dims " << dims << "\n";
     std::cout << "requested rate " << requestedRate << " actual rate " << actualRate << "\n";
     std::cout << "MinBits " << stream.minbits << "\n";
@@ -141,16 +149,19 @@ public:
     vtkm::Id outsize = outbits / sizeof(ZFPWord);
     std::cout << "Output size " << outsize << "\n";
 
-    vtkm::cont::ArrayHandle<vtkm::Int64> output;
+    output.Allocate(dims[0] * dims[1] * dims[2]);
     // hopefully this inits/allocates the mem only on the device
-    vtkm::cont::ArrayHandleConstant<vtkm::Int64> zero(0, outsize);
-    vtkm::cont::Algorithm::Copy(zero, output);
+    //
+    //vtkm::cont::ArrayHandleConstant<vtkm::Int64> zero(0, outsize);
+    //vtkm::cont::Algorithm::Copy(zero, output);
+    //
     using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
     {
       Timer timer;
       vtkm::cont::ArrayHandleCounting<vtkm::Id> one(0, 1, 1);
       vtkm::worklet::DispatcherMapField<detail::MemTransfer> dis;
-      dis.Invoke(one, data);
+      dis.Invoke(one, output);
+      dis.Invoke(one, encodedData);
 
       vtkm::Float64 time = timer.GetElapsedTime();
       std::cout << "Copy scalars " << time << "\n";
@@ -160,19 +171,17 @@ public:
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
     Timer timer;
-    vtkm::worklet::DispatcherMapField<zfp::Encode3> compressDispatcher(
-      zfp::Encode3(dims, paddedDims, stream.maxbits));
-    compressDispatcher.Invoke(blockCounter, data, output);
+    vtkm::worklet::DispatcherMapField<zfp::Decode3> decompressDispatcher(
+      zfp::Decode3(dims, paddedDims, stream.maxbits));
+    decompressDispatcher.Invoke(blockCounter, output, encodedData);
 
     vtkm::Float64 time = timer.GetElapsedTime();
-    size_t total_bytes = data.GetNumberOfValues() * sizeof(vtkm::Float64);
+    size_t total_bytes = output.GetNumberOfValues() * sizeof(vtkm::Float64);
     vtkm::Float64 gB = vtkm::Float64(total_bytes) / (1024. * 1024. * 1024.);
     vtkm::Float64 rate = gB / time;
-    std::cout << "Compress time " << time << " sec\n";
-    std::cout << "Compress rate " << rate << " GB / sec\n";
+    std::cout << "Decompress time " << time << " sec\n";
+    std::cout << "Decompress rate " << rate << " GB / sec\n";
     DataDump(output, "compressed");
-
-    return output;
   }
 };
 } // namespace worklet

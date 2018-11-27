@@ -44,56 +44,53 @@ struct BlockReader
   Word m_buffer;
 
   VTKM_EXEC
-  BlockReader(const WordsPortalType& words,
-              const int& maxbits,
-              const int& block_idx,
-              const int& num_blocks)
+  BlockReader(const WordsPortalType& words, const int& maxbits, const int& block_idx)
     : Words(words)
     , m_maxbits(maxbits)
   {
     Index = (block_idx * maxbits) / (sizeof(Word) * 8);
     m_buffer = Words.Get(Index);
-    m_current_bit = (block_idx * maxbits) % (sizeof(Word) * 8);
+    m_current_bit = (block_idx * maxbits) % vtkm::Int32((sizeof(Word) * 8));
 
     m_buffer >>= m_current_bit;
     m_block_idx = block_idx;
   }
 
-  inline __device__ uint read_bit()
+  inline VTKM_EXEC uint read_bit()
   {
-    uint bit = m_buffer & 1;
+    vtkm::UInt32 bit = vtkm::UInt32(m_buffer & 1);
     ++m_current_bit;
     m_buffer >>= 1;
     // handle moving into next word
-    if (m_current_bit >= sizeof(Word) * 8)
+    if (m_current_bit >= vtkm::Int32(sizeof(Word) * 8))
     {
       m_current_bit = 0;
-      ++m_words;
-      m_buffer = *m_words;
+      ++Index;
+      m_buffer = Words.Get(Index);
     }
     return bit;
   }
 
 
   // note this assumes that n_bits is <= 64
-  inline __device__ uint read_bits(const int& n_bits)
+  inline VTKM_EXEC vtkm::UInt64 read_bits(const int& n_bits)
   {
-    uint bits;
+    vtkm::UInt64 bits;
     // rem bits will always be positive
-    int rem_bits = sizeof(Word) * 8 - m_current_bit;
+    vtkm::Int32 rem_bits = vtkm::Int32(sizeof(Word) * 8) - m_current_bit;
 
-    int first_read = min(rem_bits, n_bits);
+    vtkm::Int32 first_read = vtkm::Min(rem_bits, n_bits);
     // first mask
     Word mask = ((Word)1 << ((first_read))) - 1;
     bits = m_buffer & mask;
     m_buffer >>= n_bits;
     m_current_bit += first_read;
-    int next_read = 0;
+    vtkm::Int32 next_read = 0;
     if (n_bits >= rem_bits)
     {
-      ++m_words;
-      m_buffer = *m_words;
       m_current_bit = 0;
+      ++Index;
+      m_buffer = Words.Get(Index);
       next_read = n_bits - first_read;
     }
 
@@ -108,7 +105,7 @@ struct BlockReader
   }
 
 private:
-  __device__ BlockReader() {}
+  VTKM_EXEC BlockReader() {}
 
 }; // block reader
 

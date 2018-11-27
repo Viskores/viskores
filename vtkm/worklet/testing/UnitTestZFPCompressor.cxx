@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/worklet/ZFPCompressor.h>
+#include <vtkm/worklet/ZFPDecompress.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -42,6 +43,7 @@ void Test3D(int rate)
   ;
 
   vtkm::worklet::ZFPCompressor compressor;
+  vtkm::worklet::ZFPDecompressor decompressor;
 
   if (dynField.IsSameType(Handle64()))
   {
@@ -56,7 +58,11 @@ void Test3D(int rate)
     {
       hPortal.Set(i, static_cast<Scalar>(fPortal.Get(i)));
     }
-    compressor.Compress(handle, rate, dims);
+
+    auto compressed = compressor.Compress(handle, rate, dims);
+
+    vtkm::cont::ArrayHandle<Scalar> decoded;
+    decompressor.Decompress(compressed, decoded, rate, dims);
   }
 }
 
