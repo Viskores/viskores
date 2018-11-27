@@ -440,20 +440,22 @@ function(vtkm_unit_tests)
   target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
 
   foreach(current_backend ${all_backends})
+    set (device_command_line_argument --device=${current_backend})
     if (current_backend STREQUAL "NO_BACKEND")
       set (current_backend "")
+      set(device_command_line_argument "")
     endif()
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
       if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
         add_test(NAME ${tname}${current_backend}
           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
-                  $<TARGET_FILE:${test_prog}> ${tname} --device=${current_backend} ${VTKm_UT_TEST_ARGS}
+                  $<TARGET_FILE:${test_prog}> ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
                   ${MPIEXEC_POSTFLAGS}
           )
       else()
         add_test(NAME ${tname}${current_backend}
-          COMMAND ${test_prog} ${tname} --device=${current_backend} ${VTKm_UT_TEST_ARGS}
+          COMMAND ${test_prog} ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
           )
       endif()
 
