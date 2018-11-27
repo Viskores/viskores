@@ -19,8 +19,7 @@
 //============================================================================
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/Timer.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
@@ -32,7 +31,7 @@
 #include <stdexcept>
 #include <string>
 
-using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+static const vtkm::cont::LogLevel CosmoLogLevel = vtkm::cont::LogLevel(1);
 
 void TestCosmoHaloFinder(const char* fileName)
 {
@@ -73,28 +72,26 @@ void TestCosmoHaloFinder(const char* fileName)
   vtkm::cont::ArrayHandle<vtkm::Id> resultMBP;
   vtkm::cont::ArrayHandle<vtkm::Float32> resultPot;
 
-  vtkm::cont::Timer<DeviceAdapter> total;
-  vtkm::cont::Timer<DeviceAdapter> timer;
-
   // Create the worklet and run it
   vtkm::Id minHaloSize = 20;
   vtkm::Float32 linkingLength = 0.2f;
   vtkm::Float32 particleMass = 1.08413e+09f;
 
-  vtkm::worklet::CosmoTools cosmoTools;
-  cosmoTools.RunHaloFinder(xLocArray,
-                           yLocArray,
-                           zLocArray,
-                           nParticles,
-                           particleMass,
-                           minHaloSize,
-                           linkingLength,
-                           resultHaloId,
-                           resultMBP,
-                           resultPot,
-                           DeviceAdapter());
-  vtkm::Float64 haloTime = timer.GetElapsedTime();
-  std::cout << "**** Time for HaloFinder: " << haloTime << std::endl;
+  {
+    VTKM_LOG_SCOPE(CosmoLogLevel, "Executing HaloFinder");
+
+    vtkm::worklet::CosmoTools cosmoTools;
+    cosmoTools.RunHaloFinder(xLocArray,
+                             yLocArray,
+                             zLocArray,
+                             nParticles,
+                             particleMass,
+                             minHaloSize,
+                             linkingLength,
+                             resultHaloId,
+                             resultMBP,
+                             resultPot);
+  }
 
   xLocArray.ReleaseResources();
   yLocArray.ReleaseResources();
@@ -117,11 +114,19 @@ void TestCosmoHaloFinder(const char* fileName)
 
 int main(int argc, char* argv[])
 {
+  vtkm::cont::SetLogLevelName(CosmoLogLevel, "Cosmo");
+  vtkm::cont::SetStderrLogLevel(CosmoLogLevel);
+  vtkm::cont::InitLogging(argc, argv);
+
   if (argc < 2)
   {
     std::cout << "Usage: " << std::endl << "$ " << argv[0] << " <input_file>" << std::endl;
     return 1;
   }
+
+#ifndef VTKM_ENABLE_LOGGING
+  std::cout << "Warning: turn on VTKm_ENABLE_LOGGING CMake option to turn on timing." << std::endl;
+#endif
 
   TestCosmoHaloFinder(argv[1]);
 
