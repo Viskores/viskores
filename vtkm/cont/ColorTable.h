@@ -108,7 +108,6 @@ class VTKM_CONT_EXPORT ColorTable
   std::shared_ptr<detail::ColorTableInternals> Impl;
 
 public:
-  // Note: these are in flux and will change soon.
   enum struct Preset
   {
     DEFAULT,
