@@ -23,7 +23,10 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleAny.h>
 #include <vtkm/cont/StorageBasic.h>
+#include <vtkm/cont/StorageVirtual.h>
+
 
 #include <vtkm/cont/arg/Transport.h>
 
@@ -67,6 +70,50 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
     // array might not have the same size depending on how the user is using
     // the array.
     ExecType obj(array);
+    return obj.PrepareForExecution(Device());
+  }
+};
+
+template <typename T, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
+                 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>,
+                 Device>
+{
+  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T, Device>;
+  using ExecType = vtkm::cont::AtomicArray<T>;
+
+  template <typename InputDomainType>
+  VTKM_CONT ExecObjectType
+  operator()(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>& array,
+             const InputDomainType&,
+             vtkm::Id,
+             vtkm::Id) const
+  {
+    using S = vtkm::cont::StorageTagBasic;
+
+    const vtkm::cont::StorageVirtual* storage = array.GetStorage();
+    if (!storage)
+    {
+      throw vtkm::cont::ErrorBadValue("ArrayHandleVirtual must not have a nullptr for storage.");
+    }
+
+    if (!storage->IsType(typeid(vtkm::cont::internal::Storage<T, S>)))
+    {
+#if defined(VTKM_ENABLE_LOGGING)
+      using AH = vtkm::cont::ArrayHandle<T, S>;
+      VTKM_LOG_CAST_FAIL(array, AH);
+#endif
+      throw vtkm::cont::ErrorBadValue("Arrays being used as atomic's must always have storage that "
+                                      "is of the type StorageTagBasic.");
+    }
+
+    const auto* any = static_cast<const vtkm::cont::StorageAny<T, S>*>(storage);
+    VTKM_LOG_CAST_SUCC(array, *any);
+
+    // Note: we ignore the size of the domain because the randomly accessed
+    // array might not have the same size depending on how the user is using
+    // the array.
+    ExecType obj(any->GetHandle());
     return obj.PrepareForExecution(Device());
   }
 };

@@ -26,6 +26,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
+#include <vtkm/cont/StorageVirtual.h>
 
 #include <vtkm/cont/AtomicArray.h>
 
@@ -55,6 +56,14 @@ struct TypeCheck<TypeCheckTagAtomicArray<TypeList>, ArrayType>
 template <typename T, typename TypeList>
 struct TypeCheck<TypeCheckTagAtomicArray<TypeList>,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
+{
+  static constexpr bool value = (vtkm::ListContains<TypeList, T>::value &&
+                                 vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value);
+};
+
+template <typename T, typename TypeList>
+struct TypeCheck<TypeCheckTagAtomicArray<TypeList>,
+                 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
 {
   static constexpr bool value = (vtkm::ListContains<TypeList, T>::value &&
                                  vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value);
