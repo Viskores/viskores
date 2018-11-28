@@ -32,9 +32,9 @@ template <typename Scalar>
 void Test3D(int rate)
 {
   std::cout << "Testing ZFP 3d:" << std::endl;
-  //vtkm::Id3 dims(4,4,4);
+  vtkm::Id3 dims(4, 4, 4);
   //vtkm::Id3 dims(4,4,7);
-  vtkm::Id3 dims(8, 8, 8);
+  //vtkm::Id3 dims(8,8,8);
   //vtkm::Id3 dims(256,256,256);
   //vtkm::Id3 dims(128,128,128);
   vtkm::cont::testing::MakeTestDataSet testDataSet;
@@ -68,8 +68,8 @@ void Test3D(int rate)
 
 void TestZFP()
 {
-  //Test3D<vtkm::Float64>(4);
-  Test3D<vtkm::Float32>(4);
+  Test3D<vtkm::Float64>(4);
+  //Test3D<vtkm::Float32>(4);
   //Test3D<vtkm::Int64>(4);
   //Test3D<vtkm::Int32>(4);
 }

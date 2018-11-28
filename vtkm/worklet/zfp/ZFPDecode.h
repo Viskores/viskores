@@ -167,7 +167,7 @@ VTKM_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
 {
   for (vtkm::Int32 i = 0; i < BlockSize; ++i)
   {
-    data = 0;
+    data[i] = 0;
   }
 
   vtkm::UInt64 x;
@@ -192,6 +192,10 @@ VTKM_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
       data[i] += (UInt)(x & 1u) << k;
     }
   }
+  //for (int i = 0; i < BlockSize; i++)
+  //{
+  //  std::cout<<"Decomp int "<<i<<" = "<<data[i]<<"\n";
+  //}
 }
 
 template <vtkm::Int32 BlockSize, typename Scalar, typename PortalType>
@@ -206,7 +210,7 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
 
   vtkm::UInt32 cont = 1;
 
-  if (zfp::is_int<Scalar>())
+  if (!zfp::is_int<Scalar>())
   {
     cont = reader.read_bit();
   }
@@ -218,8 +222,15 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
     vtkm::UInt32 emax;
     if (!zfp::is_int<Scalar>())
     {
+      //std::cout<<"ebits "<<ebits<<"\n";
       // read in the shared exponent
+      //vtkm::UInt64 b = reader.read_bits(ebits - 1);
+      //print_bits(b);
+      //std::cout<<"b "<<b<<"\n";
+      //std::cout<<"ebias "<<zfp::get_ebias<Scalar>()<<"\n";
+      //emax = vtkm::UInt32(b - zfp::get_ebias<Scalar>());
       emax = vtkm::UInt32(reader.read_bits(ebits - 1) - zfp::get_ebias<Scalar>());
+      //std::cout<<"EMAX "<<emax<<"\n";
     }
     else
     {
@@ -238,14 +249,25 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
 #endif
     for (vtkm::Int32 i = 0; i < BlockSize; ++i)
     {
-      iblock[codec.CodecLookup(i)] = ublock[i];
+      iblock[codec.CodecLookup(i)] = uint2int(ublock[i]);
     }
+
+    //for (int i = 0; i < BlockSize; i++)
+    //{
+    //  std::cout<<"before xform tid "<<i<<"  "<<iblock[i]<<"\n";
+    //}
 
     inv_transform<BlockSize> trans;
     trans.inv_xform(iblock);
 
+    //for (int i = 0; i < BlockSize; i++)
+    //{
+    //  std::cout<<"tid "<<i<<"  "<<iblock[i]<<"\n";
+    //}
+
     Scalar inv_w = dequantize<Int, Scalar>(1, emax);
 
+//std::cout<<"dequantize factor "<<inv_w<<"\n";
 #ifdef VTKM_ENABLE_CUDA
 #pragma unroll
 #endif
@@ -255,52 +277,6 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
     }
   }
 }
-// helpers so we can do partial template instantiation since
-// the portal type could be on any backend
-/*
-template<vtkm::Int32 BlockSize, typename Scalar, typename PortalType>
-struct ZFPBlockDecoder {};
-
-template<vtkm::Int32 BlockSize, typename PortalType>
-struct ZFPBlockDecoder<BlockSize, vtkm::Float32, PortalType>
-{
-  VTKM_EXEC void encode(vtkm::Float32 *fblock, vtkm::Int32 maxbits, vtkm::UInt32 blockIdx, PortalType &stream)
-  {
-    //zfp_decodef<BlockSize>(fblock, maxbits, blockIdx, stream);
-  }
-};
-
-template<vtkm::Int32 BlockSize, typename PortalType>
-struct ZFPBlockDecoder<BlockSize, vtkm::Float64, PortalType>
-{
-  VTKM_EXEC void encode(vtkm::Float64 *fblock, vtkm::Int32 maxbits, vtkm::UInt32 blockIdx, PortalType &stream)
-  {
-    //zfp_decodef<BlockSize>(fblock, maxbits, blockIdx, stream);
-  }
-};
-
-template<vtkm::Int32 BlockSize, typename PortalType>
-struct ZFPBlockDecoder<BlockSize, vtkm::Int32, PortalType>
-{
-  VTKM_EXEC void encode(vtkm::Int32 *fblock, vtkm::Int32 maxbits, vtkm::UInt32 blockIdx, PortalType &stream)
-  {
-    using Int = typename zfp::zfp_traits<vtkm::Int32>::Int;
-    zfp::BlockReader<BlockSize, PortalType> blockWriter(stream, maxbits, blockIdx);
-    //decode_block<BlockSize>(blockWriter, maxbits, get_precision<vtkm::Int32>(), (Int*)fblock);
-  }
-};
-
-template<vtkm::Int32 BlockSize, typename PortalType>
-struct ZFPBlockDecoder<BlockSize, vtkm::Int64, PortalType>
-{
-  VTKM_EXEC void encode(vtkm::Int64 *fblock, vtkm::Int32 maxbits, vtkm::UInt32 blockIdx, PortalType &stream)
-  {
-    using Int = typename zfp::zfp_traits<vtkm::Int64>::Int;
-    zfp::BlockReader<BlockSize, PortalType> blockWriter(stream, maxbits, blockIdx);
-    //decode_block<BlockSize>(blockWriter, maxbits, get_precision<vtkm::Int64>(), (Int*)fblock);
-  }
-};
-*/
 }
 }
 } // namespace vtkm::worklet::zfp

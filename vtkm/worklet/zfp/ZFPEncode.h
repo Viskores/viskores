@@ -190,19 +190,6 @@ inline VTKM_EXEC void fwd_xform<vtkm::Int32, 64>(vtkm::Int32* p)
       fwd_lift<vtkm::Int32, 16>(p + 1 * x + 4 * y);
 }
 
-template <typename T>
-void print_bits(T bits)
-{
-  const int bit_size = sizeof(T) * 8;
-  for (int i = bit_size - 1; i >= 0; --i)
-  {
-    T one = 1;
-    T mask = one << i;
-    int val = (bits & mask) >> i;
-    printf("%d", val);
-  }
-  printf("\n");
-}
 
 template <vtkm::Int32 BlockSize, typename PortalType, typename Int>
 VTKM_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
@@ -271,6 +258,7 @@ inline VTKM_EXEC void zfp_encodef(Scalar* fblock,
   using Int = typename zfp::zfp_traits<Scalar>::Int;
   zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, blockIdx);
   vtkm::Int32 emax = zfp::MaxExponent<BlockSize, Scalar>(fblock);
+  std::cout << "EMAX " << emax << "\n";
   vtkm::Int32 maxprec =
     zfp::precision(emax, zfp::get_precision<Scalar>(), zfp::get_min_exp<Scalar>());
   vtkm::UInt32 e = maxprec ? emax + zfp::get_ebias<Scalar>() : 0;

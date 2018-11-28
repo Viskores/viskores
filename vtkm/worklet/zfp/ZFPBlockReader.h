@@ -42,11 +42,13 @@ struct BlockReader
   vtkm::Id Index;
 
   Word m_buffer;
+  const vtkm::Id MaxIndex;
 
   VTKM_EXEC
   BlockReader(const WordsPortalType& words, const int& maxbits, const int& block_idx)
     : Words(words)
     , m_maxbits(maxbits)
+    , MaxIndex(words.GetNumberOfValues() - 1)
   {
     Index = (block_idx * maxbits) / (sizeof(Word) * 8);
     m_buffer = Words.Get(Index);
@@ -54,6 +56,9 @@ struct BlockReader
 
     m_buffer >>= m_current_bit;
     m_block_idx = block_idx;
+    //std::cout<<"Reader index "<<Index<<"\n";
+    //print_bits(m_buffer);
+    //print_bits(Words.Get(Index));
   }
 
   inline VTKM_EXEC uint read_bit()
@@ -89,7 +94,9 @@ struct BlockReader
     if (n_bits >= rem_bits)
     {
       m_current_bit = 0;
-      ++Index;
+      // just read in 0s if someone asks for more bits past the end of the array.
+      // not sure what the best way to deal with this i
+      Index = vtkm::Min(MaxIndex, Index + 1);
       m_buffer = Words.Get(Index);
       next_read = n_bits - first_read;
     }
