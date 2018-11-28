@@ -127,6 +127,8 @@ public:
   const vtkm::internal::PortalVirtualBase* PrepareForOutput(vtkm::Id numberOfValues,
                                                             vtkm::cont::DeviceAdapterId devId);
 
+  const vtkm::internal::PortalVirtualBase* PrepareForInPlace(vtkm::cont::DeviceAdapterId devId);
+
   //This needs to cause a host side sync!
   //This needs to work before we execute on a device
   const vtkm::internal::PortalVirtualBase* GetPortalControl();
@@ -139,6 +141,13 @@ public:
   /// with an up-to-date copy of the data, VTKM_DEVICE_ADAPTER_UNDEFINED is
   /// returned.
   DeviceAdapterId GetDeviceAdapterId() const noexcept;
+
+
+  enum struct OutputMode
+  {
+    WRITE,
+    READ_WRITE
+  };
 
 private:
   //Memory management routines
@@ -153,9 +162,12 @@ private:
   //Portal routines
   virtual void ControlPortalForInput(vtkm::cont::internal::TransferInfoArray& payload) const = 0;
   virtual void ControlPortalForOutput(vtkm::cont::internal::TransferInfoArray& payload);
+
+
   virtual void TransferPortalForInput(vtkm::cont::internal::TransferInfoArray& payload,
                                       vtkm::cont::DeviceAdapterId devId) const = 0;
   virtual void TransferPortalForOutput(vtkm::cont::internal::TransferInfoArray& payload,
+                                       OutputMode mode,
                                        vtkm::Id numberOfValues,
                                        vtkm::cont::DeviceAdapterId devId);
 

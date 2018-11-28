@@ -70,12 +70,24 @@ struct PortalWrapperToDevice
   bool operator()(DeviceAdapterTag device,
                   Handle&& handle,
                   vtkm::Id numberOfValues,
-                  vtkm::cont::internal::TransferInfoArray& payload) const
+                  vtkm::cont::internal::TransferInfoArray& payload,
+                  vtkm::cont::StorageVirtual::OutputMode mode) const
   {
-    auto portal = handle.PrepareForOutput(numberOfValues, device);
-    using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
-    vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
-    return transfer(device, payload, portal);
+    using ACCESS_MODE = vtkm::cont::StorageVirtual::OutputMode;
+    if (mode == ACCESS_MODE::WRITE)
+    {
+      auto portal = handle.PrepareForOutput(numberOfValues, device);
+      using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
+      vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
+      return transfer(device, payload, portal);
+    }
+    else
+    {
+      auto portal = handle.PrepareForInPlace(device);
+      using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
+      vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
+      return transfer(device, payload, portal);
+    }
   }
 };
 }
@@ -129,11 +141,12 @@ void StorageAny<T, S>::TransferPortalForInput(vtkm::cont::internal::TransferInfo
 
 template <typename T, typename S>
 void StorageAny<T, S>::TransferPortalForOutput(vtkm::cont::internal::TransferInfoArray& payload,
+                                               vtkm::cont::StorageVirtual::OutputMode mode,
                                                vtkm::Id numberOfValues,
                                                vtkm::cont::DeviceAdapterId devId)
 {
   vtkm::cont::TryExecuteOnDevice(
-    devId, detail::PortalWrapperToDevice(), this->Handle, numberOfValues, payload);
+    devId, detail::PortalWrapperToDevice(), this->Handle, numberOfValues, payload, mode);
 }
 }
 } // namespace vtkm::cont

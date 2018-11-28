@@ -73,9 +73,9 @@ private:
                               vtkm::cont::DeviceAdapterId devId) const;
 
   void TransferPortalForOutput(vtkm::cont::internal::TransferInfoArray& payload,
+                               OutputMode mode,
                                vtkm::Id numberOfValues,
                                vtkm::cont::DeviceAdapterId devId);
-
 
   vtkm::cont::ArrayHandle<T, S> Handle;
 };

@@ -239,7 +239,7 @@ public:
   vtkm::ArrayPortalRef<T> PrepareForInPlace(vtkm::cont::DeviceAdapterId devId)
   {
     return make_ArrayPortalRef(
-      static_cast<const vtkm::ArrayPortalVirtual<T>*>(this->Storage->PrepareForInput(devId)),
+      static_cast<const vtkm::ArrayPortalVirtual<T>*>(this->Storage->PrepareForInPlace(devId)),
       this->GetNumberOfValues());
   }
 

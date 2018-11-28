@@ -122,7 +122,6 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::PrepareForInput(
     //need to re-transfer the execution information
     auto* payload = this->DeviceTransferState.get();
     this->TransferPortalForInput(*payload, devId);
-    this->HostUpToDate = false;
     this->DeviceUpToDate = true;
   }
   return this->DeviceTransferState->devicePtr();
@@ -145,7 +144,33 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::PrepareForOutput(vtkm::Id number
   const bool needsUpload = !(this->DeviceTransferState->valid(devId) && this->DeviceUpToDate);
   if (needsUpload)
   {
-    this->TransferPortalForOutput(*(this->DeviceTransferState), numberOfValues, devId);
+    this->TransferPortalForOutput(
+      *(this->DeviceTransferState), OutputMode::WRITE, numberOfValues, devId);
+    this->HostUpToDate = false;
+    this->DeviceUpToDate = true;
+  }
+  return this->DeviceTransferState->devicePtr();
+}
+
+//--------------------------------------------------------------------
+const vtkm::internal::PortalVirtualBase*
+Storage<void, ::vtkm::cont::StorageTagVirtual>::PrepareForInPlace(vtkm::cont::DeviceAdapterId devId)
+{
+  if (devId == vtkm::cont::DeviceAdapterTagUndefined())
+  {
+    throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_UNDEFINED");
+  }
+  if (devId == vtkm::cont::DeviceAdapterTagError())
+  {
+    throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_ERROR");
+  }
+
+  const bool needsUpload = !(this->DeviceTransferState->valid(devId) && this->DeviceUpToDate);
+  if (needsUpload)
+  {
+    vtkm::Id numberOfValues = this->GetNumberOfValues();
+    this->TransferPortalForOutput(
+      *(this->DeviceTransferState), OutputMode::READ_WRITE, numberOfValues, devId);
     this->HostUpToDate = false;
     this->DeviceUpToDate = true;
   }
@@ -178,9 +203,6 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::GetPortalConstControl() const
     vtkm::cont::internal::TransferInfoArray* payload = this->DeviceTransferState.get();
     this->ControlPortalForInput(*payload);
   }
-  //We need to mark the device out of date after the conditions
-  //as they can modify the state of the device
-  this->DeviceUpToDate = false;
   this->HostUpToDate = true;
   return this->DeviceTransferState->hostPtr();
 }
@@ -195,16 +217,18 @@ DeviceAdapterId Storage<void, ::vtkm::cont::StorageTagVirtual>::GetDeviceAdapter
 void Storage<void, ::vtkm::cont::StorageTagVirtual>::ControlPortalForOutput(
   vtkm::cont::internal::TransferInfoArray&)
 {
-  throw vtkm::cont::ErrorBadValue("StorageTagVirtual by default doesn't support output.");
+  throw vtkm::cont::ErrorBadValue(
+    "StorageTagVirtual by default doesn't support control side writes.");
 }
 
 //--------------------------------------------------------------------
 void Storage<void, ::vtkm::cont::StorageTagVirtual>::TransferPortalForOutput(
   vtkm::cont::internal::TransferInfoArray&,
+  OutputMode,
   vtkm::Id,
   vtkm::cont::DeviceAdapterId)
 {
-  throw vtkm::cont::ErrorBadValue("StorageTagVirtual by default doesn't support output.");
+  throw vtkm::cont::ErrorBadValue("StorageTagVirtual by default doesn't support exec side writes.");
 }
 }
 }
