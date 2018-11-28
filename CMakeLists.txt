@@ -289,7 +289,7 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
 
   # Create and install exports for external projects
   export(EXPORT ${VTKm_EXPORT_NAME}
-    FILE ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    FILE ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
     )
   install(EXPORT ${VTKm_EXPORT_NAME}
     DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
