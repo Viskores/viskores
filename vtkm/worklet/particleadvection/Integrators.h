@@ -24,7 +24,10 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
+
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
+
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm

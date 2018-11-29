@@ -32,7 +32,7 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/exec/CellEdge.h>
 
 namespace vtkm

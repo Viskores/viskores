@@ -78,7 +78,7 @@ void TestWarpScalar()
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> scaleFactorArray;
   auto scaleFactor =
-    ds.GetField("scalefactor").GetData().ResetTypeList(vtkm::TypeListTagFieldScalar());
+    ds.GetField("scalefactor").GetData().ResetTypes(vtkm::TypeListTagFieldScalar());
   scaleFactor.CopyTo(scaleFactorArray);
   auto sFAPortal = scaleFactorArray.GetPortalControl();
 

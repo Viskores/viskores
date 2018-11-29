@@ -19,7 +19,8 @@
 //============================================================================
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
+
+#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -136,7 +137,7 @@ struct DoStaticTestWorklet
 };
 
 template <typename WorkletType>
-struct DoDynamicTestWorklet
+struct DoVariantTestWorklet
 {
   template <typename T>
   VTKM_CONT void operator()(T) const
@@ -154,25 +155,25 @@ struct DoDynamicTestWorklet
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
 
-    std::cout << "Create and run dispatcher with dynamic arrays." << std::endl;
+    std::cout << "Create and run dispatcher with variant arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
 
-    vtkm::cont::DynamicArrayHandle inputDynamic(inputHandle);
+    vtkm::cont::ArrayHandleVariant inputVariant(inputHandle);
 
     { //Verify we can pass by value
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
-      vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
-      vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
-      dispatcher.Invoke(inputDynamic, outputDynamic, inoutDynamic);
+      vtkm::cont::ArrayHandleVariant outputVariant(outputHandle);
+      vtkm::cont::ArrayHandleVariant inoutVariant(inoutHandle);
+      dispatcher.Invoke(inputVariant, outputVariant, inoutVariant);
       CheckPortal(outputHandle.GetPortalConstControl());
       CheckPortal(inoutHandle.GetPortalConstControl());
     }
 
     { //Verify we can pass by pointer
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
-      vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
-      vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
-      dispatcher.Invoke(&inputDynamic, &outputDynamic, &inoutDynamic);
+      vtkm::cont::ArrayHandleVariant outputVariant(outputHandle);
+      vtkm::cont::ArrayHandleVariant inoutVariant(inoutHandle);
+      dispatcher.Invoke(&inputVariant, &outputVariant, &inoutVariant);
       CheckPortal(outputHandle.GetPortalConstControl());
       CheckPortal(inoutHandle.GetPortalConstControl());
     }
@@ -187,7 +188,7 @@ struct DoTestWorklet
   {
     DoStaticTestWorklet<WorkletType> sw;
     sw(t);
-    DoDynamicTestWorklet<WorkletType> dw;
+    DoVariantTestWorklet<WorkletType> dw;
     dw(t);
   }
 };
@@ -207,8 +208,8 @@ void TestWorkletMapField(vtkm::cont::DeviceAdapterId id)
   std::cout << "--- Sending bad type to worklet." << std::endl;
   try
   {
-    //can only test with dynamic arrays, as static arrays will fail to compile
-    DoDynamicTestWorklet<TestMapFieldWorkletLimitedTypes> badWorkletTest;
+    //can only test with variant arrays, as static arrays will fail to compile
+    DoVariantTestWorklet<TestMapFieldWorkletLimitedTypes> badWorkletTest;
     badWorkletTest(vtkm::Vec<vtkm::Float32, 3>());
     VTKM_TEST_FAIL("Did not throw expected error.");
   }

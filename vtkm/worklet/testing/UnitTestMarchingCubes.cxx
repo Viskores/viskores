@@ -23,7 +23,6 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -266,12 +265,11 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   //Set point scalar
-  dataSet.AddField(vtkm::cont::Field("distanceToOrigin",
-                                     vtkm::cont::Field::Association::POINTS,
-                                     vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
+  dataSet.AddField(vtkm::cont::Field(
+    "distanceToOrigin", vtkm::cont::Field::Association::POINTS, distanceToOrigin));
   dataSet.AddField(vtkm::cont::Field("distanceToOther",
                                      vtkm::cont::Field::Association::POINTS,
-                                     vtkm::cont::DynamicArrayHandle(distanceToOther)));
+                                     vtkm::cont::ArrayHandleVariant(distanceToOther)));
 
   CellSet cellSet("cells");
   cellSet.Fill((dim + 1) * (dim + 1) * (dim + 1), HexTag::Id, HexTraits::NUM_POINTS, connectivity);

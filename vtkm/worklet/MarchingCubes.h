@@ -37,7 +37,6 @@
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>

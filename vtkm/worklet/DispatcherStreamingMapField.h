@@ -244,7 +244,7 @@ public:
     const InputDomainType& inputDomain = invocation.GetInputDomain();
 
     // For a DispatcherStreamingMapField, the inputDomain must be an ArrayHandle (or
-    // a DynamicArrayHandle that gets cast to one). The size of the domain
+    // an ArrayHandleVariant that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
     vtkm::Id fullSize = internal::scheduling_range(inputDomain);

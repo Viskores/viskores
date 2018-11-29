@@ -29,7 +29,6 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
