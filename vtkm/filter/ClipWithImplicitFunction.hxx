@@ -28,30 +28,6 @@ namespace vtkm
 {
 namespace filter
 {
-
-namespace clipwithimplicitfunction
-{
-
-struct PointMapHelper
-{
-  PointMapHelper(const vtkm::worklet::Clip& worklet, vtkm::cont::DynamicArrayHandle& output)
-    : Worklet(worklet)
-    , Output(output)
-  {
-  }
-
-  template <typename ArrayType>
-  void operator()(const ArrayType& array) const
-  {
-    this->Output = this->Worklet.ProcessPointField(array);
-  }
-
-  const vtkm::worklet::Clip& Worklet;
-  vtkm::cont::DynamicArrayHandle& Output;
-};
-
-} // end namespace clipwithimplicitfunction
-
 //-----------------------------------------------------------------------------
 
 ClipWithImplicitFunction::ClipWithImplicitFunction()
@@ -64,8 +40,6 @@ inline vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  using namespace clipwithimplicitfunction;
-
   //get the cells and coordinates of the dataset
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 

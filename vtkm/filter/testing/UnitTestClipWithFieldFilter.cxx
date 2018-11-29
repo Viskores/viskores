@@ -20,7 +20,6 @@
 
 #include <vtkm/filter/ClipWithField.h>
 
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -80,7 +79,7 @@ void TestClipExplicit()
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
 
-  vtkm::cont::DynamicArrayHandle temp = outputData.GetField("scalars").GetData();
+  auto temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.CopyTo(resultArrayHandle);
 
