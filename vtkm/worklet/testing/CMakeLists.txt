@@ -86,7 +86,7 @@ set(unit_tests
  )
 
 
-vtkm_unit_tests(NAME Worklets SOURCES ${unit_tests} ALL_BACKENDS)
+vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS)
 if (TARGET vtkm::cuda)
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
     set(particle_cuda_src "${CMAKE_CURRENT_BINARY_DIR}/UnitTestParticleAdvection.cu")
