@@ -107,6 +107,34 @@ public:
     return *this;
   }
 
+  /// Like a pointer, two \c ArrayHandles are considered equal if they point
+  /// to the same location in memory.
+  ///
+  VTKM_CONT
+  bool operator==(const ArrayHandle<T, StorageTag>& rhs) const
+  {
+    return (this->Storage == rhs.Storage);
+  }
+
+  VTKM_CONT
+  bool operator!=(const ArrayHandle<T, StorageTag>& rhs) const
+  {
+    return (this->Storage != rhs.Storage);
+  }
+
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator==(const ArrayHandle<VT, ST>&) const
+  {
+    return false; // different valuetype and/or storage
+  }
+
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator!=(const ArrayHandle<VT, ST>&) const
+  {
+    return true; // different valuetype and/or storage
+  }
+
+
   /// Returns true if this array's storage matches the type passed in.
   ///
   template <typename ArrayHandleType>
