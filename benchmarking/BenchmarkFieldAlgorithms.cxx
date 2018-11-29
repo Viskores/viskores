@@ -22,8 +22,8 @@
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
 
@@ -309,7 +309,6 @@ struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>
 struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Vec<vtkm::Float32, 3>>
 {
 };
-using StorageListTag = ::vtkm::cont::StorageListTagBasic;
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of different field operations
@@ -318,14 +317,11 @@ class BenchmarkFieldAlgorithms
 {
   using StorageTag = vtkm::cont::StorageTagBasic;
 
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
-
   using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
 
-  using ValueDynamicHandle = vtkm::cont::DynamicArrayHandleBase<ValueTypes, StorageListTag>;
-  using InterpDynamicHandle = vtkm::cont::DynamicArrayHandleBase<InterpValueTypes, StorageListTag>;
-  using IdDynamicHandle =
-    vtkm::cont::DynamicArrayHandleBase<vtkm::TypeListTagIndex, StorageListTag>;
+  using ValueVariantHandle = vtkm::cont::ArrayHandleVariantBase<ValueTypes>;
+  using InterpVariantHandle = vtkm::cont::ArrayHandleVariantBase<InterpValueTypes>;
+  using IdVariantHandle = vtkm::cont::ArrayHandleVariantBase<vtkm::TypeListTagIndex>;
 
 private:
   template <typename Value>
@@ -402,9 +398,9 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      ValueDynamicHandle dstocks(this->StockPrice);
-      ValueDynamicHandle dstrikes(this->OptionStrike);
-      ValueDynamicHandle doptions(this->OptionYears);
+      ValueVariantHandle dstocks(this->StockPrice);
+      ValueVariantHandle dstrikes(this->OptionStrike);
+      ValueVariantHandle doptions(this->OptionYears);
 
       vtkm::cont::ArrayHandle<Value> callResultHandle, putResultHandle;
       const Value RISKFREE = 0.02f;
@@ -488,9 +484,9 @@ private:
 
       vtkm::cont::ArrayHandle<Value> temp1;
       vtkm::cont::ArrayHandle<Value> temp2;
-      vtkm::cont::DynamicArrayHandleBase<MathTypes, StorageListTag> dinput(this->InputHandle);
-      ValueDynamicHandle dtemp1(temp1);
-      ValueDynamicHandle dtemp2(temp2);
+      vtkm::cont::ArrayHandleVariantBase<MathTypes> dinput(this->InputHandle);
+      ValueVariantHandle dtemp1(temp1);
+      ValueVariantHandle dtemp2(temp2);
 
       Timer timer;
 
@@ -564,7 +560,7 @@ private:
     {
       using MathTypes = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
 
-      vtkm::cont::DynamicArrayHandleBase<MathTypes, StorageListTag> dinput(this->InputHandle);
+      vtkm::cont::ArrayHandleVariantBase<MathTypes> dinput(this->InputHandle);
 
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
@@ -666,9 +662,9 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      InterpDynamicHandle dfield(this->FieldHandle);
-      InterpDynamicHandle dweight(this->WeightHandle);
-      IdDynamicHandle dedges(this->EdgePairHandle);
+      InterpVariantHandle dfield(this->FieldHandle);
+      InterpVariantHandle dweight(this->WeightHandle);
+      IdVariantHandle dedges(this->EdgePairHandle);
       vtkm::cont::ArrayHandle<Value> result;
 
       Timer timer;

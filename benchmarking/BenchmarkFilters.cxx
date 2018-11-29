@@ -147,8 +147,6 @@ using FieldTypes = vtkm::ListTagBase<vtkm::Float32,
                                      vtkm::Vec<vtkm::Float32, 3>,
                                      vtkm::Vec<vtkm::Float64, 3>>;
 
-using FieldStorage = vtkm::ListTagBase<vtkm::cont::StorageTagBasic>;
-
 using StructuredCellList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
 
 using UnstructuredCellList =
@@ -158,26 +156,16 @@ using AllCellList = vtkm::ListTagJoin<StructuredCellList, UnstructuredCellList>;
 
 using CoordinateList = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
 
-using CoordinateStorage =
-  vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-                    vtkm::cont::StorageTagBasic>;
-
-using DeviceAdapters = vtkm::ListTagBase<Device>;
-
 class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
 {
 public:
   using FieldTypeList = FieldTypes;
-  using FieldStorageList = FieldStorage;
 
   using StructuredCellSetList = StructuredCellList;
   using UnstructuredCellSetList = UnstructuredCellList;
   using AllCellSetList = AllCellList;
 
   using CoordinateTypeList = CoordinateList;
-  using CoordinateStorageList = CoordinateStorage;
-
-  using DeviceAdapterList = DeviceAdapters;
 };
 
 // Class implementing all filter benchmarks:
@@ -852,7 +840,7 @@ public:
   }
 };
 
-// Get the number of components in a DynamicArrayHandle, ArrayHandle, or Field's
+// Get the number of components in a ArrayHandleVariant, ArrayHandle, or Field's
 // ValueType.
 struct NumberOfComponents
 {
