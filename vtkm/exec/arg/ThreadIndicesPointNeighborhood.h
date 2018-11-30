@@ -48,58 +48,54 @@ struct BoundaryState
   }
 
   //@{
-  /// Returns true if a neighborhood of the given number of layers is contained within the bounds
-  /// of the cell set in the X, Y, or Z direction. Returns false if the neighborhood extends ouside
-  /// of the boundary of the data in the X, Y, or Z direction.
+  /// Returns true if a neighborhood of the given radius is contained within the bounds of the cell
+  /// set in the X, Y, or Z direction. Returns false if the neighborhood extends ouside of the
+  /// boundary of the data in the X, Y, or Z direction.
   ///
-  /// The number of layers defines the size of the neighborhood in terms of how far away it extends
-  /// from the center. So if there is 1 layer, the neighborhood extends 1 unit away from the center
-  /// in each direction and is 3x3x3. If there are 2 layers, the neighborhood extends 2 units for a
-  /// size of 5x5x5.
+  /// The radius defines the size of the neighborhood in terms of how far away it extends from the
+  /// center. So if there is a radius of 1, the neighborhood extends 1 unit away from the center in
+  /// each direction and is 3x3x3. If there is a radius of 2, the neighborhood extends 2 units for
+  /// a size of 5x5x5.
   ///
-  VTKM_EXEC bool InXBoundary(vtkm::IdComponent numLayers) const
+  VTKM_EXEC bool InXBoundary(vtkm::IdComponent radius) const
   {
-    return (((this->IJK[0] - numLayers) >= 0) &&
-            ((this->IJK[0] + numLayers) < this->PointDimensions[0]));
+    return (((this->IJK[0] - radius) >= 0) && ((this->IJK[0] + radius) < this->PointDimensions[0]));
   }
-  VTKM_EXEC bool InYBoundary(vtkm::IdComponent numLayers) const
+  VTKM_EXEC bool InYBoundary(vtkm::IdComponent radius) const
   {
-    return (((this->IJK[1] - numLayers) >= 0) &&
-            ((this->IJK[1] + numLayers) < this->PointDimensions[1]));
+    return (((this->IJK[1] - radius) >= 0) && ((this->IJK[1] + radius) < this->PointDimensions[1]));
   }
-  VTKM_EXEC bool InZBoundary(vtkm::IdComponent numLayers) const
+  VTKM_EXEC bool InZBoundary(vtkm::IdComponent radius) const
   {
-    return (((this->IJK[2] - numLayers) >= 0) &&
-            ((this->IJK[2] + numLayers) < this->PointDimensions[2]));
+    return (((this->IJK[2] - radius) >= 0) && ((this->IJK[2] + radius) < this->PointDimensions[2]));
   }
   //@}
 
-  /// Returns true if a neighborhood of the given number of layers is contained within the bounds
+  /// Returns true if a neighborhood of the given radius is contained within the bounds
   /// of the cell set. Returns false if the neighborhood extends ouside of the boundary of the
   /// data.
   ///
-  /// The number of layers defines the size of the neighborhood in terms of how far away it extends
-  /// from the center. So if there is 1 layer, the neighborhood extends 1 unit away from the center
-  /// in each direction and is 3x3x3. If there are 2 layers, the neighborhood extends 2 units for a
-  /// size of 5x5x5.
+  /// The radius defines the size of the neighborhood in terms of how far away it extends from the
+  /// center. So if there is a radius of 1, the neighborhood extends 1 unit away from the center in
+  /// each direction and is 3x3x3. If there is a radius of 2, the neighborhood extends 2 units for
+  /// a size of 5x5x5.
   ///
-  VTKM_EXEC bool InBoundary(vtkm::IdComponent numLayers) const
+  VTKM_EXEC bool InBoundary(vtkm::IdComponent radius) const
   {
-    return this->InXBoundary(numLayers) && this->InYBoundary(numLayers) &&
-      this->InZBoundary(numLayers);
+    return this->InXBoundary(radius) && this->InYBoundary(radius) && this->InZBoundary(radius);
   }
 
   /// Returns the minimum neighborhood indices that are within the bounds of the data.
   ///
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> MinNeighborIndices(vtkm::IdComponent numLayers) const
+  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> MinNeighborIndices(vtkm::IdComponent radius) const
   {
     vtkm::Vec<vtkm::IdComponent, 3> minIndices;
 
     for (vtkm::IdComponent component = 0; component < 3; ++component)
     {
-      if (this->IJK[component] >= numLayers)
+      if (this->IJK[component] >= radius)
       {
-        minIndices[component] = -numLayers;
+        minIndices[component] = -radius;
       }
       else
       {
@@ -112,15 +108,15 @@ struct BoundaryState
 
   /// Returns the minimum neighborhood indices that are within the bounds of the data.
   ///
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> MaxNeighborIndices(vtkm::IdComponent numLayers) const
+  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> MaxNeighborIndices(vtkm::IdComponent radius) const
   {
     vtkm::Vec<vtkm::IdComponent, 3> maxIndices;
 
     for (vtkm::IdComponent component = 0; component < 3; ++component)
     {
-      if ((this->PointDimensions[component] - this->IJK[component] - 1) >= numLayers)
+      if ((this->PointDimensions[component] - this->IJK[component] - 1) >= radius)
       {
-        maxIndices[component] = numLayers;
+        maxIndices[component] = radius;
       }
       else
       {
