@@ -60,6 +60,28 @@ namespace raytracing
 namespace detail
 {
 
+class AdjustSample : public vtkm::worklet::WorkletMapField
+{
+  vtkm::Float64 SampleDistance;
+
+public:
+  VTKM_CONT
+  AdjustSample(const vtkm::Float64 sampleDistance)
+    : SampleDistance(sampleDistance)
+  {
+  }
+  using ControlSignature = void(FieldIn<>, FieldInOut<>);
+  using ExecutionSignature = void(_1, _2);
+  template <typename FloatType>
+  VTKM_EXEC inline void operator()(const vtkm::UInt8& status, FloatType& currentDistance) const
+  {
+    if (status != RAY_ACTIVE)
+      return;
+
+    currentDistance += FMod(currentDistance, (FloatType)SampleDistance);
+  }
+}; //class AdvanceRay
+
 template <typename FloatType>
 void RayTracking<FloatType>::Compact(vtkm::cont::ArrayHandle<FloatType>& compactedDistances,
                                      vtkm::cont::ArrayHandle<UInt8>& masks)
@@ -1297,6 +1319,12 @@ void ConnectivityTracer::IntegrateMeshSegment(Ray<FloatType>& rays)
   rayTracker.Init(rays.NumRays, rays.Distance);
 
   bool hasPathLengths = rays.HasBuffer("path_lengths");
+
+  if (this->Integrator == Volume)
+  {
+    vtkm::worklet::DispatcherMapField<detail::AdjustSample> adispatcher(SampleDistance);
+    adispatcher.Invoke(rays.Status, rayTracker.CurrentDistance);
+  }
 
   while (RayOperations::RaysInMesh(rays))
   {

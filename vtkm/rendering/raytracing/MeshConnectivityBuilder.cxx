@@ -43,7 +43,7 @@ namespace raytracing
 struct IsUnique
 {
   VTKM_EXEC_CONT
-  inline bool operator()(const vtkm::Int32& x) const { return (x < 0); }
+  inline bool operator()(const vtkm::Int32& x) const { return x < 0; }
 }; //struct IsExternal
 
 class CountFaces : public vtkm::worklet::WorkletMapField
