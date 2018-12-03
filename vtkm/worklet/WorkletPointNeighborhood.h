@@ -39,12 +39,12 @@
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSetStructured.h>
 
+#include <vtkm/exec/arg/Boundary.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagArrayNeighborhoodIn.h>
 #include <vtkm/exec/arg/FetchTagCellSetIn.h>
-#include <vtkm/exec/arg/OnBoundary.h>
 #include <vtkm/exec/arg/ThreadIndicesPointNeighborhood.h>
 
 #include <vtkm/worklet/ScatterIdentity.h>
@@ -87,16 +87,16 @@ public:
   template <typename Worklet>
   using Dispatcher = vtkm::worklet::DispatcherPointNeighborhood<Worklet>;
 
-  /// \brief The \c ExecutionSignature tag to get if you the current iteration is on a boundary.
+  /// \brief The \c ExecutionSignature tag to query if the current iteration is inside the boundary.
   ///
-  /// A \c WorkletPointNeighborhood operates by iterating over all points using
-  /// a defined neighborhood. This \c ExecutionSignature tag provides different
-  /// types when you are on or off a boundary, allowing for separate code paths
-  /// just for handling boundaries.
+  /// A \c WorkletPointNeighborhood operates by iterating over all points using a defined
+  /// neighborhood. This \c ExecutionSignature tag provides a \c BoundaryState object that allows
+  /// you to query whether the neighborhood of the current iteration is completely inside the
+  /// bounds of the mesh or if it extends beyond the mesh. This is important as when you are on a
+  /// boundary the neighboordhood will contain empty values for a certain subset of values, and in
+  /// this case the values returned will depend on the boundary behavior.
   ///
-  /// This is important as when you are on a boundary the neighboordhood will
-  /// contain empty values for a certain subset of values
-  struct OnBoundary : vtkm::exec::arg::OnBoundary
+  struct Boundary : vtkm::exec::arg::Boundary
   {
   };
 

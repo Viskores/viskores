@@ -43,13 +43,13 @@ struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood
                                 CellSetIn,
                                 FieldOut<Scalar> maxV);
 
-  using ExecutionSignature = void(OnBoundary, _1, _3);
+  using ExecutionSignature = void(Boundary, _1, _3);
   //verify input domain can be something other than first parameter
   using InputDomain = _2;
 
   template <typename FieldIn, typename FieldOut>
-  VTKM_EXEC void operator()(const vtkm::exec::arg::BoundaryState& boundary,
-                            const vtkm::exec::arg::Neighborhood<FieldIn>& inputField,
+  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary,
+                            const vtkm::exec::FieldNeighborhood<FieldIn>& inputField,
                             FieldOut& output) const
   {
     using ValueType = typename FieldIn::ValueType;

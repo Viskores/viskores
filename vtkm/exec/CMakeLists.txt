@@ -20,6 +20,7 @@
 
 set(headers
   BoundingIntervalHierarchyExec.h
+  BoundaryState.h
   AtomicArrayExecutionObject.h
   CellDerivative.h
   CellEdge.h
@@ -33,6 +34,7 @@ set(headers
   ConnectivityPermuted.h
   ConnectivityStructured.h
   ExecutionWholeArray.h
+  FieldNeighborhood.h
   FunctorBase.h
   Jacobian.h
   ParametricCoordinates.h

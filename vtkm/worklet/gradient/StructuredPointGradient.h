@@ -46,12 +46,12 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
                                 FieldInNeighborhood<StructuredPointGradientInType<T>>,
                                 GradientOutputs outputFields);
 
-  using ExecutionSignature = void(OnBoundary, _2, _3, _4);
+  using ExecutionSignature = void(Boundary, _2, _3, _4);
 
   using InputDomain = _1;
 
   template <typename PointsIn, typename FieldIn, typename GradientOutType>
-  VTKM_EXEC void operator()(const vtkm::exec::arg::BoundaryState& boundary,
+  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary,
                             const PointsIn& inputPoints,
                             const FieldIn& inputField,
                             GradientOutType& outputGradient) const
@@ -77,8 +77,8 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
   }
 
   template <typename FieldIn, typename GradientOutType>
-  VTKM_EXEC void operator()(const vtkm::exec::arg::BoundaryState& boundary,
-                            const vtkm::exec::arg::Neighborhood<
+  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary,
+                            const vtkm::exec::FieldNeighborhood<
                               vtkm::internal::ArrayPortalUniformPointCoordinates>& inputPoints,
                             const FieldIn& inputField,
                             GradientOutType& outputGradient) const
@@ -87,7 +87,7 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
     //performance by not doing the Jacobian, but instead do an image gradient
     //using central differences
     using PointsIn =
-      vtkm::exec::arg::Neighborhood<vtkm::internal::ArrayPortalUniformPointCoordinates>;
+      vtkm::exec::FieldNeighborhood<vtkm::internal::ArrayPortalUniformPointCoordinates>;
     using CoordType = typename PointsIn::ValueType;
     using OT = typename GradientOutType::ComponentType;
 
@@ -112,7 +112,7 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
   //will be float,3 even when T is a 3 component field
   template <typename PointsIn, typename CT>
   VTKM_EXEC void Jacobian(const PointsIn& inputPoints,
-                          const vtkm::exec::arg::BoundaryState& boundary,
+                          const vtkm::exec::BoundaryState& boundary,
                           vtkm::Vec<CT, 3>& m_xi,
                           vtkm::Vec<CT, 3>& m_eta,
                           vtkm::Vec<CT, 3>& m_zeta) const

@@ -604,8 +604,8 @@ public:
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();
     auto fieldPortal = inputField.GetPortal();
-    vtkm::exec::arg::Neighborhood<decltype(pointPortal)> points(pointPortal, boundary);
-    vtkm::exec::arg::Neighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
+    vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
+    vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
 
     vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
     gradient(boundary, points, field, normal);
@@ -688,8 +688,8 @@ public:
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();
     auto fieldPortal = inputField.GetPortal();
-    vtkm::exec::arg::Neighborhood<decltype(pointPortal)> points(pointPortal, boundary);
-    vtkm::exec::arg::Neighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
+    vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
+    vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
 
     vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
     NormalType grad1;
