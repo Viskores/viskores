@@ -36,6 +36,9 @@ namespace cont
 class CellLocatorUniformGrid : public vtkm::cont::CellLocator
 {
 public:
+  VTKM_EXEC_CONT
+  CellLocatorUniformGrid() = default;
+
   VTKM_CONT
   void Build() override
   {
@@ -51,9 +54,12 @@ public:
     vtkm::Vec<vtkm::Id, 3> celldims =
       cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
 
-    RangeTransform[0] = static_cast<vtkm::FloatDefault>(celldims[0] / Bounds.X.Length());
-    RangeTransform[1] = static_cast<vtkm::FloatDefault>(celldims[1] / Bounds.Y.Length());
-    RangeTransform[2] = static_cast<vtkm::FloatDefault>(celldims[2] / Bounds.Z.Length());
+    RangeTransform[0] = static_cast<vtkm::FloatDefault>(celldims[0]) /
+      static_cast<vtkm::FloatDefault>(Bounds.X.Length());
+    RangeTransform[1] = static_cast<vtkm::FloatDefault>(celldims[1]) /
+      static_cast<vtkm::FloatDefault>(Bounds.Y.Length());
+    RangeTransform[2] = static_cast<vtkm::FloatDefault>(celldims[2]) /
+      static_cast<vtkm::FloatDefault>(Bounds.Z.Length());
 
     // Since we are calculating the cell Id, and the number of cells is
     // 1 less than the number of points in each direction, the -1 from dims
