@@ -33,6 +33,12 @@ public:
 
   void operator()() const
   {
+    CCL_CUDA8x4();
+    CCL_CUDA8x8();
+  }
+
+  void CCL_CUDA8x4() const
+  {
     // example image from Connected Component Labeling in CUDA by OndˇrejˇŚtava,
     // Bedˇrich Beneˇ
     std::vector<vtkm::UInt8> pixels(8 * 4, 0);
@@ -55,6 +61,7 @@ public:
     std::vector<vtkm::Id> componentExpected = { 0, 1, 2, 1, 1, 3, 3, 4, 0, 1, 1, 1, 3, 3, 3, 4,
                                                 1, 1, 3, 3, 3, 4, 3, 4, 1, 1, 3, 3, 4, 4, 4, 4 };
 
+
     std::size_t i = 0;
     for (vtkm::Id index = 0; index < component.GetNumberOfValues(); index++, i++)
     {
@@ -62,7 +69,40 @@ public:
                        "Components has unexpected value.");
     }
   }
+
+  void CCL_CUDA8x8() const
+  {
+    // example from Figure 35.7 of Connected Component Labeling in CUDA by OndˇrejˇŚtava,
+    // Bedˇrich Beneˇ
+    std::vector<vtkm::UInt8> pixels{
+      0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1,
+      1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1,
+      1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
+    };
+
+    vtkm::cont::DataSetBuilderUniform builder;
+    vtkm::cont::DataSet data = builder.Create(vtkm::Id3(8, 8, 1));
+
+    auto colorField =
+      vtkm::cont::make_Field("color", vtkm::cont::Field::Association::POINTS, pixels);
+    data.AddField(colorField);
+
+    vtkm::cont::ArrayHandle<vtkm::Id> component;
+    vtkm::worklet::connectivity::ImageConnectivity().Run(
+      data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
+
+    for (int j = 0; j < 8; j++)
+    {
+      for (int i = 0; i < 8; i++)
+      {
+        std::cout << std::setw(2) << component.GetPortalConstControl().Get(i + j * 8) << " ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+  }
 };
+
 
 int UnitTestImageConnectivity(int argc, char* argv[])
 {

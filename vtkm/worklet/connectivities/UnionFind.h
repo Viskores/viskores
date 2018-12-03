@@ -23,6 +23,15 @@
 #ifndef vtk_m_worklet_connectivity_union_find_h
 #define vtk_m_worklet_connectivity_union_find_h
 
+#include <vtkm/worklet/WorkletMapField.h>
+
+namespace vtkm
+{
+namespace worklet
+{
+namespace connectivity
+{
+
 class PointerJumping : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -30,14 +39,20 @@ public:
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
+  template <typename Comp>
+  VTKM_EXEC vtkm::Id findRoot(Comp& comp, vtkm::Id index) const
+  {
+    while (comp.Get(index) != index)
+      index = comp.Get(index);
+    return index;
+  }
+
   template <typename InOutPortalType>
   VTKM_EXEC void operator()(vtkm::Id index, InOutPortalType& comp) const
   {
-    // keep updating component id until we reach the root of the tree.
-    for (auto parent = comp.Get(index); comp.Get(parent) != parent; parent = comp.Get(index))
-    {
-      comp.Set(index, comp.Get(parent));
-    }
+    // TODO: is there a data race between findRoot and comp.Set?
+    auto root = findRoot(comp, index);
+    comp.Set(index, root);
   }
 };
 
@@ -55,4 +70,7 @@ public:
   }
 };
 
+} // connectivity
+} // worklet
+} // vtkm
 #endif // vtk_m_worklet_connectivity_union_find_h

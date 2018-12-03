@@ -28,6 +28,7 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
+#include <iomanip>
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 #include <vtkm/worklet/connectivities/UnionFind.h>
 
@@ -39,37 +40,67 @@ namespace connectivity
 {
 namespace detail
 {
-template <int Dimension>
-class ImageGraft;
 
-template <>
-class ImageGraft<2> : public vtkm::worklet::WorkletPointNeighborhood3x3x3
+class ImageGraft : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 {
 public:
   using ControlSignature = void(CellSetIn,
-                                FieldInNeighborhood<> comp,
+                                FieldIn<> index,
+                                FieldInNeighborhood<> compIn,
                                 FieldInNeighborhood<> color,
-                                FieldOut<> newComp);
+                                WholeArrayInOut<> compOut,
+                                FieldOut<> changed);
 
-  using ExecutionSignature = _4(_2, _3);
+  using ExecutionSignature = _6(_2, _3, _4, _5);
 
-  template <typename Comp, typename NeighborColor>
-  VTKM_EXEC vtkm::Id operator()(const Comp& comp, const NeighborColor& color) const
+  template <typename Comp>
+  VTKM_EXEC vtkm::Id findRoot(Comp& comp, vtkm::Id index) const
   {
-    vtkm::Id myComp = comp.Get(0, 0, 0);
-    auto myColor = color.Get(0, 0, 0);
+    while (comp.Get(index) != index)
+      index = comp.Get(index);
+    return index;
+  }
 
-    for (int j = -1; j <= 1; j++)
+  // compOut is an alias of compIn such that we can update component labels
+  template <typename NeighborComp, typename NeighborColor, typename CompOut>
+  VTKM_EXEC bool operator()(const vtkm::Id index,
+                            const NeighborComp& neighborComp,
+                            const NeighborColor& neighborColor,
+                            CompOut& compOut) const
+  {
+    vtkm::Id myComp = neighborComp.Get(0, 0, 0);
+    auto minComp = myComp;
+
+    auto myColor = neighborColor.Get(0, 0, 0);
+
+    for (int k = -1; k <= 1; k++)
     {
-      for (int i = -1; i <= 1; i++)
+      for (int j = -1; j <= 1; j++)
       {
-        if (myColor == color.Get(i, j, 0))
+        for (int i = -1; i <= 1; i++)
         {
-          myComp = vtkm::Min(myComp, comp.Get(i, j, 0));
+          if (myColor == neighborColor.Get(i, j, k))
+          {
+            minComp = vtkm::Min(minComp, neighborComp.Get(i, j, k));
+          }
         }
       }
     }
-    return myComp;
+    // I don't just only want to update the component label of this pixel, I actually
+    // want to Union(FindRoot(myComponent), FindRoot(minComp)) and then Flatten the
+    // result.
+    compOut.Set(index, minComp);
+
+    auto myRoot = findRoot(compOut, myComp);
+    auto newRoot = findRoot(compOut, minComp);
+
+    if (myRoot < newRoot)
+      compOut.Set(newRoot, myRoot);
+    else if (myRoot > newRoot)
+      compOut.Set(myRoot, newRoot);
+
+    // return if the labeling has changed.
+    return myComp != minComp;
   }
 };
 }
@@ -80,47 +111,37 @@ public:
   class RunImpl
   {
   public:
-    template <typename StorageT, typename OutputPortalType>
-    void operator()(const vtkm::cont::ArrayHandle<vtkm::UInt8, StorageT>& pixels,
-                    const vtkm::cont::CellSetStructured<2>& input,
-                    OutputPortalType& componentsOut) const
+    template <int Dimension, typename T, typename StorageT, typename OutputPortalType>
+    void operator()(const vtkm::cont::ArrayHandle<T, StorageT>& pixels,
+                    const vtkm::cont::CellSetStructured<Dimension>& input,
+                    OutputPortalType& components) const
     {
       using Algorithm = vtkm::cont::Algorithm;
 
-      // TODO: template pixel type?
-
       Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
-                      componentsOut);
-
-      vtkm::cont::ArrayHandle<vtkm::Id> newComponents;
+                      components);
 
       vtkm::cont::ArrayHandle<vtkm::Id> pixelIds;
       Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
                       pixelIds);
 
-      bool allStar = false;
-      vtkm::cont::ArrayHandle<bool> isStar;
+      vtkm::cont::ArrayHandle<bool> changed;
+
+      using DispatcherType = vtkm::worklet::DispatcherPointNeighborhood<detail::ImageGraft>;
 
       do
       {
-        vtkm::worklet::DispatcherPointNeighborhood<detail::ImageGraft<2>> imageGraftDispatcher;
-        imageGraftDispatcher.Invoke(input, componentsOut, pixels, newComponents);
-
-        // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
-        vtkm::worklet::DispatcherMapField<IsStar> isStarDisp;
-        isStarDisp.Invoke(pixelIds, newComponents, isStar);
-        allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());
+        DispatcherType dispatcher;
+        dispatcher.Invoke(input, pixelIds, components, pixels, components, changed);
 
         vtkm::worklet::DispatcherMapField<PointerJumping> pointJumpingDispatcher;
-        pointJumpingDispatcher.Invoke(pixelIds, newComponents);
+        pointJumpingDispatcher.Invoke(pixelIds, components);
 
-        Algorithm::Copy(newComponents, componentsOut);
-
-      } while (!allStar);
+      } while (Algorithm::Reduce(changed, false, vtkm::LogicalOr()));
 
       // renumber connected component to the range of [0, number of components).
       vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
-      Algorithm::Copy(componentsOut, uniqueComponents);
+      Algorithm::Copy(components, uniqueComponents);
       Algorithm::Sort(uniqueComponents);
       Algorithm::Unique(uniqueComponents);
 
@@ -130,29 +151,25 @@ public:
         uniqueColor);
       vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
       vtkm::cont::ArrayHandle<vtkm::Id> pixelIdsOut;
-      InnerJoin().Run(componentsOut,
-                      pixelIds,
-                      uniqueComponents,
-                      uniqueColor,
-                      cellColors,
-                      pixelIdsOut,
-                      componentsOut);
+      InnerJoin().Run(
+        components, pixelIds, uniqueComponents, uniqueColor, cellColors, pixelIdsOut, components);
 
-      Algorithm::SortByKey(pixelIdsOut, componentsOut);
+      Algorithm::SortByKey(pixelIdsOut, components);
     }
   };
 
-  template <typename T, typename S, typename OutputPortalType>
-  void Run(const vtkm::cont::CellSetStructured<2>& input,
+  // TODO: Do we really need the CellSet as input parameter?
+  template <int Dimension, typename T, typename S, typename OutputPortalType>
+  void Run(const vtkm::cont::CellSetStructured<Dimension>& input,
            const vtkm::cont::DynamicArrayHandleBase<T, S>& pixels,
            OutputPortalType& componentsOut) const
   {
-    using Types = vtkm::ListTagBase<vtkm::UInt8>;
+    using Types = vtkm::TypeListTagScalarAll;
     vtkm::cont::CastAndCall(pixels.ResetTypeList(Types{}), RunImpl(), input, componentsOut);
   }
 
-  template <typename T, typename S, typename OutputPortalType>
-  void Run(const vtkm::cont::CellSetStructured<2>& input,
+  template <int Dimension, typename T, typename S, typename OutputPortalType>
+  void Run(const vtkm::cont::CellSetStructured<Dimension>& input,
            const vtkm::cont::ArrayHandle<T, S>& pixels,
            OutputPortalType& componentsOut) const
   {
