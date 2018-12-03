@@ -26,11 +26,10 @@
 #include <vtkm/worklet/connectivities/ImageConnectivity.h>
 
 
-template <typename DeviceAdapter>
 class TestImageConnectivity
 {
 public:
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   void operator()() const
   {
@@ -51,10 +50,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
     vtkm::worklet::connectivity::ImageConnectivity().Run(
-      data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(),
-      colorField.GetData(),
-      component,
-      DeviceAdapter());
+      data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
 
     std::vector<vtkm::Id> componentExpected = { 0, 1, 2, 1, 1, 3, 3, 4, 0, 1, 1, 1, 3, 3, 3, 4,
                                                 1, 1, 3, 3, 3, 4, 3, 4, 1, 1, 3, 3, 4, 4, 4, 4 };
@@ -68,8 +64,7 @@ public:
   }
 };
 
-int UnitTestImageConnectivity(int, char* [])
+int UnitTestImageConnectivity(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestImageConnectivity<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestImageConnectivity(), argc, argv);
 }

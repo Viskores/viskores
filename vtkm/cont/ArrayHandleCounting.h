@@ -77,6 +77,12 @@ public:
   }
 
   VTKM_EXEC_CONT
+  ValueType GetStart() const { return this->Start; }
+
+  VTKM_EXEC_CONT
+  ValueType GetStep() const { return this->Step; }
+
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_EXEC_CONT
@@ -141,5 +147,71 @@ make_ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename T>
+struct TypeString<vtkm::cont::ArrayHandleCounting<T>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Counting<" + TypeString<T>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename T>
+struct TypeString<
+  vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
+  : TypeString<vtkm::cont::ArrayHandleCounting<T>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename T>
+struct Serialization<vtkm::cont::ArrayHandleCounting<T>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleCounting<T>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto portal = obj.GetPortalConstControl();
+    diy::save(bb, portal.GetStart());
+    diy::save(bb, portal.GetStep());
+    diy::save(bb, portal.GetNumberOfValues());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    T start{}, step{};
+    vtkm::Id count = 0;
+
+    diy::load(bb, start);
+    diy::load(bb, step);
+    diy::load(bb, count);
+
+    obj = vtkm::cont::make_ArrayHandleCounting(start, step, count);
+  }
+};
+
+template <typename T>
+struct Serialization<
+  vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
+  : Serialization<vtkm::cont::ArrayHandleCounting<T>>
+{
+};
+} // diy
 
 #endif //vtk_m_cont_ArrayHandleCounting_h

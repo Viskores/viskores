@@ -34,16 +34,15 @@ inline VTKM_CONT CylindricalCoordinateTransform::CylindricalCoordinateTransform(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::ArrayHandle<T> outArray;
-  Worklet.Run(field, outArray, device);
+  this->Worklet.Run(field, outArray);
   return internal::CreateResult(inDataSet,
                                 outArray,
                                 this->GetOutputFieldName(),
@@ -59,16 +58,15 @@ inline VTKM_CONT SphericalCoordinateTransform::SphericalCoordinateTransform()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device) const
+  const vtkm::filter::PolicyBase<DerivedPolicy>&) const
 {
   vtkm::cont::ArrayHandle<T> outArray;
-  Worklet.Run(field, outArray, device);
+  Worklet.Run(field, outArray);
   return internal::CreateResult(inDataSet,
                                 outArray,
                                 this->GetOutputFieldName(),

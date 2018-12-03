@@ -27,6 +27,7 @@
 #include <vtkm/Math.h>
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -76,11 +77,10 @@ static void TestMaxPointOrCell();
 static void TestAvgPointToCell();
 static void TestAvgCellToPoint();
 
-void TestWorkletMapTopologyExplicit()
+void TestWorkletMapTopologyExplicit(vtkm::cont::DeviceAdapterId id)
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
-  std::cout << "Testing Topology Worklet ( Explicit ) on device adapter: "
-            << DeviceAdapterTraits::GetName() << std::endl;
+  std::cout << "Testing Topology Worklet ( Explicit ) on device adapter: " << id.GetName()
+            << std::endl;
 
   TestMaxPointOrCell();
   TestAvgPointToCell();
@@ -178,7 +178,7 @@ static void TestAvgCellToPoint()
 
 } // anonymous namespace
 
-int UnitTestWorkletMapTopologyExplicit(int, char* [])
+int UnitTestWorkletMapTopologyExplicit(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestWorkletMapTopologyExplicit);
+  return vtkm::cont::testing::Testing::RunOnDevice(TestWorkletMapTopologyExplicit, argc, argv);
 }

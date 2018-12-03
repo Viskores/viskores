@@ -29,9 +29,22 @@ namespace cont
 namespace internal
 {
 
+
 template <typename T>
 Storage<T, vtkm::cont::StorageTagBasic>::Storage()
   : StorageBasicBase()
+{
+}
+
+template <typename T>
+Storage<T, vtkm::cont::StorageTagBasic>::Storage(const Storage<T, vtkm::cont::StorageTagBasic>& src)
+  : StorageBasicBase(src)
+{
+}
+
+template <typename T>
+Storage<T, vtkm::cont::StorageTagBasic>::Storage(
+  Storage<T, vtkm::cont::StorageTagBasic>&& src) noexcept : StorageBasicBase(std::move(src))
 {
 }
 
@@ -48,6 +61,22 @@ Storage<T, vtkm::cont::StorageTagBasic>::Storage(const T* array,
   : StorageBasicBase(const_cast<T*>(array), numberOfValues, sizeof(T), deleteFunction)
 {
 }
+
+template <typename T>
+Storage<T, vtkm::cont::StorageTagBasic>& Storage<T, vtkm::cont::StorageTagBasic>::Storage::
+operator=(const Storage<T, vtkm::cont::StorageTagBasic>& src)
+{
+  return static_cast<Storage<T, vtkm::cont::StorageTagBasic>&>(StorageBasicBase::operator=(src));
+}
+
+template <typename T>
+Storage<T, vtkm::cont::StorageTagBasic>& Storage<T, vtkm::cont::StorageTagBasic>::Storage::
+operator=(Storage<T, vtkm::cont::StorageTagBasic>&& src)
+{
+  return static_cast<Storage<T, vtkm::cont::StorageTagBasic>&>(
+    StorageBasicBase::operator=(std::move(src)));
+}
+
 
 template <typename T>
 void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)

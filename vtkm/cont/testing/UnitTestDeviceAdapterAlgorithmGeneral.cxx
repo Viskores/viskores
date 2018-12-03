@@ -31,6 +31,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
+#include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
@@ -101,13 +102,10 @@ public:
 };
 
 template <typename TargetClass>
-struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> final
   : public VirtualObjectTransferShareWithControl<TargetClass>
 {
-  VirtualObjectTransfer(const TargetClass* target)
-    : VirtualObjectTransferShareWithControl<TargetClass>(target)
-  {
-  }
+  using VirtualObjectTransferShareWithControl<TargetClass>::VirtualObjectTransferShareWithControl;
 };
 
 template <typename T>

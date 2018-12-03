@@ -609,20 +609,11 @@ private:
   }
 
   VTKM_CONT
-  static void TestRuntime()
-  {
-    std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing RuntimeDeviceInformation" << std::endl;
-
-    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
-    const bool valid_runtime = runtime.Exists();
-
-    VTKM_TEST_ASSERT(valid_runtime, "runtime detection failed for device");
-  }
-
-  VTKM_CONT
   static void TestVirtualObjectTransfer()
   {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing VirtualObjectTransfer" << std::endl;
+
     using BaseType = typename VirtualObjectTransferKernel::Interface;
     using TargetType = typename VirtualObjectTransferKernel::Concrete;
     using Transfer = vtkm::cont::internal::VirtualObjectTransfer<TargetType, DeviceAdapterTag>;
@@ -635,16 +626,13 @@ private:
     target.Value = 5;
 
     Transfer transfer(&target);
-    const BaseType* base = transfer.PrepareForExecution(false);
-
-    std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing VirtualObjectTransfer" << std::endl;
+    const BaseType* base = static_cast<const BaseType*>(transfer.PrepareForExecution(false));
 
     Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 5, "Did not get expected result");
 
     target.Value = 10;
-    base = transfer.PrepareForExecution(true);
+    base = static_cast<const BaseType*>(transfer.PrepareForExecution(true));
     Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 10, "Did not get expected result");
 
@@ -2036,7 +2024,7 @@ private:
     VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
 
     // This is spcifically to test the cuda-backend but should pass for all backends
-    std::cout << "Testing if execution errors are eventually propogated to the host "
+    std::cout << "Testing if execution errors are eventually propagated to the host "
               << "without explicit synchronization\n";
     message = "";
     int nkernels = 0;
@@ -2416,7 +2404,6 @@ private:
       TestArrayManagerExecution();
       TestOutOfMemory();
       TestTimer();
-      TestRuntime();
       TestVirtualObjectTransfer();
 
       TestAlgorithmSchedule();

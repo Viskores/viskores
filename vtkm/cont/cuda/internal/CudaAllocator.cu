@@ -20,6 +20,7 @@
 
 #include <cstdlib>
 #include <mutex>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #define NO_VTKM_MANAGED_MEMORY "NO_VTKM_MANAGED_MEMORY"
@@ -101,7 +102,11 @@ bool CudaAllocator::IsManagedPointer(const void* ptr)
     return false;
   }
   VTKM_CUDA_CALL(err /*= cudaPointerGetAttributes(&attr, ptr)*/);
+#if CUDART_VERSION < 10000 // isManaged deprecated in CUDA 10.
   return attr.isManaged != 0;
+#else // attr.type doesn't exist before CUDA 10
+  return attr.type == cudaMemoryTypeManaged;
+#endif
 }
 
 void* CudaAllocator::Allocate(std::size_t numBytes)
@@ -124,6 +129,13 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
     VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
   }
 
+  {
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemExec,
+               "Allocated CUDA array of %s at %p.",
+               vtkm::cont::GetSizeString(numBytes).c_str(),
+               ptr);
+  }
+
   return ptr;
 }
 
@@ -131,11 +143,18 @@ void* CudaAllocator::AllocateUnManaged(std::size_t numBytes)
 {
   void* ptr = nullptr;
   VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
+  {
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemExec,
+               "Allocated CUDA array of %s at %p.",
+               vtkm::cont::GetSizeString(numBytes).c_str(),
+               ptr);
+  }
   return ptr;
 }
 
 void CudaAllocator::Free(void* ptr)
 {
+  VTKM_LOG_F(vtkm::cont::LogLevel::MemExec, "Freeing CUDA allocation at %p.", ptr);
   VTKM_CUDA_CALL(cudaFree(ptr));
 }
 
@@ -145,6 +164,13 @@ void CudaAllocator::FreeDeferred(void* ptr, std::size_t numBytes)
   static std::vector<void*> deferredPointers;
   static std::size_t deferredSize = 0;
   constexpr std::size_t bufferLimit = 2 << 24; //16MB buffer
+
+  {
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemExec,
+               "Deferring free of CUDA allocation at %p of %s.",
+               ptr,
+               vtkm::cont::GetSizeString(numBytes).c_str());
+  }
 
   std::vector<void*> toFree;
   // critical section
@@ -161,6 +187,7 @@ void CudaAllocator::FreeDeferred(void* ptr, std::size_t numBytes)
 
   for (auto&& p : toFree)
   {
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemExec, "Freeing deferred CUDA allocation at %p.", p);
     VTKM_CUDA_CALL(cudaFree(p));
   }
 }

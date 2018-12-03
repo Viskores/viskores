@@ -93,48 +93,42 @@ public:
 
   /// \brief Use each component to generate RGBA colors
   ///
-  template <typename T, typename S, typename Device>
+  template <typename T, typename S>
   void Run(const vtkm::cont::ArrayHandle<T, S>& values,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut,
-           Device) const;
+           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
 
   /// \brief Use each component to generate RGB colors
   ///
-  template <typename T, typename S, typename Device>
+  template <typename T, typename S>
   void Run(const vtkm::cont::ArrayHandle<T, S>& values,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut,
-           Device) const;
+           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
 
 
   /// \brief Use magnitude of a vector to generate RGBA colors
   ///
-  template <typename T, int N, typename S, typename Device>
+  template <typename T, int N, typename S>
   void RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut,
-                    Device) const;
+                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
 
   /// \brief Use magnitude of a vector to generate RGB colors
   ///
-  template <typename T, int N, typename S, typename Device>
+  template <typename T, int N, typename S>
   void RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut,
-                    Device) const;
+                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
 
   /// \brief Use a single component of a vector to generate RGBA colors
   ///
-  template <typename T, int N, typename S, typename Device>
+  template <typename T, int N, typename S>
   void RunComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                     vtkm::IdComponent comp,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut,
-                    Device) const;
+                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
 
   /// \brief Use a single component of a vector to generate RGB colors
   ///
-  template <typename T, int N, typename S, typename Device>
+  template <typename T, int N, typename S>
   void RunComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                     vtkm::IdComponent comp,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut,
-                    Device) const;
+                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
 };
 }
 }

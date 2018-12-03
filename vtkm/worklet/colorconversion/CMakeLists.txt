@@ -29,5 +29,11 @@ set(headers
   TransferFunction.h
   )
 
+set_source_files_properties(Conversions.h
+                            ConvertToRGB.h
+                            ConvertToRGBA.h
+                            ShiftScaleToRGB.h
+                            ShiftScaleToRGBA.h
+                            PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE)
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})

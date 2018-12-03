@@ -22,7 +22,6 @@
 #include <vtkm/worklet/NDimsHistogram.h>
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
@@ -229,33 +228,20 @@ void TestNDimsHistMarginalization()
   vtkm::worklet::NDimsHistogram ndHistogram;
 
   // Set the number of data points
-  ndHistogram.SetNumOfDataPoints(ds.GetField(0).GetData().GetNumberOfValues(),
-                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.SetNumOfDataPoints(ds.GetField(0).GetData().GetNumberOfValues());
 
   // Add field one by one
   vtkm::Range rangeFieldA;
   vtkm::Float64 deltaFieldA;
-  ndHistogram.AddField(ds.GetField("fieldA").GetData(),
-                       10,
-                       rangeFieldA,
-                       deltaFieldA,
-                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.AddField(ds.GetField("fieldA").GetData(), 10, rangeFieldA, deltaFieldA);
 
   vtkm::Range rangeFieldB;
   vtkm::Float64 deltaFieldB;
-  ndHistogram.AddField(ds.GetField("fieldB").GetData(),
-                       10,
-                       rangeFieldB,
-                       deltaFieldB,
-                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.AddField(ds.GetField("fieldB").GetData(), 10, rangeFieldB, deltaFieldB);
 
   vtkm::Range rangeFieldC;
   vtkm::Float64 deltaFieldC;
-  ndHistogram.AddField(ds.GetField("fieldC").GetData(),
-                       10,
-                       rangeFieldC,
-                       deltaFieldC,
-                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.AddField(ds.GetField("fieldC").GetData(), 10, rangeFieldC, deltaFieldC);
 
   // the return binIds and freqs is sparse distribution representation
   // (we do not keep the 0 frequency entities)
@@ -264,7 +250,7 @@ void TestNDimsHistMarginalization()
   // freqs[j] is the freqncy of this bin IDs combination
   std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> binIds;
   vtkm::cont::ArrayHandle<vtkm::Id> freqs;
-  ndHistogram.Run(binIds, freqs, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.Run(binIds, freqs);
 
   // setup for histogram marginalization
   // use a bool array to indicate the marginal variable (true -> marginal variable)
@@ -286,8 +272,7 @@ void TestNDimsHistMarginalization()
                             marginalVariable,
                             VariableCondition(),
                             marginalBinIds,
-                            marginalFreqs,
-                            VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+                            marginalFreqs);
 
   // Ground truth ND histogram
   vtkm::Id gtNonSparseBins = 40;
@@ -314,7 +299,7 @@ void TestNDimsHistMarginalization()
 } // TestNDimsHistMarginalization
 }
 
-int UnitTestNDimsHistMarginalization(int, char* [])
+int UnitTestNDimsHistMarginalization(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestNDimsHistMarginalization);
+  return vtkm::cont::testing::Testing::Run(TestNDimsHistMarginalization, argc, argv);
 }

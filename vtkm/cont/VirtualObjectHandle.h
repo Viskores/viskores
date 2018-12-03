@@ -21,10 +21,8 @@
 #define vtk_m_cont_VirtualObjectHandle_h
 
 #include <vtkm/cont/DeviceAdapterListTag.h>
-#include <vtkm/cont/ErrorBadType.h>
-#include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
 #include <array>
@@ -34,6 +32,22 @@ namespace vtkm
 {
 namespace cont
 {
+
+namespace internal
+{
+struct CreateTransferInterface
+{
+  template <typename VirtualDerivedType, typename DeviceAdapter>
+  VTKM_CONT inline void operator()(DeviceAdapter device,
+                                   internal::TransferState* transfers,
+                                   const VirtualDerivedType* virtualObject) const
+  {
+    using TransferImpl = TransferInterfaceImpl<VirtualDerivedType, DeviceAdapter>;
+    auto i = static_cast<std::size_t>(device.GetValue());
+    transfers->DeviceTransferState[i].reset(new TransferImpl(virtualObject));
+  }
+};
+}
 
 /// \brief Implements VTK-m's execution side <em> Virtual Methods </em> functionality.
 ///
@@ -55,14 +69,14 @@ namespace cont
 /// \sa vtkm::VirtualObjectBase
 ///
 template <typename VirtualBaseType>
-class VTKM_ALWAYS_EXPORT VirtualObjectHandle
+class VTKM_ALWAYS_EXPORT VirtualObjectHandle : public vtkm::cont::ExecutionAndControlObjectBase
 {
   VTKM_STATIC_ASSERT_MSG((std::is_base_of<vtkm::VirtualObjectBase, VirtualBaseType>::value),
                          "All virtual objects must be subclass of vtkm::VirtualObjectBase.");
 
 public:
   VTKM_CONT VirtualObjectHandle()
-    : Internals(new InternalStruct)
+    : Internals(std::make_shared<internal::TransferState>())
   {
   }
 
@@ -71,19 +85,23 @@ public:
   VTKM_CONT explicit VirtualObjectHandle(VirtualDerivedType* derived,
                                          bool acquireOwnership = true,
                                          DeviceAdapterList devices = DeviceAdapterList())
-    : Internals(new InternalStruct)
+    : Internals(std::make_shared<internal::TransferState>())
   {
     this->Reset(derived, acquireOwnership, devices);
   }
 
   /// Get if in a valid state (a target is bound)
-  VTKM_CONT bool GetValid() const { return this->Internals->VirtualObject != nullptr; }
+  VTKM_CONT bool GetValid() const { return this->Internals->HostPtr() != nullptr; }
+
 
   /// Get if this handle owns the control side target object
-  VTKM_CONT bool OwnsObject() const { return this->Internals->Owner; }
+  VTKM_CONT bool OwnsObject() const { return this->Internals->WillReleaseHostPointer(); }
 
   /// Get the control side pointer to the virtual object
-  VTKM_CONT VirtualBaseType* Get() const { return this->Internals->VirtualObject; }
+  VTKM_CONT VirtualBaseType* Get() const
+  {
+    return static_cast<VirtualBaseType*>(this->Internals->HostPtr());
+  }
 
   /// Reset the underlying derived type object
   template <typename VirtualDerivedType,
@@ -92,22 +110,28 @@ public:
                        bool acquireOwnership = true,
                        DeviceAdapterList devices = DeviceAdapterList())
   {
-    this->Reset();
+    VTKM_STATIC_ASSERT_MSG((std::is_base_of<VirtualBaseType, VirtualDerivedType>::value),
+                           "Tried to bind a type that is not a subclass of the base class.");
+
+    if (acquireOwnership)
+    {
+      auto deleter = [](void* p) { delete static_cast<VirtualBaseType*>(p); };
+      this->Internals->UpdateHost(derived, deleter);
+    }
+    else
+    {
+      this->Internals->UpdateHost(derived, nullptr);
+    }
+
     if (derived)
     {
-      VTKM_STATIC_ASSERT_MSG((std::is_base_of<VirtualBaseType, VirtualDerivedType>::value),
-                             "Tried to bind a type that is not a subclass of the base class.");
-
-      this->Internals->VirtualObject = derived;
-      this->Internals->Owner = acquireOwnership;
-      vtkm::cont::internal::ForEachValidDevice(devices,
-                                               CreateTransferInterface<VirtualDerivedType>(),
-                                               this->Internals->Transfers.data(),
-                                               derived);
+      vtkm::cont::internal::ForEachValidDevice(
+        devices, internal::CreateTransferInterface(), this->Internals.get(), derived);
     }
   }
 
-  void Reset() { this->Internals->Reset(); }
+  /// Release all host and execution side resources
+  VTKM_CONT void ReleaseResources() { this->Internals->ReleaseResources(); }
 
   /// Release all the execution side resources
   VTKM_CONT void ReleaseExecutionResources() { this->Internals->ReleaseExecutionResources(); }
@@ -121,128 +145,22 @@ public:
   ///
   VTKM_CONT const VirtualBaseType* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const
   {
-    if (!this->GetValid())
-    {
-      throw vtkm::cont::ErrorBadValue("No target object bound");
+    const bool validId = this->Internals->DeviceIdIsValid(deviceId);
+    if (!validId)
+    { //can't be reached since DeviceIdIsValid will through an exception
+      //if deviceId is not valid
+      return nullptr;
     }
 
-    if (!this->Internals->Current || this->Internals->Current->GetDeviceId() != deviceId)
-    {
-      if (!this->Internals->Transfers[static_cast<std::size_t>(deviceId.GetValue())])
-      {
-        std::string msg =
-          "VTK-m was asked to transfer a VirtualObjectHandle for execution on DeviceAdapter '" +
-          deviceId.GetName() + "' (" + std::to_string(deviceId.GetValue()) +
-          "). It can't as this VirtualObjectHandle was not constructed/bound with this "
-          "DeviceAdapter in the list of valid DeviceAdapters.";
-        throw vtkm::cont::ErrorBadDevice(msg);
-      }
-
-      if (this->Internals->Current)
-      {
-        this->Internals->Current->ReleaseResources();
-      }
-      this->Internals->Current =
-        this->Internals->Transfers[static_cast<std::size_t>(deviceId.GetValue())].get();
-    }
-
-    return this->Internals->Current->PrepareForExecution();
+    return static_cast<const VirtualBaseType*>(this->Internals->PrepareForExecution(deviceId));
   }
 
+  /// Used as part of the \c ExecutionAndControlObjectBase interface. Returns the same pointer
+  /// as \c Get.
+  VTKM_CONT const VirtualBaseType* PrepareForControl() const { return this->Get(); }
 
 private:
-  class TransferInterface
-  {
-  public:
-    VTKM_CONT virtual ~TransferInterface() = default;
-
-    VTKM_CONT virtual vtkm::cont::DeviceAdapterId GetDeviceId() const = 0;
-    VTKM_CONT virtual const VirtualBaseType* PrepareForExecution() = 0;
-    VTKM_CONT virtual void ReleaseResources() = 0;
-  };
-
-  template <typename VirtualDerivedType, typename DeviceAdapter>
-  class TransferInterfaceImpl : public TransferInterface
-  {
-  public:
-    VTKM_CONT TransferInterfaceImpl(const VirtualDerivedType* virtualObject)
-      : LastModifiedCount(-1)
-      , VirtualObject(virtualObject)
-      , Transfer(virtualObject)
-    {
-    }
-
-    VTKM_CONT vtkm::cont::DeviceAdapterId GetDeviceId() const override { return DeviceAdapter(); }
-
-    VTKM_CONT const VirtualBaseType* PrepareForExecution() override
-    {
-      vtkm::Id modifiedCount = this->VirtualObject->GetModifiedCount();
-      bool updateData = (this->LastModifiedCount != modifiedCount);
-      const VirtualBaseType* executionObject = this->Transfer.PrepareForExecution(updateData);
-      this->LastModifiedCount = modifiedCount;
-      return executionObject;
-    }
-
-    VTKM_CONT void ReleaseResources() override { this->Transfer.ReleaseResources(); }
-
-  private:
-    vtkm::Id LastModifiedCount;
-    const VirtualDerivedType* VirtualObject;
-    vtkm::cont::internal::VirtualObjectTransfer<VirtualDerivedType, DeviceAdapter> Transfer;
-  };
-
-  template <typename VirtualDerivedType>
-  struct CreateTransferInterface
-  {
-    template <typename DeviceAdapter>
-    VTKM_CONT void operator()(DeviceAdapter device,
-                              std::unique_ptr<TransferInterface>* transfers,
-                              const VirtualDerivedType* virtualObject) const
-    {
-      if (!device.IsValueValid())
-      {
-        throwFailedRuntimeDeviceTransfer("VirtualObjectHandle", device);
-      }
-      using TransferImpl = TransferInterfaceImpl<VirtualDerivedType, DeviceAdapter>;
-      transfers[device.GetValue()].reset(new TransferImpl(virtualObject));
-    }
-  };
-
-  struct InternalStruct
-  {
-    VirtualBaseType* VirtualObject = nullptr;
-    bool Owner = false;
-    std::array<std::unique_ptr<TransferInterface>, VTKM_MAX_DEVICE_ADAPTER_ID> Transfers;
-    TransferInterface* Current = nullptr;
-
-    VTKM_CONT void ReleaseExecutionResources()
-    {
-      if (this->Current)
-      {
-        this->Current->ReleaseResources();
-        this->Current = nullptr;
-      }
-    }
-
-    VTKM_CONT void Reset()
-    {
-      this->ReleaseExecutionResources();
-      for (auto& transfer : this->Transfers)
-      {
-        transfer.reset(nullptr);
-      }
-      if (this->Owner)
-      {
-        delete this->VirtualObject;
-      }
-      this->VirtualObject = nullptr;
-      this->Owner = false;
-    }
-
-    VTKM_CONT ~InternalStruct() { this->Reset(); }
-  };
-
-  std::shared_ptr<InternalStruct> Internals;
+  std::shared_ptr<internal::TransferState> Internals;
 };
 }
 } // vtkm::cont

@@ -29,6 +29,7 @@
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
+#include <vtkm/rendering/raytracing/Sampler.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -161,6 +162,82 @@ public:
   }
 
 }; // class pixelData
+
+class PerspectiveRayGenJitter : public vtkm::worklet::WorkletMapField
+{
+public:
+  vtkm::Int32 w;
+  vtkm::Int32 h;
+  vtkm::Vec<vtkm::Float32, 3> nlook; // normalized look
+  vtkm::Vec<vtkm::Float32, 3> delta_x;
+  vtkm::Vec<vtkm::Float32, 3> delta_y;
+  vtkm::Int32 CurrentSample;
+  VTKM_CONT_EXPORT
+  PerspectiveRayGenJitter(vtkm::Int32 width,
+                          vtkm::Int32 height,
+                          vtkm::Float32 fovX,
+                          vtkm::Float32 fovY,
+                          vtkm::Vec<vtkm::Float32, 3> look,
+                          vtkm::Vec<vtkm::Float32, 3> up,
+                          vtkm::Float32 _zoom,
+                          vtkm::Int32 currentSample)
+    : w(width)
+    , h(height)
+  {
+    vtkm::Float32 thx = tanf((fovX * 3.1415926f / 180.f) * .5f);
+    vtkm::Float32 thy = tanf((fovY * 3.1415926f / 180.f) * .5f);
+    vtkm::Vec<vtkm::Float32, 3> ru = vtkm::Cross(up, look);
+    vtkm::Normalize(ru);
+
+    vtkm::Vec<vtkm::Float32, 3> rv = vtkm::Cross(ru, look);
+    vtkm::Normalize(rv);
+
+    delta_x = ru * (2 * thx / (float)w);
+    delta_y = rv * (2 * thy / (float)h);
+
+    if (_zoom > 0)
+    {
+      delta_x[0] = delta_x[0] / _zoom;
+      delta_x[1] = delta_x[1] / _zoom;
+      delta_x[2] = delta_x[2] / _zoom;
+      delta_y[0] = delta_y[0] / _zoom;
+      delta_y[1] = delta_y[1] / _zoom;
+      delta_y[2] = delta_y[2] / _zoom;
+    }
+    nlook = look;
+    vtkm::Normalize(nlook);
+    CurrentSample = currentSample;
+  }
+
+  typedef void ControlSignature(FieldOut<>, FieldOut<>, FieldOut<>, FieldIn<>);
+
+  typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4);
+  VTKM_EXEC
+  void operator()(vtkm::Id idx,
+                  vtkm::Float32& rayDirX,
+                  vtkm::Float32& rayDirY,
+                  vtkm::Float32& rayDirZ,
+                  const vtkm::Int32& seed) const
+  {
+    vtkm::Vec<vtkm::Float32, 2> xy;
+    Halton2D<3>(CurrentSample + seed, xy);
+    xy[0] -= .5f;
+    xy[1] -= .5f;
+
+    vtkm::Vec<vtkm::Float32, 3> ray_dir(rayDirX, rayDirY, rayDirZ);
+    vtkm::Float32 i = static_cast<vtkm::Float32>(vtkm::Int32(idx) % w);
+    vtkm::Float32 j = static_cast<vtkm::Float32>(vtkm::Int32(idx) / w);
+    i += xy[0];
+    j += xy[1];
+    ray_dir = nlook + delta_x * ((2.f * i - vtkm::Float32(w)) / 2.0f) +
+      delta_y * ((2.f * j - vtkm::Float32(h)) / 2.0f);
+    vtkm::Normalize(ray_dir);
+    rayDirX = ray_dir[0];
+    rayDirY = ray_dir[1];
+    rayDirZ = ray_dir[2];
+  }
+
+}; // class perspective ray gen jitter
 
 class Camera::Ortho2DRayGen : public vtkm::worklet::WorkletMapField
 {
@@ -631,35 +708,6 @@ bool Camera::GetIsViewDirty() const
   return this->IsViewDirty;
 }
 
-
-
-template <typename Precision>
-struct Camera::CreateRaysFunctor
-{
-  vtkm::rendering::raytracing::Camera* Self;
-  const vtkm::cont::CoordinateSystem& Coords;
-  vtkm::rendering::raytracing::Ray<Precision>& Rays;
-  VTKM_CONT
-  CreateRaysFunctor(vtkm::rendering::raytracing::Camera* self,
-                    const vtkm::cont::CoordinateSystem& coords,
-                    vtkm::rendering::raytracing::Ray<Precision>& rays)
-    : Self(self)
-    , Coords(coords)
-    , Rays(rays)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::Bounds boundingBox = Coords.GetBounds();
-    Self->CreateRaysOnDevice(this->Rays, Device(), boundingBox);
-    return true;
-  }
-};
-
 void Camera::GetPixelData(const vtkm::cont::CoordinateSystem& coords,
                           vtkm::Int32& activePixels,
                           vtkm::Float32& aveRayDistance)
@@ -695,53 +743,42 @@ void Camera::GetPixelData(const vtkm::cont::CoordinateSystem& coords,
 }
 
 VTKM_CONT
-void Camera::CreateRays(Ray<vtkm::Float32>& rays, const vtkm::cont::CoordinateSystem& coords)
+void Camera::CreateRays(Ray<vtkm::Float32>& rays, vtkm::Bounds bounds)
 {
-  CreateRaysFunctor<Float32> functor(this, coords, rays);
-  vtkm::cont::TryExecute(functor);
+  CreateRaysImpl(rays, bounds);
 }
 
 VTKM_CONT
-void Camera::CreateRays(Ray<vtkm::Float64>& rays, const vtkm::cont::CoordinateSystem& coords)
+void Camera::CreateRays(Ray<vtkm::Float64>& rays, vtkm::Bounds bounds)
 {
-  CreateRaysFunctor<Float64> functor(this, coords, rays);
-  vtkm::cont::TryExecute(functor);
+  CreateRaysImpl(rays, bounds);
 }
 
-template <typename Precision, typename Device>
-VTKM_CONT void Camera::CreateRaysOnDevice(Ray<Precision>& rays,
-                                          Device,
-                                          const vtkm::Bounds boundingBox)
+template <typename Precision>
+VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds boundingBox)
 {
   Logger* logger = Logger::GetInstance();
-  vtkm::cont::Timer<Device> createTimer;
+  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> createTimer;
   logger->OpenLogEntry("ray_camera");
-  logger->AddLogData("device", GetDeviceString(Device()));
 
   bool ortho = this->CameraView.GetMode() == vtkm::rendering::Camera::MODE_2D;
-  this->UpdateDimensions(rays, Device(), boundingBox, ortho);
-
+  this->UpdateDimensions(rays, boundingBox, ortho);
   this->WriteSettingsToLog();
-  vtkm::cont::Timer<Device> timer;
+  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
   //Set the origin of the ray back to the camera position
 
   Precision infinity;
   GetInfinity(infinity);
 
-  vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetInfDispatcher(
-    (MemSet<Precision>(infinity)));
-  memSetInfDispatcher.SetDevice(Device());
-  memSetInfDispatcher.Invoke(rays.MaxDistance);
+  vtkm::cont::ArrayHandleConstant<Precision> inf(infinity, rays.NumRays);
+  vtkm::cont::Algorithm::Copy(inf, rays.MaxDistance);
 
-  vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSet0Dispatcher((MemSet<Precision>(0.f)));
-  memSet0Dispatcher.SetDevice(Device());
-  memSet0Dispatcher.Invoke(rays.MinDistance);
-  memSet0Dispatcher.Invoke(rays.Distance);
+  vtkm::cont::ArrayHandleConstant<Precision> zero(0, rays.NumRays);
+  vtkm::cont::Algorithm::Copy(zero, rays.MinDistance);
+  vtkm::cont::Algorithm::Copy(zero, rays.Distance);
 
-  //Reset the Rays Hit Index to -2
-  vtkm::worklet::DispatcherMapField<MemSet<vtkm::Id>> memSetM2Dispatcher((MemSet<vtkm::Id>(-2)));
-  memSetM2Dispatcher.SetDevice(Device());
-  memSetM2Dispatcher.Invoke(rays.HitIdx);
+  vtkm::cont::ArrayHandleConstant<vtkm::Id> initHit(-2, rays.NumRays);
+  vtkm::cont::Algorithm::Copy(initHit, rays.HitIdx);
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("camera_memset", time);
@@ -760,7 +797,6 @@ VTKM_CONT void Camera::CreateRaysOnDevice(Ray<Precision>& rays,
                                                                               this->SubsetMinX,
                                                                               this->SubsetMinY,
                                                                               this->CameraView));
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(rays.DirX,
                       rays.DirY,
                       rays.DirZ,
@@ -783,23 +819,16 @@ VTKM_CONT void Camera::CreateRaysOnDevice(Ray<Precision>& rays,
                         this->SubsetWidth,
                         this->SubsetMinX,
                         this->SubsetMinY));
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(rays.DirX, rays.DirY, rays.DirZ, rays.PixelIdx); //X Y Z
 
-    vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetPos0Dispatcher(
-      MemSet<Precision>(this->Position[0]));
-    memSetPos0Dispatcher.SetDevice(Device());
-    memSetPos0Dispatcher.Invoke(rays.OriginX);
+    vtkm::cont::ArrayHandleConstant<Precision> posX(this->Position[0], rays.NumRays);
+    vtkm::cont::Algorithm::Copy(posX, rays.OriginX);
 
-    vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetPos1Dispatcher(
-      MemSet<Precision>(this->Position[1]));
-    memSetPos1Dispatcher.SetDevice(Device());
-    memSetPos1Dispatcher.Invoke(rays.OriginY);
+    vtkm::cont::ArrayHandleConstant<Precision> posY(this->Position[1], rays.NumRays);
+    vtkm::cont::Algorithm::Copy(posY, rays.OriginY);
 
-    vtkm::worklet::DispatcherMapField<MemSet<Precision>> memSetPos2Dispatcher(
-      MemSet<Precision>(this->Position[2]));
-    memSetPos2Dispatcher.SetDevice(Device());
-    memSetPos2Dispatcher.Invoke(rays.OriginZ);
+    vtkm::cont::ArrayHandleConstant<Precision> posZ(this->Position[2], rays.NumRays);
+    vtkm::cont::Algorithm::Copy(posZ, rays.OriginZ);
   }
 
   time = timer.GetElapsedTime();
@@ -909,9 +938,8 @@ void Camera::FindSubset(const vtkm::Bounds& bounds)
   logger->AddLogData("subset_height", dy);
 }
 
-template <typename Device, typename Precision>
+template <typename Precision>
 VTKM_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
-                                        Device,
                                         const vtkm::Bounds& boundingBox,
                                         bool ortho2D)
 {
@@ -971,7 +999,8 @@ VTKM_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
   // resize rays and buffers
   if (rays.NumRays != SubsetWidth * SubsetHeight)
   {
-    RayOperations::Resize(rays, this->SubsetHeight * this->SubsetWidth, Device());
+    RayOperations::Resize(
+      rays, this->SubsetHeight * this->SubsetWidth, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   }
 }
 

@@ -51,21 +51,33 @@
 #endif
 #endif
 
-/// \def VTKM_TEST_ASSERT(condition, message)
+/// \def VTKM_STRINGIFY_FIRST(...)
+///
+/// A utility macro that takes 1 or more arguments and converts it into the C string version
+/// of the first argument.
+
+#define VTKM_STRINGIFY_FIRST(...) VTKM_EXPAND(VTK_M_STRINGIFY_FIRST_IMPL(__VA_ARGS__, dummy))
+#define VTK_M_STRINGIFY_FIRST_IMPL(first, ...) #first
+#define VTKM_EXPAND(x) x
+
+/// \def VTKM_TEST_ASSERT(condition, messages..)
 ///
 /// Asserts a condition for a test to pass. A passing condition is when \a
 /// condition resolves to true. If \a condition is false, then the test is
-/// aborted and failure is returned.
+/// aborted and failure is returned. If one or more message arguments are
+/// given, they are printed out by concatinating them. If no messages are
+/// given, a generic message is given. In any case, the condition that failed
+/// is written out.
 
-#define VTKM_TEST_ASSERT(condition, message)                                                       \
-  ::vtkm::testing::Testing::Assert(condition, __FILE__, __LINE__, message, #condition)
+#define VTKM_TEST_ASSERT(...)                                                                      \
+  ::vtkm::testing::Testing::Assert(                                                                \
+    VTKM_STRINGIFY_FIRST(__VA_ARGS__), __FILE__, __LINE__, __VA_ARGS__)
 
-/// \def VTKM_TEST_FAIL(message)
+/// \def VTKM_TEST_FAIL(messages..)
 ///
-/// Causes a test to fail with the given \a message.
+/// Causes a test to fail with the given \a messages. At least one argument must be given.
 
-#define VTKM_TEST_FAIL(message)                                                                    \
-  throw ::vtkm::testing::Testing::TestFailure(__FILE__, __LINE__, message)
+#define VTKM_TEST_FAIL(...) ::vtkm::testing::Testing::TestFail(__FILE__, __LINE__, __VA_ARGS__)
 
 namespace vtkm
 {
@@ -169,40 +181,67 @@ public:
   class TestFailure
   {
   public:
-    VTKM_CONT TestFailure(const std::string& file, vtkm::Id line, const std::string& message)
-      : File(file)
-      , Line(line)
-      , Message(message)
-    {
-    }
-
-    VTKM_CONT TestFailure(const std::string& file,
-                          vtkm::Id line,
-                          const std::string& message,
-                          const std::string& condition)
+    template <typename... Ts>
+    VTKM_CONT TestFailure(const std::string& file, vtkm::Id line, Ts&&... messages)
       : File(file)
       , Line(line)
     {
-      this->Message.append(message);
-      this->Message.append(" (");
-      this->Message.append(condition);
-      this->Message.append(")");
+      std::stringstream messageStream;
+      this->AppendMessages(messageStream, std::forward<Ts>(messages)...);
+      this->Message = messageStream.str();
     }
 
     VTKM_CONT const std::string& GetFile() const { return this->File; }
     VTKM_CONT vtkm::Id GetLine() const { return this->Line; }
     VTKM_CONT const std::string& GetMessage() const { return this->Message; }
   private:
+    template <typename T1>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream, T1&& m1)
+    {
+      messageStream << m1;
+    }
+    template <typename T1, typename T2>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream, T1&& m1, T2&& m2)
+    {
+      messageStream << m1 << m2;
+    }
+    template <typename T1, typename T2, typename T3>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream, T1&& m1, T2&& m2, T3&& m3)
+    {
+      messageStream << m1 << m2 << m3;
+    }
+    template <typename T1, typename T2, typename T3, typename T4>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream,
+                                  T1&& m1,
+                                  T2&& m2,
+                                  T3&& m3,
+                                  T4&& m4)
+    {
+      messageStream << m1 << m2 << m3 << m4;
+    }
+    template <typename T1, typename T2, typename T3, typename T4, typename... Ts>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream,
+                                  T1&& m1,
+                                  T2&& m2,
+                                  T3&& m3,
+                                  T4&& m4,
+                                  Ts&&... ms)
+    {
+      messageStream << m1 << m2 << m3 << m4;
+      this->AppendMessages(messageStream, std::forward<Ts>(ms)...);
+    }
+
     std::string File;
     vtkm::Id Line;
     std::string Message;
   };
 
-  static VTKM_CONT void Assert(bool condition,
+  template <typename... Ts>
+  static VTKM_CONT void Assert(const std::string& conditionString,
                                const std::string& file,
                                vtkm::Id line,
-                               const std::string& message,
-                               const std::string& conditionString)
+                               bool condition,
+                               Ts&&... messages)
   {
     if (condition)
     {
@@ -210,8 +249,22 @@ public:
     }
     else
     {
-      throw TestFailure(file, line, message, conditionString);
+      throw TestFailure(file, line, std::forward<Ts>(messages)..., " (", conditionString, ")");
     }
+  }
+
+  static VTKM_CONT void Assert(const std::string& conditionString,
+                               const std::string& file,
+                               vtkm::Id line,
+                               bool condition)
+  {
+    Assert(conditionString, file, line, condition, "Test assertion failed");
+  }
+
+  template <typename... Ts>
+  static VTKM_CONT void TestFail(const std::string& file, vtkm::Id line, Ts&&... messages)
+  {
+    throw TestFailure(file, line, std::forward<Ts>(messages)...);
   }
 
 #ifndef VTKM_TESTING_IN_CONT

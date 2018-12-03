@@ -21,7 +21,6 @@
 namespace
 {
 
-template <typename DeviceTag>
 struct CallWorklet
 {
   vtkm::Id Stride;
@@ -38,7 +37,7 @@ struct CallWorklet
   template <typename CellSetType>
   void operator()(const CellSetType& cells) const
   {
-    this->Output = this->Worklet.Run(cells, this->Stride, DeviceTag());
+    this->Output = this->Worklet.Run(cells, this->Stride);
   }
 };
 
@@ -58,15 +57,13 @@ inline VTKM_CONT Mask::Mask()
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter&)
+template <typename DerivedPolicy>
+inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input,
+                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
   vtkm::cont::DynamicCellSet cellOut;
-  CallWorklet<DeviceAdapter> workletCaller(this->Stride, cellOut, this->Worklet);
+  CallWorklet workletCaller(this->Stride, cellOut, this->Worklet);
   vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(workletCaller);
 
   // create the output dataset
@@ -77,12 +74,11 @@ inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool Mask::DoMapField(vtkm::cont::DataSet& result,
                                        const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                        const vtkm::filter::FieldMetadata& fieldMeta,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                       const DeviceAdapter& device)
+                                       vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   vtkm::cont::Field output;
 
@@ -92,7 +88,7 @@ inline VTKM_CONT bool Mask::DoMapField(vtkm::cont::DataSet& result,
   }
   else if (fieldMeta.IsCellField())
   {
-    output = fieldMeta.AsField(this->Worklet.ProcessCellField(input, device));
+    output = fieldMeta.AsField(this->Worklet.ProcessCellField(input));
   }
   else
   {

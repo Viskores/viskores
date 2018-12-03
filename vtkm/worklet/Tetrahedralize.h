@@ -41,10 +41,10 @@ public:
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    template <typename CountArrayType, typename DeviceAdapter>
-    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray, DeviceAdapter device)
+    template <typename CountArrayType>
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
     {
-      return ScatterType(countArray, device);
+      return ScatterType(countArray);
     }
 
     template <typename T>
@@ -80,15 +80,14 @@ public:
   }
 
   // Using the saved input to output cells, expand cell data
-  template <typename T, typename StorageType, typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<T> ProcessCellField(const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                              const DeviceAdapter& device) const
+  template <typename T, typename StorageType>
+  vtkm::cont::ArrayHandle<T> ProcessCellField(
+    const vtkm::cont::ArrayHandle<T, StorageType>& input) const
   {
     vtkm::cont::ArrayHandle<T> output;
 
     vtkm::worklet::DispatcherMapField<DistributeCellData> dispatcher(
-      DistributeCellData::MakeScatter(this->OutCellsPerCell, device));
-    dispatcher.SetDevice(DeviceAdapter());
+      DistributeCellData::MakeScatter(this->OutCellsPerCell));
     dispatcher.Invoke(input, output);
 
     return output;

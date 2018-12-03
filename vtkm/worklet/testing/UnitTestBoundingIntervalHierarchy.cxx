@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/BoundingIntervalHierarchy.hxx>
 #include <vtkm/cont/DataSetBuilderUniform.h>
@@ -69,7 +70,6 @@ vtkm::cont::DataSet ConstructDataSet(vtkm::Id size)
 void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponent numPlanes)
 {
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using Algorithms = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   using Timer = vtkm::cont::Timer<DeviceAdapter>;
 
   vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
@@ -109,7 +109,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
   cudaDeviceSetLimit(cudaLimitStackSize, stackSizeBackup);
 #endif
-  vtkm::Id numDiffs = Algorithms::Reduce(results, 0, vtkm::Add());
+  vtkm::Id numDiffs = vtkm::cont::Algorithm::Reduce(results, 0, vtkm::Add());
   vtkm::Float64 timeDiff = interpolationTimer.GetElapsedTime();
   std::cout << "No of interpolations: " << results.GetNumberOfValues() << "\n";
   std::cout << "Interpolation time: " << timeDiff << "\n";
@@ -129,7 +129,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestBoundingIntervalHierarchy(int, char* [])
+int UnitTestBoundingIntervalHierarchy(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunTest);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

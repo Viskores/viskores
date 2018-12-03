@@ -31,6 +31,16 @@ namespace rendering
 namespace raytracing
 {
 
+struct AABBs
+{
+  vtkm::cont::ArrayHandle<vtkm::Float32> xmins;
+  vtkm::cont::ArrayHandle<vtkm::Float32> ymins;
+  vtkm::cont::ArrayHandle<vtkm::Float32> zmins;
+  vtkm::cont::ArrayHandle<vtkm::Float32> xmaxs;
+  vtkm::cont::ArrayHandle<vtkm::Float32> ymaxs;
+  vtkm::cont::ArrayHandle<vtkm::Float32> zmaxs;
+};
+
 //
 // This is the data structure that is passed to the ray tracer.
 //
@@ -38,16 +48,15 @@ class VTKM_RENDERING_EXPORT LinearBVH
 {
 public:
   using InnerNodesHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
-  using LeafNodesHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
+  using LeafNodesHandle = vtkm::cont::ArrayHandle<Id>;
+  AABBs AABB;
   InnerNodesHandle FlatBVH;
-  LeafNodesHandle LeafNodes;
+  LeafNodesHandle Leafs;
+  vtkm::Bounds TotalBounds;
   struct ConstructFunctor;
   vtkm::Id LeafCount;
-  vtkm::Bounds CoordBounds;
 
 protected:
-  vtkm::cont::ArrayHandleVirtualCoordinates CoordsHandle;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Triangles;
   bool IsConstructed;
   bool CanConstruct;
 
@@ -55,9 +64,7 @@ public:
   LinearBVH();
 
   VTKM_CONT
-  LinearBVH(vtkm::cont::ArrayHandleVirtualCoordinates coordsHandle,
-            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
-            vtkm::Bounds coordBounds);
+  LinearBVH(AABBs& aabbs);
 
   VTKM_CONT
   LinearBVH(const LinearBVH& other);
@@ -69,9 +76,10 @@ public:
   void Construct();
 
   VTKM_CONT
-  void SetData(vtkm::cont::ArrayHandleVirtualCoordinates coordsHandle,
-               vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
-               vtkm::Bounds coordBounds);
+  void SetData(AABBs& aabbs);
+
+  VTKM_CONT
+  AABBs& GetAABBs();
 
   template <typename Device>
   VTKM_CONT void ConstructOnDevice(Device device);
@@ -79,13 +87,7 @@ public:
   VTKM_CONT
   bool GetIsConstructed() const;
 
-  VTKM_CONT
-  vtkm::cont::ArrayHandleVirtualCoordinates GetCoordsHandle() const;
-
-  VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> GetTriangles() const;
-
-  vtkm::Id GetNumberOfTriangles() const;
+  vtkm::Id GetNumberOfAABBs() const;
 }; // class LinearBVH
 }
 }

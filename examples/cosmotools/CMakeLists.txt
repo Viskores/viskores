@@ -25,24 +25,16 @@ project(CosmoTools CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(CosmoCenterFinder_SERIAL CosmoCenterFinder.cxx)
-add_executable(CosmoHaloFinder_SERIAL CosmoHaloFinder.cxx)
-
-target_link_libraries(CosmoCenterFinder_SERIAL PRIVATE vtkm_cont)
-target_link_libraries(CosmoHaloFinder_SERIAL PRIVATE vtkm_cont)
-
 if(TARGET vtkm::cuda)
-  add_executable(CosmoCenterFinder_CUDA CosmoCenterFinder.cu)
-  add_executable(CosmoHaloFinder_CUDA CosmoHaloFinder.cu)
+  vtkm_compile_as_cuda(cu_srcs CosmoCenterFinder.cxx)
+  add_executable(CosmoCenterFinder ${cu_srcs})
 
-  target_link_libraries(CosmoCenterFinder_CUDA PRIVATE vtkm_cont)
-  target_link_libraries(CosmoHaloFinder_CUDA PRIVATE vtkm_cont)
+  vtkm_compile_as_cuda(cu_srcs CosmoHaloFinder.cxx)
+  add_executable(CosmoHaloFinder ${cu_srcs})
+else()
+  add_executable(CosmoCenterFinder CosmoCenterFinder.cxx)
+  add_executable(CosmoHaloFinder CosmoHaloFinder.cxx)
 endif()
 
-if(TARGET vtkm::tbb)
-  add_executable(CosmoCenterFinder_TBB CosmoCenterFinderTBB.cxx)
-  add_executable(CosmoHaloFinder_TBB CosmoHaloFinderTBB.cxx)
-
-  target_link_libraries(CosmoCenterFinder_TBB PRIVATE vtkm_cont)
-  target_link_libraries(CosmoHaloFinder_TBB PRIVATE vtkm_cont)
-endif()
+target_link_libraries(CosmoCenterFinder PRIVATE vtkm_cont)
+target_link_libraries(CosmoHaloFinder PRIVATE vtkm_cont)

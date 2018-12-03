@@ -97,6 +97,7 @@ vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
+vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
 
 vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
@@ -199,6 +200,11 @@ if (VTKm_ENABLE_TESTING)
   # Find Pyexpander in case somebody wants to update the auto generated
   # faux variadic template code
   find_package(Pyexpander QUIET)
+
+  #-----------------------------------------------------------------------------
+  # Setup compiler flags for dynamic analysis if needed
+  include(VTKmCompilerDynamicAnalysisFlags)
+  vtkm_check_sanitizer_build()
 endif (VTKm_ENABLE_TESTING)
 
 #-----------------------------------------------------------------------------
@@ -288,7 +294,7 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
 
   # Create and install exports for external projects
   export(EXPORT ${VTKm_EXPORT_NAME}
-    FILE ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    FILE ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
     )
   install(EXPORT ${VTKm_EXPORT_NAME}
     DESTINATION ${VTKm_INSTALL_CONFIG_DIR}

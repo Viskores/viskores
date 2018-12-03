@@ -253,6 +253,9 @@
 #error "VTK-m requires at least a C++11 compiler"
 #endif
 
+//Mark if we have enabled logging.
+#cmakedefine VTKM_ENABLE_LOGGING
+
 
 // Define a pair of macros, VTKM_SWALLOW_SEMICOLON_PRE_BLOCK and
 // VTKM_SWALLOW_SEMICOLON_POST_BLOCK that can be used around a block in a

@@ -74,16 +74,11 @@ public:
   // Execute the WarpVector worklet given the points, vector and a scale factor.
   // Returns:
   // warped points
-  template <typename PointType, typename VectorType, typename ResultType, typename DeviceAdapter>
-  void Run(PointType point,
-           VectorType vector,
-           vtkm::FloatDefault scale,
-           ResultType warpedPoint,
-           DeviceAdapter vtkmNotUsed(adapter))
+  template <typename PointType, typename VectorType, typename ResultType>
+  void Run(PointType point, VectorType vector, vtkm::FloatDefault scale, ResultType warpedPoint)
   {
     WarpVectorImp warpVectorImp(scale);
     vtkm::worklet::DispatcherMapField<WarpVectorImp> dispatcher(warpVectorImp);
-    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(point, vector, warpedPoint);
   }
 };

@@ -73,33 +73,17 @@ public:
     LOGICAL_DIM
   };
 
+  VTKM_CONT
+  Field() = default;
+
   /// constructors for points / whole mesh
   VTKM_CONT
-  Field(std::string name, Association association, const vtkm::cont::DynamicArrayHandle& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName()
-    , AssocLogicalDim(-1)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->FieldAssociation == Association::WHOLE_MESH ||
-                this->FieldAssociation == Association::POINTS);
-  }
+  Field(std::string name, Association association, const vtkm::cont::DynamicArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name, Association association, const ArrayHandle<T, Storage>& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName()
-    , AssocLogicalDim(-1)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
+    : Field(name, association, vtkm::cont::DynamicArrayHandle{ data })
   {
-    VTKM_ASSERT((this->FieldAssociation == Association::WHOLE_MESH) ||
-                (this->FieldAssociation == Association::POINTS));
   }
 
   /// constructors for cell set associations
@@ -107,32 +91,15 @@ public:
   Field(std::string name,
         Association association,
         const std::string& cellSetName,
-        const vtkm::cont::DynamicArrayHandle& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName(cellSetName)
-    , AssocLogicalDim(-1)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->FieldAssociation == Association::CELL_SET);
-  }
+        const vtkm::cont::DynamicArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   const std::string& cellSetName,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName(cellSetName)
-    , AssocLogicalDim(-1)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
+    : Field(name, association, cellSetName, vtkm::cont::DynamicArrayHandle{ data })
   {
-    VTKM_ASSERT(this->FieldAssociation == Association::CELL_SET);
   }
 
   /// constructors for logical dimension associations
@@ -140,44 +107,15 @@ public:
   Field(std::string name,
         Association association,
         vtkm::IdComponent logicalDim,
-        const vtkm::cont::DynamicArrayHandle& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocCellSetName()
-    , AssocLogicalDim(logicalDim)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->FieldAssociation == Association::LOGICAL_DIM);
-  }
+        const vtkm::cont::DynamicArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   vtkm::IdComponent logicalDim,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Name(name)
-    , FieldAssociation(association)
-    , AssocLogicalDim(logicalDim)
-    , Data(data)
-    , Range()
-    , ModifiedFlag(true)
+    : Field(name, association, logicalDim, vtkm::cont::DynamicArrayHandle{ data })
   {
-    VTKM_ASSERT(this->FieldAssociation == Association::LOGICAL_DIM);
-  }
-
-  VTKM_CONT
-  Field()
-    : Name()
-    , FieldAssociation(Association::ANY)
-    , AssocCellSetName()
-    , AssocLogicalDim()
-    , Data()
-    , Range()
-    , ModifiedFlag(true)
-  {
-    //Generate an empty field
   }
 
   VTKM_CONT
@@ -287,13 +225,13 @@ public:
 private:
   std::string Name; ///< name of field
 
-  Association FieldAssociation;
+  Association FieldAssociation = Association::ANY;
   std::string AssocCellSetName;      ///< only populate if assoc is cells
   vtkm::IdComponent AssocLogicalDim; ///< only populate if assoc is logical dim
 
   vtkm::cont::DynamicArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
-  mutable bool ModifiedFlag;
+  mutable bool ModifiedFlag = true;
 
   template <typename TypeList, typename StorageList>
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRangeImpl(TypeList, StorageList) const
@@ -397,5 +335,91 @@ struct DynamicTransformTraits<vtkm::cont::Field>
 } // namespace internal
 } // namespace cont
 } // namespace vtkm
+
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename TypeList = VTKM_DEFAULT_TYPE_LIST_TAG,
+          typename StorageList = VTKM_DEFAULT_STORAGE_LIST_TAG>
+struct SerializableField
+{
+  SerializableField() = default;
+
+  explicit SerializableField(const vtkm::cont::Field& field)
+    : Field(field)
+  {
+  }
+
+  vtkm::cont::Field Field;
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename TypeList, typename StorageList>
+struct Serialization<vtkm::cont::SerializableField<TypeList, StorageList>>
+{
+private:
+  using Type = vtkm::cont::SerializableField<TypeList, StorageList>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& serializable)
+  {
+    const auto& field = serializable.Field;
+
+    diy::save(bb, field.GetName());
+    diy::save(bb, static_cast<int>(field.GetAssociation()));
+    if (field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
+    {
+      diy::save(bb, field.GetAssocCellSet());
+    }
+    else if (field.GetAssociation() == vtkm::cont::Field::Association::LOGICAL_DIM)
+    {
+      diy::save(bb, field.GetAssocLogicalDim());
+    }
+    diy::save(bb, field.GetData().ResetTypeAndStorageLists(TypeList{}, StorageList{}));
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& serializable)
+  {
+    auto& field = serializable.Field;
+
+    std::string name;
+    diy::load(bb, name);
+    int assocVal = 0;
+    diy::load(bb, assocVal);
+
+    auto assoc = static_cast<vtkm::cont::Field::Association>(assocVal);
+    vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList> data;
+    if (assoc == vtkm::cont::Field::Association::CELL_SET)
+    {
+      std::string assocCellSetName;
+      diy::load(bb, assocCellSetName);
+      diy::load(bb, data);
+      field =
+        vtkm::cont::Field(name, assoc, assocCellSetName, vtkm::cont::DynamicArrayHandle(data));
+    }
+    else if (assoc == vtkm::cont::Field::Association::LOGICAL_DIM)
+    {
+      vtkm::IdComponent assocLogicalDim;
+      diy::load(bb, assocLogicalDim);
+      diy::load(bb, data);
+      field = vtkm::cont::Field(name, assoc, assocLogicalDim, vtkm::cont::DynamicArrayHandle(data));
+    }
+    else
+    {
+      diy::load(bb, data);
+      field = vtkm::cont::Field(name, assoc, vtkm::cont::DynamicArrayHandle(data));
+    }
+  }
+};
+
+} // diy
 
 #endif //vtk_m_cont_Field_h

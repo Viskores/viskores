@@ -698,7 +698,7 @@ private:
   template <typename Value>
   struct BenchStableSortIndices
   {
-    using SSI = vtkm::worklet::StableSortIndices<DeviceAdapterTag>;
+    using SSI = vtkm::worklet::StableSortIndices;
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     ValueArrayHandle ValueHandle;
@@ -743,7 +743,7 @@ private:
   template <typename Value>
   struct BenchStableSortIndicesUnique
   {
-    using SSI = vtkm::worklet::StableSortIndices<DeviceAdapterTag>;
+    using SSI = vtkm::worklet::StableSortIndices;
     using IndexArrayHandle = typename SSI::IndexArrayType;
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
@@ -915,6 +915,7 @@ public:
   static VTKM_CONT int Run()
   {
     std::cout << DIVIDER << "\nRunning DeviceAdapter benchmarks\n";
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
 
     // Run fixed bytes / size tests:
     for (int sizeType = 0; sizeType < 2; ++sizeType)

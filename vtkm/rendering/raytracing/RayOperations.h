@@ -21,7 +21,6 @@
 #define vtk_m_rendering_raytracing_Ray_Operations_h
 
 #include <vtkm/Matrix.h>
-#include <vtkm/cont/TryExecute.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/raytracing/ChannelBufferOperations.h>
@@ -114,13 +113,11 @@ public:
 class RayOperations
 {
 public:
-  template <typename Device, typename T>
-  static void ResetStatus(Ray<T>& rays, vtkm::UInt8 status, Device)
+  template <typename T>
+  static void ResetStatus(Ray<T>& rays, vtkm::UInt8 status)
   {
-    vtkm::worklet::DispatcherMapField<MemSet<vtkm::UInt8>> dispatcher(
-      (MemSet<vtkm::UInt8>(status)));
-    dispatcher.SetDevice(Device());
-    dispatcher.Invoke(rays.Status);
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> statusHandle(status, rays.NumRays);
+    vtkm::cont::Algorithm::Copy(statusHandle, rays.Status);
   }
 
   //
@@ -137,12 +134,20 @@ public:
     dispatcher.Invoke(rays.HitIdx, rays.Status);
   }
 
+  template <typename T>
+  static void UpdateRayStatus(Ray<T>& rays)
+  {
+    vtkm::worklet::DispatcherMapField<detail::RayStatusFilter> dispatcher{ (
+      detail::RayStatusFilter{}) };
+    dispatcher.Invoke(rays.HitIdx, rays.Status);
+  }
+
   static void MapCanvasToRays(Ray<vtkm::Float32>& rays,
                               const vtkm::rendering::Camera& camera,
                               const vtkm::rendering::CanvasRayTracer& canvas);
 
-  template <typename Device, typename T>
-  static vtkm::Id RaysInMesh(Ray<T>& rays, Device)
+  template <typename T>
+  static vtkm::Id RaysInMesh(Ray<T>& rays)
   {
     vtkm::Vec<UInt8, 2> maskValues;
     maskValues[0] = RAY_ACTIVE;
@@ -152,17 +157,16 @@ public:
 
     vtkm::worklet::DispatcherMapField<ManyMask<vtkm::UInt8, 2>> dispatcher{ (
       ManyMask<vtkm::UInt8, 2>{ maskValues }) };
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(rays.Status, masks);
     vtkm::cont::ArrayHandleCast<vtkm::Id, vtkm::cont::ArrayHandle<vtkm::UInt8>> castedMasks(masks);
     const vtkm::Id initVal = 0;
-    vtkm::Id count = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(castedMasks, initVal);
+    vtkm::Id count = vtkm::cont::Algorithm::Reduce(castedMasks, initVal);
 
     return count;
   }
 
-  template <typename Device, typename T>
-  static vtkm::Id GetStatusCount(Ray<T>& rays, vtkm::Id status, Device)
+  template <typename T>
+  static vtkm::Id GetStatusCount(Ray<T>& rays, vtkm::Id status)
   {
     vtkm::UInt8 statusUInt8;
     if (status < 0 || status > 255)
@@ -175,17 +179,16 @@ public:
 
     vtkm::worklet::DispatcherMapField<Mask<vtkm::UInt8>> dispatcher{ (
       Mask<vtkm::UInt8>{ statusUInt8 }) };
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(rays.Status, masks);
     vtkm::cont::ArrayHandleCast<vtkm::Id, vtkm::cont::ArrayHandle<vtkm::UInt8>> castedMasks(masks);
     const vtkm::Id initVal = 0;
-    vtkm::Id count = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(castedMasks, initVal);
+    vtkm::Id count = vtkm::cont::Algorithm::Reduce(castedMasks, initVal);
 
     return count;
   }
 
-  template <typename Device, typename T>
-  static vtkm::Id RaysProcessed(Ray<T>& rays, Device)
+  template <typename T>
+  static vtkm::Id RaysProcessed(Ray<T>& rays)
   {
     vtkm::Vec<UInt8, 3> maskValues;
     maskValues[0] = RAY_TERMINATED;
@@ -196,17 +199,16 @@ public:
 
     vtkm::worklet::DispatcherMapField<ManyMask<vtkm::UInt8, 3>> dispatcher{ (
       ManyMask<vtkm::UInt8, 3>{ maskValues }) };
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(rays.Status, masks);
     vtkm::cont::ArrayHandleCast<vtkm::Id, vtkm::cont::ArrayHandle<vtkm::UInt8>> castedMasks(masks);
     const vtkm::Id initVal = 0;
-    vtkm::Id count = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(castedMasks, initVal);
+    vtkm::Id count = vtkm::cont::Algorithm::Reduce(castedMasks, initVal);
 
     return count;
   }
 
-  template <typename Device, typename T>
-  static vtkm::cont::ArrayHandle<vtkm::UInt8> CompactActiveRays(Ray<T>& rays, Device)
+  template <typename T>
+  static vtkm::cont::ArrayHandle<vtkm::UInt8> CompactActiveRays(Ray<T>& rays)
   {
     vtkm::Vec<UInt8, 1> maskValues;
     maskValues[0] = RAY_ACTIVE;
@@ -215,7 +217,6 @@ public:
 
     vtkm::worklet::DispatcherMapField<Mask<vtkm::UInt8>> dispatcher{ (
       Mask<vtkm::UInt8>{ statusUInt8 }) };
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(rays.Status, masks);
 
     vtkm::cont::ArrayHandle<T> emptyHandle;
@@ -256,7 +257,7 @@ public:
         break;
       }
       vtkm::cont::ArrayHandle<T> compacted;
-      vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(*floatArrayPointers[i], masks, compacted);
+      vtkm::cont::Algorithm::CopyIf(*floatArrayPointers[i], masks, compacted);
       *floatArrayPointers[i] = compacted;
     }
 
@@ -270,15 +271,15 @@ public:
     rays.Dir = vtkm::cont::make_ArrayHandleCompositeVector(rays.DirX, rays.DirY, rays.DirZ);
 
     vtkm::cont::ArrayHandle<vtkm::Id> compactedHits;
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(rays.HitIdx, masks, compactedHits);
+    vtkm::cont::Algorithm::CopyIf(rays.HitIdx, masks, compactedHits);
     rays.HitIdx = compactedHits;
 
     vtkm::cont::ArrayHandle<vtkm::Id> compactedPixels;
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(rays.PixelIdx, masks, compactedPixels);
+    vtkm::cont::Algorithm::CopyIf(rays.PixelIdx, masks, compactedPixels);
     rays.PixelIdx = compactedPixels;
 
     vtkm::cont::ArrayHandle<vtkm::UInt8> compactedStatus;
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(rays.Status, masks, compactedStatus);
+    vtkm::cont::Algorithm::CopyIf(rays.Status, masks, compactedStatus);
     rays.Status = compactedStatus;
 
     rays.NumRays = rays.Status.GetPortalConstControl().GetNumberOfValues();
@@ -286,7 +287,7 @@ public:
     const size_t bufferCount = static_cast<size_t>(rays.Buffers.size());
     for (size_t i = 0; i < bufferCount; ++i)
     {
-      ChannelBufferOperations::Compact(rays.Buffers[i], masks, rays.NumRays, Device());
+      ChannelBufferOperations::Compact(rays.Buffers[i], masks, rays.NumRays);
     }
     return masks;
   }
@@ -335,12 +336,11 @@ public:
     }
   }
 
-  template <typename Device, typename T>
-  static void CopyDistancesToMin(Ray<T> rays, Device, const T offset = 0.f)
+  template <typename T>
+  static void CopyDistancesToMin(Ray<T> rays, const T offset = 0.f)
   {
     vtkm::worklet::DispatcherMapField<CopyAndOffsetMask<T>> dispatcher{ (
       CopyAndOffsetMask<T>{ offset, RAY_EXITED_MESH }) };
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(rays.Distance, rays.MinDistance, rays.Status);
   }
 };

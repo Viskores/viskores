@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -27,11 +28,12 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
-
 
 #include <cstring>
 #include <iostream>
@@ -43,6 +45,42 @@ static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> BasisParticles;
 static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> BasisParticlesOriginal;
 static vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
 
+class ValidityCheck : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn<> end_point, FieldIn<> steps, FieldInOut<> output);
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  inline VTKM_CONT void SetBounds(vtkm::Bounds b) { bounds = b; }
+
+  template <typename PosType, typename StepType, typename ValidityType>
+  VTKM_EXEC void operator()(const PosType& end_point,
+                            const StepType& steps,
+                            ValidityType& res) const
+  {
+    if (steps > 0 && res == 1)
+    {
+      if (end_point[0] >= bounds.X.Min && end_point[0] <= bounds.X.Max &&
+          end_point[1] >= bounds.Y.Min && end_point[1] <= bounds.Y.Max &&
+          end_point[2] >= bounds.Z.Min && end_point[2] <= bounds.Z.Max)
+      {
+        res = 1;
+      }
+      else
+      {
+        res = 0;
+      }
+    }
+    else
+    {
+      res = 0;
+    }
+  }
+
+private:
+  vtkm::Bounds bounds;
+};
 
 namespace vtkm
 {
@@ -165,20 +203,19 @@ inline void Lagrangian::InitializeUniformSeeds(const vtkm::cont::DataSet& input)
 
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
 
   if (cycle == 0)
   {
     InitializeUniformSeeds(input);
     BasisParticlesOriginal.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(BasisParticles, BasisParticlesOriginal);
+    vtkm::cont::ArrayCopy(BasisParticles, BasisParticlesOriginal);
   }
 
   if (!fieldMeta.IsPointField())
@@ -192,7 +229,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
       "Write frequency can not be 0. Use SetWriteFrequency().");
   }
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> basisParticleArray;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(BasisParticles, basisParticleArray);
+  vtkm::cont::ArrayCopy(BasisParticles, basisParticleArray);
 
   cycle += 1;
   std::cout << "Cycle : " << cycle << std::endl;
@@ -205,21 +242,16 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
   using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using FieldPortalConstType =
-    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using PortalType_Position = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::PortalControl;
-  using PortalType_DoublePosition =
-    typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>::PortalControl;
 
   vtkm::worklet::ParticleAdvection particleadvection;
-  vtkm::worklet::ParticleAdvectionResult<T> res;
+  vtkm::worklet::ParticleAdvectionResult res;
 
   if (coords.GetData().IsType<RectilinearType>())
   {
-    using RectilinearGridEvalType = vtkm::worklet::particleadvection::
-      RectilinearGridEvaluate<FieldPortalConstType, T, DeviceAdapter, StorageType>;
+    using RectilinearGridEvalType =
+      vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldHandle>;
     using RK4IntegratorType =
-      vtkm::worklet::particleadvection::RK4Integrator<RectilinearGridEvalType, T>;
+      vtkm::worklet::particleadvection::RK4Integrator<RectilinearGridEvalType>;
     /*
   * If Euler step is preferred.
   using EulerIntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<RectilinearGridEvalType, T>;
@@ -227,17 +259,15 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     RectilinearGridEvalType eval(coords, cells, field);
     RK4IntegratorType rk4(eval, static_cast<vtkm::Float32>(this->stepSize));
     /*
-  * If Euler step is preffered.
+  * If Euler step is preferred.
   EulerIntegratorType euler(eval, static_cast<vtkm::FloatDefault>(this->stepSize));
   */
-    res = particleadvection.Run(rk4, basisParticleArray, 1, device); // Taking a single step
+    res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
   }
   else if (coords.GetData().IsType<UniformType>())
   {
-    using UniformGridEvalType = vtkm::worklet::particleadvection::
-      UniformGridEvaluate<FieldPortalConstType, T, DeviceAdapter, StorageType>;
-    using RK4IntegratorType =
-      vtkm::worklet::particleadvection::RK4Integrator<UniformGridEvalType, T>;
+    using UniformGridEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
+    using RK4IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<UniformGridEvalType>;
     /*
   * If Euler step is preferred.
   using EulerIntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<UniformGridEvalType, T>;
@@ -248,72 +278,66 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   * If Euler step is preferred.
   EulerIntegratorType euler(eval, static_cast<vtkm::FloatDefault>(this->stepSize));
   */
-    res = particleadvection.Run(rk4, basisParticleArray, 1, device); // Taking a single step
+    res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
   }
   else
   {
     std::cout << "Data set type is not rectilinear or uniform." << std::endl;
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> particle_positions = res.positions;
-  vtkm::cont::ArrayHandle<vtkm::Id> particle_stepstaken = res.stepsTaken;
+  auto particle_positions = res.positions;
+  auto particle_stepstaken = res.stepsTaken;
 
-  using PortalType_Position = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::PortalControl;
-  using PortalType_ID = typename vtkm::cont::ArrayHandle<vtkm::Id>::PortalControl;
+  auto start_position = BasisParticlesOriginal.GetPortalControl();
+  auto end_position = particle_positions.GetPortalControl();
 
-  PortalType_DoublePosition start_position = BasisParticlesOriginal.GetPortalControl();
-  PortalType_Position end_position = particle_positions.GetPortalControl();
+  auto portal_stepstaken = particle_stepstaken.GetPortalControl();
+  auto portal_validity = BasisParticlesValidity.GetPortalControl();
 
-  PortalType_ID portal_stepstaken = particle_stepstaken.GetPortalControl();
-  PortalType_ID portal_validity = BasisParticlesValidity.GetPortalControl();
+  vtkm::cont::DataSet outputData;
+  vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
 
-
-  int connectivity_index = 0;
-  std::vector<vtkm::Id> connectivity;
-  std::vector<vtkm::Vec<T, 3>> pointCoordinates;
-  std::vector<vtkm::UInt8> shapes;
-  std::vector<vtkm::IdComponent> numIndices;
-
-  // This whole loops needs to be replaced with data parallel function calls.
-  for (vtkm::Id index = 0; index < res.positions.GetNumberOfValues(); index++)
+  if (cycle % this->writeFrequency == 0)
   {
-    auto start_point = start_position.Get(index);
-    auto end_point = end_position.Get(index);
-    auto steps = portal_stepstaken.Get(index);
+    int connectivity_index = 0;
+    std::vector<vtkm::Id> connectivity;
+    std::vector<vtkm::Vec<T, 3>> pointCoordinates;
+    std::vector<vtkm::UInt8> shapes;
+    std::vector<vtkm::IdComponent> numIndices;
 
-    if (steps > 0 && portal_validity.Get(index) == 1)
+    for (vtkm::Id index = 0; index < res.positions.GetNumberOfValues(); index++)
     {
-      if (end_point[0] >= bounds.X.Min && end_point[0] <= bounds.X.Max &&
-          end_point[1] >= bounds.Y.Min && end_point[1] <= bounds.Y.Max &&
-          end_point[2] >= bounds.Z.Min && end_point[2] <= bounds.Z.Max)
+      auto start_point = start_position.Get(index);
+      auto end_point = end_position.Get(index);
+      auto steps = portal_stepstaken.Get(index);
+
+      if (steps > 0 && portal_validity.Get(index) == 1)
       {
-        connectivity.push_back(connectivity_index);
-        connectivity.push_back(connectivity_index + 1);
-        connectivity_index += 2;
-        pointCoordinates.push_back(
-          vtkm::Vec<T, 3>((float)start_point[0], (float)start_point[1], (float)start_point[2]));
-        pointCoordinates.push_back(
-          vtkm::Vec<T, 3>((float)end_point[0], (float)end_point[1], (float)end_point[2]));
-        shapes.push_back(vtkm::CELL_SHAPE_LINE);
-        numIndices.push_back(2);
+        if (end_point[0] >= bounds.X.Min && end_point[0] <= bounds.X.Max &&
+            end_point[1] >= bounds.Y.Min && end_point[1] <= bounds.Y.Max &&
+            end_point[2] >= bounds.Z.Min && end_point[2] <= bounds.Z.Max)
+        {
+          connectivity.push_back(connectivity_index);
+          connectivity.push_back(connectivity_index + 1);
+          connectivity_index += 2;
+          pointCoordinates.push_back(
+            vtkm::Vec<T, 3>((float)start_point[0], (float)start_point[1], (float)start_point[2]));
+          pointCoordinates.push_back(
+            vtkm::Vec<T, 3>((float)end_point[0], (float)end_point[1], (float)end_point[2]));
+          shapes.push_back(vtkm::CELL_SHAPE_LINE);
+          numIndices.push_back(2);
+        }
+        else
+        {
+          portal_validity.Set(index, 0);
+        }
       }
       else
       {
         portal_validity.Set(index, 0);
       }
     }
-    else
-    {
-      portal_validity.Set(index, 0);
-    }
-  }
 
-  vtkm::cont::DataSet outputData;
-  vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
-
-
-  if (cycle % this->writeFrequency == 0)
-  {
     outputData = dataSetBuilder.Create(pointCoordinates, shapes, numIndices, connectivity);
     std::stringstream file_path;
     file_path << "output/basisflows_" << this->rank << "_";
@@ -323,29 +347,31 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     {
       InitializeUniformSeeds(input);
       BasisParticlesOriginal.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(BasisParticles,
-                                                              BasisParticlesOriginal);
+      vtkm::cont::ArrayCopy(BasisParticles, BasisParticlesOriginal);
     }
     else
     {
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(particle_positions, BasisParticles);
+      vtkm::cont::ArrayCopy(particle_positions, BasisParticles);
     }
   }
   else
   {
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(particle_positions, BasisParticles);
+    ValidityCheck check;
+    check.SetBounds(bounds);
+    vtkm::worklet::DispatcherMapField<ValidityCheck> dispatcher(check);
+    dispatcher.Invoke(particle_positions, particle_stepstaken, BasisParticlesValidity);
+    vtkm::cont::ArrayCopy(particle_positions, BasisParticles);
   }
 
   return outputData;
 }
 
 //---------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool Lagrangian::DoMapField(vtkm::cont::DataSet&,
                                              const vtkm::cont::ArrayHandle<T, StorageType>&,
                                              const vtkm::filter::FieldMetadata&,
-                                             const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                             const DeviceAdapter&)
+                                             const vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

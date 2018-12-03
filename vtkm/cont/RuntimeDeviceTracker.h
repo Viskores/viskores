@@ -23,6 +23,7 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
@@ -34,10 +35,12 @@ namespace vtkm
 namespace cont
 {
 
+class RuntimeDeviceTracker;
 namespace detail
 {
 
 struct RuntimeDeviceTrackerInternals;
+struct RuntimeDeviceTrackerFunctor;
 }
 
 /// A class that can be used to determine if a given device adapter
@@ -49,6 +52,8 @@ struct RuntimeDeviceTrackerInternals;
 ///
 class VTKM_ALWAYS_EXPORT RuntimeDeviceTracker
 {
+  friend struct detail::RuntimeDeviceTrackerFunctor;
+
 public:
   VTKM_CONT_EXPORT
   VTKM_CONT
@@ -109,8 +114,8 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void ResetDevice(DeviceAdapterTag device)
   {
-    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
-    this->SetDeviceState(device, runtimeDevice.Exists());
+    vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+    this->SetDeviceState(device, runtimeDevice.Exists(DeviceAdapterTag()));
   }
 
   /// Reset the tracker to its default state for default devices.
@@ -192,9 +197,12 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void ForceDevice(DeviceAdapterTag device)
   {
-    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
-    this->ForceDeviceImpl(device, runtimeDevice.Exists());
+    vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+    this->ForceDeviceImpl(device, runtimeDevice.Exists(DeviceAdapterTag()));
   }
+
+  VTKM_CONT_EXPORT
+  VTKM_CONT void ForceDevice(DeviceAdapterId id);
 
   VTKM_CONT_EXPORT
   VTKM_CONT
@@ -235,6 +243,29 @@ thread_local static vtkm::cont::RuntimeDeviceTracker runtimeDeviceTracker;
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker();
+
+struct ScopedGlobalRuntimeDeviceTracker
+{
+  vtkm::cont::RuntimeDeviceTracker SavedTracker;
+
+  VTKM_CONT ScopedGlobalRuntimeDeviceTracker()
+    : SavedTracker(vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy())
+  {
+  }
+
+  VTKM_CONT ScopedGlobalRuntimeDeviceTracker(vtkm::cont::RuntimeDeviceTracker tracker)
+    : SavedTracker(vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy())
+  {
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy(tracker);
+  }
+
+  VTKM_CONT ~ScopedGlobalRuntimeDeviceTracker()
+  {
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy(this->SavedTracker);
+  }
+
+  ScopedGlobalRuntimeDeviceTracker(const ScopedGlobalRuntimeDeviceTracker&) = delete;
+};
 }
 } // namespace vtkm::cont
 

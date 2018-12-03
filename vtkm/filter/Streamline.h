@@ -23,6 +23,7 @@
 
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
 {
@@ -39,7 +40,7 @@ public:
   Streamline();
 
   VTKM_CONT
-  void SetStepSize(vtkm::Float64 s) { this->StepSize = s; }
+  void SetStepSize(vtkm::worklet::particleadvection::ScalarType s) { this->StepSize = s; }
 
   VTKM_CONT
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
@@ -47,26 +48,24 @@ public:
   VTKM_CONT
   void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& seeds);
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
     const vtkm::cont::DataSet& input,
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
     const vtkm::filter::FieldMetadata& fieldMeta,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter& tag);
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                            const DeviceAdapter& tag);
+                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   vtkm::worklet::Streamline Worklet;
-  vtkm::Float64 StepSize;
+  vtkm::worklet::particleadvection::ScalarType StepSize;
   vtkm::Id NumberOfSteps;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Seeds;
 };

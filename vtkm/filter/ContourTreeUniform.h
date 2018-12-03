@@ -87,12 +87,11 @@ public:
   ContourTreeMesh2D();
 
   /// Output field
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag);
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 };
 
 template <>
@@ -115,12 +114,11 @@ public:
   ContourTreeMesh3D();
 
   /// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag);
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 };
 
 template <>

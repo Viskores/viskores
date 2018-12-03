@@ -94,7 +94,6 @@ namespace contourtree
 {
 
 // Worklet: set initial chain maximum value
-template <typename DeviceAdapter>
 class ActiveEdgeTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -102,28 +101,15 @@ public:
     void(FieldIn<IdType> vertexID,              // (input) active vertex ID
          FieldIn<IdType> newPosition,           // (input) new position of edge in array
          FieldIn<IdType> newOutdegree,          // (input) the new updegree computed
+         WholeArrayIn<IdType> activeEdges,      // (input) active edges
+         WholeArrayIn<IdType> prunesTo,         // (input) where a vertex prunes to
          WholeArrayInOut<IdType> firstEdge,     // (i/o) first edge of each active vertex
          WholeArrayInOut<IdType> outdegree,     // (i/o) existing vertex updegrees
          WholeArrayInOut<IdType> chainExtremum, // (i/o) chain extremum for vertices
          WholeArrayInOut<IdType> edgeFar,       // (i/o) high end of each edge
          WholeArrayOut<IdType> newActiveEdges); // (output) new active edge list
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10);
   using InputDomain = _1;
-
-  // Passed in constructor because of argument limit on operator
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-
-  IdPortalType activeEdges; // (input) active edges
-  IdPortalType prunesTo;    // (input) where a vertex prunes to
-
-  // Constructor
-  VTKM_EXEC_CONT
-  ActiveEdgeTransferrer(IdPortalType ActiveEdges, IdPortalType PrunesTo)
-    : activeEdges(ActiveEdges)
-    , prunesTo(PrunesTo)
-  {
-  }
 
   // WARNING: POTENTIAL RISK FOR I/O
   // chainMaximum is safe for I/O here because:
@@ -134,10 +120,12 @@ public:
   //		reads the current value before writing to it
   //		the same is true of firstEdge and updegree
 
-  template <typename InOutFieldPortalType, typename OutFieldPortalType>
+  template <typename InFieldPortalType, typename InOutFieldPortalType, typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertexID,
                             const vtkm::Id& newPosition,
                             const vtkm::Id& newOutdegree,
+                            const InFieldPortalType& activeEdges,
+                            const InFieldPortalType& prunesTo,
                             const InOutFieldPortalType& firstEdge,
                             const InOutFieldPortalType& outdegree,
                             const InOutFieldPortalType& chainExtremum,

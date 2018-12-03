@@ -26,6 +26,7 @@
 
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/Logging.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
@@ -246,8 +247,7 @@ void CallPostExecute(Derived* self,
 //----------------------------------------------------------------------------
 template <typename Derived>
 inline VTKM_CONT Filter<Derived>::Filter()
-  : Tracker(vtkm::cont::GetGlobalRuntimeDeviceTracker())
-  , FieldsToPass(vtkm::filter::FieldSelection::MODE_ALL)
+  : FieldsToPass(vtkm::filter::FieldSelection::MODE_ALL)
 {
 }
 
@@ -280,6 +280,9 @@ inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
+  VTKM_LOG_SCOPE(
+    vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeName<Derived>().c_str());
+
   Derived* self = static_cast<Derived*>(this);
   vtkm::cont::MultiBlock output = self->Execute(vtkm::cont::MultiBlock(input), policy);
   if (output.GetNumberOfBlocks() > 1)
@@ -296,6 +299,10 @@ inline VTKM_CONT vtkm::cont::MultiBlock Filter<Derived>::Execute(
   const vtkm::cont::MultiBlock& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
+                 "Filter (MultiBlock): '%s'",
+                 vtkm::cont::TypeName<Derived>().c_str());
+
   Derived* self = static_cast<Derived*>(this);
 
   // Call `void Derived::PreExecute<DerivedPolicy>(input, policy)`, if defined.

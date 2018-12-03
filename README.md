@@ -71,6 +71,7 @@ Optional dependencies are:
 
   + CUDA Device Adapter
       + [Cuda Toolkit 7.5+](https://developer.nvidia.com/cuda-toolkit)
+      + Note CUDA >= 10.0 is required on Windows
   + TBB Device Adapter
       + [TBB](https://www.threadingbuildingblocks.org/)
   + OpenMP Device Adapter
@@ -95,19 +96,20 @@ Optional dependencies are:
       + EGL Driver
 
 VTK-m has been tested on the following configurations:
-  + On Linux 
-      + GCC 4.8.5, 5.4.0, 6.4.0, Clang 3.8.0
-      + CMake 3.9.2, 3.9.3, 3.10.3
-      + CUDA 8.0.61, 9.1.85
+  + On Linux
+      + GCC 4.8.5, 5.4.0, 6.4.0, 7.3.0 Clang 3.8.0, Intel 17.0.4
+      + CMake 3.9.3, 3.10.3
+      + CUDA 8.0.61, 9.1.85, 10.0.130
       + TBB 4.4 U2, 2017 U7
   + On Windows
       + Visual Studio 2015, 2017
       + CMake 3.3, 3.11.1
-      + CUDA 9.1.85
+      + CUDA 10.0.130
       + TBB 2017 U3, 2018 U2
   + On MacOS
-      + AppleClang 6.0
-      + TBB 2017 U6
+      + AppleClang 9.1
+      + CMake 3.12.0
+      + TBB 2018
 
 
 ## Building ##
@@ -133,7 +135,7 @@ Users Guide].
 ## Example##
 
 The VTK-m source distribution includes a number of examples. The goal of the
-VTK-m examples is to illustrate specific VTK-m concepts in a consistent and 
+VTK-m examples is to illustrate specific VTK-m concepts in a consistent and
 simple format. However, these examples only cover a small part of the
 capabilities of VTK-m.
 
@@ -204,7 +206,7 @@ See [LICENSE.txt](LICENSE.txt) for details.
 [VTK-m download page]:      http://m.vtk.org/index.php/VTK-m_Releases
 [VTK-m git repository]:     https://gitlab.kitware.com/vtk/vtk-m/
 [VTK-m Issue Tracker]:      https://gitlab.kitware.com/vtk/vtk-m/issues
-[VTK-m Overview]:           http://m.vtk.org/images/2/29/VTKmVis2016.pptx 
+[VTK-m Overview]:           http://m.vtk.org/images/2/29/VTKmVis2016.pptx
 [VTK-m Users Guide]:        http://m.vtk.org/images/c/c8/VTKmUsersGuide.pdf
 [VTK-m users email list]:   http://vtk.org/mailman/listinfo/vtkm
 [VTK-m Wiki]:               http://m.vtk.org/

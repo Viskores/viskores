@@ -72,6 +72,16 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
       IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
       IMPORTED_LOCATION_RELEASE "${real_path}"
       )
+  elseif(EXISTS "${TBB_LIBRARY}")
+    #When VTK-m is mixed with OSPray we could use the OSPray FindTBB file
+    #which doesn't define TBB_LIBRARY_RELEASE but instead defined only
+    #TBB_LIBRARY
+    vtkm_extract_real_library("${TBB_LIBRARY}" real_path)
+    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+    set_target_properties(vtkm::tbb PROPERTIES
+      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+      IMPORTED_LOCATION_RELEASE "${real_path}"
+      )
   endif()
 
   if(EXISTS "${TBB_LIBRARY_DEBUG}")
@@ -188,18 +198,21 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   #   - Uses: --generate-code=arch=compute_60,code=sm_60
   # 6 - volta
   #   - Uses: --generate-code=arch=compute_70,code=sm_70
-  # 7 - all
+  # 7 - turing
+  #   - Uses: --generate-code=arch=compute_75code=sm_75
+  # 8 - all
   #   - Uses: --generate-code=arch=compute_30,code=sm_30
   #   - Uses: --generate-code=arch=compute_35,code=sm_35
   #   - Uses: --generate-code=arch=compute_50,code=sm_50
   #   - Uses: --generate-code=arch=compute_60,code=sm_60
   #   - Uses: --generate-code=arch=compute_70,code=sm_70
+  #   - Uses: --generate-code=arch=compute_75,code=sm_75
   # 8 - none
   #
 
   #specify the property
   set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
-  set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta all none)
+  set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta turing all none)
 
   #detect what the property is set too
   if(VTKm_CUDA_Architecture STREQUAL "native")
@@ -253,12 +266,15 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     set(arch_flags --generate-code=arch=compute_60,code=sm_60)
   elseif(VTKm_CUDA_Architecture STREQUAL "volta")
     set(arch_flags --generate-code=arch=compute_70,code=sm_70)
+  elseif(VTKm_CUDA_Architecture STREQUAL "turing")
+    set(arch_flags --generate-code=arch=compute_75,code=sm_75)
   elseif(VTKm_CUDA_Architecture STREQUAL "all")
     set(arch_flags --generate-code=arch=compute_30,code=sm_30
                    --generate-code=arch=compute_35,code=sm_35
                    --generate-code=arch=compute_50,code=sm_50
                    --generate-code=arch=compute_60,code=sm_60
-                   --generate-code=arch=compute_70,code=sm_70)
+                   --generate-code=arch=compute_70,code=sm_70
+                   --generate-code=arch=compute_75,code=sm_75)
   endif()
 
   string(REPLACE ";" " " arch_flags "${arch_flags}")

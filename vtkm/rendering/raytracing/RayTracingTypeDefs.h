@@ -29,6 +29,7 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/TryExecute.h>
 
 namespace vtkm
 {
@@ -99,6 +100,30 @@ inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagCuda>(
   vtkm::cont::DeviceAdapterTagCuda)
 {
   return "cuda";
+}
+
+struct DeviceStringFunctor
+{
+  std::string result;
+  DeviceStringFunctor()
+    : result("")
+  {
+  }
+
+  template <typename Device>
+  VTKM_CONT bool operator()(Device)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    result = GetDeviceString(Device());
+    return true;
+  }
+};
+
+inline std::string GetDeviceString()
+{
+  DeviceStringFunctor functor;
+  vtkm::cont::TryExecute(functor);
+  return functor.result;
 }
 
 using ColorBuffer4f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;

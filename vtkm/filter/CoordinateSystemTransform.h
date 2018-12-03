@@ -41,12 +41,11 @@ public:
   VTKM_CONT void SetCartesianToCylindrical() { Worklet.SetCartesianToCylindrical(); }
   VTKM_CONT void SetCylindricalToCartesian() { Worklet.SetCylindricalToCartesian(); }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag);
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   vtkm::worklet::CylindricalCoordinateTransform Worklet;
@@ -69,12 +68,12 @@ public:
   VTKM_CONT void SetCartesianToSpherical() { Worklet.SetCartesianToSpherical(); }
   VTKM_CONT void SetSphericalToCartesian() { Worklet.SetSphericalToCartesian(); }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                          const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag) const;
+  template <typename T, typename StorageType, typename DerivedPolicy>
+  VTKM_CONT vtkm::cont::DataSet DoExecute(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::ArrayHandle<T, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy) const;
 
 private:
   vtkm::worklet::SphericalCoordinateTransform Worklet;
@@ -84,7 +83,7 @@ template <>
 class FilterTraits<SphericalCoordinateTransform>
 {
 public:
-  //Point Elevation can only convert Float and Double Vec3 arrays
+  //CoordinateSystemTransformation can only convert Float and Double Vec3 arrays
   using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }

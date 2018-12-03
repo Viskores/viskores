@@ -66,12 +66,11 @@ public:
   VTKM_CONT
   vtkm::Range GetComputedRange() const { return this->ComputedRange; }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag);
+                                          vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //@{
   /// when operating on vtkm::cont::MultiBlock, we

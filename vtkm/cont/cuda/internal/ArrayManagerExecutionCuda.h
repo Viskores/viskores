@@ -31,6 +31,7 @@
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/Storage.h>
 
 //This is in a separate header so that ArrayHandleBasicImpl can include
@@ -151,6 +152,11 @@ public:
 
       if (static_cast<std::size_t>(numberOfValues) > maxNumVals)
       {
+        VTKM_LOG_F(vtkm::cont::LogLevel::MemExec,
+                   "Refusing to allocate CUDA memory; number of values (%llu) exceeds "
+                   "std::size_t capacity.",
+                   static_cast<vtkm::UInt64>(numberOfValues));
+
         std::ostringstream err;
         err << "Failed to allocate " << numberOfValues << " values on device: "
             << "Number of bytes is not representable by std::size_t.";
@@ -198,6 +204,11 @@ public:
   void RetrieveOutputData(StorageType* storage) const
   {
     storage->Allocate(this->GetNumberOfValues());
+
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
+               "Copying CUDA dev --> host: %s",
+               vtkm::cont::GetSizeString(this->End - this->Begin).c_str());
+
     try
     {
       ::thrust::copy(thrust::cuda::pointer<ValueType>(this->Begin),
@@ -250,6 +261,11 @@ private:
     try
     {
       this->PrepareForOutput(this->Storage->GetNumberOfValues());
+
+      VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
+                 "Copying host --> CUDA dev: %s.",
+                 vtkm::cont::GetSizeString(this->End - this->Begin).c_str());
+
       ::thrust::copy(vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
                      vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()),
                      thrust::cuda::pointer<ValueType>(this->Begin));

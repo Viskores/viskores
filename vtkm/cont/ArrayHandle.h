@@ -29,6 +29,7 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/ErrorInternal.h>
+#include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
 
@@ -293,7 +294,7 @@ public:
   /// with CUDA), then the automatically generated move constructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  ArrayHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src);
+  ArrayHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src) noexcept;
 
   /// Special constructor for subclass specializations that need to set the
   /// initial state of the control array. When this constructor is used, it
@@ -306,7 +307,7 @@ public:
   /// initial state of the control array. When this constructor is used, it
   /// is assumed that the control array is valid.
   ///
-  ArrayHandle(StorageType&& storage);
+  ArrayHandle(StorageType&& storage) noexcept;
 
   /// Destructs an empty ArrayHandle.
   ///
@@ -327,7 +328,7 @@ public:
   ///
   VTKM_CONT
   vtkm::cont::ArrayHandle<ValueType, StorageTag>& operator=(
-    vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src);
+    vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src) noexcept;
 
   /// Like a pointer, two \c ArrayHandles are considered equal if they point
   /// to the same location in memory.
@@ -673,6 +674,50 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 }
 }
 } //namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename T>
+struct TypeString<ArrayHandle<T>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH<" + TypeString<T>::Get() + ">";
+    return name;
+  }
+};
+
+namespace internal
+{
+
+template <typename T, typename S>
+void VTKM_CONT ArrayHandleDefaultSerialization(diy::BinaryBuffer& bb,
+                                               const vtkm::cont::ArrayHandle<T, S>& obj);
+
+} // internal
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename T>
+struct Serialization<vtkm::cont::ArrayHandle<T>>
+{
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::ArrayHandle<T>& obj)
+  {
+    vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::ArrayHandle<T>& obj);
+};
+
+} // diy
 
 #include <vtkm/cont/ArrayHandle.hxx>
 #include <vtkm/cont/internal/ArrayHandleBasicImpl.h>

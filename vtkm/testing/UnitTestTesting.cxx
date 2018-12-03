@@ -31,14 +31,33 @@ void Fail()
   VTKM_TEST_FAIL("I expect this error.");
 }
 
+void Fail2()
+{
+  vtkm::Id num = 5;
+  VTKM_TEST_FAIL("I can provide a number: ", num);
+}
+
 void BadAssert()
 {
   VTKM_TEST_ASSERT(0 == 1, "I expect this error.");
 }
 
+void BadAssert2()
+{
+  vtkm::Id num1 = 0;
+  vtkm::Id num2 = 1;
+  VTKM_TEST_ASSERT(num1 == num2, "num 1 is ", num1, "; num 2 is ", num2);
+}
+
+void BadAssert3()
+{
+  VTKM_TEST_ASSERT(0 == 1);
+}
+
 void GoodAssert()
 {
   VTKM_TEST_ASSERT(1 == 1, "Always true.");
+  VTKM_TEST_ASSERT(1 == 1);
 }
 
 void TestTestEqual()
@@ -65,7 +84,25 @@ int UnitTestTesting(int, char* [])
     return 1;
   }
   std::cout << "This call should fail." << std::endl;
+  if (vtkm::testing::Testing::Run(Fail2) == 0)
+  {
+    std::cout << "Did not get expected fail!" << std::endl;
+    return 1;
+  }
+  std::cout << "This call should fail." << std::endl;
   if (vtkm::testing::Testing::Run(BadAssert) == 0)
+  {
+    std::cout << "Did not get expected fail!" << std::endl;
+    return 1;
+  }
+  std::cout << "This call should fail." << std::endl;
+  if (vtkm::testing::Testing::Run(BadAssert2) == 0)
+  {
+    std::cout << "Did not get expected fail!" << std::endl;
+    return 1;
+  }
+  std::cout << "This call should fail." << std::endl;
+  if (vtkm::testing::Testing::Run(BadAssert3) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;

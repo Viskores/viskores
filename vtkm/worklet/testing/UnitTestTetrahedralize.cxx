@@ -28,7 +28,6 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingTetrahedralize
 {
 public:
@@ -97,8 +96,7 @@ public:
   }
 };
 
-int UnitTestTetrahedralize(int, char* [])
+int UnitTestTetrahedralize(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestingTetrahedralize<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingTetrahedralize(), argc, argv);
 }

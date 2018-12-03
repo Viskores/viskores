@@ -21,6 +21,7 @@
 #ifndef vtk_m_worklet_StreamLineUniformGrid_h
 #define vtk_m_worklet_StreamLineUniformGrid_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
@@ -344,7 +345,7 @@ public:
                           vtkm::Id maxSteps,
                           FieldType timeStep)
   {
-    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using DeviceAlgorithm = vtkm::cont::Algorithm;
 
     // Get information from input dataset
     vtkm::cont::CellSetStructured<3> inCellSet;
@@ -398,7 +399,6 @@ public:
       timeStep, streamMode, maxSteps, vdims, fieldArray.PrepareForInput(DeviceAdapter()));
     using MakeStreamLinesDispatcher = vtkm::worklet::DispatcherMapField<MakeStreamLines>;
     MakeStreamLinesDispatcher makeStreamLinesDispatcher(makeStreamLines);
-    makeStreamLinesDispatcher.SetDevice(DeviceAdapter());
     makeStreamLinesDispatcher.Invoke(
       seedIdArray, seedPosArray, numIndices, validPoint, streamArray);
 

@@ -45,10 +45,10 @@ void process_block_tbb(RuntimeTaskQueue& queue)
 {
   //Step 1. Set the device adapter to this thread to TBB.
   //This makes sure that any vtkm::filters used by our
-  //task operate only on TBB
+  //task operate only on TBB. The "global" thread tracker
+  //is actually thread-local, so we can use that.
   //
-  vtkm::cont::RuntimeDeviceTracker tracker;
-  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
 
   while (queue.hasTasks())
   {
@@ -60,7 +60,7 @@ void process_block_tbb(RuntimeTaskQueue& queue)
     //when the queue is empty and we are shutting down
     if (task != nullptr)
     {
-      task(tracker);
+      task();
     }
 
     //Step 4. Notify the queue that we finished processing this task
@@ -73,13 +73,10 @@ void process_block_cuda(RuntimeTaskQueue& queue, int gpuId)
 {
   //Step 1. Set the device adapter to this thread to cuda.
   //This makes sure that any vtkm::filters used by our
-  //task operate only on cuda
+  //task operate only on cuda.  The "global" thread tracker
+  //is actually thread-local, so we can use that.
   //
-  vtkm::cont::RuntimeDeviceTracker tracker;
-#if defined(VTKM_ENABLE_CUDA)
-  auto error = cudaSetDevice(gpuId);
-  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
-#endif
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   (void)gpuId;
 
   while (queue.hasTasks())
@@ -87,12 +84,12 @@ void process_block_cuda(RuntimeTaskQueue& queue, int gpuId)
     //Step 2. Get the task to run on cuda
     auto task = queue.pop();
 
-    //Step 3. Run the task on TBB. We check the validity
+    //Step 3. Run the task on cuda. We check the validity
     //of the task since we could be given an empty task
     //when the queue is empty and we are shutting down
     if (task != nullptr)
     {
-      task(tracker);
+      task();
     }
 
     //Step 4. Notify the queue that we finished processing this task
@@ -190,11 +187,8 @@ inline VTKM_CONT vtkm::cont::MultiBlock MultiDeviceGradient::PrepareForExecution
   {
     vtkm::cont::DataSet input = *block;
     this->Queue.push( //build a lambda that is the work to do
-      [=](const vtkm::cont::RuntimeDeviceTracker& tracker) {
-        //make a per thread copy of the filter
-        //and give it the device tracker
+      [=]() {
         vtkm::filter::Gradient perThreadGrad = gradient;
-        perThreadGrad.SetRuntimeDeviceTracker(tracker);
 
         vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
         outPtr->ReplaceBlock(0, result);
@@ -212,11 +206,8 @@ inline VTKM_CONT vtkm::cont::MultiBlock MultiDeviceGradient::PrepareForExecution
     //will allows us to have multiple works execute in a non
     //blocking manner
     this->Queue.push( //build a lambda that is the work to do
-      [=](const vtkm::cont::RuntimeDeviceTracker& tracker) {
-        //make a per thread copy of the filter
-        //and give it the device tracker
+      [=]() {
         vtkm::filter::Gradient perThreadGrad = gradient;
-        perThreadGrad.SetRuntimeDeviceTracker(tracker);
 
         vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
         outPtr->ReplaceBlock(index, result);

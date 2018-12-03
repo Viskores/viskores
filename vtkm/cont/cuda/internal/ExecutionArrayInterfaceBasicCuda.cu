@@ -20,6 +20,8 @@
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/ExecutionArrayInterfaceBasicCuda.h>
 
+#include <vtkm/cont/Logging.h>
+
 using vtkm::cont::cuda::internal::CudaAllocator;
 
 namespace vtkm
@@ -142,6 +144,11 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(
     return;
   }
 
+  VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
+             "Copying host --> CUDA dev: %s (%llu bytes)",
+             vtkm::cont::GetHumanReadableSize(numBytes).c_str(),
+             numBytes);
+
   VTKM_CUDA_CALL(cudaMemcpyAsync(executionPtr,
                                  controlPtr,
                                  static_cast<std::size_t>(numBytes),
@@ -170,6 +177,11 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
   }
   else
   {
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
+               "Copying CUDA dev --> host: %s (%llu bytes)",
+               vtkm::cont::GetHumanReadableSize(numBytes).c_str(),
+               numBytes);
+
     VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
                                    executionPtr,
                                    static_cast<std::size_t>(numBytes),

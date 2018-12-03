@@ -28,7 +28,6 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingTriangulate
 {
 public:
@@ -45,7 +44,7 @@ public:
 
     // Convert uniform quadrilaterals to triangles
     vtkm::worklet::Triangulate triangulate;
-    OutCellSetType outCellSet = triangulate.Run(cellSet, DeviceAdapter());
+    OutCellSetType outCellSet = triangulate.Run(cellSet);
 
     // Create the output dataset and assign the input coordinate system
     vtkm::cont::DataSet outDataSet;
@@ -71,7 +70,7 @@ public:
 
     // Convert explicit cells to triangles
     vtkm::worklet::Triangulate triangulate;
-    OutCellSetType outCellSet = triangulate.Run(cellSet, DeviceAdapter());
+    OutCellSetType outCellSet = triangulate.Run(cellSet);
 
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;
@@ -89,7 +88,7 @@ public:
   }
 };
 
-int UnitTestTriangulate(int, char* [])
+int UnitTestTriangulate(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingTriangulate<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingTriangulate(), argc, argv);
 }

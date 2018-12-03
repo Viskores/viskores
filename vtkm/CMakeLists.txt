@@ -31,11 +31,13 @@ set(headers
   BaseComponent.h
   BinaryPredicates.h
   BinaryOperators.h
+  Bitset.h
   Bounds.h
   CellShape.h
   CellTraits.h
   Flags.h
   Geometry.h
+  GhostCell.h
   Hash.h
   ImplicitFunction.h
   ListTag.h
@@ -80,6 +82,9 @@ vtkm_declare_headers(
 #first add all the components vtkm that are shared between control and exec
 add_subdirectory(thirdparty/diy)
 add_subdirectory(thirdparty/taotuple)
+if(VTKm_ENABLE_LOGGING)
+  add_subdirectory(thirdparty/loguru)
+endif()
 add_subdirectory(testing)
 add_subdirectory(internal)
 

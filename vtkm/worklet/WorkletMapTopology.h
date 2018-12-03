@@ -48,11 +48,16 @@ namespace vtkm
 namespace worklet
 {
 
+template <typename WorkletType>
+class DispatcherMapTopology;
+
 namespace detail
 {
 
 struct WorkletMapTopologyBase : vtkm::worklet::internal::WorkletBase
 {
+  template <typename Worklet>
+  using Dispatcher = vtkm::worklet::DispatcherMapTopology<Worklet>;
 };
 
 } // namespace detail

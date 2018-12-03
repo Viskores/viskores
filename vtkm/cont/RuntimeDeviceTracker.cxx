@@ -23,10 +23,19 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/internal/DeviceAdapterError.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+
+//Bring in each device adapters runtime class
+#include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
+#include <vtkm/cont/internal/DeviceAdapterError.h>
+#include <vtkm/cont/openmp/internal/DeviceAdapterRuntimeDetectorOpenMP.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
+#include <vtkm/cont/tbb/internal/DeviceAdapterRuntimeDetectorTBB.h>
+
 
 #include <algorithm>
 #include <map>
@@ -74,6 +83,19 @@ struct RuntimeDeviceTrackerInternals
 {
   bool RuntimeValid[VTKM_MAX_DEVICE_ADAPTER_ID];
   DeviceAdapterNameType DeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
+};
+
+struct RuntimeDeviceTrackerFunctor
+{
+  template <typename DeviceAdapter>
+  VTKM_CONT void operator()(DeviceAdapter, DeviceAdapterId id, RuntimeDeviceTracker* rdt)
+  {
+    vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+    if (DeviceAdapter() == id)
+    {
+      rdt->ForceDeviceImpl(DeviceAdapter(), runtimeDevice.Exists(DeviceAdapter()));
+    }
+  }
 };
 }
 
@@ -203,6 +225,13 @@ vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker()
 #else
   return runtimeDeviceTracker;
 #endif
+}
+
+VTKM_CONT
+void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId id)
+{
+  detail::RuntimeDeviceTrackerFunctor functor;
+  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(), id, this);
 }
 
 VTKM_CONT

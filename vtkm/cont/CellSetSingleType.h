@@ -261,4 +261,65 @@ private:
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename ConnectivityST>
+struct TypeString<vtkm::cont::CellSetSingleType<ConnectivityST>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name =
+      "CS_Single<" + TypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST>";
+
+    return name;
+  }
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename ConnectivityST>
+struct Serialization<vtkm::cont::CellSetSingleType<ConnectivityST>>
+{
+private:
+  using Type = vtkm::cont::CellSetSingleType<ConnectivityST>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
+  {
+    diy::save(bb, cs.GetName());
+    diy::save(bb, cs.GetNumberOfPoints());
+    diy::save(bb, cs.GetCellShape(0));
+    diy::save(bb, cs.GetNumberOfPointsInCell(0));
+    diy::save(
+      bb, cs.GetConnectivityArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
+  {
+    std::string name;
+    diy::load(bb, name);
+    vtkm::Id numberOfPoints = 0;
+    diy::load(bb, numberOfPoints);
+    vtkm::UInt8 shape;
+    diy::load(bb, shape);
+    vtkm::IdComponent count;
+    diy::load(bb, count);
+    vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST> connectivity;
+    diy::load(bb, connectivity);
+
+    cs = Type(name);
+    cs.Fill(numberOfPoints, shape, count, connectivity);
+  }
+};
+
+} // diy
+
 #endif //vtk_m_cont_CellSetSingleType_h

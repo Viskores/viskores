@@ -22,6 +22,7 @@
 
 //include all backends
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
@@ -50,8 +51,8 @@ struct DoesExist<false>
   {
 
     //runtime information for this device should return false
-    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
-    VTKM_TEST_ASSERT(runtime.Exists() == false,
+    vtkm::cont::RuntimeDeviceInformation runtime;
+    VTKM_TEST_ASSERT(runtime.Exists(DeviceAdapterTag()) == false,
                      "A backend with zero compile time support, can't have runtime support");
   }
 
@@ -60,12 +61,12 @@ struct DoesExist<false>
     //Since we are in a C++ compilation unit the Device Adapter
     //trait should be false. But CUDA could still be enabled.
     //That is why we check VTKM_ENABLE_CUDA.
-    vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagCuda> runtime;
+    vtkm::cont::RuntimeDeviceInformation runtime;
 #ifdef VTKM_ENABLE_CUDA
-    VTKM_TEST_ASSERT(runtime.Exists() == true,
+    VTKM_TEST_ASSERT(runtime.Exists(vtkm::cont::DeviceAdapterTagCuda()) == true,
                      "with cuda backend enabled, runtime support should be enabled");
 #else
-    VTKM_TEST_ASSERT(runtime.Exists() == false,
+    VTKM_TEST_ASSERT(runtime.Exists(vtkm::cont::DeviceAdapterTagCuda()) == false,
                      "with cuda backend disabled, runtime support should be disabled");
 #endif
   }
@@ -78,8 +79,8 @@ struct DoesExist<true>
   void Exist(DeviceAdapterTag) const
   {
     //runtime information for this device should return true
-    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
-    VTKM_TEST_ASSERT(runtime.Exists() == true,
+    vtkm::cont::RuntimeDeviceInformation runtime;
+    VTKM_TEST_ASSERT(runtime.Exists(DeviceAdapterTag()) == true,
                      "A backend with compile time support, should have runtime support");
   }
 };
@@ -87,14 +88,16 @@ struct DoesExist<true>
 void Detection()
 {
   using SerialTag = ::vtkm::cont::DeviceAdapterTagSerial;
+  using OpenMPTag = ::vtkm::cont::DeviceAdapterTagOpenMP;
   using TBBTag = ::vtkm::cont::DeviceAdapterTagTBB;
   using CudaTag = ::vtkm::cont::DeviceAdapterTagCuda;
 
   //Verify that for each device adapter we compile code for, that it
   //has valid runtime support.
+  detect_if_exists(SerialTag());
+  detect_if_exists(OpenMPTag());
   detect_if_exists(CudaTag());
   detect_if_exists(TBBTag());
-  detect_if_exists(SerialTag());
 }
 
 } // anonymous namespace

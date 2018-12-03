@@ -36,11 +36,10 @@ inline VTKM_CONT ExtractStructured::ExtractStructured()
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename DeviceAdapter>
+template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
   const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
   const vtkm::cont::CoordinateSystem& coordinates =
@@ -49,10 +48,9 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
   auto cellset = this->Worklet.Run(vtkm::filter::ApplyPolicyStructured(cells, policy),
                                    this->VOI,
                                    this->SampleRate,
-                                   this->IncludeBoundary,
-                                   device);
+                                   this->IncludeBoundary);
 
-  auto coords = this->Worklet.MapCoordinates(coordinates, device);
+  auto coords = this->Worklet.MapCoordinates(coordinates);
   vtkm::cont::CoordinateSystem outputCoordinates(coordinates.GetName(), coords);
 
   vtkm::cont::DataSet output;
@@ -62,17 +60,16 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool ExtractStructured::DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   if (fieldMeta.IsPointField())
   {
-    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessPointField(input, device);
+    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessPointField(input);
 
     result.AddField(fieldMeta.AsField(output));
     return true;
@@ -81,7 +78,7 @@ inline VTKM_CONT bool ExtractStructured::DoMapField(
   // cell data must be scattered to the cells created per input cell
   if (fieldMeta.IsCellField())
   {
-    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input, device);
+    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input);
 
     result.AddField(fieldMeta.AsField(output));
     return true;

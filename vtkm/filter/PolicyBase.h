@@ -25,6 +25,7 @@
 
 #include <vtkm/cont/CellSetListTag.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
@@ -46,9 +47,6 @@ struct PolicyBase
   using StructuredCellSetList = vtkm::cont::CellSetListTagStructured;
   using UnstructuredCellSetList = vtkm::cont::CellSetListTagUnstructured;
   using AllCellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG;
-
-  // List of backends to try in sequence (if one fails, the next is attempted).
-  using DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
 };
 
 //-----------------------------------------------------------------------------
@@ -63,16 +61,16 @@ ApplyPolicy(const vtkm::cont::Field& field, const vtkm::filter::PolicyBase<Deriv
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename FilterType>
+template <typename DerivedPolicy, typename FilterType, typename FieldTag>
 VTKM_CONT vtkm::cont::DynamicArrayHandleBase<
-  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType>::TypeList,
+  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList,
   typename DerivedPolicy::FieldStorageList>
 ApplyPolicy(const vtkm::cont::Field& field,
             const vtkm::filter::PolicyBase<DerivedPolicy>&,
-            const vtkm::filter::FilterTraits<FilterType>&)
+            const vtkm::filter::FilterTraits<FilterType, FieldTag>&)
 {
   using TypeList =
-    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType>::TypeList;
+    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList;
 
   using StorageList = typename DerivedPolicy::FieldStorageList;
   return field.GetData().ResetTypeAndStorageLists(TypeList(), StorageList());
@@ -107,7 +105,47 @@ ApplyPolicyUnstructured(const vtkm::cont::DynamicCellSet& cellset,
   using CellSetList = typename DerivedPolicy::UnstructuredCellSetList;
   return cellset.ResetCellSetList(CellSetList());
 }
+
+//-----------------------------------------------------------------------------
+template <typename DerivedPolicy>
+VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList,
+                                        typename DerivedPolicy::FieldStorageList>
+MakeSerializableField(const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return {};
+}
+
+template <typename DerivedPolicy>
+VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList,
+                                        typename DerivedPolicy::FieldStorageList>
+MakeSerializableField(const vtkm::cont::Field& field,
+                      const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList,
+                                       typename DerivedPolicy::FieldStorageList>{ field };
+}
+
+template <typename DerivedPolicy>
+VTKM_CONT vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
+                                          typename DerivedPolicy::FieldStorageList,
+                                          typename DerivedPolicy::AllCellSetList>
+MakeSerializableDataSet(const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return {};
+}
+
+template <typename DerivedPolicy>
+VTKM_CONT vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
+                                          typename DerivedPolicy::FieldStorageList,
+                                          typename DerivedPolicy::AllCellSetList>
+MakeSerializableDataSet(const vtkm::cont::DataSet& dataset,
+                        const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
+                                         typename DerivedPolicy::FieldStorageList,
+                                         typename DerivedPolicy::AllCellSetList>{ dataset };
 }
 }
+} // vtkm::filter
 
 #endif //vtk_m_filter_PolicyBase_h

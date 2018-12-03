@@ -25,6 +25,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/rendering/raytracing/CellTables.h>
+#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>

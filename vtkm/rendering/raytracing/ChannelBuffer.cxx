@@ -440,9 +440,15 @@ template <typename Precision>
 void ChannelBuffer<Precision>::Normalize(bool invert)
 {
 
-  NormalizeFunctor<Precision> functor(this->Buffer, invert);
-
-  vtkm::cont::TryExecute(functor);
+  vtkm::cont::Field asField(
+    "name meaningless", vtkm::cont::Field::Association::POINTS, this->Buffer);
+  vtkm::Range range;
+  asField.GetRange(&range);
+  Precision minScalar = static_cast<Precision>(range.Min);
+  Precision maxScalar = static_cast<Precision>(range.Max);
+  vtkm::worklet::DispatcherMapField<NormalizeBuffer<Precision>> dispatcher(
+    NormalizeBuffer<Precision>(minScalar, maxScalar, invert));
+  dispatcher.Invoke(this->Buffer);
 }
 
 template <typename Precision>
@@ -466,29 +472,10 @@ struct ResizeChannelFunctor
 };
 
 template <typename Precision>
-struct InitConstFunctor
-{
-  ChannelBuffer<Precision>* Self;
-  Precision Value;
-  InitConstFunctor(ChannelBuffer<Precision>* self, Precision value)
-    : Self(self)
-    , Value(value)
-  {
-  }
-
-  template <typename Device>
-  bool operator()(Device device)
-  {
-    ChannelBufferOperations::InitConst(*Self, Value, device);
-    return true;
-  }
-};
-
-template <typename Precision>
 void ChannelBuffer<Precision>::InitConst(const Precision value)
 {
-  InitConstFunctor<Precision> functor(this, value);
-  vtkm::cont::TryExecute(functor);
+  vtkm::cont::ArrayHandleConstant<Precision> valueHandle(value, this->GetBufferLength());
+  vtkm::cont::Algorithm::Copy(valueHandle, this->Buffer);
 }
 
 template <typename Precision>
@@ -524,6 +511,15 @@ void ChannelBuffer<Precision>::SetNumChannels(const vtkm::Int32 numChannels)
   ResizeChannelFunctor<Precision> functor(this, numChannels);
   vtkm::cont::TryExecute(functor);
 }
+
+template <typename Precision>
+ChannelBuffer<Precision> ChannelBuffer<Precision>::Copy()
+{
+  ChannelBuffer res(NumChannels, Size);
+  vtkm::cont::Algorithm::Copy(this->Buffer, res.Buffer);
+  return res;
+}
+
 // Instantiate supported types
 template class ChannelBuffer<vtkm::Float32>;
 template class ChannelBuffer<vtkm::Float64>;

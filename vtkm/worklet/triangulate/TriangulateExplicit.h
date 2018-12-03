@@ -25,7 +25,6 @@
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Field.h>
 
@@ -116,8 +115,7 @@ public:
 
   template <typename CellSetType>
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell,
-                                      vtkm::cont::DeviceAdapterId device)
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
@@ -134,13 +132,11 @@ public:
 
     // Determine the number of output cells each input cell will generate
     vtkm::worklet::DispatcherMapField<TrianglesPerCell> triPerCellDispatcher;
-    triPerCellDispatcher.SetDevice(device);
     triPerCellDispatcher.Invoke(inShapes, inNumIndices, tables.PrepareForInput(), outCellsPerCell);
 
     // Build new cells
     vtkm::worklet::DispatcherMapTopology<TriangulateCell> triangulateDispatcher(
       TriangulateCell::MakeScatter(outCellsPerCell));
-    triangulateDispatcher.SetDevice(device);
     triangulateDispatcher.Invoke(
       cellSet, tables.PrepareForInput(), vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
 

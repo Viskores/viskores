@@ -27,6 +27,7 @@
 
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
@@ -485,6 +486,10 @@ inline void deduce(Trampoline&& trampoline, ContParams&& sig, Args&&... args)
 #pragma diag_suppress 2885
 #endif
 
+#if (__CUDACC_VER_MAJOR__ >= 10)
+#pragma diag_suppress 2905
+#endif
+
 #endif
 //This is a separate function as the pragma guards can cause nvcc
 //to have an internal compiler error (codegen #3028)
@@ -658,6 +663,9 @@ public:
   template <typename... Args>
   VTKM_CONT void Invoke(Args&&... args) const
   {
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
+                   "Invoking Worklet: '%s'",
+                   vtkm::cont::TypeName<WorkletType>().c_str());
     this->StartInvoke(std::forward<Args>(args)...);
   }
 

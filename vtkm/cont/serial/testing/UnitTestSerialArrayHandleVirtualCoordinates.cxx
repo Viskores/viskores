@@ -23,6 +23,7 @@
 // for a part of an operation where the TBB device was specified.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/TestingArrayHandleVirtualCoordinates.h>
 

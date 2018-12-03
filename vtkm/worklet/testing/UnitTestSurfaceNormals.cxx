@@ -27,15 +27,13 @@ namespace
 {
 
 using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
-using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 void TestFacetedSurfaceNormals(const vtkm::cont::DataSet& dataset, NormalsArrayHandle& normals)
 {
   std::cout << "Testing FacetedSurfaceNormals:\n";
 
   vtkm::worklet::FacetedSurfaceNormals faceted;
-  faceted.Run(
-    dataset.GetCellSet(), dataset.GetCoordinateSystem().GetData(), normals, DeviceAdapter());
+  faceted.Run(dataset.GetCellSet(), dataset.GetCoordinateSystem().GetData(), normals);
 
   vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
     { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f }, { 0.707f, 0.500f, -0.500f },
@@ -58,7 +56,7 @@ void TestSmoothSurfaceNormals(const vtkm::cont::DataSet& dataset,
 
   NormalsArrayHandle pointNormals;
   vtkm::worklet::SmoothSurfaceNormals smooth;
-  smooth.Run(dataset.GetCellSet(), faceNormals, pointNormals, DeviceAdapter());
+  smooth.Run(dataset.GetCellSet(), faceNormals, pointNormals);
 
   vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
     { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
@@ -77,6 +75,7 @@ void TestSmoothSurfaceNormals(const vtkm::cont::DataSet& dataset,
 
 void TestSurfaceNormals()
 {
+
   vtkm::cont::DataSet dataset =
     vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
   NormalsArrayHandle faceNormals;
@@ -87,7 +86,7 @@ void TestSurfaceNormals()
 
 } // anonymous namespace
 
-int UnitTestSurfaceNormals(int, char* [])
+int UnitTestSurfaceNormals(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals);
+  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals, argc, argv);
 }

@@ -60,12 +60,11 @@ public:
 
   void SetTransform(const vtkm::Matrix<S, 4, 4>& mtx);
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                          const DeviceAdapter& tag);
+                                          vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   vtkm::worklet::PointTransform<S> Worklet;
@@ -75,7 +74,7 @@ template <typename S>
 class FilterTraits<PointTransform<S>>
 {
 public:
-  //Point Elevation can only convert Float and Double Vec3 arrays
+  //PointTransformation can only convert Float and Double Vec3 arrays
   using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }

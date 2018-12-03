@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
@@ -57,13 +58,12 @@ inline VTKM_CONT void Streamline::SetSeeds(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   //Check for some basics.
   if (this->Seeds.GetNumberOfValues() == 0)
@@ -87,22 +87,19 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
 
   //todo: add check for rectilinear.
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using FieldPortalConstType =
-    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using RGEvalType = vtkm::worklet::particleadvection::
-    UniformGridEvaluate<FieldPortalConstType, T, DeviceAdapter, StorageType>;
-  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, T>;
+  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
+  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType>;
 
   //RGEvalType eval(input.GetCoordinateSystem(), input.GetCellSet(0), field);
   RGEvalType eval(coords, cells, field);
   RK4RGType rk4(eval, static_cast<T>(this->StepSize));
 
   vtkm::worklet::Streamline streamline;
-  vtkm::worklet::StreamlineResult<T> res;
+  vtkm::worklet::StreamlineResult res;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> seedArray;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(this->Seeds, seedArray);
-  res = Worklet.Run(rk4, seedArray, this->NumberOfSteps, device);
+  vtkm::cont::ArrayCopy(this->Seeds, seedArray);
+  res = Worklet.Run(rk4, seedArray, this->NumberOfSteps);
 
   vtkm::cont::DataSet outData;
   vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
@@ -113,12 +110,11 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool Streamline::DoMapField(vtkm::cont::DataSet&,
                                              const vtkm::cont::ArrayHandle<T, StorageType>&,
                                              const vtkm::filter::FieldMetadata&,
-                                             const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                             const DeviceAdapter&)
+                                             vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

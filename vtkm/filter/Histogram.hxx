@@ -27,7 +27,7 @@
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
-#include <vtkm/cont/diy/Serialization.h>
+#include <vtkm/cont/Serialization.h>
 #include <vtkm/filter/internal/CreateResult.h>
 
 // clang-format off
@@ -192,13 +192,12 @@ inline VTKM_CONT Histogram::Histogram()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata&,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> binArray;
   T delta;
@@ -211,12 +210,11 @@ inline VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(
                 static_cast<T>(this->ComputedRange.Min),
                 static_cast<T>(this->ComputedRange.Max),
                 delta,
-                binArray,
-                device);
+                binArray);
   }
   else
   {
-    worklet.Run(field, this->NumberOfBins, this->ComputedRange, delta, binArray, device);
+    worklet.Run(field, this->NumberOfBins, this->ComputedRange, delta, binArray);
   }
 
   this->BinDelta = static_cast<vtkm::Float64>(delta);

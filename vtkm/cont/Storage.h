@@ -122,6 +122,11 @@ public:
   ///
   using PortalConstType = ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*>;
 
+  VTKM_CONT Storage(const Storage& src);
+  VTKM_CONT Storage(Storage&& src) noexcept;
+  VTKM_CONT Storage& operator=(const Storage& src);
+  VTKM_CONT Storage& operator=(Storage&& src);
+
   /// Returns a portal to the array.
   ///
   VTKM_CONT

@@ -138,18 +138,18 @@ struct GenerateRConn : public vtkm::exec::FunctorBase
 class ReverseConnectivityBuilder
 {
 public:
-  using IdArray = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using IdComponentArray = vtkm::cont::ArrayHandle<vtkm::IdComponent>;
-
   VTKM_CONT
   template <typename ConnArray,
+            typename RConnArray,
+            typename RNumArray,
+            typename RIndexArray,
             typename RConnToConnIdxCalc,
             typename ConnIdxToCellIdxCalc,
             typename Device>
   inline void Run(const ConnArray& conn,
-                  IdArray& rConn,
-                  IdComponentArray& rNumIndices,
-                  IdArray& rIndexOffsets,
+                  RConnArray& rConn,
+                  RNumArray& rNumIndices,
+                  RIndexArray& rIndexOffsets,
                   const RConnToConnIdxCalc& rConnToConnCalc,
                   const ConnIdxToCellIdxCalc& cellIdCalc,
                   vtkm::Id numberOfPoints,
@@ -183,7 +183,8 @@ public:
     }
 
     { // Compute offsets:
-      auto rNumIndicesAsId = vtkm::cont::make_ArrayHandleCast<vtkm::Id>(rNumIndices);
+      auto rNumIndicesAsId =
+        vtkm::cont::make_ArrayHandleCast<typename RIndexArray::ValueType>(rNumIndices);
       Algo::ScanExclusive(rNumIndicesAsId, rIndexOffsets);
     }
 

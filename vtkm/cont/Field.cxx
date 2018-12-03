@@ -25,6 +25,56 @@ namespace vtkm
 namespace cont
 {
 
+/// constructors for points / whole mesh
+VTKM_CONT
+Field::Field(std::string name, Association association, const vtkm::cont::DynamicArrayHandle& data)
+  : Name(name)
+  , FieldAssociation(association)
+  , AssocCellSetName()
+  , AssocLogicalDim(-1)
+  , Data(data)
+  , Range()
+  , ModifiedFlag(true)
+{
+  VTKM_ASSERT(this->FieldAssociation == Association::WHOLE_MESH ||
+              this->FieldAssociation == Association::POINTS);
+}
+
+/// constructors for cell set associations
+VTKM_CONT
+Field::Field(std::string name,
+             Association association,
+             const std::string& cellSetName,
+             const vtkm::cont::DynamicArrayHandle& data)
+  : Name(name)
+  , FieldAssociation(association)
+  , AssocCellSetName(cellSetName)
+  , AssocLogicalDim(-1)
+  , Data(data)
+  , Range()
+  , ModifiedFlag(true)
+{
+  VTKM_ASSERT(this->FieldAssociation == Association::CELL_SET);
+}
+
+/// constructors for logical dimension associations
+VTKM_CONT
+Field::Field(std::string name,
+             Association association,
+             vtkm::IdComponent logicalDim,
+             const vtkm::cont::DynamicArrayHandle& data)
+  : Name(name)
+  , FieldAssociation(association)
+  , AssocCellSetName()
+  , AssocLogicalDim(logicalDim)
+  , Data(data)
+  , Range()
+  , ModifiedFlag(true)
+{
+  VTKM_ASSERT(this->FieldAssociation == Association::LOGICAL_DIM);
+}
+
+
 VTKM_CONT
 void Field::PrintSummary(std::ostream& out) const
 {

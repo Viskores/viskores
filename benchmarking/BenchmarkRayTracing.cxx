@@ -28,11 +28,14 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
 #include <vtkm/rendering/Camera.h>
-#include <vtkm/rendering/internal/RunTriangulator.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
+#include <vtkm/rendering/raytracing/SphereIntersector.h>
+#include <vtkm/rendering/raytracing/TriangleExtractor.h>
 
 #include <vtkm/exec/FunctorBase.h>
+
+#include <vtkm/cont/ColorTable.hxx>
 
 #include <sstream>
 #include <string>
@@ -66,18 +69,24 @@ struct BenchRayTracing
     camera.ResetToBounds(bounds);
 
     vtkm::cont::DynamicCellSet cellset = Data.GetCellSet();
-    vtkm::rendering::internal::RunTriangulator(cellset, Indices, NumberOfTriangles);
+
+    vtkm::rendering::raytracing::TriangleExtractor triExtractor;
+    triExtractor.ExtractCells(cellset);
+    vtkm::rendering::raytracing::TriangleIntersector* triIntersector =
+      new vtkm::rendering::raytracing::TriangleIntersector();
+    triIntersector->SetData(Coords, triExtractor.GetTriangles());
+    Tracer.AddShapeIntersector(triIntersector);
 
     vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
     RayCamera.SetParameters(camera, canvas);
-    RayCamera.CreateRays(Rays, Coords);
+    RayCamera.CreateRays(Rays, Coords.GetBounds());
 
     Rays.Buffers.at(0).InitConst(0.f);
 
     vtkm::cont::Field field = Data.GetField("pointvar");
     vtkm::Range range = field.GetRange().GetPortalConstControl().Get(0);
 
-    Tracer.SetData(Coords.GetData(), Indices, field, NumberOfTriangles, range, bounds);
+    Tracer.SetField(field, range);
 
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> temp;
     vtkm::cont::ColorTable table("cool to warm");
@@ -107,7 +116,7 @@ struct BenchRayTracing
   {
     vtkm::cont::Timer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> timer;
 
-    RayCamera.CreateRays(Rays, Coords);
+    RayCamera.CreateRays(Rays, Coords.GetBounds());
     Tracer.Render(Rays);
 
     return timer.GetElapsedTime();

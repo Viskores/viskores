@@ -53,13 +53,11 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
   {
     vtkm::worklet::ExternalFaces().Run(inCellSet.Cast<vtkm::cont::CellSetStructured<3>>(),
                                        inDataSet.GetCoordinateSystem(),
-                                       outCellSet,
-                                       MyDeviceAdapter());
+                                       outCellSet);
   }
   else
   {
-    vtkm::worklet::ExternalFaces().Run(
-      inCellSet.Cast<vtkm::cont::CellSetExplicit<>>(), outCellSet, MyDeviceAdapter());
+    vtkm::worklet::ExternalFaces().Run(inCellSet.Cast<vtkm::cont::CellSetExplicit<>>(), outCellSet);
   }
 
   vtkm::cont::DataSet outDataSet;
@@ -203,13 +201,15 @@ void TestExternalFaces3()
 
 void TestExternalFaces()
 {
+  // Ignore the device passed in.
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(MyDeviceAdapter());
   TestExternalFaces1();
   TestExternalFaces2();
   TestExternalFaces3();
 }
 }
 
-int UnitTestExternalFaces(int, char* [])
+int UnitTestExternalFaces(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestExternalFaces);
+  return vtkm::cont::testing::Testing::Run(TestExternalFaces, argc, argv);
 }

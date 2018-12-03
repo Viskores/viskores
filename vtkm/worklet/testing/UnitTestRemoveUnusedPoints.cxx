@@ -70,8 +70,6 @@ void CheckOutputCellSet(const vtkm::cont::CellSetExplicit<>& cellSet,
 
 void RunTest()
 {
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
   std::cout << "Creating input" << std::endl;
   vtkm::cont::CellSetExplicit<> inCellSet = CreateInputCellSet();
 
@@ -80,10 +78,9 @@ void RunTest()
   SetPortal(inField.GetPortalControl());
 
   std::cout << "Removing unused points" << std::endl;
-  vtkm::worklet::RemoveUnusedPoints compactPoints(inCellSet, Device());
-  vtkm::cont::CellSetExplicit<> outCellSet = compactPoints.MapCellSet(inCellSet, Device());
-  vtkm::cont::ArrayHandle<vtkm::Float32> outField =
-    compactPoints.MapPointFieldDeep(inField, Device());
+  vtkm::worklet::RemoveUnusedPoints compactPoints(inCellSet);
+  vtkm::cont::CellSetExplicit<> outCellSet = compactPoints.MapCellSet(inCellSet);
+  vtkm::cont::ArrayHandle<vtkm::Float32> outField = compactPoints.MapPointFieldDeep(inField);
 
   std::cout << "Checking resulting cell set" << std::endl;
   CheckOutputCellSet(outCellSet, outField);
@@ -91,7 +88,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestRemoveUnusedPoints(int, char* [])
+int UnitTestRemoveUnusedPoints(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunTest);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

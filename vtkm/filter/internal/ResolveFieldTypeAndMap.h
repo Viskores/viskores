@@ -34,15 +34,6 @@ namespace filter
 {
 namespace internal
 {
-struct ResolveFieldTypeAndMapForDevice
-{
-  template <typename DeviceAdapterTag, typename InstanceType, typename FieldType>
-  bool operator()(DeviceAdapterTag tag, InstanceType&& instance, FieldType&& field) const
-  {
-    return instance.DerivedClass->DoMapField(
-      instance.InputResult, field, instance.Metadata, instance.Policy, tag);
-  }
-};
 
 template <typename Derived, typename DerivedPolicy>
 struct ResolveFieldTypeAndMap
@@ -69,12 +60,10 @@ struct ResolveFieldTypeAndMap
   }
 
   template <typename T, typename StorageTag>
-  void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& field,
-                  vtkm::cont::RuntimeDeviceTracker& tracker) const
+  void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& field) const
   {
-    ResolveFieldTypeAndMapForDevice doResolve;
-    this->RanProperly = vtkm::cont::TryExecute(
-      doResolve, tracker, typename DerivedPolicy::DeviceAdapterList(), *this, field);
+    this->RanProperly =
+      this->DerivedClass->DoMapField(this->InputResult, field, this->Metadata, this->Policy);
   }
 
 private:

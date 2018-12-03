@@ -34,7 +34,7 @@ namespace cont
 /// uniform orthogonal grid (extent, origin, and spacing) and implicitly
 /// computes these coordinates in its array portal.
 ///
-class ArrayHandleUniformPointCoordinates
+class VTKM_ALWAYS_EXPORT ArrayHandleUniformPointCoordinates
   : public vtkm::cont::ArrayHandle<
       vtkm::Vec<vtkm::FloatDefault, 3>,
       vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>
@@ -61,5 +61,70 @@ public:
 };
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <>
+struct TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
+{
+  static VTKM_CONT const std::string Get() { return "AH_UniformPointCoordinates"; }
+};
+
+template <>
+struct TypeString<vtkm::cont::ArrayHandle<
+  vtkm::Vec<vtkm::FloatDefault, 3>,
+  vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>>
+  : TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <>
+struct Serialization<vtkm::cont::ArrayHandleUniformPointCoordinates>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleUniformPointCoordinates;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto portal = obj.GetPortalConstControl();
+    diy::save(bb, portal.GetDimensions());
+    diy::save(bb, portal.GetOrigin());
+    diy::save(bb, portal.GetSpacing());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    vtkm::Id3 dims;
+    typename BaseType::ValueType origin, spacing;
+
+    diy::load(bb, dims);
+    diy::load(bb, origin);
+    diy::load(bb, spacing);
+
+    obj = vtkm::cont::ArrayHandleUniformPointCoordinates(dims, origin, spacing);
+  }
+};
+
+template <>
+struct Serialization<vtkm::cont::ArrayHandle<
+  vtkm::Vec<vtkm::FloatDefault, 3>,
+  vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>>
+  : Serialization<vtkm::cont::ArrayHandleUniformPointCoordinates>
+{
+};
+
+} // diy
 
 #endif //vtk_+m_cont_ArrayHandleUniformPointCoordinates_h

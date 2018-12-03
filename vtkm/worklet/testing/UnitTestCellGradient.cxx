@@ -26,7 +26,6 @@
 namespace
 {
 
-template <typename DeviceAdapter>
 void TestCellGradientUniform2D()
 {
   std::cout << "Testing CellGradient Worklet on 2D structured data" << std::endl;
@@ -40,8 +39,7 @@ void TestCellGradientUniform2D()
   dataSet.GetField("pointvar").GetData().CopyTo(input);
 
   vtkm::worklet::CellGradient gradient;
-  result =
-    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, DeviceAdapter());
+  result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);
 
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10, 30, 0 }, { 10, 30, 0 } };
   for (int i = 0; i < 2; ++i)
@@ -51,7 +49,6 @@ void TestCellGradientUniform2D()
   }
 }
 
-template <typename DeviceAdapter>
 void TestCellGradientUniform3D()
 {
   std::cout << "Testing CellGradient Worklet on 3D structured data" << std::endl;
@@ -65,8 +62,7 @@ void TestCellGradientUniform3D()
   dataSet.GetField("pointvar").GetData().CopyTo(input);
 
   vtkm::worklet::CellGradient gradient;
-  result =
-    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, DeviceAdapter());
+  result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);
 
   vtkm::Vec<vtkm::Float32, 3> expected[4] = {
     { 10.025f, 30.075f, 60.125f },
@@ -81,7 +77,6 @@ void TestCellGradientUniform3D()
   }
 }
 
-template <typename DeviceAdapter>
 void TestCellGradientUniform3DWithVectorField()
 {
   std::cout
@@ -110,8 +105,7 @@ void TestCellGradientUniform3DWithVectorField()
   extraOutput.SetComputeQCriterion(true);
 
   vtkm::worklet::CellGradient gradient;
-  result = gradient.Run(
-    dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, extraOutput, DeviceAdapter());
+  result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, extraOutput);
 
   VTKM_TEST_ASSERT((extraOutput.Gradient.GetNumberOfValues() == 4),
                    "Gradient field should be generated");
@@ -159,7 +153,6 @@ void TestCellGradientUniform3DWithVectorField()
   }
 }
 
-template <typename DeviceAdapter>
 void TestCellGradientUniform3DWithVectorField2()
 {
   std::cout << "Testing CellGradient Worklet with a vector field on 3D structured data" << std::endl
@@ -185,8 +178,8 @@ void TestCellGradientUniform3DWithVectorField2()
   extraOutput.SetComputeQCriterion(false);
 
   vtkm::worklet::CellGradient gradient;
-  auto result = gradient.Run(
-    dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, extraOutput, DeviceAdapter());
+  auto result =
+    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, extraOutput);
 
   //Verify that the result is 0 size
   VTKM_TEST_ASSERT((result.GetNumberOfValues() == 0), "Gradient field shouldn't be generated");
@@ -222,7 +215,6 @@ void TestCellGradientUniform3DWithVectorField2()
   }
 }
 
-template <typename DeviceAdapter>
 void TestCellGradientExplicit()
 {
   std::cout << "Testing CellGradient Worklet on Explicit data" << std::endl;
@@ -235,8 +227,7 @@ void TestCellGradientExplicit()
   dataSet.GetField("pointvar").GetData().CopyTo(input);
 
   vtkm::worklet::CellGradient gradient;
-  result =
-    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, DeviceAdapter());
+  result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);
 
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, -0.0f } };
   for (int i = 0; i < 2; ++i)
@@ -248,16 +239,15 @@ void TestCellGradientExplicit()
 
 void TestCellGradient()
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  TestCellGradientUniform2D<DeviceAdapter>();
-  TestCellGradientUniform3D<DeviceAdapter>();
-  TestCellGradientUniform3DWithVectorField<DeviceAdapter>();
-  TestCellGradientUniform3DWithVectorField2<DeviceAdapter>();
-  TestCellGradientExplicit<DeviceAdapter>();
+  TestCellGradientUniform2D();
+  TestCellGradientUniform3D();
+  TestCellGradientUniform3DWithVectorField();
+  TestCellGradientUniform3DWithVectorField2();
+  TestCellGradientExplicit();
 }
 }
 
-int UnitTestCellGradient(int, char* [])
+int UnitTestCellGradient(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellGradient);
+  return vtkm::cont::testing::Testing::Run(TestCellGradient, argc, argv);
 }

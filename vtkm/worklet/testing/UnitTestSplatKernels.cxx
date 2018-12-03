@@ -151,7 +151,7 @@ int TestSplatKernels()
   return EXIT_SUCCESS;
 }
 
-int UnitTestSplatKernels(int, char* [])
+int UnitTestSplatKernels(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestSplatKernels);
+  return vtkm::cont::testing::Testing::Run(TestSplatKernels, argc, argv);
 }

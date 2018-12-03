@@ -25,7 +25,6 @@
 
 #include <vtkm/worklet/connectivities/CellSetDualGraph.h>
 
-template <typename DeviceAdapter>
 class TestCellSetDualGraph
 {
 private:
@@ -62,7 +61,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivityArray;
 
-    vtkm::worklet::connectivity::CellSetDualGraph<DeviceAdapter>().Run(
+    vtkm::worklet::connectivity::CellSetDualGraph().Run(
       cellSet, numIndicesArray, indexOffsetArray, connectivityArray);
 
     vtkm::Id expectedNumIndices[] = { 1, 1, 3, 1, 1, 1 };
@@ -83,7 +82,7 @@ public:
   void operator()() const { this->TestTriangleMesh(); }
 };
 
-int UnitTestCellSetDualGraph(int, char* [])
+int UnitTestCellSetDualGraph(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellSetDualGraph<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestCellSetDualGraph(), argc, argv);
 }

@@ -27,6 +27,8 @@
 #include <exception>
 #include <string>
 
+#include <vtkm/cont/Logging.h>
+
 #include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm
@@ -68,6 +70,9 @@ protected:
     : Message(message)
     , IsDeviceIndependent(is_device_independent)
   {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Exception raised: " << message << "\n"
+                                    << vtkm::cont::GetStackTrace(1)); // 1 = skip this ctor frame.
   }
 
   void SetMessage(const std::string& message) { this->Message = message; }

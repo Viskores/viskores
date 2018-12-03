@@ -55,7 +55,7 @@ TestScatterArrays MakeScatterArraysShort()
   const vtkm::IdComponent visitArray[outputSize] = { 0, 0, 1, 0, 0, 0 };
 
   TestScatterArrays arrays;
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   // Need to copy arrays so that the data does not go out of scope.
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize), arrays.CountArray);
@@ -78,7 +78,7 @@ TestScatterArrays MakeScatterArraysLong()
   const vtkm::IdComponent visitArray[outputSize] = { 0, 0, 1, 0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4 };
 
   TestScatterArrays arrays;
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   // Need to copy arrays so that the data does not go out of scope.
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize), arrays.CountArray);
@@ -98,7 +98,7 @@ TestScatterArrays MakeScatterArraysZero()
   const vtkm::Id inputToOutputMap[countArraySize] = { 0, 0, 0, 0, 0, 0 };
 
   TestScatterArrays arrays;
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   // Need to copy arrays so that the data does not go out of scope.
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize), arrays.CountArray);
@@ -120,10 +120,10 @@ struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
 
   using ScatterType = vtkm::worklet::ScatterCounting;
 
-  template <typename CountArrayType, typename Device>
-  VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray, Device)
+  template <typename CountArrayType>
+  VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
   {
-    return ScatterType(countArray, Device());
+    return ScatterType(countArray);
   }
 
   VTKM_EXEC
@@ -165,7 +165,7 @@ void TestScatterArrayGeneration(const TestScatterArrays& arrays)
   std::cout << "  Testing array generation" << std::endl;
 
   vtkm::worklet::ScatterCounting scatter(
-    arrays.CountArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG(), true);
+    arrays.CountArray, vtkm::cont::DeviceAdapterTagAny(), true);
 
   vtkm::Id inputSize = arrays.CountArray.GetNumberOfValues();
 
@@ -186,7 +186,7 @@ void TestScatterWorklet(const TestScatterArrays& arrays)
   std::cout << "  Testing scatter counting in a worklet." << std::endl;
 
   vtkm::worklet::DispatcherMapField<TestScatterCountingWorklet> dispatcher(
-    TestScatterCountingWorklet::MakeScatter(arrays.CountArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
+    TestScatterCountingWorklet::MakeScatter(arrays.CountArray));
 
   vtkm::Id inputSize = arrays.CountArray.GetNumberOfValues();
   vtkm::cont::ArrayHandleIndex inputIndices(inputSize);
@@ -225,7 +225,7 @@ void TestScatterCounting()
 
 } // anonymous namespace
 
-int UnitTestScatterCounting(int, char* [])
+int UnitTestScatterCounting(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestScatterCounting);
+  return vtkm::cont::testing::Testing::Run(TestScatterCounting, argc, argv);
 }

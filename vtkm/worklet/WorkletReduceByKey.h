@@ -46,9 +46,14 @@ namespace vtkm
 namespace worklet
 {
 
+template <typename WorkletType>
+class DispatcherReduceByKey;
+
 class WorkletReduceByKey : public vtkm::worklet::internal::WorkletBase
 {
 public:
+  template <typename Worklet>
+  using Dispatcher = vtkm::worklet::DispatcherReduceByKey<Worklet>;
   /// \brief A control signature tag for input keys.
   ///
   /// A \c WorkletReduceByKey operates by collecting all identical keys and

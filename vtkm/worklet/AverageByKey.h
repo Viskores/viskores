@@ -50,14 +50,25 @@ struct AverageByKey
     template <typename ValuesVecType>
     VTKM_EXEC typename ValuesVecType::ComponentType operator()(const ValuesVecType& valuesIn) const
     {
-      using ComponentType = typename ValuesVecType::ComponentType;
-      ComponentType sum = valuesIn[0];
+      using FieldType = typename ValuesVecType::ComponentType;
+      FieldType sum = valuesIn[0];
       for (vtkm::IdComponent index = 1; index < valuesIn.GetNumberOfComponents(); ++index)
       {
-        ComponentType component = valuesIn[index];
+        FieldType component = valuesIn[index];
         sum = sum + component;
       }
-      return sum / static_cast<ComponentType>(valuesIn.GetNumberOfComponents());
+
+      // To get the average, we (of course) divide the sum by the amount of values, which is
+      // returned from valuesIn.GetNumberOfComponents(). To do this, we need to cast the number of
+      // components (returned as a vtkm::IdComponent) to a FieldType. This is a little more complex
+      // than it first seems because FieldType might be a Vec type. If you just try a
+      // static_cast<FieldType>(), it will use the constructor to FieldType which might be a Vec
+      // constructor expecting the type of the component. So, get around this problem by first
+      // casting to the component type of the field and then constructing a field value from that.
+      // We use the VecTraits class to make this work regardless of whether FieldType is a real Vec
+      // or just a scalar.
+      using ComponentType = typename vtkm::VecTraits<FieldType>::ComponentType;
+      return sum / FieldType(static_cast<ComponentType>(valuesIn.GetNumberOfComponents()));
     }
   };
 
@@ -69,17 +80,13 @@ struct AverageByKey
   template <typename KeyType,
             typename ValueType,
             typename InValuesStorage,
-            typename OutAveragesStorage,
-            typename Device>
+            typename OutAveragesStorage>
   VTKM_CONT static void Run(const vtkm::worklet::Keys<KeyType>& keys,
                             const vtkm::cont::ArrayHandle<ValueType, InValuesStorage>& inValues,
-                            vtkm::cont::ArrayHandle<ValueType, OutAveragesStorage>& outAverages,
-                            Device)
+                            vtkm::cont::ArrayHandle<ValueType, OutAveragesStorage>& outAverages)
   {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
     vtkm::worklet::DispatcherReduceByKey<AverageWorklet> dispatcher;
-    dispatcher.SetDevice(Device());
     dispatcher.Invoke(keys, inValues, outAverages);
   }
 
@@ -88,16 +95,14 @@ struct AverageByKey
   /// This method uses an existing \c Keys object to collected values by those keys and find
   /// the average of those groups.
   ///
-  template <typename KeyType, typename ValueType, typename InValuesStorage, typename Device>
+  template <typename KeyType, typename ValueType, typename InValuesStorage>
   VTKM_CONT static vtkm::cont::ArrayHandle<ValueType> Run(
     const vtkm::worklet::Keys<KeyType>& keys,
-    const vtkm::cont::ArrayHandle<ValueType, InValuesStorage>& inValues,
-    Device)
+    const vtkm::cont::ArrayHandle<ValueType, InValuesStorage>& inValues)
   {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
     vtkm::cont::ArrayHandle<ValueType> outAverages;
-    Run(keys, inValues, outAverages, Device());
+    Run(keys, inValues, outAverages);
     return outAverages;
   }
 
@@ -136,15 +141,13 @@ struct AverageByKey
             class KeyInStorage,
             class KeyOutStorage,
             class ValueInStorage,
-            class ValueOutStorage,
-            class DeviceAdapter>
+            class ValueOutStorage>
   VTKM_CONT static void Run(const vtkm::cont::ArrayHandle<KeyType, KeyInStorage>& keyArray,
                             const vtkm::cont::ArrayHandle<ValueType, ValueInStorage>& valueArray,
                             vtkm::cont::ArrayHandle<KeyType, KeyOutStorage>& outputKeyArray,
-                            vtkm::cont::ArrayHandle<ValueType, ValueOutStorage>& outputValueArray,
-                            DeviceAdapter)
+                            vtkm::cont::ArrayHandle<ValueType, ValueOutStorage>& outputValueArray)
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
     using ValueInArray = vtkm::cont::ArrayHandle<ValueType, ValueInStorage>;
     using IdArray = vtkm::cont::ArrayHandle<vtkm::Id>;
     using ValueArray = vtkm::cont::ArrayHandle<ValueType>;
@@ -177,7 +180,6 @@ struct AverageByKey
 
     // get average
     DispatcherMapField<DivideWorklet> dispatcher;
-    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(sumArray, countArray, outputValueArray);
   }
 };

@@ -83,6 +83,8 @@
 #ifndef vtkm_worklet_contourtree_mesh2d_dem_triangulation_h
 #define vtkm_worklet_contourtree_mesh2d_dem_triangulation_h
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleZip.h>
@@ -105,12 +107,10 @@ namespace worklet
 namespace contourtree
 {
 
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 class Mesh2D_DEM_Triangulation
 {
 public:
-  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   // original data array
   const vtkm::cont::ArrayHandle<T, StorageType>& values;
 
@@ -129,14 +129,13 @@ public:
   void SetStarts(vtkm::cont::ArrayHandle<vtkm::Id>& chains, bool descending);
 
   // sets outgoing paths for saddles
-  void SetSaddleStarts(ChainGraph<T, StorageType, DeviceAdapter>& mergeGraph, bool descending);
+  void SetSaddleStarts(ChainGraph<T, StorageType>& mergeGraph, bool descending);
 };
 
 // sets outgoing paths for saddles
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetStarts(
-  vtkm::cont::ArrayHandle<vtkm::Id>& chains,
-  bool ascending)
+template <typename T, typename StorageType>
+void Mesh2D_DEM_Triangulation<T, StorageType>::SetStarts(vtkm::cont::ArrayHandle<vtkm::Id>& chains,
+                                                         bool ascending)
 {
   // create the neighbourhood mask
   neighbourhoodMask.Allocate(nVertices);
@@ -146,7 +145,6 @@ void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetStarts(
   Mesh2D_DEM_VertexStarter<T> vertexStarter(nRows, nCols, ascending);
   vtkm::worklet::DispatcherMapField<Mesh2D_DEM_VertexStarter<T>> vertexStarterDispatcher(
     vertexStarter);
-  vertexStarterDispatcher.SetDevice(DeviceAdapter());
 
   vertexStarterDispatcher.Invoke(vertexIndexArray,   // input
                                  values,             // input (whole array)
@@ -155,8 +153,8 @@ void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetStarts(
 } // SetStarts()
 
 // creates input mesh
-template <typename T, typename StorageType, typename DeviceAdapter>
-Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::Mesh2D_DEM_Triangulation(
+template <typename T, typename StorageType>
+Mesh2D_DEM_Triangulation<T, StorageType>::Mesh2D_DEM_Triangulation(
   const vtkm::cont::ArrayHandle<T, StorageType>& Values,
   vtkm::Id NRows,
   vtkm::Id NCols)
@@ -173,9 +171,9 @@ Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::Mesh2D_DEM_Triangulatio
 }
 
 // sets outgoing paths for saddles
-template <typename T, typename StorageType, typename DeviceAdapter>
-void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
-  ChainGraph<T, StorageType, DeviceAdapter>& mergeGraph,
+template <typename T, typename StorageType>
+void Mesh2D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
+  ChainGraph<T, StorageType>& mergeGraph,
   bool ascending)
 {
   // we need a temporary inverse index to change vertex IDs
@@ -190,7 +188,6 @@ void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
   Mesh2D_DEM_VertexOutdegreeStarter vertexOutdegreeStarter(nRows, nCols, ascending);
   vtkm::worklet::DispatcherMapField<Mesh2D_DEM_VertexOutdegreeStarter>
     vertexOutdegreeStarterDispatcher(vertexOutdegreeStarter);
-  vertexOutdegreeStarterDispatcher.SetDevice(DeviceAdapter());
 
   vertexOutdegreeStarterDispatcher.Invoke(vertexIndexArray,    // input
                                           neighbourhoodMask,   // input
@@ -198,7 +195,7 @@ void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
                                           outdegree,           // output
                                           isCritical);         // output
 
-  DeviceAlgorithm::ScanExclusive(isCritical, inverseIndex);
+  vtkm::cont::Algorithm::ScanExclusive(isCritical, inverseIndex);
 
   // now we can compute how many critical points we carry forward
   vtkm::Id nCriticalPoints = inverseIndex.GetPortalConstControl().Get(nVertices - 1) +
@@ -208,15 +205,15 @@ void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
   mergeGraph.AllocateVertexArrays(nCriticalPoints);
 
   // compact the set of vertex indices to critical ones only
-  DeviceAlgorithm::CopyIf(vertexIndexArray, isCritical, mergeGraph.valueIndex);
+  vtkm::cont::Algorithm::CopyIf(vertexIndexArray, isCritical, mergeGraph.valueIndex);
 
   // we initialise the prunesTo array to "NONE"
   vtkm::cont::ArrayHandleConstant<vtkm::Id> notAssigned(NO_VERTEX_ASSIGNED, nCriticalPoints);
-  DeviceAlgorithm::Copy(notAssigned, mergeGraph.prunesTo);
+  vtkm::cont::Algorithm::Copy(notAssigned, mergeGraph.prunesTo);
 
   // copy the outdegree from our temporary array
   // : mergeGraph.outdegree[vID] <= outdegree[mergeGraph.valueIndex[vID]]
-  DeviceAlgorithm::CopyIf(outdegree, isCritical, mergeGraph.outdegree);
+  vtkm::cont::Algorithm::CopyIf(outdegree, isCritical, mergeGraph.outdegree);
 
   // copy the chain maximum from arcArray
   // : mergeGraph.chainExtremum[vID] = inverseIndex[mergeGraph.arcArray[mergeGraph.valueIndex[vID]]]
@@ -225,15 +222,15 @@ void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
 
   vtkm::cont::ArrayHandle<vtkm::Id> tArray;
   tArray.Allocate(nCriticalPoints);
-  DeviceAlgorithm::CopyIf(mergeGraph.arcArray, isCritical, tArray);
-  DeviceAlgorithm::Copy(PermuteIndexType(tArray, inverseIndex), mergeGraph.chainExtremum);
+  vtkm::cont::Algorithm::CopyIf(mergeGraph.arcArray, isCritical, tArray);
+  vtkm::cont::Algorithm::Copy(PermuteIndexType(tArray, inverseIndex), mergeGraph.chainExtremum);
 
   // and set up the active vertices - initially to identity
   vtkm::cont::ArrayHandleIndex criticalVertsIndexArray(nCriticalPoints);
-  DeviceAlgorithm::Copy(criticalVertsIndexArray, mergeGraph.activeVertices);
+  vtkm::cont::Algorithm::Copy(criticalVertsIndexArray, mergeGraph.activeVertices);
 
   // now we need to compute the firstEdge array from the outdegrees
-  DeviceAlgorithm::ScanExclusive(mergeGraph.outdegree, mergeGraph.firstEdge);
+  vtkm::cont::Algorithm::ScanExclusive(mergeGraph.outdegree, mergeGraph.firstEdge);
 
   vtkm::Id nCriticalEdges = mergeGraph.firstEdge.GetPortalConstControl().Get(nCriticalPoints - 1) +
     mergeGraph.outdegree.GetPortalConstControl().Get(nCriticalPoints - 1);
@@ -247,7 +244,6 @@ void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
                                          ascending); // input
   vtkm::worklet::DispatcherMapField<Mesh2D_DEM_SaddleStarter> saddleStarterDispatcher(
     saddleStarter);
-  saddleStarterDispatcher.SetDevice(DeviceAdapter());
 
   vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandle<vtkm::Id>, vtkm::cont::ArrayHandle<vtkm::Id>>
     outDegFirstEdge = vtkm::cont::make_ArrayHandleZip(mergeGraph.outdegree, mergeGraph.firstEdge);
@@ -263,7 +259,7 @@ void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
                                  mergeGraph.activeEdges); // output (whole array)
 
   // finally, allocate and initialise the edgeSorter array
-  DeviceAlgorithm::Copy(mergeGraph.activeEdges, mergeGraph.edgeSorter);
+  vtkm::cont::ArrayCopy(mergeGraph.activeEdges, mergeGraph.edgeSorter);
 } // SetSaddleStarts()
 }
 }

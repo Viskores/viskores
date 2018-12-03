@@ -20,19 +20,19 @@
 #ifndef vtk_m_cont_CellLocatorTwoLevelUniformGrid_h
 #define vtk_m_cont_CellLocatorTwoLevelUniformGrid_h
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/exec/internal/TwoLevelUniformGridExecutionObject.h>
 
 #include <vtkm/exec/CellInside.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -484,10 +484,12 @@ public:
 
   /// Builds the cell locator lookup structure
   ///
-  template <typename DeviceAdapter, typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
-  void Build(DeviceAdapter, CellSetList cellSetTypes = CellSetList())
+  template <typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
+  void Build(CellSetList cellSetTypes = CellSetList())
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    VTKM_IS_LIST_TAG(CellSetList);
+
+    vtkm::worklet::Invoker invoke;
 
     auto cellset = this->CellSet.ResetCellSetList(cellSetTypes);
     const auto& coords = this->Coordinates;
@@ -513,89 +515,80 @@ public:
     // 2: For each cell, find the number of top level bins they intersect
     vtkm::cont::ArrayHandle<vtkm::Id> binCounts;
     CountBinsL1 countL1(ls.TopLevel);
-    vtkm::worklet::DispatcherMapTopology<CountBinsL1> countL1Dispatcher(countL1);
-    countL1Dispatcher.SetDevice(DeviceAdapter());
-    countL1Dispatcher.Invoke(cellset, coords, binCounts);
+    invoke(countL1, cellset, coords, binCounts);
 
     // 3: Total number of unique (cell, bin) pairs (for pre-allocating arrays)
-    vtkm::Id numPairsL1 = Algorithm::ScanExclusive(binCounts, binCounts);
+    vtkm::Id numPairsL1 = vtkm::cont::Algorithm::ScanExclusive(binCounts, binCounts);
 
     // 4: For each cell find the top level bins that intersect it
     vtkm::cont::ArrayHandle<vtkm::Id> binIds;
     binIds.Allocate(numPairsL1);
     FindBinsL1 findL1(ls.TopLevel);
-    vtkm::worklet::DispatcherMapTopology<FindBinsL1> findL1Dispatcher(findL1);
-    findL1Dispatcher.SetDevice(DeviceAdapter());
-    findL1Dispatcher.Invoke(cellset, coords, binCounts, binIds);
+    invoke(findL1, cellset, coords, binCounts, binIds);
     binCounts.ReleaseResources();
 
     // 5: From above, find the number of cells that intersect each top level bin
-    Algorithm::Sort(binIds);
+    vtkm::cont::Algorithm::Sort(binIds);
     vtkm::cont::ArrayHandle<vtkm::Id> bins;
     vtkm::cont::ArrayHandle<vtkm::Id> cellsPerBin;
-    Algorithm::ReduceByKey(binIds,
-                           vtkm::cont::make_ArrayHandleConstant(vtkm::Id(1), numPairsL1),
-                           bins,
-                           cellsPerBin,
-                           vtkm::Sum());
+    vtkm::cont::Algorithm::ReduceByKey(
+      binIds,
+      vtkm::cont::make_ArrayHandleConstant(vtkm::Id(1), numPairsL1),
+      bins,
+      cellsPerBin,
+      vtkm::Sum());
     binIds.ReleaseResources();
 
     // 6: Compute level-2 dimensions
     vtkm::Id numberOfBins =
       ls.TopLevel.Dimensions[0] * ls.TopLevel.Dimensions[1] * ls.TopLevel.Dimensions[2];
-    Algorithm::Copy(vtkm::cont::make_ArrayHandleConstant(DimVec3(0), numberOfBins),
-                    ls.LeafDimensions);
+    vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleConstant(DimVec3(0), numberOfBins),
+                          ls.LeafDimensions);
     GenerateBinsL1 generateL1(ls.TopLevel.BinSize, this->DensityL2);
-    vtkm::worklet::DispatcherMapField<GenerateBinsL1> generateL1Dispatcher(generateL1);
-    generateL1Dispatcher.SetDevice(DeviceAdapter());
-    generateL1Dispatcher.Invoke(bins, cellsPerBin, ls.LeafDimensions);
+    invoke(generateL1, bins, cellsPerBin, ls.LeafDimensions);
     bins.ReleaseResources();
     cellsPerBin.ReleaseResources();
 
     // 7: Compute number of level-2 bins
-    vtkm::Id numberOfLeaves = Algorithm::ScanExclusive(
+    vtkm::Id numberOfLeaves = vtkm::cont::Algorithm::ScanExclusive(
       vtkm::cont::make_ArrayHandleTransform(ls.LeafDimensions, DimensionsToCount()),
       ls.LeafStartIndex);
 
 
     // 8: For each cell, find the number of l2 bins they intersect
     CountBinsL2 countL2(ls.TopLevel);
-    vtkm::worklet::DispatcherMapTopology<CountBinsL2> countL2Dispatcher(countL2);
-    countL2Dispatcher.SetDevice(DeviceAdapter());
-    countL2Dispatcher.Invoke(cellset, coords, ls.LeafDimensions, binCounts);
+    invoke(countL2, cellset, coords, ls.LeafDimensions, binCounts);
 
     // 9: Total number of unique (cell, bin) pairs (for pre-allocating arrays)
-    vtkm::Id numPairsL2 = Algorithm::ScanExclusive(binCounts, binCounts);
+    vtkm::Id numPairsL2 = vtkm::cont::Algorithm::ScanExclusive(binCounts, binCounts);
 
     // 10: For each cell, find the l2 bins they intersect
     binIds.Allocate(numPairsL2);
     ls.CellIds.Allocate(numPairsL2);
     FindBinsL2 findL2(ls.TopLevel);
-    vtkm::worklet::DispatcherMapTopology<FindBinsL2> findL2Dispatcher(findL2);
-    findL2Dispatcher.SetDevice(DeviceAdapter());
-    findL2Dispatcher.Invoke(
-      cellset, coords, ls.LeafDimensions, ls.LeafStartIndex, binCounts, binIds, ls.CellIds);
+    invoke(
+      findL2, cellset, coords, ls.LeafDimensions, ls.LeafStartIndex, binCounts, binIds, ls.CellIds);
     binCounts.ReleaseResources();
 
     // 11: From above, find the cells that each l2 bin intersects
-    Algorithm::SortByKey(binIds, ls.CellIds);
-    Algorithm::ReduceByKey(binIds,
-                           vtkm::cont::make_ArrayHandleConstant(vtkm::Id(1), numPairsL2),
-                           bins,
-                           cellsPerBin,
-                           vtkm::Sum());
+    vtkm::cont::Algorithm::SortByKey(binIds, ls.CellIds);
+    vtkm::cont::Algorithm::ReduceByKey(
+      binIds,
+      vtkm::cont::make_ArrayHandleConstant(vtkm::Id(1), numPairsL2),
+      bins,
+      cellsPerBin,
+      vtkm::Sum());
     binIds.ReleaseResources();
 
     // 12: Generate the leaf bin arrays
     vtkm::cont::ArrayHandle<vtkm::Id> cellsStart;
-    Algorithm::ScanExclusive(cellsPerBin, cellsStart);
+    vtkm::cont::Algorithm::ScanExclusive(cellsPerBin, cellsStart);
 
-    Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numberOfLeaves),
-                    ls.CellStartIndex);
-    Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numberOfLeaves), ls.CellCount);
-    vtkm::worklet::DispatcherMapField<GenerateBinsL2> dispatchGenerateBinsL2;
-    dispatchGenerateBinsL2.SetDevice(DeviceAdapter());
-    dispatchGenerateBinsL2.Invoke(bins, cellsStart, cellsPerBin, ls.CellStartIndex, ls.CellCount);
+    vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numberOfLeaves),
+                          ls.CellStartIndex);
+    vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numberOfLeaves),
+                          ls.CellCount);
+    invoke(GenerateBinsL2{}, bins, cellsStart, cellsPerBin, ls.CellStartIndex, ls.CellCount);
 
     std::swap(this->LookupStructure, ls);
   }
@@ -706,17 +699,14 @@ public:
   ///
   template <typename PointComponentType,
             typename PointStorageType,
-            typename DeviceAdapter,
             typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
   void FindCells(
     const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& points,
     vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
     vtkm::cont::ArrayHandle<FloatVec3>& parametricCoords,
-    DeviceAdapter,
     CellSetList cellSetTypes = CellSetList()) const
   {
     vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
-    dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(points,
                       this->CellSet.ResetCellSetList(cellSetTypes),
                       this->Coordinates,

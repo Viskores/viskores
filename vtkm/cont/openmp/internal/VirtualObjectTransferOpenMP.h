@@ -33,13 +33,11 @@ namespace internal
 {
 
 template <typename VirtualDerivedType>
-struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagOpenMP>
+struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagOpenMP> final
   : VirtualObjectTransferShareWithControl<VirtualDerivedType>
 {
-  VTKM_CONT VirtualObjectTransfer(const VirtualDerivedType* virtualObject)
-    : VirtualObjectTransferShareWithControl<VirtualDerivedType>(virtualObject)
-  {
-  }
+  using VirtualObjectTransferShareWithControl<
+    VirtualDerivedType>::VirtualObjectTransferShareWithControl;
 };
 }
 }
