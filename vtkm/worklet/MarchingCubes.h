@@ -599,13 +599,13 @@ public:
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood<3> tpn(pointId, pointId, 0, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();
     auto fieldPortal = inputField.GetPortal();
-    vtkm::exec::arg::Neighborhood<1, decltype(pointPortal)> points(pointPortal, boundary);
-    vtkm::exec::arg::Neighborhood<1, decltype(fieldPortal)> field(fieldPortal, boundary);
+    vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
+    vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
 
     vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
     gradient(boundary, points, field, normal);
@@ -683,13 +683,13 @@ public:
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood<3> tpn(pointId, pointId, 0, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();
     auto fieldPortal = inputField.GetPortal();
-    vtkm::exec::arg::Neighborhood<1, decltype(pointPortal)> points(pointPortal, boundary);
-    vtkm::exec::arg::Neighborhood<1, decltype(fieldPortal)> field(fieldPortal, boundary);
+    vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
+    vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
 
     vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
     NormalType grad1;

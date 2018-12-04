@@ -74,7 +74,7 @@ struct GameOfLifePolicy : public vtkm::filter::PolicyBase<GameOfLifePolicy>
   using DeviceAdapterList = DevicesToTry;
 };
 
-struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood3x3x3
+struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
 {
   using CountingHandle = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
 

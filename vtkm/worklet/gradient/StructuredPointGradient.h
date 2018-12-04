@@ -38,7 +38,7 @@ struct StructuredPointGradientInType : vtkm::ListTagBase<T>
 };
 
 template <typename T>
-struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3x3x3
+struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
 {
 
   using ControlSignature = void(CellSetIn,
@@ -46,12 +46,12 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
                                 FieldInNeighborhood<StructuredPointGradientInType<T>>,
                                 GradientOutputs outputFields);
 
-  using ExecutionSignature = void(OnBoundary, _2, _3, _4);
+  using ExecutionSignature = void(Boundary, _2, _3, _4);
 
   using InputDomain = _1;
 
   template <typename PointsIn, typename FieldIn, typename GradientOutType>
-  VTKM_EXEC void operator()(const vtkm::exec::arg::BoundaryState& boundary,
+  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary,
                             const PointsIn& inputPoints,
                             const FieldIn& inputField,
                             GradientOutType& outputGradient) const
@@ -67,9 +67,9 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
     T deta = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
     T dzeta = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
 
-    dxi = (boundary.OnX() ? dxi : dxi * 0.5f);
-    deta = (boundary.OnY() ? deta : deta * 0.5f);
-    dzeta = (boundary.OnZ() ? dzeta : dzeta * 0.5f);
+    dxi = (boundary.InXBoundary(1) ? dxi * 0.5f : dxi);
+    deta = (boundary.InYBoundary(1) ? deta * 0.5f : deta);
+    dzeta = (boundary.InZBoundary(1) ? dzeta * 0.5f : dzeta);
 
     outputGradient[0] = static_cast<OT>(xi[0] * dxi + eta[0] * deta + zeta[0] * dzeta);
     outputGradient[1] = static_cast<OT>(xi[1] * dxi + eta[1] * deta + zeta[1] * dzeta);
@@ -77,27 +77,26 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
   }
 
   template <typename FieldIn, typename GradientOutType>
-  VTKM_EXEC void operator()(
-    const vtkm::exec::arg::BoundaryState& boundary,
-    const vtkm::exec::arg::Neighborhood<1, vtkm::internal::ArrayPortalUniformPointCoordinates>&
-      inputPoints,
-    const FieldIn& inputField,
-    GradientOutType& outputGradient) const
+  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary,
+                            const vtkm::exec::FieldNeighborhood<
+                              vtkm::internal::ArrayPortalUniformPointCoordinates>& inputPoints,
+                            const FieldIn& inputField,
+                            GradientOutType& outputGradient) const
   {
     //When the points and cells are both structured we can achieve even better
     //performance by not doing the Jacobian, but instead do an image gradient
     //using central differences
     using PointsIn =
-      vtkm::exec::arg::Neighborhood<1, vtkm::internal::ArrayPortalUniformPointCoordinates>;
+      vtkm::exec::FieldNeighborhood<vtkm::internal::ArrayPortalUniformPointCoordinates>;
     using CoordType = typename PointsIn::ValueType;
     using OT = typename GradientOutType::ComponentType;
 
 
     CoordType r = inputPoints.Portal.GetSpacing();
 
-    r[0] = (boundary.OnX() ? r[0] : r[0] * 0.5f);
-    r[1] = (boundary.OnY() ? r[1] : r[1] * 0.5f);
-    r[2] = (boundary.OnZ() ? r[2] : r[2] * 0.5f);
+    r[0] = (boundary.InXBoundary(1) ? r[0] * 0.5f : r[0]);
+    r[1] = (boundary.InYBoundary(1) ? r[1] * 0.5f : r[1]);
+    r[2] = (boundary.InZBoundary(1) ? r[2] * 0.5f : r[2]);
 
     const T dx = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
     const T dy = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
@@ -113,7 +112,7 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
   //will be float,3 even when T is a 3 component field
   template <typename PointsIn, typename CT>
   VTKM_EXEC void Jacobian(const PointsIn& inputPoints,
-                          const vtkm::exec::arg::BoundaryState& boundary,
+                          const vtkm::exec::BoundaryState& boundary,
                           vtkm::Vec<CT, 3>& m_xi,
                           vtkm::Vec<CT, 3>& m_eta,
                           vtkm::Vec<CT, 3>& m_zeta) const
@@ -124,9 +123,9 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
     CoordType eta = inputPoints.Get(0, 1, 0) - inputPoints.Get(0, -1, 0);
     CoordType zeta = inputPoints.Get(0, 0, 1) - inputPoints.Get(0, 0, -1);
 
-    xi = (boundary.OnX() ? xi : xi * 0.5f);
-    eta = (boundary.OnY() ? eta : eta * 0.5f);
-    zeta = (boundary.OnZ() ? zeta : zeta * 0.5f);
+    xi = (boundary.InXBoundary(1) ? xi * 0.5f : xi);
+    eta = (boundary.InYBoundary(1) ? eta * 0.5f : eta);
+    zeta = (boundary.InZBoundary(1) ? zeta * 0.5f : zeta);
 
     CT aj = xi[0] * eta[1] * zeta[2] + xi[1] * eta[2] * zeta[0] + xi[2] * eta[0] * zeta[1] -
       xi[2] * eta[1] * zeta[0] - xi[1] * eta[0] * zeta[2] - xi[0] * eta[2] * zeta[1];
