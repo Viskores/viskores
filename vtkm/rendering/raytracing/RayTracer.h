@@ -20,11 +20,12 @@
 #ifndef vtk_m_rendering_raytracing_RayTracer_h
 #define vtk_m_rendering_raytracing_RayTracer_h
 
+#include <vector>
+
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Camera.h>
-
+#include <vtkm/rendering/raytracing/TriangleIntersector.h>
 namespace vtkm
 {
 namespace rendering
@@ -35,42 +36,50 @@ namespace raytracing
 class VTKM_RENDERING_EXPORT RayTracer
 {
 protected:
-  LinearBVH Bvh;
+  std::vector<ShapeIntersector*> Intersectors;
   Camera camera;
-  vtkm::cont::ArrayHandleVirtualCoordinates CoordsHandle;
-  vtkm::cont::Field ScalarField;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
+  const vtkm::cont::Field* ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Float32> Scalars;
-  vtkm::Id NumberOfTriangles;
+  vtkm::Id NumberOfShapes;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
   vtkm::Range ScalarRange;
-  vtkm::Bounds DataBounds;
-  template <typename Precision>
-  struct RenderFunctor;
+  bool Shade;
 
-  template <typename Device, typename Precision>
-  void RenderOnDevice(Ray<Precision>& rays, Device);
+  template <typename Precision>
+  void RenderOnDevice(Ray<Precision>& rays);
 
 public:
   VTKM_CONT
   RayTracer();
+  VTKM_CONT
+  ~RayTracer();
 
   VTKM_CONT
   Camera& GetCamera();
 
   VTKM_CONT
-  void SetData(const vtkm::cont::ArrayHandleVirtualCoordinates& coordsHandle,
-               const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
-               vtkm::cont::Field& scalarField,
-               const vtkm::Id& numberOfTriangles,
-               const vtkm::Range& scalarRange,
-               const vtkm::Bounds& dataBounds);
+  void AddShapeIntersector(ShapeIntersector* intersector);
+
+  VTKM_CONT
+  void SetField(const vtkm::cont::Field& scalarField, const vtkm::Range& scalarRange);
 
   VTKM_CONT
   void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
 
+  VTKM_CONT
+  void SetShadingOn(bool on);
+
+  VTKM_CONT
   void Render(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays);
+
+  VTKM_CONT
   void Render(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays);
+
+  VTKM_CONT
+  vtkm::Id GetNumberOfShapes() const;
+
+  VTKM_CONT
+  void Clear();
 
 }; //class RayTracer
 }

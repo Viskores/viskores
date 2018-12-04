@@ -114,7 +114,7 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 
     rayCamera.SetParameters(camera, *this->Internals->Canvas);
 
-    rayCamera.CreateRays(rays, coords);
+    rayCamera.CreateRays(rays, coords.GetBounds());
     rays.Buffers.at(0).InitConst(0.f);
     raytracing::RayOperations::MapCanvasToRays(rays, camera, *this->Internals->Canvas);
 

@@ -23,16 +23,10 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/rendering/raytracing/ConnectivityTracerBase.h>
-#include <vtkm/rendering/raytracing/MeshConnectivityStructures.h>
 
-#ifndef CELL_SHAPE_ZOO
-#define CELL_SHAPE_ZOO 255
-#endif
+#include <vtkm/rendering/raytracing/MeshConnectivityContainers.h>
+#include <vtkm/rendering/raytracing/PartialComposite.h>
 
-#ifndef CELL_SHAPE_STRUCTURED
-#define CELL_SHAPE_STRUCTURED 254
-#endif
 
 namespace vtkm
 {
@@ -67,93 +61,165 @@ public:
     ExitDist = &Distance2;
   }
 
-  template <typename Device>
   void Compact(vtkm::cont::ArrayHandle<FloatType>& compactedDistances,
-               vtkm::cont::ArrayHandle<UInt8>& masks,
-               Device);
+               vtkm::cont::ArrayHandle<UInt8>& masks);
 
-  template <typename Device>
-  void Init(const vtkm::Id size, vtkm::cont::ArrayHandle<FloatType>& distances, Device);
+  void Init(const vtkm::Id size, vtkm::cont::ArrayHandle<FloatType>& distances);
 
   void Swap();
 };
 
 } //namespace detail
 
-
-template <vtkm::Int32 CellType, typename ConnectivityType>
-class ConnectivityTracer : public ConnectivityTracerBase
+/**
+ * \brief ConnectivityTracer is volumetric ray tracer for unstructured
+ *        grids. Capabilities include volume rendering and integrating
+ *        absorption and emission of N energy groups for simulated
+ *        radiograhy.
+ */
+class VTKM_RENDERING_EXPORT ConnectivityTracer
 {
 public:
-  ConnectivityTracer(ConnectivityType& meshConn)
-    : ConnectivityTracerBase()
-    , MeshConn(meshConn)
+  ConnectivityTracer()
+    : MeshContainer(nullptr)
+    , CountRayStatus(false)
+    , UnitScalar(1.f)
   {
   }
 
-  template <typename Device>
-  VTKM_CONT void SetBoundingBox(Device)
+  ~ConnectivityTracer()
   {
-    vtkm::Bounds coordsBounds = MeshConn.GetCoordinateBounds(Device());
-    BoundingBox[0] = vtkm::Float32(coordsBounds.X.Min);
-    BoundingBox[1] = vtkm::Float32(coordsBounds.X.Max);
-    BoundingBox[2] = vtkm::Float32(coordsBounds.Y.Min);
-    BoundingBox[3] = vtkm::Float32(coordsBounds.Y.Max);
-    BoundingBox[4] = vtkm::Float32(coordsBounds.Z.Min);
-    BoundingBox[5] = vtkm::Float32(coordsBounds.Z.Max);
-    BackgroundColor[0] = 1.f;
-    BackgroundColor[1] = 1.f;
-    BackgroundColor[2] = 1.f;
-    BackgroundColor[3] = 1.f;
+    if (MeshContainer != nullptr)
+    {
+      delete MeshContainer;
+    }
   }
 
-  void Trace(Ray<vtkm::Float32>& rays) override;
+  enum IntegrationMode
+  {
+    Volume,
+    Energy
+  };
 
-  void Trace(Ray<vtkm::Float64>& rays) override;
+  void SetVolumeData(const vtkm::cont::Field& scalarField,
+                     const vtkm::Range& scalarBounds,
+                     const vtkm::cont::DynamicCellSet& cellSet,
+                     const vtkm::cont::CoordinateSystem& coords);
 
-  ConnectivityType GetMeshConn() { return MeshConn; }
+  void SetEnergyData(const vtkm::cont::Field& absorption,
+                     const vtkm::Int32 numBins,
+                     const vtkm::cont::DynamicCellSet& cellSet,
+                     const vtkm::cont::CoordinateSystem& coords,
+                     const vtkm::cont::Field& emission);
 
-  vtkm::Id GetNumberOfMeshCells() override { return MeshConn.GetNumberOfCells(); }
+  void SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor);
+  void SetSampleDistance(const vtkm::Float32& distance);
+  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
+
+  MeshConnContainer* GetMeshContainer() { return MeshContainer; }
+
+  void Init();
+
+  void SetDebugOn(bool on) { CountRayStatus = on; }
+
+  void SetUnitScalar(const vtkm::Float32 unitScalar) { UnitScalar = unitScalar; }
+
+
+  vtkm::Id GetNumberOfMeshCells() const;
+
+  void ResetTimers();
+  void LogTimers();
+
+  ///
+  /// Traces rays fully through the mesh. Rays can exit and re-enter
+  /// multiple times before leaving the domain. This is fast path for
+  /// structured meshs or meshes that are not interlocking.
+  /// Note: rays will be compacted
+  ///
+  template <typename FloatType>
+  void FullTrace(Ray<FloatType>& rays);
+
+  ///
+  /// Integrates rays through the mesh. If rays leave the mesh and
+  /// re-enter, then those become two separate partial composites.
+  /// This is need to support domain decompositions that are like
+  /// puzzle pieces. Note: rays will be compacted
+  ///
+  template <typename FloatType>
+  std::vector<PartialComposite<FloatType>> PartialTrace(Ray<FloatType>& rays);
+
+  ///
+  /// Integrates the active rays though the mesh until all rays
+  /// have exited.
+  ///  Precondition: rays.HitIdx is set to a valid mesh cell
+  ///
+  template <typename FloatType>
+  void IntegrateMeshSegment(Ray<FloatType>& rays);
+
+  ///
+  /// Find the entry point in the mesh
+  ///
+  template <typename FloatType>
+  void FindMeshEntry(Ray<FloatType>& rays);
 
 private:
-  friend struct detail::RenderFunctor;
-  template <typename FloatType, typename Device>
-  void IntersectCell(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  template <typename FloatType>
+  void IntersectCell(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void AccumulatePathLengths(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  template <typename FloatType>
+  void AccumulatePathLengths(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void FindLostRays(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  template <typename FloatType>
+  void FindLostRays(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void SampleCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  template <typename FloatType>
+  void SampleCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void IntegrateCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device);
+  template <typename FloatType>
+  void IntegrateCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker);
 
-  template <typename FloatType, typename Device>
-  void OffsetMinDistances(Ray<FloatType>& rays, Device);
+  template <typename FloatType>
+  void OffsetMinDistances(Ray<FloatType>& rays);
 
-  template <typename Device, typename FloatType>
-  void RenderOnDevice(Ray<FloatType>& rays, Device);
+  template <typename FloatType>
+  void PrintRayStatus(Ray<FloatType>& rays);
 
-  ConnectivityType MeshConn;
+protected:
+  // Data set info
+  vtkm::cont::Field ScalarField;
+  vtkm::cont::Field EmissionField;
+  vtkm::cont::DynamicCellSet CellSet;
+  vtkm::cont::CoordinateSystem Coords;
+  vtkm::Range ScalarBounds;
+  vtkm::Float32 BoundingBox[6];
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
+
+  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
+  vtkm::Float32 SampleDistance;
+  vtkm::Id RaysLost;
+  IntegrationMode Integrator;
+
+  MeshConnContainer* MeshContainer;
+  //
+  // flags
+  bool CountRayStatus;
+  bool MeshConnIsConstructed;
+  bool DebugFiltersOn;
+  bool ReEnterMesh; // Do not try to re-enter the mesh
+  bool CreatePartialComposites;
+  bool FieldAssocPoints;
+  bool HasEmission; // Mode for integrating through energy bins
+
+  // timers
+  vtkm::Float64 IntersectTime;
+  vtkm::Float64 IntegrateTime;
+  vtkm::Float64 SampleTime;
+  vtkm::Float64 LostRayTime;
+  vtkm::Float64 MeshEntryTime;
+  vtkm::Float32 UnitScalar;
+
 }; // class ConnectivityTracer<CellType,ConnectivityType>
-
-#ifndef vtk_m_rendering_raytracing_ConnectivityTracer_cxx
-//extern explicit instantiations of ConnectivityTracer
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_ZOO, UnstructuredMeshConn>;
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_HEXAHEDRON, UnstructuredMeshConnSingleType>;
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_WEDGE, UnstructuredMeshConnSingleType>;
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_TETRA, UnstructuredMeshConnSingleType>;
-extern template class VTKM_RENDERING_TEMPLATE_EXPORT
-  ConnectivityTracer<CELL_SHAPE_STRUCTURED, StructuredMeshConn>;
-#endif
 }
 }
 } // namespace vtkm::rendering::raytracing

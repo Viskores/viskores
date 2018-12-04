@@ -20,10 +20,10 @@
 #ifndef vtkm_m_worklet_MaskPoints_h
 #define vtkm_m_worklet_MaskPoints_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 namespace vtkm
 {
@@ -34,19 +34,15 @@ namespace worklet
 class MaskPoints
 {
 public:
-  template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      const vtkm::Id stride,
-                                      DeviceAdapter)
+  template <typename CellSetType>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet, const vtkm::Id stride)
   {
-    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     vtkm::Id numberOfInputPoints = cellSet.GetNumberOfPoints();
     vtkm::Id numberOfSampledPoints = numberOfInputPoints / stride;
     vtkm::cont::ArrayHandleCounting<vtkm::Id> strideArray(0, stride, numberOfSampledPoints);
 
     vtkm::cont::ArrayHandle<vtkm::Id> pointIds;
-    DeviceAlgorithm::Copy(strideArray, pointIds);
+    vtkm::cont::ArrayCopy(strideArray, pointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
     vtkm::cont::CellSetSingleType<> outCellSet("cells");

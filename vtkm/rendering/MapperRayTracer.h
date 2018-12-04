@@ -52,6 +52,7 @@ public:
   virtual void EndScene() override;
   void SetCompositeBackground(bool on);
   vtkm::rendering::Mapper* NewCopy() const override;
+  void SetShadingOn(bool on);
 
 private:
   struct InternalsType;

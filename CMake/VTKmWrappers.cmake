@@ -95,6 +95,13 @@ endfunction()
 function(vtkm_add_header_build_test name dir_prefix use_cuda)
   set(hfiles ${ARGN})
 
+  #only attempt to add a test build executable if we have any headers to
+  #test. this might not happen when everything depends on thrust.
+  list(LENGTH hfiles num_srcs)
+  if (${num_srcs} EQUAL 0)
+    return()
+  endif()
+
   set(ext "cxx")
   if(use_cuda)
     set(ext "cu")
@@ -104,10 +111,9 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   foreach (header ${hfiles})
     get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
     if( NOT cant_be_tested )
-      get_filename_component(headername ${header} NAME_WE)
-      get_filename_component(headerextension ${header} EXT)
-      string(SUBSTRING ${headerextension} 1 -1 headerextension)
-      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}_${headerextension}.${ext})
+      string(REPLACE "/" "_" headername "${header}")
+      string(REPLACE "." "_" headername "${headername}")
+      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext})
 
       #By using file generate we will not trigger CMake execution when
       #a header gets touched
@@ -118,9 +124,10 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
 //This is used by headers that include thrust to properly define a proper
 //device backend / system
 #define VTKM_TEST_HEADER_BUILD
-#include <${dir_prefix}/${headername}.${headerextension}>
+#include <${dir_prefix}/${header}>
 int ${headername}_${headerextension}_testbuild_symbol;"
         )
+
       list(APPEND srcs ${src})
     endif()
   endforeach()
@@ -128,13 +135,6 @@ int ${headername}_${headerextension}_testbuild_symbol;"
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
-
-  #only attempt to add a test build executable if we have any headers to
-  #test. this might not happen when everything depends on thrust.
-  list(LENGTH srcs num_srcs)
-  if (${num_srcs} EQUAL 0)
-    return()
-  endif()
 
   if(TARGET TestBuild_${name})
     #If the target already exists just add more sources to it
@@ -206,6 +206,7 @@ function(vtkm_generate_export_header lib_name)
 
 endfunction(vtkm_generate_export_header)
 
+#-----------------------------------------------------------------------------
 function(vtkm_install_headers dir_prefix)
   if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     set(hfiles ${ARGN})
@@ -345,6 +346,7 @@ endfunction(vtkm_library)
 #   LIBRARIES <dependent_library_list>
 #   TEST_ARGS <argument_list>
 #   MPI
+#   ALL_BACKENDS
 #   <options>
 #   )
 #
@@ -362,6 +364,8 @@ endfunction(vtkm_library)
 #
 # [MPI]       : when specified, the tests should be run in parallel if
 #               MPI is enabled.
+# [ALL_BACKENDS] : when specified, the tests would test against all enabled
+#                  backends. BACKEND argument would be ignored.
 #
 function(vtkm_unit_tests)
   if (NOT VTKm_ENABLE_TESTING)
@@ -369,7 +373,7 @@ function(vtkm_unit_tests)
   endif()
 
   set(options)
-  set(global_options ${options} MPI)
+  set(global_options ${options} MPI ALL_BACKENDS)
   set(oneValueArgs BACKEND NAME)
   set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
@@ -378,8 +382,20 @@ function(vtkm_unit_tests)
     )
   vtkm_parse_test_options(VTKm_UT_SOURCES "${options}" ${VTKm_UT_SOURCES})
 
-  set(test_prog )
+  set(test_prog)
   set(backend ${VTKm_UT_BACKEND})
+
+  set(enable_all_backends ${VTKm_UT_ALL_BACKENDS})
+  set(all_backends SERIAL)
+  if (VTKm_ENABLE_CUDA)
+    list(APPEND all_backends CUDA)
+  endif()
+  if (VTKm_ENABLE_TBB)
+    list(APPEND all_backends TBB)
+  endif()
+  if (VTKm_ENABLE_OPENMP)
+    list(APPEND all_backends OPENMP)
+  endif()
 
   if(VTKm_UT_NAME)
     set(test_prog "${VTKm_UT_NAME}")
@@ -387,8 +403,12 @@ function(vtkm_unit_tests)
     vtkm_get_kit_name(kit)
     set(test_prog "UnitTests_${kit}")
   endif()
-  if(VTKm_UT_BACKEND)
+
+  if(backend)
     set(test_prog "${test_prog}_${backend}")
+    set(all_backends ${backend})
+  elseif(NOT enable_all_backends)
+    set (all_backends "NO_BACKEND")
   endif()
 
   if(VTKm_UT_MPI)
@@ -403,7 +423,8 @@ function(vtkm_unit_tests)
   #the creation of the test source list needs to occur before the labeling as
   #cuda. This is so that we get the correctly named entry points generated
   create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES} ${extraArgs})
-  if(backend STREQUAL "CUDA")
+  #if all backends are enabled, we can use cuda compiler to handle all possible backends.
+  if(backend STREQUAL "CUDA" OR (enable_all_backends AND VTKm_ENABLE_CUDA))
     vtkm_compile_as_cuda(cu_srcs ${VTKm_UT_SOURCES})
     set(VTKm_UT_SOURCES ${cu_srcs})
   endif()
@@ -414,32 +435,50 @@ function(vtkm_unit_tests)
   set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
   target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
-  if(backend)
-    target_compile_definitions(${test_prog} PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_${backend}")
-  endif()
 
-  #determine the timeout for all the tests based on the backend. CUDA tests
-  #generally require more time because of kernel generation.
-  set(timeout 180)
-  if(backend STREQUAL "CUDA")
-    set(timeout 1500)
-  endif()
-
-  foreach (test ${VTKm_UT_SOURCES})
-    get_filename_component(tname ${test} NAME_WE)
-    if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
-      add_test(NAME ${tname}${backend}
-        COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
-                $<TARGET_FILE:${test_prog}> ${tname} ${VTKm_UT_TEST_ARGS}
-                ${MPIEXEC_POSTFLAGS}
-        )
-    else()
-      add_test(NAME ${tname}${backend}
-        COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
-        )
+  foreach(current_backend ${all_backends})
+    set (device_command_line_argument --device=${current_backend})
+    if (current_backend STREQUAL "NO_BACKEND")
+      set (current_backend "")
+      set(device_command_line_argument "")
     endif()
-    set_tests_properties("${tname}${backend}" PROPERTIES TIMEOUT ${timeout})
-  endforeach (test)
+    foreach (test ${VTKm_UT_SOURCES})
+      get_filename_component(tname ${test} NAME_WE)
+      if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
+        add_test(NAME ${tname}${current_backend}
+          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
+                  $<TARGET_FILE:${test_prog}> ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
+                  ${MPIEXEC_POSTFLAGS}
+          )
+      else()
+        add_test(NAME ${tname}${current_backend}
+          COMMAND ${test_prog} ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
+          )
+      endif()
+
+      #determine the timeout for all the tests based on the backend. CUDA tests
+      #generally require more time because of kernel generation.
+      if (current_backend STREQUAL "CUDA")
+        set(timeout 1500)
+      else()
+        set(timeout 180)
+      endif()
+      if(current_backend STREQUAL "OPENMP")
+        #We need to have all OpenMP tests run serially as they
+        #will uses all the system cores, and we will cause a N*N thread
+        #explosion which causes the tests to run slower than when run
+        #serially
+        set(run_serial True)
+      else()
+        set(run_serial False)
+      endif()
+
+      set_tests_properties("${tname}${current_backend}" PROPERTIES
+        TIMEOUT ${timeout}
+        RUN_SERIAL ${run_serial}
+      )
+    endforeach (test)
+  endforeach(current_backend)
 
 endfunction(vtkm_unit_tests)
 

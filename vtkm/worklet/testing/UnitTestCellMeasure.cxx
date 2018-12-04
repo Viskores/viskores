@@ -120,7 +120,7 @@ void TestCellMeasure()
 }
 }
 
-int UnitTestCellMeasure(int, char* [])
+int UnitTestCellMeasure(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellMeasure);
+  return vtkm::cont::testing::Testing::Run(TestCellMeasure, argc, argv);
 }

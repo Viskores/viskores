@@ -29,12 +29,14 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
+#include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral, -3);
+VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral, 7);
 
 namespace vtkm
 {
@@ -100,13 +102,10 @@ public:
 };
 
 template <typename TargetClass>
-struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> final
   : public VirtualObjectTransferShareWithControl<TargetClass>
 {
-  VirtualObjectTransfer(const TargetClass* target)
-    : VirtualObjectTransferShareWithControl<TargetClass>(target)
-  {
-  }
+  using VirtualObjectTransferShareWithControl<TargetClass>::VirtualObjectTransferShareWithControl;
 };
 
 template <typename T>
@@ -115,27 +114,22 @@ struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagTestAlgorithmGeneral>
 {
   using Superclass = ExecutionPortalFactoryBasicShareWithControl<T>;
 
-  using typename Superclass::ValueType;
-  using typename Superclass::PortalType;
-  using typename Superclass::PortalConstType;
   using Superclass::CreatePortal;
   using Superclass::CreatePortalConst;
+  using typename Superclass::PortalConstType;
+  using typename Superclass::PortalType;
+  using typename Superclass::ValueType;
 };
 
 template <>
 struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
   : public ExecutionArrayInterfaceBasicShareWithControl
 {
-  using Superclass = ExecutionArrayInterfaceBasicShareWithControl;
+  //inherit our parents constructor
+  using ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareWithControl;
 
   VTKM_CONT
-  ExecutionArrayInterfaceBasic(StorageBasicBase& storage)
-    : Superclass(storage)
-  {
-  }
-
-  VTKM_CONT
-  DeviceAdapterId GetDeviceId() const final { return -3; }
+  DeviceAdapterId GetDeviceId() const final { return DeviceAdapterTagTestAlgorithmGeneral{}; }
 };
 }
 }
@@ -143,6 +137,11 @@ struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
 
 int UnitTestDeviceAdapterAlgorithmGeneral(int, char* [])
 {
+  //need to enable DeviceAdapterTagTestAlgorithmGeneral as it
+  //is not part of the default set of devices
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ResetDevice(vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral{});
+
   return vtkm::cont::testing::TestingDeviceAdapter<
     vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>::Run();
 }

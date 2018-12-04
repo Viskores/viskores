@@ -149,8 +149,6 @@ void TestCoordinateSystemTransform()
 {
   std::cout << "Testing CylindricalCoordinateTransform Worklet" << std::endl;
 
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
   //Test cartesian to cyl
   vtkm::cont::DataSet dsCart = MakeTestDataSet(CART);
   vtkm::worklet::CylindricalCoordinateTransform cylTrn;
@@ -159,10 +157,10 @@ void TestCoordinateSystemTransform()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> revResult;
 
   cylTrn.SetCartesianToCylindrical();
-  cylTrn.Run(dsCart.GetCoordinateSystem(), carToCylPts, DeviceAdapter());
+  cylTrn.Run(dsCart.GetCoordinateSystem(), carToCylPts);
 
   cylTrn.SetCylindricalToCartesian();
-  cylTrn.Run(carToCylPts, revResult, DeviceAdapter());
+  cylTrn.Run(carToCylPts, revResult);
   ValidateCoordTransform(
     dsCart.GetCoordinateSystem(), carToCylPts, revResult, { false, false, false });
 
@@ -170,10 +168,10 @@ void TestCoordinateSystemTransform()
   vtkm::cont::DataSet dsCyl = MakeTestDataSet(CYL);
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> cylToCarPts;
   cylTrn.SetCylindricalToCartesian();
-  cylTrn.Run(dsCyl.GetCoordinateSystem(), cylToCarPts, DeviceAdapter());
+  cylTrn.Run(dsCyl.GetCoordinateSystem(), cylToCarPts);
 
   cylTrn.SetCartesianToCylindrical();
-  cylTrn.Run(cylToCarPts, revResult, DeviceAdapter());
+  cylTrn.Run(cylToCarPts, revResult);
   ValidateCoordTransform(
     dsCyl.GetCoordinateSystem(), cylToCarPts, revResult, { false, true, false });
 
@@ -183,10 +181,10 @@ void TestCoordinateSystemTransform()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> carToSphPts;
 
   sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(dsCart.GetCoordinateSystem(), carToSphPts, DeviceAdapter());
+  sphTrn.Run(dsCart.GetCoordinateSystem(), carToSphPts);
 
   sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(carToSphPts, revResult, DeviceAdapter());
+  sphTrn.Run(carToSphPts, revResult);
   ValidateCoordTransform(
     dsCart.GetCoordinateSystem(), carToSphPts, revResult, { false, true, true });
 
@@ -195,22 +193,22 @@ void TestCoordinateSystemTransform()
   vtkm::cont::DataSet dsSph = MakeTestDataSet(SPH);
 
   sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts, DeviceAdapter());
+  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts);
 
   sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(sphToCarPts, revResult, DeviceAdapter());
+  sphTrn.Run(sphToCarPts, revResult);
 
   ValidateCoordTransform(
     dsSph.GetCoordinateSystem(), sphToCarPts, revResult, { false, true, true });
   sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts, DeviceAdapter());
+  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts);
   sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(sphToCarPts, revResult, DeviceAdapter());
+  sphTrn.Run(sphToCarPts, revResult);
   ValidateCoordTransform(
     dsSph.GetCoordinateSystem(), sphToCarPts, revResult, { false, true, true });
 }
 
-int UnitTestCoordinateSystemTransform(int, char* [])
+int UnitTestCoordinateSystemTransform(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCoordinateSystemTransform);
+  return vtkm::cont::testing::Testing::Run(TestCoordinateSystemTransform, argc, argv);
 }

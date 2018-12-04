@@ -28,7 +28,7 @@
 
 #include <thread>
 
-using RuntimeTaskQueue = TaskQueue<std::function<void(const vtkm::cont::RuntimeDeviceTracker&)>>;
+using RuntimeTaskQueue = TaskQueue<std::function<void()>>;
 
 /// \brief Construct a MultiDeviceGradient for a given multiblock dataset
 ///

@@ -24,7 +24,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/MultiBlock.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/FilterTraits.h>
@@ -185,21 +184,6 @@ public:
   ~Filter();
 
   //@{
-  /// The runtime device tracker determines what devices the filter will be executed on.
-  ///
-  VTKM_CONT
-  void SetRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker& tracker)
-  {
-    this->Tracker = tracker;
-  }
-
-  VTKM_CONT
-  const vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker() const { return this->Tracker; }
-  VTKM_CONT
-  vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker() { return this->Tracker; }
-  //@}
-
-  //@{
   /// \brief Specify which fields get passed from input to output.
   ///
   /// After a filter successfully executes and returns a new data set, fields are mapped from
@@ -269,7 +253,6 @@ public:
                                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  vtkm::cont::RuntimeDeviceTracker Tracker;
   vtkm::filter::FieldSelection FieldsToPass;
 };
 }

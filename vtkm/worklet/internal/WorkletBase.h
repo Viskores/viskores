@@ -57,68 +57,6 @@ template <int ControlSignatureIndex>
 struct Arg : vtkm::exec::arg::BasicArg<ControlSignatureIndex>
 {
 };
-
-/// Basic execution argument tags
-struct _1 : Arg<1>
-{
-};
-struct _2 : Arg<2>
-{
-};
-struct _3 : Arg<3>
-{
-};
-struct _4 : Arg<4>
-{
-};
-struct _5 : Arg<5>
-{
-};
-struct _6 : Arg<6>
-{
-};
-struct _7 : Arg<7>
-{
-};
-struct _8 : Arg<8>
-{
-};
-struct _9 : Arg<9>
-{
-};
-struct _10 : Arg<10>
-{
-};
-struct _11 : Arg<11>
-{
-};
-struct _12 : Arg<12>
-{
-};
-struct _13 : Arg<13>
-{
-};
-struct _14 : Arg<14>
-{
-};
-struct _15 : Arg<15>
-{
-};
-struct _16 : Arg<16>
-{
-};
-struct _17 : Arg<17>
-{
-};
-struct _18 : Arg<18>
-{
-};
-struct _19 : Arg<19>
-{
-};
-struct _20 : Arg<20>
-{
-};
 }
 
 namespace worklet
@@ -133,26 +71,26 @@ namespace internal
 class WorkletBase : public vtkm::exec::FunctorBase
 {
 public:
-  using _1 = vtkm::placeholders::_1;
-  using _2 = vtkm::placeholders::_2;
-  using _3 = vtkm::placeholders::_3;
-  using _4 = vtkm::placeholders::_4;
-  using _5 = vtkm::placeholders::_5;
-  using _6 = vtkm::placeholders::_6;
-  using _7 = vtkm::placeholders::_7;
-  using _8 = vtkm::placeholders::_8;
-  using _9 = vtkm::placeholders::_9;
-  using _10 = vtkm::placeholders::_10;
-  using _11 = vtkm::placeholders::_11;
-  using _12 = vtkm::placeholders::_12;
-  using _13 = vtkm::placeholders::_13;
-  using _14 = vtkm::placeholders::_14;
-  using _15 = vtkm::placeholders::_15;
-  using _16 = vtkm::placeholders::_16;
-  using _17 = vtkm::placeholders::_17;
-  using _18 = vtkm::placeholders::_18;
-  using _19 = vtkm::placeholders::_19;
-  using _20 = vtkm::placeholders::_20;
+  using _1 = vtkm::placeholders::Arg<1>;
+  using _2 = vtkm::placeholders::Arg<2>;
+  using _3 = vtkm::placeholders::Arg<3>;
+  using _4 = vtkm::placeholders::Arg<4>;
+  using _5 = vtkm::placeholders::Arg<5>;
+  using _6 = vtkm::placeholders::Arg<6>;
+  using _7 = vtkm::placeholders::Arg<7>;
+  using _8 = vtkm::placeholders::Arg<8>;
+  using _9 = vtkm::placeholders::Arg<9>;
+  using _10 = vtkm::placeholders::Arg<10>;
+  using _11 = vtkm::placeholders::Arg<11>;
+  using _12 = vtkm::placeholders::Arg<12>;
+  using _13 = vtkm::placeholders::Arg<13>;
+  using _14 = vtkm::placeholders::Arg<14>;
+  using _15 = vtkm::placeholders::Arg<15>;
+  using _16 = vtkm::placeholders::Arg<16>;
+  using _17 = vtkm::placeholders::Arg<17>;
+  using _18 = vtkm::placeholders::Arg<18>;
+  using _19 = vtkm::placeholders::Arg<19>;
+  using _20 = vtkm::placeholders::Arg<20>;
 
   /// \c ExecutionSignature tag for getting the work index.
   ///

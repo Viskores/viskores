@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Error.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 
 #include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
@@ -29,9 +30,6 @@
 #include <vtkm/cont/openmp/internal/ParallelScanOpenMP.h>
 #include <vtkm/cont/openmp/internal/ParallelSortOpenMP.h>
 #include <vtkm/exec/openmp/internal/TaskTilingOpenMP.h>
-
-// For serial fallback:
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <omp.h>
 
@@ -50,13 +48,14 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagOpenMP>
       vtkm::cont::DeviceAdapterTagOpenMP>
 {
   using DevTag = DeviceAdapterTagOpenMP;
-  using SerialAlgo = DeviceAdapterAlgorithm<DeviceAdapterTagSerial>;
 
 public:
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
                              vtkm::cont::ArrayHandle<U, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     using namespace vtkm::cont::openmp;
 
     const vtkm::Id inSize = input.GetNumberOfValues();
@@ -75,6 +74,8 @@ public:
                                const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
                                vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     ::vtkm::NotZeroInitialized unary_predicate;
     CopyIf(input, stencil, output, unary_predicate);
   }
@@ -85,6 +86,8 @@ public:
                                vtkm::cont::ArrayHandle<T, COut>& output,
                                UnaryPredicate unary_predicate)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     using namespace vtkm::cont::openmp;
 
     vtkm::Id inSize = input.GetNumberOfValues();
@@ -131,6 +134,8 @@ public:
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     using namespace vtkm::cont::openmp;
 
     const vtkm::Id inSize = input.GetNumberOfValues();
@@ -184,6 +189,8 @@ public:
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return Reduce(input, initialValue, vtkm::Add());
   }
 
@@ -192,6 +199,8 @@ public:
                             U initialValue,
                             BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     using namespace vtkm::cont::openmp;
 
     auto portal = input.PrepareForInput(DevTag());
@@ -213,6 +222,8 @@ public:
                                     vtkm::cont::ArrayHandle<U, CValOut>& values_output,
                                     BinaryFunctor func)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     openmp::ReduceByKeyHelper(keys, values, keys_output, values_output, func);
   }
 
@@ -220,6 +231,8 @@ public:
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return ScanInclusive(input, output, vtkm::Add());
   }
 
@@ -228,9 +241,11 @@ public:
                                    vtkm::cont::ArrayHandle<T, COut>& output,
                                    BinaryFunctor binaryFunctor)
   {
-    if (input.GetNumberOfValues() * sizeof(T) <= openmp::PAGE_SIZE)
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    if (input.GetNumberOfValues() <= 0)
     {
-      return SerialAlgo::ScanInclusive(input, output, binaryFunctor);
+      return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
     using InPortalT = decltype(input.PrepareForInput(DevTag()));
@@ -248,6 +263,8 @@ public:
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return ScanExclusive(input, output, vtkm::Add(), vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
@@ -257,9 +274,11 @@ public:
                                    BinaryFunctor binaryFunctor,
                                    const T& initialValue)
   {
-    if (input.GetNumberOfValues() * sizeof(T) <= openmp::PAGE_SIZE)
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    if (input.GetNumberOfValues() <= 0)
     {
-      return SerialAlgo::ScanExclusive(input, output, binaryFunctor, initialValue);
+      return initialValue;
     }
 
     using InPortalT = decltype(input.PrepareForInput(DevTag()));
@@ -283,6 +302,8 @@ public:
   template <typename T, class Storage>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     Sort(values, vtkm::SortLess());
   }
 
@@ -290,6 +311,8 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
                              BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     openmp::sort::parallel_sort(values, binary_compare);
   }
 
@@ -297,6 +320,8 @@ public:
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     SortByKey(keys, values, std::less<T>());
   }
 
@@ -305,12 +330,16 @@ public:
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     openmp::sort::parallel_sort_bykey(keys, values, binary_compare);
   }
 
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     Unique(values, std::equal_to<T>());
   }
 
@@ -318,6 +347,8 @@ public:
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     auto portal = values.PrepareForInPlace(DevTag());
     auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
 
@@ -337,6 +368,8 @@ public:
   template <class FunctorType>
   VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id numInstances)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::exec::openmp::internal::TaskTiling1D kernel(functor);
     ScheduleTask(kernel, numInstances);
   }
@@ -344,6 +377,8 @@ public:
   template <class FunctorType>
   VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id3 rangeMax)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::exec::openmp::internal::TaskTiling3D kernel(functor);
     ScheduleTask(kernel, rangeMax);
   }

@@ -404,29 +404,66 @@ brought up during review by adding more commits to the topic. While this is
 sufficient for most issues, some issues can only be resolved by rewriting
 the history of the topic.
 
-If a reviewer has asked explicitly for certain commits to be rewritten, you
-will need to revise the commits and force push it back to GitLab for
-another review. To revise a topic for another review as follows:
+### Starting Revisions ###
 
-1.  Checkout the topic if it is not your current branch:
+Regardless of what revisions need to be made, you first must make sure that
+your topic is the current branch. To make your topic branch current:
 
-        $ git checkout my-topic
+    $ git checkout my-topic
 
-2.  To revise the `3`rd commit back on the topic:
+(As always, you can get the current branch with the `git status` command.)
 
-        $ git rebase -i HEAD~3
+A common need for revisions is to update your topic branch to the latest
+version of VTK-m. Even if you a revising your topic branch for some other
+reason, also updating to the latest master is usually not a bad idea. To
+update to the latest commit in master, you need to make sure that the
+latest commit is in your local repository. To do that run
 
-    (Substitute the correct number of commits back, as low as `1`.) Follow
-    Git's interactive instructions.
+    $ git pull-master
 
-3.  Push commits in your topic branch to your fork in GitLab:
+### Make Local Revisions ###
 
-        $ git gitlab-push -f
+The easiest way to make changes to the commits on your topic branch is to
+rebase it to the master branch:
 
-    Notes:
-      * You need to add `-f` or `--force` to overwrite the destination as
-        you are revising a previously pushed topic and have rewritten the
-        topic history.
+    $ git rebase -i master
+
+When you run this command, git will open your text editor with a list of
+all the commits that will be changed. The first word of each lines
+indicates a command for that commit. By default, all commits are `pick`ed,
+which means that they will be simply passed without change.
+
+If you need to revise the commit message of one of the commits, then
+replace `pick` with `reword` (or just `r`). When the rebase starts, a new
+editor will be provided to let you change the commit message.
+
+If you need to make changes to files within a commit, then replace `pick`
+with `edit` (or just `e`). When the rebase gets to this commit, it will
+pause to let you make changes to the files.
+
+If you need to merge commits together, use the `squash` (or `s`) command.
+The rebase will give you a change to edit the commit message of the merged
+commit.
+
+Once you exit your editor, the rebase will begin. If you have requested to
+edit any commits or if git detects a conflict while applying a commit, it
+will stop running so that you can make changes. Make the changes you need,
+use `git add` to stage those changes, and then use
+
+    $ git rebase --continue
+	
+to have git continue the rebase process. You can always run `git status` to
+get help about what to do next.
+
+### Push to GitLab ###
+
+To push commits in your topic branch to your fork in GitLab:
+
+    $ git gitlab-push -f
+
+Note: You need have the `-f` or `--force` to overwrite the destination as
+you are revising a previously pushed topic and have rewritten the topic
+history.
 
 ## Merge a Topic ##
 
@@ -454,3 +491,93 @@ upstream history and rebase on it:
     $ git rebase origin/master
 
 Return to the [above step](#share-a-topic) to share the revised topic.
+
+## Fixing Problems ##
+
+There are a lot of instructions in this document, and if you are not
+familiar with contributing to VTK-m, you may get your repository in a bad
+state that will cause problems with the other instructions. This section
+attempts to capture common problems contributors have and the fixes for
+them.
+
+### Wrong origin Remote ###
+
+The VTK-m contribution workflow assumes that your `origin` remote is
+attached to the main VTK-m GitLab repository. If it is not, that will cause
+problems with updating your repository. To check which remote repository
+origin refers to, run
+
+    $ git remote -v
+
+It will give you a list of remotes and their URLs that you have configured.
+If you have a line like
+
+    origin  https://gitlab.kitware.com/vtk/vtk-m.git (fetch)
+
+or
+
+    origin  git@gitlab.kitware.com:vtk/vtk-m.git (fetch)
+
+then everything is OK. If it is anything else (for example, it has your
+GitLab username in it), then you have a problem. Fortunately, you can fix
+it by simply changing the remote's URL:
+
+    $ git remote set-url origin https://gitlab.kitware.com/vtk/vtk-m.git
+
+If you had to change the `origin` remote, you should also rerun
+`Utilities/SetupForDevelopment.sh` to make sure the other remotes are set
+up correctly.
+
+### master Not Tracking origin ###
+
+The instructions in this document assume that your `master` branch is
+tracking the remote `master` branch at `origin` (which, as specified above,
+should be the main VTK-m repository). This should be set up if you
+correctly cloned the main VTK-m repository, but can get accidentally
+changed.
+
+To check which remote branch `master` is tracking, call
+
+    $ git rev-parse --abbrev-ref --symbolic-full-name master@{upstream}
+
+Git should respond with `origin/master`. If it responds with anything else,
+you need to reset the tracking:
+
+    $ git branch -u origin/master master
+
+### Local Edits on the master Branch ###
+
+The first step in the [contributing workflow](#workflow) is that you
+[create a topic branch](#create-a-topic) on which to make changes. You are
+not supposed to add your commits directly to `master`. However, it is easy
+to forget to create the topic branch.
+
+To find out if you have local commits on your master branch, check its
+status:
+
+    $ git checkout master
+	$ git status
+
+If status responds that your branch is up to date or that your branch is
+_behind_ the `origin/master` remote branch, then everything is fine. (If
+your branch is behind you might want to update it with `git pull`.)
+
+If the status responds that your branch and `origin/master` have diverged
+or that your branch is _ahead_ of `origin/master`, then you have local
+commits on the master branch. Those local commits need to move to a topic
+branch.
+
+1.  Create a topic branch:
+
+        $ git branch my-topic
+
+	Of course, replace `my-topic` with something that better describes your
+    changes.
+
+2.  Reset the local master branch to the remote master branch:
+
+        $ git reset --hard origin/master
+
+3.  Check out the topic branch to continue working on it:
+
+        $ git checkout my-topic

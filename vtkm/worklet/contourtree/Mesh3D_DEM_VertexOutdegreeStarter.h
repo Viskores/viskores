@@ -95,52 +95,45 @@ namespace contourtree
 {
 
 // Worklet for setting initial chain maximum value
-template <typename DeviceAdapter>
 class Mesh3D_DEM_VertexOutdegreeStarter : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> vertex,        // (input) index into active vertices
-                                FieldIn<IdType> nbrMask,       // (input) neighbor mask
-                                WholeArrayIn<IdType> arcArray, // (input) chain extrema
-                                FieldOut<IdType> outdegree,    // (output) outdegree
-                                FieldOut<IdType> isCritical);  // (output) whether critical
-  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+  using ControlSignature =
+    void(FieldIn<IdType> vertex,        // (input) index into active vertices
+         FieldIn<IdType> nbrMask,       // (input) neighbor mask
+         WholeArrayIn<IdType> arcArray, // (input) chain extrema
+         WholeArrayIn<> neighbourTable, // (input) table for neighbour offsets
+         WholeArrayIn<> caseTable,      // (input) case table for neighbours
+         FieldOut<IdType> outdegree,    // (output) outdegree
+         FieldOut<IdType> isCritical);  // (output) whether critical
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 
-  using IdComponentPortalType = typename vtkm::cont::ArrayHandle<
-    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
-
-  vtkm::Id nRows;                       // (input) number of rows in 3D
-  vtkm::Id nCols;                       // (input) number of cols in 3D
-  vtkm::Id nSlices;                     // (input) number of cols in 3D
-  bool ascending;                       // (input) ascending or descending (join or split tree)
-  IdComponentPortalType neighbourTable; // (input) table for neighbour offsets
-  IdPortalType caseTable;               // (input) case table for neighbours
+  vtkm::Id nRows;   // (input) number of rows in 3D
+  vtkm::Id nCols;   // (input) number of cols in 3D
+  vtkm::Id nSlices; // (input) number of cols in 3D
+  bool ascending;   // (input) ascending or descending (join or split tree)
 
   // Constructor
   VTKM_EXEC_CONT
   Mesh3D_DEM_VertexOutdegreeStarter(vtkm::Id NRows,
                                     vtkm::Id NCols,
                                     vtkm::Id NSlices,
-                                    bool Ascending,
-                                    IdComponentPortalType NeighbourTable,
-                                    IdPortalType CaseTable)
+                                    bool Ascending)
     : nRows(NRows)
     , nCols(NCols)
     , nSlices(NSlices)
     , ascending(Ascending)
-    , neighbourTable(NeighbourTable)
-    , caseTable(CaseTable)
   {
   }
 
   //template<typename InFieldPortalType>
-  template <typename InFieldPortalType>
+  template <typename InFieldPortalType, typename NeighbourTableType, typename CaseTableType>
   VTKM_EXEC void operator()(const vtkm::Id& vertex,
                             const vtkm::Id& nbrMask,
                             const InFieldPortalType& arcArray,
+                            const NeighbourTableType& neighbourTable,
+                            const CaseTableType& caseTable,
                             vtkm::Id& outdegree,
                             vtkm::Id& isCritical) const
   {

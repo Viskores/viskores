@@ -19,12 +19,13 @@
 //============================================================================
 
 #include <random>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/worklet/KdTree3D.h>
 
 namespace
 {
 
-using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+using Algorithm = vtkm::cont::Algorithm;
 
 ////brute force method /////
 template <typename CoordiVecT, typename CoordiPortalT, typename CoordiT>
@@ -74,7 +75,7 @@ public:
   }
 };
 
-void TestKdTreeBuildNNS()
+void TestKdTreeBuildNNS(vtkm::cont::DeviceAdapterId deviceId)
 {
   vtkm::Int32 nTrainingPoints = 1000;
   vtkm::Int32 nTestingPoint = 1000;
@@ -95,7 +96,7 @@ void TestKdTreeBuildNNS()
 
   // Run data
   vtkm::worklet::KdTree3D kdtree3d;
-  kdtree3d.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  kdtree3d.Build(coordi_Handle);
 
   //Nearest Neighbor worklet Testing
   /// randomly generate testing points /////
@@ -111,8 +112,7 @@ void TestKdTreeBuildNNS()
   vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
 
-  kdtree3d.Run(
-    coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  kdtree3d.Run(coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, deviceId);
 
   vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;
@@ -140,7 +140,7 @@ void TestKdTreeBuildNNS()
 
 } // anonymous namespace
 
-int UnitTestKdTreeBuildNNS(int, char* [])
+int UnitTestKdTreeBuildNNS(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestKdTreeBuildNNS);
+  return vtkm::cont::testing::Testing::RunOnDevice(TestKdTreeBuildNNS, argc, argv);
 }

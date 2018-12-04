@@ -31,7 +31,6 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetListTag.h>
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
 namespace vtkm
@@ -206,12 +205,11 @@ private:
   }
 
 public:
-  template <vtkm::IdComponent Dimensionality, typename DeviceAdapter>
+  template <vtkm::IdComponent Dimensionality>
   DynamicCellSetStructured Run(const vtkm::cont::CellSetStructured<Dimensionality>& cellset,
                                const vtkm::RangeId3& voi,
                                const vtkm::Id3& sampleRate,
-                               bool includeBoundary,
-                               DeviceAdapter)
+                               bool includeBoundary)
   {
     // Verify input parameters
     vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellset.GetPointDimensions());
@@ -305,7 +303,6 @@ public:
   }
 
 private:
-  template <typename DeviceAdapter>
   class CallRun
   {
   public:
@@ -325,8 +322,8 @@ private:
     template <vtkm::IdComponent Dimensionality>
     void operator()(const vtkm::cont::CellSetStructured<Dimensionality>& cellset) const
     {
-      *this->Output = this->Worklet->Run(
-        cellset, *this->VOI, *this->SampleRate, this->IncludeBoundary, DeviceAdapter());
+      *this->Output =
+        this->Worklet->Run(cellset, *this->VOI, *this->SampleRate, this->IncludeBoundary);
     }
 
     template <typename CellSetType>
@@ -344,21 +341,19 @@ private:
   };
 
 public:
-  template <typename CellSetList, typename DeviceAdapter>
+  template <typename CellSetList>
   DynamicCellSetStructured Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset,
                                const vtkm::RangeId3& voi,
                                const vtkm::Id3& sampleRate,
-                               bool includeBoundary,
-                               DeviceAdapter)
+                               bool includeBoundary)
   {
     DynamicCellSetStructured output;
-    CallRun<DeviceAdapter> cr(this, voi, sampleRate, includeBoundary, output);
+    CallRun cr(this, voi, sampleRate, includeBoundary, output);
     vtkm::cont::CastAndCall(cellset, cr);
     return output;
   }
 
 private:
-  template <typename DeviceAdapter>
   class CoordinatesMapper
   {
   private:
@@ -428,7 +423,7 @@ private:
     template <typename T, typename Storage>
     void operator()(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, Storage>& coords) const
     {
-      auto out = this->Worklet->ProcessPointField(coords, DeviceAdapter());
+      auto out = this->Worklet->ProcessPointField(coords);
       *this->Result = vtkm::cont::ArrayHandleVirtualCoordinates(out);
     }
 
@@ -445,8 +440,7 @@ private:
       }
       else
       {
-        vtkm::cont::ArrayCopy(
-          vtkm::cont::make_ArrayHandlePermutation(valid, coords), dest, DeviceAdapter());
+        vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandlePermutation(valid, coords), dest);
         return 1;
       }
     }
@@ -456,61 +450,55 @@ private:
   };
 
 public:
-  template <typename DeviceAdapter>
   vtkm::cont::ArrayHandleVirtualCoordinates MapCoordinates(
-    const vtkm::cont::CoordinateSystem& coordinates,
-    DeviceAdapter)
+    const vtkm::cont::CoordinateSystem& coordinates)
   {
     vtkm::cont::ArrayHandleVirtualCoordinates result;
-    CoordinatesMapper<DeviceAdapter> mapper(this, result);
+    CoordinatesMapper mapper(this, result);
     vtkm::cont::CastAndCall(coordinates, mapper);
     return result;
   }
 
 private:
-  template <vtkm::IdComponent Dimensionality, typename T, typename Storage, typename DeviceAdapter>
+  template <vtkm::IdComponent Dimensionality, typename T, typename Storage>
   void MapPointField(const vtkm::cont::ArrayHandle<T, Storage>& in,
-                     vtkm::cont::ArrayHandle<T>& out,
-                     DeviceAdapter) const
+                     vtkm::cont::ArrayHandle<T>& out) const
   {
     using namespace extractstructured::internal;
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     auto validPointsFlat = vtkm::cont::make_ArrayHandleTransform(
       this->ValidPoints, LogicalToFlatIndex<Dimensionality>(this->InputDimensions));
-    Algorithm::Copy(make_ArrayHandlePermutation(validPointsFlat, in), out);
+    vtkm::cont::ArrayCopy(make_ArrayHandlePermutation(validPointsFlat, in), out);
   }
 
-  template <vtkm::IdComponent Dimensionality, typename T, typename Storage, typename DeviceAdapter>
+  template <vtkm::IdComponent Dimensionality, typename T, typename Storage>
   void MapCellField(const vtkm::cont::ArrayHandle<T, Storage>& in,
-                    vtkm::cont::ArrayHandle<T>& out,
-                    DeviceAdapter) const
+                    vtkm::cont::ArrayHandle<T>& out) const
   {
     using namespace extractstructured::internal;
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     auto inputCellDimensions = this->InputDimensions - vtkm::Id3(1);
     auto validCellsFlat = vtkm::cont::make_ArrayHandleTransform(
       this->ValidCells, LogicalToFlatIndex<Dimensionality>(inputCellDimensions));
-    Algorithm::Copy(make_ArrayHandlePermutation(validCellsFlat, in), out);
+    vtkm::cont::ArrayCopy(make_ArrayHandlePermutation(validCellsFlat, in), out);
   }
 
 public:
-  template <typename T, typename Storage, typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<T> ProcessPointField(const vtkm::cont::ArrayHandle<T, Storage>& field,
-                                               DeviceAdapter device) const
+  template <typename T, typename Storage>
+  vtkm::cont::ArrayHandle<T> ProcessPointField(
+    const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
     vtkm::cont::ArrayHandle<T> result;
     switch (this->InputDimensionality)
     {
       case 1:
-        this->MapPointField<1>(field, result, device);
+        this->MapPointField<1>(field, result);
         break;
       case 2:
-        this->MapPointField<2>(field, result, device);
+        this->MapPointField<2>(field, result);
         break;
       case 3:
-        this->MapPointField<3>(field, result, device);
+        this->MapPointField<3>(field, result);
         break;
       default:
         break;
@@ -519,21 +507,21 @@ public:
     return result;
   }
 
-  template <typename T, typename Storage, typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<T> ProcessCellField(const vtkm::cont::ArrayHandle<T, Storage>& field,
-                                              DeviceAdapter device) const
+  template <typename T, typename Storage>
+  vtkm::cont::ArrayHandle<T> ProcessCellField(
+    const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
     vtkm::cont::ArrayHandle<T> result;
     switch (this->InputDimensionality)
     {
       case 1:
-        this->MapCellField<1>(field, result, device);
+        this->MapCellField<1>(field, result);
         break;
       case 2:
-        this->MapCellField<2>(field, result, device);
+        this->MapCellField<2>(field, result);
         break;
       case 3:
-        this->MapCellField<3>(field, result, device);
+        this->MapCellField<3>(field, result);
         break;
       default:
         break;

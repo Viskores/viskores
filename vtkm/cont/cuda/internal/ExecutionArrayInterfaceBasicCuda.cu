@@ -20,6 +20,8 @@
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/ExecutionArrayInterfaceBasicCuda.h>
 
+#include <vtkm/cont/Logging.h>
+
 using vtkm::cont::cuda::internal::CudaAllocator;
 
 namespace vtkm
@@ -29,15 +31,9 @@ namespace cont
 namespace internal
 {
 
-ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::ExecutionArrayInterfaceBasic(
-  StorageBasicBase& storage)
-  : Superclass(storage)
-{
-}
-
 DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::GetDeviceId() const
 {
-  return VTKM_DEVICE_ADAPTER_CUDA;
+  return DeviceAdapterTagCuda{};
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecutionArray& execArray,
@@ -125,7 +121,10 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Free(
 
   if (execArray.Array != nullptr)
   {
-    CudaAllocator::Free(execArray.Array);
+    const vtkm::UInt64 cap = static_cast<vtkm::UInt64>(static_cast<char*>(execArray.ArrayCapacity) -
+                                                       static_cast<char*>(execArray.Array));
+
+    CudaAllocator::FreeDeferred(execArray.Array, cap);
     execArray.Array = nullptr;
     execArray.ArrayEnd = nullptr;
     execArray.ArrayCapacity = nullptr;
@@ -144,6 +143,11 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(
     CudaAllocator::PrepareForInput(executionPtr, numBytes);
     return;
   }
+
+  VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
+             "Copying host --> CUDA dev: %s (%llu bytes)",
+             vtkm::cont::GetHumanReadableSize(numBytes).c_str(),
+             numBytes);
 
   VTKM_CUDA_CALL(cudaMemcpyAsync(executionPtr,
                                  controlPtr,
@@ -173,6 +177,11 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
   }
   else
   {
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
+               "Copying CUDA dev --> host: %s (%llu bytes)",
+               vtkm::cont::GetHumanReadableSize(numBytes).c_str(),
+               numBytes);
+
     VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
                                    executionPtr,
                                    static_cast<std::size_t>(numBytes),
@@ -184,7 +193,7 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
   //our stream. We need to block on the copy back to control since
   //we don't wanting it accessing memory that hasn't finished
   //being used by the GPU
-  cudaStreamSynchronize(cudaStreamPerThread);
+  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTagCuda>::Synchronize();
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(

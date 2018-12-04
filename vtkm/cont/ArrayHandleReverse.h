@@ -243,4 +243,63 @@ VTKM_CONT ArrayHandleReverse<HandleType> make_ArrayHandleReverse(const HandleTyp
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH>
+struct TypeString<vtkm::cont::ArrayHandleReverse<AH>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Reverse<" + TypeString<AH>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH>
+struct TypeString<
+  vtkm::cont::ArrayHandle<typename AH::ValueType, vtkm::cont::StorageTagReverse<AH>>>
+  : TypeString<vtkm::cont::ArrayHandleReverse<AH>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename AH>
+struct Serialization<vtkm::cont::ArrayHandleReverse<AH>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleReverse<AH>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    diy::save(bb, obj.GetStorage().GetArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH array;
+    diy::load(bb, array);
+    obj = vtkm::cont::make_ArrayHandleReverse(array);
+  }
+};
+
+template <typename AH>
+struct Serialization<
+  vtkm::cont::ArrayHandle<typename AH::ValueType, vtkm::cont::StorageTagReverse<AH>>>
+  : Serialization<vtkm::cont::ArrayHandleReverse<AH>>
+{
+};
+
+} // diy
+
 #endif // vtk_m_cont_ArrayHandleReverse_h

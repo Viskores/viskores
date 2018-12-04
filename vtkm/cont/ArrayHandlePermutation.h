@@ -372,4 +372,72 @@ make_ArrayHandlePermutation(IndexArrayHandleType indexArray, ValueArrayHandleTyp
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename IdxAH, typename ValAH>
+struct TypeString<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name =
+      "AH_Permutation<" + TypeString<IdxAH>::Get() + "," + TypeString<ValAH>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename IdxAH, typename ValAH>
+struct TypeString<
+  vtkm::cont::ArrayHandle<typename ValAH::ValueType,
+                          vtkm::cont::internal::StorageTagPermutation<IdxAH, ValAH>>>
+  : TypeString<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename IdxAH, typename ValAH>
+struct Serialization<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    diy::save(bb, storage.GetIndexArray());
+    diy::save(bb, storage.GetValueArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    IdxAH indices;
+    ValAH values;
+
+    diy::load(bb, indices);
+    diy::load(bb, values);
+
+    obj = vtkm::cont::make_ArrayHandlePermutation(indices, values);
+  }
+};
+
+template <typename IdxAH, typename ValAH>
+struct Serialization<
+  vtkm::cont::ArrayHandle<typename ValAH::ValueType,
+                          vtkm::cont::internal::StorageTagPermutation<IdxAH, ValAH>>>
+  : Serialization<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
+{
+};
+
+} // diy
+
 #endif //vtk_m_cont_ArrayHandlePermutation_h

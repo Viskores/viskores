@@ -21,7 +21,9 @@
 set(unit_tests
   UnitTestOpenMPArrayHandle.cxx
   UnitTestOpenMPArrayHandleFancy.cxx
+  UnitTestOpenMPArrayHandleVirtualCoordinates.cxx
   UnitTestOpenMPCellLocatorTwoLevelUniformGrid.cxx
+  UnitTestOpenMPColorTable.cxx
   UnitTestOpenMPComputeRange.cxx
   UnitTestOpenMPDataSetExplicit.cxx
   UnitTestOpenMPDataSetSingleType.cxx
@@ -31,3 +33,16 @@ set(unit_tests
   UnitTestOpenMPVirtualObjectHandle.cxx
   )
 vtkm_unit_tests(OpenMP SOURCES ${unit_tests})
+
+if (VTKm_ENABLE_TESTING)
+  #We need to have all OpenMP tests run serially as they
+  #will uses all the system cores, and we will cause a N*N thread
+  #explosion which causes the tests to run slower than when run
+  #serially
+  foreach (test ${unit_tests})
+    get_filename_component(tname ${test} NAME_WE)
+    set_tests_properties(${tname} PROPERTIES
+        RUN_SERIAL True
+    )
+  endforeach()
+endif()

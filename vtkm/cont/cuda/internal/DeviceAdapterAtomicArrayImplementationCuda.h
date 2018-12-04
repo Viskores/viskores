@@ -25,6 +25,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
@@ -54,16 +55,49 @@ public:
 
   VTKM_EXEC T Add(vtkm::Id index, const T& value) const
   {
+// Although this function is marked VTKM_EXEC, this currently expands to
+// __host__ __device__, and nvcc 8.0.61 errors when calling the __device__
+// function vtkmAtomicAdd. VTKM_SUPPRESS_EXEC_WARNINGS does not fix this.
+// We work around this by calling the __device__ function inside of a
+// __CUDA_ARCH__ guard, as nvcc is smart enough to recognize that this is a
+// safe usage of a __device__ function in a __host__ __device__ context.
+#ifdef __CUDA_ARCH__
     T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return this->vtkmAtomicAdd(lockedValue, value);
+#else
+    // Shut up, compiler
+    (void)index;
+    (void)value;
+
+    throw vtkm::cont::ErrorExecution("AtomicArray used in control environment, "
+                                     "or incorrect array implementation used "
+                                     "for device.");
+#endif
   }
 
   VTKM_EXEC T CompareAndSwap(vtkm::Id index,
                              const vtkm::Int64& newValue,
                              const vtkm::Int64& oldValue) const
   {
+// Although this function is marked VTKM_EXEC, this currently expands to
+// __host__ __device__, and nvcc 8.0.61 errors when calling the __device__
+// function vtkmAtomicAdd. VTKM_SUPPRESS_EXEC_WARNINGS does not fix this.
+// We work around this by calling the __device__ function inside of a
+// __CUDA_ARCH__ guard, as nvcc is smart enough to recognize that this is a
+// safe usage of a __device__ function in a __host__ __device__ context.
+#ifdef __CUDA_ARCH__
     T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return this->vtkmCompareAndSwap(lockedValue, newValue, oldValue);
+#else
+    // Shut up, compiler.
+    (void)index;
+    (void)newValue;
+    (void)oldValue;
+
+    throw vtkm::cont::ErrorExecution("AtomicArray used in control environment, "
+                                     "or incorrect array implementation used "
+                                     "for device.");
+#endif
   }
 
 private:

@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
+  UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
   UnitTestDotProductFilter.cxx
@@ -37,7 +38,9 @@ set(unit_tests
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
   UnitTestGradient.cxx
+  UnitTestGhostZone.cxx
   UnitTestHistogramFilter.cxx
+  UnitTestLagrangianFilter.cxx
   UnitTestMarchingCubesFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
@@ -49,6 +52,7 @@ set(unit_tests
   UnitTestPointElevationFilter.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
+  UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx

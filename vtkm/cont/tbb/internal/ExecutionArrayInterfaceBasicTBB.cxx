@@ -25,9 +25,9 @@ namespace cont
 {
 namespace internal
 {
-vtkm::cont::DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB>::GetDeviceId() const
+DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB>::GetDeviceId() const
 {
-  return VTKM_DEVICE_ADAPTER_TBB;
+  return DeviceAdapterTagTBB{};
 }
 
 } // namespace internal

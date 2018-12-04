@@ -63,12 +63,11 @@ struct DoubleWorklet : public vtkm::worklet::WorkletMapField
   }
 };
 
-template <typename T, typename S, typename DeviceAdapter>
+template <typename T, typename S>
 inline void TestVirtualAccess(const vtkm::cont::ArrayHandle<T, S>& in,
-                              vtkm::cont::ArrayHandle<T>& out,
-                              DeviceAdapter)
+                              vtkm::cont::ArrayHandle<T>& out)
 {
-  vtkm::worklet::DispatcherMapField<CopyWorklet, DeviceAdapter>().Invoke(
+  vtkm::worklet::DispatcherMapField<CopyWorklet>().Invoke(
     vtkm::cont::ArrayHandleVirtualCoordinates(in), vtkm::cont::ArrayHandleVirtualCoordinates(out));
 
   VTKM_TEST_ASSERT(test_equal_portals(in.GetPortalConstControl(), out.GetPortalConstControl()),
@@ -103,11 +102,11 @@ private:
     {
       a1.GetPortalControl().Set(i, TestValue(i, PointType()));
     }
-    TestVirtualAccess(a1, out, DeviceAdapter{});
+    TestVirtualAccess(a1, out);
 
     std::cout << "Testing ArrayHandleUniformPointCoordinates as input\n";
     auto t = vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(4, 4, 4));
-    TestVirtualAccess(t, out, DeviceAdapter{});
+    TestVirtualAccess(t, out);
 
     std::cout << "Testing ArrayHandleCartesianProduct as input\n";
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> c1, c2, c3;
@@ -121,13 +120,12 @@ private:
       c2.GetPortalControl().Set(i, p[1]);
       c3.GetPortalControl().Set(i, p[2]);
     }
-    TestVirtualAccess(
-      vtkm::cont::make_ArrayHandleCartesianProduct(c1, c2, c3), out, DeviceAdapter{});
+    TestVirtualAccess(vtkm::cont::make_ArrayHandleCartesianProduct(c1, c2, c3), out);
 
     std::cout << "Testing resources releasing on ArrayHandleVirtualCoordinates\n";
     vtkm::cont::ArrayHandleVirtualCoordinates virtualC =
       vtkm::cont::ArrayHandleVirtualCoordinates(a1);
-    vtkm::worklet::DispatcherMapField<DoubleWorklet, DeviceAdapter>().Invoke(a1);
+    vtkm::worklet::DispatcherMapField<DoubleWorklet>().Invoke(a1);
     virtualC.ReleaseResourcesExecution();
     VTKM_TEST_ASSERT(a1.GetNumberOfValues() == length,
                      "ReleaseResourcesExecution"
@@ -143,7 +141,11 @@ private:
   }
 
 public:
-  static int Run() { return vtkm::cont::testing::Testing::Run(TestAll); }
+  static int Run()
+  {
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+    return vtkm::cont::testing::Testing::Run(TestAll);
+  }
 };
 }
 }

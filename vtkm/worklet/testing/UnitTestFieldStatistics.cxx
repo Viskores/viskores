@@ -309,8 +309,7 @@ vtkm::cont::DataSet Make2DUniformStatDataSet1()
 //
 // Create a dataset with known point data and cell data (statistical distributions)
 //
-void PrintStatInfo(
-  vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::StatInfo statinfo)
+void PrintStatInfo(vtkm::worklet::FieldStatistics<vtkm::Float32>::StatInfo statinfo)
 {
   std::cout << "   Median " << statinfo.median << std::endl;
   std::cout << "   Minimum " << statinfo.minimum << std::endl;
@@ -336,7 +335,7 @@ void PrintStatInfo(
 void TestFieldSimple()
 {
   // Create the output structure
-  vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::StatInfo statinfo;
+  vtkm::worklet::FieldStatistics<vtkm::Float32>::StatInfo statinfo;
 
   // Data attached is [1:10]
   vtkm::cont::DataSet ds = Make2DUniformStatDataSet0();
@@ -346,8 +345,7 @@ void TestFieldSimple()
   ds.GetField("data").GetData().CopyTo(data);
 
   // Run
-  vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().Run(data,
-                                                                                       statinfo);
+  vtkm::worklet::FieldStatistics<vtkm::Float32>().Run(data, statinfo);
   std::cout << "Statistics for CELL data:" << std::endl;
   PrintStatInfo(statinfo);
 
@@ -368,7 +366,7 @@ void TestFieldSimple()
 void TestFieldStandardDistributions()
 {
   // Create the output structure
-  vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::StatInfo statinfo;
+  vtkm::worklet::FieldStatistics<vtkm::Float32>::StatInfo statinfo;
 
   // Data attached is the poisson distribution
   vtkm::cont::DataSet ds = Make2DUniformStatDataSet1();
@@ -384,26 +382,22 @@ void TestFieldStandardDistributions()
   ds.GetField("p_uniform").GetData().CopyTo(p_uniform);
 
   // Run Poisson data
-  vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().Run(p_poisson,
-                                                                                       statinfo);
+  vtkm::worklet::FieldStatistics<vtkm::Float32>().Run(p_poisson, statinfo);
   std::cout << "Poisson distributed POINT data:" << std::endl;
   PrintStatInfo(statinfo);
 
   // Run Normal data
-  vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().Run(p_normal,
-                                                                                       statinfo);
+  vtkm::worklet::FieldStatistics<vtkm::Float32>().Run(p_normal, statinfo);
   std::cout << "Normal distributed POINT data:" << std::endl;
   PrintStatInfo(statinfo);
 
   // Run Chi Square data
-  vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().Run(p_chiSquare,
-                                                                                       statinfo);
+  vtkm::worklet::FieldStatistics<vtkm::Float32>().Run(p_chiSquare, statinfo);
   std::cout << "Chi Square distributed POINT data:" << std::endl;
   PrintStatInfo(statinfo);
 
   // Run Uniform data
-  vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().Run(p_uniform,
-                                                                                       statinfo);
+  vtkm::worklet::FieldStatistics<vtkm::Float32>().Run(p_uniform, statinfo);
   std::cout << "Uniform distributed POINT data:" << std::endl;
   PrintStatInfo(statinfo);
 } // TestFieldStatistics
@@ -414,7 +408,7 @@ void TestFieldStatistics()
   TestFieldSimple();
 }
 
-int UnitTestFieldStatistics(int, char* [])
+int UnitTestFieldStatistics(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldStatistics);
+  return vtkm::cont::testing::Testing::Run(TestFieldStatistics, argc, argv);
 }

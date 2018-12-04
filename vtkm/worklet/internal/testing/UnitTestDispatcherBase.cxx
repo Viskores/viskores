@@ -20,16 +20,12 @@
 
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-
 #include <vtkm/worklet/internal/WorkletBase.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
 {
-
-using Device = vtkm::cont::DeviceAdapterTagSerial;
 
 static constexpr vtkm::Id ARRAY_SIZE = 10;
 
@@ -130,7 +126,7 @@ struct TypeCheck<TestTypeCheckTag, std::vector<vtkm::Id>>
   static constexpr bool value = true;
 };
 
-template <>
+template <typename Device>
 struct Transport<TestTransportTagIn, std::vector<vtkm::Id>, Device>
 {
   using ExecObjectType = TestExecObjectIn;
@@ -147,7 +143,7 @@ struct Transport<TestTransportTagIn, std::vector<vtkm::Id>, Device>
   }
 };
 
-template <>
+template <typename Device>
 struct Transport<TestTransportTagOut, std::vector<vtkm::Id>, Device>
 {
   using ExecObjectType = TestExecObjectOut;
@@ -321,7 +317,7 @@ public:
   void DoInvoke(Invocation&& invocation) const
   {
     std::cout << "In TestDispatcher::DoInvoke()" << std::endl;
-    this->BasicInvoke(invocation, ARRAY_SIZE, Device());
+    this->BasicInvoke(invocation, ARRAY_SIZE);
   }
 
 private:
@@ -383,6 +379,7 @@ void TestInvokeWithError()
   catch (vtkm::cont::ErrorExecution& error)
   {
     std::cout << "  Got expected exception." << std::endl;
+    std::cout << "  Exception message: " << error.GetMessage() << std::endl;
     VTKM_TEST_ASSERT(error.GetMessage() == ERROR_MESSAGE, "Got unexpected error message.");
   }
 }

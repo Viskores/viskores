@@ -613,4 +613,70 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename SAH, typename OAH>
+struct TypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name =
+      "AH_GroupVecVariable<" + TypeString<SAH>::Get() + "," + TypeString<OAH>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename SAH, typename OAH>
+struct TypeString<
+  vtkm::cont::ArrayHandle<vtkm::VecFromPortal<typename SAH::PortalControl>,
+                          vtkm::cont::internal::StorageTagGroupVecVariable<SAH, OAH>>>
+  : TypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename SAH, typename OAH>
+struct Serialization<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    diy::save(bb, obj.GetStorage().GetSourceArray());
+    diy::save(bb, obj.GetStorage().GetOffsetsArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    SAH src;
+    OAH off;
+
+    diy::load(bb, src);
+    diy::load(bb, off);
+
+    obj = vtkm::cont::make_ArrayHandleGroupVecVariable(src, off);
+  }
+};
+
+template <typename SAH, typename OAH>
+struct Serialization<
+  vtkm::cont::ArrayHandle<vtkm::VecFromPortal<typename SAH::PortalControl>,
+                          vtkm::cont::internal::StorageTagGroupVecVariable<SAH, OAH>>>
+  : Serialization<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+{
+};
+} // diy
+
 #endif //vtk_m_cont_ArrayHandleGroupVecVariable_h

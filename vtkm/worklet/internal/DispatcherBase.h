@@ -26,8 +26,9 @@
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/cont/DeviceAdapter.h>
-
 #include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/Transport.h>
@@ -37,6 +38,8 @@
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
 #include <vtkm/internal/brigand.hpp>
+
+#include <vtkm/worklet/internal/WorkletBase.h>
 
 #include <sstream>
 
@@ -255,6 +258,20 @@ struct DispatcherBaseExecutionSignatureTagCheck
   };
 };
 
+struct DispatcherBaseTryExecuteFunctor
+{
+  template <typename Device, typename DispatcherBaseType, typename Invocation, typename RangeType>
+  VTKM_CONT bool operator()(Device device,
+                            const DispatcherBaseType* self,
+                            Invocation& invocation,
+                            const RangeType& dimensions)
+  {
+    self->InvokeTransportParameters(
+      invocation, dimensions, self->Scatter.GetOutputRange(dimensions), device);
+    return true;
+  }
+};
+
 // A look up helper used by DispatcherBaseTransportFunctor to determine
 //the types independent of the device we are templated on.
 template <typename ControlInterface, vtkm::IdComponent Index>
@@ -469,6 +486,10 @@ inline void deduce(Trampoline&& trampoline, ContParams&& sig, Args&&... args)
 #pragma diag_suppress 2885
 #endif
 
+#if (__CUDACC_VER_MAJOR__ >= 10)
+#pragma diag_suppress 2905
+#endif
+
 #endif
 //This is a separate function as the pragma guards can cause nvcc
 //to have an internal compiler error (codegen #3028)
@@ -487,6 +508,31 @@ inline auto make_funcIFace(Args&&... args) -> decltype(
 
 
 } // namespace detail
+
+/// This is a help struct to detect out of bound placeholders defined in the
+/// execution signature at compile time
+template <vtkm::IdComponent MaxIndexAllowed>
+struct PlaceholderValidator
+{
+  PlaceholderValidator() {}
+
+  // An overload operator to detect possible out of bound placeholder
+  template <int N>
+  void operator()(brigand::type_<vtkm::placeholders::Arg<N>>) const
+  {
+    static_assert(N <= MaxIndexAllowed,
+                  "An argument in the execution signature"
+                  " (usually _2, _3, _4, etc.) refers to a control signature argument that"
+                  " does not exist. For example, you will get this error if you have _3 (or"
+                  " _4 or _5 or so on) as one of the execution signature arguments, but you"
+                  " have fewer than 3 (or 4 or 5 or so on) arguments in the control signature.");
+  }
+
+  template <typename DerivedType>
+  void operator()(brigand::type_<DerivedType>) const
+  {
+  }
+};
 
 /// Base class for all dispatcher classes. Every worklet type should have its
 /// own dispatcher.
@@ -527,6 +573,11 @@ private:
     static_assert(
       std::is_base_of<BaseWorkletType, WorkletType>::value,
       "The worklet being scheduled by this dispatcher doesn't match the type of the dispatcher");
+
+    // Check if the placeholders defined in the execution environment exceed the max bound
+    // defined in the control environment by throwing a nice compile error.
+    using ComponentSig = typename ExecutionInterface::ComponentSig;
+    brigand::for_each<ComponentSig>(PlaceholderValidator<NUM_INVOKE_PARAMS>{});
 
     //We need to determine if we have the need to do any dynamic
     //transforms. This is fairly simple of a query. We just need to check
@@ -595,14 +646,26 @@ private:
     static_cast<const DerivedClass*>(this)->DoInvoke(ivc);
   }
 
-
-
 public:
+  //@{
+  /// Setting the device ID will force the execute to happen on a particular device. If no device
+  /// is specified (or the device ID is set to any), then a device will automatically be chosen
+  /// based on the runtime device tracker.
+  ///
+  VTKM_CONT
+  void SetDevice(vtkm::cont::DeviceAdapterId device) { this->Device = device; }
+
+  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const { return this->Device; }
+  //@}
+
   using ScatterType = typename WorkletType::ScatterType;
 
   template <typename... Args>
   VTKM_CONT void Invoke(Args&&... args) const
   {
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
+                   "Invoking Worklet: '%s'",
+                   vtkm::cont::TypeName<WorkletType>().c_str());
     this->StartInvoke(std::forward<Args>(args)...);
   }
 
@@ -611,33 +674,46 @@ protected:
   DispatcherBase(const WorkletType& worklet, const ScatterType& scatter)
     : Worklet(worklet)
     , Scatter(scatter)
+    , Device(vtkm::cont::DeviceAdapterTagAny())
   {
   }
 
-  template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(Invocation& invocation,
-                             vtkm::Id numInstances,
-                             DeviceAdapter device) const
+  friend struct internal::detail::DispatcherBaseTryExecuteFunctor;
+
+  template <typename Invocation>
+  VTKM_CONT void BasicInvoke(Invocation& invocation, vtkm::Id numInstances) const
   {
-    this->InvokeTransportParameters(
-      invocation, numInstances, this->Scatter.GetOutputRange(numInstances), device);
+    bool success =
+      vtkm::cont::TryExecuteOnDevice(this->Device,
+                                     internal::detail::DispatcherBaseTryExecuteFunctor(),
+                                     this,
+                                     invocation,
+                                     numInstances);
+    if (!success)
+    {
+      throw vtkm::cont::ErrorExecution("Failed to execute worklet on any device.");
+    }
   }
 
-  template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(Invocation& invocation,
-                             vtkm::Id2 dimensions,
-                             DeviceAdapter device) const
+  template <typename Invocation>
+  VTKM_CONT void BasicInvoke(Invocation& invocation, vtkm::Id2 dimensions) const
   {
-    this->BasicInvoke(invocation, vtkm::Id3(dimensions[0], dimensions[1], 1), device);
+    this->BasicInvoke(invocation, vtkm::Id3(dimensions[0], dimensions[1], 1));
   }
 
-  template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(Invocation& invocation,
-                             vtkm::Id3 dimensions,
-                             DeviceAdapter device) const
+  template <typename Invocation>
+  VTKM_CONT void BasicInvoke(Invocation& invocation, vtkm::Id3 dimensions) const
   {
-    this->InvokeTransportParameters(
-      invocation, dimensions, this->Scatter.GetOutputRange(dimensions), device);
+    bool success =
+      vtkm::cont::TryExecuteOnDevice(this->Device,
+                                     internal::detail::DispatcherBaseTryExecuteFunctor(),
+                                     this,
+                                     invocation,
+                                     dimensions);
+    if (!success)
+    {
+      throw vtkm::cont::ErrorExecution("Failed to execute worklet on any device.");
+    }
   }
 
   WorkletType Worklet;
@@ -647,6 +723,8 @@ private:
   // Dispatchers cannot be copied
   DispatcherBase(const MyType&) = delete;
   void operator=(const MyType&) = delete;
+
+  vtkm::cont::DeviceAdapterId Device;
 
   template <typename Invocation,
             typename InputRangeType,

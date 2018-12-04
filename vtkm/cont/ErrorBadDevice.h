@@ -22,10 +22,14 @@
 
 #include <vtkm/cont/Error.h>
 
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/vtkm_cont_export.h>
+
 namespace vtkm
 {
 namespace cont
 {
+
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
@@ -42,6 +46,15 @@ public:
 };
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
+
+/// Throws an ErrorBadeDevice exception with the following message:
+/// "VTK-m was unable to transfer \c className to DeviceAdapter[id,name].
+///  This is generally caused by asking for execution on a DeviceAdapter that
+///  isn't compiled into VTK-m. In the case of CUDA it can also be caused by accidentally
+///  compiling source files as C++ files instead of CUDA."
+//
+VTKM_CONT_EXPORT void throwFailedRuntimeDeviceTransfer(const std::string& className,
+                                                       vtkm::cont::DeviceAdapterId device);
 }
 } // namespace vtkm::cont
 

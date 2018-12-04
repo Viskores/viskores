@@ -45,9 +45,11 @@
 #include <vtkm/cont/AtomicArray.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <ctime>
 #include <random>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -408,19 +410,77 @@ public:
     IdPortalType Result;
   };
 
+  struct CustomTForReduce
+  {
+    constexpr CustomTForReduce()
+      : Value(0.0f)
+    {
+    }
+
+    constexpr CustomTForReduce(float f)
+      : Value(f)
+    {
+    }
+
+    VTKM_EXEC_CONT
+    constexpr float value() const { return this->Value; }
+
+    //required due to how the CUDA::Reduction is implemented when
+    //the return Type of Reduction is different than the input type
+    VTKM_EXEC_CONT
+    constexpr explicit operator vtkm::Vec<float, 2>() const
+    {
+      return vtkm::Vec<float, 2>(this->Value);
+    }
+
+    float Value;
+  };
+
+  template <typename T>
+  struct CustomMinAndMax
+  {
+    VTKM_EXEC_CONT
+    vtkm::Vec<float, 2> operator()(const T& a, const T& b) const
+    {
+      return vtkm::make_Vec(vtkm::Min(a.value(), b.value()), vtkm::Max(a.value(), b.value()));
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Vec<float, 2> operator()(const vtkm::Vec<float, 2>& a, const vtkm::Vec<float, 2>& b) const
+    {
+      return vtkm::make_Vec(vtkm::Min(a[0], b[0]), vtkm::Max(a[1], b[1]));
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Vec<float, 2> operator()(const T& a, const vtkm::Vec<float, 2>& b) const
+    {
+      return vtkm::make_Vec(vtkm::Min(a.value(), b[0]), vtkm::Max(a.value(), b[1]));
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Vec<float, 2> operator()(const vtkm::Vec<float, 2>& a, const T& b) const
+    {
+      return vtkm::make_Vec(vtkm::Min(a[0], b.value()), vtkm::Max(a[1], b.value()));
+    }
+  };
+
+
 private:
   static VTKM_CONT void TestDeviceAdapterTag()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing device adapter tag" << std::endl;
 
+    constexpr DeviceAdapterTag deviceTag;
+    constexpr vtkm::cont::DeviceAdapterTagError errorTag;
+
+    VTKM_TEST_ASSERT(deviceTag.GetValue() == deviceTag.GetValue(),
+                     "Device adapter Id does not equal itself.");
+    VTKM_TEST_ASSERT(deviceTag.GetValue() != errorTag.GetValue(),
+                     "Device adapter Id not distinguishable from others.");
+
     using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
     using ErrorTraits = vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>;
-
-    VTKM_TEST_ASSERT(Traits::GetId() == Traits::GetId(),
-                     "Device adapter Id does not equal itself.");
-    VTKM_TEST_ASSERT(Traits::GetId() != ErrorTraits::GetId(),
-                     "Device adapter Id not distinguishable from others.");
 
     VTKM_TEST_ASSERT(Traits::GetName() == Traits::GetName(),
                      "Device adapter Name does not equal itself.");
@@ -549,20 +609,11 @@ private:
   }
 
   VTKM_CONT
-  static void TestRuntime()
-  {
-    std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing RuntimeDeviceInformation" << std::endl;
-
-    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
-    const bool valid_runtime = runtime.Exists();
-
-    VTKM_TEST_ASSERT(valid_runtime, "runtime detection failed for device");
-  }
-
-  VTKM_CONT
   static void TestVirtualObjectTransfer()
   {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing VirtualObjectTransfer" << std::endl;
+
     using BaseType = typename VirtualObjectTransferKernel::Interface;
     using TargetType = typename VirtualObjectTransferKernel::Concrete;
     using Transfer = vtkm::cont::internal::VirtualObjectTransfer<TargetType, DeviceAdapterTag>;
@@ -575,16 +626,13 @@ private:
     target.Value = 5;
 
     Transfer transfer(&target);
-    const BaseType* base = transfer.PrepareForExecution(false);
-
-    std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing VirtualObjectTransfer" << std::endl;
+    const BaseType* base = static_cast<const BaseType*>(transfer.PrepareForExecution(false));
 
     Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 5, "Did not get expected result");
 
     target.Value = 10;
-    base = transfer.PrepareForExecution(true);
+    base = static_cast<const BaseType*>(transfer.PrepareForExecution(true));
     Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 10, "Did not get expected result");
 
@@ -1227,6 +1275,8 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce with comparison object " << std::endl;
 
+
+    std::cout << "  Reduce vtkm::Id array with vtkm::MinAndMax to compute range." << std::endl;
     //construct the index array. Assign an abnormally large value
     //to the middle of the array, that should be what we see as our sum.
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
@@ -1245,6 +1295,37 @@ private:
     VTKM_TEST_ASSERT(maxValue == range[1], "Got bad value from Reduce with comparison object");
 
     VTKM_TEST_ASSERT(0 == range[0], "Got bad value from Reduce with comparison object");
+
+
+    std::cout << "  Reduce bool array with vtkm::BitwiseAnd to see if all values are true."
+              << std::endl;
+    //construct an array of bools and verify that they aren't all true
+    constexpr vtkm::Id inputLength = 60;
+    constexpr bool inputValues[inputLength] = {
+      true, true, true, true, true, true, false, true, true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true
+    };
+    auto barray = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+    bool all_true = Algorithm::Reduce(barray, true, vtkm::BitwiseAnd());
+    VTKM_TEST_ASSERT(all_true == false, "reduction with vtkm::BitwiseAnd should return false");
+
+    std::cout << "  Reduce with custom value type and custom comparison operator." << std::endl;
+    //test with a custom value type with the reduction value being a vtkm::Vec<float,2>
+    constexpr CustomTForReduce inputFValues[inputLength] = {
+      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 413.1f, -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
+      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
+      13.1f, -2.1f, -11.0f, 13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
+      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -211.1f, -1.0f,
+      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 113.1f, -2.1f,   -1.0f
+    };
+    auto farray = vtkm::cont::make_ArrayHandle(inputFValues, inputLength);
+    vtkm::Vec<vtkm::Float32, 2> frange = Algorithm::Reduce(
+      farray, vtkm::Vec<vtkm::Float32, 2>(0.0f, 0.0f), CustomMinAndMax<CustomTForReduce>());
+    VTKM_TEST_ASSERT(-211.1f == frange[0],
+                     "Got bad float value from Reduce with comparison object");
+    VTKM_TEST_ASSERT(413.1f == frange[1], "Got bad float value from Reduce with comparison object");
   }
 
   static VTKM_CONT void TestReduceWithFancyArrays()
@@ -1919,6 +2000,7 @@ private:
     try
     {
       Algorithm::Schedule(OneErrorKernel(), ARRAY_SIZE);
+      Algorithm::Synchronize();
     }
     catch (vtkm::cont::ErrorExecution& error)
     {
@@ -1932,12 +2014,48 @@ private:
     try
     {
       Algorithm::Schedule(AllErrorKernel(), ARRAY_SIZE);
+      Algorithm::Synchronize();
     }
     catch (vtkm::cont::ErrorExecution& error)
     {
       std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
     }
+    VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
+
+    // This is spcifically to test the cuda-backend but should pass for all backends
+    std::cout << "Testing if execution errors are eventually propagated to the host "
+              << "without explicit synchronization\n";
+    message = "";
+    int nkernels = 0;
+    try
+    {
+      IdArrayHandle idArray;
+      idArray.Allocate(ARRAY_SIZE);
+      auto portal = idArray.PrepareForInPlace(DeviceAdapterTag{});
+
+      Algorithm::Schedule(OneErrorKernel(), ARRAY_SIZE);
+      for (; nkernels < 100; ++nkernels)
+      {
+        Algorithm::Schedule(AddArrayKernel(portal), ARRAY_SIZE);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      }
+      Algorithm::Synchronize();
+    }
+    catch (vtkm::cont::ErrorExecution& error)
+    {
+      std::cout << "Got expected error: \"" << error.GetMessage() << "\" ";
+      if (nkernels < 100)
+      {
+        std::cout << "after " << nkernels << " invocations of other kernel" << std::endl;
+      }
+      else
+      {
+        std::cout << "only after explicit synchronization" << std::endl;
+      }
+      message = error.GetMessage();
+    }
+    std::cout << "\n";
     VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
   }
 
@@ -2286,7 +2404,6 @@ private:
       TestArrayManagerExecution();
       TestOutOfMemory();
       TestTimer();
-      TestRuntime();
       TestVirtualObjectTransfer();
 
       TestAlgorithmSchedule();

@@ -47,17 +47,14 @@ vtkm::Range NDHistogram::GetDataRange(size_t fieldIdx)
   return DataRanges[fieldIdx];
 }
 
-template <typename Policy, typename Device>
+template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::DataSet& inData,
-                                                            vtkm::filter::PolicyBase<Policy> policy,
-                                                            Device device)
+                                                            vtkm::filter::PolicyBase<Policy> policy)
 {
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
   vtkm::worklet::NDimsHistogram ndHistogram;
 
   // Set the number of data points
-  ndHistogram.SetNumOfDataPoints(inData.GetField(0).GetData().GetNumberOfValues(), device);
+  ndHistogram.SetNumOfDataPoints(inData.GetField(0).GetData().GetNumberOfValues());
 
   // Add field one by one
   // (By using AddFieldAndBin(), the length of FieldNames and NumOfBins must be the same)
@@ -68,15 +65,14 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::Da
     ndHistogram.AddField(vtkm::filter::ApplyPolicy(inData.GetField(FieldNames[i]), policy),
                          NumOfBins[i],
                          rangeField,
-                         deltaField,
-                         device);
+                         deltaField);
     DataRanges.push_back(rangeField);
     BinDeltas.push_back(deltaField);
   }
 
   std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> binIds;
   vtkm::cont::ArrayHandle<vtkm::Id> freqs;
-  ndHistogram.Run(binIds, freqs, device);
+  ndHistogram.Run(binIds, freqs);
 
   vtkm::cont::DataSet outputData;
   for (size_t i = 0; i < binIds.size(); i++)
@@ -91,12 +87,11 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::Da
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool NDHistogram::DoMapField(vtkm::cont::DataSet&,
                                               const vtkm::cont::ArrayHandle<T, StorageType>&,
                                               const vtkm::filter::FieldMetadata&,
-                                              const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                              DeviceAdapter)
+                                              vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

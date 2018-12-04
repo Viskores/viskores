@@ -41,10 +41,10 @@ public:
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    template <typename CountArrayType, typename DeviceAdapter>
-    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray, DeviceAdapter device)
+    template <typename CountArrayType>
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
     {
-      return ScatterType(countArray, device);
+      return ScatterType(countArray);
     }
 
     template <typename T>
@@ -60,37 +60,34 @@ public:
   }
 
   // Tetrahedralize explicit data set, save number of tetra cells per input
-  template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet, const DeviceAdapter&)
+  template <typename CellSetType>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet)
   {
-    TetrahedralizeExplicit<DeviceAdapter> worklet;
+    TetrahedralizeExplicit worklet;
     return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
   // Tetrahedralize structured data set, save number of tetra cells per input
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>& cellSet,
-                                      const DeviceAdapter&)
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>& cellSet)
   {
-    TetrahedralizeStructured<DeviceAdapter> worklet;
+    TetrahedralizeStructured worklet;
     return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&, const DeviceAdapter&)
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&)
   {
     throw vtkm::cont::ErrorBadType("CellSetStructured<2> can't be tetrahedralized");
   }
 
   // Using the saved input to output cells, expand cell data
-  template <typename T, typename StorageType, typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<T> ProcessCellField(const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                              const DeviceAdapter& device) const
+  template <typename T, typename StorageType>
+  vtkm::cont::ArrayHandle<T> ProcessCellField(
+    const vtkm::cont::ArrayHandle<T, StorageType>& input) const
   {
     vtkm::cont::ArrayHandle<T> output;
 
-    vtkm::worklet::DispatcherMapField<DistributeCellData, DeviceAdapter> dispatcher(
-      DistributeCellData::MakeScatter(this->OutCellsPerCell, device));
+    vtkm::worklet::DispatcherMapField<DistributeCellData> dispatcher(
+      DistributeCellData::MakeScatter(this->OutCellsPerCell));
     dispatcher.Invoke(input, output);
 
     return output;

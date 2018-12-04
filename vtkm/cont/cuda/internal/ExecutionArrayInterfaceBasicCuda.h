@@ -32,9 +32,9 @@ template <>
 struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda> final
   : public ExecutionArrayInterfaceBasicBase
 {
-  using Superclass = ExecutionArrayInterfaceBasicBase;
+  //inherit our parents constructor
+  using ExecutionArrayInterfaceBasicBase::ExecutionArrayInterfaceBasicBase;
 
-  VTKM_CONT ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
   VTKM_CONT DeviceAdapterId GetDeviceId() const final;
   VTKM_CONT void Allocate(TypelessExecutionArray& execArray,
                           vtkm::Id numberOfValues,

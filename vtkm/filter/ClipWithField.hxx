@@ -34,7 +34,6 @@ namespace filter
 namespace clipwithfield
 {
 
-template <typename Device>
 struct PointMapHelper
 {
   PointMapHelper(const vtkm::worklet::Clip& worklet, vtkm::cont::DynamicArrayHandle& output)
@@ -46,7 +45,7 @@ struct PointMapHelper
   template <typename ArrayType>
   void operator()(const ArrayType& array) const
   {
-    this->Output = this->Worklet.ProcessPointField(array, Device());
+    this->Output = this->Worklet.ProcessPointField(array);
   }
 
   const vtkm::worklet::Clip& Worklet;
@@ -65,13 +64,12 @@ inline VTKM_CONT ClipWithField::ClipWithField()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   using namespace clipwithfield;
 
@@ -87,37 +85,36 @@ inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
-    vtkm::filter::ApplyPolicy(cells, policy), field, this->ClipValue, this->Invert, device);
+    vtkm::filter::ApplyPolicy(cells, policy), field, this->ClipValue, this->Invert);
 
   //create the output data
   vtkm::cont::DataSet output;
   output.AddCellSet(outputCellSet);
 
   // Compute the new boundary points and add them to the output:
-  auto outputCoordsArray = this->Worklet.ProcessPointField(inputCoords.GetData(), device);
+  auto outputCoordsArray = this->Worklet.ProcessPointField(inputCoords.GetData());
   vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(), outputCoordsArray);
   output.AddCoordinateSystem(outputCoords);
   return output;
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool ClipWithField::DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   vtkm::cont::ArrayHandle<T> output;
 
   if (fieldMeta.IsPointField())
   {
-    output = this->Worklet.ProcessPointField(input, device);
+    output = this->Worklet.ProcessPointField(input);
   }
   else if (fieldMeta.IsCellField())
   {
-    output = this->Worklet.ProcessCellField(input, device);
+    output = this->Worklet.ProcessCellField(input);
   }
   else
   {

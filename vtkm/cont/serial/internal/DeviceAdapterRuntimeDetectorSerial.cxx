@@ -25,8 +25,7 @@ namespace cont
 {
 VTKM_CONT bool DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagSerial>::Exists() const
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagSerial>;
-  return DeviceAdapterTraits::Valid;
+  return vtkm::cont::DeviceAdapterTagSerial::IsEnabled;
 }
 }
 }

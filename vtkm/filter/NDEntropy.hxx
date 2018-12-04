@@ -36,26 +36,23 @@ void NDEntropy::AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins)
   this->NumOfBins.push_back(numOfBins);
 }
 
-template <typename Policy, typename Device>
+template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
   const vtkm::cont::DataSet& inData,
-  vtkm::filter::PolicyBase<Policy> vtkmNotUsed(policy),
-  Device device)
+  vtkm::filter::PolicyBase<Policy> vtkmNotUsed(policy))
 {
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
   vtkm::worklet::NDimsEntropy ndEntropy;
-  ndEntropy.SetNumOfDataPoints(inData.GetField(0).GetData().GetNumberOfValues(), device);
+  ndEntropy.SetNumOfDataPoints(inData.GetField(0).GetData().GetNumberOfValues());
 
   // Add field one by one
   // (By using AddFieldAndBin(), the length of FieldNames and NumOfBins must be the same)
   for (size_t i = 0; i < FieldNames.size(); i++)
   {
-    ndEntropy.AddField(inData.GetField(FieldNames[i]).GetData(), NumOfBins[i], device);
+    ndEntropy.AddField(inData.GetField(FieldNames[i]).GetData(), NumOfBins[i]);
   }
 
   // Run worklet to calculate multi-variate entropy
-  vtkm::Float64 entropy = ndEntropy.Run(device);
+  vtkm::Float64 entropy = ndEntropy.Run();
   vtkm::cont::DataSet outputData;
   outputData.AddField(vtkm::cont::make_Field(
     "Entropy", vtkm::cont::Field::Association::POINTS, &entropy, 1, vtkm::CopyFlag::On));
@@ -63,12 +60,11 @@ inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool NDEntropy::DoMapField(vtkm::cont::DataSet&,
                                             const vtkm::cont::ArrayHandle<T, StorageType>&,
                                             const vtkm::filter::FieldMetadata&,
-                                            const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                            DeviceAdapter)
+                                            vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

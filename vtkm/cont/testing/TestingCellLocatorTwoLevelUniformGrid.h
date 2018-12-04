@@ -20,6 +20,7 @@
 #ifndef vtk_m_cont_testing_TestingCellLocatorTwoLevelUniformGrid_h
 #define vtk_m_cont_testing_TestingCellLocatorTwoLevelUniformGrid_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorTwoLevelUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -71,11 +72,9 @@ public:
   }
 };
 
-template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
-vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
-                                    DeviceAdapter device)
+template <vtkm::IdComponent DIMENSIONS>
+vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
 {
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   using Connectivity = vtkm::internal::ConnectivityStructuredInternals<DIMENSIONS>;
 
   const vtkm::IdComponent PointsPerCell = 1 << DIMENSIONS;
@@ -87,7 +86,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
 
   // copy points
   vtkm::cont::ArrayHandle<PointType> points;
-  Algorithm::Copy(uniformDs.GetCoordinateSystem().GetData(), points);
+  vtkm::cont::ArrayCopy(uniformDs.GetCoordinateSystem().GetData(), points);
 
   vtkm::Id numberOfCells = uniformDs.GetCellSet().GetNumberOfCells();
   vtkm::Id numberOfIndices = numberOfCells * PointsPerCell;
@@ -115,10 +114,10 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
   switch (DIMENSIONS)
   {
     case 2:
-      cellset = vtkm::worklet::Triangulate().Run(uniformCs, device);
+      cellset = vtkm::worklet::Triangulate().Run(uniformCs);
       break;
     case 3:
-      cellset = vtkm::worklet::Tetrahedralize().Run(uniformCs, device);
+      cellset = vtkm::worklet::Tetrahedralize().Run(uniformCs);
       break;
     default:
       VTKM_ASSERT(false);
@@ -148,7 +147,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
   return out;
 }
 
-template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
+template <vtkm::IdComponent DIMENSIONS>
 void GenerateRandomInput(const vtkm::cont::DataSet& ds,
                          vtkm::Id count,
                          vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
@@ -181,17 +180,15 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
     pcoords.GetPortalControl().Set(i, pc);
   }
 
-  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates, DeviceAdapter> dispatcher(
+  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
     ParametricToWorldCoordinates::MakeScatter(cellIds));
   dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
 }
 
-template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
-void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim,
-                     vtkm::Id numberOfPoints,
-                     DeviceAdapter device)
+template <vtkm::IdComponent DIMENSIONS>
+void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id numberOfPoints)
 {
-  auto ds = MakeTestDataSet(dim, device);
+  auto ds = MakeTestDataSet(dim);
 
   std::cout << "Testing " << DIMENSIONS << "D dataset with " << ds.GetCellSet().GetNumberOfCells()
             << " cells\n";
@@ -201,18 +198,17 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim,
   locator.SetDensityL2(1.0f);
   locator.SetCellSet(ds.GetCellSet());
   locator.SetCoordinates(ds.GetCoordinateSystem());
-  locator.Build(device);
+  locator.Build();
 
   vtkm::cont::ArrayHandle<vtkm::Id> expCellIds;
   vtkm::cont::ArrayHandle<PointType> expPCoords;
   vtkm::cont::ArrayHandle<PointType> points;
-  GenerateRandomInput<DIMENSIONS, DeviceAdapter>(
-    ds, numberOfPoints, expCellIds, expPCoords, points);
+  GenerateRandomInput<DIMENSIONS>(ds, numberOfPoints, expCellIds, expPCoords, points);
 
   std::cout << "Finding cells for " << numberOfPoints << " points\n";
   vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
   vtkm::cont::ArrayHandle<PointType> pcoords;
-  locator.FindCells(points, cellIds, pcoords, device);
+  locator.FindCells(points, cellIds, pcoords);
 
   for (vtkm::Id i = 0; i < numberOfPoints; ++i)
   {
@@ -231,12 +227,14 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim,
 template <typename DeviceAdapter>
 void TestingCellLocatorTwoLevelUniformGrid()
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+
   vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
   std::cout << "Seed: " << seed << std::endl;
   RandomGenerator.seed(seed);
 
-  TestCellLocator(vtkm::Id3(8), 512, DeviceAdapter());  // 3D dataset
-  TestCellLocator(vtkm::Id2(18), 512, DeviceAdapter()); // 2D dataset
+  TestCellLocator(vtkm::Id3(8), 512);  // 3D dataset
+  TestCellLocator(vtkm::Id2(18), 512); // 2D dataset
 }
 
 #endif // vtk_m_cont_testing_TestingCellLocatorTwoLevelUniformGrid_h

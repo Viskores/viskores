@@ -22,6 +22,8 @@
 #define vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -38,33 +40,36 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename IntegratorType, typename FieldType>
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> idx, ExecObject ic);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> idx,
+                                ExecObject integrator,
+                                ExecObject integralCurve);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
-  template <typename IntegralCurveType>
-  VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
+  template <typename IntegratorType, typename IntegralCurveType>
+  VTKM_EXEC void operator()(const vtkm::Id& idx,
+                            const IntegratorType* integrator,
+                            IntegralCurveType& integralCurve) const
   {
-    vtkm::Vec<FieldType, 3> inpos = ic.GetPos(idx);
-    vtkm::Vec<FieldType, 3> outpos;
-    FieldType time = ic.GetTime(idx);
+    vtkm::Vec<ScalarType, 3> inpos = integralCurve.GetPos(idx);
+    vtkm::Vec<ScalarType, 3> outpos;
+    ScalarType time = integralCurve.GetTime(idx);
     ParticleStatus status;
-    while (!ic.Done(idx))
+    while (!integralCurve.Done(idx))
     {
-      status = integrator.Step(inpos, time, outpos);
+      status = integrator->Step(inpos, time, outpos);
       // If the status is OK, we only need to check if the particle
       // has completed the maximum steps required.
       if (status == ParticleStatus::STATUS_OK)
       {
-        ic.TakeStep(idx, outpos, status);
+        integralCurve.TakeStep(idx, outpos, status);
         // This is to keep track of the particle's time.
         // This is what the Evaluator uses to determine if the particle
         // has exited temporal boundary.
-        ic.SetTime(idx, time);
+        integralCurve.SetTime(idx, time);
         inpos = outpos;
       }
       // If the particle is at spatial or temporal  boundary, take steps to just
@@ -74,74 +79,51 @@ public:
       if (status == ParticleStatus::AT_SPATIAL_BOUNDARY ||
           status == ParticleStatus::AT_TEMPORAL_BOUNDARY)
       {
-        vtkm::Id numSteps = ic.GetStep(idx);
-        status = integrator.PushOutOfBoundary(inpos, numSteps, time, status, outpos);
-        ic.TakeStep(idx, outpos, status);
-        ic.SetTime(idx, time);
+        vtkm::Id numSteps = integralCurve.GetStep(idx);
+        status = integrator->PushOutOfBoundary(inpos, numSteps, time, status, outpos);
+        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.SetTime(idx, time);
         if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
-          ic.SetExitedSpatialBoundary(idx);
+          integralCurve.SetExitedSpatialBoundary(idx);
         if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
-          ic.SetExitedTemporalBoundary(idx);
+          integralCurve.SetExitedTemporalBoundary(idx);
       }
       // If the particle has exited spatial boundary, set corresponding status.
       else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
       {
-        ic.TakeStep(idx, outpos, status);
-        ic.SetExitedSpatialBoundary(idx);
+        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.SetExitedSpatialBoundary(idx);
       }
       // If the particle has exited temporal boundary, set corresponding status.
       else if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
       {
-        ic.TakeStep(idx, outpos, status);
-        ic.SetExitedTemporalBoundary(idx);
+        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.SetExitedTemporalBoundary(idx);
       }
     }
   }
-
-  ParticleAdvectWorklet(const IntegratorType& it)
-    : integrator(it)
-  {
-  }
-
-  IntegratorType integrator;
 };
 
 
-template <typename IntegratorType, typename FieldType>
+template <typename IntegratorType>
 class ParticleAdvectionWorklet
 {
 public:
   VTKM_EXEC_CONT ParticleAdvectionWorklet() {}
 
-  template <typename PointStorage, typename FieldStorage, typename DeviceAdapterTag>
-  void Run(const IntegratorType& it,
-           const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-           const vtkm::Id& nSteps,
-           vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
-           vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken,
-           vtkm::cont::ArrayHandle<FieldType, FieldStorage>& timeArray,
-           DeviceAdapterTag tag)
-  {
-    integrator = it;
-    seedArray = pts;
-    maxSteps = nSteps;
-    run(statusArray, stepsTaken, timeArray, tag);
-  }
-
   ~ParticleAdvectionWorklet() {}
 
-private:
-  template <typename FieldStorage, typename DeviceAdapterTag>
-  void run(vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
-           vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken,
-           vtkm::cont::ArrayHandle<FieldType, FieldStorage>& timeArray,
-           DeviceAdapterTag)
+  void Run(const IntegratorType& integrator,
+           vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& seedArray,
+           vtkm::Id maxSteps,
+           vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
+           vtkm::cont::ArrayHandle<vtkm::Id>& stepsTaken,
+           vtkm::cont::ArrayHandle<ScalarType>& timeArray)
   {
-    using ParticleAdvectWorkletType =
-      vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType, FieldType>;
+    using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorklet;
     using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType, DeviceAdapterTag>;
-    using ParticleType = vtkm::worklet::particleadvection::Particles<FieldType>;
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
+    using ParticleType = vtkm::worklet::particleadvection::Particles;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
     //Create and invoke the particle advection.
@@ -149,14 +131,9 @@ private:
     ParticleType particles(seedArray, stepsTaken, statusArray, timeArray, maxSteps);
 
     //Invoke particle advection worklet
-    ParticleAdvectWorkletType particleWorklet(integrator);
-    ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
-    particleWorkletDispatch.Invoke(idxArray, particles);
+    ParticleWorkletDispatchType particleWorkletDispatch;
+    particleWorkletDispatch.Invoke(idxArray, integrator, particles);
   }
-
-  IntegratorType integrator;
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
-  vtkm::Id maxSteps;
 };
 
 namespace detail
@@ -173,29 +150,28 @@ public:
     res = x - y;
   }
 };
-};
+} // namespace detail
 
-template <typename IntegratorType, typename FieldType>
+template <typename IntegratorType>
 class StreamlineWorklet
 {
 public:
   VTKM_EXEC_CONT StreamlineWorklet() {}
 
-  template <typename PointStorage, typename FieldStorage, typename DeviceAdapterTag>
+  template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
-           const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
+           const vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>, PointStorage>& pts,
            const vtkm::Id& nSteps,
-           vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& positions,
+           vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>, PointStorage>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken,
-           vtkm::cont::ArrayHandle<FieldType, FieldStorage>& timeArray,
-           DeviceAdapterTag tag)
+           vtkm::cont::ArrayHandle<ScalarType, FieldStorage>& timeArray)
   {
     integrator = it;
     seedArray = pts;
     maxSteps = nSteps;
-    run(positions, polyLines, statusArray, stepsTaken, timeArray, tag);
+    run(positions, polyLines, statusArray, stepsTaken, timeArray);
   }
 
   ~StreamlineWorklet() {}
@@ -210,29 +186,22 @@ public:
   };
 
 private:
-  template <typename DeviceAdapterTag>
-  void run(vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>& positions,
+  void run(vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines,
            vtkm::cont::ArrayHandle<vtkm::Id>& status,
            vtkm::cont::ArrayHandle<vtkm::Id>& stepsTaken,
-           vtkm::cont::ArrayHandle<FieldType>& timeArray,
-           DeviceAdapterTag)
+           vtkm::cont::ArrayHandle<ScalarType>& timeArray)
   {
-
-    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
-    using ParticleAdvectWorkletType =
-      vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType, FieldType>;
-    using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType, DeviceAdapterTag>;
-    using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles<FieldType>;
+    using ParticleWorkletDispatchType = typename vtkm::worklet::DispatcherMapField<
+      vtkm::worklet::particleadvection::ParticleAdvectWorklet>;
+    using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles;
 
     vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
-    DeviceAlgorithm::Copy(stepsTaken, initialStepsTaken);
+    vtkm::cont::ArrayCopy(stepsTaken, initialStepsTaken);
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
 
-    ParticleAdvectWorkletType particleWorklet(integrator);
-    ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
+    ParticleWorkletDispatchType particleWorkletDispatch;
 
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
 
@@ -241,44 +210,44 @@ private:
     validPoint = vtkm::cont::make_ArrayHandle(vpa);
 
     //Compact history into positions.
-    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> history;
+    vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> history;
     StreamlineType streamlines(
       seedArray, history, stepsTaken, status, timeArray, validPoint, maxSteps);
 
-    particleWorkletDispatch.Invoke(idxArray, streamlines);
-    DeviceAlgorithm::CopyIf(history, validPoint, positions, IsOne());
+    particleWorkletDispatch.Invoke(idxArray, integrator, streamlines);
+    vtkm::cont::Algorithm::CopyIf(history, validPoint, positions, IsOne());
 
     vtkm::cont::ArrayHandle<vtkm::Id> stepsTakenNow;
     stepsTakenNow.Allocate(numSeeds);
-    vtkm::worklet::DispatcherMapField<detail::Subtract, DeviceAdapterTag>(detail::Subtract())
-      .Invoke(stepsTakenNow, stepsTaken, initialStepsTaken);
+    vtkm::worklet::DispatcherMapField<detail::Subtract> subtractDispatcher{ (detail::Subtract{}) };
+    subtractDispatcher.Invoke(stepsTakenNow, stepsTaken, initialStepsTaken);
 
     //Create cells.
     vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;
-    vtkm::Id connectivityLen = DeviceAlgorithm::ScanExclusive(stepsTakenNow, cellIndex);
+    vtkm::Id connectivityLen = vtkm::cont::Algorithm::ScanExclusive(stepsTakenNow, cellIndex);
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> connCount(0, 1, connectivityLen);
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-    DeviceAlgorithm::Copy(connCount, connectivity);
+    vtkm::cont::ArrayCopy(connCount, connectivity);
 
     vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
     cellTypes.Allocate(numSeeds);
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> polyLineShape(vtkm::CELL_SHAPE_LINE, numSeeds);
-    DeviceAlgorithm::Copy(polyLineShape, cellTypes);
+    vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> cellCounts;
-    DeviceAlgorithm::Copy(vtkm::cont::make_ArrayHandleCast(stepsTakenNow, vtkm::IdComponent()),
+    vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCast(stepsTakenNow, vtkm::IdComponent()),
                           cellCounts);
 
     polyLines.Fill(positions.GetNumberOfValues(), cellTypes, cellCounts, connectivity);
   }
 
   IntegratorType integrator;
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> seedArray;
   vtkm::Id maxSteps;
 };
 }
 }
-}
+} // namespace vtkm::worklet::particleadvection
 
 #endif // vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h

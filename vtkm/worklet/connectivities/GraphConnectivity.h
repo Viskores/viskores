@@ -68,11 +68,10 @@ public:
 };
 }
 
-template <typename DeviceAdapter>
 class GraphConnectivity
 {
 public:
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   template <typename InputPortalType, typename OutputPortalType>
   void Run(const InputPortalType& numIndexArray,
@@ -90,16 +89,16 @@ public:
 
     do
     {
-      vtkm::worklet::DispatcherMapField<detail::Graft, DeviceAdapter> graftDispatcher;
+      vtkm::worklet::DispatcherMapField<detail::Graft> graftDispatcher;
       graftDispatcher.Invoke(
         cellIds, indexOffsetArray, numIndexArray, connectivityArray, components);
 
       // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
-      vtkm::worklet::DispatcherMapField<IsStar, DeviceAdapter> isStarDisp;
+      vtkm::worklet::DispatcherMapField<IsStar> isStarDisp;
       isStarDisp.Invoke(cellIds, components, isStar);
       allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());
 
-      vtkm::worklet::DispatcherMapField<PointerJumping, DeviceAdapter> pointJumpingDispatcher;
+      vtkm::worklet::DispatcherMapField<PointerJumping> pointJumpingDispatcher;
       pointJumpingDispatcher.Invoke(cellIds, components);
     } while (!allStar);
 
@@ -115,7 +114,7 @@ public:
       uniqueColor);
     vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
     vtkm::cont::ArrayHandle<vtkm::Id> cellIdsOut;
-    InnerJoin<DeviceAdapter>().Run(
+    InnerJoin().Run(
       components, cellIds, uniqueComponents, uniqueColor, cellColors, cellIdsOut, componentsOut);
 
     Algorithm::SortByKey(cellIdsOut, componentsOut);

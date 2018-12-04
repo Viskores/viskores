@@ -29,6 +29,8 @@
 #include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
+#include <vtkm/cont/ColorTable.hxx>
+
 namespace vtkm
 {
 namespace rendering

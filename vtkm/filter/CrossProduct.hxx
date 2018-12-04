@@ -30,7 +30,7 @@ namespace filter
 namespace detail
 {
 
-template <typename T, typename DeviceAdapter>
+template <typename T>
 struct CrossProductFunctor
 {
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> OutArray;
@@ -38,7 +38,7 @@ struct CrossProductFunctor
   template <typename PrimaryFieldType, typename SecondaryFieldType>
   void operator()(const SecondaryFieldType& secondaryField, const PrimaryFieldType& primaryField)
   {
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::CrossProduct, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::CrossProduct> dispatcher;
     dispatcher.Invoke(primaryField,
                       vtkm::cont::make_ArrayHandleCast<vtkm::Vec<T, 3>>(secondaryField),
                       this->OutArray);
@@ -59,15 +59,14 @@ inline VTKM_CONT CrossProduct::CrossProduct()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter&)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  detail::CrossProductFunctor<T, DeviceAdapter> functor;
+  detail::CrossProductFunctor<T> functor;
   try
   {
     if (this->UseCoordinateSystemAsSecondaryField)
@@ -101,12 +100,11 @@ inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool CrossProduct::DoMapField(vtkm::cont::DataSet& result,
                                                const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                                const vtkm::filter::FieldMetadata& fieldMeta,
-                                               const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                               DeviceAdapter)
+                                               vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   //we copy the input handle to the result dataset, reusing the metadata
   result.AddField(fieldMeta.AsField(input));

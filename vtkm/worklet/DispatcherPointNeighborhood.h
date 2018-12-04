@@ -33,14 +33,14 @@ namespace worklet
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletPointNeighborhood.
 ///
-template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template <typename WorkletType>
 class DispatcherPointNeighborhood
-  : public vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType, Device>,
+  : public vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
                                                    WorkletType,
                                                    vtkm::worklet::WorkletPointNeighborhoodBase>
 {
   using Superclass =
-    vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType, Device>,
+    vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
                                             WorkletType,
                                             vtkm::worklet::WorkletPointNeighborhoodBase>;
   using ScatterType = typename Superclass::ScatterType;
@@ -82,7 +82,7 @@ public:
 
     // This is pretty straightforward dispatch. Once we know the number
     // of invocations, the superclass can take care of the rest.
-    this->BasicInvoke(invocation, inputRange, Device());
+    this->BasicInvoke(invocation, inputRange);
   }
 };
 }

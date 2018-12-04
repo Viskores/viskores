@@ -21,6 +21,8 @@
 #include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
+#include <vtkm/Math.h>
+
 namespace vtkm
 {
 namespace filter
@@ -35,19 +37,17 @@ inline VTKM_CONT VectorMagnitude::VectorMagnitude()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet VectorMagnitude::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter&)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  using ReturnType = typename detail::FloatingPointReturnType<T>::Type;
+  using ReturnType = typename ::vtkm::detail::FloatingPointReturnType<T>::Type;
   vtkm::cont::ArrayHandle<ReturnType> outArray;
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude, DeviceAdapter> dispatcher(
-    this->Worklet);
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude> dispatcher(this->Worklet);
 
   dispatcher.Invoke(field, outArray);
 

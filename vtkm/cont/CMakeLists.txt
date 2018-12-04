@@ -39,6 +39,7 @@ set(headers
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
+  ArrayHandleView.h
   ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
@@ -82,22 +83,26 @@ set(headers
   ErrorFilterExecution.h
   ErrorExecution.h
   ErrorInternal.h
+  ExecutionAndControlObjectBase.h
   ExecutionObjectBase.h
   Field.h
   FieldRangeCompute.h
   FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
+  Logging.h
   MultiBlock.h
   PointLocator.h
   PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
+  Serialization.h
   Storage.h
   StorageBasic.h
   StorageImplicit.h
   StorageListTag.h
   Timer.h
   TryExecute.h
+  TypeString.h
   VirtualObjectHandle.h
   )
 
@@ -107,6 +112,7 @@ set(template_sources
   BoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
+  ColorTable.hxx
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
@@ -120,20 +126,27 @@ set(sources
   BoundsGlobalCompute.cxx
   CellSet.cxx
   CellSetStructured.cxx
+  ColorTable.cxx
+  ColorTablePresets.cxx
   DataSet.cxx
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
+  ErrorBadDevice.cxx
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
   internal/ArrayHandleBasicImpl.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
+  internal/DeviceAdapterTag.cxx
   internal/SimplePolymorphicContainer.cxx
+  internal/SimplePolymorphicContainer.cxx
+  internal/VirtualObjectTransfer.cxx
+  Logging.cxx
   MultiBlock.cxx
-  PresetColorTables.cxx
+  RuntimeDeviceInformation.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
   TryExecute.cxx
@@ -144,7 +157,6 @@ set(sources
 set(device_sources
   ArrayRangeCompute.cxx
   CellSetExplicit.cxx
-  ColorTable.cxx
   CoordinateSystem.cxx
   )
 
@@ -157,13 +169,13 @@ vtkm_library( NAME vtkm_cont
             )
 add_subdirectory(internal)
 add_subdirectory(arg)
-add_subdirectory(diy)
 add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(openmp)
 add_subdirectory(cuda)
 
 set(backends )
+set (DL_LIBS )
 if(TARGET vtkm::tbb)
   list(APPEND backends vtkm::tbb)
 endif()
@@ -173,7 +185,10 @@ endif()
 if(TARGET vtkm::openmp)
   list(APPEND backends vtkm::openmp)
 endif()
-target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
+if (VTKm_ENABLE_LOGGING)
+  list(APPEND DL_LIBS ${CMAKE_DL_LIBS}) # dladdr function
+endif()
+target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends} ${DL_LIBS})
 if(TARGET vtkm_diy)
   # This will become a required dependency eventually.
   target_link_libraries(vtkm_cont PUBLIC vtkm_diy vtkm_taotuple)

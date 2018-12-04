@@ -19,6 +19,7 @@
 //============================================================================
 
 #define vtkm_cont_StorageBasic_cxx
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/internal/Configure.h>
 
@@ -117,11 +118,11 @@ StorageBasicBase::~StorageBasicBase()
   this->ReleaseResources();
 }
 
-StorageBasicBase::StorageBasicBase(StorageBasicBase&& src)
-  : Array(src.Array)
-  , AllocatedByteSize(src.AllocatedByteSize)
-  , NumberOfValues(src.NumberOfValues)
-  , DeleteFunction(src.DeleteFunction)
+StorageBasicBase::StorageBasicBase(StorageBasicBase&& src) noexcept
+  : Array(src.Array),
+    AllocatedByteSize(src.AllocatedByteSize),
+    NumberOfValues(src.NumberOfValues),
+    DeleteFunction(src.DeleteFunction)
 
 {
   src.Array = nullptr;
@@ -145,7 +146,7 @@ StorageBasicBase::StorageBasicBase(const StorageBasicBase& src)
   }
 }
 
-StorageBasicBase StorageBasicBase::operator=(StorageBasicBase&& src)
+StorageBasicBase& StorageBasicBase::operator=(StorageBasicBase&& src) noexcept
 {
   this->ReleaseResources();
   this->Array = src.Array;
@@ -160,7 +161,7 @@ StorageBasicBase StorageBasicBase::operator=(StorageBasicBase&& src)
   return *this;
 }
 
-StorageBasicBase StorageBasicBase::operator=(const StorageBasicBase& src)
+StorageBasicBase& StorageBasicBase::operator=(const StorageBasicBase& src)
 {
   if (src.DeleteFunction)
   {
@@ -218,8 +219,14 @@ void StorageBasicBase::AllocateValues(vtkm::Id numberOfValues, vtkm::UInt64 size
       // Make sure our state is OK.
       this->AllocatedByteSize = 0;
       this->NumberOfValues = 0;
+      VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
+                 "Could not allocate control array of %s.",
+                 vtkm::cont::GetSizeString(allocsize).c_str());
       throw vtkm::cont::ErrorBadAllocation("Could not allocate basic control array.");
     }
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
+               "Allocated control array of %s.",
+               vtkm::cont::GetSizeString(allocsize).c_str());
   }
   else
   {
@@ -246,6 +253,9 @@ void StorageBasicBase::ReleaseResources()
     VTKM_ASSERT(this->Array != nullptr);
     if (this->DeleteFunction)
     {
+      VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
+                 "Freeing control allocation of %s.",
+                 vtkm::cont::GetSizeString(this->AllocatedByteSize).c_str());
       this->DeleteFunction(this->Array);
     }
     this->Array = nullptr;

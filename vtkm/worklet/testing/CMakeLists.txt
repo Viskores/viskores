@@ -29,6 +29,7 @@ set(unit_tests
   UnitTestCellMeasure.cxx
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
+  UnitTestContourTreeUniformAugmented.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
   UnitTestCrossProduct.cxx
@@ -61,6 +62,7 @@ set(unit_tests
   UnitTestScatterCounting.cxx
   UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
+  UnitTestSplitSharpEdges.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestSurfaceNormals.cxx
@@ -84,13 +86,10 @@ set(unit_tests
  )
 
 
-vtkm_unit_tests(NAME Worklets BACKEND SERIAL SOURCES ${unit_tests})
-if (TARGET vtkm::tbb)
-  vtkm_unit_tests(NAME Worklets BACKEND TBB SOURCES ${unit_tests})
-endif()
-if (TARGET vtkm::openmp)
-  vtkm_unit_tests(NAME Worklets BACKEND OPENMP SOURCES ${unit_tests})
-endif()
+vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS)
 if (TARGET vtkm::cuda)
-  vtkm_unit_tests(NAME Worklets BACKEND CUDA SOURCES ${unit_tests})
+  if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
+    set(particle_cuda_src "${CMAKE_CURRENT_BINARY_DIR}/UnitTestParticleAdvection.cu")
+    set_source_files_properties(${particle_cuda_src} PROPERTIES COMPILE_FLAGS "-Xptxas --opt-level=0")
+  endif()
 endif()

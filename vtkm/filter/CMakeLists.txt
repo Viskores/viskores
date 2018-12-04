@@ -25,6 +25,7 @@ set(headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   ContourTreeUniform.h
+  ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
   CrossProduct.h
   DotProduct.h
@@ -42,8 +43,10 @@ set(headers
   FilterDataSetWithField.h
   FilterField.h
   FilterTraits.h
+  GhostZone.h
   Gradient.h
   Histogram.h
+  Lagrangian.h
   MarchingCubes.h
   Mask.h
   MaskPoints.h
@@ -56,6 +59,7 @@ set(headers
   PolicyBase.h
   PolicyDefault.h
   Probe.h
+  SplitSharpEdges.h
   Streamline.h
   SurfaceNormals.h
   Tetrahedralize.h
@@ -75,6 +79,7 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
+  ContourTreeUniformAugmented.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
   DotProduct.hxx
@@ -89,8 +94,10 @@ set(header_template_sources
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
+  GhostZone.hxx
   Gradient.hxx
   Histogram.hxx
+  Lagrangian.hxx
   MarchingCubes.hxx
   Mask.hxx
   MaskPoints.hxx
@@ -101,6 +108,7 @@ set(header_template_sources
   PointElevation.hxx
   PointTransform.hxx
   Probe.hxx
+  SplitSharpEdges.hxx
   Streamline.hxx
   SurfaceNormals.hxx
   Tetrahedralize.hxx

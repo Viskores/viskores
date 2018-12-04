@@ -30,8 +30,6 @@
 
 void TestVertexClustering()
 {
-  VTKM_DEFAULT_DEVICE_ADAPTER_TAG device;
-
   const vtkm::Id3 divisions(3, 3, 3);
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose();
@@ -42,13 +40,13 @@ void TestVertexClustering()
   // run
   vtkm::worklet::VertexClustering clustering;
   vtkm::cont::DataSet outDataSet =
-    clustering.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), bounds, divisions, device);
+    clustering.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), bounds, divisions);
 
   using FieldArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
   FieldArrayType pointvar = clustering.ProcessPointField(
-    dataSet.GetPointField("pointvar").GetData().Cast<FieldArrayType>(), device);
-  FieldArrayType cellvar = clustering.ProcessCellField(
-    dataSet.GetCellField("cellvar").GetData().Cast<FieldArrayType>(), device);
+    dataSet.GetPointField("pointvar").GetData().Cast<FieldArrayType>());
+  FieldArrayType cellvar =
+    clustering.ProcessCellField(dataSet.GetCellField("cellvar").GetData().Cast<FieldArrayType>());
 
   // test
   const vtkm::Id output_pointIds = 18;
@@ -142,7 +140,7 @@ void TestVertexClustering()
 
 } // TestVertexClustering
 
-int UnitTestVertexClustering(int, char* [])
+int UnitTestVertexClustering(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVertexClustering);
+  return vtkm::cont::testing::Testing::Run(TestVertexClustering, argc, argv);
 }

@@ -114,7 +114,8 @@ protected:
   void Build() override;
 
   VTKM_CONT
-  virtual const HandleType PrepareForExecutionImpl(const vtkm::Int8 device) const override;
+  virtual const HandleType PrepareForExecutionImpl(
+    const vtkm::cont::DeviceAdapterId device) const override;
 
 private:
   vtkm::IdComponent NumPlanes;

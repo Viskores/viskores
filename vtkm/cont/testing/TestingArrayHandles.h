@@ -22,12 +22,12 @@
 
 #include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <algorithm>
@@ -136,7 +136,7 @@ private:
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  using DispatcherPassThrough = vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag>;
+  using DispatcherPassThrough = vtkm::worklet::DispatcherMapField<PassThrough>;
   struct VerifyEmptyArrays
   {
     template <typename T>
@@ -406,7 +406,7 @@ private:
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
 
-        a1.PrepareForInPlace(DeviceAdapterTagSerial());
+        a1.PrepareForInPlace(DeviceAdapterTag());
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
       }
@@ -456,7 +456,11 @@ private:
   };
 
 public:
-  static VTKM_CONT int Run() { return vtkm::cont::testing::Testing::Run(TryArrayHandleType()); }
+  static VTKM_CONT int Run()
+  {
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
+    return vtkm::cont::testing::Testing::Run(TryArrayHandleType());
+  }
 };
 }
 }

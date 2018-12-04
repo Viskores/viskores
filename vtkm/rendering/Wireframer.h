@@ -496,10 +496,8 @@ private:
 
     if (ShowInternalZones && !IsOverlay)
     {
-      using MemSet =
-        typename vtkm::rendering::Triangulator<DeviceTag>::template MemSet<vtkm::Int64>;
-      MemSet memSet(ClearValue);
-      vtkm::worklet::DispatcherMapField<MemSet>(memSet).Invoke(FrameBuffer);
+      vtkm::cont::ArrayHandleConstant<vtkm::Int64> clear(ClearValue, pixelCount);
+      vtkm::cont::Algorithm::Copy(clear, FrameBuffer);
     }
     else
     {
@@ -554,12 +552,14 @@ private:
                                    ColorMap,
                                    FrameBuffer,
                                    Camera.GetClippingRange());
-    vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>, DeviceTag>(plotter).Invoke(
-      PointIndices, Coordinates, ScalarField.GetData());
+    vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
+    plotterDispatcher.SetDevice(DeviceTag());
+    plotterDispatcher.Invoke(PointIndices, Coordinates, ScalarField.GetData());
 
     BufferConverter converter;
-    vtkm::worklet::DispatcherMapField<BufferConverter, DeviceTag>(converter).Invoke(
-      FrameBuffer, Canvas->GetDepthBuffer(), Canvas->GetColorBuffer());
+    vtkm::worklet::DispatcherMapField<BufferConverter> converterDispatcher(converter);
+    converterDispatcher.SetDevice(DeviceTag());
+    converterDispatcher.Invoke(FrameBuffer, Canvas->GetDepthBuffer(), Canvas->GetColorBuffer());
   }
 
   VTKM_CONT

@@ -25,6 +25,7 @@ set(headers
   CellMeasure.h
   Clip.h
   ContourTreeUniform.h
+  ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
   CosmoTools.h
   CrossProduct.h
@@ -42,6 +43,7 @@ set(headers
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
+  Invoker.h
   KdTree3D.h
   KernelSplatter.h
   Keys.h
@@ -50,8 +52,8 @@ set(headers
   Mask.h
   MaskPoints.h
   NDimsEntropy.h
-  NDimsHistogram.h
   NDimsHistMarginalization.h
+  NDimsHistogram.h
   Normalize.h
   OscillatorSource.h
   ParticleAdvection.h
@@ -65,6 +67,7 @@ set(headers
   ScatterIdentity.h
   ScatterPermutation.h
   ScatterUniform.h
+  SplitSharpEdges.h
   StableSortIndices.h
   StreamLineUniformGrid.h
   SurfaceNormals.h
@@ -91,8 +94,10 @@ set(header_impls
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
+add_subdirectory(colorconversion)
 add_subdirectory(contour)
 add_subdirectory(contourtree)
+add_subdirectory(contourtree_augmented)
 add_subdirectory(cosmotools)
 add_subdirectory(gradient)
 add_subdirectory(splatkernels)

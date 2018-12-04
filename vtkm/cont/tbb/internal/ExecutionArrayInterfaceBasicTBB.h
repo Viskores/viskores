@@ -37,10 +37,8 @@ template <>
 struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB> final
   : public ExecutionArrayInterfaceBasicShareWithControl
 {
-  using Superclass = ExecutionArrayInterfaceBasicShareWithControl;
-
-  VTKM_CONT
-  ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
+  //inherit our parents constructor
+  using ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareWithControl;
 
   VTKM_CONT
   DeviceAdapterId GetDeviceId() const final;

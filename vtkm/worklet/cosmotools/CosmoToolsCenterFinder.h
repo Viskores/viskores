@@ -77,8 +77,8 @@ namespace cosmotools
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderMxN(T* mxnPotential)
+template <typename T, typename StorageType>
+vtkm::Id CosmoTools<T, StorageType>::MBPCenterFinderMxN(T* mxnPotential)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> partId;
   vtkm::cont::ArrayHandle<vtkm::Id> binId;
@@ -127,8 +127,8 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderMxN(T* mxnPot
 
   // Estimate only across the uniqueBins that contain particles
   ComputePotentialBin<T> computePotentialBin(uniqueBins.GetNumberOfValues(), particleMass, linkLen);
-  vtkm::worklet::DispatcherMapField<ComputePotentialBin<T>, DeviceAdapter>
-    computePotentialBinDispatcher(computePotentialBin);
+  vtkm::worklet::DispatcherMapField<ComputePotentialBin<T>> computePotentialBinDispatcher(
+    computePotentialBin);
 
   computePotentialBinDispatcher.Invoke(uniqueIndex,        // input
                                        partPerBin,         // input (whole array)
@@ -157,8 +157,8 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderMxN(T* mxnPot
   DeviceAlgorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nParticles), candidate);
 
   SetCandidateParticles<T> setCandidateParticles(cutoffPotential);
-  vtkm::worklet::DispatcherMapField<SetCandidateParticles<T>, DeviceAdapter>
-    setCandidateParticlesDispatcher(setCandidateParticles);
+  vtkm::worklet::DispatcherMapField<SetCandidateParticles<T>> setCandidateParticlesDispatcher(
+    setCandidateParticles);
   setCandidateParticlesDispatcher.Invoke(bestEstPotential, // input
                                          particleOffset,   // input
                                          partPerBin,       // input
@@ -171,7 +171,7 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderMxN(T* mxnPot
   // Compute potentials only on the candidate particles
   vtkm::cont::ArrayHandle<T> mpotential;
   ComputePotentialOnCandidates<T> computePotentialOnCandidates(nParticles, particleMass);
-  vtkm::worklet::DispatcherMapField<ComputePotentialOnCandidates<T>, DeviceAdapter>
+  vtkm::worklet::DispatcherMapField<ComputePotentialOnCandidates<T>>
     computePotentialOnCandidatesDispatcher(computePotentialOnCandidates);
 
   computePotentialOnCandidatesDispatcher.Invoke(mparticles,
@@ -199,16 +199,15 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderMxN(T* mxnPot
 // Bin particles in one halo for quick MBP finding
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesHalo(
-  vtkm::cont::ArrayHandle<vtkm::Id>& partId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& uniqueBins,
-  vtkm::cont::ArrayHandle<vtkm::Id>& partPerBin,
-  vtkm::cont::ArrayHandle<vtkm::Id>& particleOffset,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binX,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binY,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binZ)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::BinParticlesHalo(vtkm::cont::ArrayHandle<vtkm::Id>& partId,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& binId,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& uniqueBins,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& partPerBin,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& particleOffset,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& binX,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& binY,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& binZ)
 {
   // Compute number of bins and ranges for each bin
   vtkm::Vec<T, 2> xRange(xLoc.GetPortalConstControl().Get(0));
@@ -255,8 +254,7 @@ void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesHalo(
                              numBinsX,
                              numBinsY,
                              numBinsZ); // Size of superimposed mesh
-  vtkm::worklet::DispatcherMapField<ComputeBins<T>, DeviceAdapter> computeBinsDispatcher(
-    computeBins);
+  vtkm::worklet::DispatcherMapField<ComputeBins<T>> computeBinsDispatcher(computeBins);
   computeBinsDispatcher.Invoke(xLoc,   // input
                                yLoc,   // input
                                zLoc,   // input
@@ -287,10 +285,9 @@ void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesHalo(
 #endif
 
   // Calculate the bin indices
-  vtkm::cont::ArrayHandleIndex uniqueIndex(uniqueBins.GetNumberOfValues());
   ComputeBinIndices<T> computeBinIndices(numBinsX, numBinsY, numBinsZ);
-  vtkm::worklet::DispatcherMapField<ComputeBinIndices<T>, DeviceAdapter>
-    computeBinIndicesDispatcher(computeBinIndices);
+  vtkm::worklet::DispatcherMapField<ComputeBinIndices<T>> computeBinIndicesDispatcher(
+    computeBinIndices);
 
   computeBinIndicesDispatcher.Invoke(uniqueBins, // input
                                      binX,       // input
@@ -308,11 +305,10 @@ void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesHalo(
 // Method uses ScanInclusiveByKey() and ArrayHandleReverse
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByKey(
-  vtkm::cont::ArrayHandle<vtkm::Id>& keyId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& partId,
-  vtkm::cont::ArrayHandle<T>& minPotential)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::MBPCenterFindingByKey(vtkm::cont::ArrayHandle<vtkm::Id>& keyId,
+                                                       vtkm::cont::ArrayHandle<vtkm::Id>& partId,
+                                                       vtkm::cont::ArrayHandle<T>& minPotential)
 {
   // Compute starting and ending indices of each key (bin or halo)
   vtkm::cont::ArrayHandleIndex indexArray(nParticles);
@@ -329,14 +325,13 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByKey(
 
   vtkm::cont::ArrayHandleIndex countArray(nParticles);
   ComputeNeighborBins computeNeighborBins(numBinsX, numBinsY, numBinsZ, NUM_NEIGHBORS);
-  vtkm::worklet::DispatcherMapField<ComputeNeighborBins, DeviceAdapter>
-    computeNeighborBinsDispatcher(computeNeighborBins);
+  vtkm::worklet::DispatcherMapField<ComputeNeighborBins> computeNeighborBinsDispatcher(
+    computeNeighborBins);
   computeNeighborBinsDispatcher.Invoke(countArray, keyId, leftNeighbor);
 
   // Compute indices of all right neighbor bins
   ComputeBinRange computeBinRange(numBinsX);
-  vtkm::worklet::DispatcherMapField<ComputeBinRange, DeviceAdapter> computeBinRangeDispatcher(
-    computeBinRange);
+  vtkm::worklet::DispatcherMapField<ComputeBinRange> computeBinRangeDispatcher(computeBinRange);
   computeBinRangeDispatcher.Invoke(leftNeighbor, rightNeighbor);
 
   // Convert bin range to particle range within the bins
@@ -351,7 +346,7 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByKey(
   // Compute potentials on particles in 27 neighbors to find minimum
   ComputePotentialNeighbors<T> computePotentialNeighbors(
     numBinsX, numBinsY, numBinsZ, NUM_NEIGHBORS, particleMass);
-  vtkm::worklet::DispatcherMapField<ComputePotentialNeighbors<T>, DeviceAdapter>
+  vtkm::worklet::DispatcherMapField<ComputePotentialNeighbors<T>>
     computePotentialNeighborsDispatcher(computePotentialNeighbors);
 
   computePotentialNeighborsDispatcher.Invoke(indexArray,
@@ -375,8 +370,8 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByKey(
   // Find the particle id matching the minimum potential
   vtkm::cont::ArrayHandle<vtkm::Id> centerId;
   EqualsMinimumPotential<T> equalsMinimumPotential;
-  vtkm::worklet::DispatcherMapField<EqualsMinimumPotential<T>, DeviceAdapter>
-    equalsMinimumPotentialDispatcher(equalsMinimumPotential);
+  vtkm::worklet::DispatcherMapField<EqualsMinimumPotential<T>> equalsMinimumPotentialDispatcher(
+    equalsMinimumPotential);
 
   equalsMinimumPotentialDispatcher.Invoke(partId, potential, minPotential, centerId);
 }
@@ -388,8 +383,8 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByKey(
 // Method uses ScanInclusiveByKey() and ArrayHandleReverse
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderNxN(T* nxnPotential)
+template <typename T, typename StorageType>
+vtkm::Id CosmoTools<T, StorageType>::MBPCenterFinderNxN(T* nxnPotential)
 {
   vtkm::cont::ArrayHandle<T> potential;
   vtkm::cont::ArrayHandle<T> minPotential;
@@ -400,8 +395,8 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderNxN(T* nxnPot
 
   // Compute potentials (Worklet)
   ComputePotentialNxN<T> computePotentialHalo(nParticles, particleMass);
-  vtkm::worklet::DispatcherMapField<ComputePotentialNxN<T>, DeviceAdapter>
-    computePotentialHaloDispatcher(computePotentialHalo);
+  vtkm::worklet::DispatcherMapField<ComputePotentialNxN<T>> computePotentialHaloDispatcher(
+    computePotentialHalo);
 
   computePotentialHaloDispatcher.Invoke(particleIndex, // input
                                         xLoc,          // input (whole array)
@@ -416,8 +411,8 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderNxN(T* nxnPot
   // Find the particle id matching the minimum potential
   vtkm::cont::ArrayHandle<vtkm::Id> centerId;
   EqualsMinimumPotential<T> equalsMinimumPotential;
-  vtkm::worklet::DispatcherMapField<EqualsMinimumPotential<T>, DeviceAdapter>
-    equalsMinimumPotentialDispatcher(equalsMinimumPotential);
+  vtkm::worklet::DispatcherMapField<EqualsMinimumPotential<T>> equalsMinimumPotentialDispatcher(
+    equalsMinimumPotential);
 
   equalsMinimumPotentialDispatcher.Invoke(particleIndex, potential, minPotential, centerId);
 

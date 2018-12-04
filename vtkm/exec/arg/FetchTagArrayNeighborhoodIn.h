@@ -60,7 +60,7 @@ struct Neighborhood
     VTKM_ASSERT(i <= NeighborhoodSize && i >= -NeighborhoodSize);
     VTKM_ASSERT(j <= NeighborhoodSize && j >= -NeighborhoodSize);
     VTKM_ASSERT(k <= NeighborhoodSize && k >= -NeighborhoodSize);
-    return Portal.Get(this->Boundary->ClampAndFlatten(i, j, k));
+    return Portal.Get(this->Boundary->NeighborIndexToFlatIndexClamp(i, j, k));
   }
 
   VTKM_EXEC
@@ -69,7 +69,7 @@ struct Neighborhood
     VTKM_ASSERT(ijk[0] <= NeighborhoodSize && ijk[0] >= -NeighborhoodSize);
     VTKM_ASSERT(ijk[1] <= NeighborhoodSize && ijk[1] >= -NeighborhoodSize);
     VTKM_ASSERT(ijk[2] <= NeighborhoodSize && ijk[2] >= -NeighborhoodSize);
-    return Portal.Get(this->Boundary->ClampAndFlatten(ijk));
+    return Portal.Get(this->Boundary->NeighborIndexToFlatIndexClamp(ijk));
   }
 
   vtkm::exec::arg::BoundaryState const* const Boundary;
@@ -93,17 +93,15 @@ struct Neighborhood<NeighborhoodSize, vtkm::internal::ArrayPortalUniformPointCoo
   using ValueType = vtkm::internal::ArrayPortalUniformPointCoordinates::ValueType;
 
   VTKM_EXEC
-  ValueType Get(vtkm::Id i, vtkm::Id j, vtkm::Id k) const
+  ValueType Get(vtkm::IdComponent i, vtkm::IdComponent j, vtkm::IdComponent k) const
   {
-    this->Boundary->Clamp(i, j, k);
-    return Portal.Get(vtkm::Id3(i, j, k));
+    return Portal.Get(this->Boundary->NeighborIndexToFullIndexClamp(i, j, k));
   }
 
   VTKM_EXEC
-  ValueType Get(vtkm::Id3 ijk) const
+  ValueType Get(const vtkm::Vec<vtkm::IdComponent, 3>& ijk) const
   {
-    this->Boundary->Clamp(ijk);
-    return Portal.Get(ijk);
+    return Portal.Get(this->Boundary->NeighborIndexToFullIndexClamp(ijk));
   }
 
   vtkm::exec::arg::BoundaryState const* const Boundary;

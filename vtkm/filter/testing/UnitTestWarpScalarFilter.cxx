@@ -123,7 +123,7 @@ void TestWarpScalarFilter()
     vtkm::filter::WarpScalar filter(scale);
     filter.SetUseCoordinateSystemAsPrimaryField(true);
     filter.SetNormalField("normal");
-    filter.SetScarlarFactorField("scalarfactor");
+    filter.SetScalarFactorField("scalarfactor");
     vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpScalar());
     CheckResult(filter, result);
   }
@@ -133,7 +133,7 @@ void TestWarpScalarFilter()
     vtkm::filter::WarpScalar filter(scale);
     filter.SetPrimaryField("vec1");
     filter.SetNormalField("normal");
-    filter.SetScarlarFactorField("scalarfactor");
+    filter.SetScalarFactorField("scalarfactor");
     vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpScalar());
     CheckResult(filter, result);
   }

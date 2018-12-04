@@ -129,6 +129,20 @@ public:
     DebugHeight = -1;
   }
 
+
+  struct EnableIntersectionDataFunctor
+  {
+    template <typename Device>
+    VTKM_CONT bool operator()(Device, Ray<Precision>* self)
+    {
+      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+      self->EnableIntersectionData(Device());
+      return true;
+    }
+  };
+
+  void EnableIntersectionData() { vtkm::cont::TryExecute(EnableIntersectionDataFunctor(), this); }
+
   template <typename Device>
   void EnableIntersectionData(Device)
   {
@@ -185,11 +199,18 @@ public:
     this->Resize(size, Device());
   }
 
-
-  VTKM_CONT void Resize(const vtkm::Int32 size)
+  struct ResizeFunctor
   {
-    this->Resize(size, vtkm::cont::DeviceAdapterTagSerial());
-  }
+    template <typename Device>
+    VTKM_CONT bool operator()(Device, Ray<Precision>* self, const vtkm::Int32 size)
+    {
+      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+      self->Resize(size, Device());
+      return true;
+    }
+  };
+
+  VTKM_CONT void Resize(const vtkm::Int32 size) { vtkm::cont::TryExecute(ResizeFunctor(), size); }
 
   template <typename Device>
   VTKM_CONT void Resize(const vtkm::Int32 size, Device)
@@ -229,23 +250,11 @@ public:
     HitIdx.PrepareForOutput(NumRays, Device());
     PixelIdx.PrepareForOutput(NumRays, Device());
 
-    vtkm::IdComponent inComp[3];
-    inComp[0] = 0;
-    inComp[1] = 1;
-    inComp[2] = 2;
-
-    Intersection = vtkm::cont::make_ArrayHandleCompositeVector(
-      IntersectionX, inComp[0], IntersectionY, inComp[1], IntersectionZ, inComp[2]);
-
-    Normal = vtkm::cont::make_ArrayHandleCompositeVector(
-      NormalX, inComp[0], NormalY, inComp[1], NormalZ, inComp[2]);
-
-    Origin = vtkm::cont::make_ArrayHandleCompositeVector(
-      OriginX, inComp[0], OriginY, inComp[1], OriginZ, inComp[2]);
-
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
-      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
-
+    Intersection =
+      vtkm::cont::make_ArrayHandleCompositeVector(IntersectionX, IntersectionY, IntersectionZ);
+    Normal = vtkm::cont::make_ArrayHandleCompositeVector(NormalX, NormalY, NormalZ);
+    Origin = vtkm::cont::make_ArrayHandleCompositeVector(OriginX, OriginY, OriginZ);
+    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, DirY, DirZ);
 
     const size_t numBuffers = this->Buffers.size();
     for (size_t i = 0; i < numBuffers; ++i)

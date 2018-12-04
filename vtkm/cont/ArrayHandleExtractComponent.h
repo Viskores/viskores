@@ -310,4 +310,69 @@ VTKM_CONT ArrayHandleExtractComponent<ArrayHandleType> make_ArrayHandleExtractCo
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH>
+struct TypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_ExtractComponent<" + TypeString<AH>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH>
+struct TypeString<
+  vtkm::cont::ArrayHandle<typename vtkm::VecTraits<typename AH::ValueType>::ComponentType,
+                          vtkm::cont::StorageTagExtractComponent<AH>>>
+  : TypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename AH>
+struct Serialization<vtkm::cont::ArrayHandleExtractComponent<AH>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleExtractComponent<AH>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    diy::save(bb, storage.GetComponent());
+    diy::save(bb, storage.GetArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    vtkm::IdComponent component = 0;
+    AH array;
+    diy::load(bb, component);
+    diy::load(bb, array);
+
+    obj = vtkm::cont::make_ArrayHandleExtractComponent(array, component);
+  }
+};
+
+template <typename AH>
+struct Serialization<
+  vtkm::cont::ArrayHandle<typename vtkm::VecTraits<typename AH::ValueType>::ComponentType,
+                          vtkm::cont::StorageTagExtractComponent<AH>>>
+  : Serialization<vtkm::cont::ArrayHandleExtractComponent<AH>>
+{
+};
+} // diy
+
 #endif // vtk_m_cont_ArrayHandleExtractComponent_h

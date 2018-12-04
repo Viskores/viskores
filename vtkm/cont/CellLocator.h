@@ -67,10 +67,9 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(DeviceAdapter device) const
   {
-    vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    return PrepareForExecutionImpl(deviceId).PrepareForExecution(DeviceAdapter());
+    return PrepareForExecutionImpl(device).PrepareForExecution(device);
   }
 
 protected:
@@ -79,7 +78,8 @@ protected:
   //This is going to need a TryExecute
   VTKM_CONT virtual void Build() = 0;
 
-  VTKM_CONT virtual const HandleType PrepareForExecutionImpl(const vtkm::Int8 device) const = 0;
+  VTKM_CONT virtual const HandleType PrepareForExecutionImpl(
+    const vtkm::cont::DeviceAdapterId device) const = 0;
 
 private:
   vtkm::cont::DynamicCellSet CellSet;

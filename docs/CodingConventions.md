@@ -99,10 +99,34 @@ class ExposedClass;
       + Although tags are technically classes, they behave as an
         enumeration for the compiler. Multiple tags that make up this
         enumeration are collected together.
-      + Some classes, such as `vtkm::Tuple` are meant to behave as basic
+      + Some classes, such as `vtkm::Vec` are meant to behave as basic
         types. These are sometimes collected together as if they were
         related typedefs. The vtkm/Types.h header is a good example of
         this.
+
+  + The indentation style can be characterized as [Allman Style].
+    With the curly brace (scope delimiter) placed on the
+    following line and not-indented.
+
+```cpp
+if (test)
+{
+  clause;
+}    
+```
+
+  + Conditional clauses including loop conditionals such as for and while
+    must be in braces below the conditional.
+    
+```cpp
+for (auto v : vector)
+{
+  single line clause;
+}    
+```
+
+  + Two space indentation. Tabs are not allowed. Trailing whitespace
+    is not allowed.
 
   + Code formatting is strictly enforced. VTK-m's [development workflow]
     includes a reformatting step that compares the formatting of new source
@@ -198,3 +222,5 @@ copyright) are not meant to be dogmatic. Examples can be found in the
 existing code that break these conventions, particularly when the
 conventions stand in the way of readability (which is the point in having
 them in the first place).
+
+[Allman Style]:  https://en.wikipedia.org/wiki/Indent_style#Allman_style

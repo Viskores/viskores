@@ -25,8 +25,7 @@ namespace cont
 {
 VTKM_CONT bool DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagOpenMP>::Exists() const
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagOpenMP>;
-  return DeviceAdapterTraits::Valid;
+  return vtkm::cont::DeviceAdapterTagOpenMP::IsEnabled;
 }
 }
 }

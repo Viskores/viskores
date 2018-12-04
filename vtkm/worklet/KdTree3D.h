@@ -37,16 +37,13 @@ public:
   ///
   /// \tparam CoordType type of the x, y, z component of the point coordinates.
   /// \tparam CoordStorageTag
-  /// \tparam DeviceAdapter
   /// \param coords An ArrayHandle of x, y, z coordinates of input points.
-  /// \param device Tag for selecting device adapter.
   ///
-  template <typename CoordType, typename CoordStorageTag, typename DeviceAdapter>
-  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag>& coords,
-             DeviceAdapter device)
+  template <typename CoordType, typename CoordStorageTag>
+  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag>& coords)
   {
     vtkm::worklet::spatialstructure::KdTree3DConstruction().Run(
-      coords, this->PointIds, this->SplitIds, device);
+      coords, this->PointIds, this->SplitIds);
   }
 
   /// \brief Nearest neighbor search using KD-Tree
@@ -73,10 +70,10 @@ public:
            const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag2>& queryPoints,
            vtkm::cont::ArrayHandle<vtkm::Id>& nearestNeighborIds,
            vtkm::cont::ArrayHandle<CoordType>& distances,
-           DeviceAdapter device)
+           DeviceAdapter deviceId)
   {
     vtkm::worklet::spatialstructure::KdTree3DNNSearch().Run(
-      coords, this->PointIds, this->SplitIds, queryPoints, nearestNeighborIds, distances, device);
+      coords, this->PointIds, this->SplitIds, queryPoints, nearestNeighborIds, distances, deviceId);
   }
 
 private:

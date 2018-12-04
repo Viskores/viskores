@@ -105,6 +105,7 @@
 #include <utility>
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/Logging.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 
@@ -732,6 +733,7 @@ public:
     , src_(NULL)
     , dst_(NULL)
     , out_buf_(NULL)
+    , tmp_size(0)
   {
   }
 
@@ -770,6 +772,7 @@ private:
   ValueType *original_, *tmp_;
   ValueType *src_, *dst_;
   ValueType*** out_buf_;
+  vtkm::UInt64 tmp_size;
 
   void DeleteAll();
 };
@@ -782,7 +785,13 @@ void PairValueManager<PlainType, ValueType, Base>::Init(size_t max_elems, size_t
   max_elems_ = max_elems;
   max_threads_ = utility::GetMaxThreads(max_elems_ * sizeof(PlainType), available_cores);
 
-  tmp_ = new ValueType[max_elems];
+  { // This allocation can be quite large, so log it:
+    tmp_size = max_elems * sizeof(ValueType);
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
+               "Allocating working memory for radix sort-by-key: %s.",
+               vtkm::cont::GetSizeString(tmp_size).c_str());
+    tmp_ = new ValueType[max_elems];
+  }
 
   out_buf_ = new ValueType**[max_threads_];
   for (int i = 0; i < max_threads_; ++i)
@@ -798,8 +807,14 @@ void PairValueManager<PlainType, ValueType, Base>::Init(size_t max_elems, size_t
 template <typename PlainType, typename ValueType, int Base>
 void PairValueManager<PlainType, ValueType, Base>::DeleteAll()
 {
-  delete[] tmp_;
-  tmp_ = NULL;
+  { // This allocation can be quite large, so log it:
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
+               "Freeing working memory for radix sort-by-key: %s.",
+               vtkm::cont::GetSizeString(tmp_size).c_str());
+    delete[] tmp_;
+    tmp_ = NULL;
+    tmp_size = 0;
+  }
 
   for (int i = 0; i < max_threads_; ++i)
   {

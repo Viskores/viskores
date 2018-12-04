@@ -46,14 +46,14 @@ struct WaveField : public vtkm::worklet::WorkletMapField
   }
 };
 
-vtkm::cont::DataSet make_test3DImageData(int xdim, int ydim, int zdim)
+vtkm::cont::DataSet make_test3DImageData(vtkm::Id3 dims)
 {
   using Builder = vtkm::cont::DataSetBuilderUniform;
   using FieldAdd = vtkm::cont::DataSetFieldAdd;
-  vtkm::cont::DataSet ds = Builder::Create(vtkm::Id3{ xdim, ydim, zdim });
+  vtkm::cont::DataSet ds = Builder::Create(dims);
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> field;
-  vtkm::worklet::DispatcherMapField<WaveField, vtkm::cont::DeviceAdapterTagSerial> dispatcher;
+  vtkm::worklet::DispatcherMapField<WaveField> dispatcher;
   dispatcher.Invoke(ds.GetCoordinateSystem(), field);
 
   FieldAdd::AddPointField(ds, "vec_field", field);
@@ -66,21 +66,21 @@ void io_generator(TaskQueue<vtkm::cont::MultiBlock>& queue, std::size_t numberOf
   //Step 1. We want to build an initial set of blocks
   //that vary in size. This way we can generate uneven
   //work to show off the vtk-m filter work distribution
-  vtkm::cont::DataSet small = make_test3DImageData(128, 128, 128);
-  vtkm::cont::DataSet medium = make_test3DImageData(256, 256, 128);
-  vtkm::cont::DataSet large = make_test3DImageData(512, 512, 128);
+  vtkm::Id3 small(128, 128, 128);
+  vtkm::Id3 medium(256, 256, 128);
+  vtkm::Id3 large(512, 256, 128);
 
-  std::vector<vtkm::cont::DataSet> blocks;
-  blocks.push_back(small);
-  blocks.push_back(medium);
-  blocks.push_back(large);
+  std::vector<vtkm::Id3> block_sizes;
+  block_sizes.push_back(small);
+  block_sizes.push_back(medium);
+  block_sizes.push_back(large);
 
 
   std::mt19937 rng;
   //uniform_int_distribution is a closed interval [] so both the min and max
   //can be chosen values
   std::uniform_int_distribution<vtkm::Id> blockNumGen(6, 32);
-  std::uniform_int_distribution<std::size_t> blockPicker(0, blocks.size() - 1);
+  std::uniform_int_distribution<std::size_t> blockPicker(0, block_sizes.size() - 1);
   for (std::size_t i = 0; i < numberOfTasks; ++i)
   {
     //Step 2. Construct a random number of blocks
@@ -90,7 +90,9 @@ void io_generator(TaskQueue<vtkm::cont::MultiBlock>& queue, std::size_t numberOf
     vtkm::cont::MultiBlock mb(numberOfBlocks);
     for (vtkm::Id b = 0; b < numberOfBlocks; ++b)
     {
-      mb.AddBlock(blocks[blockPicker(rng)]);
+      const auto& dims = block_sizes[blockPicker(rng)];
+      auto block = make_test3DImageData(dims);
+      mb.AddBlock(block);
     }
 
     std::cout << "adding multi-block with " << mb.GetNumberOfBlocks() << " blocks" << std::endl;

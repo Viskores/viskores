@@ -80,13 +80,12 @@ public:
   class RunImpl
   {
   public:
-    template <typename StorageT, typename OutputPortalType, typename Device>
+    template <typename StorageT, typename OutputPortalType>
     void operator()(const vtkm::cont::ArrayHandle<vtkm::UInt8, StorageT>& pixels,
                     const vtkm::cont::CellSetStructured<2>& input,
-                    OutputPortalType& componentsOut,
-                    Device) const
+                    OutputPortalType& componentsOut) const
     {
-      using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
+      using Algorithm = vtkm::cont::Algorithm;
 
       // TODO: template pixel type?
 
@@ -102,19 +101,17 @@ public:
       bool allStar = false;
       vtkm::cont::ArrayHandle<bool> isStar;
 
-      using DispatcherType =
-        vtkm::worklet::DispatcherPointNeighborhood<detail::ImageGraft<2>, Device>;
-
       do
       {
-        DispatcherType().Invoke(input, componentsOut, pixels, newComponents);
+        vtkm::worklet::DispatcherPointNeighborhood<detail::ImageGraft<2>> imageGraftDispatcher;
+        imageGraftDispatcher.Invoke(input, componentsOut, pixels, newComponents);
 
         // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
-        vtkm::worklet::DispatcherMapField<IsStar, Device> isStarDisp;
+        vtkm::worklet::DispatcherMapField<IsStar> isStarDisp;
         isStarDisp.Invoke(pixelIds, newComponents, isStar);
         allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());
 
-        vtkm::worklet::DispatcherMapField<PointerJumping, Device> pointJumpingDispatcher;
+        vtkm::worklet::DispatcherMapField<PointerJumping> pointJumpingDispatcher;
         pointJumpingDispatcher.Invoke(pixelIds, newComponents);
 
         Algorithm::Copy(newComponents, componentsOut);
@@ -133,35 +130,33 @@ public:
         uniqueColor);
       vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
       vtkm::cont::ArrayHandle<vtkm::Id> pixelIdsOut;
-      InnerJoin<Device>().Run(componentsOut,
-                              pixelIds,
-                              uniqueComponents,
-                              uniqueColor,
-                              cellColors,
-                              pixelIdsOut,
-                              componentsOut);
+      InnerJoin().Run(componentsOut,
+                      pixelIds,
+                      uniqueComponents,
+                      uniqueColor,
+                      cellColors,
+                      pixelIdsOut,
+                      componentsOut);
 
       Algorithm::SortByKey(pixelIdsOut, componentsOut);
     }
   };
 
-  template <typename T, typename S, typename OutputPortalType, typename Device>
+  template <typename T, typename S, typename OutputPortalType>
   void Run(const vtkm::cont::CellSetStructured<2>& input,
            const vtkm::cont::DynamicArrayHandleBase<T, S>& pixels,
-           OutputPortalType& componentsOut,
-           Device device) const
+           OutputPortalType& componentsOut) const
   {
     using Types = vtkm::ListTagBase<vtkm::UInt8>;
-    vtkm::cont::CastAndCall(pixels.ResetTypeList(Types{}), RunImpl(), input, componentsOut, device);
+    vtkm::cont::CastAndCall(pixels.ResetTypeList(Types{}), RunImpl(), input, componentsOut);
   }
 
-  template <typename T, typename S, typename OutputPortalType, typename Device>
+  template <typename T, typename S, typename OutputPortalType>
   void Run(const vtkm::cont::CellSetStructured<2>& input,
            const vtkm::cont::ArrayHandle<T, S>& pixels,
-           OutputPortalType& componentsOut,
-           Device device) const
+           OutputPortalType& componentsOut) const
   {
-    vtkm::cont::CastAndCall(pixels, RunImpl(), input, componentsOut, device);
+    vtkm::cont::CastAndCall(pixels, RunImpl(), input, componentsOut);
   }
 };
 }

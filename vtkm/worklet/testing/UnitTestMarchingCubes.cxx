@@ -293,7 +293,6 @@ void TestMarchingCubesUniformGrid()
   vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::DataSet dataSet = vtkm_ut_mc_worklet::MakeIsosurfaceTestDataSet(dims);
 
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   vtkm::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet().CopyTo(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
@@ -315,13 +314,12 @@ void TestMarchingCubesUniformGrid()
                                      dataSet.GetCoordinateSystem(),
                                      pointFieldArray,
                                      verticesArray,
-                                     normalsArray,
-                                     DeviceAdapter());
+                                     normalsArray);
 
-  scalarsArray = isosurfaceFilter.ProcessPointField(pointFieldArray, DeviceAdapter());
+  scalarsArray = isosurfaceFilter.ProcessPointField(pointFieldArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
-  cellFieldArrayOut = isosurfaceFilter.ProcessCellField(cellFieldArray, DeviceAdapter());
+  cellFieldArrayOut = isosurfaceFilter.ProcessCellField(cellFieldArray);
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(verticesArray, std::cout);
@@ -348,7 +346,6 @@ void TestMarchingCubesExplicit()
   std::cout << "Testing MarchingCubes filter on explicit data" << std::endl;
 
   using DataSetGenerator = vtkm_ut_mc_worklet::MakeRadiantDataSet;
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Vec3Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
   using DataHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
 
@@ -371,14 +368,8 @@ void TestMarchingCubesExplicit()
   vtkm::worklet::MarchingCubes marchingCubes;
   marchingCubes.SetMergeDuplicatePoints(false);
 
-  auto result = marchingCubes.Run(&contourValue,
-                                  1,
-                                  cellSet,
-                                  dataSet.GetCoordinateSystem(),
-                                  contourArray,
-                                  vertices,
-                                  normals,
-                                  DeviceAdapter());
+  auto result = marchingCubes.Run(
+    &contourValue, 1, cellSet, dataSet.GetCoordinateSystem(), contourArray, vertices, normals);
 
   DataHandle scalars;
 
@@ -387,13 +378,13 @@ void TestMarchingCubesExplicit()
   DataSetGenerator::DataArrayHandle projectedArray;
   projectedField.GetData().CopyTo(projectedArray);
 
-  scalars = marchingCubes.ProcessPointField(projectedArray, DeviceAdapter());
+  scalars = marchingCubes.ProcessPointField(projectedArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
-  cellFieldArrayOut = marchingCubes.ProcessCellField(cellFieldArray, DeviceAdapter());
+  cellFieldArrayOut = marchingCubes.ProcessCellField(cellFieldArray);
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(vertices, std::cout);
@@ -424,7 +415,7 @@ void TestMarchingCubes()
   TestMarchingCubesExplicit();
 }
 
-int UnitTestMarchingCubes(int, char* [])
+int UnitTestMarchingCubes(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestMarchingCubes);
+  return vtkm::cont::testing::Testing::Run(TestMarchingCubes, argc, argv);
 }

@@ -57,7 +57,7 @@ vtkm::cont::CellSetExplicit<> DoCellDeepCopy(const CellSetType& inCells)
 {
   std::cout << "Doing cell copy" << std::endl;
 
-  return vtkm::worklet::CellDeepCopy::Run(inCells, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  return vtkm::worklet::CellDeepCopy::Run(inCells);
 }
 
 void CheckOutput(const vtkm::cont::CellSetExplicit<>& copiedCells)
@@ -98,7 +98,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestCellDeepCopy(int, char* [])
+int UnitTestCellDeepCopy(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunTest);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

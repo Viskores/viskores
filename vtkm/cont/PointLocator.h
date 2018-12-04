@@ -55,13 +55,11 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(DeviceAdapter device) const
   {
-    vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-    return PrepareForExecutionImp(deviceId).PrepareForExecution(DeviceAdapter());
+    return PrepareForExecutionImp(device).PrepareForExecution(device);
   }
 
-  //VTKM_CONT virtual const vtkm::exec::PointLocator*
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;
   VTKM_CONT virtual const HandleType PrepareForExecutionImp(
     vtkm::cont::DeviceAdapterId deviceId) const = 0;

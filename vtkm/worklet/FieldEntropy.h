@@ -22,9 +22,9 @@
 #define vtk_m_worklet_FieldEntropy_h
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/FieldHistogram.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -70,35 +70,31 @@ public:
   // Execute the entropy computation filter given data(a field) and number of bins
   // Returns:
   // Entropy (log2) of the field of the data
-  template <typename FieldType, typename Storage, typename DeviceAdapter>
-  vtkm::Float64 Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray,
-                    vtkm::Id numberOfBins,
-                    DeviceAdapter device)
+  template <typename FieldType, typename Storage>
+  vtkm::Float64 Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray, vtkm::Id numberOfBins)
   {
-    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     ///// calculate histogram using FieldHistogram worklet /////
     vtkm::Range range;
     FieldType delta;
     vtkm::cont::ArrayHandle<vtkm::Id> binArray;
     vtkm::worklet::FieldHistogram histogram;
-    histogram.Run(fieldArray, numberOfBins, range, delta, binArray, device);
+    histogram.Run(fieldArray, numberOfBins, range, delta, binArray);
 
     ///// calculate sum of frequency of the histogram /////
     vtkm::Id initFreqSumValue = 0;
-    vtkm::Id freqSum = DeviceAlgorithms::Reduce(binArray, initFreqSumValue, vtkm::Sum());
+    vtkm::Id freqSum = vtkm::cont::Algorithm::Reduce(binArray, initFreqSumValue, vtkm::Sum());
 
     ///// calculate information content of each bin using self-define worklet /////
     vtkm::cont::ArrayHandle<vtkm::Float64> informationContent;
     SetBinInformationContent binWorklet(static_cast<vtkm::Float64>(freqSum));
-    vtkm::worklet::DispatcherMapField<SetBinInformationContent, DeviceAdapter>
-      setBinInformationContentDispatcher(binWorklet);
+    vtkm::worklet::DispatcherMapField<SetBinInformationContent> setBinInformationContentDispatcher(
+      binWorklet);
     setBinInformationContentDispatcher.Invoke(binArray, informationContent);
 
     ///// calculate entropy by summing up information conetent of all bins /////
     vtkm::Float64 initEntropyValue = 0;
     vtkm::Float64 entropy =
-      DeviceAlgorithms::Reduce(informationContent, initEntropyValue, vtkm::Sum());
+      vtkm::cont::Algorithm::Reduce(informationContent, initEntropyValue, vtkm::Sum());
 
     return entropy;
   }

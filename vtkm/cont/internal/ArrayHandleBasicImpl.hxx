@@ -40,19 +40,19 @@ ArrayHandle<T, StorageTagBasic>::ArrayHandle(const Thisclass& src)
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(Thisclass&& src)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(Thisclass&& src) noexcept
   : Internals(std::move(src.Internals))
 {
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(const StorageType& storage)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(const StorageType& storage) noexcept
   : Internals(new internal::ArrayHandleImpl(storage))
 {
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(StorageType&& storage)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(StorageType&& storage) noexcept
   : Internals(new internal::ArrayHandleImpl(std::move(storage)))
 {
 }
@@ -70,7 +70,8 @@ ArrayHandle<T, StorageTagBasic>& ArrayHandle<T, StorageTagBasic>::operator=(cons
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>& ArrayHandle<T, StorageTagBasic>::operator=(Thisclass&& src)
+ArrayHandle<T, StorageTagBasic>& ArrayHandle<T, StorageTagBasic>::operator=(
+  Thisclass&& src) noexcept
 {
   this->Internals = std::move(src.Internals);
   return *this;
@@ -234,10 +235,15 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
 
 template <typename T>
 template <typename DeviceAdapterTag>
-void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag) const
+void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag device) const
 {
-  DeviceAdapterId devId = DeviceAdapterTraits<DeviceAdapterTag>::GetId();
-  this->Internals->PrepareForDevice(devId, sizeof(T));
+  bool needToRealloc = this->Internals->PrepareForDevice(device, sizeof(T));
+  if (needToRealloc)
+  {
+    this->Internals->ExecutionInterface =
+      new internal::ExecutionArrayInterfaceBasic<DeviceAdapterTag>(
+        *(this->Internals->ControlArray));
+  }
 }
 
 template <typename T>

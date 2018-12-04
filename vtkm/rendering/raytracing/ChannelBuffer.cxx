@@ -39,26 +39,6 @@ namespace rendering
 namespace raytracing
 {
 
-template <typename Precision, typename OpWorklet>
-struct BufferMathFunctor
-{
-  ChannelBuffer<Precision>* Self;
-  const ChannelBuffer<Precision>* Other;
-  BufferMathFunctor(ChannelBuffer<Precision>* self, const ChannelBuffer<Precision>* other)
-    : Self(self)
-    , Other(other)
-  {
-  }
-
-  template <typename Device>
-  bool operator()(Device vtkmNotUsed(device))
-  {
-    vtkm::worklet::DispatcherMapField<OpWorklet, Device>(OpWorklet())
-      .Invoke(Other->Buffer, Self->Buffer);
-    return true;
-  }
-};
-
 class BufferAddition : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -150,8 +130,7 @@ void ChannelBuffer<Precision>::AddBuffer(const ChannelBuffer<Precision>& other)
   if (this->Size != other.GetSize())
     throw vtkm::cont::ErrorBadValue("ChannelBuffer add: size must be equal");
 
-  BufferMathFunctor<Precision, BufferAddition> functor(this, &other);
-  vtkm::cont::TryExecute(functor);
+  vtkm::worklet::DispatcherMapField<BufferAddition>().Invoke(other.Buffer, this->Buffer);
 }
 
 template <typename Precision>
@@ -162,8 +141,7 @@ void ChannelBuffer<Precision>::MultiplyBuffer(const ChannelBuffer<Precision>& ot
   if (this->Size != other.GetSize())
     throw vtkm::cont::ErrorBadValue("ChannelBuffer add: size must be equal");
 
-  BufferMathFunctor<Precision, BufferMultiply> functor(this, &other);
-  vtkm::cont::TryExecute(functor);
+  vtkm::worklet::DispatcherMapField<BufferMultiply>().Invoke(other.Buffer, this->Buffer);
 }
 
 template <typename Precision>
@@ -221,9 +199,10 @@ struct ExtractChannelFunctor
   bool operator()(Device device)
   {
     Output.PrepareForOutput(Self->GetSize(), device);
-    vtkm::worklet::DispatcherMapField<ExtractChannel, Device>(
-      ExtractChannel(Self->GetNumChannels(), Channel))
-      .Invoke(Output, Self->Buffer);
+    vtkm::worklet::DispatcherMapField<ExtractChannel> dispatcher(
+      ExtractChannel(Self->GetNumChannels(), Channel));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(Output, Self->Buffer);
     return true;
   }
 };
@@ -307,8 +286,9 @@ struct ExpandFunctorSignature
     Output->Buffer.PrepareForOutput(totalSize, device);
     ChannelBufferOperations::InitChannels(*Output, Signature, device);
 
-    vtkm::worklet::DispatcherMapField<Expand, Device>(Expand(NumChannels))
-      .Invoke(Input, SparseIndexes, Output->Buffer);
+    vtkm::worklet::DispatcherMapField<Expand> dispatcher((Expand(NumChannels)));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(Input, SparseIndexes, Output->Buffer);
 
     return true;
   }
@@ -347,8 +327,9 @@ struct ExpandFunctor
     Output->Buffer.PrepareForOutput(totalSize, device);
     ChannelBufferOperations::InitConst(*Output, InitVal, device);
 
-    vtkm::worklet::DispatcherMapField<Expand, Device>(Expand(NumChannels))
-      .Invoke(Input, SparseIndexes, Output->Buffer);
+    vtkm::worklet::DispatcherMapField<Expand> dispatcher((Expand(NumChannels)));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(Input, SparseIndexes, Output->Buffer);
 
     return true;
   }
@@ -410,9 +391,10 @@ struct NormalizeFunctor
     asField.GetRange(&range);
     Precision minScalar = static_cast<Precision>(range.Min);
     Precision maxScalar = static_cast<Precision>(range.Max);
-    vtkm::worklet::DispatcherMapField<NormalizeBuffer<Precision>, Device>(
-      NormalizeBuffer<Precision>(minScalar, maxScalar, Invert))
-      .Invoke(Input);
+    vtkm::worklet::DispatcherMapField<NormalizeBuffer<Precision>> dispatcher(
+      NormalizeBuffer<Precision>(minScalar, maxScalar, Invert));
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(Input);
 
     return true;
   }
@@ -458,9 +440,15 @@ template <typename Precision>
 void ChannelBuffer<Precision>::Normalize(bool invert)
 {
 
-  NormalizeFunctor<Precision> functor(this->Buffer, invert);
-
-  vtkm::cont::TryExecute(functor);
+  vtkm::cont::Field asField(
+    "name meaningless", vtkm::cont::Field::Association::POINTS, this->Buffer);
+  vtkm::Range range;
+  asField.GetRange(&range);
+  Precision minScalar = static_cast<Precision>(range.Min);
+  Precision maxScalar = static_cast<Precision>(range.Max);
+  vtkm::worklet::DispatcherMapField<NormalizeBuffer<Precision>> dispatcher(
+    NormalizeBuffer<Precision>(minScalar, maxScalar, invert));
+  dispatcher.Invoke(this->Buffer);
 }
 
 template <typename Precision>
@@ -484,29 +472,10 @@ struct ResizeChannelFunctor
 };
 
 template <typename Precision>
-struct InitConstFunctor
-{
-  ChannelBuffer<Precision>* Self;
-  Precision Value;
-  InitConstFunctor(ChannelBuffer<Precision>* self, Precision value)
-    : Self(self)
-    , Value(value)
-  {
-  }
-
-  template <typename Device>
-  bool operator()(Device device)
-  {
-    ChannelBufferOperations::InitConst(*Self, Value, device);
-    return true;
-  }
-};
-
-template <typename Precision>
 void ChannelBuffer<Precision>::InitConst(const Precision value)
 {
-  InitConstFunctor<Precision> functor(this, value);
-  vtkm::cont::TryExecute(functor);
+  vtkm::cont::ArrayHandleConstant<Precision> valueHandle(value, this->GetBufferLength());
+  vtkm::cont::Algorithm::Copy(valueHandle, this->Buffer);
 }
 
 template <typename Precision>
@@ -542,6 +511,15 @@ void ChannelBuffer<Precision>::SetNumChannels(const vtkm::Int32 numChannels)
   ResizeChannelFunctor<Precision> functor(this, numChannels);
   vtkm::cont::TryExecute(functor);
 }
+
+template <typename Precision>
+ChannelBuffer<Precision> ChannelBuffer<Precision>::Copy()
+{
+  ChannelBuffer res(NumChannels, Size);
+  vtkm::cont::Algorithm::Copy(this->Buffer, res.Buffer);
+  return res;
+}
+
 // Instantiate supported types
 template class ChannelBuffer<vtkm::Float32>;
 template class ChannelBuffer<vtkm::Float64>;

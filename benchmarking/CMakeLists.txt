@@ -60,9 +60,11 @@ endfunction()
 
 set(benchmarks
   BenchmarkArrayTransfer
+  BenchmarkAtomicArray
   BenchmarkCopySpeeds
   BenchmarkDeviceAdapter
   BenchmarkFieldAlgorithms
+  BenchmarkFilters
   BenchmarkTopologyAlgorithms
   )
 

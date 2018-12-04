@@ -144,16 +144,18 @@ public:
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> nnDis_Handle;
 
     PointLocatorUniformGridWorklet pointLocatorUniformGridWorklet;
-    vtkm::worklet::DispatcherMapField<PointLocatorUniformGridWorklet, DeviceAdapter>
-      locatorDispatcher(pointLocatorUniformGridWorklet);
+    vtkm::worklet::DispatcherMapField<PointLocatorUniformGridWorklet> locatorDispatcher(
+      pointLocatorUniformGridWorklet);
+    locatorDispatcher.SetDevice(DeviceAdapter());
     locatorDispatcher.Invoke(qc_Handle, locator, nnId_Handle, nnDis_Handle);
 
     // brute force
     vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;
     NearestNeighborSearchBruteForce3DWorklet nnsbf3dWorklet;
-    vtkm::worklet::DispatcherMapField<NearestNeighborSearchBruteForce3DWorklet, DeviceAdapter>
-      nnsbf3DDispatcher(nnsbf3dWorklet);
+    vtkm::worklet::DispatcherMapField<NearestNeighborSearchBruteForce3DWorklet> nnsbf3DDispatcher(
+      nnsbf3dWorklet);
+    nnsbf3DDispatcher.SetDevice(DeviceAdapter());
     nnsbf3DDispatcher.Invoke(
       qc_Handle, vtkm::cont::make_ArrayHandle(coordi), bfnnId_Handle, bfnnDis_Handle);
 

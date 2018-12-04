@@ -125,44 +125,36 @@ public:
   template <typename CellSetType,
             typename CoordsCompType,
             typename CoordsStorageType,
-            typename NormalCompType,
-            typename DeviceAdapter>
+            typename NormalCompType>
   void Run(const CellSetType& cellset,
            const vtkm::cont::ArrayHandle<vtkm::Vec<CoordsCompType, 3>, CoordsStorageType>& points,
-           vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals,
-           DeviceAdapter)
+           vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals)
   {
     if (this->Normalize)
     {
-      vtkm::worklet::DispatcherMapTopology<Worklet<>, DeviceAdapter> dispatcher;
-      dispatcher.Invoke(cellset, points, normals);
+      vtkm::worklet::DispatcherMapTopology<Worklet<>>().Invoke(cellset, points, normals);
     }
     else
     {
-      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>, DeviceAdapter> dispatcher;
-      dispatcher.Invoke(cellset, points, normals);
+      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>>().Invoke(
+        cellset, points, normals);
     }
   }
 
-  template <typename CellSetType,
-            typename CoordsStorageList,
-            typename NormalCompType,
-            typename DeviceAdapter>
+  template <typename CellSetType, typename CoordsStorageList, typename NormalCompType>
   void Run(
     const CellSetType& cellset,
     const vtkm::cont::DynamicArrayHandleBase<vtkm::TypeListTagFieldVec3, CoordsStorageList>& points,
-    vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals,
-    DeviceAdapter)
+    vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals)
   {
     if (this->Normalize)
     {
-      vtkm::worklet::DispatcherMapTopology<Worklet<>, DeviceAdapter> dispatcher;
-      dispatcher.Invoke(cellset, points, normals);
+      vtkm::worklet::DispatcherMapTopology<Worklet<>>().Invoke(cellset, points, normals);
     }
     else
     {
-      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>, DeviceAdapter> dispatcher;
-      dispatcher.Invoke(cellset, points, normals);
+      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>>().Invoke(
+        cellset, points, normals);
     }
   }
 
@@ -204,33 +196,25 @@ public:
     }
   };
 
-  template <typename CellSetType,
-            typename NormalCompType,
-            typename FaceNormalStorageType,
-            typename DeviceAdapter>
+  template <typename CellSetType, typename NormalCompType, typename FaceNormalStorageType>
   void Run(
     const CellSetType& cellset,
     const vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>, FaceNormalStorageType>& faceNormals,
-    vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals,
-    DeviceAdapter)
+    vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals)
   {
-    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(cellset, faceNormals, pointNormals);
+    vtkm::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);
   }
 
   template <typename CellSetType,
             typename FaceNormalTypeList,
             typename FaceNormalStorageList,
-            typename NormalCompType,
-            typename DeviceAdapter>
+            typename NormalCompType>
   void Run(const CellSetType& cellset,
            const vtkm::cont::DynamicArrayHandleBase<FaceNormalTypeList, FaceNormalStorageList>&
              faceNormals,
-           vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals,
-           DeviceAdapter)
+           vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals)
   {
-    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(cellset, faceNormals, pointNormals);
+    vtkm::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);
   }
 };
 }

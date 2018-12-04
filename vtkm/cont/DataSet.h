@@ -187,4 +187,102 @@ private:
 } // namespace cont
 } // namespace vtkm
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG,
+          typename FieldStorageList = VTKM_DEFAULT_STORAGE_LIST_TAG,
+          typename CellSetTypesList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
+struct SerializableDataSet
+{
+  SerializableDataSet() = default;
+
+  explicit SerializableDataSet(const vtkm::cont::DataSet& dataset)
+    : DataSet(dataset)
+  {
+  }
+
+  vtkm::cont::DataSet DataSet;
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename FieldTypeList, typename FieldStorageList, typename CellSetTypesList>
+struct Serialization<
+  vtkm::cont::SerializableDataSet<FieldTypeList, FieldStorageList, CellSetTypesList>>
+{
+private:
+  using Type = vtkm::cont::SerializableDataSet<FieldTypeList, FieldStorageList, CellSetTypesList>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& serializable)
+  {
+    const auto& dataset = serializable.DataSet;
+
+    vtkm::IdComponent numberOfCoordinateSystems = dataset.GetNumberOfCoordinateSystems();
+    diy::save(bb, numberOfCoordinateSystems);
+    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
+    {
+      diy::save(bb, dataset.GetCoordinateSystem(i));
+    }
+
+    vtkm::IdComponent numberOfCellSets = dataset.GetNumberOfCellSets();
+    diy::save(bb, numberOfCellSets);
+    for (vtkm::IdComponent i = 0; i < numberOfCellSets; ++i)
+    {
+      diy::save(bb, dataset.GetCellSet(i).ResetCellSetList(CellSetTypesList{}));
+    }
+
+    vtkm::IdComponent numberOfFields = dataset.GetNumberOfFields();
+    diy::save(bb, numberOfFields);
+    for (vtkm::IdComponent i = 0; i < numberOfFields; ++i)
+    {
+      diy::save(
+        bb, vtkm::cont::SerializableField<FieldTypeList, FieldStorageList>(dataset.GetField(i)));
+    }
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& serializable)
+  {
+    auto& dataset = serializable.DataSet;
+    dataset = {}; // clear
+
+    vtkm::IdComponent numberOfCoordinateSystems = 0;
+    diy::load(bb, numberOfCoordinateSystems);
+    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
+    {
+      vtkm::cont::CoordinateSystem coords;
+      diy::load(bb, coords);
+      dataset.AddCoordinateSystem(coords);
+    }
+
+    vtkm::IdComponent numberOfCellSets = 0;
+    diy::load(bb, numberOfCellSets);
+    for (vtkm::IdComponent i = 0; i < numberOfCellSets; ++i)
+    {
+      vtkm::cont::DynamicCellSetBase<CellSetTypesList> cells;
+      diy::load(bb, cells);
+      dataset.AddCellSet(vtkm::cont::DynamicCellSet(cells));
+    }
+
+    vtkm::IdComponent numberOfFields = 0;
+    diy::load(bb, numberOfFields);
+    for (vtkm::IdComponent i = 0; i < numberOfFields; ++i)
+    {
+      vtkm::cont::SerializableField<FieldTypeList, FieldStorageList> field;
+      diy::load(bb, field);
+      dataset.AddField(field.Field);
+    }
+  }
+};
+
+} // diy
+
 #endif //vtk_m_cont_DataSet_h

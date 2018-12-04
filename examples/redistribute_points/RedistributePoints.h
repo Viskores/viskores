@@ -22,7 +22,7 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/AssignerMultiBlock.h>
 #include <vtkm/cont/BoundsGlobalCompute.h>
-#include <vtkm/cont/diy/Serialization.h>
+#include <vtkm/cont/Serialization.h>
 #include <vtkm/filter/ExtractPoints.h>
 #include <vtkm/filter/Filter.h>
 
@@ -73,6 +73,66 @@ class Redistributor
     return extractor.Execute(input, this->Policy);
   }
 
+  class ConcatenateFields
+  {
+  public:
+    explicit ConcatenateFields(vtkm::Id totalSize) : TotalSize(totalSize), CurrentIdx(0) {}
+
+    void Append(const vtkm::cont::Field& field)
+    {
+      VTKM_ASSERT(this->CurrentIdx + field.GetData().GetNumberOfValues() <= this->TotalSize);
+
+      if (this->Field.GetData().GetNumberOfValues() == 0)
+      {
+        this->Field = field;
+        field.GetData().CastAndCall(Allocator{}, this->Field, this->TotalSize);
+      }
+      else
+      {
+        VTKM_ASSERT(this->Field.GetName() == field.GetName() &&
+                    this->Field.GetAssociation() == field.GetAssociation());
+      }
+
+      field.GetData().CastAndCall(Appender{}, this->Field, this->CurrentIdx);
+      this->CurrentIdx += field.GetData().GetNumberOfValues();
+    }
+
+    const vtkm::cont::Field& GetResult() const
+    {
+      return this->Field;
+    }
+
+  private:
+    struct Allocator
+    {
+      template <typename T, typename S>
+      void operator()(const vtkm::cont::ArrayHandle<T, S>&,
+                      vtkm::cont::Field& field,
+                      vtkm::Id totalSize) const
+      {
+        vtkm::cont::ArrayHandle<T> init;
+        init.Allocate(totalSize);
+        field.SetData(init);
+      }
+    };
+
+    struct Appender
+    {
+      template <typename T, typename S>
+      void operator()(const vtkm::cont::ArrayHandle<T, S>& data,
+                      vtkm::cont::Field& field,
+                      vtkm::Id currentIdx) const
+      {
+        vtkm::cont::ArrayHandle<T> farray =
+          field.GetData().template Cast<vtkm::cont::ArrayHandle<T>>();
+        vtkm::cont::Algorithm::CopySubRange(data, 0, data.GetNumberOfValues(), farray, currentIdx);
+      }
+    };
+
+    vtkm::Id TotalSize;
+    vtkm::Id CurrentIdx;
+    vtkm::cont::Field Field;
+  };
 
 public:
   Redistributor(const diy::RegularDecomposer<diy::ContinuousBounds>& decomposer,
@@ -95,11 +155,7 @@ public:
           this->Decomposer.fill_bounds(bds, target.gid);
 
           auto extractedDS = this->Extract(*block, bds);
-          const auto inputAH = extractedDS.GetCoordinateSystem(0).GetData();
-          vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> outputAH;
-          outputAH.Allocate(inputAH.GetNumberOfValues());
-          vtkm::cont::Algorithm::Copy(inputAH, outputAH);
-          rp.enqueue(target, outputAH);
+          rp.enqueue(target, vtkm::filter::MakeSerializableDataSet(extractedDS, DerivedPolicy{}));
         }
         // clear our dataset.
         *block = vtkm::cont::DataSet();
@@ -108,36 +164,43 @@ public:
     else
     {
       vtkm::Id numValues = 0;
-      std::vector<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>> received_arrays;
+      std::vector<vtkm::cont::DataSet> receives;
       for (int cc = 0; cc < rp.in_link().size(); ++cc)
       {
         auto target = rp.in_link().target(cc);
         if (rp.incoming(target.gid).size() > 0)
         {
-          vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> incomingAH;
-          rp.dequeue(target.gid, incomingAH);
-          received_arrays.push_back(incomingAH);
-          numValues += incomingAH.GetNumberOfValues();
+          auto sds = vtkm::filter::MakeSerializableDataSet(DerivedPolicy{});
+          rp.dequeue(target.gid, sds);
+          receives.push_back(sds.DataSet);
+          numValues += receives.back().GetCoordinateSystem(0).GetData().GetNumberOfValues();
         }
       }
 
       *block = vtkm::cont::DataSet();
-      if (received_arrays.size() == 1)
+      if (receives.size() == 1)
       {
-        auto coords = vtkm::cont::CoordinateSystem("coords", received_arrays[0]);
-        block->AddCoordinateSystem(coords);
+        *block = receives[0];
       }
-      else if (received_arrays.size() > 1)
+      else if (receives.size() > 1)
       {
-        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> coordsAH;
-        coordsAH.Allocate(numValues);
-        vtkm::Id offset = 0;
-        for (const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& receivedAH : received_arrays)
+        ConcatenateFields concatCoords(numValues);
+        for (const auto& ds: receives)
         {
-          vtkm::cont::Algorithm::CopySubRange(receivedAH, 0, receivedAH.GetNumberOfValues(), coordsAH, offset);
-          offset += receivedAH.GetNumberOfValues();
+          concatCoords.Append(ds.GetCoordinateSystem(0));
         }
-        block->AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", coordsAH));
+        block->AddCoordinateSystem(vtkm::cont::CoordinateSystem(
+          concatCoords.GetResult().GetName(), concatCoords.GetResult().GetData()));
+
+        for (vtkm::IdComponent i = 0; i < receives[0].GetNumberOfFields(); ++i)
+        {
+          ConcatenateFields concatField(numValues);
+          for (const auto& ds: receives)
+          {
+            concatField.Append(ds.GetField(i));
+          }
+          block->AddField(concatField.GetResult());
+        }
       }
     }
   }

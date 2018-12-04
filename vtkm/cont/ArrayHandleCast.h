@@ -103,4 +103,56 @@ VTKM_CONT
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename T1, typename T2>
+struct TypeString<vtkm::cont::internal::Cast<T1, T2>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name =
+      "AH_Cast_Functor<" + TypeString<T1>::Get() + "," + TypeString<T2>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename T, typename AH>
+struct TypeString<vtkm::cont::ArrayHandleCast<T, AH>>
+  : TypeString<
+      vtkm::cont::ArrayHandleTransform<AH,
+                                       vtkm::cont::internal::Cast<typename AH::ValueType, T>,
+                                       vtkm::cont::internal::Cast<T, typename AH::ValueType>>>
+{
+};
+}
+} // namespace vtkm::cont
+
+namespace diy
+{
+
+template <typename T1, typename T2>
+struct Serialization<vtkm::cont::internal::Cast<T1, T2>>
+{
+  static VTKM_CONT void save(BinaryBuffer&, const vtkm::cont::internal::Cast<T1, T2>&) {}
+
+  static VTKM_CONT void load(BinaryBuffer&, vtkm::cont::internal::Cast<T1, T2>&) {}
+};
+
+template <typename T, typename AH>
+struct Serialization<vtkm::cont::ArrayHandleCast<T, AH>>
+  : Serialization<
+      vtkm::cont::ArrayHandleTransform<AH,
+                                       vtkm::cont::internal::Cast<typename AH::ValueType, T>,
+                                       vtkm::cont::internal::Cast<T, typename AH::ValueType>>>
+{
+};
+
+} // diy
+
 #endif // vtk_m_cont_ArrayHandleCast_h

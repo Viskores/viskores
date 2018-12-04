@@ -78,7 +78,7 @@ class CosmoTools
 {
 public:
   // Run the halo finder and then the NxN MBP center finder
-  template <typename FieldType, typename StorageType, typename DeviceAdapter>
+  template <typename FieldType, typename StorageType>
   void RunHaloFinder(vtkm::cont::ArrayHandle<FieldType, StorageType>& xLocation,
                      vtkm::cont::ArrayHandle<FieldType, StorageType>& yLocation,
                      vtkm::cont::ArrayHandle<FieldType, StorageType>& zLocation,
@@ -88,11 +88,10 @@ public:
                      const FieldType linkingLen,
                      vtkm::cont::ArrayHandle<vtkm::Id>& resultHaloId,
                      vtkm::cont::ArrayHandle<vtkm::Id>& resultMBP,
-                     vtkm::cont::ArrayHandle<FieldType>& resultPot,
-                     const DeviceAdapter&)
+                     vtkm::cont::ArrayHandle<FieldType>& resultPot)
   {
     // Constructor gets particle locations, particle mass and min halo size
-    cosmotools::CosmoTools<FieldType, StorageType, DeviceAdapter> cosmo(
+    cosmotools::CosmoTools<FieldType, StorageType> cosmo(
       nParticles, particleMass, minHaloSize, linkingLen, xLocation, yLocation, zLocation);
 
     // Find the halos within the particles and the MBP center of each halo
@@ -100,17 +99,16 @@ public:
   }
 
   // Run MBP on a single halo of particles using the N^2 algorithm
-  template <typename FieldType, typename StorageType, typename DeviceAdapter>
+  template <typename FieldType, typename StorageType>
   void RunMBPCenterFinderNxN(vtkm::cont::ArrayHandle<FieldType, StorageType> xLocation,
                              vtkm::cont::ArrayHandle<FieldType, StorageType> yLocation,
                              vtkm::cont::ArrayHandle<FieldType, StorageType> zLocation,
                              const vtkm::Id nParticles,
                              const FieldType particleMass,
-                             vtkm::Pair<vtkm::Id, FieldType>& nxnResult,
-                             const DeviceAdapter&)
+                             vtkm::Pair<vtkm::Id, FieldType>& nxnResult)
   {
     // Constructor gets particle locations and particle mass
-    cosmotools::CosmoTools<FieldType, StorageType, DeviceAdapter> cosmo(
+    cosmotools::CosmoTools<FieldType, StorageType> cosmo(
       nParticles, particleMass, xLocation, yLocation, zLocation);
 
     // Most Bound Particle N x N algorithm
@@ -122,17 +120,16 @@ public:
   }
 
   // Run MBP on a single halo of particles using MxN estimation algorithm
-  template <typename FieldType, typename StorageType, typename DeviceAdapter>
+  template <typename FieldType, typename StorageType>
   void RunMBPCenterFinderMxN(vtkm::cont::ArrayHandle<FieldType, StorageType> xLocation,
                              vtkm::cont::ArrayHandle<FieldType, StorageType> yLocation,
                              vtkm::cont::ArrayHandle<FieldType, StorageType> zLocation,
                              const vtkm::Id nParticles,
                              const FieldType particleMass,
-                             vtkm::Pair<vtkm::Id, FieldType>& mxnResult,
-                             const DeviceAdapter&)
+                             vtkm::Pair<vtkm::Id, FieldType>& mxnResult)
   {
     // Constructor gets particle locations and particle mass
-    cosmotools::CosmoTools<FieldType, StorageType, DeviceAdapter> cosmo(
+    cosmotools::CosmoTools<FieldType, StorageType> cosmo(
       nParticles, particleMass, xLocation, yLocation, zLocation);
 
     // Most Bound Particle M x N algorithm with binning estimates

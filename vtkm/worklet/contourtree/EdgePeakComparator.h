@@ -83,6 +83,7 @@
 #define vtkm_worklet_contourtree_edge_peak_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -92,71 +93,111 @@ namespace contourtree
 {
 
 // Comparator for edges to sort governing saddles high
-template <typename T, typename StorageType, typename DeviceAdapter>
-class EdgePeakComparator
+template <typename T, typename StorageType>
+class EdgePeakComparator : public vtkm::cont::ExecutionObjectBase
 {
 public:
-  using ValuePortalType = typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-
-  ValuePortalType values;
-  IdPortalType valueIndex;
-  IdPortalType edgeFar;
-  IdPortalType edgeNear;
-  IdPortalType arcArray;
-  bool isJoinGraph;
+  using ValueArrayType = vtkm::cont::ArrayHandle<T, StorageType>;
+  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
   VTKM_CONT
-  EdgePeakComparator(ValuePortalType Values,
-                     IdPortalType ValueIndex,
-                     IdPortalType EdgeFar,
-                     IdPortalType EdgeNear,
-                     IdPortalType ArcArray,
-                     bool IsJoinGraph)
-    : values(Values)
-    , valueIndex(ValueIndex)
-    , edgeFar(EdgeFar)
-    , edgeNear(EdgeNear)
-    , arcArray(ArcArray)
-    , isJoinGraph(IsJoinGraph)
+  EdgePeakComparator(ValueArrayType values,
+                     IdArrayType valueIndex,
+                     IdArrayType edgeFar,
+                     IdArrayType edgeNear,
+                     IdArrayType arcArray,
+                     bool isJoinGraph)
+    : Values(values)
+    , ValueIndex(valueIndex)
+    , EdgeFar(edgeFar)
+    , EdgeNear(edgeNear)
+    , ArcArray(arcArray)
+    , IsJoinGraph(isJoinGraph)
   {
   }
 
-  VTKM_EXEC
-  bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
+  ValueArrayType Values;
+  IdArrayType ValueIndex;
+  IdArrayType EdgeFar;
+  IdArrayType EdgeNear;
+  IdArrayType ArcArray;
+  bool IsJoinGraph;
+
+  template <typename DeviceAdapter>
+  class ExecObject
   {
-    // first compare the far end
-    if (edgeFar.Get(i) < edgeFar.Get(j))
-      return true ^ isJoinGraph;
-    if (edgeFar.Get(j) < edgeFar.Get(i))
-      return false ^ isJoinGraph;
+  public:
+    using ValuePortalType =
+      typename ValueArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+    using IdPortalType = typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-    // the compare the values of the low end
-    vtkm::Id valueIndex1 = valueIndex.Get(edgeNear.Get(i));
-    vtkm::Id valueIndex2 = valueIndex.Get(edgeNear.Get(j));
+    VTKM_CONT
+    ExecObject(ValuePortalType values,
+               IdPortalType valueIndex,
+               IdPortalType edgeFar,
+               IdPortalType edgeNear,
+               IdPortalType arcArray,
+               bool isJoinGraph)
+      : Values(values)
+      , ValueIndex(valueIndex)
+      , EdgeFar(edgeFar)
+      , EdgeNear(edgeNear)
+      , ArcArray(arcArray)
+      , IsJoinGraph(isJoinGraph)
+    {
+    }
 
-    if (values.Get(valueIndex1) < values.Get(valueIndex2))
-      return true ^ isJoinGraph;
-    if (values.Get(valueIndex2) < values.Get(valueIndex1))
-      return false ^ isJoinGraph;
+    ValuePortalType Values;
+    IdPortalType ValueIndex;
+    IdPortalType EdgeFar;
+    IdPortalType EdgeNear;
+    IdPortalType ArcArray;
+    bool IsJoinGraph;
 
-    // finally compare the indices
-    if (valueIndex1 < valueIndex2)
-      return true ^ isJoinGraph;
-    if (valueIndex2 < valueIndex1)
-      return false ^ isJoinGraph;
+    VTKM_EXEC
+    bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
+    {
+      // first compare the far end
+      if (this->EdgeFar.Get(i) < this->EdgeFar.Get(j))
+        return true ^ this->IsJoinGraph;
+      if (this->EdgeFar.Get(j) < this->EdgeFar.Get(i))
+        return false ^ this->IsJoinGraph;
 
-    if (i < j)
-      return false ^ isJoinGraph;
-    if (j < i)
-      return true ^ isJoinGraph;
+      // the compare the values of the low end
+      vtkm::Id valueIndex1 = this->ValueIndex.Get(this->EdgeNear.Get(i));
+      vtkm::Id valueIndex2 = this->ValueIndex.Get(this->EdgeNear.Get(j));
 
-    // fallback can happen when multiple paths end at same extremum
-    return false; //true ^ graph.isJoinGraph;
+      if (this->Values.Get(valueIndex1) < this->Values.Get(valueIndex2))
+        return true ^ this->IsJoinGraph;
+      if (this->Values.Get(valueIndex2) < this->Values.Get(valueIndex1))
+        return false ^ this->IsJoinGraph;
+
+      // finally compare the indices
+      if (valueIndex1 < valueIndex2)
+        return true ^ this->IsJoinGraph;
+      if (valueIndex2 < valueIndex1)
+        return false ^ this->IsJoinGraph;
+
+      if (i < j)
+        return false ^ this->IsJoinGraph;
+      if (j < i)
+        return true ^ this->IsJoinGraph;
+
+      // fallback can happen when multiple paths end at same extremum
+      return false; //true ^ graph.isJoinGraph;
+    }
+  };
+
+  template <typename DeviceAdapter>
+  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  {
+    return ExecObject<DeviceAdapter>(this->Values.PrepareForInput(DeviceAdapter()),
+                                     this->ValueIndex.PrepareForInput(DeviceAdapter()),
+                                     this->EdgeFar.PrepareForInput(DeviceAdapter()),
+                                     this->EdgeNear.PrepareForInput(DeviceAdapter()),
+                                     this->ArcArray.PrepareForInput(DeviceAdapter()),
+                                     this->IsJoinGraph);
   }
-
 }; // EdgePeakComparator
 }
 }

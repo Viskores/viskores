@@ -65,12 +65,11 @@ public:
   void SetPointNormalsName(const std::string& name) { this->PointNormalsName = name; }
   const std::string& GetPointNormalsName() const { return this->PointNormalsName; }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                 const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
                                 const vtkm::filter::FieldMetadata& fieldMeta,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                const DeviceAdapter& device);
+                                vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   bool GenerateCellNormals;

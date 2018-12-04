@@ -31,10 +31,8 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/exec/BoundingIntervalHierarchyExec.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -132,19 +130,21 @@ VTKM_CONT void BoundingIntervalHierarchy::CalculatePlaneSplitCost(
   DeviceAdapter)
 {
   using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  vtkm::worklet::Invoker invoker(DeviceAdapter{});
+
   // Make candidate split plane array
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> splitPlanes;
   vtkm::worklet::spatialstructure::SplitPlaneCalculatorWorklet splitPlaneCalcWorklet(planeIndex,
                                                                                      numPlanes);
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::SplitPlaneCalculatorWorklet,
-                                    DeviceAdapter>
-    splitDispatcher(splitPlaneCalcWorklet);
-  splitDispatcher.Invoke(segmentRanges, splitPlanes);
+  invoker(splitPlaneCalcWorklet, segmentRanges, splitPlanes);
 
   // Check if a point is to the left of the split plane or right
   vtkm::cont::ArrayHandle<vtkm::Id> isLEQOfSplitPlane, isROfSplitPlane;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::LEQWorklet, DeviceAdapter>()
-    .Invoke(coords, splitPlanes, isLEQOfSplitPlane, isROfSplitPlane);
+  invoker(vtkm::worklet::spatialstructure::LEQWorklet{},
+          coords,
+          splitPlanes,
+          isLEQOfSplitPlane,
+          isROfSplitPlane);
 
   // Count of points to the left
   vtkm::cont::ArrayHandle<vtkm::Id> pointsToLeft;
@@ -162,8 +162,9 @@ VTKM_CONT void BoundingIntervalHierarchy::CalculatePlaneSplitCost(
   vtkm::cont::ArrayHandle<vtkm::Range> lMaxRanges;
   {
     vtkm::cont::ArrayHandle<vtkm::Range> leqRanges;
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::FilterRanges<true>>().Invoke(
-      coords, splitPlanes, ranges, leqRanges);
+    vtkm::worklet::spatialstructure::FilterRanges<true> worklet;
+    invoker(worklet, coords, splitPlanes, ranges, leqRanges);
+
     Algorithms::ReduceByKey(
       segmentIds, leqRanges, discardKeys, lMaxRanges, vtkm::worklet::spatialstructure::RangeAdd());
   }
@@ -171,8 +172,9 @@ VTKM_CONT void BoundingIntervalHierarchy::CalculatePlaneSplitCost(
   vtkm::cont::ArrayHandle<vtkm::Range> rMinRanges;
   {
     vtkm::cont::ArrayHandle<vtkm::Range> rRanges;
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::FilterRanges<false>>()
-      .Invoke(coords, splitPlanes, ranges, rRanges);
+    vtkm::worklet::spatialstructure::FilterRanges<false> worklet;
+    invoker(worklet, coords, splitPlanes, ranges, rRanges);
+
     Algorithms::ReduceByKey(
       segmentIds, rRanges, discardKeys, rMinRanges, vtkm::worklet::spatialstructure::RangeAdd());
   }
@@ -184,10 +186,13 @@ VTKM_CONT void BoundingIntervalHierarchy::CalculatePlaneSplitCost(
   // Calculate costs
   vtkm::worklet::spatialstructure::SplitPropertiesCalculator splitPropertiesCalculator(
     index, NumPlanes + 1);
-
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::SplitPropertiesCalculator>(
-    splitPropertiesCalculator)
-    .Invoke(pointsToLeft, pointsToRight, lMaxRanges, rMinRanges, segmentedSplitPlanes, splits);
+  invoker(splitPropertiesCalculator,
+          pointsToLeft,
+          pointsToRight,
+          lMaxRanges,
+          rMinRanges,
+          segmentedSplitPlanes,
+          splits);
 }
 
 template <typename DeviceAdapter>
@@ -198,6 +203,8 @@ BoundingIntervalHierarchy::CalculateSplitScatterIndices(const IdArrayHandle& cel
                                                         DeviceAdapter)
 {
   using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  vtkm::worklet::Invoker invoker(DeviceAdapter{});
+
   // Count total number of true flags preceding in segment
   IdArrayHandle trueFlagCounts;
   Algorithms::ScanExclusiveByKey(segmentIds, leqFlags, trueFlagCounts);
@@ -223,15 +230,15 @@ BoundingIntervalHierarchy::CalculateSplitScatterIndices(const IdArrayHandle& cel
   // if point is to the left,
   //    index = total number in  previous segments + total number of false flags in this segment + total number of trues in previous segment
   // else
-  //    index = total number in previous segments + number of falses preceeding it in the segment.
+  //    index = total number in previous segments + number of falses preceding it in the segment.
   IdArrayHandle scatterIndices;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::SplitIndicesCalculator>()
-    .Invoke(leqFlags,
-            trueFlagCounts,
-            countPreviousSegments,
-            runningFalseFlagCount,
-            totalFalseFlagSegmentCount,
-            scatterIndices);
+  invoker(vtkm::worklet::spatialstructure::SplitIndicesCalculator{},
+          leqFlags,
+          trueFlagCounts,
+          countPreviousSegments,
+          runningFalseFlagCount,
+          totalFalseFlagSegmentCount,
+          scatterIndices);
   return scatterIndices;
 }
 
@@ -251,8 +258,10 @@ public:
   VTKM_CONT bool operator()(DeviceAdapter)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-    // Accomodate into a Functor, so that this could be used with TryExecute
+    // Accommodate into a Functor, so that this could be used with TryExecute
     using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+
+    vtkm::worklet::Invoker invoker(DeviceAdapter{});
 
     vtkm::cont::DynamicCellSet cellSet = Self->GetCellSet();
     vtkm::Id numCells = cellSet.GetNumberOfCells();
@@ -271,9 +280,15 @@ public:
     //START_TIMER(s12);
     CoordsArrayHandle centerXs, centerYs, centerZs;
     RangeArrayHandle xRanges, yRanges, zRanges;
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::spatialstructure::CellRangesExtracter,
-                                         DeviceAdapter>()
-      .Invoke(cellSet, points, xRanges, yRanges, zRanges, centerXs, centerYs, centerZs);
+    invoker(vtkm::worklet::spatialstructure::CellRangesExtracter{},
+            cellSet,
+            points,
+            xRanges,
+            yRanges,
+            zRanges,
+            centerXs,
+            centerYs,
+            centerZs);
     //PRINT_TIMER("1.2", s12);
 
     bool done = false;
@@ -330,19 +345,19 @@ public:
       SplitArrayHandle segmentSplits;
       vtkm::cont::ArrayHandle<vtkm::FloatDefault> segmentPlanes;
       vtkm::cont::ArrayHandle<vtkm::Id> splitChoices;
+      CountingIdArrayHandle indices(0, 1, numSegments);
+
       vtkm::worklet::spatialstructure::SplitSelector worklet(
         Self->NumPlanes, Self->MaxLeafSize, Self->NumPlanes + 1);
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::SplitSelector>
-        splitSelectorDispatcher(worklet);
-      CountingIdArrayHandle indices(0, 1, numSegments);
-      splitSelectorDispatcher.Invoke(indices,
-                                     xSplits,
-                                     ySplits,
-                                     zSplits,
-                                     segmentSizes,
-                                     segmentSplits,
-                                     segmentPlanes,
-                                     splitChoices);
+      invoker(worklet,
+              indices,
+              xSplits,
+              ySplits,
+              zSplits,
+              segmentSizes,
+              segmentSplits,
+              segmentPlanes,
+              splitChoices);
       //PRINT_TIMER("2.3", s23);
 
       // Expand the per segment split plane to per cell
@@ -351,10 +366,13 @@ public:
 
       //START_TIMER(s31);
       IdArrayHandle leqFlags;
-      vtkm::worklet::DispatcherMapField<
-        vtkm::worklet::spatialstructure::CalculateSplitDirectionFlag>
-        computeFlagDispatcher;
-      computeFlagDispatcher.Invoke(centerXs, centerYs, centerZs, splits, planes, leqFlags);
+      invoker(vtkm::worklet::spatialstructure::CalculateSplitDirectionFlag{},
+              centerXs,
+              centerYs,
+              centerZs,
+              splits,
+              planes,
+              leqFlags);
       //PRINT_TIMER("3.1", s31);
 
       //START_TIMER(s32);
@@ -362,9 +380,11 @@ public:
         Self->CalculateSplitScatterIndices(cellIds, leqFlags, segmentIds, DeviceAdapter());
       IdArrayHandle newSegmentIds;
       IdPermutationArrayHandle sizes(segmentIds, segmentSizes);
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::SegmentSplitter>(
-        vtkm::worklet::spatialstructure::SegmentSplitter(Self->MaxLeafSize))
-        .Invoke(segmentIds, leqFlags, sizes, newSegmentIds);
+      invoker(vtkm::worklet::spatialstructure::SegmentSplitter{ Self->MaxLeafSize },
+              segmentIds,
+              leqFlags,
+              sizes,
+              newSegmentIds);
       //PRINT_TIMER("3.2", s32);
 
       //START_TIMER(s33);
@@ -385,9 +405,9 @@ public:
       // Move the cell ids at leafs to the processed cellids list
       //START_TIMER(s41);
       IdArrayHandle nonSplitSegmentSizes;
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::NonSplitIndexCalculator>(
-        vtkm::worklet::spatialstructure::NonSplitIndexCalculator(Self->MaxLeafSize))
-        .Invoke(segmentSizes, nonSplitSegmentSizes);
+      invoker(vtkm::worklet::spatialstructure::NonSplitIndexCalculator{ Self->MaxLeafSize },
+              segmentSizes,
+              nonSplitSegmentSizes);
       IdArrayHandle nonSplitSegmentIndices;
       Algorithms::ScanExclusive(nonSplitSegmentSizes, nonSplitSegmentIndices);
       IdArrayHandle runningSplitSegmentCounts;
@@ -412,7 +432,7 @@ public:
       //PRINT_TIMER("4.2", s42);
 
       //START_TIMER(s43);
-      // Make a new nodes with enough nodes for the currnt level, copying over the old one
+      // Make a new nodes with enough nodes for the current level, copying over the old one
       vtkm::Id nodesSize = Self->Nodes.GetNumberOfValues() + numSegments;
       vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> newTree;
       newTree.Allocate(nodesSize);
@@ -421,13 +441,13 @@ public:
       CountingIdArrayHandle nodesIndices(nodesIndexOffset, 1, numSegments);
       vtkm::worklet::spatialstructure::TreeLevelAdder nodesAdder(
         cellIdsOffset, nodesSize, Self->MaxLeafSize);
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::spatialstructure::TreeLevelAdder>(nodesAdder)
-        .Invoke(nodesIndices,
-                segmentSplits,
-                nonSplitSegmentIndices,
-                segmentSizes,
-                runningSplitSegmentCounts,
-                newTree);
+      invoker(nodesAdder,
+              nodesIndices,
+              segmentSplits,
+              nonSplitSegmentIndices,
+              segmentSizes,
+              runningSplitSegmentCounts,
+              newTree);
       nodesIndexOffset = nodesSize;
       cellIdsOffset += doneCellIds.GetNumberOfValues();
       Self->Nodes = newTree;
@@ -455,7 +475,7 @@ class BoundingIntervalHierarchy::PrepareForExecutionFunctor
 {
 public:
   template <typename DeviceAdapter>
-  VTKM_CONT void operator()(DeviceAdapter,
+  VTKM_CONT bool operator()(DeviceAdapter,
                             const vtkm::cont::BoundingIntervalHierarchy& bih,
                             HandleType& bihExec) const
   {
@@ -508,6 +528,7 @@ public:
     {
       throw vtkm::cont::ErrorBadType("Could not determine type to write out.");
     }
+    return true;
   }
 };
 
@@ -519,18 +540,16 @@ void BoundingIntervalHierarchy::Build()
 }
 
 VTKM_CONT
-const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(const vtkm::Int8 deviceId) const
+const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(
+  const vtkm::cont::DeviceAdapterId deviceId) const
 {
-  /*using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
-  const vtkm::exec::CellLocator* toReturn;
-  vtkm::cont::internal::FindDeviceAdapterTagAndCall(
-    device, DeviceList(), PrepareForExecutionFunctor(), *this, &toReturn);
-  return toReturn;*/
+  const bool success =
+    vtkm::cont::TryExecuteOnDevice(deviceId, PrepareForExecutionFunctor(), *this, this->ExecHandle);
+  if (!success)
+  {
+    throwFailedRuntimeDeviceTransfer("BoundingIntervalHierarchy", deviceId);
+  }
 
-  using DeviceList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
-  //HandleType ExecHandle; // = new HandleType(locator, false);
-  vtkm::cont::internal::FindDeviceAdapterTagAndCall(
-    deviceId, DeviceList(), PrepareForExecutionFunctor(), *this, this->ExecHandle);
   return this->ExecHandle;
 }
 

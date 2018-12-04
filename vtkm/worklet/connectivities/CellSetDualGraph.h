@@ -104,11 +104,10 @@ struct CellToCellConnectivity : public vtkm::worklet::WorkletMapField
 };
 } // vtkm::worklet::connectivity::detail
 
-template <typename DeviceAdapter>
 class CellSetDualGraph
 {
 public:
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   struct degree2
   {
@@ -123,14 +122,12 @@ public:
   {
     // Get number of edges for each cell and use it as scatter count.
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numEdgesPerCell;
-    vtkm::worklet::DispatcherMapTopology<detail::EdgeCount, DeviceAdapter> edgesPerCellDisp;
+    vtkm::worklet::DispatcherMapTopology<detail::EdgeCount> edgesPerCellDisp;
     edgesPerCellDisp.Invoke(cellSet, numEdgesPerCell);
 
     // Get uncompress Cell to Edge mapping
-    vtkm::worklet::ScatterCounting scatter{ numEdgesPerCell, DeviceAdapter() };
-    vtkm::worklet::DispatcherMapTopology<detail::EdgeExtract, DeviceAdapter> edgeExtractDisp{
-      scatter
-    };
+    vtkm::worklet::ScatterCounting scatter{ numEdgesPerCell };
+    vtkm::worklet::DispatcherMapTopology<detail::EdgeExtract> edgeExtractDisp{ scatter };
     edgeExtractDisp.Invoke(cellSet, cellIds, cellEdges);
   }
 
@@ -172,7 +169,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> connTo;
     connFrom.Allocate(sharedEdges.GetNumberOfValues() * 2);
     connTo.Allocate(sharedEdges.GetNumberOfValues() * 2);
-    vtkm::worklet::DispatcherMapField<detail::CellToCellConnectivity, DeviceAdapter> c2cDisp;
+    vtkm::worklet::DispatcherMapField<detail::CellToCellConnectivity> c2cDisp;
     c2cDisp.Invoke(lb, cellIds, connFrom, connTo);
 
     // Turn dual graph into Compressed Sparse Row format

@@ -26,12 +26,16 @@
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/raytracing/Camera.h>
+#include <vtkm/rendering/raytracing/PartialComposite.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 
 namespace vtkm
 {
 namespace rendering
 {
+
+using PartialVector64 = std::vector<vtkm::rendering::raytracing::PartialComposite<vtkm::Float64>>;
+using PartialVector32 = std::vector<vtkm::rendering::raytracing::PartialComposite<vtkm::Float32>>;
 
 class VTKM_RENDERING_EXPORT ConnectivityProxy
 {
@@ -56,13 +60,18 @@ public:
   void SetScalarRange(const vtkm::Range& range);
   void SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colormap);
   void SetCompositeBackground(bool on);
+  void SetDebugPrints(bool on);
+  void SetUnitScalar(vtkm::Float32 unitScalar);
 
   vtkm::Bounds GetSpatialBounds();
-  vtkm::Range GetScalarRange();
+  vtkm::Range GetScalarFieldRange();
 
   void Trace(const vtkm::rendering::Camera& camera, vtkm::rendering::CanvasRayTracer* canvas);
   void Trace(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays);
   void Trace(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays);
+
+  PartialVector64 PartialTrace(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays);
+  PartialVector32 PartialTrace(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays);
 
 protected:
   struct InternalsType;

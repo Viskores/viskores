@@ -22,10 +22,10 @@
 #define vtk_m_worklet_KdTree3DConstruction_h
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -228,13 +228,12 @@ public:
   };
 
   ////////// General worklet WRAPPER for Kd-tree //////
-  template <typename T, class BinaryFunctor, typename DeviceAdapter>
+  template <typename T, class BinaryFunctor>
   vtkm::cont::ArrayHandle<T> ReverseScanInclusiveByKey(vtkm::cont::ArrayHandle<T>& keyHandle,
                                                        vtkm::cont::ArrayHandle<T>& dataHandle,
-                                                       BinaryFunctor binary_functor,
-                                                       DeviceAdapter vtkmNotUsed(device))
+                                                       BinaryFunctor binary_functor)
   {
-    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
 
     vtkm::cont::ArrayHandle<T> resultHandle;
 
@@ -248,79 +247,71 @@ public:
     return resultHandle;
   }
 
-  template <typename T, typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<T> Inverse01ArrayWrapper(vtkm::cont::ArrayHandle<T>& inputHandle,
-                                                   DeviceAdapter vtkmNotUsed(device))
+  template <typename T>
+  vtkm::cont::ArrayHandle<T> Inverse01ArrayWrapper(vtkm::cont::ArrayHandle<T>& inputHandle)
   {
     vtkm::cont::ArrayHandle<T> InverseHandle;
     InverseArray invWorklet;
-    vtkm::worklet::DispatcherMapField<InverseArray, DeviceAdapter> InverseArrayDispatcher(
-      invWorklet);
-    InverseArrayDispatcher.Invoke(inputHandle, InverseHandle);
+    vtkm::worklet::DispatcherMapField<InverseArray> inverseArrayDispatcher(invWorklet);
+    inverseArrayDispatcher.Invoke(inputHandle, InverseHandle);
     return InverseHandle;
   }
 
-  template <typename T, typename DeviceAdapter>
+  template <typename T>
   vtkm::cont::ArrayHandle<T> ScatterArrayWrapper(vtkm::cont::ArrayHandle<T>& inputHandle,
-                                                 vtkm::cont::ArrayHandle<T>& indexHandle,
-                                                 DeviceAdapter vtkmNotUsed(device))
+                                                 vtkm::cont::ArrayHandle<T>& indexHandle)
   {
     vtkm::cont::ArrayHandle<T> outputHandle;
     outputHandle.Allocate(inputHandle.GetNumberOfValues());
     ScatterArray scatterWorklet;
-    vtkm::worklet::DispatcherMapField<ScatterArray, DeviceAdapter> ScatterArrayDispatcher(
-      scatterWorklet);
-    ScatterArrayDispatcher.Invoke(inputHandle, indexHandle, outputHandle);
+    vtkm::worklet::DispatcherMapField<ScatterArray> scatterArrayDispatcher(scatterWorklet);
+    scatterArrayDispatcher.Invoke(inputHandle, indexHandle, outputHandle);
     return outputHandle;
   }
 
-  template <typename T, typename DeviceAdapter>
+  template <typename T>
   vtkm::cont::ArrayHandle<T> NewKeyWrapper(vtkm::cont::ArrayHandle<T>& oldSegIdHandle,
-                                           vtkm::cont::ArrayHandle<T>& flagHandle,
-                                           DeviceAdapter vtkmNotUsed(device))
+                                           vtkm::cont::ArrayHandle<T>& flagHandle)
   {
     vtkm::cont::ArrayHandle<T> newSegIdHandle;
     NewSegmentId newsegidWorklet;
-    vtkm::worklet::DispatcherMapField<NewSegmentId, DeviceAdapter> newSegIdDispatcher(
-      newsegidWorklet);
+    vtkm::worklet::DispatcherMapField<NewSegmentId> newSegIdDispatcher(newsegidWorklet);
     newSegIdDispatcher.Invoke(oldSegIdHandle, flagHandle, newSegIdHandle);
     return newSegIdHandle;
   }
 
-  template <typename T, typename DeviceAdapter>
+  template <typename T>
   vtkm::cont::ArrayHandle<T> SaveSplitPointIdWrapper(vtkm::cont::ArrayHandle<T>& pointIdHandle,
                                                      vtkm::cont::ArrayHandle<T>& flagHandle,
                                                      vtkm::cont::ArrayHandle<T>& rankHandle,
-                                                     vtkm::cont::ArrayHandle<T>& oldSplitIdHandle,
-                                                     DeviceAdapter device)
+                                                     vtkm::cont::ArrayHandle<T>& oldSplitIdHandle)
   {
     vtkm::cont::ArrayHandle<T> splitIdInSegmentHandle;
     FindSplitPointId findSplitPointIdWorklet;
-    vtkm::worklet::DispatcherMapField<FindSplitPointId, DeviceAdapter>
-      findSplitPointIdWorkletDispatcher(findSplitPointIdWorklet);
+    vtkm::worklet::DispatcherMapField<FindSplitPointId> findSplitPointIdWorkletDispatcher(
+      findSplitPointIdWorklet);
     findSplitPointIdWorkletDispatcher.Invoke(pointIdHandle, rankHandle, splitIdInSegmentHandle);
 
     vtkm::cont::ArrayHandle<T> splitIdInSegmentByScanHandle =
-      ReverseScanInclusiveByKey(flagHandle, splitIdInSegmentHandle, vtkm::Maximum(), device);
+      ReverseScanInclusiveByKey(flagHandle, splitIdInSegmentHandle, vtkm::Maximum());
 
     vtkm::cont::ArrayHandle<T> splitIdHandle;
     SaveSplitPointId saveSplitPointIdWorklet;
-    vtkm::worklet::DispatcherMapField<SaveSplitPointId, DeviceAdapter>
-      saveSplitPointIdWorkletDispatcher(saveSplitPointIdWorklet);
+    vtkm::worklet::DispatcherMapField<SaveSplitPointId> saveSplitPointIdWorkletDispatcher(
+      saveSplitPointIdWorklet);
     saveSplitPointIdWorkletDispatcher.Invoke(
       splitIdInSegmentByScanHandle, flagHandle, oldSplitIdHandle, splitIdHandle);
 
     return splitIdHandle;
   }
 
-  template <typename T, typename DeviceAdapter>
+  template <typename T>
   vtkm::cont::ArrayHandle<T> ArrayAddWrapper(vtkm::cont::ArrayHandle<T>& array0Handle,
-                                             vtkm::cont::ArrayHandle<T>& array1Handle,
-                                             DeviceAdapter vtkmNotUsed(device))
+                                             vtkm::cont::ArrayHandle<T>& array1Handle)
   {
     vtkm::cont::ArrayHandle<T> resultHandle;
     ArrayAdd arrayAddWorklet;
-    vtkm::worklet::DispatcherMapField<ArrayAdd, DeviceAdapter> arrayAddDispatcher(arrayAddWorklet);
+    vtkm::worklet::DispatcherMapField<ArrayAdd> arrayAddDispatcher(arrayAddWorklet);
     arrayAddDispatcher.Invoke(array0Handle, array1Handle, resultHandle);
     return resultHandle;
   }
@@ -328,12 +319,11 @@ public:
   ///////////////////////////////////////////////////
   ////////General Kd tree function //////////////////
   ///////////////////////////////////////////////////
-  template <typename T, typename DeviceAdapter>
+  template <typename T>
   vtkm::cont::ArrayHandle<T> ComputeFlagProcedure(vtkm::cont::ArrayHandle<T>& rankHandle,
-                                                  vtkm::cont::ArrayHandle<T>& segIdHandle,
-                                                  DeviceAdapter device)
+                                                  vtkm::cont::ArrayHandle<T>& segIdHandle)
   {
-    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
 
     vtkm::cont::ArrayHandle<T> segCountAryHandle;
     {
@@ -342,24 +332,22 @@ public:
       Algorithm::ScanInclusiveByKey(
         segIdHandle, constHandle, tmpAryHandle, vtkm::Add()); //compute ttl segs in segment
 
-      segCountAryHandle =
-        ReverseScanInclusiveByKey(segIdHandle, tmpAryHandle, vtkm::Maximum(), device);
+      segCountAryHandle = ReverseScanInclusiveByKey(segIdHandle, tmpAryHandle, vtkm::Maximum());
     }
 
     vtkm::cont::ArrayHandle<T> flagHandle;
-    vtkm::worklet::DispatcherMapField<ComputeFlag, DeviceAdapter> ComputeFlagDispatcher;
-    ComputeFlagDispatcher.Invoke(rankHandle, segCountAryHandle, flagHandle);
+    vtkm::worklet::DispatcherMapField<ComputeFlag> computeFlagDispatcher;
+    computeFlagDispatcher.Invoke(rankHandle, segCountAryHandle, flagHandle);
 
     return flagHandle;
   }
 
-  template <typename T, typename DeviceAdapter>
+  template <typename T>
   vtkm::cont::ArrayHandle<T> SegmentedSplitProcedure(vtkm::cont::ArrayHandle<T>& A_Handle,
                                                      vtkm::cont::ArrayHandle<T>& B_Handle,
-                                                     vtkm::cont::ArrayHandle<T>& C_Handle,
-                                                     DeviceAdapter device)
+                                                     vtkm::cont::ArrayHandle<T>& C_Handle)
   {
-    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
 
     vtkm::cont::ArrayHandle<T> D_Handle;
     T initValue = 0;
@@ -372,31 +360,30 @@ public:
     vtkm::cont::ArrayHandle<T> F_Handle;
     Algorithm::ScanInclusiveByKey(C_Handle, E_Handle, F_Handle, vtkm::Minimum());
 
-    vtkm::cont::ArrayHandle<T> InvB_Handle = Inverse01ArrayWrapper(B_Handle, device);
+    vtkm::cont::ArrayHandle<T> InvB_Handle = Inverse01ArrayWrapper(B_Handle);
     vtkm::cont::ArrayHandle<T> G_Handle;
     Algorithm::ScanInclusiveByKey(C_Handle, InvB_Handle, G_Handle, vtkm::Add());
 
     vtkm::cont::ArrayHandle<T> H_Handle =
-      ReverseScanInclusiveByKey(C_Handle, G_Handle, vtkm::Maximum(), device);
+      ReverseScanInclusiveByKey(C_Handle, G_Handle, vtkm::Maximum());
 
     vtkm::cont::ArrayHandle<T> I_Handle;
     SegmentedSplitTransform sstWorklet;
-    vtkm::worklet::DispatcherMapField<SegmentedSplitTransform, DeviceAdapter>
-      SegmentedSplitTransformDispatcher(sstWorklet);
-    SegmentedSplitTransformDispatcher.Invoke(
+    vtkm::worklet::DispatcherMapField<SegmentedSplitTransform> segmentedSplitTransformDispatcher(
+      sstWorklet);
+    segmentedSplitTransformDispatcher.Invoke(
       B_Handle, D_Handle, F_Handle, G_Handle, H_Handle, I_Handle);
 
-    return ScatterArrayWrapper(A_Handle, I_Handle, device);
+    return ScatterArrayWrapper(A_Handle, I_Handle);
   }
 
-  template <typename T, typename DeviceAdapter>
+  template <typename T>
   void RenumberRanksProcedure(vtkm::cont::ArrayHandle<T>& A_Handle,
                               vtkm::cont::ArrayHandle<T>& B_Handle,
                               vtkm::cont::ArrayHandle<T>& C_Handle,
-                              vtkm::cont::ArrayHandle<T>& D_Handle,
-                              DeviceAdapter device)
+                              vtkm::cont::ArrayHandle<T>& D_Handle)
   {
-    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
 
     vtkm::Id nPoints = A_Handle.GetNumberOfValues();
 
@@ -408,7 +395,7 @@ public:
     Algorithm::ScanInclusiveByKey(D_Handle, E_Handle, F_Handle, vtkm::Minimum());
 
     vtkm::cont::ArrayHandle<T> G_Handle;
-    G_Handle = ArrayAddWrapper(A_Handle, F_Handle, device);
+    G_Handle = ArrayAddWrapper(A_Handle, F_Handle);
 
     vtkm::cont::ArrayHandleConstant<T> HConstant_Handle(1, nPoints);
     vtkm::cont::ArrayHandle<T> H_Handle;
@@ -419,21 +406,21 @@ public:
     Algorithm::ScanExclusiveByKey(C_Handle, H_Handle, I_Handle, initValue, vtkm::Add());
 
     vtkm::cont::ArrayHandle<T> J_Handle;
-    J_Handle = ScatterArrayWrapper(I_Handle, G_Handle, device);
+    J_Handle = ScatterArrayWrapper(I_Handle, G_Handle);
 
     vtkm::cont::ArrayHandle<T> K_Handle;
-    K_Handle = ScatterArrayWrapper(B_Handle, G_Handle, device);
+    K_Handle = ScatterArrayWrapper(B_Handle, G_Handle);
 
     vtkm::cont::ArrayHandle<T> L_Handle;
-    L_Handle = SegmentedSplitProcedure(J_Handle, K_Handle, D_Handle, device);
+    L_Handle = SegmentedSplitProcedure(J_Handle, K_Handle, D_Handle);
 
     vtkm::cont::ArrayHandle<T> M_Handle;
     Algorithm::ScanInclusiveByKey(C_Handle, E_Handle, M_Handle, vtkm::Minimum());
 
     vtkm::cont::ArrayHandle<T> N_Handle;
-    N_Handle = ArrayAddWrapper(L_Handle, M_Handle, device);
+    N_Handle = ArrayAddWrapper(L_Handle, M_Handle);
 
-    A_Handle = ScatterArrayWrapper(I_Handle, N_Handle, device);
+    A_Handle = ScatterArrayWrapper(I_Handle, N_Handle);
   }
 
   /////////////3D construction      /////////////////////
@@ -443,24 +430,21 @@ public:
   /// as indicated by \c segId_Handle according to flags in \c flag_Handle.
   ///
   /// \tparam T
-  /// \tparam DeviceAdapter
   /// \param pointId_Handle
   /// \param flag_Handle
   /// \param segId_Handle
   /// \param X_Handle
   /// \param Y_Handle
   /// \param Z_Handle
-  /// \param device
-  template <typename T, typename DeviceAdapter>
+  template <typename T>
   void SegmentedSplitProcedure3D(vtkm::cont::ArrayHandle<T>& pointId_Handle,
                                  vtkm::cont::ArrayHandle<T>& flag_Handle,
                                  vtkm::cont::ArrayHandle<T>& segId_Handle,
                                  vtkm::cont::ArrayHandle<T>& X_Handle,
                                  vtkm::cont::ArrayHandle<T>& Y_Handle,
-                                 vtkm::cont::ArrayHandle<T>& Z_Handle,
-                                 DeviceAdapter device)
+                                 vtkm::cont::ArrayHandle<T>& Z_Handle)
   {
-    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
 
     vtkm::cont::ArrayHandle<T> D_Handle;
     T initValue = 0;
@@ -473,29 +457,29 @@ public:
     vtkm::cont::ArrayHandle<T> F_Handle;
     Algorithm::ScanInclusiveByKey(segId_Handle, E_Handle, F_Handle, vtkm::Minimum());
 
-    vtkm::cont::ArrayHandle<T> InvB_Handle = Inverse01ArrayWrapper(flag_Handle, device);
+    vtkm::cont::ArrayHandle<T> InvB_Handle = Inverse01ArrayWrapper(flag_Handle);
     vtkm::cont::ArrayHandle<T> G_Handle;
     Algorithm::ScanInclusiveByKey(segId_Handle, InvB_Handle, G_Handle, vtkm::Add());
 
     vtkm::cont::ArrayHandle<T> H_Handle =
-      ReverseScanInclusiveByKey(segId_Handle, G_Handle, vtkm::Maximum(), device);
+      ReverseScanInclusiveByKey(segId_Handle, G_Handle, vtkm::Maximum());
 
     vtkm::cont::ArrayHandle<T> I_Handle;
     SegmentedSplitTransform sstWorklet;
-    vtkm::worklet::DispatcherMapField<SegmentedSplitTransform, DeviceAdapter>
-      SegmentedSplitTransformDispatcher(sstWorklet);
-    SegmentedSplitTransformDispatcher.Invoke(
+    vtkm::worklet::DispatcherMapField<SegmentedSplitTransform> segmentedSplitTransformDispatcher(
+      sstWorklet);
+    segmentedSplitTransformDispatcher.Invoke(
       flag_Handle, D_Handle, F_Handle, G_Handle, H_Handle, I_Handle);
 
-    pointId_Handle = ScatterArrayWrapper(pointId_Handle, I_Handle, device);
+    pointId_Handle = ScatterArrayWrapper(pointId_Handle, I_Handle);
 
-    flag_Handle = ScatterArrayWrapper(flag_Handle, I_Handle, device);
+    flag_Handle = ScatterArrayWrapper(flag_Handle, I_Handle);
 
-    X_Handle = ScatterArrayWrapper(X_Handle, I_Handle, device);
+    X_Handle = ScatterArrayWrapper(X_Handle, I_Handle);
 
-    Y_Handle = ScatterArrayWrapper(Y_Handle, I_Handle, device);
+    Y_Handle = ScatterArrayWrapper(Y_Handle, I_Handle);
 
-    Z_Handle = ScatterArrayWrapper(Z_Handle, I_Handle, device);
+    Z_Handle = ScatterArrayWrapper(Z_Handle, I_Handle);
   }
 
   /// \brief Perform one level of KD-Tree construction
@@ -504,57 +488,56 @@ public:
   /// \c xrank_Handle, \c yrank_Handle and \c zrank_Handle according to the medium element
   /// in each segment as indicated by \c segId_Handle alone the axis determined by \c level.
   /// The split point of each segment will be updated in \c splitId_Handle.
-  template <typename T, typename DeviceAdapter>
+  template <typename T>
   void OneLevelSplit3D(vtkm::cont::ArrayHandle<T>& pointId_Handle,
                        vtkm::cont::ArrayHandle<T>& xrank_Handle,
                        vtkm::cont::ArrayHandle<T>& yrank_Handle,
                        vtkm::cont::ArrayHandle<T>& zrank_Handle,
                        vtkm::cont::ArrayHandle<T>& segId_Handle,
                        vtkm::cont::ArrayHandle<T>& splitId_Handle,
-                       vtkm::Int32 level,
-                       DeviceAdapter device)
+                       vtkm::Int32 level)
   {
-    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
 
     vtkm::cont::ArrayHandle<T> flag_Handle;
     if (level % 3 == 0)
     {
-      flag_Handle = ComputeFlagProcedure(xrank_Handle, segId_Handle, device);
+      flag_Handle = ComputeFlagProcedure(xrank_Handle, segId_Handle);
     }
     else if (level % 3 == 1)
     {
-      flag_Handle = ComputeFlagProcedure(yrank_Handle, segId_Handle, device);
+      flag_Handle = ComputeFlagProcedure(yrank_Handle, segId_Handle);
     }
     else
     {
-      flag_Handle = ComputeFlagProcedure(zrank_Handle, segId_Handle, device);
+      flag_Handle = ComputeFlagProcedure(zrank_Handle, segId_Handle);
     }
 
     SegmentedSplitProcedure3D(
-      pointId_Handle, flag_Handle, segId_Handle, xrank_Handle, yrank_Handle, zrank_Handle, device);
+      pointId_Handle, flag_Handle, segId_Handle, xrank_Handle, yrank_Handle, zrank_Handle);
 
     vtkm::cont::ArrayHandle<T> segIdOld_Handle;
     Algorithm::Copy(segId_Handle, segIdOld_Handle);
-    segId_Handle = NewKeyWrapper(segIdOld_Handle, flag_Handle, device);
+    segId_Handle = NewKeyWrapper(segIdOld_Handle, flag_Handle);
 
-    RenumberRanksProcedure(xrank_Handle, flag_Handle, segId_Handle, segIdOld_Handle, device);
-    RenumberRanksProcedure(yrank_Handle, flag_Handle, segId_Handle, segIdOld_Handle, device);
-    RenumberRanksProcedure(zrank_Handle, flag_Handle, segId_Handle, segIdOld_Handle, device);
+    RenumberRanksProcedure(xrank_Handle, flag_Handle, segId_Handle, segIdOld_Handle);
+    RenumberRanksProcedure(yrank_Handle, flag_Handle, segId_Handle, segIdOld_Handle);
+    RenumberRanksProcedure(zrank_Handle, flag_Handle, segId_Handle, segIdOld_Handle);
 
     if (level % 3 == 0)
     {
       splitId_Handle =
-        SaveSplitPointIdWrapper(pointId_Handle, flag_Handle, xrank_Handle, splitId_Handle, device);
+        SaveSplitPointIdWrapper(pointId_Handle, flag_Handle, xrank_Handle, splitId_Handle);
     }
     else if (level % 3 == 1)
     {
       splitId_Handle =
-        SaveSplitPointIdWrapper(pointId_Handle, flag_Handle, yrank_Handle, splitId_Handle, device);
+        SaveSplitPointIdWrapper(pointId_Handle, flag_Handle, yrank_Handle, splitId_Handle);
     }
     else
     {
       splitId_Handle =
-        SaveSplitPointIdWrapper(pointId_Handle, flag_Handle, zrank_Handle, splitId_Handle, device);
+        SaveSplitPointIdWrapper(pointId_Handle, flag_Handle, zrank_Handle, splitId_Handle);
     }
   }
 
@@ -569,15 +552,13 @@ public:
   /// \param coordi_Handle (in) x, y, z coordinates of input points
   /// \param pointId_Handle (out) returns indices to leaf nodes of the KD-tree
   /// \param splitId_Handle (out) returns indices to internal nodes of the KD-tree
-  /// \param device the device to run the construction on
   // Leaf Node vector and internal node (split) vectpr
-  template <typename CoordType, typename CoordStorageTag, typename DeviceAdapter>
+  template <typename CoordType, typename CoordStorageTag>
   void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag>& coordi_Handle,
            vtkm::cont::ArrayHandle<vtkm::Id>& pointId_Handle,
-           vtkm::cont::ArrayHandle<vtkm::Id>& splitId_Handle,
-           DeviceAdapter device)
+           vtkm::cont::ArrayHandle<vtkm::Id>& splitId_Handle)
   {
-    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
 
     vtkm::Id nTrainingPoints = coordi_Handle.GetNumberOfValues();
     vtkm::cont::ArrayHandleCounting<vtkm::Id> counting_Handle(0, 1, nTrainingPoints);
@@ -596,21 +577,20 @@ public:
     vtkm::cont::ArrayHandle<CoordType> zcoordi_Handle;
 
     SeprateVec3AryHandle sepVec3Worklet;
-    vtkm::worklet::DispatcherMapField<SeprateVec3AryHandle, DeviceAdapter> sepVec3Dispatcher(
-      sepVec3Worklet);
+    vtkm::worklet::DispatcherMapField<SeprateVec3AryHandle> sepVec3Dispatcher(sepVec3Worklet);
     sepVec3Dispatcher.Invoke(coordi_Handle, xcoordi_Handle, ycoordi_Handle, zcoordi_Handle);
 
     Algorithm::SortByKey(xcoordi_Handle, xorder_Handle);
     vtkm::cont::ArrayHandle<vtkm::Id> xrank_Handle =
-      ScatterArrayWrapper(pointId_Handle, xorder_Handle, device);
+      ScatterArrayWrapper(pointId_Handle, xorder_Handle);
 
     Algorithm::SortByKey(ycoordi_Handle, yorder_Handle);
     vtkm::cont::ArrayHandle<vtkm::Id> yrank_Handle =
-      ScatterArrayWrapper(pointId_Handle, yorder_Handle, device);
+      ScatterArrayWrapper(pointId_Handle, yorder_Handle);
 
     Algorithm::SortByKey(zcoordi_Handle, zorder_Handle);
     vtkm::cont::ArrayHandle<vtkm::Id> zrank_Handle =
-      ScatterArrayWrapper(pointId_Handle, zorder_Handle, device);
+      ScatterArrayWrapper(pointId_Handle, zorder_Handle);
 
     vtkm::cont::ArrayHandle<vtkm::Id> segId_Handle;
     vtkm::cont::ArrayHandleConstant<vtkm::Id> constHandle(0, nTrainingPoints);
@@ -620,14 +600,8 @@ public:
     vtkm::Int32 maxLevel = static_cast<vtkm::Int32>(ceil(vtkm::Log2(nTrainingPoints) + 1));
     for (vtkm::Int32 i = 0; i < maxLevel - 1; i++)
     {
-      OneLevelSplit3D(pointId_Handle,
-                      xrank_Handle,
-                      yrank_Handle,
-                      zrank_Handle,
-                      segId_Handle,
-                      splitId_Handle,
-                      i,
-                      device);
+      OneLevelSplit3D(
+        pointId_Handle, xrank_Handle, yrank_Handle, zrank_Handle, segId_Handle, splitId_Handle, i);
     }
   }
 };

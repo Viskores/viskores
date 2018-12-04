@@ -59,43 +59,13 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
 
 namespace detail
 {
-
-template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
 struct ArrayCopyFunctor
 {
-  using InArrayHandleType = vtkm::cont::ArrayHandle<InValueType, InStorage>;
-  InArrayHandleType InputArray;
-
-  using OutArrayHandleType = vtkm::cont::ArrayHandle<OutValueType, OutStorage>;
-  OutArrayHandleType OutputArray;
-
-  bool OnlyUseCurrentInputDevice;
-
-  VTKM_CONT
-  ArrayCopyFunctor(const InArrayHandleType& input,
-                   OutArrayHandleType& output,
-                   bool onlyUseCurrentInputDevice)
-    : InputArray(input)
-    , OutputArray(output)
-    , OnlyUseCurrentInputDevice(onlyUseCurrentInputDevice)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
+  template <typename Device, typename InArray, typename OutArray>
+  VTKM_CONT bool operator()(Device, const InArray& input, OutArray& output)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    if (this->OnlyUseCurrentInputDevice &&
-        (vtkm::cont::DeviceAdapterTraits<Device>::GetId() != this->InputArray.GetDeviceAdapterId()))
-    {
-      // We were asked to only copy on the device that already has the data from the input array.
-      // This is not that device, so return without copying.
-      return false;
-    }
-
-    vtkm::cont::ArrayCopy(this->InputArray, this->OutputArray, Device());
-
+    vtkm::cont::ArrayCopy(input, output, Device());
     return true;
   }
 };
@@ -116,28 +86,19 @@ VTKM_CONT void ArrayCopy(
   vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination,
   vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
-  bool isCopied = false;
-
-  detail::ArrayCopyFunctor<InValueType, InStorage, OutValueType, OutStorage> functor(
-    source, destination, true);
+  detail::ArrayCopyFunctor functor;
 
   // First pass, only use source's already loaded device.
-  isCopied = vtkm::cont::TryExecute(functor, tracker);
-  if (isCopied)
-  {
-    return;
+  bool isCopied = vtkm::cont::TryExecuteOnDevice(
+    source.GetDeviceAdapterId(), functor, tracker, source, destination);
+  if (!isCopied)
+  { // Second pass, use any available device.
+    isCopied = vtkm::cont::TryExecute(functor, tracker, source, destination);
   }
-
-  // Second pass, use any available device.
-  functor.OnlyUseCurrentInputDevice = false;
-  isCopied = vtkm::cont::TryExecute(functor, tracker);
-  if (isCopied)
-  {
-    return;
+  if (!isCopied)
+  { // If after the second pass, still not valid through an exception
+    throw vtkm::cont::ErrorExecution("Failed to run ArrayCopy on any device.");
   }
-
-  // If we are here, then we just failed to copy.
-  throw vtkm::cont::ErrorExecution("Failed to run ArrayCopy on any device.");
 }
 }
 } // namespace vtkm::cont

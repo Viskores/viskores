@@ -54,17 +54,15 @@ inline VTKM_CONT void PointElevation::SetRange(vtkm::Float64 low, vtkm::Float64 
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet PointElevation::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter&)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::PointElevation, DeviceAdapter> dispatcher(
-    this->Worklet);
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::PointElevation> dispatcher(this->Worklet);
 
   //todo, we need to use the policy to determine the valid conversions
   //that the dispatcher should do

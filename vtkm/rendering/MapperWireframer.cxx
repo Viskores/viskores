@@ -59,21 +59,6 @@ public:
   }
 }; // conn
 
-struct ConnFunctor
-{
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device,
-                            vtkm::cont::ArrayHandleCounting<vtkm::Id>& iter,
-                            vtkm::cont::ArrayHandle<vtkm::Id>& conn)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::worklet::DispatcherMapField<CreateConnectivity, Device>(CreateConnectivity())
-      .Invoke(iter, conn);
-    return true;
-  }
-};
-
 class Convert1DCoordinates : public vtkm::worklet::WorkletMapField
 {
 private:
@@ -123,26 +108,6 @@ public:
   }
 }; // convert coords
 
-struct ConvertFunctor
-{
-
-  template <typename Device, typename CoordType, typename ScalarType>
-  VTKM_CONT bool operator()(Device,
-                            CoordType coords,
-                            ScalarType scalars,
-                            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>& outCoords,
-                            vtkm::cont::ArrayHandle<vtkm::Float32>& outScalars,
-                            bool logY,
-                            bool logX)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::worklet::DispatcherMapField<Convert1DCoordinates, Device>(
-      Convert1DCoordinates(logY, logX))
-      .Invoke(coords, scalars, outCoords, outScalars);
-    return true;
-  }
-};
-
 #if defined(VTKM_MSVC)
 #pragma warning(push)
 #pragma warning(disable : 4127) //conditional expression is constant
@@ -176,10 +141,10 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
   using ScatterType = vtkm::worklet::ScatterCounting;
 
   VTKM_CONT
-  template <typename CountArrayType, typename DeviceTag>
-  static ScatterType MakeScatter(const CountArrayType& counts, DeviceTag device)
+  template <typename CountArrayType>
+  static ScatterType MakeScatter(const CountArrayType& counts)
   {
-    return ScatterType(counts, device);
+    return ScatterType(counts);
   }
 
   template <typename CellShapeTag, typename PointIndexVecType, typename EdgeIndexVecType>
@@ -212,33 +177,6 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
 #if defined(VTKM_MSVC)
 #pragma warning(pop)
 #endif
-
-struct ExtractUniqueEdges
-{
-  vtkm::cont::DynamicCellSet CellSet;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> EdgeIndices;
-
-  VTKM_CONT
-  ExtractUniqueEdges(const vtkm::cont::DynamicCellSet& cellSet)
-    : CellSet(cellSet)
-  {
-  }
-
-  template <typename DeviceTag>
-  VTKM_CONT bool operator()(DeviceTag)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceTag);
-
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
-    vtkm::worklet::DispatcherMapTopology<EdgesCounter, DeviceTag>().Invoke(CellSet, counts);
-    vtkm::worklet::DispatcherMapTopology<EdgesExtracter, DeviceTag> extractDispatcher(
-      EdgesExtracter::MakeScatter(counts, DeviceTag()));
-    extractDispatcher.Invoke(CellSet, EdgeIndices);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Sort<vtkm::Id2>(EdgeIndices);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Unique<vtkm::Id2>(EdgeIndices);
-    return true;
-  }
-}; // struct ExtractUniqueEdges
 } // namespace
 
 struct MapperWireframer::InternalsType
@@ -340,13 +278,9 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     //
     // Convert the cell set into something we can draw
     //
-    vtkm::cont::TryExecute(ConvertFunctor(),
-                           coords.GetData(),
-                           inScalarField.GetData(),
-                           newCoords,
-                           newScalars,
-                           this->LogarithmY,
-                           this->LogarithmX);
+    vtkm::worklet::DispatcherMapField<Convert1DCoordinates>(
+      Convert1DCoordinates(this->LogarithmY, this->LogarithmX))
+      .Invoke(coords.GetData(), inScalarField.GetData(), newCoords, newScalars);
 
     actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
     actualField = vtkm::cont::Field(
@@ -357,7 +291,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::cont::ArrayHandleCounting<vtkm::Id> iter =
       vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), numCells);
     conn.Allocate(numCells * 2);
-    vtkm::cont::TryExecute(ConnFunctor(), iter, conn);
+    vtkm::worklet::DispatcherMapField<CreateConnectivity>(CreateConnectivity()).Invoke(iter, conn);
 
     vtkm::cont::CellSetSingleType<> newCellSet("cells");
     newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
@@ -391,9 +325,14 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   }
 
   // Extract unique edges from the cell set.
-  ExtractUniqueEdges extracter(cellSet);
-  vtkm::cont::TryExecute(extracter);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> edgeIndices = extracter.EdgeIndices;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> edgeIndices;
+  vtkm::worklet::DispatcherMapTopology<EdgesCounter>().Invoke(cellSet, counts);
+  vtkm::worklet::DispatcherMapTopology<EdgesExtracter> extractDispatcher(
+    EdgesExtracter::MakeScatter(counts));
+  extractDispatcher.Invoke(cellSet, edgeIndices);
+  vtkm::cont::Algorithm::template Sort<vtkm::Id2>(edgeIndices);
+  vtkm::cont::Algorithm::template Unique<vtkm::Id2>(edgeIndices);
 
   Wireframer renderer(
     this->Internals->Canvas, this->Internals->ShowInternalZones, this->Internals->IsOverlay);

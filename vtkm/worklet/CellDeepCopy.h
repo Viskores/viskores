@@ -76,20 +76,18 @@ struct CellDeepCopy
             typename ShapeStorage,
             typename NumIndicesStorage,
             typename ConnectivityStorage,
-            typename OffsetsStorage,
-            typename Device>
+            typename OffsetsStorage>
   VTKM_CONT static void Run(const InCellSetType& inCellSet,
                             vtkm::cont::CellSetExplicit<ShapeStorage,
                                                         NumIndicesStorage,
                                                         ConnectivityStorage,
-                                                        OffsetsStorage>& outCellSet,
-                            Device)
+                                                        OffsetsStorage>& outCellSet)
   {
     VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(InCellSetType);
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage> numIndices;
 
-    vtkm::worklet::DispatcherMapTopology<CountCellPoints, Device> countDispatcher;
+    vtkm::worklet::DispatcherMapTopology<CountCellPoints> countDispatcher;
     countDispatcher.Invoke(inCellSet, numIndices);
 
     vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage> shapes;
@@ -100,7 +98,7 @@ struct CellDeepCopy
     vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connectivitySize);
     connectivity.Allocate(connectivitySize);
 
-    vtkm::worklet::DispatcherMapTopology<PassCellStructure, Device> passDispatcher;
+    vtkm::worklet::DispatcherMapTopology<PassCellStructure> passDispatcher;
     passDispatcher.Invoke(
       inCellSet, shapes, vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
 
@@ -111,13 +109,13 @@ struct CellDeepCopy
     outCellSet = newCellSet;
   }
 
-  template <typename InCellSetType, typename Device>
-  VTKM_CONT static vtkm::cont::CellSetExplicit<> Run(const InCellSetType& inCellSet, Device)
+  template <typename InCellSetType>
+  VTKM_CONT static vtkm::cont::CellSetExplicit<> Run(const InCellSetType& inCellSet)
   {
     VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(InCellSetType);
 
     vtkm::cont::CellSetExplicit<> outCellSet;
-    Run(inCellSet, outCellSet, Device());
+    Run(inCellSet, outCellSet);
 
     return outCellSet;
   }

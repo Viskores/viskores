@@ -26,9 +26,9 @@
 #include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
@@ -126,6 +126,26 @@ __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic pop
 #endif
+
+template <typename PortalType, typename OutValueType>
+struct CastPortal
+{
+  using ValueType = OutValueType;
+
+  PortalType Portal;
+
+  VTKM_CONT
+  CastPortal(const PortalType& portal)
+    : Portal(portal)
+  {
+  }
+
+  VTKM_EXEC
+  vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
+
+  VTKM_EXEC
+  ValueType Get(vtkm::Id index) const { return static_cast<OutValueType>(this->Portal.Get(index)); }
+};
 }
 } // end namespace cuda::internal
 
@@ -313,9 +333,7 @@ private:
     //The portal type and the initial value AREN'T the same type so we have
     //to a slower approach, where we wrap the input portal inside a cast
     //portal
-    using CastFunctor = vtkm::cont::internal::Cast<typename InputPortal::ValueType, T>;
-
-    vtkm::exec::internal::ArrayPortalTransform<T, InputPortal, CastFunctor> castPortal(input);
+    vtkm::cont::cuda::internal::CastPortal<InputPortal, T> castPortal(input);
 
     vtkm::exec::cuda::internal::WrappedBinaryOperator<T, BinaryFunctor> bop(binary_functor);
 
@@ -432,7 +450,6 @@ private:
     {
       cuda::internal::throwAsVTKmException();
     }
-    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
     return sum[2];
   }
 
@@ -733,6 +750,8 @@ public:
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, SIn>& input,
                              vtkm::cont::ArrayHandle<U, SOut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id inSize = input.GetNumberOfValues();
     CopyPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                output.PrepareForOutput(inSize, DeviceAdapterTagCuda()));
@@ -743,6 +762,8 @@ public:
                                const vtkm::cont::ArrayHandle<T, SStencil>& stencil,
                                vtkm::cont::ArrayHandle<U, SOut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id size = stencil.GetNumberOfValues();
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                                     stencil.PrepareForInput(DeviceAdapterTagCuda()),
@@ -757,6 +778,8 @@ public:
                                vtkm::cont::ArrayHandle<U, SOut>& output,
                                UnaryPredicate unary_predicate)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id size = stencil.GetNumberOfValues();
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                                     stencil.PrepareForInput(DeviceAdapterTagCuda()),
@@ -772,6 +795,8 @@ public:
                                      vtkm::cont::ArrayHandle<U, SOut>& output,
                                      vtkm::Id outputIndex = 0)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
@@ -825,6 +850,8 @@ public:
                                     const vtkm::cont::ArrayHandle<T, SVal>& values,
                                     vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id numberOfValues = values.GetNumberOfValues();
     LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                       values.PrepareForInput(DeviceAdapterTagCuda()),
@@ -837,6 +864,8 @@ public:
                                     vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output,
                                     BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id numberOfValues = values.GetNumberOfValues();
     LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                       values.PrepareForInput(DeviceAdapterTagCuda()),
@@ -848,6 +877,8 @@ public:
   VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<vtkm::Id, SIn>& input,
                                     vtkm::cont::ArrayHandle<vtkm::Id, SOut>& values_output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                       values_output.PrepareForInPlace(DeviceAdapterTagCuda()));
   }
@@ -855,6 +886,8 @@ public:
   template <typename T, typename U, class SIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, SIn>& input, U initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -868,6 +901,8 @@ public:
                             U initialValue,
                             BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -890,6 +925,8 @@ public:
                                     vtkm::cont::ArrayHandle<U, VOut>& values_output,
                                     BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     //there is a concern that by default we will allocate too much
     //space for the keys/values output. 1 option is to
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
@@ -912,6 +949,8 @@ public:
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
                                    vtkm::cont::ArrayHandle<T, SOut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -934,6 +973,8 @@ public:
                                    BinaryFunctor binary_functor,
                                    const T& initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -956,6 +997,8 @@ public:
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
                                    vtkm::cont::ArrayHandle<T, SOut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -977,6 +1020,8 @@ public:
                                    vtkm::cont::ArrayHandle<T, SOut>& output,
                                    BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -998,6 +1043,8 @@ public:
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -1025,6 +1072,8 @@ public:
                                            vtkm::cont::ArrayHandle<U, VOut>& output,
                                            BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -1049,6 +1098,8 @@ public:
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -1082,6 +1133,8 @@ public:
                                            const U& initialValue,
                                            BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
@@ -1102,13 +1155,24 @@ public:
                              ::thrust::equal_to<T>(),
                              binary_functor);
   }
+
   // we use cuda pinned memory to reduce the amount of synchronization
   // and mem copies between the host and device.
-  VTKM_CONT_EXPORT
-  static char* GetPinnedErrorArray(vtkm::Id& arraySize, char** hostPointer);
+  struct VTKM_CONT_EXPORT PinnedErrorArray
+  {
+    char* HostPtr = nullptr;
+    char* DevicePtr = nullptr;
+    vtkm::Id Size = 0;
+  };
 
   VTKM_CONT_EXPORT
-  static char* SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
+  static const PinnedErrorArray& GetPinnedErrorArray();
+
+  VTKM_CONT_EXPORT
+  static void CheckForErrors(); // throws vtkm::cont::ErrorExecution
+
+  VTKM_CONT_EXPORT
+  static void SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
 
   VTKM_CONT_EXPORT
   static void GetGridsAndBlocks(vtkm::UInt32& grid, vtkm::UInt32& blocks, vtkm::Id size);
@@ -1127,25 +1191,15 @@ public:
       // No instances means nothing to run. Just return.
       return;
     }
-    char* hostErrorPtr = SetupErrorBuffer(functor);
+
+    CheckForErrors();
+    SetupErrorBuffer(functor);
 
     vtkm::UInt32 grids, blocks;
     GetGridsAndBlocks(grids, blocks, numInstances);
 
     cuda::internal::TaskStrided1DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor,
                                                                                    numInstances);
-
-    //sync so that we can check the results of the call.
-    //In the future I want move this before the schedule call, and throwing
-    //an exception if the previous schedule wrote an error. This would help
-    //cuda to run longer before we hard sync.
-    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
-
-    //check what the value is
-    if (hostErrorPtr[0] != '\0')
-    {
-      throw vtkm::cont::ErrorExecution(hostErrorPtr);
-    }
 
 #ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_1D
     parameter_sweep_1d_schedule(functor, numInstances);
@@ -1162,7 +1216,9 @@ public:
       // No instances means nothing to run. Just return.
       return;
     }
-    char* hostErrorPtr = SetupErrorBuffer(functor);
+
+    CheckForErrors();
+    SetupErrorBuffer(functor);
 
     const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
                       static_cast<vtkm::UInt32>(rangeMax[1]),
@@ -1174,18 +1230,6 @@ public:
 
     cuda::internal::TaskStrided3DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor, ranges);
 
-    //sync so that we can check the results of the call.
-    //In the future I want move this before the schedule call, and throwing
-    //an exception if the previous schedule wrote an error. This would help
-    //cuda to run longer before we hard sync.
-    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
-
-    //check what the value is
-    if (hostErrorPtr[0] != '\0')
-    {
-      throw vtkm::cont::ErrorExecution(hostErrorPtr);
-    }
-
 #ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_3D
     parameter_sweep_3d_schedule(functor, rangeMax);
 #endif
@@ -1194,6 +1238,8 @@ public:
   template <class Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::exec::cuda::internal::TaskStrided1D<Functor, vtkm::internal::NullType> kernel(functor);
     ScheduleTask(kernel, numInstances);
   }
@@ -1201,6 +1247,8 @@ public:
   template <class Functor>
   VTKM_CONT static void Schedule(Functor functor, const vtkm::Id3& rangeMax)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::exec::cuda::internal::TaskStrided3D<Functor, vtkm::internal::NullType> kernel(functor);
     ScheduleTask(kernel, rangeMax);
   }
@@ -1208,6 +1256,8 @@ public:
   template <typename T, class Storage>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda()));
   }
 
@@ -1215,6 +1265,8 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
                              BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda()), binary_compare);
   }
 
@@ -1222,6 +1274,8 @@ public:
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda()),
                     values.PrepareForInPlace(DeviceAdapterTagCuda()));
   }
@@ -1231,6 +1285,8 @@ public:
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda()),
                     values.PrepareForInPlace(DeviceAdapterTagCuda()),
                     binary_compare);
@@ -1239,6 +1295,8 @@ public:
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda()));
 
     values.Shrink(newSize);
@@ -1248,6 +1306,8 @@ public:
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id newSize =
       UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda()), binary_compare);
 
@@ -1259,6 +1319,8 @@ public:
                                     const vtkm::cont::ArrayHandle<T, SVal>& values,
                                     vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id numberOfValues = values.GetNumberOfValues();
     UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                       values.PrepareForInput(DeviceAdapterTagCuda()),
@@ -1271,6 +1333,8 @@ public:
                                     vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output,
                                     BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id numberOfValues = values.GetNumberOfValues();
     UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                       values.PrepareForInput(DeviceAdapterTagCuda()),
@@ -1282,13 +1346,18 @@ public:
   VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<vtkm::Id, SIn>& input,
                                     vtkm::cont::ArrayHandle<vtkm::Id, SOut>& values_output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                       values_output.PrepareForInPlace(DeviceAdapterTagCuda()));
   }
 
   VTKM_CONT static void Synchronize()
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
+    CheckForErrors();
   }
 };
 

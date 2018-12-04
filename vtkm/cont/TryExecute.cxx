@@ -31,9 +31,9 @@ namespace cont
 namespace detail
 {
 
-void HandleTryExecuteException(vtkm::Int8 deviceId,
-                               const std::string& name,
-                               vtkm::cont::RuntimeDeviceTracker& tracker)
+void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
+                               vtkm::cont::RuntimeDeviceTracker& tracker,
+                               const std::string& functorName)
 {
   try
   {
@@ -42,44 +42,45 @@ void HandleTryExecuteException(vtkm::Int8 deviceId,
   }
   catch (vtkm::cont::ErrorBadAllocation& e)
   {
-    std::cerr << "caught ErrorBadAllocation " << e.GetMessage() << std::endl;
+    VTKM_LOG_TRYEXECUTE_DISABLE("Bad allocation (" << e.GetMessage() << ")", functorName, deviceId);
     //currently we only consider OOM errors worth disabling a device for
     //than we fallback to another device
-    tracker.ReportAllocationFailure(deviceId, name, e);
+    tracker.ReportAllocationFailure(deviceId, e);
   }
   catch (vtkm::cont::ErrorBadDevice& e)
   {
-    std::cerr << "caught ErrorBadDevice: " << e.GetMessage() << std::endl;
-    tracker.ReportBadDeviceFailure(deviceId, name, e);
+    VTKM_LOG_TRYEXECUTE_DISABLE("Bad device (" << e.GetMessage() << ")", functorName, deviceId);
+    tracker.ReportBadDeviceFailure(deviceId, e);
   }
   catch (vtkm::cont::ErrorBadType& e)
   {
     //should bad type errors should stop the execution, instead of
     //deferring to another device adapter?
-    std::cerr << "caught ErrorBadType : " << e.GetMessage() << std::endl;
+    VTKM_LOG_TRYEXECUTE_FAIL("ErrorBadType (" << e.GetMessage() << ")", functorName, deviceId);
   }
   catch (vtkm::cont::ErrorBadValue& e)
   {
-    //should bad value errors should stop the filter, instead of deferring
-    //to another device adapter?
-    std::cerr << "caught ErrorBadValue : " << e.GetMessage() << std::endl;
+    // Should bad values be deferred to another device? Seems unlikely they will succeed.
+    // Re-throw instead.
+    VTKM_LOG_TRYEXECUTE_FAIL("ErrorBadValue (" << e.GetMessage() << ")", functorName, deviceId);
+    throw;
   }
   catch (vtkm::cont::Error& e)
   {
+    VTKM_LOG_TRYEXECUTE_FAIL(e.GetMessage(), functorName, deviceId);
     if (e.GetIsDeviceIndependent())
     {
       // re-throw the exception as it's a device-independent exception.
       throw;
     }
-    //general errors should be caught and let us try the next device adapter.
-    std::cerr << "exception is: " << e.GetMessage() << std::endl;
   }
   catch (std::exception& e)
   {
-    std::cerr << "caught standard exception: " << e.what() << std::endl;
+    VTKM_LOG_TRYEXECUTE_FAIL(e.what(), functorName, deviceId);
   }
   catch (...)
   {
+    VTKM_LOG_TRYEXECUTE_FAIL("Unknown exception", functorName, deviceId);
     std::cerr << "unknown exception caught" << std::endl;
   }
 }

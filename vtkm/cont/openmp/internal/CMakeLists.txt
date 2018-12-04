@@ -23,6 +23,7 @@ set(headers
   DeviceAdapterAlgorithmOpenMP.h
   DeviceAdapterRuntimeDetectorOpenMP.h
   DeviceAdapterTagOpenMP.h
+  ExecutionArrayInterfaceBasicOpenMP.h
   FunctorsOpenMP.h
   ParallelQuickSortOpenMP.h
   ParallelRadixSortOpenMP.h
@@ -45,5 +46,6 @@ endif()
 target_sources(vtkm_cont PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionOpenMP.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmOpenMP.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicOpenMP.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/ParallelRadixSortOpenMP.cxx
 )

@@ -38,20 +38,18 @@ inline VTKM_CONT CellMeasures<IntegrationType>::CellMeasures()
 
 //-----------------------------------------------------------------------------
 template <typename IntegrationType>
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   VTKM_ASSERT(fieldMeta.IsPointField());
   const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
   vtkm::cont::ArrayHandle<T> outArray;
 
-  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<IntegrationType>, DeviceAdapter>
-    dispatcher;
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<IntegrationType>> dispatcher;
   dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellset, policy), points, outArray);
 
   vtkm::cont::DataSet result;

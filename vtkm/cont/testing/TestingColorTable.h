@@ -88,46 +88,74 @@ public:
     auto labspace = vtkm::cont::ColorSpace::LAB;
     auto diverging = vtkm::cont::ColorSpace::DIVERGING;
 
-    vtkm::cont::ColorTable table(rgbspace);
-    VTKM_TEST_ASSERT(table.LoadPreset("Linear YGB"), "failed to find Linear YGB preset");
-    VTKM_TEST_ASSERT(table.GetColorSpace() == labspace,
-                     "color space not switched when loading preset");
-    VTKM_TEST_ASSERT(table.GetRange() == range, "color range not correct after loading preset");
-    VTKM_TEST_ASSERT(table.GetNumberOfPoints() == 22,
-                     "color range not correct after loading preset");
+    {
+      vtkm::cont::ColorTable table(rgbspace);
+      VTKM_TEST_ASSERT(table.LoadPreset("Cool to Warm"));
+      VTKM_TEST_ASSERT(table.GetColorSpace() == diverging,
+                       "color space not switched when loading preset");
+      VTKM_TEST_ASSERT(table.GetRange() == range, "color range not correct after loading preset");
+      VTKM_TEST_ASSERT(table.GetNumberOfPoints() == 3);
 
-    table.SetColorSpace(diverging);
-    VTKM_TEST_ASSERT(table.LoadPreset("inferno"), "failed to find inferno");
-    VTKM_TEST_ASSERT(table.GetColorSpace() == labspace,
-                     "color space not switched when loading preset");
-    VTKM_TEST_ASSERT(table.GetRange() == range, "color range not correct after loading preset");
-    VTKM_TEST_ASSERT(table.GetNumberOfPoints() == 256,
-                     "color range not correct after loading preset");
+      VTKM_TEST_ASSERT(table.LoadPreset(vtkm::cont::ColorTable::Preset::COOL_TO_WARM_EXTENDED));
+      VTKM_TEST_ASSERT(table.GetColorSpace() == labspace,
+                       "color space not switched when loading preset");
+      VTKM_TEST_ASSERT(table.GetRange() == range, "color range not correct after loading preset");
+      VTKM_TEST_ASSERT(table.GetNumberOfPoints() == 35);
 
-
-    table.SetColorSpace(hsvspace);
-    VTKM_TEST_ASSERT((table.LoadPreset("no table with this name") == false),
-                     "failed to error out on bad preset table name");
-    //verify that after a failure we still have the previous preset loaded
-    VTKM_TEST_ASSERT(table.GetColorSpace() == hsvspace,
-                     "color space not switched when loading preset");
-    VTKM_TEST_ASSERT(table.GetRange() == range, "color range not correct after loading preset");
-    VTKM_TEST_ASSERT(table.GetNumberOfPoints() == 256,
-                     "color range not correct after loading preset");
+      table.SetColorSpace(hsvspace);
+      VTKM_TEST_ASSERT((table.LoadPreset("no table with this name") == false),
+                       "failed to error out on bad preset table name");
+      //verify that after a failure we still have the previous preset loaded
+      VTKM_TEST_ASSERT(table.GetColorSpace() == hsvspace,
+                       "color space not switched when loading preset");
+      VTKM_TEST_ASSERT(table.GetRange() == range, "color range not correct after failing preset");
+      VTKM_TEST_ASSERT(table.GetNumberOfPoints() == 35);
+    }
 
 
     //verify that we can get the presets
-    std::set<std::string> names = table.GetPresets();
-    VTKM_TEST_ASSERT(names.size() == 15, "incorrect number of names in preset set");
+    std::set<std::string> names = vtkm::cont::ColorTable::GetPresets();
+    VTKM_TEST_ASSERT(names.size() == 18, "incorrect number of names in preset set");
 
-    VTKM_TEST_ASSERT(names.count("inferno") == 1, "names should contain inferno");
-    VTKM_TEST_ASSERT(names.count("black-body radiation") == 1,
+    VTKM_TEST_ASSERT(names.count("Inferno") == 1, "names should contain inferno");
+    VTKM_TEST_ASSERT(names.count("Black-Body Radiation") == 1,
                      "names should contain black-body radiation");
-    VTKM_TEST_ASSERT(names.count("viridis") == 1, "names should contain viridis");
-    VTKM_TEST_ASSERT(names.count("black, blue and white") == 1,
+    VTKM_TEST_ASSERT(names.count("Viridis") == 1, "names should contain viridis");
+    VTKM_TEST_ASSERT(names.count("Black - Blue - White") == 1,
                      "names should contain black, blue and white");
-    VTKM_TEST_ASSERT(names.count("samsel fire") == 1, "names should contain samsel fire");
-    VTKM_TEST_ASSERT(names.count("jet") == 1, "names should contain jet");
+    VTKM_TEST_ASSERT(names.count("Blue to Orange") == 1, "names should contain samsel fire");
+    VTKM_TEST_ASSERT(names.count("Jet") == 1, "names should contain jet");
+
+    // verify that we can load in all the listed color tables
+    for (auto&& name : names)
+    {
+      vtkm::cont::ColorTable table(name);
+      VTKM_TEST_ASSERT(table.GetNumberOfPoints() > 0, "Issue loading preset ", name);
+    }
+
+    auto presetEnum = { vtkm::cont::ColorTable::Preset::DEFAULT,
+                        vtkm::cont::ColorTable::Preset::COOL_TO_WARM,
+                        vtkm::cont::ColorTable::Preset::COOL_TO_WARM_EXTENDED,
+                        vtkm::cont::ColorTable::Preset::VIRIDIS,
+                        vtkm::cont::ColorTable::Preset::INFERNO,
+                        vtkm::cont::ColorTable::Preset::PLASMA,
+                        vtkm::cont::ColorTable::Preset::BLACK_BODY_RADIATION,
+                        vtkm::cont::ColorTable::Preset::X_RAY,
+                        vtkm::cont::ColorTable::Preset::GREEN,
+                        vtkm::cont::ColorTable::Preset::BLACK_BLUE_WHITE,
+                        vtkm::cont::ColorTable::Preset::BLUE_TO_ORANGE,
+                        vtkm::cont::ColorTable::Preset::GRAY_TO_RED,
+                        vtkm::cont::ColorTable::Preset::COLD_AND_HOT,
+                        vtkm::cont::ColorTable::Preset::BLUE_GREEN_ORANGE,
+                        vtkm::cont::ColorTable::Preset::YELLOW_GRAY_BLUE,
+                        vtkm::cont::ColorTable::Preset::RAINBOW_UNIFORM,
+                        vtkm::cont::ColorTable::Preset::JET,
+                        vtkm::cont::ColorTable::Preset::RAINBOW_DESATURATED };
+    for (vtkm::cont::ColorTable::Preset preset : presetEnum)
+    {
+      vtkm::cont::ColorTable table(preset);
+      VTKM_TEST_ASSERT(table.GetNumberOfPoints() > 0, "Issue loading preset");
+    }
   }
 
   static void TestClamping()
@@ -310,7 +338,7 @@ public:
     //Verify that the opacity points have moved
     vtkm::Vec<double, 4> opacityData;
     table.GetPointAlpha(1, opacityData);
-    VTKM_TEST_ASSERT(opacityData[0] == range.Max, "rescale to range failed on opacity");
+    VTKM_TEST_ASSERT(test_equal(opacityData[0], range.Max), "rescale to range failed on opacity");
     VTKM_TEST_ASSERT(opacityData[1] == 1.0, "rescale changed opacity values");
     VTKM_TEST_ASSERT(opacityData[2] == 0.5, "rescale modified mid/sharp of opacity");
     VTKM_TEST_ASSERT(opacityData[3] == 0.0, "rescale modified mid/sharp of opacity");
@@ -449,19 +477,20 @@ public:
   {
     using namespace vtkm::worklet::colorconversion;
 
-    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::LINEAR_GREEN);
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::GREEN);
     VTKM_TEST_ASSERT((table.GetRange() == vtkm::Range{ 0.0, 1.0 }),
                      "loading linear green table failed with wrong range");
     VTKM_TEST_ASSERT((table.GetNumberOfPoints() == 21),
                      "loading linear green table failed with number of control points");
 
     constexpr vtkm::Id nvals = 3;
-    constexpr double data[3] = { 0.0f, 0.5f, 1.0f };
+    constexpr double data[3] = { 0.0, 0.5, 1.0 };
     auto samples = vtkm::cont::make_ArrayHandle(data, nvals);
 
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
     TransferFunction transfer(table.PrepareForExecution(DeviceAdapterTag{}));
-    vtkm::worklet::DispatcherMapField<TransferFunction, DeviceAdapterTag> dispatcher(transfer);
+    vtkm::worklet::DispatcherMapField<TransferFunction> dispatcher(transfer);
+    dispatcher.SetDevice(DeviceAdapterTag());
     dispatcher.Invoke(samples, colors);
 
     const vtkm::Vec<vtkm::UInt8, 4> correct_sampling_points[nvals] = { { 14, 28, 31, 255 },
@@ -480,7 +509,7 @@ public:
   static void TestSampling()
   {
 
-    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::LINEAR_GREEN);
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::GREEN);
     VTKM_TEST_ASSERT((table.GetRange() == vtkm::Range{ 0.0, 1.0 }),
                      "loading linear green table failed with wrong range");
     VTKM_TEST_ASSERT((table.GetNumberOfPoints() == 21),
@@ -537,7 +566,6 @@ public:
                        "incorrect value when interpolating between values");
     }
   }
-
 
   struct TestAll
   {

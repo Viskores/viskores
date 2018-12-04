@@ -20,24 +20,34 @@
 
 set(headers
   BoundingVolumeHierarchy.h
+  BVHTraverser.h
   Camera.h
   CellIntersector.h
   CellSampler.h
   CellTables.h
   ChannelBuffer.h
   ChannelBufferOperations.h
-  ConnectivityBase.h
   ConnectivityTracer.h
-  ConnectivityTracerBase.h
-  ConnectivityTracerFactory.h
+  CylinderExtractor.h
+  CylinderIntersector.h
   Logger.h
   MeshConnectivityBuilder.h
-  MeshConnectivityStructures.h
+  MeshConnectivityContainers.h
+  MeshConnectivityBase.h
   MortonCodes.h
+  PartialComposite.h
+  QuadExtractor.h
+  QuadIntersector.h
   Ray.h
   RayOperations.h
   RayTracer.h
   RayTracingTypeDefs.h
+  Sampler.h
+  ShapeIntersector.h
+  SphereExtractor.h
+  SphereIntersector.h
+  TriangleExtractor.h
+  TriangleIntersections.h
   TriangleIntersector.h
   VolumeRendererStructured.h
   Worklets.h

@@ -92,8 +92,9 @@ public:
     vtkm::Id connectivityLength = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
       vtkm::cont::make_ArrayHandleCast(conn.NumIndices, vtkm::Id()), conn.IndexOffsets);
     conn.Connectivity.Allocate(connectivityLength);
-    vtkm::worklet::DispatcherMapTopology<WriteConnectivity, Device>().Invoke(
-      cellset, conn.IndexOffsets, conn.Connectivity);
+    vtkm::worklet::DispatcherMapTopology<WriteConnectivity> dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(cellset, conn.IndexOffsets, conn.Connectivity);
 
     return conn;
   }
@@ -126,8 +127,9 @@ public:
     conn.NumIndices = make_ArrayHandleConstant(numPointsInCell, numberOfCells);
     conn.IndexOffsets = ArrayHandleCounting<vtkm::Id>(0, numPointsInCell, numberOfCells);
     conn.Connectivity.Allocate(connectivityLength);
-    vtkm::worklet::DispatcherMapTopology<WriteConnectivity, Device>().Invoke(
-      cellset, conn.IndexOffsets, conn.Connectivity);
+    vtkm::worklet::DispatcherMapTopology<WriteConnectivity> dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(cellset, conn.IndexOffsets, conn.Connectivity);
 
     return conn;
   }
@@ -393,5 +395,57 @@ vtkm::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType> make
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename CSType, typename AHValidCellIds>
+struct TypeString<vtkm::cont::CellSetPermutation<CSType, AHValidCellIds>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name =
+      "CS_Permutation<" + TypeString<CSType>::Get() + "," + TypeString<AHValidCellIds>::Get() + ">";
+    return name;
+  }
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename CSType, typename AHValidCellIds>
+struct Serialization<vtkm::cont::CellSetPermutation<CSType, AHValidCellIds>>
+{
+private:
+  using Type = vtkm::cont::CellSetPermutation<CSType, AHValidCellIds>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
+  {
+    diy::save(bb, cs.GetName());
+    diy::save(bb, cs.GetFullCellSet());
+    diy::save(bb, cs.GetValidCellIds());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
+  {
+    std::string name;
+    diy::load(bb, name);
+    CSType fullCS;
+    diy::load(bb, fullCS);
+    AHValidCellIds validCellIds;
+    diy::load(bb, validCellIds);
+
+    cs = make_CellSetPermutation(validCellIds, fullCS, name);
+  }
+};
+
+} // diy
 
 #endif //vtk_m_cont_CellSetPermutation_h

@@ -41,15 +41,10 @@ VTKM_CONT_EXPORT vtkm::UInt32 getNumSMs(int dId)
   }
 
   //check
-  static bool lookupBuilt = false;
+  static std::once_flag lookupBuiltFlag;
   static std::vector<vtkm::UInt32> numSMs;
 
-  if (!lookupBuilt)
-  {
-    //lock the mutex
-    static std::mutex built_mutex;
-    std::lock_guard<std::mutex> lock(built_mutex);
-
+  std::call_once(lookupBuiltFlag, []() {
     //iterate over all devices
     int numberOfSMs = 0;
     int count = 0;
@@ -61,8 +56,7 @@ VTKM_CONT_EXPORT vtkm::UInt32 getNumSMs(int dId)
         cudaDeviceGetAttribute(&numberOfSMs, cudaDevAttrMultiProcessorCount, deviceId));
       numSMs.push_back(static_cast<vtkm::UInt32>(numberOfSMs));
     }
-    lookupBuilt = true;
-  }
+  });
   return numSMs[index];
 }
 }
@@ -70,45 +64,41 @@ VTKM_CONT_EXPORT vtkm::UInt32 getNumSMs(int dId)
 
 // we use cuda pinned memory to reduce the amount of synchronization
 // and mem copies between the host and device.
-char* DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetPinnedErrorArray(
-  vtkm::Id& arraySize,
-  char** hostPointer)
+auto DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetPinnedErrorArray()
+  -> const PinnedErrorArray&
 {
-  const vtkm::Id ERROR_ARRAY_SIZE = 1024;
-  static bool errorArrayInit = false;
-  static char* hostPtr = nullptr;
-  static char* devicePtr = nullptr;
-  if (!errorArrayInit)
-  {
-    VTKM_CUDA_CALL(cudaMallocHost((void**)&hostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped));
-    VTKM_CUDA_CALL(cudaHostGetDevicePointer(&devicePtr, hostPtr, 0));
-    errorArrayInit = true;
-  }
-  //set the size of the array
-  arraySize = ERROR_ARRAY_SIZE;
+  constexpr vtkm::Id ERROR_ARRAY_SIZE = 1024;
+  static thread_local PinnedErrorArray local;
 
-  //specify the host pointer to the memory
-  *hostPointer = hostPtr;
-  (void)hostPointer;
-  return devicePtr;
+  if (!local.HostPtr)
+  {
+    VTKM_CUDA_CALL(cudaMallocHost((void**)&local.HostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped));
+    VTKM_CUDA_CALL(cudaHostGetDevicePointer(&local.DevicePtr, local.HostPtr, 0));
+    local.HostPtr[0] = '\0'; // clear
+    local.Size = ERROR_ARRAY_SIZE;
+  }
+
+  return local;
 }
 
-char* DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::SetupErrorBuffer(
+void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::SetupErrorBuffer(
   vtkm::exec::cuda::internal::TaskStrided& functor)
 {
-  //since the memory is pinned we can access it safely on the host
-  //without a memcpy
-  vtkm::Id errorArraySize = 0;
-  char* hostErrorPtr = nullptr;
-  char* deviceErrorPtr = GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
-
-  //clear the first character which means that we don't contain an error
-  hostErrorPtr[0] = '\0';
-
-  vtkm::exec::internal::ErrorMessageBuffer errorMessage(deviceErrorPtr, errorArraySize);
+  auto pinnedArray = GetPinnedErrorArray();
+  vtkm::exec::internal::ErrorMessageBuffer errorMessage(pinnedArray.DevicePtr, pinnedArray.Size);
   functor.SetErrorMessageBuffer(errorMessage);
+}
 
-  return hostErrorPtr;
+void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::CheckForErrors()
+{
+  auto pinnedArray = GetPinnedErrorArray();
+  if (pinnedArray.HostPtr[0] != '\0')
+  {
+    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
+    auto excep = vtkm::cont::ErrorExecution(pinnedArray.HostPtr);
+    pinnedArray.HostPtr[0] = '\0'; // clear
+    throw excep;
+  }
 }
 
 void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(

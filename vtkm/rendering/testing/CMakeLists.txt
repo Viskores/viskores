@@ -28,6 +28,9 @@ set(unit_tests
   UnitTestCanvas.cxx
   UnitTestMapperConnectivity.cxx
   UnitTestMultiMapper.cxx
+  UnitTestMapperCylinders.cxx
+  UnitTestMapperPoints.cxx
+  UnitTestMapperQuads.cxx
   UnitTestMapperRayTracer.cxx
   UnitTestMapperWireframer.cxx
   UnitTestMapperVolume.cxx
@@ -36,6 +39,9 @@ set(unit_tests
 vtkm_unit_tests(NAME Rendering BACKEND SERIAL SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
 if (TARGET vtkm::tbb)
   vtkm_unit_tests(NAME Rendering BACKEND TBB SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
+endif()
+if (TARGET vtkm::openmp)
+  vtkm_unit_tests(NAME Rendering BACKEND OPENMP SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
 endif()
 if (TARGET vtkm::cuda)
   vtkm_unit_tests(NAME Rendering BACKEND CUDA SOURCES ${unit_tests} LIBRARIES vtkm_rendering)

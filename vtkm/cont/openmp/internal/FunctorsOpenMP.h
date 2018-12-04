@@ -286,21 +286,22 @@ struct ReduceHelper
     auto data = vtkm::cont::ArrayPortalToIteratorBegin(portal);
 
     bool doParallel = false;
-    std::vector<ReturnType> threadData;
+    int numThreads = 0;
+    std::unique_ptr<ReturnType[]> threadData;
 
     VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(f)
-                            shared(data, threadData, doParallel))
+                            shared(data, doParallel, numThreads, threadData))
     {
 
       int tid = omp_get_thread_num();
-      int numThreads = omp_get_num_threads();
 
       VTKM_OPENMP_DIRECTIVE(single)
       {
+        numThreads = omp_get_num_threads();
         if (numVals >= numThreads * 2)
         {
           doParallel = true;
-          threadData.resize(numThreads);
+          threadData.reset(new ReturnType[numThreads]);
         }
       }
 
@@ -324,7 +325,7 @@ struct ReduceHelper
     if (doParallel)
     {
       // do the final reduction serially:
-      for (size_t i = 0; i < threadData.size(); ++i)
+      for (size_t i = 0; i < static_cast<size_t>(numThreads); ++i)
       {
         init = f(init, threadData[i]);
       }

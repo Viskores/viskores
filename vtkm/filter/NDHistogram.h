@@ -32,7 +32,7 @@ namespace filter
 /// it would generate a N-Dims histogram from input fields. The result is stored
 /// in a field named as "Frequency". This filed contains all the frequencies of
 /// the N-Dims histogram in sparse representation. That being said, the result
-/// field does not store 0 frequency bins. Meanwhile all input fileds now
+/// field does not store 0 frequency bins. Meanwhile all input fields now
 /// would have the same length and store bin ids instead.
 /// E.g. (FieldA[i], FieldB[i], FieldC[i], Frequency[i]) is a bin in the histogram.
 /// The first three numbers are binIDs for FieldA, FieldB and FieldC. Frequency[i] stores
@@ -47,10 +47,9 @@ public:
   VTKM_CONT
   void AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins);
 
-  template <typename Policy, typename Device>
+  template <typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData,
-                                          vtkm::filter::PolicyBase<Policy> policy,
-                                          Device);
+                                          vtkm::filter::PolicyBase<Policy> policy);
 
   // This index is the field position in FieldNames
   // (or the input _fieldName string vector of SetFields() Function)
@@ -62,12 +61,11 @@ public:
   VTKM_CONT
   vtkm::Range GetDataRange(size_t fieldIdx);
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                            DeviceAdapter tag);
+                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   std::vector<vtkm::Id> NumOfBins;

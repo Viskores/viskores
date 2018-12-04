@@ -24,12 +24,19 @@
 #define BRIGAND_COMP_CLANG
 #endif
 #endif
+
 #if defined(__CUDACC__)
+
 #if __CUDACC_VER_MAJOR__ == 9
 #define BRIGAND_COMP_CUDA_9
 #endif
+#if __CUDACC_VER_MAJOR__ >= 9
+#define BRIGAND_COMP_CUDA_9PLUS
+#endif
+
 #define BRIGAND_COMP_CUDA
 #endif
+
 #include <type_traits>
 namespace brigand
 {
@@ -260,8 +267,11 @@ namespace brigand
 
     template<std::size_t N, typename Seq> struct at_impl;
 #if defined(BRIGAND_COMP_CUDA_9) || defined(BRIGAND_COMP_INTEL)
-    //Both CUDA 9 and the Intel 18 compiler series have a problem deducing the
-    //type so we are just going
+    //Both CUDA 9 and the Intel 18 compiler series have a problem when
+    //at_impl ::type typedef is produced through inheritance of a `T`
+    //that is deduced through an unimplemented static functions return type.
+    //So we don't do the inherit trick, but instead manually construct
+    //a ::type typedef ourself.
     template <std::size_t N, template <typename...> class L, class... Ts>
     struct at_impl<N, L<Ts...>>
     {
@@ -503,7 +513,7 @@ namespace lazy
         using type = ::brigand::size_t<0>;
     };
 
-#if defined(BRIGAND_COMP_CUDA_9)
+#if defined(BRIGAND_COMP_CUDA_9PLUS)
   //This was added for CUDA 9 RC1 and most likely will need CUDA
   //version guards
   template<class P, class T>
@@ -1551,7 +1561,7 @@ namespace detail
 namespace brigand
 {
 
-#if (defined(BRIGAND_COMP_GCC) || defined(BRIGAND_COMP_CLANG)) && !defined(BRIGAND_COMP_CUDA_9)
+#if (defined(BRIGAND_COMP_GCC) || defined(BRIGAND_COMP_CLANG)) && !defined(BRIGAND_COMP_CUDA_9PLUS)
   namespace lazy
   {
     template <typename L, typename Pred>

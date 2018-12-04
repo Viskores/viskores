@@ -74,7 +74,6 @@ namespace
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestContourTreeUniform
 {
 public:
@@ -104,7 +103,7 @@ public:
     // Create the worklet and run it
     vtkm::worklet::ContourTreeMesh2D contourTreeMesh2D;
 
-    contourTreeMesh2D.Run(fieldArray, nRows, nCols, saddlePeak, DeviceAdapter());
+    contourTreeMesh2D.Run(fieldArray, nRows, nCols, saddlePeak);
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 7),
                      "Wrong result for ContourTree filter");
@@ -151,7 +150,7 @@ public:
     // Create the worklet and run it
     vtkm::worklet::ContourTreeMesh3D contourTreeMesh3D;
 
-    contourTreeMesh3D.Run(fieldArray, nRows, nCols, nSlices, saddlePeak, DeviceAdapter());
+    contourTreeMesh3D.Run(fieldArray, nRows, nCols, nSlices, saddlePeak);
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
                      "Wrong result for ContourTree filter");
@@ -183,8 +182,7 @@ public:
 };
 }
 
-int UnitTestContourTreeUniform(int, char* [])
+int UnitTestContourTreeUniform(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestContourTreeUniform<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestContourTreeUniform(), argc, argv);
 }

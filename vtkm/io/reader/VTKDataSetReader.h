@@ -46,6 +46,11 @@ public:
   {
   }
 
+  explicit VTKDataSetReader(const std::string& fileName)
+    : VTKDataSetReaderBase(fileName)
+  {
+  }
+
   virtual void PrintSummary(std::ostream& out) const
   {
     if (this->Reader)

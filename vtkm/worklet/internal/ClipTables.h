@@ -24,6 +24,7 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -19457,7 +19458,7 @@ VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt8 CellEdges[CELL_EDGES_SIZE] = {
 #undef X
 // clang-format on
 
-class ClipTables
+class ClipTables : public vtkm::cont::ExecutionObjectBase
 {
 public:
   using EdgeVec = vtkm::Vec<vtkm::IdComponent, 2>;
@@ -19524,7 +19525,7 @@ public:
   }
 
   template <typename DeviceAdapter>
-  DevicePortal<DeviceAdapter> GetDevicePortal(DeviceAdapter)
+  DevicePortal<DeviceAdapter> PrepareForExecution(DeviceAdapter)
   {
     DevicePortal<DeviceAdapter> portal;
     portal.ClipTablesDataPortal = this->ClipTablesDataArray.PrepareForInput(DeviceAdapter());

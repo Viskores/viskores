@@ -152,9 +152,9 @@ public:
   void ReleaseResources() { this->ReleaseResourcesImpl(); }
 
   template <typename DeviceAdapter>
-  VTKM_CONT bool IsDeviceAdapter(DeviceAdapter) const
+  VTKM_CONT bool IsDeviceAdapter(DeviceAdapter device) const
   {
-    return this->IsDeviceAdapterImpl(vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId());
+    return this->IsDeviceAdapterImpl(device);
   }
 
   VTKM_CONT
@@ -255,16 +255,10 @@ protected:
   void ReleaseResourcesImpl() { this->Transfer.ReleaseResources(); }
 
   VTKM_CONT
-  bool IsDeviceAdapterImpl(const DeviceAdapterId& id) const
-  {
-    return id == vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-  }
+  bool IsDeviceAdapterImpl(const DeviceAdapterId& id) const { return id == DeviceAdapter(); }
 
   VTKM_CONT
-  DeviceAdapterId GetDeviceAdapterIdImpl() const
-  {
-    return vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-  }
+  DeviceAdapterId GetDeviceAdapterIdImpl() const { return DeviceAdapter(); }
 
 private:
   ArrayTransferType Transfer;

@@ -51,11 +51,10 @@ inline vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>> GetCellSet
 } // anonymous namespace
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename DeviceAdapter>
+template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
   const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter&)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //1. extract the cell set
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -68,13 +67,11 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
   {
     this->Worklet.Run(cells.Cast<vtkm::cont::CellSetStructured<3>>(),
                       input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
-                      outCellSet,
-                      DeviceAdapter());
+                      outCellSet);
   }
   else
   {
-    this->Worklet.Run(
-      vtkm::filter::ApplyPolicyUnstructured(cells, policy), outCellSet, DeviceAdapter());
+    this->Worklet.Run(vtkm::filter::ApplyPolicyUnstructured(cells, policy), outCellSet);
   }
 
   //3. Check the fields of the dataset to see what kinds of fields are present so
@@ -103,7 +100,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
-    return this->Compactor.DoExecute(output, GetCellSetExplicitPolicy(policy), DeviceAdapter());
+    return this->Compactor.DoExecute(output, GetCellSetExplicitPolicy(policy));
   }
   else
   {
@@ -112,19 +109,18 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool ExternalFaces::DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (fieldMeta.IsPointField())
   {
     if (this->CompactPoints)
     {
-      return this->Compactor.DoMapField(result, input, fieldMeta, policy, DeviceAdapter());
+      return this->Compactor.DoMapField(result, input, fieldMeta, policy);
     }
     else
     {
@@ -135,7 +131,7 @@ inline VTKM_CONT bool ExternalFaces::DoMapField(
   else if (fieldMeta.IsCellField())
   {
     vtkm::cont::ArrayHandle<T> fieldArray;
-    fieldArray = this->Worklet.ProcessCellField(input, device);
+    fieldArray = this->Worklet.ProcessCellField(input);
     result.AddField(fieldMeta.AsField(fieldArray));
     return true;
   }

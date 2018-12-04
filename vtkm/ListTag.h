@@ -82,7 +82,7 @@ struct ListTagAppend : detail::ListRoot
 };
 
 /// Append \c Type to \c ListTag only if \c ListTag does not already contain \c Type.
-/// No checks are performed to see if \c ListTag itself has only unqiue elements.
+/// No checks are performed to see if \c ListTag itself has only unique elements.
 template <typename ListTag, typename Type>
 struct ListTagAppendUnique : detail::ListRoot
 {

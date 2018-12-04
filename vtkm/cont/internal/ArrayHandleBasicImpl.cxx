@@ -22,18 +22,6 @@
 
 #include <vtkm/cont/internal/ArrayHandleBasicImpl.h>
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
-
-#include <vtkm/cont/serial/internal/ExecutionArrayInterfaceBasicSerial.h>
-#ifdef VTKM_ENABLE_TBB
-#include <vtkm/cont/tbb/internal/ExecutionArrayInterfaceBasicTBB.h>
-#endif
-#ifdef VTKM_ENABLE_CUDA
-#include <vtkm/cont/cuda/internal/ExecutionArrayInterfaceBasicCuda.h>
-#endif
-
 namespace vtkm
 {
 namespace cont
@@ -256,43 +244,13 @@ bool ArrayHandleImpl::PrepareForDevice(DeviceAdapterId devId, vtkm::UInt64 sizeO
 
   VTKM_ASSERT(this->ExecutionInterface == nullptr);
   VTKM_ASSERT(!this->ExecutionArrayValid);
-  switch (devId)
-  {
-    case VTKM_DEVICE_ADAPTER_ERROR:
-      throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_ERROR");
-      break;
-
-#ifdef VTKM_ENABLE_TBB
-    case VTKM_DEVICE_ADAPTER_TBB:
-      this->ExecutionInterface =
-        new ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB>(*this->ControlArray);
-      break;
-#endif
-
-//this doesn't need to be guarded as a .cu file as it is calling host methods
-//and not cuda code directly
-#ifdef VTKM_ENABLE_CUDA
-    case VTKM_DEVICE_ADAPTER_CUDA:
-
-      this->ExecutionInterface =
-        new ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>(*this->ControlArray);
-      break;
-#endif
-
-    case VTKM_DEVICE_ADAPTER_SERIAL:
-      VTKM_FALLTHROUGH;
-    default:
-      this->ExecutionInterface =
-        new ExecutionArrayInterfaceBasic<DeviceAdapterTagSerial>(*this->ControlArray);
-      break;
-  }
   return true;
 }
 
 DeviceAdapterId ArrayHandleImpl::GetDeviceAdapterId() const
 {
   return this->ExecutionArrayValid ? this->ExecutionInterface->GetDeviceId()
-                                   : VTKM_DEVICE_ADAPTER_UNDEFINED;
+                                   : DeviceAdapterTagUndefined{};
 }
 
 

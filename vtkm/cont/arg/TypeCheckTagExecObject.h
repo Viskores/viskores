@@ -46,7 +46,7 @@ struct TypeCheckTagExecObject
 template <typename Type>
 struct TypeCheck<TypeCheckTagExecObject, Type>
 {
-  static constexpr bool value = std::is_base_of<vtkm::cont::ExecutionObjectBase, Type>::value;
+  static constexpr bool value = vtkm::cont::internal::IsExecutionObjectBase<Type>::value;
 };
 }
 }

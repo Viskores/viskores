@@ -85,13 +85,14 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
 
-  using FunctorType =
-    internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, vtkm::cont::DataSet>;
-  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
-
-  using Traits = vtkm::filter::FilterTraits<Derived>;
   vtkm::cont::CastAndCall(
-    vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->GetRuntimeDeviceTracker());
+    vtkm::filter::ApplyPolicy(field, policy, vtkm::filter::FilterTraits<Derived>()),
+    internal::ResolveFieldTypeAndExecute(),
+    static_cast<Derived*>(this),
+    input,
+    metaData,
+    policy,
+    result);
   return result;
 }
 
@@ -109,17 +110,19 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
 
-  using FunctorType =
-    internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, vtkm::cont::DataSet>;
-  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
-
   using Traits = vtkm::filter::FilterTraits<Derived>;
   constexpr bool supportsVec3 = vtkm::ListContains<typename Traits::InputFieldTypeList,
                                                    vtkm::Vec<vtkm::FloatDefault, 3>>::value;
 
   using supportsCoordinateSystem = std::integral_constant<bool, supportsVec3>;
-  vtkm::cont::ConditionalCastAndCall(
-    supportsCoordinateSystem(), field, functor, this->GetRuntimeDeviceTracker());
+  vtkm::cont::ConditionalCastAndCall(supportsCoordinateSystem(),
+                                     field,
+                                     internal::ResolveFieldTypeAndExecute(),
+                                     static_cast<Derived*>(this),
+                                     input,
+                                     metaData,
+                                     policy,
+                                     result);
 
   return result;
 }

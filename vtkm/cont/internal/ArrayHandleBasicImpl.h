@@ -75,7 +75,7 @@ static PortalConstType CreatePortalConst(const ValueType* start, const ValueType
 /// Typeless interface for interacting with a execution memory buffer when using basic storage.
 struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicBase
 {
-  VTKM_CONT ExecutionArrayInterfaceBasicBase(StorageBasicBase& storage);
+  VTKM_CONT explicit ExecutionArrayInterfaceBasicBase(StorageBasicBase& storage);
   VTKM_CONT virtual ~ExecutionArrayInterfaceBasicBase();
 
   VTKM_CONT
@@ -239,15 +239,15 @@ public:
 
   VTKM_CONT ArrayHandle();
   VTKM_CONT ArrayHandle(const Thisclass& src);
-  VTKM_CONT ArrayHandle(Thisclass&& src);
+  VTKM_CONT ArrayHandle(Thisclass&& src) noexcept;
 
-  VTKM_CONT ArrayHandle(const StorageType& storage);
-  VTKM_CONT ArrayHandle(StorageType&& storage);
+  VTKM_CONT ArrayHandle(const StorageType& storage) noexcept;
+  VTKM_CONT ArrayHandle(StorageType&& storage) noexcept;
 
   VTKM_CONT ~ArrayHandle();
 
   VTKM_CONT Thisclass& operator=(const Thisclass& src);
-  VTKM_CONT Thisclass& operator=(Thisclass&& src);
+  VTKM_CONT Thisclass& operator=(Thisclass&& src) noexcept;
 
   VTKM_CONT bool operator==(const Thisclass& rhs) const;
   VTKM_CONT bool operator!=(const Thisclass& rhs) const;

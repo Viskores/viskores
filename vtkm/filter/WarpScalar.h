@@ -112,7 +112,7 @@ public:
   /// Choose the scalar factor field to operate on. In the warp op A + B *
   /// scaleAmount * scalarFactor, scalarFactor is the scalar factor field.
   VTKM_CONT
-  void SetScarlarFactorField(
+  void SetScalarFactorField(
     const std::string& name,
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
@@ -131,13 +131,12 @@ public:
   }
   //@}
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
     const vtkm::cont::DataSet& input,
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
     const vtkm::filter::FieldMetadata& fieldMeta,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter& tag);
+    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   vtkm::worklet::WarpScalar Worklet;
@@ -154,6 +153,16 @@ class FilterTraits<WarpScalar>
 public:
   // WarpScalar can only applies to Float and Double Vec3 arrays
   using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
+};
+
+struct WarpScalarScalarFieldTag
+{
+};
+
+template <>
+struct FilterTraits<WarpScalar, WarpScalarScalarFieldTag>
+{
+  using InputFieldTypeList = vtkm::TypeListTagFieldScalar;
 };
 }
 }

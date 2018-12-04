@@ -97,7 +97,7 @@ void TestPointElevation()
   }
 }
 
-int UnitTestPointElevation(int, char* [])
+int UnitTestPointElevation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestPointElevation);
+  return vtkm::cont::testing::Testing::Run(TestPointElevation, argc, argv);
 }

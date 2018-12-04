@@ -66,13 +66,20 @@ if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
 endif()
 if (NOT DEFINED VTKm_BUILD_CMAKE_BASE_DIR)
   set(VTKm_BUILD_CMAKE_BASE_DIR "${VTKm_BINARY_DIR}")
-endif ()
-
-set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include")
-
+endif()
+if(NOT DEFINED VTKm_EXECUTABLE_OUTPUT_PATH)
+  ## Set the directory where the binaries will be stored
+  set(VTKm_EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+endif()
+if(NOT DEFINED VTKm_LIBRARY_OUTPUT_PATH)
+  ## Set the directory where the libraries will be stored
+  set(VTKm_LIBRARY_OUTPUT_PATH  ${PROJECT_BINARY_DIR}/lib)
+endif()
 if (NOT DEFINED VTKm_EXPORT_NAME)
   set(VTKm_EXPORT_NAME "VTKmTargets")
 endif()
+
+set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include")
 
 #-----------------------------------------------------------------------------
 # vtkm_option(variable doc [initial])
@@ -90,6 +97,7 @@ vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
+vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
 
 vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
@@ -133,7 +141,7 @@ mark_as_advanced(
 #-----------------------------------------------------------------------------
 # When using C++11 support make sure you use the standard C++ extensions rather
 # than compiler-specific versions of the extensions (to preserve portability).
-set(CMAKE_CXX_EXTENSIONS False)
+set(CMAKE_CXX_EXTENSIONS Off)
 
 # Setup default build types
 include(VTKmBuildType)
@@ -148,20 +156,7 @@ include(VTKmCompilerFlags)
 
 
 #-----------------------------------------------------------------------------
-# When building VTK-m it self we want to explicitly disable compiler extensions
-set(CMAKE_CXX_EXTENSIONS OFF)
 
-#-----------------------------------------------------------------------------
-
-## Set the directory where the binaries will be stored
-if(NOT VTKm_EXECUTABLE_OUTPUT_PATH)
-  set(VTKm_EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-endif()
-
-## Set the directory where the libraries will be stored
-if(NOT VTKm_LIBRARY_OUTPUT_PATH)
-  set(VTKm_LIBRARY_OUTPUT_PATH  ${PROJECT_BINARY_DIR}/lib)
-endif()
 
 #-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)
@@ -205,6 +200,11 @@ if (VTKm_ENABLE_TESTING)
   # Find Pyexpander in case somebody wants to update the auto generated
   # faux variadic template code
   find_package(Pyexpander QUIET)
+
+  #-----------------------------------------------------------------------------
+  # Setup compiler flags for dynamic analysis if needed
+  include(VTKmCompilerDynamicAnalysisFlags)
+  vtkm_check_sanitizer_build()
 endif (VTKm_ENABLE_TESTING)
 
 #-----------------------------------------------------------------------------
@@ -294,7 +294,7 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
 
   # Create and install exports for external projects
   export(EXPORT ${VTKm_EXPORT_NAME}
-    FILE ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    FILE ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
     )
   install(EXPORT ${VTKm_EXPORT_NAME}
     DESTINATION ${VTKm_INSTALL_CONFIG_DIR}

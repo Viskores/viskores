@@ -85,4 +85,40 @@ vtkm::cont::ArrayHandleConstant<T> make_ArrayHandleConstant(T value, vtkm::Id nu
 }
 } // vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename T>
+struct TypeString<vtkm::cont::detail::ConstantFunctor<T>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_ConstantFunctor<" + TypeString<T>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename T>
+struct TypeString<vtkm::cont::ArrayHandleConstant<T>>
+  : TypeString<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::ConstantFunctor<T>>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename T>
+struct Serialization<vtkm::cont::ArrayHandleConstant<T>>
+  : Serialization<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::ConstantFunctor<T>>>
+{
+};
+
+} // diy
+
 #endif //vtk_m_cont_ArrayHandleConstant_h

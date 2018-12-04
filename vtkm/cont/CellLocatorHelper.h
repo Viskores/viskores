@@ -53,9 +53,11 @@ public:
 
   /// Builds the cell locator lookup structure
   ///
-  template <typename DeviceAdapter, typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
-  void Build(DeviceAdapter device, CellSetList cellSetTypes = CellSetList())
+  template <typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
+  void Build(CellSetList cellSetTypes = CellSetList())
   {
+    VTKM_IS_LIST_TAG(CellSetList);
+
     if (IsUniformGrid(this->CellSet, this->Coordinates))
     {
       // nothing to build for uniform grid
@@ -64,7 +66,7 @@ public:
     {
       this->Locator.SetCellSet(this->CellSet);
       this->Locator.SetCoordinates(this->Coordinates);
-      this->Locator.Build(device, cellSetTypes);
+      this->Locator.Build(cellSetTypes);
     }
   }
 
@@ -124,13 +126,11 @@ public:
   ///
   template <typename PointComponentType,
             typename PointStorageType,
-            typename DeviceAdapter,
             typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
   void FindCells(
     const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& points,
     vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& parametricCoords,
-    DeviceAdapter device,
     CellSetList cellSetTypes = CellSetList()) const
   {
     if (IsUniformGrid(this->CellSet, this->Coordinates))
@@ -138,12 +138,12 @@ public:
       auto coordinates =
         this->Coordinates.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       auto cellset = this->CellSet.ResetCellSetList(StructuredCellSetList());
-      vtkm::worklet::DispatcherMapField<FindCellWorklet, DeviceAdapter>().Invoke(
-        points, cellset, coordinates, cellIds, parametricCoords);
+      vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
+      dispatcher.Invoke(points, cellset, coordinates, cellIds, parametricCoords);
     }
     else
     {
-      this->Locator.FindCells(points, cellIds, parametricCoords, device, cellSetTypes);
+      this->Locator.FindCells(points, cellIds, parametricCoords, cellSetTypes);
     }
   }
 

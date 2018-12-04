@@ -55,6 +55,9 @@ namespace internal
 template <class ArrayPortalType>
 class Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>
 {
+  using ClassType =
+    Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>;
+
 public:
   using ValueType = typename ArrayPortalType::ValueType;
   using PortalConstType = ArrayPortalType;
@@ -73,6 +76,11 @@ public:
     , NumberOfValues(portal.GetNumberOfValues())
   {
   }
+
+  VTKM_CONT Storage(const ClassType& src) = default;
+  VTKM_CONT Storage(ClassType&& src) = default;
+  VTKM_CONT ClassType& operator=(const ClassType& src) = default;
+  VTKM_CONT ClassType& operator=(ClassType&& src) = default;
 
   // All these methods do nothing but raise errors.
   VTKM_CONT
