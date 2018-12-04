@@ -46,6 +46,7 @@ set(headers
   GhostZone.h
   Gradient.h
   Histogram.h
+  ImageConnectivity.h
   Lagrangian.h
   MarchingCubes.h
   Mask.h
@@ -97,6 +98,7 @@ set(header_template_sources
   GhostZone.hxx
   Gradient.hxx
   Histogram.hxx
+  ImageConnectivity.hxx
   Lagrangian.hxx
   MarchingCubes.hxx
   Mask.hxx

@@ -19,8 +19,8 @@
 //  this software.
 //
 //=============================================================================
-#ifndef vtk_m_worklet_CellSetDualGraph_h
-#define vtk_m_worklet_CellSetDualGraph_h
+#ifndef vtk_m_worklet_connectivity_CellSetDualGraph_h
+#define vtk_m_worklet_connectivity_CellSetDualGraph_h
 
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/exec/CellEdge.h>
@@ -190,4 +190,4 @@ public:
 }
 }
 
-#endif //vtk_m_worklet_CellSetDualGraph_h
+#endif //vtk_m_worklet_connectivity_CellSetDualGraph_h

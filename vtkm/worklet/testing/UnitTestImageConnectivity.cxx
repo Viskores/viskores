@@ -25,7 +25,6 @@
 
 #include <vtkm/worklet/connectivities/ImageConnectivity.h>
 
-
 class TestImageConnectivity
 {
 public:
@@ -91,15 +90,10 @@ public:
     vtkm::worklet::connectivity::ImageConnectivity().Run(
       data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
 
-    for (int j = 0; j < 8; j++)
-    {
-      for (int i = 0; i < 8; i++)
-      {
-        std::cout << std::setw(2) << component.GetPortalConstControl().Get(i + j * 8) << " ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
+    std::vector<vtkm::UInt8> componentExpected = { 0, 1, 1, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 1, 1, 2,
+                                                   0, 1, 1, 0, 0, 1, 1, 2, 0, 1, 0, 0, 0, 1, 1, 2,
+                                                   0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
+                                                   0, 1, 0, 1, 1, 1, 3, 3, 0, 1, 1, 1, 1, 1, 3, 3 };
   }
 };
 

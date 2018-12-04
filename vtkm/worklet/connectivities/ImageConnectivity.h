@@ -20,8 +20,8 @@
 //
 //=============================================================================
 
-#ifndef vtk_m_worklet_connectivity_graph_connectivity_h
-#define vtk_m_worklet_connectivity_graph_connectivity_h
+#ifndef vtk_m_worklet_connectivity_ImageConnectivity_h
+#define vtk_m_worklet_connectivity_ImageConnectivity_h
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherPointNeighborhood.h>
@@ -180,4 +180,4 @@ public:
 }
 }
 
-#endif
+#endif // vtk_m_worklet_connectivity_ImageConnectivity_h

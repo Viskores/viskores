@@ -74,8 +74,8 @@ public:
   using Algorithm = vtkm::cont::Algorithm;
 
   template <typename InputPortalType, typename OutputPortalType>
-  void Run(const InputPortalType& numIndexArray,
-           const InputPortalType& indexOffsetArray,
+  void Run(const InputPortalType& numIndicesArray,
+           const InputPortalType& indexOffsetsArray,
            const InputPortalType& connectivityArray,
            OutputPortalType& componentsOut) const
   {
@@ -84,14 +84,15 @@ public:
     vtkm::cont::ArrayHandle<bool> isStar;
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
     Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndexArray.GetNumberOfValues()), cellIds);
+      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
+      cellIds);
     Algorithm::Copy(cellIds, components);
 
     do
     {
       vtkm::worklet::DispatcherMapField<detail::Graft> graftDispatcher;
       graftDispatcher.Invoke(
-        cellIds, indexOffsetArray, numIndexArray, connectivityArray, components);
+        cellIds, indexOffsetsArray, numIndicesArray, connectivityArray, components);
 
       // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
       vtkm::worklet::DispatcherMapField<IsStar> isStarDisp;
