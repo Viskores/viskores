@@ -72,7 +72,8 @@ set(headers
   WarpVector.h
   ZFPCompressor1D.h
   ZFPDecompressor1D.h
-  #ZFPCompression2D.h
+  ZFPCompressor2D.h
+  ZFPDecompressor2D.h
   #ZFPCompression3D.h
 )
 
@@ -125,7 +126,8 @@ set(header_template_sources
   WarpVector.hxx
   ZFPCompressor1D.hxx
   ZFPDecompressor1D.hxx
-  #ZFPCompression2D.hxx
+  ZFPCompressor2D.hxx
+  ZFPDecompressor2D.hxx
   #ZFPCompression3D.hxx
 )
 

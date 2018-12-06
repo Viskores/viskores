@@ -32,34 +32,28 @@ namespace vtkm
 namespace filter
 {
 
-namespace
-{
-
-template <typename CellSetList>
-bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset)
-{
-  if (cellset.template IsType<vtkm::cont::CellSetStructured<1>>())
-
-  {
-    return true;
-  }
-  return false;
-}
-} // anonymous namespace
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT ZFPCompressor1D::ZFPCompressor1D()
-  : vtkm::filter::FilterField<ZFPCompressor1D>()
-  , rate(0)
+inline VTKM_CONT ZFPDecompressor2D::ZFPDecompressor2D()
+  : vtkm::filter::FilterField<ZFPDecompressor2D>()
 {
 }
-
-
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor1D::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor2D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+{
+  VTKM_ASSERT(true);
+}
+
+//-----------------------------------------------------------------------------
+template <typename StorageType, typename DerivedPolicy>
+inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor2D::DoExecute(
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<vtkm::Int64, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
@@ -81,20 +75,26 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor1D::DoExecute(
       hasCellFields = true;
     }
   }
-  const vtkm::Id3 dim(field.GetNumberOfValues(), 1, 1);
 
-  auto compressed = compressor.Compress(field, rate, dim);
+  vtkm::cont::CellSetStructured<2> cellSet;
+  input.GetCellSet(0).CopyTo(cellSet);
+  vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
+
+  const vtkm::Id3 dim(pointDimensions[0], pointDimensions[1], 1);
+
+  vtkm::cont::ArrayHandle<vtkm::Float32, StorageType> decompress;
+  decompressor.Decompress(field, decompress, rate, dim);
 
   vtkm::cont::DataSet dataset;
-  vtkm::cont::Field compressedField(
-    "compressed", vtkm::cont::Field::Association::POINTS, compressed);
-  dataset.AddField(compressedField);
+  vtkm::cont::Field decompressField(
+    "decompressed", vtkm::cont::Field::Association::POINTS, decompress);
+  dataset.AddField(decompressField);
   return dataset;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ZFPCompressor1D::DoMapField(
+inline VTKM_CONT bool ZFPDecompressor2D::DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,

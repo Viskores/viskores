@@ -18,11 +18,12 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_ZFPCompressor1D_h
-#define vtk_m_filter_ZFPCompressor1D_h
+#ifndef vtk_m_filter_ZFPDecompressor2D_h
+#define vtk_m_filter_ZFPDecompressor2D_h
 
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/ZFPCompressor.h>
+#include <vtkm/worklet/ZFPDecompress.h>
 
 namespace vtkm
 {
@@ -34,11 +35,11 @@ namespace filter
 /// output of compressed data.
 /// @warning
 /// This filter is currently only supports 1D volumes.
-class ZFPCompressor1D : public vtkm::filter::FilterField<ZFPCompressor1D>
+class ZFPDecompressor2D : public vtkm::filter::FilterField<ZFPDecompressor2D>
 {
 public:
   VTKM_CONT
-  ZFPCompressor1D();
+  ZFPDecompressor2D();
 
   void SetRate(vtkm::Float64 _rate) { rate = _rate; }
   vtkm::Float64 GetRate() { return rate; }
@@ -48,6 +49,12 @@ public:
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  template <typename StorageType, typename DerivedPolicy>
+  VTKM_CONT vtkm::cont::DataSet DoExecute(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::ArrayHandle<vtkm::Int64, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
@@ -59,22 +66,22 @@ public:
 
 private:
   vtkm::Float64 rate;
-  vtkm::worklet::ZFPCompressor compressor;
+  vtkm::worklet::ZFPDecompressor decompressor;
 };
 
 template <>
-class FilterTraits<ZFPCompressor1D>
+class FilterTraits<ZFPDecompressor2D>
 {
 public:
-  struct TypeListTagMCScalars
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>
+  struct TypeListTagZFP1DScalars
+    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Int64, vtkm::Float32, vtkm::Float64>
   {
   };
-  using InputFieldTypeList = TypeListTagMCScalars;
+  using InputFieldTypeList = TypeListTagZFP1DScalars;
 };
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/ZFPCompressor1D.hxx>
+#include <vtkm/filter/ZFPDecompressor2D.hxx>
 
-#endif // vtk_m_filter_ZFPCompressor1D_h
+#endif // vtk_m_filter_ZFPDecompressor2D_h

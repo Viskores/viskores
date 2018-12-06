@@ -84,4 +84,4 @@ public:
 
 #include <vtkm/filter/ZFPDecompressor1D.hxx>
 
-#endif // vtk_m_filter_MarchingCubes_h
+#endif // vtk_m_filter_ZFPDecompressor1D_h

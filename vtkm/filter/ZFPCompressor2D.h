@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_ZFPCompressor1D_h
-#define vtk_m_filter_ZFPCompressor1D_h
+#ifndef vtk_m_filter_ZFPCompressor2D_h
+#define vtk_m_filter_ZFPCompressor2D_h
 
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/ZFPCompressor.h>
@@ -34,11 +34,11 @@ namespace filter
 /// output of compressed data.
 /// @warning
 /// This filter is currently only supports 1D volumes.
-class ZFPCompressor1D : public vtkm::filter::FilterField<ZFPCompressor1D>
+class ZFPCompressor2D : public vtkm::filter::FilterField<ZFPCompressor2D>
 {
 public:
   VTKM_CONT
-  ZFPCompressor1D();
+  ZFPCompressor2D();
 
   void SetRate(vtkm::Float64 _rate) { rate = _rate; }
   vtkm::Float64 GetRate() { return rate; }
@@ -63,7 +63,7 @@ private:
 };
 
 template <>
-class FilterTraits<ZFPCompressor1D>
+class FilterTraits<ZFPCompressor2D>
 {
 public:
   struct TypeListTagMCScalars
@@ -75,6 +75,6 @@ public:
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/ZFPCompressor1D.hxx>
+#include <vtkm/filter/ZFPCompressor2D.hxx>
 
-#endif // vtk_m_filter_ZFPCompressor1D_h
+#endif // vtk_m_filter_ZFPCompressor2D_h

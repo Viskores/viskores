@@ -63,7 +63,7 @@ set(unit_tests
   UnitTestVertexClusteringFilter.cxx
   UnitTestWarpScalarFilter.cxx
   UnitTestWarpVectorFilter.cxx
-  UnitTestZFP1D.cxx
+  UnitTestZFP.cxx
  )
 
 vtkm_unit_tests(SOURCES ${unit_tests})

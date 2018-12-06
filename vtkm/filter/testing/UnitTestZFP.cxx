@@ -29,11 +29,12 @@
 #include <vtkm/filter/CleanGrid.h>
 
 #include <vtkm/filter/ZFPCompressor1D.h>
+#include <vtkm/filter/ZFPCompressor2D.h>
 #include <vtkm/filter/ZFPDecompressor1D.h>
+#include <vtkm/filter/ZFPDecompressor2D.h>
 
-namespace vtkm_ut_zfp1d_filter
+namespace vtkm_ut_zfp_filter
 {
-
 
 void TestZFP1DFilter()
 {
@@ -57,9 +58,36 @@ void TestZFP1DFilter()
   auto decompress = decompressor.Execute(compressed);
 }
 
+void TestZFP2DFilter()
+{
+
+
+  vtkm::cont::testing::MakeTestDataSet testDataSet;
+  vtkm::cont::DataSet dataset = testDataSet.Make2DUniformDataSet0();
+  auto dynField = dataset.GetField("pointvar").GetData();
+
+  vtkm::filter::ZFPCompressor2D compressor;
+  vtkm::filter::ZFPDecompressor2D decompressor;
+
+  compressor.SetActiveField("pointvar");
+  compressor.SetRate(4);
+  auto compressed = compressor.Execute(dataset);
+
+
+
+  decompressor.SetActiveField("compressed");
+  decompressor.SetRate(4);
+  auto decompress = decompressor.Execute(compressed);
+}
+
+void TestZFPFilter()
+{
+  //TestZFP1DFilter();
+  TestZFP2DFilter();
+}
 } // anonymous namespace
 
-int UnitTestZFP1D(int, char* [])
+int UnitTestZFP(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(vtkm_ut_zfp1d_filter::TestZFP1DFilter);
+  return vtkm::cont::testing::Testing::Run(vtkm_ut_zfp_filter::TestZFPFilter);
 }
