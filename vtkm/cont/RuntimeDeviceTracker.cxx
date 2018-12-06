@@ -269,5 +269,32 @@ DeviceAdapterNameType RuntimeDeviceTracker::GetDeviceName(DeviceAdapterId device
   // Device 0 is invalid:
   return this->Internals->DeviceNames[0];
 }
+
+VTKM_CONT
+DeviceAdapterId RuntimeDeviceTracker::GetDeviceAdapterId(DeviceAdapterNameType name) const
+{
+  if (name == "Any")
+  {
+    return vtkm::cont::DeviceAdapterTagAny{};
+  }
+  else if (name == "Error")
+  {
+    return vtkm::cont::DeviceAdapterTagError{};
+  }
+  else if (name == "Undefined")
+  {
+    return vtkm::cont::DeviceAdapterTagUndefined{};
+  }
+
+  for (vtkm::Int8 id = 0; id < VTKM_MAX_DEVICE_ADAPTER_ID; ++id)
+  {
+    if (name == this->Internals->DeviceNames[id])
+    {
+      return vtkm::cont::make_DeviceAdapterId(id);
+    }
+  }
+
+  return vtkm::cont::DeviceAdapterTagUndefined{};
+}
 }
 } // namespace vtkm::cont

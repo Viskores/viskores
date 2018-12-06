@@ -75,27 +75,8 @@ private:
   vtkm::Int8 Value;
 };
 
-inline DeviceAdapterId make_DeviceAdapterIdFromName(const std::string& name)
-{
-  vtkm::Int8 deviceId(VTKM_DEVICE_ADAPTER_ERROR);
-  if (name == "SERIAL")
-  {
-    deviceId = VTKM_DEVICE_ADAPTER_SERIAL;
-  }
-  else if (name == "CUDA")
-  {
-    deviceId = VTKM_DEVICE_ADAPTER_CUDA;
-  }
-  else if (name == "TBB")
-  {
-    deviceId = VTKM_DEVICE_ADAPTER_TBB;
-  }
-  else if (name == "OPENMP")
-  {
-    deviceId = VTKM_DEVICE_ADAPTER_OPENMP;
-  }
-  return DeviceAdapterId(deviceId);
-}
+VTKM_CONT_EXPORT
+DeviceAdapterId make_DeviceAdapterId(const DeviceAdapterNameType& name);
 
 inline DeviceAdapterId make_DeviceAdapterId(vtkm::Int8 id)
 {

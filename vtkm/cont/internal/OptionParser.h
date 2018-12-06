@@ -1,3 +1,25 @@
+//=============================================================================
+//
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//
+//=============================================================================
+
 /*
  * The Lean Mean C++ Option Parser
  *
@@ -228,7 +250,9 @@
 
 namespace vtkm
 {
-namespace testing
+namespace cont
+{
+namespace internal
 {
 /** @brief The namespace of The Lean Mean C++ Option Parser. */
 namespace option
@@ -2958,10 +2982,10 @@ void printUsage(Function* prn,
   PrintUsageImplementation::printUsage(
     write, usage, width, last_column_min_percent, last_column_own_line_max_percent);
 }
+
+} // namespace option
 }
-// namespace option
 }
-}
-// namespace vtkm::testing
+} // namespace vtkm::cont::internal
 
 #endif /* OPTIONPARSER_H_ */

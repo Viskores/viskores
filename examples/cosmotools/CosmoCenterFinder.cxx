@@ -31,7 +31,7 @@
 #include <stdexcept>
 #include <string>
 
-static const vtkm::cont::LogLevel CosmoLogLevel = vtkm::cont::LogLevel(1);
+static const vtkm::cont::LogLevel CosmoLogLevel = vtkm::cont::LogLevel::UserFirst;
 
 void TestCosmoCenterFinder(const char* fileName)
 {
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 {
   vtkm::cont::SetLogLevelName(CosmoLogLevel, "Cosmo");
   vtkm::cont::SetStderrLogLevel(CosmoLogLevel);
-  vtkm::cont::InitLogging(argc, argv);
+  vtkm::cont::Initialize(argc, argv);
 
   if (argc < 2)
   {
