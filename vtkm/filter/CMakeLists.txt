@@ -70,6 +70,10 @@ set(headers
   VertexClustering.h
   WarpScalar.h
   WarpVector.h
+  ZFPCompressor1D.h
+  ZFPDecompressor1D.h
+  #ZFPCompression2D.h
+  #ZFPCompression3D.h
 )
 
 set(header_template_sources
@@ -119,6 +123,10 @@ set(header_template_sources
   VertexClustering.hxx
   WarpScalar.hxx
   WarpVector.hxx
+  ZFPCompressor1D.hxx
+  ZFPDecompressor1D.hxx
+  #ZFPCompression2D.hxx
+  #ZFPCompression3D.hxx
 )
 
 vtkm_declare_headers(${headers}
