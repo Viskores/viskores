@@ -37,6 +37,24 @@ namespace vtkm_ut_zfp1d_filter
 
 void TestZFP1DFilter()
 {
+
+
+  vtkm::cont::testing::MakeTestDataSet testDataSet;
+  vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet0();
+  auto dynField = dataset.GetField("pointvar").GetData();
+
+  vtkm::filter::ZFPCompressor1D compressor;
+  vtkm::filter::ZFPDecompressor1D decompressor;
+
+  compressor.SetActiveField("pointvar");
+  compressor.SetRate(4);
+  auto compressed = compressor.Execute(dataset);
+
+
+
+  decompressor.SetActiveField("compressed");
+  decompressor.SetRate(4);
+  auto decompress = decompressor.Execute(compressed);
 }
 
 } // anonymous namespace

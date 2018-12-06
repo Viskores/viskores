@@ -21,7 +21,7 @@
 #ifndef vtk_m_filter_ZFPCompressor1D_h
 #define vtk_m_filter_ZFPCompressor1D_h
 
-#include <vtkm/filter/FilterDataSetWithField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/ZFPCompressor.h>
 
 namespace vtkm
@@ -34,14 +34,14 @@ namespace filter
 /// output of compressed data.
 /// @warning
 /// This filter is currently only supports 1D volumes.
-class ZFPCompressor1D : public vtkm::filter::FilterDataSetWithField<ZFPCompressor1D>
+class ZFPCompressor1D : public vtkm::filter::FilterField<ZFPCompressor1D>
 {
 public:
   VTKM_CONT
   ZFPCompressor1D();
 
-  void SetRate(vtkm::Int32 _rate) { rate = _rate; }
-  vtkm::Int32 GetRate() { return rate; }
+  void SetRate(vtkm::Float64 _rate) { rate = _rate; }
+  vtkm::Float64 GetRate() { return rate; }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -58,7 +58,7 @@ public:
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  vtkm::Int32 rate;
+  vtkm::Float64 rate;
   vtkm::worklet::ZFPCompressor compressor;
 };
 

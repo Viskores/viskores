@@ -50,7 +50,8 @@ bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cell
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT ZFPCompressor1D::ZFPCompressor1D()
-  : vtkm::filter::FilterDataSetWithField<ZFPCompressor1D>()
+  : vtkm::filter::FilterField<ZFPCompressor1D>()
+  , rate(0)
 {
 }
 
@@ -81,12 +82,15 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor1D::DoExecute(
       hasCellFields = true;
     }
   }
-  const vtkm::Id dim = field.GetNumberOfValues();
+  const vtkm::Id3 dim(field.GetNumberOfValues(), 1, 1);
 
   auto compressed = compressor.Compress(field, rate, dim);
 
-
-  return compressed;
+  vtkm::cont::DataSet dataset;
+  vtkm::cont::Field compressedField(
+    "compressed", vtkm::cont::Field::Association::POINTS, compressed);
+  dataset.AddField(compressedField);
+  return dataset;
 }
 
 //-----------------------------------------------------------------------------

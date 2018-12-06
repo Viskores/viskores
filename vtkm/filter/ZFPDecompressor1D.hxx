@@ -35,16 +35,25 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT ZFPDecompressor1D::ZFPDecompressor1D()
-  : vtkm::filter::FilterDataSetWithField<ZFPDecompressor1D>()
+  : vtkm::filter::FilterField<ZFPDecompressor1D>()
 {
 }
-
-
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+{
+  VTKM_ASSERT(true);
+}
+
+//-----------------------------------------------------------------------------
+template <typename StorageType, typename DerivedPolicy>
+inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<vtkm::Int64, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
@@ -66,13 +75,15 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
       hasCellFields = true;
     }
   }
-  const vtkm::Id dim = field.GetNumberOfValues();
+  const vtkm::Id3 dim(field.GetNumberOfValues(), 1, 1);
 
-  vtkm::cont::ArrayHandle<T> decompress;
+  vtkm::cont::ArrayHandle<vtkm::Float32, StorageType> decompress;
   decompressor.Decompress(field, decompress, rate, dim);
 
   vtkm::cont::DataSet dataset;
-  dataset.AddField(decompress);
+  vtkm::cont::Field decompressField(
+    "decompressed", vtkm::cont::Field::Association::POINTS, decompress);
+  dataset.AddField(decompressField);
   return dataset;
 }
 
