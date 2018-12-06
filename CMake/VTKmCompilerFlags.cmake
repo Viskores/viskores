@@ -49,18 +49,13 @@ endif()
 add_library(vtkm_compiler_flags INTERFACE)
 
 # When building libraries/tests that are part of the VTK-m repository
-# inherit the properties from vtkm_developer_flags and vtkm_vectorization_flags.
+# inherit the properties from vtkm_vectorization_flags.
 # The flags are intended only for VTK-m itself and are not needed by consumers.
-# We will export vtkm_developer_flags, and vtkm_vectorization_flags in general
+# We will export vtkm_vectorization_flags in general
 # so consumer can either enable vectorization or use VTK-m's build flags if
 # they so desire
-if (VTKm_ENABLE_DEVELOPER_FLAGS)
-  target_link_libraries(vtkm_compiler_flags
-    INTERFACE $<BUILD_INTERFACE:vtkm_developer_flags>)
-endif()
 target_link_libraries(vtkm_compiler_flags
   INTERFACE $<BUILD_INTERFACE:vtkm_vectorization_flags>)
-
 
 # setup that we need C++11 support
 if(CMAKE_VERSION VERSION_LESS 3.8)
