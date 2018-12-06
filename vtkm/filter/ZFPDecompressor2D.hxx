@@ -82,7 +82,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor2D::DoExecute(
 
   const vtkm::Id3 dim(pointDimensions[0], pointDimensions[1], 1);
 
-  vtkm::cont::ArrayHandle<vtkm::Float32, StorageType> decompress;
+  vtkm::cont::ArrayHandle<vtkm::Float64, StorageType> decompress;
   decompressor.Decompress(field, decompress, rate, dim);
 
   vtkm::cont::DataSet dataset;
