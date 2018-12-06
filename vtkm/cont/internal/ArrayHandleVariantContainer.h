@@ -23,6 +23,9 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/ArrayHandleVirtual.h>
+#include <vtkm/cont/ArrayHandleVirtual.hxx>
+
+#include <vtkm/cont/ArrayHandleAny.hxx>
 
 #include <memory>
 #include <vtkm/Types.h>

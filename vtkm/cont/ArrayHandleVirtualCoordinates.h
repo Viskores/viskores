@@ -117,9 +117,12 @@ struct TypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
 {
   static VTKM_CONT const std::string Get() { return "AH_VirtualCoordinates"; }
 };
-}
-} // vtkm::cont
 
+} // namespace cont
+} // namespace vtkm
+
+//=============================================================================
+// Specializations of serialization related classes
 namespace diy
 {
 
@@ -139,30 +142,29 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    const auto& virtArray = static_cast<const vtkm::cont::ArrayHandleVirtualCoordinates&>(obj);
-    const vtkm::cont::StorageVirtual* storage = virtArray.GetStorage();
-    if (virtArray.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
+    const vtkm::cont::StorageVirtual* storage = obj.GetStorage();
+    if (obj.template IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
     {
       using HandleType = vtkm::cont::ArrayHandleUniformPointCoordinates;
       using T = typename HandleType::ValueType;
       using S = typename HandleType::StorageTag;
       auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
       diy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
-      diy::save(bb, array);
+      diy::save(bb, array->GetHandle());
     }
-    else if (virtArray.IsType<RectilinearCoordsArrayType>())
+    else if (obj.template IsType<RectilinearCoordsArrayType>())
     {
       using HandleType = RectilinearCoordsArrayType;
       using T = typename HandleType::ValueType;
       using S = typename HandleType::StorageTag;
       auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
       diy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
-      diy::save(bb, array);
+      diy::save(bb, array->GetHandle());
     }
     else
     {
       diy::save(bb, vtkm::cont::TypeString<BasicCoordsType>::Get());
-      vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, virtArray);
+      vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
     }
   }
 

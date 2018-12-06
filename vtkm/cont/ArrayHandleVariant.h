@@ -25,10 +25,8 @@
 #include <vtkm/TypeListTag.h>
 #include <vtkm/VecTraits.h>
 
-#include <vtkm/cont/ArrayHandleAny.h>
-#include <vtkm/cont/ArrayHandleAny.hxx>
-
 #include <vtkm/cont/ArrayHandleVirtual.h>
+
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/DynamicTransform.h>

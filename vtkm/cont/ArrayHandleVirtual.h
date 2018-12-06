@@ -300,13 +300,25 @@ private:
   }
 };
 
+//=============================================================================
+// Better name for the type
 template <typename T>
 using ArrayHandleVirtual = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>;
+
+
+//=============================================================================
+// Specializations of serialization related classes
+template <typename T>
+struct TypeString<vtkm::cont::ArrayHandleVirtual<T>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Virtual<" + TypeString<T>::Get() + ">";
+    return name;
+  }
+};
 }
 } //namespace vtkm::cont
 
 
-#include <vtkm/cont/ArrayHandleAny.h>
-
-
-#endif
+#endif //vtk_m_cont_ArrayHandleVirtual_h

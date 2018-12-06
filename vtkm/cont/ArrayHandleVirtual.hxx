@@ -68,4 +68,62 @@ inline void make_hostPortal(Payload&& payload, Args&&... args)
 } // namespace vtkm::virts
 
 
+
+#include <vtkm/cont/ArrayHandleAny.h>
+//=============================================================================
+// Specializations of serialization related classes
+namespace diy
+{
+
+template <typename T>
+struct Serialization<vtkm::cont::ArrayHandleVirtual<T>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleVirtual<T>;
+  using BaseType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>;
+  using BasicType = vtkm::cont::ArrayHandle<T>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    if (obj.template IsType<vtkm::cont::ArrayHandleAny<T>>())
+    {
+      const auto& array = static_cast<const vtkm::cont::ArrayHandleAny<T>&>(obj);
+      diy::save(bb, vtkm::cont::TypeString<vtkm::cont::ArrayHandleAny<T>>::Get());
+      diy::save(bb, array);
+    }
+    else
+    {
+      diy::save(bb, vtkm::cont::TypeString<BasicType>::Get());
+      vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
+    }
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    std::string typeString;
+    diy::load(bb, typeString);
+
+    if (typeString == vtkm::cont::TypeString<vtkm::cont::ArrayHandleAny<T>>::Get())
+    {
+      vtkm::cont::ArrayHandleAny<T> array;
+      diy::load(bb, array);
+      obj = std::move(array);
+    }
+    else if (typeString == vtkm::cont::TypeString<BasicType>::Get())
+    {
+      BasicType array;
+      diy::load(bb, array);
+      obj = std::move(vtkm::cont::ArrayHandleAny<T>{ array });
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadType("Error deserializing ArrayHandleVirtual. TypeString: " +
+                                     typeString);
+    }
+  }
+};
+}
+
+
 #endif
