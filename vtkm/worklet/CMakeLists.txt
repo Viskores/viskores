@@ -84,6 +84,10 @@ set(headers
   WorkletMapTopology.h
   WorkletPointNeighborhood.h
   WorkletReduceByKey.h
+  ZFPCompressor.h
+  ZFPDecompress.h
+  ZFP2DCompressor.h
+  ZFP2DDecompress.h
   )
 
 

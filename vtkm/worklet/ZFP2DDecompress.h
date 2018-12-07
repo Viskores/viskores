@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_worklet_zfp_decompressor_h
-#define vtk_m_worklet_zfp_decompressor_h
+#ifndef vtk_m_worklet_zfp_2d_decompressor_h
+#define vtk_m_worklet_zfp_2d_decompressor_h
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/Algorithm.h>
@@ -29,7 +29,7 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/zfp/ZFPDecode3.h>
+#include <vtkm/worklet/zfp/ZFPDecode2.h>
 #include <vtkm/worklet/zfp/ZFPTools.h>
 
 using ZFPWord = vtkm::UInt64;
@@ -43,80 +43,23 @@ namespace worklet
 namespace detail
 {
 
-//size_t CalcMem3d(const vtkm::Id3 dims,
-//                 const int bits_per_block)
-//{
-//  const size_t vals_per_block = 64;
-//  const size_t size = dims[0] * dims[1] * dims[2];
-//  size_t total_blocks = size / vals_per_block;
-//  const size_t bits_per_word = sizeof(ZFPWord) * 8;
-//  const size_t total_bits = bits_per_block * total_blocks;
-//  const size_t alloc_size = total_bits / bits_per_word;
-//  return alloc_size * sizeof(ZFPWord);
-//}
 
-//class MemTransfer : public vtkm::worklet::WorkletMapField
-//{
-//public:
-//  VTKM_CONT
-//  MemTransfer()
-//  {
-//  }
-//  using ControlSignature = void(FieldIn<>, WholeArrayInOut<>);
-//  using ExecutionSignature = void(_1, _2);
-
-//  template<typename PortalType>
-//  VTKM_EXEC
-//  void operator()(const vtkm::Id id,
-//                  PortalType& outValue) const
-//  {
-//    (void) id;
-//    (void) outValue;
-//  }
-//}; //class MemTransfer
 
 } // namespace detail
 
-template <typename T>
-T* GetVTKMPointerb(vtkm::cont::ArrayHandle<T>& handle)
-{
-  typedef typename vtkm::cont::ArrayHandle<T> HandleType;
-  typedef typename HandleType::template ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial>::Portal
-    PortalType;
-  typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
-  IteratorType iter =
-    vtkm::cont::ArrayPortalToIterators<PortalType>(handle.GetPortalControl()).GetBegin();
-  return &(*iter);
-}
 
-template <typename T>
-void DataDumpb(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
-{
-
-  T* ptr = GetVTKMPointerb(handle);
-  vtkm::Id osize = handle.GetNumberOfValues();
-  FILE* fp = fopen(fileName.c_str(), "wb");
-  ;
-  if (fp != NULL)
-  {
-    fwrite(ptr, sizeof(T), osize, fp);
-  }
-
-  fclose(fp);
-}
-
-class ZFPDecompressor
+class ZFP2DDecompressor
 {
 public:
   template <typename Scalar>
   void Decompress(const vtkm::cont::ArrayHandle<vtkm::Int64>& encodedData,
                   vtkm::cont::ArrayHandle<Scalar>& output,
                   const vtkm::Float64 requestedRate,
-                  vtkm::Id3 dims)
+                  vtkm::Id2 dims)
   {
     //DataDumpb(data, "uncompressed");
     zfp::ZFPStream stream;
-    const vtkm::Int32 topoDims = 3;
+    constexpr vtkm::Int32 topoDims = 2;
     ;
     vtkm::Float64 actualRate = stream.SetRate(requestedRate, topoDims, vtkm::Float64());
 
@@ -128,27 +71,24 @@ public:
     // Check to see if we need to increase the block sizes
     // in the case where dim[x] is not a multiple of 4
 
-    vtkm::Id3 paddedDims = dims;
+    vtkm::Id2 paddedDims = dims;
     // ensure that we have block sizes
     // that are a multiple of 4
     if (paddedDims[0] % 4 != 0)
       paddedDims[0] += 4 - dims[0] % 4;
     if (paddedDims[1] % 4 != 0)
       paddedDims[1] += 4 - dims[1] % 4;
-    if (paddedDims[2] % 4 != 0)
-      paddedDims[2] += 4 - dims[2] % 4;
-    const vtkm::Id four = 4;
-    vtkm::Id totalBlocks =
-      (paddedDims[0] / four) * (paddedDims[1] / (four) * (paddedDims[2] / four));
+    constexpr vtkm::Id four = 4;
+    vtkm::Id totalBlocks = (paddedDims[0] / four) * (paddedDims[1] / (four));
 
     std::cout << "Padded dims " << paddedDims << "\n";
 
-    size_t outbits = detail::CalcMem3d(paddedDims, stream.minbits);
+    size_t outbits = detail::CalcMem2d(paddedDims, stream.minbits);
     std::cout << "Total output bits " << outbits << "\n";
     vtkm::Id outsize = outbits / sizeof(ZFPWord);
     std::cout << "Output size " << outsize << "\n";
 
-    output.Allocate(dims[0] * dims[1] * dims[2]);
+    output.Allocate(dims[0] * dims[1]);
     // hopefully this inits/allocates the mem only on the device
     //
     //vtkm::cont::ArrayHandleConstant<vtkm::Int64> zero(0, outsize);
@@ -170,8 +110,8 @@ public:
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
     Timer timer;
-    vtkm::worklet::DispatcherMapField<zfp::Decode3> decompressDispatcher(
-      zfp::Decode3(dims, paddedDims, stream.maxbits));
+    vtkm::worklet::DispatcherMapField<zfp::Decode2> decompressDispatcher(
+      zfp::Decode2(dims, paddedDims, stream.maxbits));
     decompressDispatcher.Invoke(blockCounter, output, encodedData);
 
     vtkm::Float64 time = timer.GetElapsedTime();
@@ -185,4 +125,4 @@ public:
 };
 } // namespace worklet
 } // namespace vtkm
-#endif //  vtk_m_worklet_zfp_compressor_h
+#endif //  vtk_m_worklet_zfp_2d_compressor_h

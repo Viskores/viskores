@@ -21,6 +21,9 @@
 #include <vtkm/worklet/ZFPCompressor.h>
 #include <vtkm/worklet/ZFPDecompress.h>
 
+#include <vtkm/worklet/ZFP2DCompressor.h>
+#include <vtkm/worklet/ZFP2DDecompress.h>
+
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -28,6 +31,37 @@
 
 using Handle64 = vtkm::cont::ArrayHandle<vtkm::Float64>;
 
+template <typename Scalar>
+void Test2D(int rate)
+{
+  std::cout << "Testing ZFP 2d:" << std::endl;
+  vtkm::Id2 dims(4, 4);
+  vtkm::cont::testing::MakeTestDataSet testDataSet;
+  vtkm::cont::DataSet dataset = testDataSet.Make2DUniformDataSet2();
+  auto dynField = dataset.GetField("pointvar").GetData();
+
+  vtkm::worklet::ZFP2DCompressor compressor;
+  vtkm::worklet::ZFP2DDecompressor decompressor;
+
+  if (dynField.IsSameType(Handle64()))
+  {
+    Handle64 field = dynField.Cast<Handle64>();
+    vtkm::cont::ArrayHandle<Scalar> handle;
+    const vtkm::Id size = field.GetNumberOfValues();
+    handle.Allocate(size);
+
+    auto fPortal = field.GetPortalControl();
+    auto hPortal = handle.GetPortalControl();
+    for (vtkm::Id i = 0; i < size; ++i)
+    {
+      hPortal.Set(i, static_cast<Scalar>(fPortal.Get(i)));
+    }
+
+    auto compressed = compressor.Compress(handle, rate, dims);
+    vtkm::cont::ArrayHandle<Scalar> decoded;
+    decompressor.Decompress(compressed, decoded, rate, dims);
+  }
+}
 template <typename Scalar>
 void Test3D(int rate)
 {
@@ -69,6 +103,7 @@ void Test3D(int rate)
 void TestZFP()
 {
   Test3D<vtkm::Float64>(4);
+  Test2D<vtkm::Float64>(4);
   //Test3D<vtkm::Float32>(4);
   //Test3D<vtkm::Int64>(4);
   //Test3D<vtkm::Int32>(4);

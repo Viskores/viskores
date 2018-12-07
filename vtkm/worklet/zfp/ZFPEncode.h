@@ -144,10 +144,11 @@ inline VTKM_EXEC vtkm::UInt32 int2uint<vtkm::Int32, vtkm::UInt32>(const vtkm::In
 template <typename UInt, typename Int, vtkm::Int32 BlockSize>
 inline VTKM_EXEC void fwd_order(UInt* ublock, const Int* iblock)
 {
-  const zfp::ZFPCodec codec;
+  const zfp::ZFPCodec<BlockSize> codec;
   for (vtkm::Int32 i = 0; i < BlockSize; ++i)
   {
-    ublock[i] = int2uint<Int, UInt>(iblock[codec.CodecLookup(i)]);
+    vtkm::UInt8 idx = codec.CodecLookup(i);
+    ublock[i] = int2uint<Int, UInt>(iblock[idx]);
   }
 }
 
@@ -190,7 +191,17 @@ inline VTKM_EXEC void fwd_xform<vtkm::Int32, 64>(vtkm::Int32* p)
       fwd_lift<vtkm::Int32, 16>(p + 1 * x + 4 * y);
 }
 
-
+template <>
+inline VTKM_EXEC void fwd_xform<vtkm::Int64, 16>(vtkm::Int64* p)
+{
+  vtkm::UInt32 x, y;
+  /* transform along x */
+  for (y = 0; y < 4; y++)
+    fwd_lift<vtkm::Int64, 1>(p + 4 * y);
+  /* transform along y */
+  for (x = 0; x < 4; x++)
+    fwd_lift<vtkm::Int64, 4>(p + 1 * x);
+}
 template <vtkm::Int32 BlockSize, typename PortalType, typename Int>
 VTKM_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
                             vtkm::Int32 maxbits,

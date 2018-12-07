@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_worklet_zfp_compressor_h
-#define vtk_m_worklet_zfp_compressor_h
+#ifndef vtk_m_worklet_zfp_2d_compressor_h
+#define vtk_m_worklet_zfp_2d_compressor_h
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/Algorithm.h>
@@ -29,7 +29,7 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
-#include <vtkm/worklet/zfp/ZFPEncode3.h>
+#include <vtkm/worklet/zfp/ZFPEncode2.h>
 #include <vtkm/worklet/zfp/ZFPTools.h>
 
 using ZFPWord = vtkm::UInt64;
@@ -41,17 +41,18 @@ namespace vtkm
 namespace worklet
 {
 
-class ZFPCompressor
+
+class ZFP2DCompressor
 {
 public:
   template <typename Scalar>
   vtkm::cont::ArrayHandle<vtkm::Int64> Compress(const vtkm::cont::ArrayHandle<Scalar>& data,
                                                 const vtkm::Float64 requestedRate,
-                                                const vtkm::Id3 dims)
+                                                const vtkm::Id2 dims)
   {
     DataDump(data, "uncompressed");
     zfp::ZFPStream stream;
-    const vtkm::Int32 topoDims = 3;
+    constexpr vtkm::Int32 topoDims = 2;
     vtkm::Float64 actualRate = stream.SetRate(requestedRate, topoDims, vtkm::Float64());
     //VTKM_ASSERT(
     std::cout << "ArraySize " << data.GetNumberOfValues() << "\n";
@@ -62,22 +63,19 @@ public:
     // Check to see if we need to increase the block sizes
     // in the case where dim[x] is not a multiple of 4
 
-    vtkm::Id3 paddedDims = dims;
+    vtkm::Id2 paddedDims = dims;
     // ensure that we have block sizes
     // that are a multiple of 4
     if (paddedDims[0] % 4 != 0)
       paddedDims[0] += 4 - dims[0] % 4;
     if (paddedDims[1] % 4 != 0)
       paddedDims[1] += 4 - dims[1] % 4;
-    if (paddedDims[2] % 4 != 0)
-      paddedDims[2] += 4 - dims[2] % 4;
-    const vtkm::Id four = 4;
-    vtkm::Id totalBlocks =
-      (paddedDims[0] / four) * (paddedDims[1] / (four) * (paddedDims[2] / four));
+    constexpr vtkm::Id four = 4;
+    const vtkm::Id totalBlocks = (paddedDims[0] / four) * (paddedDims[1] / (four));
 
     std::cout << "Padded dims " << paddedDims << "\n";
 
-    size_t outbits = detail::CalcMem3d(paddedDims, stream.minbits);
+    size_t outbits = detail::CalcMem2d(paddedDims, stream.minbits);
     std::cout << "Total output bits " << outbits << "\n";
     vtkm::Id outsize = outbits / sizeof(ZFPWord);
     std::cout << "Output size " << outsize << "\n";
@@ -101,8 +99,8 @@ public:
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
     Timer timer;
-    vtkm::worklet::DispatcherMapField<zfp::Encode3> compressDispatcher(
-      zfp::Encode3(dims, paddedDims, stream.maxbits));
+    vtkm::worklet::DispatcherMapField<zfp::Encode2> compressDispatcher(
+      zfp::Encode2(dims, paddedDims, stream.maxbits));
     compressDispatcher.Invoke(blockCounter, data, output);
 
     vtkm::Float64 time = timer.GetElapsedTime();
@@ -118,4 +116,4 @@ public:
 };
 } // namespace worklet
 } // namespace vtkm
-#endif //  vtk_m_worklet_zfp_compressor_h
+#endif //  vtk_m_worklet_zfp_2d_compressor_h
