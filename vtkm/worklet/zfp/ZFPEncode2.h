@@ -115,7 +115,7 @@ public:
     zfpBlock[0] = blockIdx % ZFPDims[0];
     zfpBlock[1] = (blockIdx / ZFPDims[0]) % ZFPDims[1];
     vtkm::Id2 logicalStart = zfpBlock * vtkm::Id(4);
-    vtkm::Id offset = logicalStart[0] * Dims[0] + logicalStart[1] * Dims[1];
+    vtkm::Id offset = logicalStart[1] * Dims[0] + logicalStart[0];
 
     constexpr vtkm::Int32 BlockSize = 16;
     Scalar fblock[BlockSize];

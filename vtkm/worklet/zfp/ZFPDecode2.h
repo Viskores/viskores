@@ -105,7 +105,7 @@ public:
     //std::cout<<"logicalStart Start "<<logicalStart<<"\n";
     // get the offset into the field
     //vtkm::Id offset = (zfpBlock[2]*4*ZFPDims[1] + zfpBlock[1] * 4)*ZFPDims[0] * 4 + zfpBlock[0] * 4;
-    vtkm::Id offset = logicalStart[0] * Dims[0] + logicalStart[1] * Dims[1];
+    vtkm::Id offset = logicalStart[0] + logicalStart[1] * Dims[0];
     //std::cout<<"ZFP block offset "<<offset<<"\n";
     bool partial = false;
     if (logicalStart[0] + 4 > Dims[0])
