@@ -52,8 +52,10 @@ public:
   }
 
   CellSetStructured(const Thisclass& src);
+  CellSetStructured(Thisclass&& src) noexcept;
 
   Thisclass& operator=(const Thisclass& src);
+  Thisclass& operator=(Thisclass&& src) noexcept;
 
   vtkm::Id GetNumberOfCells() const override { return this->Structure.GetNumberOfCells(); }
 

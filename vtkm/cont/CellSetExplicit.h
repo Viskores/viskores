@@ -109,8 +109,10 @@ public:
 
   VTKM_CONT CellSetExplicit(const std::string& name = std::string());
   VTKM_CONT CellSetExplicit(const Thisclass& src);
+  VTKM_CONT CellSetExplicit(Thisclass&& src) noexcept;
 
   VTKM_CONT Thisclass& operator=(const Thisclass& src);
+  VTKM_CONT Thisclass& operator=(Thisclass&& src) noexcept;
 
   virtual ~CellSetExplicit();
 

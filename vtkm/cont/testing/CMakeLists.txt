@@ -72,6 +72,7 @@ set(unit_tests
   UnitTestDynamicCellSet.cxx
   UnitTestFieldRangeCompute.cxx
   UnitTestLogging.cxx
+  UnitTestMoveConstructors.cxx
   UnitTestMultiBlock.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestRuntimeDeviceNames.cxx
