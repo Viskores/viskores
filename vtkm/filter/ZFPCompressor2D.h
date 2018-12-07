@@ -22,7 +22,7 @@
 #define vtk_m_filter_ZFPCompressor2D_h
 
 #include <vtkm/filter/FilterField.h>
-#include <vtkm/worklet/ZFPCompressor.h>
+#include <vtkm/worklet/ZFP2DCompressor.h>
 
 namespace vtkm
 {
@@ -59,7 +59,7 @@ public:
 
 private:
   vtkm::Float64 rate;
-  vtkm::worklet::ZFPCompressor compressor;
+  vtkm::worklet::ZFP2DCompressor compressor;
 };
 
 template <>

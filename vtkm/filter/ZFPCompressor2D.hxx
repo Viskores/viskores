@@ -84,9 +84,8 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor2D::DoExecute(
   input.GetCellSet(0).CopyTo(cellSet);
   vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
 
-  const vtkm::Id3 dim(pointDimensions[0], pointDimensions[1], 1);
 
-  auto compressed = compressor.Compress(field, rate, dim);
+  auto compressed = compressor.Compress(field, rate, pointDimensions);
 
   vtkm::cont::DataSet dataset;
   vtkm::cont::Field compressedField(
