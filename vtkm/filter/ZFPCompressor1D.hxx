@@ -81,9 +81,8 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor1D::DoExecute(
       hasCellFields = true;
     }
   }
-  const vtkm::Id3 dim(field.GetNumberOfValues(), 1, 1);
 
-  auto compressed = compressor.Compress(field, rate, dim);
+  auto compressed = compressor.Compress(field, rate, field.GetNumberOfValues());
 
   vtkm::cont::DataSet dataset;
   vtkm::cont::Field compressedField(

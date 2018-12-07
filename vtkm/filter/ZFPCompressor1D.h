@@ -23,7 +23,6 @@
 
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/ZFP1DCompressor.h>
-#include <vtkm/worklet/ZFPCompressor.h>
 
 namespace vtkm
 {
@@ -60,7 +59,7 @@ public:
 
 private:
   vtkm::Float64 rate;
-  vtkm::worklet::ZFPCompressor compressor;
+  vtkm::worklet::ZFP1DCompressor compressor;
 };
 
 template <>
