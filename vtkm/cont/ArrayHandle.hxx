@@ -354,18 +354,43 @@ namespace cont
 namespace internal
 {
 
-template <typename T, typename S>
-inline void VTKM_CONT ArrayHandleDefaultSerialization(diy::BinaryBuffer& bb,
-                                                      const vtkm::cont::ArrayHandle<T, S>& obj)
+namespace detail
+{
+template <typename ArrayHandle>
+inline void VTKM_CONT StorageSerialization(diy::BinaryBuffer& bb,
+                                           const ArrayHandle& obj,
+                                           std::false_type)
 {
   vtkm::Id count = obj.GetNumberOfValues();
   diy::save(bb, count);
 
+  diy::save(bb, vtkm::Id(0)); //not a basic storage
   auto portal = obj.GetPortalConstControl();
   for (vtkm::Id i = 0; i < count; ++i)
   {
     diy::save(bb, portal.Get(i));
   }
+}
+
+template <typename ArrayHandle>
+inline void VTKM_CONT StorageSerialization(diy::BinaryBuffer& bb,
+                                           const ArrayHandle& obj,
+                                           std::true_type)
+{
+  vtkm::Id count = obj.GetNumberOfValues();
+  diy::save(bb, count);
+
+  diy::save(bb, vtkm::Id(1)); //is basic storage
+  diy::save(bb, obj.GetStorage().GetArray(), static_cast<std::size_t>(count));
+}
+}
+
+template <typename T, typename S>
+inline void VTKM_CONT ArrayHandleDefaultSerialization(diy::BinaryBuffer& bb,
+                                                      const vtkm::cont::ArrayHandle<T, S>& obj)
+{
+  using is_basic = typename std::is_same<S, vtkm::cont::StorageTagBasic>::type;
+  detail::StorageSerialization(bb, obj, is_basic{});
 }
 }
 }
@@ -380,14 +405,23 @@ VTKM_CONT void Serialization<vtkm::cont::ArrayHandle<T>>::load(BinaryBuffer& bb,
 {
   vtkm::Id count = 0;
   diy::load(bb, count);
-
   obj.Allocate(count);
-  auto portal = obj.GetPortalControl();
-  for (vtkm::Id i = 0; i < count; ++i)
+
+  vtkm::Id input_was_basic_storage = 0;
+  diy::load(bb, input_was_basic_storage);
+  if (input_was_basic_storage)
   {
-    T val{};
-    diy::load(bb, val);
-    portal.Set(i, val);
+    diy::load(bb, obj.GetStorage().GetArray(), static_cast<std::size_t>(count));
+  }
+  else
+  {
+    auto portal = obj.GetPortalControl();
+    for (vtkm::Id i = 0; i < count; ++i)
+    {
+      T val{};
+      diy::load(bb, val);
+      portal.Set(i, val);
+    }
   }
 }
 } // diy
