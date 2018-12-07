@@ -22,6 +22,7 @@
 #define vtk_m_filter_ZFPCompressor1D_h
 
 #include <vtkm/filter/FilterField.h>
+#include <vtkm/worklet/ZFP1DCompressor.h>
 #include <vtkm/worklet/ZFPCompressor.h>
 
 namespace vtkm

@@ -25,6 +25,7 @@ set(headers
   ZFPDecode2.h
   ZFPDecode3.h
   ZFPEncode.h
+  ZFPEncode1.h
   ZFPEncode2.h
   ZFPEncode3.h
   ZFPFunctions.h

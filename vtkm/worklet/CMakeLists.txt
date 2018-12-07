@@ -86,6 +86,7 @@ set(headers
   WorkletReduceByKey.h
   ZFPCompressor.h
   ZFPDecompress.h
+  ZFP1DCompressor.h
   ZFP2DCompressor.h
   ZFP2DDecompress.h
   )

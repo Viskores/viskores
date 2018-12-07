@@ -81,6 +81,16 @@ size_t CalcMem2d(const vtkm::Id2 dims, const int bits_per_block)
   return alloc_size * sizeof(ZFPWord);
 }
 
+size_t CalcMem1d(const vtkm::Id2 dims, const int bits_per_block)
+{
+  constexpr size_t vals_per_block = 4;
+  const size_t size = dims[0];
+  size_t total_blocks = size / vals_per_block;
+  constexpr size_t bits_per_word = sizeof(ZFPWord) * 8;
+  const size_t total_bits = bits_per_block * total_blocks;
+  const size_t alloc_size = total_bits / bits_per_word;
+  return alloc_size * sizeof(ZFPWord);
+}
 
 } // namespace detail
 

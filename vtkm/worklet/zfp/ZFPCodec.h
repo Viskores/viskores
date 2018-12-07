@@ -18,6 +18,16 @@ template <vtkm::Int32 BlockSize>
 struct ZFPCodec;
 
 template <>
+struct ZFPCodec<4>
+{
+  VTKM_EXEC vtkm::UInt8 CodecLookup(vtkm::Int32 x) const
+  {
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt8 perm_1[4] = { 0, 1, 2, 3 };
+    return perm_1[x];
+  }
+};
+
+template <>
 struct ZFPCodec<16>
 {
   VTKM_EXEC vtkm::UInt8 CodecLookup(vtkm::Int32 x) const
