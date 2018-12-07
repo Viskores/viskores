@@ -22,6 +22,7 @@ set(headers
   ZFPBlockWriter.h
   ZFPCodec.h
   ZFPDecode.h
+  ZFPDecode1.h
   ZFPDecode2.h
   ZFPDecode3.h
   ZFPEncode.h

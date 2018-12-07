@@ -36,29 +36,43 @@
 namespace vtkm_ut_zfp_filter
 {
 
-void TestZFP1DFilter()
+void TestZFP1DFilter(vtkm::Float64 rate)
 {
 
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet0();
+  vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
+  vtkm::cont::ArrayHandle<vtkm::Float64> field =
+    dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  auto oport = field.GetPortalControl();
 
   vtkm::filter::ZFPCompressor1D compressor;
   vtkm::filter::ZFPDecompressor1D decompressor;
 
   compressor.SetActiveField("pointvar");
-  compressor.SetRate(4);
+  compressor.SetRate(rate);
   auto compressed = compressor.Execute(dataset);
 
 
 
   decompressor.SetActiveField("compressed");
-  decompressor.SetRate(4);
+  decompressor.SetRate(rate);
   auto decompress = decompressor.Execute(compressed);
+  dynField = decompress.GetField("decompressed").GetData();
+  ;
+  field = dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  auto port = field.GetPortalControl();
+
+  for (int i = 0; i < field.GetNumberOfValues(); i++)
+  {
+    std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i)
+              << std::endl;
+    ;
+  }
 }
 
-void TestZFP2DFilter()
+void TestZFP2DFilter(vtkm::Float64 rate)
 {
 
 
@@ -75,13 +89,13 @@ void TestZFP2DFilter()
   vtkm::filter::ZFPDecompressor2D decompressor;
 
   compressor.SetActiveField("pointvar");
-  compressor.SetRate(4);
+  compressor.SetRate(rate);
   auto compressed = compressor.Execute(dataset);
 
 
 
   decompressor.SetActiveField("compressed");
-  decompressor.SetRate(4);
+  decompressor.SetRate(rate);
   auto decompress = decompressor.Execute(compressed);
   dynField = decompress.GetField("decompressed").GetData();
   ;
@@ -98,8 +112,8 @@ void TestZFP2DFilter()
 
 void TestZFPFilter()
 {
-  //TestZFP1DFilter();
-  TestZFP2DFilter();
+  TestZFP1DFilter(4);
+  //TestZFP2DFilter(4);
 }
 } // anonymous namespace
 

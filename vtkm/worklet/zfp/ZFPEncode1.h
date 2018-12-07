@@ -28,7 +28,7 @@ VTKM_EXEC inline void GatherPartial1(Scalar* q,
                                      int sx)
 {
   vtkm::Id x;
-  for (x = 0; x < nx; x++, offset += 1)
+  for (x = 0; x < nx; x++, offset += sx)
     q[x] = scalars.Get(offset);
   PadBlock(q, nx, 1);
 }

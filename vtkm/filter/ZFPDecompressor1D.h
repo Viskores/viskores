@@ -22,8 +22,8 @@
 #define vtk_m_filter_ZFPDecompressor1D_h
 
 #include <vtkm/filter/FilterField.h>
-#include <vtkm/worklet/ZFPCompressor.h>
-#include <vtkm/worklet/ZFPDecompress.h>
+#include <vtkm/worklet/ZFP1DDecompress.h>
+#include <vtkm/worklet/zfp/ZFPTools.h>
 
 namespace vtkm
 {
@@ -66,7 +66,7 @@ public:
 
 private:
   vtkm::Float64 rate;
-  vtkm::worklet::ZFPDecompressor decompressor;
+  vtkm::worklet::ZFP1DDecompressor decompressor;
 };
 
 template <>

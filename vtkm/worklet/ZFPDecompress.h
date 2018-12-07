@@ -77,33 +77,6 @@ namespace detail
 
 } // namespace detail
 
-template <typename T>
-T* GetVTKMPointerb(vtkm::cont::ArrayHandle<T>& handle)
-{
-  typedef typename vtkm::cont::ArrayHandle<T> HandleType;
-  typedef typename HandleType::template ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial>::Portal
-    PortalType;
-  typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
-  IteratorType iter =
-    vtkm::cont::ArrayPortalToIterators<PortalType>(handle.GetPortalControl()).GetBegin();
-  return &(*iter);
-}
-
-template <typename T>
-void DataDumpb(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
-{
-
-  T* ptr = GetVTKMPointerb(handle);
-  vtkm::Id osize = handle.GetNumberOfValues();
-  FILE* fp = fopen(fileName.c_str(), "wb");
-  ;
-  if (fp != NULL)
-  {
-    fwrite(ptr, sizeof(T), osize, fp);
-  }
-
-  fclose(fp);
-}
 
 class ZFPDecompressor
 {
@@ -180,7 +153,7 @@ public:
     vtkm::Float64 rate = gB / time;
     std::cout << "Decompress time " << time << " sec\n";
     std::cout << "Decompress rate " << rate << " GB / sec\n";
-    DataDumpb(output, "decompressed");
+    DataDump(output, "decompressed");
   }
 };
 } // namespace worklet

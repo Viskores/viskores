@@ -87,6 +87,7 @@ set(headers
   ZFPCompressor.h
   ZFPDecompress.h
   ZFP1DCompressor.h
+  ZFP1DDecompress.h
   ZFP2DCompressor.h
   ZFP2DDecompress.h
   )

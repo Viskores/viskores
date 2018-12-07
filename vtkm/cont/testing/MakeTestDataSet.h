@@ -43,6 +43,8 @@ public:
   // 1D uniform datasets.
   vtkm::cont::DataSet Make1DUniformDataSet0();
   vtkm::cont::DataSet Make1DUniformDataSet1();
+  vtkm::cont::DataSet Make1DUniformDataSet2();
+
   // 1D explicit datasets.
   vtkm::cont::DataSet Make1DExplicitDataSet0();
 
@@ -109,6 +111,34 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet1()
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::Float32 var[nVerts] = { 1.0e3f, 5.e5f, 2.e8f, 1.e10f, 2e12f, 3e15f };
   dsf.AddPointField(dataSet, "pointvar", var, nVerts);
+
+  return dataSet;
+}
+
+
+//Make a simple 1D, 16 cell uniform dataset.
+inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet2()
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  vtkm::Id dims = 16;
+  vtkm::cont::DataSet dataSet = dsb.Create(dims);
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  const vtkm::Id nVerts = 256;
+  vtkm::Float64 pointvar[dims];
+  vtkm::Float64 dx = vtkm::Float64(4.0 * vtkm::Pi()) / vtkm::Float64(dims - 1);
+
+  vtkm::Id idx = 0;
+  for (vtkm::Id x = 0; x < dims; ++x)
+  {
+    vtkm::Float64 cx = vtkm::Float64(x) * dx - 2.0 * vtkm::Pi();
+    vtkm::Float64 cv = vtkm::Sin(cx);
+
+    pointvar[idx] = cv;
+    idx++;
+  }
+
+  dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
 
   return dataSet;
 }

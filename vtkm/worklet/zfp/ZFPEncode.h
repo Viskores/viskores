@@ -214,6 +214,21 @@ inline VTKM_EXEC void fwd_xform<vtkm::Int32, 16>(vtkm::Int32* p)
   for (x = 0; x < 4; x++)
     fwd_lift<vtkm::Int32, 4>(p + 1 * x);
 }
+
+template <>
+inline VTKM_EXEC void fwd_xform<vtkm::Int64, 4>(vtkm::Int64* p)
+{
+  /* transform along x */
+  fwd_lift<vtkm::Int64, 1>(p);
+}
+
+template <>
+inline VTKM_EXEC void fwd_xform<vtkm::Int32, 4>(vtkm::Int32* p)
+{
+  /* transform along x */
+  fwd_lift<vtkm::Int32, 1>(p);
+}
+
 template <vtkm::Int32 BlockSize, typename PortalType, typename Int>
 VTKM_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
                             vtkm::Int32 maxbits,

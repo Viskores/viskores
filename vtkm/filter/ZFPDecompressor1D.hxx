@@ -75,10 +75,9 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
       hasCellFields = true;
     }
   }
-  const vtkm::Id3 dim(field.GetNumberOfValues(), 1, 1);
 
-  vtkm::cont::ArrayHandle<vtkm::Float32, StorageType> decompress;
-  decompressor.Decompress(field, decompress, rate, dim);
+  vtkm::cont::ArrayHandle<vtkm::Float64, StorageType> decompress;
+  decompressor.Decompress(field, decompress, rate, field.GetNumberOfValues());
 
   vtkm::cont::DataSet dataset;
   vtkm::cont::Field decompressField(
