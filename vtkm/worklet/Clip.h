@@ -239,8 +239,9 @@ public:
   {
   public:
     VTKM_CONT
-    ComputeStats(vtkm::Float64 _value)
-      : Value(_value)
+    ComputeStats(vtkm::Float64 value, bool invert)
+      : Value(value)
+      , Invert(invert)
     {
     }
 
@@ -250,17 +251,13 @@ public:
                                   FieldOutCell<TypeClipStats>,
                                   FieldOutCell<IdType>);
 
-    using ExecutionSignature = void(CellShape, WorkIndex, PointCount, _2, _3, _4, _5);
+    using ExecutionSignature = void(CellShape, PointCount, _2, _3, _4, _5);
 
     using InputDomain = _1;
 
-    template <typename CellShapeTag,
-              typename WorkIndexType,
-              typename ScalarFieldVec,
-              typename DeviceAdapter>
+    template <typename CellShapeTag, typename ScalarFieldVec, typename DeviceAdapter>
     VTKM_EXEC void operator()(const CellShapeTag shape,
-                              const WorkIndexType workIndex,
-                              const vtkm::Id pointCount,
+                              const vtkm::IdComponent pointCount,
                               const ScalarFieldVec& scalars,
                               const internal::ClipTables::DevicePortal<DeviceAdapter>& clippingData,
                               ClipStats& clipStat,
@@ -271,7 +268,7 @@ public:
       ClipStats _clipStat;
       for (vtkm::IdComponent iter = pointCount - 1; iter >= 0; iter--)
       {
-        if (static_cast<vtkm::Float64>(scalars[iter]) <= this->Value)
+        if (!this->Invert && static_cast<vtkm::Float64>(scalars[iter]) <= this->Value)
           caseId++;
         if (iter > 0)
           caseId *= 2;
@@ -323,6 +320,7 @@ public:
 
   private:
     vtkm::Float64 Value;
+    bool Invert;
   };
 
   class GenerateCellSet : public vtkm::worklet::WorkletMapPointToCell
@@ -410,8 +408,8 @@ public:
       vtkm::Id numberOfCells = clippingData.ValueAt(clipIndex++);
       for (vtkm::Id cell = 0; cell < numberOfCells; ++cell)
       {
-        vtkm::Id cellShape = clippingData.ValueAt(clipIndex++);
-        vtkm::Id numberOfPoints = clippingData.ValueAt(clipIndex++);
+        vtkm::UInt8 cellShape = clippingData.ValueAt(clipIndex++);
+        vtkm::IdComponent numberOfPoints = clippingData.ValueAt(clipIndex++);
         if (cellShape == 0)
         {
           // Case for a new cell point.
@@ -609,7 +607,7 @@ public:
     vtkm::cont::ArrayHandle<ClipStats> clipStats;
     vtkm::cont::ArrayHandle<vtkm::Id> clipTableIndices;
 
-    ComputeStats statsWorklet(value);
+    ComputeStats statsWorklet(value, invert);
     //Send this CellSet to process
     vtkm::worklet::DispatcherMapTopology<ComputeStats> statsDispatcher(statsWorklet);
     statsDispatcher.Invoke(cellSet, scalars, this->ClipTablesInstance, clipStats, clipTableIndices);
@@ -824,15 +822,12 @@ public:
                                     ValuesIn<TypeMappedValue> toReduce,
                                     ReducedValuesOut<TypeMappedValue> centroid);
 
-      using ExecutionSignature = void(_1, WorkIndex, _2, _3);
+      using ExecutionSignature = void(_2, _3);
 
       using ScatterType = vtkm::worklet::ScatterIdentity;
 
       template <typename MappedValueVecType, typename MappedValueType>
-      VTKM_EXEC void operator()(const vtkm::Id key,
-                                const vtkm::Id workIndex,
-                                const MappedValueVecType& toReduce,
-                                MappedValueType& centroid) const
+      VTKM_EXEC void operator()(const MappedValueVecType& toReduce, MappedValueType& centroid) const
       {
         vtkm::IdComponent numValues = toReduce.GetNumberOfComponents();
         MappedValueType sum = toReduce[0];
@@ -865,13 +860,15 @@ public:
 
       // Perform a gather on output to get all required values for calculation of
       // centroids using the interpolation info array.
-      // Use ArrayHandlePermutation.
-      vtkm::cont::ArrayHandle<ValueType> gatheredValues;
+      using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
+      using ValueHandle = vtkm::cont::ArrayHandle<ValueType>;
+      vtkm::cont::ArrayHandlePermutation<IdHandle, ValueHandle> toReduceValues(
+        InCellInterpolationInfo, result);
 
       vtkm::cont::ArrayHandle<ValueType> reducedValues;
       vtkm::worklet::DispatcherReduceByKey<PerformInCellInterpolations>
         inCellInterpolationDispatcher;
-      inCellInterpolationDispatcher.Invoke(interpolationKeys, gatheredValues, reducedValues);
+      inCellInterpolationDispatcher.Invoke(interpolationKeys, toReduceValues, reducedValues);
       vtkm::Id inCellPointsOffset = numberOfOriginalValues + numberOfEdgePoints;
       vtkm::cont::Algorithm::CopySubRange(
         reducedValues, 0, reducedValues.GetNumberOfValues(), result, inCellPointsOffset);
