@@ -120,11 +120,10 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet1()
 inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet2()
 {
   vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::Id dims = 16;
+  constexpr vtkm::Id dims = 16;
   vtkm::cont::DataSet dataSet = dsb.Create(dims);
 
   vtkm::cont::DataSetFieldAdd dsf;
-  const vtkm::Id nVerts = 256;
   vtkm::Float64 pointvar[dims];
   vtkm::Float64 dx = vtkm::Float64(4.0 * vtkm::Pi()) / vtkm::Float64(dims - 1);
 
@@ -138,7 +137,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet2()
     idx++;
   }
 
-  dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
+  dsf.AddPointField(dataSet, "pointvar", pointvar, dims);
 
   return dataSet;
 }
