@@ -371,7 +371,6 @@ public:
                                     _14);
 
     template <typename CellShapeTag,
-              typename WorkIndexType,
               typename PointVecType,
               typename ScalarVecType,
               typename ConnectivityObject,
@@ -379,7 +378,7 @@ public:
               typename EdgeInterpolationPortalType,
               typename DeviceAdapter>
     VTKM_EXEC void operator()(const CellShapeTag shape,
-                              const WorkIndexType workIndex,
+                              const vtkm::Id workIndex,
                               const PointVecType points,
                               const ScalarVecType scalars,
                               const vtkm::Id clipDataIndex,
@@ -453,7 +452,7 @@ public:
                 this->swap(ei.Vertex1, ei.Vertex2);
                 this->swap(edge[0], edge[1]);
               }
-              ei.Weight = static_cast<vtkm::Float64>(scalars[edge[0]] - this->Value) /
+              ei.Weight = (static_cast<vtkm::Float64>(scalars[edge[0]]) - this->Value) /
                 static_cast<vtkm::Float64>(scalars[edge[1]] - scalars[edge[0]]);
 
               inCellEdgeReverseConnectivity.Set(inCellEdgeInterpIndex, inCellInterpPointIndex);
