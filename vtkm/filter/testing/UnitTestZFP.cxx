@@ -112,8 +112,8 @@ void TestZFP2DFilter(vtkm::Float64 rate)
 
 void TestZFPFilter()
 {
-  TestZFP1DFilter(4);
-  //TestZFP2DFilter(4);
+  TestZFP1DFilter(8);
+  TestZFP2DFilter(8);
 }
 } // anonymous namespace
 

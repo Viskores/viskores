@@ -41,6 +41,8 @@ void Test1D(int rate)
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
+  auto field = dynField.Cast<Handle64>();
+  auto oport = field.GetPortalControl();
 
   vtkm::worklet::ZFP1DCompressor compressor;
   vtkm::worklet::ZFP1DDecompressor decompressor;
@@ -65,7 +67,8 @@ void Test1D(int rate)
     auto port = decoded.GetPortalControl();
     for (int i = 0; i < decoded.GetNumberOfValues(); i++)
     {
-      std::cout << port.Get(i) << std::endl;
+      std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i)
+                << std::endl;
     }
   }
 }
@@ -77,6 +80,8 @@ void Test2D(int rate)
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make2DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
+  auto field = dynField.Cast<Handle64>();
+  auto oport = field.GetPortalControl();
 
   vtkm::worklet::ZFP2DCompressor compressor;
   vtkm::worklet::ZFP2DDecompressor decompressor;
@@ -98,6 +103,12 @@ void Test2D(int rate)
     auto compressed = compressor.Compress(handle, rate, dims);
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
+    auto port = decoded.GetPortalControl();
+    for (int i = 0; i < decoded.GetNumberOfValues(); i++)
+    {
+      std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i)
+                << std::endl;
+    }
   }
 }
 template <typename Scalar>
@@ -141,8 +152,8 @@ void Test3D(int rate)
 void TestZFP()
 {
   //  Test3D<vtkm::Float64>(4);
-  //  Test2D<vtkm::Float64>(4);
-  Test1D<vtkm::Float64>(4);
+  Test2D<vtkm::Float64>(8);
+  Test1D<vtkm::Float64>(8);
   //Test3D<vtkm::Float32>(4);
   //Test3D<vtkm::Int64>(4);
   //Test3D<vtkm::Int32>(4);

@@ -124,7 +124,7 @@ public:
       Gather1(fblock, scalars, logicalStart, 1);
     }
 
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < BlockSize; ++i)
     {
       std::cout << " " << fblock[i];
     }
