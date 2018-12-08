@@ -836,7 +836,7 @@ public:
           MappedValueType value = toReduce[i];
           sum = sum + value;
         }
-        centroid = sum / static_cast<MappedValueType>(numValues);
+        centroid = internal::Scale(sum, 1. / static_cast<vtkm::Float64>(numValues));
       }
     };
 
