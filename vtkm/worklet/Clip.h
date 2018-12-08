@@ -507,7 +507,7 @@ public:
                 this->swap(ei.Vertex1, ei.Vertex2);
                 this->swap(edge[0], edge[1]);
               }
-              ei.Weight = static_cast<vtkm::Float64>(scalars[edge[0]] - this->Value) /
+              ei.Weight = (static_cast<vtkm::Float64>(scalars[edge[0]]) - this->Value) /
                 static_cast<vtkm::Float64>(scalars[edge[1]] - scalars[edge[0]]);
               //Add to set of new edge points
               //Add reverse connectivity;
