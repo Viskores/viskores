@@ -269,7 +269,13 @@ public:
       for (vtkm::IdComponent iter = pointCount - 1; iter >= 0; iter--)
       {
         if (!this->Invert && static_cast<vtkm::Float64>(scalars[iter]) <= this->Value)
+        {
           caseId++;
+        }
+        else if (this->Invert && static_cast<vtkm::Float64>(scalars[iter]) >= this->Value)
+        {
+          caseId++;
+        }
         if (iter > 0)
           caseId *= 2;
       }
