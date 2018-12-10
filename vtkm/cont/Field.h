@@ -118,11 +118,13 @@ public:
   {
   }
 
-  VTKM_CONT
-  virtual ~Field();
+  Field(const vtkm::cont::Field& src);
+  Field(vtkm::cont::Field&& src) noexcept;
 
-  VTKM_CONT
-  Field& operator=(const vtkm::cont::Field& src) = default;
+  VTKM_CONT virtual ~Field();
+
+  VTKM_CONT Field& operator=(const vtkm::cont::Field& src);
+  VTKM_CONT Field& operator=(vtkm::cont::Field&& src) noexcept;
 
   VTKM_CONT
   const std::string& GetName() const { return this->Name; }

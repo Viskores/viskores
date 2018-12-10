@@ -31,11 +31,27 @@ CellSetStructured<DIMENSION>::CellSetStructured(const CellSetStructured<DIMENSIO
 }
 
 template <vtkm::IdComponent DIMENSION>
+CellSetStructured<DIMENSION>::CellSetStructured(CellSetStructured<DIMENSION>&& src) noexcept
+  : CellSet(std::forward<CellSet>(src)),
+    Structure(std::move(src.Structure))
+{
+}
+
+template <vtkm::IdComponent DIMENSION>
 CellSetStructured<DIMENSION>& CellSetStructured<DIMENSION>::operator=(
   const CellSetStructured<DIMENSION>& src)
 {
   this->CellSet::operator=(src);
   this->Structure = src.Structure;
+  return *this;
+}
+
+template <vtkm::IdComponent DIMENSION>
+CellSetStructured<DIMENSION>& CellSetStructured<DIMENSION>::operator=(
+  CellSetStructured<DIMENSION>&& src) noexcept
+{
+  this->CellSet::operator=(std::forward<CellSet>(src));
+  this->Structure = std::move(src.Structure);
   return *this;
 }
 

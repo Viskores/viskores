@@ -38,8 +38,6 @@ namespace cont
 class VTKM_CONT_EXPORT DataSet
 {
 public:
-  VTKM_CONT DataSet();
-
   VTKM_CONT void Clear();
 
   VTKM_CONT void AddField(const Field& field) { this->Fields.push_back(field); }

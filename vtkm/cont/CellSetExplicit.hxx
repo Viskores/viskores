@@ -55,12 +55,38 @@ template <typename ShapeStorageTag,
           typename NumIndicesStorageTag,
           typename ConnectivityStorageTag,
           typename OffsetsStorageTag>
+VTKM_CONT CellSetExplicit<ShapeStorageTag,
+                          NumIndicesStorageTag,
+                          ConnectivityStorageTag,
+                          OffsetsStorageTag>::CellSetExplicit(Thisclass &&src) noexcept
+  : CellSet(std::forward<CellSet>(src)),
+    Data(std::move(src.Data))
+{
+}
+
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetsStorageTag>
 VTKM_CONT auto
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
 operator=(const Thisclass& src) -> Thisclass&
 {
   this->CellSet::operator=(src);
   this->Data = src.Data;
+  return *this;
+}
+
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetsStorageTag>
+VTKM_CONT auto
+CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
+operator=(Thisclass&& src) noexcept -> Thisclass&
+{
+  this->CellSet::operator=(std::forward<CellSet>(src));
+  this->Data = std::move(src.Data);
   return *this;
 }
 
