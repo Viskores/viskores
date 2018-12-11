@@ -120,7 +120,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet1()
 inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet2()
 {
   vtkm::cont::DataSetBuilderUniform dsb;
-  constexpr vtkm::Id dims = 16;
+  constexpr vtkm::Id dims = 256;
   vtkm::cont::DataSet dataSet = dsb.Create(dims);
 
   vtkm::cont::DataSetFieldAdd dsf;

@@ -63,7 +63,7 @@ struct BlockReader
 
   inline VTKM_EXEC uint read_bit()
   {
-    vtkm::UInt32 bit = vtkm::UInt32(m_buffer & 1);
+    vtkm::UInt32 bit = vtkm::UInt32(m_buffer) & 1u;
     ++m_current_bit;
     m_buffer >>= 1;
     // handle moving into next word
@@ -71,6 +71,8 @@ struct BlockReader
     {
       m_current_bit = 0;
       ++Index;
+      if (Index > MaxIndex)
+        return false;
       m_buffer = Words.Get(Index);
     }
     return bit;

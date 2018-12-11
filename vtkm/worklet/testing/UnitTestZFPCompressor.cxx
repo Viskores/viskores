@@ -29,21 +29,38 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/worklet/zfp/ZFPTools.h>
 
+#include <fstream>
 #include <iostream>
+
+template <typename T>
+void writeArray(vtkm::cont::ArrayHandle<T>& field, std::string filename)
+{
+  auto val = vtkm::worklet::GetVTKMPointer(field);
+  std::ofstream output(filename, std::ios::binary | std::ios::out);
+  output.write((char*)val, field.GetNumberOfValues() * 8);
+  output.close();
+
+  for (int i = 0; i < field.GetNumberOfValues(); i++)
+  {
+    std::cout << val[i] << " ";
+  }
+  std::cout << std::endl;
+}
 
 using Handle64 = vtkm::cont::ArrayHandle<vtkm::Float64>;
 template <typename Scalar>
 void Test1D(int rate)
 {
   std::cout << "Testing ZFP 1d:" << std::endl;
-  vtkm::Id dims = 16;
+  vtkm::Id dims = 256;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
   auto field = dynField.Cast<Handle64>();
   auto oport = field.GetPortalControl();
-
+  writeArray(field, "orig.zfp");
   vtkm::worklet::ZFP1DCompressor compressor;
   vtkm::worklet::ZFP1DDecompressor decompressor;
 
@@ -62,6 +79,7 @@ void Test1D(int rate)
     }
 
     auto compressed = compressor.Compress(handle, rate, dims);
+    writeArray(compressed, "output.zfp");
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
     auto port = decoded.GetPortalControl();
@@ -76,7 +94,7 @@ template <typename Scalar>
 void Test2D(int rate)
 {
   std::cout << "Testing ZFP 2d:" << std::endl;
-  vtkm::Id2 dims(4, 4);
+  vtkm::Id2 dims(16, 16);
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make2DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
@@ -152,8 +170,8 @@ void Test3D(int rate)
 void TestZFP()
 {
   //  Test3D<vtkm::Float64>(4);
-  Test2D<vtkm::Float64>(8);
-  Test1D<vtkm::Float64>(8);
+  //Test2D<vtkm::Float64>(4);
+  Test1D<vtkm::Float64>(4);
   //Test3D<vtkm::Float32>(4);
   //Test3D<vtkm::Int64>(4);
   //Test3D<vtkm::Int32>(4);
