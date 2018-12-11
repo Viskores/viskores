@@ -33,6 +33,7 @@
 #include <vtkm/filter/ZFPCompressor3D.h>
 #include <vtkm/filter/ZFPDecompressor1D.h>
 #include <vtkm/filter/ZFPDecompressor2D.h>
+#include <vtkm/filter/ZFPDecompressor3D.h>
 
 namespace vtkm_ut_zfp_filter
 {
@@ -125,7 +126,7 @@ void TestZFP3DFilter(vtkm::Float64 rate)
 
 
   vtkm::filter::ZFPCompressor3D compressor;
-  //vtkm::filter::ZFPDecompressor3D decompressor;
+  vtkm::filter::ZFPDecompressor3D decompressor;
 
   compressor.SetActiveField("pointvar");
   compressor.SetRate(rate);
@@ -133,17 +134,20 @@ void TestZFP3DFilter(vtkm::Float64 rate)
 
 
 
-  //  decompressor.SetActiveField("compressed");
-  //  decompressor.SetRate(rate);
-  //  auto decompress = decompressor.Execute(compressed);
-  //  dynField = decompress.GetField("decompressed").GetData();;
-  //  field = dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
-  //  auto port = field.GetPortalControl();
+  decompressor.SetActiveField("compressed");
+  decompressor.SetRate(rate);
+  auto decompress = decompressor.Execute(compressed);
+  dynField = decompress.GetField("decompressed").GetData();
+  ;
+  field = dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  auto port = field.GetPortalControl();
 
-  //  for (int i=0; i<dynField.GetNumberOfValues(); i++){
-  //    std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i) << std::endl;;
-
-  //  }
+  for (int i = 0; i < dynField.GetNumberOfValues(); i++)
+  {
+    std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i)
+              << std::endl;
+    ;
+  }
 }
 
 void TestZFPFilter()
