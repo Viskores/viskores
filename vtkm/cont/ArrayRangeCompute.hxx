@@ -103,6 +103,53 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
 
 } // namespace detail
 
+
+VTKM_CONT
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const vtkm::cont::ArrayHandleVirtualCoordinates& input,
+  vtkm::cont::RuntimeDeviceTracker tracker)
+{
+  auto array =
+    static_cast<const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>&>(input);
+  return ArrayRangeCompute(array, tracker);
+}
+
+VTKM_CONT
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>& input,
+  vtkm::cont::RuntimeDeviceTracker tracker)
+{
+  using UniformHandleType = ArrayHandleUniformPointCoordinates;
+  using RectilinearHandleType =
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
+
+
+  if (input.IsType<UniformHandleType>())
+  {
+    using T = typename UniformHandleType::ValueType;
+    using S = typename UniformHandleType::StorageTag;
+    const vtkm::cont::StorageVirtual* storage = input.GetStorage();
+    const auto* any = storage->Cast<vtkm::cont::StorageAny<T, S>>();
+
+    return ArrayRangeCompute(any->GetHandle(), tracker);
+  }
+  else if (input.IsType<RectilinearHandleType>())
+  {
+    using T = typename RectilinearHandleType::ValueType;
+    using S = typename RectilinearHandleType::StorageTag;
+    const vtkm::cont::StorageVirtual* storage = input.GetStorage();
+    const auto* any = storage->Cast<vtkm::cont::StorageAny<T, S>>();
+
+    return ArrayRangeCompute(any->GetHandle(), tracker);
+  }
+  else
+  {
+    return detail::ArrayRangeComputeImpl(input, tracker);
+  }
+}
+
 template <typename ArrayHandleType>
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const ArrayHandleType& input,
