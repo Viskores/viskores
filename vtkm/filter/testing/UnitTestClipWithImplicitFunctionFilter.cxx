@@ -75,7 +75,7 @@ void TestClipStructured()
   VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 8,
                    "Wrong number of cells in the output dataset");
 
-  vtkm::cont::ArrayHandleVariant temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.CopyTo(resultArrayHandle);
 
@@ -115,7 +115,7 @@ void TestClipStructuredInverted()
   VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 4,
                    "Wrong number of cells in the output dataset");
 
-  vtkm::cont::ArrayHandleVariant temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.CopyTo(resultArrayHandle);
 

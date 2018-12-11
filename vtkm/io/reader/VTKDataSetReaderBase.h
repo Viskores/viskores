@@ -28,9 +28,9 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 #include <vtkm/internal/ExportMacros.h>
 #include <vtkm/io/ErrorIO.h>
 
@@ -93,9 +93,9 @@ struct StreamIOType<vtkm::UInt8>
   using Type = vtkm::UInt16;
 };
 
-// Since Fields and DataSets store data in the default ArrayHandleVariant, convert
+// Since Fields and DataSets store data in the default VariantArrayHandle, convert
 // the data to the closest type supported by default. The following will
-// need to be updated if ArrayHandleVariant or TypeListTagCommon changes.
+// need to be updated if VariantArrayHandle or TypeListTagCommon changes.
 template <typename T>
 struct ClosestCommonType
 {
@@ -179,7 +179,7 @@ struct ClosestFloat<vtkm::UInt64>
 };
 
 template <typename T>
-vtkm::cont::ArrayHandleVariant CreateArrayHandleVariant(const std::vector<T>& vec)
+vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& vec)
 {
   switch (vtkm::VecTraits<T>::NUM_COMPONENTS)
   {
@@ -202,7 +202,7 @@ vtkm::cont::ArrayHandleVariant CreateArrayHandleVariant(const std::vector<T>& ve
         portal.Set(i, static_cast<CommonType>(vec[static_cast<std::size_t>(i)]));
       }
 
-      return vtkm::cont::ArrayHandleVariant(output);
+      return vtkm::cont::VariantArrayHandle(output);
     }
     case 2:
     case 3:
@@ -234,12 +234,12 @@ vtkm::cont::ArrayHandleVariant CreateArrayHandleVariant(const std::vector<T>& ve
         portal.Set(i, outval);
       }
 
-      return vtkm::cont::ArrayHandleVariant(output);
+      return vtkm::cont::VariantArrayHandle(output);
     }
     default:
     {
       std::cerr << "Only 1, 2, or 3 components supported. Skipping." << std::endl;
-      return vtkm::cont::ArrayHandleVariant(vtkm::cont::ArrayHandle<vtkm::Float32>());
+      return vtkm::cont::VariantArrayHandle(vtkm::cont::ArrayHandle<vtkm::Float32>());
     }
   }
 }
@@ -335,7 +335,7 @@ protected:
     std::size_t numPoints;
     this->DataFile->Stream >> numPoints >> dataType >> std::ws;
 
-    vtkm::cont::ArrayHandleVariant points;
+    vtkm::cont::VariantArrayHandle points;
     this->DoReadArrayVariant(dataType, numPoints, 3, points);
 
     this->DataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", points));
@@ -418,7 +418,7 @@ protected:
       {
         std::string name;
         vtkm::cont::ArrayHandle<vtkm::Float32> empty;
-        vtkm::cont::ArrayHandleVariant data(empty);
+        vtkm::cont::VariantArrayHandle data(empty);
 
         this->DataFile->Stream >> tag;
         if (tag == "SCALARS")
@@ -546,7 +546,7 @@ private:
 
   void ReadScalars(std::size_t numElements,
                    std::string& dataName,
-                   vtkm::cont::ArrayHandleVariant& data)
+                   vtkm::cont::VariantArrayHandle& data)
   {
     std::string dataType, lookupTableName;
     vtkm::IdComponent numComponents = 1;
@@ -592,7 +592,7 @@ private:
 
   void ReadTextureCoordinates(std::size_t numElements,
                               std::string& dataName,
-                              vtkm::cont::ArrayHandleVariant& data)
+                              vtkm::cont::VariantArrayHandle& data)
   {
     vtkm::IdComponent numComponents;
     std::string dataType;
@@ -603,7 +603,7 @@ private:
 
   void ReadVectors(std::size_t numElements,
                    std::string& dataName,
-                   vtkm::cont::ArrayHandleVariant& data)
+                   vtkm::cont::VariantArrayHandle& data)
   {
     std::string dataType;
     this->DataFile->Stream >> dataName >> dataType >> std::ws;
@@ -613,7 +613,7 @@ private:
 
   void ReadTensors(std::size_t numElements,
                    std::string& dataName,
-                   vtkm::cont::ArrayHandleVariant& data)
+                   vtkm::cont::VariantArrayHandle& data)
   {
     std::string dataType;
     this->DataFile->Stream >> dataName >> dataType >> std::ws;
@@ -682,7 +682,7 @@ private:
   public:
     ReadArrayVariant(VTKDataSetReaderBase* reader,
                      std::size_t numElements,
-                     vtkm::cont::ArrayHandleVariant& data)
+                     vtkm::cont::VariantArrayHandle& data)
       : SkipArrayVariant(reader, numElements)
       , Data(&data)
     {
@@ -693,7 +693,7 @@ private:
     {
       std::vector<T> buffer(this->NumElements);
       this->Reader->ReadArray(buffer);
-      *this->Data = internal::CreateArrayHandleVariant(buffer);
+      *this->Data = internal::CreateVariantArrayHandle(buffer);
     }
 
     template <typename T>
@@ -705,7 +705,7 @@ private:
     }
 
   private:
-    vtkm::cont::ArrayHandleVariant* Data;
+    vtkm::cont::VariantArrayHandle* Data;
   };
 
   //Make the Array parsing methods protected so that derived classes
@@ -737,7 +737,7 @@ protected:
   void DoReadArrayVariant(std::string dataType,
                           std::size_t numElements,
                           vtkm::IdComponent numComponents,
-                          vtkm::cont::ArrayHandleVariant& data)
+                          vtkm::cont::VariantArrayHandle& data)
   {
     vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
     vtkm::io::internal::SelectTypeAndCall(
@@ -846,7 +846,7 @@ private:
   {
   public:
     PermuteCellData(const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
-                    vtkm::cont::ArrayHandleVariant& data)
+                    vtkm::cont::VariantArrayHandle& data)
       : Permutation(permutation)
       , Data(&data)
     {
@@ -867,12 +867,12 @@ private:
       {
         outPortal.Set(i, inPortal.Get(permutationPortal.Get(i)));
       }
-      *this->Data = vtkm::cont::ArrayHandleVariant(out);
+      *this->Data = vtkm::cont::VariantArrayHandle(out);
     }
 
   private:
     const vtkm::cont::ArrayHandle<vtkm::Id> Permutation;
-    vtkm::cont::ArrayHandleVariant* Data;
+    vtkm::cont::VariantArrayHandle* Data;
   };
 
 protected:

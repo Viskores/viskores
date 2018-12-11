@@ -83,7 +83,7 @@ struct IsNoExceptHandle
     using VirtualType = vtkm::cont::ArrayHandleVirtual<T>;
 
     //verify the handle type
-    is_noexcept_movable< HandleType >();
+    is_noexcept_movable<HandleType>();
     is_noexcept_movable<AnyType>();
     is_noexcept_movable<VirtualType>();
 

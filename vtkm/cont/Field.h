@@ -26,10 +26,10 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/ArrayRangeCompute.hxx>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {
@@ -71,13 +71,13 @@ public:
 
   /// constructors for points / whole mesh
   VTKM_CONT
-  Field(std::string name, Association association, const vtkm::cont::ArrayHandleVariant& data);
+  Field(std::string name, Association association, const vtkm::cont::VariantArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, vtkm::cont::ArrayHandleVariant{ data })
+    : Field(name, association, vtkm::cont::VariantArrayHandle{ data })
   {
   }
 
@@ -86,14 +86,14 @@ public:
   Field(std::string name,
         Association association,
         const std::string& cellSetName,
-        const vtkm::cont::ArrayHandleVariant& data);
+        const vtkm::cont::VariantArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   const std::string& cellSetName,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, cellSetName, vtkm::cont::ArrayHandleVariant{ data })
+    : Field(name, association, cellSetName, vtkm::cont::VariantArrayHandle{ data })
   {
   }
 
@@ -102,14 +102,14 @@ public:
   Field(std::string name,
         Association association,
         vtkm::IdComponent logicalDim,
-        const vtkm::cont::ArrayHandleVariant& data);
+        const vtkm::cont::VariantArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   vtkm::IdComponent logicalDim,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, logicalDim, vtkm::cont::ArrayHandleVariant{ data })
+    : Field(name, association, logicalDim, vtkm::cont::VariantArrayHandle{ data })
   {
   }
 
@@ -125,8 +125,8 @@ public:
   VTKM_CONT Association GetAssociation() const { return this->FieldAssociation; }
   VTKM_CONT std::string GetAssocCellSet() const { return this->AssocCellSetName; }
   VTKM_CONT vtkm::IdComponent GetAssocLogicalDim() const { return this->AssocLogicalDim; }
-  const vtkm::cont::ArrayHandleVariant& GetData() const;
-  vtkm::cont::ArrayHandleVariant& GetData();
+  const vtkm::cont::VariantArrayHandle& GetData() const;
+  vtkm::cont::VariantArrayHandle& GetData();
 
 
   template <typename TypeList>
@@ -165,7 +165,7 @@ public:
   }
 
   VTKM_CONT
-  void SetData(const vtkm::cont::ArrayHandleVariant& newdata)
+  void SetData(const vtkm::cont::VariantArrayHandle& newdata)
   {
     this->Data = newdata;
     this->ModifiedFlag = true;
@@ -188,7 +188,7 @@ private:
   std::string AssocCellSetName;      ///< only populate if assoc is cells
   vtkm::IdComponent AssocLogicalDim; ///< only populate if assoc is logical dim
 
-  vtkm::cont::ArrayHandleVariant Data;
+  vtkm::cont::VariantArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag = true;
 
@@ -358,26 +358,26 @@ public:
     diy::load(bb, assocVal);
 
     auto assoc = static_cast<vtkm::cont::Field::Association>(assocVal);
-    vtkm::cont::ArrayHandleVariantBase<TypeList> data;
+    vtkm::cont::VariantArrayHandleBase<TypeList> data;
     if (assoc == vtkm::cont::Field::Association::CELL_SET)
     {
       std::string assocCellSetName;
       diy::load(bb, assocCellSetName);
       diy::load(bb, data);
       field =
-        vtkm::cont::Field(name, assoc, assocCellSetName, vtkm::cont::ArrayHandleVariant(data));
+        vtkm::cont::Field(name, assoc, assocCellSetName, vtkm::cont::VariantArrayHandle(data));
     }
     else if (assoc == vtkm::cont::Field::Association::LOGICAL_DIM)
     {
       vtkm::IdComponent assocLogicalDim;
       diy::load(bb, assocLogicalDim);
       diy::load(bb, data);
-      field = vtkm::cont::Field(name, assoc, assocLogicalDim, vtkm::cont::ArrayHandleVariant(data));
+      field = vtkm::cont::Field(name, assoc, assocLogicalDim, vtkm::cont::VariantArrayHandle(data));
     }
     else
     {
       diy::load(bb, data);
-      field = vtkm::cont::Field(name, assoc, vtkm::cont::ArrayHandleVariant(data));
+      field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
     }
   }
 };

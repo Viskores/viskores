@@ -32,13 +32,13 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <utility>
 #include <vtkm/exec/FunctorBase.h>

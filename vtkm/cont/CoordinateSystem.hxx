@@ -50,7 +50,7 @@ struct MakeArrayHandleVirtualCoordinatesFunctor
 
 template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates MakeArrayHandleVirtualCoordinates(
-  const vtkm::cont::ArrayHandleVariantBase<TypeList>& array)
+  const vtkm::cont::VariantArrayHandleBase<TypeList>& array)
 {
   vtkm::cont::ArrayHandleVirtualCoordinates output;
   vtkm::cont::CastAndCall(array.ResetTypes(vtkm::TypeListTagFieldVec3{}),
@@ -63,7 +63,7 @@ VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates MakeArrayHandleVirtualCoordi
 template <typename TypeList>
 VTKM_CONT CoordinateSystem::CoordinateSystem(
   std::string name,
-  const vtkm::cont::ArrayHandleVariantBase<TypeList>& data)
+  const vtkm::cont::VariantArrayHandleBase<TypeList>& data)
   : Superclass(name, Association::POINTS, detail::MakeArrayHandleVirtualCoordinates(data))
 {
 }
@@ -83,7 +83,7 @@ VTKM_CONT void CoordinateSystem::SetData(const vtkm::cont::ArrayHandle<T, Storag
 
 template <typename TypeList>
 VTKM_CONT void CoordinateSystem::SetData(
-  const vtkm::cont::ArrayHandleVariantBase<TypeList>& newdata)
+  const vtkm::cont::VariantArrayHandleBase<TypeList>& newdata)
 {
   this->SetData(detail::MakeArrayHandleVirtualCoordinates(newdata));
 }

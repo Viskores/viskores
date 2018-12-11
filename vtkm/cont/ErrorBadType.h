@@ -45,7 +45,7 @@ VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 /// Throws an ErrorBadType exception with the following message:
 /// Cast failed: \c baseType --> \c derivedType".
-/// This is generally caused by asking for a casting of a ArrayHandleVariant
+/// This is generally caused by asking for a casting of a VariantArrayHandle
 /// with an insufficient type list.
 //
 VTKM_CONT_EXPORT void throwFailedDynamicCast(const std::string& baseType,

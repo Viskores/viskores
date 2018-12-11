@@ -27,9 +27,9 @@
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {

@@ -119,7 +119,7 @@ inline VTKM_CONT bool ExtractGeometry::DoMapField(
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  vtkm::cont::ArrayHandleVariant output;
+  vtkm::cont::VariantArrayHandle output;
 
   if (fieldMeta.IsPointField())
   {

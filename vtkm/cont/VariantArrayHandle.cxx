@@ -21,8 +21,8 @@
 #include <sstream>
 #include <typeindex>
 
-#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {
@@ -31,18 +31,18 @@ namespace cont
 namespace internal
 {
 
-ArrayHandleVariantContainerBase::ArrayHandleVariantContainerBase()
+VariantArrayHandleContainerBase::VariantArrayHandleContainerBase()
 {
 }
 
-ArrayHandleVariantContainerBase::~ArrayHandleVariantContainerBase()
+VariantArrayHandleContainerBase::~VariantArrayHandleContainerBase()
 {
 }
 }
 
 namespace detail
 {
-void ThrowCastAndCallException(const vtkm::cont::internal::ArrayHandleVariantContainerBase& ref,
+void ThrowCastAndCallException(const vtkm::cont::internal::VariantArrayHandleContainerBase& ref,
                                const std::type_info& type)
 {
   std::ostringstream out;

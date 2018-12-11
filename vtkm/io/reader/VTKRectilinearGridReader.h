@@ -64,7 +64,7 @@ private:
     //Read the points.
     std::string dataType;
     std::size_t numPoints[3];
-    vtkm::cont::ArrayHandleVariant X, Y, Z;
+    vtkm::cont::VariantArrayHandle X, Y, Z;
 
     // Always read coordinates as vtkm::FloatDefault
     std::string readDataType = vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name();

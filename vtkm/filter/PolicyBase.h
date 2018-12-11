@@ -50,7 +50,7 @@ struct PolicyBase
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::ArrayHandleVariantBase<typename DerivedPolicy::FieldTypeList> ApplyPolicy(
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename DerivedPolicy::FieldTypeList> ApplyPolicy(
   const vtkm::cont::Field& field,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
@@ -60,7 +60,7 @@ VTKM_CONT vtkm::cont::ArrayHandleVariantBase<typename DerivedPolicy::FieldTypeLi
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename FilterType, typename FieldTag>
-VTKM_CONT vtkm::cont::ArrayHandleVariantBase<
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<
   typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList>
 ApplyPolicy(const vtkm::cont::Field& field,
             const vtkm::filter::PolicyBase<DerivedPolicy>&,

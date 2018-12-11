@@ -23,12 +23,12 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {

@@ -46,7 +46,7 @@ public:
 
   template <typename TypeList>
   VTKM_CONT CoordinateSystem(std::string name,
-                             const vtkm::cont::ArrayHandleVariantBase<TypeList>& data);
+                             const vtkm::cont::VariantArrayHandleBase<TypeList>& data);
 
   template <typename T, typename Storage>
   VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data);
@@ -71,7 +71,7 @@ public:
 
   VTKM_CONT
   template <typename TypeList>
-  void SetData(const vtkm::cont::ArrayHandleVariantBase<TypeList>& newdata);
+  void SetData(const vtkm::cont::VariantArrayHandleBase<TypeList>& newdata);
 
   VTKM_CONT
   void GetRange(vtkm::Range* range) const

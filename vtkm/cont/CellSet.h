@@ -25,9 +25,9 @@
 #include <vtkm/StaticAssert.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {

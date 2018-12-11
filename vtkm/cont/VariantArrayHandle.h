@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ArrayHandleVariant_h
-#define vtk_m_cont_ArrayHandleVariant_h
+#ifndef vtk_m_cont_VariantArrayHandle_h
+#define vtk_m_cont_VariantArrayHandle_h
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
@@ -31,7 +31,7 @@
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/DynamicTransform.h>
 
-#include <vtkm/cont/internal/ArrayHandleVariantContainer.h>
+#include <vtkm/cont/internal/VariantArrayHandleContainer.h>
 
 namespace vtkm
 {
@@ -39,7 +39,7 @@ namespace cont
 {
 /// \brief Holds an array handle without having to specify template parameters.
 ///
-/// \c ArrayHandleVariant holds an \c ArrayHandle or \c ArrayHandleVirtual
+/// \c VariantArrayHandle holds an \c ArrayHandle or \c ArrayHandleVirtual
 /// object using runtime polymorphism to manage different value types and
 /// storage rather than compile-time templates. This adds a programming
 /// convenience that helps avoid a proliferation of templates. It also provides
@@ -47,65 +47,65 @@ namespace cont
 /// will not be known until runtime.
 ///
 /// To interface between the runtime polymorphism and the templated algorithms
-/// in VTK-m, \c ArrayHandleVariant contains a method named \c CastAndCall that
+/// in VTK-m, \c VariantArrayHandle contains a method named \c CastAndCall that
 /// will determine the correct type from some known list of types. It returns
 /// an ArrayHandleVirtual which type erases the storage type by using polymorphism.
 /// This mechanism is used internally by VTK-m's worklet invocation
 /// mechanism to determine the type when running algorithms.
 ///
-/// By default, \c ArrayHandleVariant will assume that the value type in the
+/// By default, \c VariantArrayHandle will assume that the value type in the
 /// array matches one of the types specified by \c VTKM_DEFAULT_TYPE_LIST_TAG
 /// This list can be changed by using the \c ResetTypes. It is
 /// worthwhile to match these lists closely to the possible types that might be
 /// used. If a type is missing you will get a runtime error. If there are more
 /// types than necessary, then the template mechanism will create a lot of
 /// object code that is never used, and keep in mind that the number of
-/// combinations grows exponentially when using multiple \c ArrayHandleVariant
+/// combinations grows exponentially when using multiple \c VariantArrayHandle
 /// objects.
 ///
-/// The actual implementation of \c ArrayHandleVariant is in a templated class
-/// named \c ArrayHandleVariantBase, which is templated on the list of
+/// The actual implementation of \c VariantArrayHandle is in a templated class
+/// named \c VariantArrayHandleBase, which is templated on the list of
 /// component types.
 ///
 template <typename TypeList>
-class VTKM_ALWAYS_EXPORT ArrayHandleVariantBase
+class VTKM_ALWAYS_EXPORT VariantArrayHandleBase
 {
 public:
   VTKM_CONT
-  ArrayHandleVariantBase() = default;
+  VariantArrayHandleBase() = default;
 
   template <typename T, typename Storage>
-  VTKM_CONT ArrayHandleVariantBase(const vtkm::cont::ArrayHandle<T, Storage>& array)
-    : ArrayContainer(std::make_shared<internal::ArrayHandleVariantContainer<T>>(
+  VTKM_CONT VariantArrayHandleBase(const vtkm::cont::ArrayHandle<T, Storage>& array)
+    : ArrayContainer(std::make_shared<internal::VariantArrayHandleContainer<T>>(
         vtkm::cont::ArrayHandleAny<T>{ array }))
   {
   }
 
   template <typename T>
-  explicit VTKM_CONT ArrayHandleVariantBase(
+  explicit VTKM_CONT VariantArrayHandleBase(
     const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>& array)
-    : ArrayContainer(std::make_shared<internal::ArrayHandleVariantContainer<T>>(array))
+    : ArrayContainer(std::make_shared<internal::VariantArrayHandleContainer<T>>(array))
   {
   }
 
   template <typename OtherTypeList>
-  VTKM_CONT explicit ArrayHandleVariantBase(const ArrayHandleVariantBase<OtherTypeList>& src)
+  VTKM_CONT explicit VariantArrayHandleBase(const VariantArrayHandleBase<OtherTypeList>& src)
     : ArrayContainer(internal::variant::GetContainer::Extract(src))
   {
   }
 
-  VTKM_CONT ArrayHandleVariantBase(const ArrayHandleVariantBase& src) = default;
-  VTKM_CONT ArrayHandleVariantBase(ArrayHandleVariantBase&& src) noexcept = default;
+  VTKM_CONT VariantArrayHandleBase(const VariantArrayHandleBase& src) = default;
+  VTKM_CONT VariantArrayHandleBase(VariantArrayHandleBase&& src) noexcept = default;
 
   VTKM_CONT
-  ~ArrayHandleVariantBase() {}
+  ~VariantArrayHandleBase() {}
 
   VTKM_CONT
-  ArrayHandleVariantBase<TypeList>& operator=(const ArrayHandleVariantBase<TypeList>& src) =
+  VariantArrayHandleBase<TypeList>& operator=(const VariantArrayHandleBase<TypeList>& src) =
     default;
 
   VTKM_CONT
-  ArrayHandleVariantBase<TypeList>& operator=(ArrayHandleVariantBase<TypeList>&& src) noexcept =
+  VariantArrayHandleBase<TypeList>& operator=(VariantArrayHandleBase<TypeList>&& src) noexcept =
     default;
 
 
@@ -167,16 +167,16 @@ public:
   /// constraints.
   ///
   template <typename NewTypeList>
-  VTKM_CONT ArrayHandleVariantBase<NewTypeList> ResetTypes(NewTypeList = NewTypeList()) const
+  VTKM_CONT VariantArrayHandleBase<NewTypeList> ResetTypes(NewTypeList = NewTypeList()) const
   {
     VTKM_IS_LIST_TAG(NewTypeList);
-    return ArrayHandleVariantBase<NewTypeList>(*this);
+    return VariantArrayHandleBase<NewTypeList>(*this);
   }
 
   /// Attempts to cast the held array to a specific value type,
   /// then call the given functor with the cast array. The types
   /// tried in the cast are those in the lists defined by the TypeList.
-  /// By default \c ArrayHandleVariant set this to VTKM_DEFAULT_TYPE_LIST_TAG.
+  /// By default \c VariantArrayHandle set this to VTKM_DEFAULT_TYPE_LIST_TAG.
   ///
   template <typename Functor, typename... Args>
   VTKM_CONT void CastAndCall(Functor&& f, Args&&...) const;
@@ -188,9 +188,9 @@ public:
   /// creating output arrays that should be the same type as some input array.
   ///
   VTKM_CONT
-  ArrayHandleVariantBase<TypeList> NewInstance() const
+  VariantArrayHandleBase<TypeList> NewInstance() const
   {
-    ArrayHandleVariantBase<TypeList> instance;
+    VariantArrayHandleBase<TypeList> instance;
     instance.ArrayContainer = this->ArrayContainer->NewInstance();
     return instance;
   }
@@ -227,28 +227,28 @@ public:
 
 private:
   friend struct internal::variant::GetContainer;
-  std::shared_ptr<vtkm::cont::internal::ArrayHandleVariantContainerBase> ArrayContainer;
+  std::shared_ptr<vtkm::cont::internal::VariantArrayHandleContainerBase> ArrayContainer;
 };
 
-using ArrayHandleVariant = vtkm::cont::ArrayHandleVariantBase<VTKM_DEFAULT_TYPE_LIST_TAG>;
+using VariantArrayHandle = vtkm::cont::VariantArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG>;
 
 namespace detail
 {
 
-struct ArrayHandleVariantTry
+struct VariantArrayHandleTry
 {
   template <typename T, typename Functor, typename... Args>
   void operator()(T,
                   Functor&& f,
                   bool& called,
-                  const vtkm::cont::internal::ArrayHandleVariantContainerBase& container,
+                  const vtkm::cont::internal::VariantArrayHandleContainerBase& container,
                   Args&&... args) const
   {
     if (!called && vtkm::cont::internal::variant::IsVirtualType<T>(&container))
     {
       called = true;
       const auto* derived =
-        static_cast<const vtkm::cont::internal::ArrayHandleVariantContainer<T>*>(&container);
+        static_cast<const vtkm::cont::internal::VariantArrayHandleContainer<T>*>(&container);
       VTKM_LOG_CAST_SUCC(container, derived);
       f(derived->Array, std::forward<Args>(args)...);
     }
@@ -256,7 +256,7 @@ struct ArrayHandleVariantTry
 };
 
 VTKM_CONT_EXPORT void ThrowCastAndCallException(
-  const vtkm::cont::internal::ArrayHandleVariantContainerBase&,
+  const vtkm::cont::internal::VariantArrayHandleContainerBase&,
   const std::type_info&);
 } // namespace detail
 
@@ -264,11 +264,11 @@ VTKM_CONT_EXPORT void ThrowCastAndCallException(
 
 template <typename TypeList>
 template <typename Functor, typename... Args>
-VTKM_CONT void ArrayHandleVariantBase<TypeList>::CastAndCall(Functor&& f, Args&&... args) const
+VTKM_CONT void VariantArrayHandleBase<TypeList>::CastAndCall(Functor&& f, Args&&... args) const
 {
   bool called = false;
   const auto& ref = *this->ArrayContainer;
-  vtkm::ListForEach(detail::ArrayHandleVariantTry{},
+  vtkm::ListForEach(detail::VariantArrayHandleTry{},
                     TypeList{},
                     std::forward<Functor>(f),
                     called,
@@ -286,7 +286,7 @@ namespace internal
 {
 
 template <typename TypeList>
-struct DynamicTransformTraits<vtkm::cont::ArrayHandleVariantBase<TypeList>>
+struct DynamicTransformTraits<vtkm::cont::VariantArrayHandleBase<TypeList>>
 {
   using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
@@ -303,7 +303,7 @@ namespace diy
 namespace internal
 {
 
-struct ArrayHandleVariantSerializeFunctor
+struct VariantArrayHandleSerializeFunctor
 {
   template <typename ArrayHandleType>
   void operator()(const ArrayHandleType& ah, BinaryBuffer& bb) const
@@ -313,11 +313,11 @@ struct ArrayHandleVariantSerializeFunctor
   }
 };
 
-struct ArrayHandleVariantDeserializeFunctor
+struct VariantArrayHandleDeserializeFunctor
 {
   template <typename T, typename TypeList>
   void operator()(T,
-                  vtkm::cont::ArrayHandleVariantBase<TypeList>& dh,
+                  vtkm::cont::VariantArrayHandleBase<TypeList>& dh,
                   const std::string& typeString,
                   bool& success,
                   BinaryBuffer& bb) const
@@ -328,7 +328,7 @@ struct ArrayHandleVariantDeserializeFunctor
     {
       ArrayHandleType ah;
       diy::load(bb, ah);
-      dh = vtkm::cont::ArrayHandleVariantBase<TypeList>(ah);
+      dh = vtkm::cont::VariantArrayHandleBase<TypeList>(ah);
       success = true;
     }
   }
@@ -337,15 +337,15 @@ struct ArrayHandleVariantDeserializeFunctor
 } // internal
 
 template <typename TypeList>
-struct Serialization<vtkm::cont::ArrayHandleVariantBase<TypeList>>
+struct Serialization<vtkm::cont::VariantArrayHandleBase<TypeList>>
 {
 private:
-  using Type = vtkm::cont::ArrayHandleVariantBase<TypeList>;
+  using Type = vtkm::cont::VariantArrayHandleBase<TypeList>;
 
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& obj)
   {
-    vtkm::cont::CastAndCall(obj, internal::ArrayHandleVariantSerializeFunctor{}, bb);
+    vtkm::cont::CastAndCall(obj, internal::VariantArrayHandleSerializeFunctor{}, bb);
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& obj)
@@ -355,12 +355,12 @@ public:
 
     bool success = false;
     vtkm::ListForEach(
-      internal::ArrayHandleVariantDeserializeFunctor{}, TypeList{}, obj, typeString, success, bb);
+      internal::VariantArrayHandleDeserializeFunctor{}, TypeList{}, obj, typeString, success, bb);
 
     if (!success)
     {
       throw vtkm::cont::ErrorBadType(
-        "Error deserializing ArrayHandleVariant. Message TypeString: " + typeString);
+        "Error deserializing VariantArrayHandle. Message TypeString: " + typeString);
     }
   }
 };
@@ -368,4 +368,4 @@ public:
 } // diy
 
 
-#endif //vtk_m_virts_ArrayHandleVariant_h
+#endif //vtk_m_virts_VariantArrayHandle_h

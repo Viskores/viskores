@@ -144,7 +144,7 @@ public:
 
   template <typename T, typename OutputPortalType>
   void Run(const vtkm::cont::CellSetStructured<2>& input,
-           const vtkm::cont::ArrayHandleVariantBase<T>& pixels,
+           const vtkm::cont::VariantArrayHandleBase<T>& pixels,
            OutputPortalType& componentsOut) const
   {
     using Types = vtkm::ListTagBase<vtkm::UInt8>;

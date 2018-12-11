@@ -38,11 +38,11 @@ namespace
 
 struct FieldMapper
 {
-  vtkm::cont::ArrayHandleVariant& Output;
+  vtkm::cont::VariantArrayHandle& Output;
   vtkm::worklet::Clip& Worklet;
   bool IsCellField;
 
-  FieldMapper(vtkm::cont::ArrayHandleVariant& output,
+  FieldMapper(vtkm::cont::VariantArrayHandle& output,
               vtkm::worklet::Clip& worklet,
               bool isCellField)
     : Output(output)
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
         continue;
     }
 
-    vtkm::cont::ArrayHandleVariant outField;
+    vtkm::cont::VariantArrayHandle outField;
     FieldMapper fieldMapper(outField, clip, isCellField);
     inField.GetData().CastAndCall(fieldMapper);
     output.AddField(vtkm::cont::Field(inField.GetName(), inField.GetAssociation(), outField));

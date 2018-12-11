@@ -118,12 +118,12 @@ template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(
       vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>>::StorageTag>&);
 
 template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(std::string name,
-                                                             const vtkm::cont::ArrayHandleVariant&);
+                                                             const vtkm::cont::VariantArrayHandle&);
 
 template VTKM_CONT_EXPORT void CoordinateSystem::SetData(
   const vtkm::cont::ArrayHandle<vtkm::Vec<float, 3>>&);
 template VTKM_CONT_EXPORT void CoordinateSystem::SetData(
   const vtkm::cont::ArrayHandle<vtkm::Vec<double, 3>>&);
-template VTKM_CONT_EXPORT void CoordinateSystem::SetData(const vtkm::cont::ArrayHandleVariant&);
+template VTKM_CONT_EXPORT void CoordinateSystem::SetData(const vtkm::cont::VariantArrayHandle&);
 }
 } // namespace vtkm::cont

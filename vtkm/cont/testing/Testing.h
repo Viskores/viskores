@@ -27,11 +27,11 @@
 #include <vtkm/thirdparty/diy/Configure.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 
 // clang-format off
@@ -219,7 +219,7 @@ struct TestEqualArrayHandle
   template <typename T, typename StorageTag, typename TypeList>
   VTKM_CONT void operator()(
     const vtkm::cont::ArrayHandle<T, StorageTag>& array1,
-    const vtkm::cont::ArrayHandleVariantBase<TypeList>& array2,
+    const vtkm::cont::VariantArrayHandleBase<TypeList>& array2,
     TestEqualResult& result) const
   {
     array2.CastAndCall(*this, array1, result);
@@ -227,7 +227,7 @@ struct TestEqualArrayHandle
 
   template <typename T, typename StorageTag, typename TypeList>
   VTKM_CONT void operator()(
-    const vtkm::cont::ArrayHandleVariantBase<TypeList>& array1,
+    const vtkm::cont::VariantArrayHandleBase<TypeList>& array1,
     const vtkm::cont::ArrayHandle<T, StorageTag>& array2,
     TestEqualResult& result) const
   {
@@ -236,8 +236,8 @@ struct TestEqualArrayHandle
 
   template <typename TypeList1, typename TypeList2>
   VTKM_CONT void operator()(
-    const vtkm::cont::ArrayHandleVariantBase<TypeList1>& array1,
-    const vtkm::cont::ArrayHandleVariantBase<TypeList2>& array2,
+    const vtkm::cont::VariantArrayHandleBase<TypeList1>& array1,
+    const vtkm::cont::VariantArrayHandleBase<TypeList2>& array2,
     TestEqualResult& result) const
   {
     array2.CastAndCall(*this, array1, result);

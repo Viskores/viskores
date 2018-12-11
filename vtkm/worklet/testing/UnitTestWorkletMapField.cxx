@@ -20,7 +20,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 
-#include <vtkm/cont/ArrayHandleVariant.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -158,12 +158,12 @@ struct DoVariantTestWorklet
     std::cout << "Create and run dispatcher with variant arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
 
-    vtkm::cont::ArrayHandleVariant inputVariant(inputHandle);
+    vtkm::cont::VariantArrayHandle inputVariant(inputHandle);
 
     { //Verify we can pass by value
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
-      vtkm::cont::ArrayHandleVariant outputVariant(outputHandle);
-      vtkm::cont::ArrayHandleVariant inoutVariant(inoutHandle);
+      vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
+      vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
       dispatcher.Invoke(inputVariant, outputVariant, inoutVariant);
       CheckPortal(outputHandle.GetPortalConstControl());
       CheckPortal(inoutHandle.GetPortalConstControl());
@@ -171,8 +171,8 @@ struct DoVariantTestWorklet
 
     { //Verify we can pass by pointer
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
-      vtkm::cont::ArrayHandleVariant outputVariant(outputHandle);
-      vtkm::cont::ArrayHandleVariant inoutVariant(inoutHandle);
+      vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
+      vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
       dispatcher.Invoke(&inputVariant, &outputVariant, &inoutVariant);
       CheckPortal(outputHandle.GetPortalConstControl());
       CheckPortal(inoutHandle.GetPortalConstControl());

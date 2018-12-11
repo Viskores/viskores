@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandleVariant.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/TypeTraits.h>
 
@@ -47,7 +47,7 @@
 namespace vtkm
 {
 
-// ArrayHandleVariant requires its value type to have a defined VecTraits
+// VariantArrayHandle requires its value type to have a defined VecTraits
 // class. One of the tests is to use an "unusual" array of std::string
 // (which is pretty pointless but might tease out some assumptions).
 // Make an implementation here. Because I am lazy, this is only a partial
@@ -124,7 +124,7 @@ struct CheckFunctor
 };
 
 template <typename TypeList>
-void BasicArrayVariantChecks(const vtkm::cont::ArrayHandleVariantBase<TypeList>& array,
+void BasicArrayVariantChecks(const vtkm::cont::VariantArrayHandleBase<TypeList>& array,
                              vtkm::IdComponent numComponents)
 {
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
@@ -133,7 +133,7 @@ void BasicArrayVariantChecks(const vtkm::cont::ArrayHandleVariantBase<TypeList>&
                    "Dynamic array reports unexpected number of components.");
 }
 
-void CheckArrayVariant(vtkm::cont::ArrayHandleVariant array, vtkm::IdComponent numComponents)
+void CheckArrayVariant(vtkm::cont::VariantArrayHandle array, vtkm::IdComponent numComponents)
 {
   BasicArrayVariantChecks(array, numComponents);
 
@@ -145,7 +145,7 @@ void CheckArrayVariant(vtkm::cont::ArrayHandleVariant array, vtkm::IdComponent n
 }
 
 template <typename TypeList>
-void CheckArrayVariant(const vtkm::cont::ArrayHandleVariantBase<TypeList>& array,
+void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array,
                        vtkm::IdComponent numComponents)
 {
   BasicArrayVariantChecks(array, numComponents);
@@ -158,7 +158,7 @@ void CheckArrayVariant(const vtkm::cont::ArrayHandleVariantBase<TypeList>& array
 }
 
 template <typename T>
-vtkm::cont::ArrayHandleVariant CreateArrayVariant(T)
+vtkm::cont::VariantArrayHandle CreateArrayVariant(T)
 {
   // Declared static to prevent going out of scope.
   static T buffer[ARRAY_SIZE];
@@ -167,7 +167,7 @@ vtkm::cont::ArrayHandleVariant CreateArrayVariant(T)
     buffer[index] = TestValue(index, T());
   }
 
-  return vtkm::cont::ArrayHandleVariant(vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE));
+  return vtkm::cont::VariantArrayHandle(vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE));
 }
 
 template <typename ArrayHandleType>
@@ -175,7 +175,7 @@ void CheckCastToArrayHandle(const ArrayHandleType& array)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
-  vtkm::cont::ArrayHandleVariant arrayVariant = array;
+  vtkm::cont::VariantArrayHandle arrayVariant = array;
   VTKM_TEST_ASSERT(!arrayVariant.IsType<vtkm::cont::ArrayHandle<std::string>>(),
                    "Dynamic array reporting is wrong type.");
 
@@ -227,7 +227,7 @@ void TryNewInstance(T, ArrayVariantType originalArray)
 template <typename T>
 void TryDefaultType(T)
 {
-  vtkm::cont::ArrayHandleVariant array = CreateArrayVariant(T());
+  vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
 
   CheckArrayVariant(array, vtkm::VecTraits<T>::NUM_COMPONENTS);
 
@@ -239,7 +239,7 @@ struct TryBasicVTKmType
   template <typename T>
   void operator()(T) const
   {
-    vtkm::cont::ArrayHandleVariant array = CreateArrayVariant(T());
+    vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
 
     CheckArrayVariant(array.ResetTypes(vtkm::TypeListTagAll()), vtkm::VecTraits<T>::NUM_COMPONENTS);
 
@@ -250,7 +250,7 @@ struct TryBasicVTKmType
 void TryUnusualType()
 {
   // A string is an unlikely type to be declared elsewhere in VTK-m.
-  vtkm::cont::ArrayHandleVariant array = CreateArrayVariant(std::string());
+  vtkm::cont::VariantArrayHandle array = CreateArrayVariant(std::string());
 
   try
   {
@@ -268,7 +268,7 @@ void TryUnusualType()
 
 void TryUnusualStorage()
 {
-  vtkm::cont::ArrayHandleVariant array = ArrayHandleWithUnusualStorage<vtkm::Id>();
+  vtkm::cont::VariantArrayHandle array = ArrayHandleWithUnusualStorage<vtkm::Id>();
 
   try
   {
@@ -282,7 +282,7 @@ void TryUnusualStorage()
 
 void TryUnusualTypeAndStorage()
 {
-  vtkm::cont::ArrayHandleVariant array = ArrayHandleWithUnusualStorage<std::string>();
+  vtkm::cont::VariantArrayHandle array = ArrayHandleWithUnusualStorage<std::string>();
 
   try
   {
@@ -353,7 +353,7 @@ void TryCastToArrayHandle()
   // CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleZip(countingArray, array));
 }
 
-void TestArrayHandleVariant()
+void TestVariantArrayHandle()
 {
   std::cout << "Try common types with default type lists." << std::endl;
   std::cout << "*** vtkm::Id **********************" << std::endl;
@@ -387,7 +387,7 @@ void TestArrayHandleVariant()
 
 } // anonymous namespace
 
-int UnitTestArrayHandleVariant(int, char* [])
+int UnitTestVariantArrayHandle(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleVariant);
+  return vtkm::cont::testing::Testing::Run(TestVariantArrayHandle);
 }

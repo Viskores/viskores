@@ -27,7 +27,7 @@
 #include <vtkm/CellTraits.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {
@@ -145,7 +145,7 @@ public:
 
   template <typename CellSetType, typename NormalCompType>
   void Run(const CellSetType& cellset,
-           const vtkm::cont::ArrayHandleVariantBase<vtkm::TypeListTagFieldVec3>& points,
+           const vtkm::cont::VariantArrayHandleBase<vtkm::TypeListTagFieldVec3>& points,
            vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals)
   {
     if (this->Normalize)
@@ -208,7 +208,7 @@ public:
 
   template <typename CellSetType, typename FaceNormalTypeList, typename NormalCompType>
   void Run(const CellSetType& cellset,
-           const vtkm::cont::ArrayHandleVariantBase<FaceNormalTypeList>& faceNormals,
+           const vtkm::cont::VariantArrayHandleBase<FaceNormalTypeList>& faceNormals,
            vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals)
   {
     vtkm::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);

@@ -23,7 +23,7 @@ set(headers
   ArrayHandleBasicImpl.h
   ArrayHandleBasicImpl.hxx
   ArrayHandleExecutionManager.h
-  ArrayHandleVariantContainer.h
+  VariantArrayHandleContainer.h
   ArrayManagerExecution.h
   ArrayManagerExecutionShareWithControl.h
   ArrayPortalFromIterators.h

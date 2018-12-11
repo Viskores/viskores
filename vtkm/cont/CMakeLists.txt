@@ -23,13 +23,14 @@ set(headers
   ArrayCopy.h
   ArrayHandle.h
   ArrayHandleAny.h
-  ArrayHandleCast.h
   ArrayHandleCartesianProduct.h
+  ArrayHandleCast.h
   ArrayHandleCompositeVector.h
+  ArrayHandleConcatenate.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
-  ArrayHandleExtractComponent.h
   ArrayHandleDiscard.h
+  ArrayHandleExtractComponent.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
@@ -40,19 +41,17 @@ set(headers
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
-  ArrayHandleVariant.h
   ArrayHandleView.h
   ArrayHandleVirtual.h
   ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
-  ArrayHandleConcatenate.h
   ArrayRangeCompute.h
   AssignerMultiBlock.h
   AtomicArray.h
-  BoundingIntervalHierarchyNode.h
   BoundingIntervalHierarchy.h
+  BoundingIntervalHierarchyNode.h
   BoundsCompute.h
   BoundsGlobalCompute.h
   CellLocator.h
@@ -61,9 +60,9 @@ set(headers
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
+  CellSetPermutation.h
   CellSetSingleType.h
   CellSetStructured.h
-  CellSetPermutation.h
   ColorTable.h
   ColorTableSamples.h
   CoordinateSystem.h
@@ -83,8 +82,8 @@ set(headers
   ErrorBadDevice.h
   ErrorBadType.h
   ErrorBadValue.h
-  ErrorFilterExecution.h
   ErrorExecution.h
+  ErrorFilterExecution.h
   ErrorInternal.h
   ExecutionAndControlObjectBase.h
   ExecutionObjectBase.h
@@ -103,11 +102,12 @@ set(headers
   Storage.h
   StorageBasic.h
   StorageImplicit.h
-  StorageVirtual.h
   StorageListTag.h
+  StorageVirtual.h
   Timer.h
   TryExecute.h
   TypeString.h
+  VariantArrayHandle.h
   VirtualObjectHandle.h
   )
 
@@ -128,7 +128,6 @@ set(template_sources
 
 set(sources
   ArrayHandle.cxx
-  ArrayHandleVariant.cxx
   AssignerMultiBlock.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
@@ -161,6 +160,7 @@ set(sources
   StorageBasic.cxx
   StorageVirtual.cxx
   TryExecute.cxx
+  VariantArrayHandle.cxx
   )
 
 # This list of sources has code that uses devices and so might need to be

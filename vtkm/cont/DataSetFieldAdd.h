@@ -38,7 +38,7 @@ public:
   VTKM_CONT
   static void AddPointField(vtkm::cont::DataSet& dataSet,
                             const std::string& fieldName,
-                            const vtkm::cont::ArrayHandleVariant& field)
+                            const vtkm::cont::VariantArrayHandle& field)
   {
     dataSet.AddField(Field(fieldName, vtkm::cont::Field::Association::POINTS, field));
   }
@@ -74,7 +74,7 @@ public:
   VTKM_CONT
   static void AddCellField(vtkm::cont::DataSet& dataSet,
                            const std::string& fieldName,
-                           const vtkm::cont::ArrayHandleVariant& field,
+                           const vtkm::cont::VariantArrayHandle& field,
                            const std::string& cellSetName)
   {
     dataSet.AddField(
@@ -119,7 +119,7 @@ public:
   VTKM_CONT
   static void AddCellField(vtkm::cont::DataSet& dataSet,
                            const std::string& fieldName,
-                           const vtkm::cont::ArrayHandleVariant& field,
+                           const vtkm::cont::VariantArrayHandle& field,
                            vtkm::Id cellSetIndex = 0)
   {
     std::string cellSetName = dataSet.GetCellSet(cellSetIndex).GetName();

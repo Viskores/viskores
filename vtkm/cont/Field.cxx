@@ -27,7 +27,7 @@ namespace cont
 
 /// constructors for points / whole mesh
 VTKM_CONT
-Field::Field(std::string name, Association association, const vtkm::cont::ArrayHandleVariant& data)
+Field::Field(std::string name, Association association, const vtkm::cont::VariantArrayHandle& data)
   : Name(name)
   , FieldAssociation(association)
   , AssocCellSetName()
@@ -45,7 +45,7 @@ VTKM_CONT
 Field::Field(std::string name,
              Association association,
              const std::string& cellSetName,
-             const vtkm::cont::ArrayHandleVariant& data)
+             const vtkm::cont::VariantArrayHandle& data)
   : Name(name)
   , FieldAssociation(association)
   , AssocCellSetName(cellSetName)
@@ -62,7 +62,7 @@ VTKM_CONT
 Field::Field(std::string name,
              Association association,
              vtkm::IdComponent logicalDim,
-             const vtkm::cont::ArrayHandleVariant& data)
+             const vtkm::cont::VariantArrayHandle& data)
   : Name(name)
   , FieldAssociation(association)
   , AssocCellSetName()
@@ -157,13 +157,13 @@ Field::~Field()
 
 
 VTKM_CONT
-const vtkm::cont::ArrayHandleVariant& Field::GetData() const
+const vtkm::cont::VariantArrayHandle& Field::GetData() const
 {
   return this->Data;
 }
 
 VTKM_CONT
-vtkm::cont::ArrayHandleVariant& Field::GetData()
+vtkm::cont::VariantArrayHandle& Field::GetData()
 {
   this->ModifiedFlag = true;
   return this->Data;

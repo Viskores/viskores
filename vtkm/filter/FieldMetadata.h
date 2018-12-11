@@ -85,7 +85,7 @@ public:
   }
 
   VTKM_CONT
-  vtkm::cont::Field AsField(const vtkm::cont::ArrayHandleVariant& handle) const
+  vtkm::cont::Field AsField(const vtkm::cont::VariantArrayHandle& handle) const
   {
     if (this->IsCellField())
     {

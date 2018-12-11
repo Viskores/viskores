@@ -19,7 +19,7 @@
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -83,9 +83,9 @@ struct DoTestWholeArrayWorklet
 
   // This just demonstrates that the WholeArray tags support dynamic arrays.
   VTKM_CONT
-  void CallWorklet(const vtkm::cont::ArrayHandleVariant& inArray,
-                   const vtkm::cont::ArrayHandleVariant& inOutArray,
-                   const vtkm::cont::ArrayHandleVariant& outArray) const
+  void CallWorklet(const vtkm::cont::VariantArrayHandle& inArray,
+                   const vtkm::cont::VariantArrayHandle& inOutArray,
+                   const vtkm::cont::VariantArrayHandle& outArray) const
   {
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
@@ -111,9 +111,9 @@ struct DoTestWholeArrayWorklet
     // Output arrays must be preallocated.
     outHandle.Allocate(ARRAY_SIZE);
 
-    this->CallWorklet(vtkm::cont::ArrayHandleVariant(inHandle),
-                      vtkm::cont::ArrayHandleVariant(inOutHandle),
-                      vtkm::cont::ArrayHandleVariant(outHandle));
+    this->CallWorklet(vtkm::cont::VariantArrayHandle(inHandle),
+                      vtkm::cont::VariantArrayHandle(inOutHandle),
+                      vtkm::cont::VariantArrayHandle(outHandle));
 
     std::cout << "Check result." << std::endl;
     CheckPortal(inOutHandle.GetPortalConstControl());
@@ -127,7 +127,7 @@ struct DoTestAtomicArrayWorklet
 
   // This just demonstrates that the WholeArray tags support dynamic arrays.
   VTKM_CONT
-  void CallWorklet(const vtkm::cont::ArrayHandleVariant& inOutArray) const
+  void CallWorklet(const vtkm::cont::VariantArrayHandle& inOutArray) const
   {
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
@@ -142,7 +142,7 @@ struct DoTestAtomicArrayWorklet
 
     vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle(&inOutValue, 1);
 
-    this->CallWorklet(vtkm::cont::ArrayHandleVariant(inOutHandle));
+    this->CallWorklet(vtkm::cont::VariantArrayHandle(inOutHandle));
 
     std::cout << "Check result." << std::endl;
     T result = inOutHandle.GetPortalConstControl().Get(0);

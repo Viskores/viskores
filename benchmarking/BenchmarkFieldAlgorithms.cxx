@@ -22,10 +22,10 @@
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVariant.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -319,9 +319,9 @@ class BenchmarkFieldAlgorithms
 
   using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
 
-  using ValueVariantHandle = vtkm::cont::ArrayHandleVariantBase<ValueTypes>;
-  using InterpVariantHandle = vtkm::cont::ArrayHandleVariantBase<InterpValueTypes>;
-  using IdVariantHandle = vtkm::cont::ArrayHandleVariantBase<vtkm::TypeListTagIndex>;
+  using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
+  using InterpVariantHandle = vtkm::cont::VariantArrayHandleBase<InterpValueTypes>;
+  using IdVariantHandle = vtkm::cont::VariantArrayHandleBase<vtkm::TypeListTagIndex>;
 
 private:
   template <typename Value>
@@ -484,7 +484,7 @@ private:
 
       vtkm::cont::ArrayHandle<Value> temp1;
       vtkm::cont::ArrayHandle<Value> temp2;
-      vtkm::cont::ArrayHandleVariantBase<MathTypes> dinput(this->InputHandle);
+      vtkm::cont::VariantArrayHandleBase<MathTypes> dinput(this->InputHandle);
       ValueVariantHandle dtemp1(temp1);
       ValueVariantHandle dtemp2(temp2);
 
@@ -560,7 +560,7 @@ private:
     {
       using MathTypes = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
 
-      vtkm::cont::ArrayHandleVariantBase<MathTypes> dinput(this->InputHandle);
+      vtkm::cont::VariantArrayHandleBase<MathTypes> dinput(this->InputHandle);
 
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 

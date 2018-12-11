@@ -146,7 +146,7 @@ class BenchmarkTopologyAlgorithms
 
   using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
 
-  using ValueVariantHandle = vtkm::cont::ArrayHandleVariantBase<ValueTypes>;
+  using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
 
 private:
   template <typename T, typename Enable = void>

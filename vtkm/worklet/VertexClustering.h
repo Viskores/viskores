@@ -83,7 +83,7 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
     template <typename InputPointsArrayType, typename KeyType>
     VTKM_CONT void operator()(const InputPointsArrayType& points,
                               const vtkm::worklet::Keys<KeyType>& keys,
-                              vtkm::cont::ArrayHandleVariant& output) const
+                              vtkm::cont::VariantArrayHandle& output) const
     {
 
       vtkm::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
@@ -95,11 +95,11 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
   };
 
   template <typename KeyType, typename InputDynamicPointsArrayType>
-  VTKM_CONT static vtkm::cont::ArrayHandleVariant Run(
+  VTKM_CONT static vtkm::cont::VariantArrayHandle Run(
     const vtkm::worklet::Keys<KeyType>& keys,
     const InputDynamicPointsArrayType& inputPoints)
   {
-    vtkm::cont::ArrayHandleVariant output;
+    vtkm::cont::VariantArrayHandle output;
     RunTrampoline trampoline;
     vtkm::cont::CastAndCall(inputPoints, trampoline, keys, output);
     return output;
@@ -379,7 +379,7 @@ public:
 #endif
 
     /// pass 2 : Choose a representative point from each cluster for the output:
-    vtkm::cont::ArrayHandleVariant repPointArray;
+    vtkm::cont::VariantArrayHandle repPointArray;
     {
       vtkm::worklet::Keys<vtkm::Id> keys;
       keys.BuildArrays(pointCidArray, vtkm::worklet::Keys<vtkm::Id>::SortType::Stable);
