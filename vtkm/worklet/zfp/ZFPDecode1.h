@@ -21,11 +21,10 @@ namespace zfp
 template <typename Scalar, typename PortalType>
 VTKM_EXEC inline void ScatterPartial1(const Scalar* q,
                                       PortalType& scalars,
-                                      const vtkm::Id dims,
                                       vtkm::Id offset,
                                       vtkm::Int32 nx)
 {
-  vtkm::Id x, y;
+  vtkm::Id x;
   for (x = 0; x < nx; x++, offset++, q++)
   {
     scalars.Set(offset, *q);
@@ -33,10 +32,7 @@ VTKM_EXEC inline void ScatterPartial1(const Scalar* q,
 }
 
 template <typename Scalar, typename PortalType>
-VTKM_EXEC inline void Scatter1(const Scalar* q,
-                               PortalType& scalars,
-                               const vtkm::Id dims,
-                               vtkm::Id offset)
+VTKM_EXEC inline void Scatter1(const Scalar* q, PortalType& scalars, vtkm::Id offset)
 {
   for (vtkm::Id x = 0; x < 4; x++, ++offset)
   {
@@ -77,15 +73,9 @@ public:
     }
 
 
-    zfp::zfp_decode<BlockSize>(fblock, MaxBits, blockIdx, stream);
+    zfp::zfp_decode<BlockSize>(fblock, MaxBits, static_cast<vtkm::UInt32>(blockIdx), stream);
 
 
-    //for(int i = 0; i < BlockSize; ++i)
-    //{
-    //  std::cout<<" "<<fblock[i];
-    //}
-
-    std::cout << "\n";
     vtkm::Id zfpBlock;
     zfpBlock = blockIdx % ZFPDims;
     vtkm::Id logicalStart = zfpBlock * vtkm::Id(4);
@@ -107,12 +97,12 @@ public:
         logicalStart + 4 > Dims ? vtkm::Int32(Dims - logicalStart) : vtkm::Int32(4);
       //std::cout<<"Partial block "<<logicalStart<<" offset "<<offset<<"\n";
       //std::cout<<"Nx "<<nx<<" "<<ny<<" "<<nz<<"\n";
-      ScatterPartial1(fblock, scalars, Dims, logicalStart, nx);
+      ScatterPartial1(fblock, scalars, logicalStart, nx);
     }
     else
     {
       //std::cout<<"FULL block "<<zfpBlock<<"\n";
-      Scatter1(fblock, scalars, Dims, logicalStart);
+      Scatter1(fblock, scalars, logicalStart);
     }
   }
 };

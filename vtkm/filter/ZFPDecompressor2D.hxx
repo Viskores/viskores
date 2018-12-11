@@ -41,12 +41,15 @@ inline VTKM_CONT ZFPDecompressor2D::ZFPDecompressor2D()
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor2D::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<T, StorageType>&,
+  const vtkm::filter::FieldMetadata&,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   VTKM_ASSERT(true);
+
+  vtkm::cont::DataSet ds;
+  return ds;
 }
 
 //-----------------------------------------------------------------------------
@@ -54,8 +57,8 @@ template <typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor2D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Int64, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  const vtkm::filter::FieldMetadata&,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   //  if (fieldMeta.IsPointField() == false)
   //  {

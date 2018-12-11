@@ -39,7 +39,7 @@ void writeArray(vtkm::cont::ArrayHandle<T>& field, std::string filename)
 {
   auto val = vtkm::worklet::GetVTKMPointer(field);
   std::ofstream output(filename, std::ios::binary | std::ios::out);
-  output.write((char*)val, field.GetNumberOfValues() * 8);
+  output.write(reinterpret_cast<char*>(val), field.GetNumberOfValues() * 8);
   output.close();
 
   for (int i = 0; i < field.GetNumberOfValues(); i++)
@@ -60,18 +60,17 @@ void Test1D(int rate)
   auto dynField = dataset.GetField("pointvar").GetData();
   auto field = dynField.Cast<Handle64>();
   auto oport = field.GetPortalControl();
-  writeArray(field, "orig.zfp");
+  //writeArray(field, "orig.zfp");
   vtkm::worklet::ZFP1DCompressor compressor;
   vtkm::worklet::ZFP1DDecompressor decompressor;
 
   if (dynField.IsSameType(Handle64()))
   {
-    Handle64 field = dynField.Cast<Handle64>();
     vtkm::cont::ArrayHandle<Scalar> handle;
-    const vtkm::Id size = field.GetNumberOfValues();
+    const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
     handle.Allocate(size);
 
-    auto fPortal = field.GetPortalControl();
+    auto fPortal = dynField.Cast<Handle64>().GetPortalControl();
     auto hPortal = handle.GetPortalControl();
     for (vtkm::Id i = 0; i < size; ++i)
     {
@@ -79,7 +78,7 @@ void Test1D(int rate)
     }
 
     auto compressed = compressor.Compress(handle, rate, dims);
-    writeArray(compressed, "output.zfp");
+    //writeArray(compressed, "output.zfp");
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
     auto port = decoded.GetPortalControl();
@@ -106,12 +105,11 @@ void Test2D(int rate)
 
   if (dynField.IsSameType(Handle64()))
   {
-    Handle64 field = dynField.Cast<Handle64>();
     vtkm::cont::ArrayHandle<Scalar> handle;
-    const vtkm::Id size = field.GetNumberOfValues();
+    const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
     handle.Allocate(size);
 
-    auto fPortal = field.GetPortalControl();
+    auto fPortal = dynField.Cast<Handle64>().GetPortalControl();
     auto hPortal = handle.GetPortalControl();
     for (vtkm::Id i = 0; i < size; ++i)
     {
@@ -148,12 +146,11 @@ void Test3D(int rate)
 
   if (dynField.IsSameType(Handle64()))
   {
-    Handle64 field = dynField.Cast<Handle64>();
     vtkm::cont::ArrayHandle<Scalar> handle;
-    const vtkm::Id size = field.GetNumberOfValues();
+    const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
     handle.Allocate(size);
 
-    auto fPortal = field.GetPortalControl();
+    auto fPortal = dynField.Cast<Handle64>().GetPortalControl();
     auto hPortal = handle.GetPortalControl();
     for (vtkm::Id i = 0; i < size; ++i)
     {
@@ -169,8 +166,8 @@ void Test3D(int rate)
 
 void TestZFP()
 {
-  //  Test3D<vtkm::Float64>(4);
-  //Test2D<vtkm::Float64>(4);
+  Test3D<vtkm::Float64>(4);
+  Test2D<vtkm::Float64>(4);
   Test1D<vtkm::Float64>(4);
   //Test3D<vtkm::Float32>(4);
   //Test3D<vtkm::Int64>(4);

@@ -93,7 +93,7 @@ public:
     }
 
 
-    zfp::zfp_decode<BlockSize>(fblock, MaxBits, blockIdx, stream);
+    zfp::zfp_decode<BlockSize>(fblock, MaxBits, static_cast<vtkm::UInt32>(blockIdx), stream);
 
 
     //for(int i = 0; i < BlockSize; ++i)

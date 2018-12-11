@@ -59,8 +59,8 @@ template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor3D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  const vtkm::filter::FieldMetadata&,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   //  if (fieldMeta.IsPointField() == false)
   //  {
