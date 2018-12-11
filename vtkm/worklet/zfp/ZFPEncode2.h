@@ -24,10 +24,10 @@ template <typename Scalar, typename PortalType>
 VTKM_EXEC inline void GatherPartial2(Scalar* q,
                                      const PortalType& scalars,
                                      vtkm::Id offset,
-                                     int nx,
-                                     int ny,
-                                     int sx,
-                                     int sy)
+                                     vtkm::Int32 nx,
+                                     vtkm::Int32 ny,
+                                     vtkm::Int32 sx,
+                                     vtkm::Int32 sy)
 {
   vtkm::Id x, y;
   for (y = 0; y < ny; y++, offset += sy - nx * sx)
@@ -136,11 +136,11 @@ public:
         logicalStart[0] + 4 > Dims[0] ? vtkm::Int32(Dims[0] - logicalStart[0]) : vtkm::Int32(4);
       const vtkm::Int32 ny =
         logicalStart[1] + 4 > Dims[1] ? vtkm::Int32(Dims[1] - logicalStart[1]) : vtkm::Int32(4);
-      GatherPartial2(fblock, scalars, offset, nx, ny, 1, Dims[0]);
+      GatherPartial2(fblock, scalars, offset, nx, ny, 1, static_cast<vtkm::Int32>(Dims[0]));
     }
     else
     {
-      Gather2(fblock, scalars, offset, 1, Dims[0]);
+      Gather2(fblock, scalars, offset, 1, static_cast<vtkm::Int32>(Dims[0]));
     }
 
     for (int i = 0; i < 16; ++i)
