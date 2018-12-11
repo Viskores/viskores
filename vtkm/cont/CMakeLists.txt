@@ -74,7 +74,6 @@ set(headers
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
   DeviceAdapterListTag.h
-  DynamicArrayHandle.h
   DynamicCellSet.h
   EnvironmentTracker.h
   Error.h
@@ -139,7 +138,6 @@ set(sources
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
-  DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx

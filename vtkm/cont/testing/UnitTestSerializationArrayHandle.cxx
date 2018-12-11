@@ -236,7 +236,7 @@ struct TestArrayHandleGroupVecVariable
                                                               vtkm::cont::make_ArrayHandle(comps));
     RunTest(array);
 
-    // cannot make a DynamicArrayHandle containing ArrayHandleGroupVecVariable
+    // cannot make a VariantArrayHandle containing ArrayHandleGroupVecVariable
     // because of the variable number of components of its values.
     // RunTest(MakeTestVariantArrayHandle(array));
   }
