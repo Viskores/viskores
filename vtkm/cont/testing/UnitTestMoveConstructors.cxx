@@ -49,8 +49,9 @@ template<typename T>
 void is_triv_noexcept_movable()
 {
   constexpr bool valid =
-#if !(defined(VTKM_GCC) && (__GNUC__ == 4 && __GNUC_MINOR__ <= 8))
-                         //GCC 4.8 doesn't have implementations for is_trivially_*
+#if !(defined(__GNUC__) && (__GNUC__ <= 5))
+                         //GCC 4.X and compilers that act like it such as Intel 17.0
+                         //don't have implementations for is_trivially_*
                          std::is_trivially_move_constructible<T>::value &&
                          std::is_trivially_move_assignable<T>::value &&
 #endif
