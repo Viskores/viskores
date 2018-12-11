@@ -74,7 +74,7 @@ set(headers
   ZFPDecompressor1D.h
   ZFPCompressor2D.h
   ZFPDecompressor2D.h
-  #ZFPCompression3D.h
+  ZFPCompressor3D.h
 )
 
 set(header_template_sources
@@ -128,7 +128,7 @@ set(header_template_sources
   ZFPDecompressor1D.hxx
   ZFPCompressor2D.hxx
   ZFPDecompressor2D.hxx
-  #ZFPCompression3D.hxx
+  ZFPCompressor3D.hxx
 )
 
 vtkm_declare_headers(${headers}
