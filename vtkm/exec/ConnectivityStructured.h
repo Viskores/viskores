@@ -119,6 +119,12 @@ public:
     return this->Internals.GetPointDimensions();
   }
 
+  VTKM_EXEC_CONT
+  SchedulingRangeType GetGlobalPointIndexStart() const
+  {
+    return this->Internals.GetGlobalPointIndexStart();
+  }
+
   friend class ConnectivityStructured<ToTopology, FromTopology, Dimension>;
 
 private:

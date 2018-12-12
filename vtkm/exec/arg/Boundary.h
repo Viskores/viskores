@@ -33,31 +33,31 @@ namespace arg
 
 /// \brief Aspect tag to use for getting if a point is a boundary point.
 ///
-/// The \c AspectTagOnBoundary aspect tag causes the \c Fetch class to obtain
+/// The \c AspectTagBoundary aspect tag causes the \c Fetch class to obtain
 /// if the point is on a boundary.
 ///
-struct AspectTagOnBoundary
+struct AspectTagBoundary
 {
 };
 
 
 /// \brief The \c ExecutionSignature tag to get if executing on a boundary element
 ///
-struct OnBoundary : vtkm::exec::arg::ExecutionSignatureTagBase
+struct Boundary : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static constexpr vtkm::IdComponent INDEX = 1;
-  using AspectTag = vtkm::exec::arg::AspectTagOnBoundary;
+  using AspectTag = vtkm::exec::arg::AspectTagBoundary;
 };
 
-template <typename FetchTag, int NSize, typename ExecObjectType>
+template <typename FetchTag, typename ExecObjectType>
 struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagOnBoundary,
-             vtkm::exec::arg::ThreadIndicesPointNeighborhood<NSize>,
+             vtkm::exec::arg::AspectTagBoundary,
+             vtkm::exec::arg::ThreadIndicesPointNeighborhood,
              ExecObjectType>
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesPointNeighborhood<NSize>;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesPointNeighborhood;
 
-  using ValueType = vtkm::exec::arg::BoundaryState;
+  using ValueType = vtkm::exec::BoundaryState;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC

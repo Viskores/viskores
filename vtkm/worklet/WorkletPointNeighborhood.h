@@ -39,12 +39,12 @@
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSetStructured.h>
 
+#include <vtkm/exec/arg/Boundary.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagArrayNeighborhoodIn.h>
 #include <vtkm/exec/arg/FetchTagCellSetIn.h>
-#include <vtkm/exec/arg/OnBoundary.h>
 #include <vtkm/exec/arg/ThreadIndicesPointNeighborhood.h>
 
 #include <vtkm/worklet/ScatterIdentity.h>
@@ -87,16 +87,16 @@ public:
   template <typename Worklet>
   using Dispatcher = vtkm::worklet::DispatcherPointNeighborhood<Worklet>;
 
-  /// \brief The \c ExecutionSignature tag to get if you the current iteration is on a boundary.
+  /// \brief The \c ExecutionSignature tag to query if the current iteration is inside the boundary.
   ///
-  /// A \c WorkletPointNeighborhood operates by iterating over all points using
-  /// a defined neighborhood. This \c ExecutionSignature tag provides different
-  /// types when you are on or off a boundary, allowing for separate code paths
-  /// just for handling boundaries.
+  /// A \c WorkletPointNeighborhood operates by iterating over all points using a defined
+  /// neighborhood. This \c ExecutionSignature tag provides a \c BoundaryState object that allows
+  /// you to query whether the neighborhood of the current iteration is completely inside the
+  /// bounds of the mesh or if it extends beyond the mesh. This is important as when you are on a
+  /// boundary the neighboordhood will contain empty values for a certain subset of values, and in
+  /// this case the values returned will depend on the boundary behavior.
   ///
-  /// This is important as when you are on a boundary the neighboordhood will
-  /// contain empty values for a certain subset of values
-  struct OnBoundary : vtkm::exec::arg::OnBoundary
+  struct Boundary : vtkm::exec::arg::Boundary
   {
   };
 
@@ -164,12 +164,9 @@ public:
   };
 };
 
-template <int Neighborhood_>
 class WorkletPointNeighborhood : public WorkletPointNeighborhoodBase
 {
 public:
-  static constexpr vtkm::IdComponent Neighborhood = Neighborhood_;
-
   /// \brief A control signature tag for neighborhood input values.
   ///
   /// A \c WorkletPointNeighborhood operates allowing access to a adjacent point
@@ -186,7 +183,7 @@ public:
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
-    using FetchTag = vtkm::exec::arg::FetchTagArrayNeighborhoodIn<Neighborhood>;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayNeighborhoodIn;
   };
 
   /// Point neighborhood worklets use the related thread indices class.
@@ -197,7 +194,7 @@ public:
             typename OutToInArrayType,
             typename VisitArrayType,
             vtkm::IdComponent Dimension>
-  VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood<Neighborhood> GetThreadIndices(
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood GetThreadIndices(
     const IndexType& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
@@ -206,14 +203,10 @@ public:
                                              Dimension>& inputDomain, //this should be explicitly
     const T& globalThreadIndexOffset = 0) const
   {
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood<Neighborhood>(
+    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
       threadIndex, outToIn, visit, inputDomain, globalThreadIndexOffset);
   }
 };
-
-
-using WorkletPointNeighborhood3x3x3 = WorkletPointNeighborhood<1>;
-using WorkletPointNeighborhood5x5x5 = WorkletPointNeighborhood<2>;
 }
 }
 

@@ -41,7 +41,7 @@ namespace connectivity
 namespace detail
 {
 
-class ImageGraft : public vtkm::worklet::WorkletPointNeighborhood3x3x3
+class ImageGraft : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
   using ControlSignature = void(CellSetIn,

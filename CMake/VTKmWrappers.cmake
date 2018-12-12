@@ -146,7 +146,12 @@ int ${headername}_${headerextension}_testbuild_symbol;"
     set_property(TARGET TestBuild_${name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
     set_property(TARGET TestBuild_${name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
 
-    target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags vtkm_taotuple)
+    target_link_libraries(TestBuild_${name}
+      PRIVATE
+        $<BUILD_INTERFACE:vtkm_developer_flags>
+        vtkm_compiler_flags
+        vtkm_taotuple
+    )
 
     if(TARGET vtkm::tbb)
       #make sure that we have the tbb include paths when tbb is enabled.
@@ -324,6 +329,17 @@ function(vtkm_library)
   vtkm_declare_headers(${VTKm_LIB_HEADERS}
                        EXCLUDE_FROM_TESTING ${VTKm_LIB_TEMPLATE_SOURCES}
                        )
+
+  # When building libraries/tests that are part of the VTK-m repository inherit
+  # the properties from vtkm_developer_flags. The flags are intended only for
+  # VTK-m itself and are not needed by consumers. We will export
+  # vtkm_developer_flags so consumer can use VTK-m's build flags if they so
+  # desire
+  if (VTKm_ENABLE_DEVELOPER_FLAGS)
+    target_link_libraries(${lib_name} PUBLIC $<BUILD_INTERFACE:vtkm_developer_flags>)
+  else()
+    target_link_libraries(${lib_name} PRIVATE $<BUILD_INTERFACE:vtkm_developer_flags>)
+  endif()
 
   #install the library itself
   install(TARGETS ${lib_name}

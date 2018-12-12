@@ -24,11 +24,6 @@ namespace vtkm
 {
 namespace cont
 {
-
-DataSet::DataSet()
-{
-}
-
 void DataSet::Clear()
 {
   this->CoordSystems.clear();

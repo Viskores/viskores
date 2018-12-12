@@ -52,8 +52,10 @@ public:
   }
 
   CellSetStructured(const Thisclass& src);
+  CellSetStructured(Thisclass&& src) noexcept;
 
   Thisclass& operator=(const Thisclass& src);
+  Thisclass& operator=(Thisclass&& src) noexcept;
 
   vtkm::Id GetNumberOfCells() const override { return this->Structure.GetNumberOfCells(); }
 
@@ -71,9 +73,19 @@ public:
     this->Structure.SetPointDimensions(dimensions);
   }
 
+  void SetGlobalPointIndexStart(SchedulingRangeType start)
+  {
+    this->Structure.SetGlobalPointIndexStart(start);
+  }
+
   SchedulingRangeType GetPointDimensions() const { return this->Structure.GetPointDimensions(); }
 
   SchedulingRangeType GetCellDimensions() const { return this->Structure.GetCellDimensions(); }
+
+  SchedulingRangeType GetGlobalPointIndexStart() const
+  {
+    return this->Structure.GetGlobalPointIndexStart();
+  }
 
   vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex) = 0) const
   {
@@ -145,16 +157,20 @@ public:
   {
     diy::save(bb, cs.GetName());
     diy::save(bb, cs.GetPointDimensions());
+    diy::save(bb, cs.GetGlobalPointIndexStart());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
     std::string name;
     diy::load(bb, name);
-    typename Type::SchedulingRangeType dims;
+    typename Type::SchedulingRangeType dims, start;
     diy::load(bb, dims);
+    diy::load(bb, start);
+
     cs = Type(name);
     cs.SetPointDimensions(dims);
+    cs.SetGlobalPointIndexStart(start);
   }
 };
 

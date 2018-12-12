@@ -58,9 +58,6 @@ public:
     vtkm::Vec<vtkm::FloatDefault, 3> spacing = vtkm::Vec<vtkm::FloatDefault, 3>(1.0f, 1.0f, 1.0f));
 
   VTKM_CONT
-  CoordinateSystem& operator=(const vtkm::cont::CoordinateSystem& src) = default;
-
-  VTKM_CONT
   vtkm::cont::ArrayHandleVirtualCoordinates GetData() const;
 
   VTKM_CONT void SetData(const vtkm::cont::ArrayHandleVirtualCoordinates::Superclass& newdata);
