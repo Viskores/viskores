@@ -52,12 +52,8 @@ public:
     DataDump(data, "uncompressed");
     zfp::ZFPStream stream;
     const vtkm::Int32 topoDims = 3;
-    vtkm::Float64 actualRate = stream.SetRate(requestedRate, topoDims, vtkm::Float64());
+    stream.SetRate(requestedRate, topoDims, vtkm::Float64());
     //VTKM_ASSERT(
-    std::cout << "ArraySize " << data.GetNumberOfValues() << "\n";
-    std::cout << "Array dims " << dims << "\n";
-    std::cout << "requested rate " << requestedRate << " actual rate " << actualRate << "\n";
-    std::cout << "MinBits " << stream.minbits << "\n";
 
     // Check to see if we need to increase the block sizes
     // in the case where dim[x] is not a multiple of 4
@@ -75,43 +71,40 @@ public:
     vtkm::Id totalBlocks =
       (paddedDims[0] / four) * (paddedDims[1] / (four) * (paddedDims[2] / four));
 
-    std::cout << "Padded dims " << paddedDims << "\n";
 
     size_t outbits = detail::CalcMem3d(paddedDims, stream.minbits);
-    std::cout << "Total output bits " << outbits << "\n";
     vtkm::Id outsize = outbits / sizeof(ZFPWord);
-    std::cout << "Output size " << outsize << "\n";
 
     vtkm::cont::ArrayHandle<vtkm::Int64> output;
     // hopefully this inits/allocates the mem only on the device
     vtkm::cont::ArrayHandleConstant<vtkm::Int64> zero(0, outsize);
     vtkm::cont::Algorithm::Copy(zero, output);
-    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
-    {
-      Timer timer;
-      vtkm::cont::ArrayHandleCounting<vtkm::Id> one(0, 1, 1);
-      vtkm::worklet::DispatcherMapField<detail::MemTransfer> dis;
-      dis.Invoke(one, data);
+    //    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
+    //    {
+    //      Timer timer;
+    //      vtkm::cont::ArrayHandleCounting<vtkm::Id> one(0,1,1);
+    //      vtkm::worklet::DispatcherMapField<detail::MemTransfer> dis;
+    //      dis.Invoke(one,data);
 
-      vtkm::Float64 time = timer.GetElapsedTime();
-      std::cout << "Copy scalars " << time << "\n";
-    }
+    //      vtkm::Float64 time = timer.GetElapsedTime();
+    //      std::cout<<"Copy scalars "<<time<<"\n";
+    //    }
 
     // launch 1 thread per zfp block
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
-    Timer timer;
+    //    Timer timer;
     vtkm::worklet::DispatcherMapField<zfp::Encode3> compressDispatcher(
       zfp::Encode3(dims, paddedDims, stream.maxbits));
     compressDispatcher.Invoke(blockCounter, data, output);
 
-    vtkm::Float64 time = timer.GetElapsedTime();
-    size_t total_bytes = data.GetNumberOfValues() * sizeof(vtkm::Float64);
-    vtkm::Float64 gB = vtkm::Float64(total_bytes) / (1024. * 1024. * 1024.);
-    vtkm::Float64 rate = gB / time;
-    std::cout << "Compress time " << time << " sec\n";
-    std::cout << "Compress rate " << rate << " GB / sec\n";
-    DataDump(output, "compressed");
+    //    vtkm::Float64 time = timer.GetElapsedTime();
+    //    size_t total_bytes =  data.GetNumberOfValues() * sizeof(vtkm::Float64);
+    //    vtkm::Float64 gB = vtkm::Float64(total_bytes) / (1024. * 1024. * 1024.);
+    //    vtkm::Float64 rate = gB / time;
+    //    std::cout<<"Compress time "<<time<<" sec\n";
+    //    std::cout<<"Compress rate "<<rate<<" GB / sec\n";
+    //    DataDump(output, "compressed");
 
     return output;
   }

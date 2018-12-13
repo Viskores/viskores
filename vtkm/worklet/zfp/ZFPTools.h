@@ -58,10 +58,10 @@ public:
   }
 }; //class MemTransfer
 
-size_t CalcMem3d(const vtkm::Id3 dims, const int bits_per_block)
+size_t CalcMem3d(const vtkm::Id3 dims, const vtkm::UInt32 bits_per_block)
 {
   const size_t vals_per_block = 64;
-  const size_t size = dims[0] * dims[1] * dims[2];
+  const size_t size = static_cast<size_t>(dims[0] * dims[1] * dims[2]);
   size_t total_blocks = size / vals_per_block;
   const size_t bits_per_word = sizeof(ZFPWord) * 8;
   const size_t total_bits = bits_per_block * total_blocks;
@@ -70,10 +70,10 @@ size_t CalcMem3d(const vtkm::Id3 dims, const int bits_per_block)
 }
 
 
-size_t CalcMem2d(const vtkm::Id2 dims, const int bits_per_block)
+size_t CalcMem2d(const vtkm::Id2 dims, const vtkm::UInt32 bits_per_block)
 {
   constexpr size_t vals_per_block = 16;
-  const size_t size = dims[0] * dims[1];
+  const size_t size = static_cast<size_t>(dims[0] * dims[1]);
   size_t total_blocks = size / vals_per_block;
   constexpr size_t bits_per_word = sizeof(ZFPWord) * 8;
   const size_t total_bits = bits_per_block * total_blocks;
@@ -81,10 +81,10 @@ size_t CalcMem2d(const vtkm::Id2 dims, const int bits_per_block)
   return alloc_size * sizeof(ZFPWord);
 }
 
-size_t CalcMem1d(const vtkm::Id dims, const int bits_per_block)
+size_t CalcMem1d(const vtkm::Id dims, const vtkm::UInt32 bits_per_block)
 {
   constexpr size_t vals_per_block = 4;
-  const size_t size = dims;
+  const size_t size = static_cast<size_t>(dims);
   size_t total_blocks = size / vals_per_block;
   constexpr size_t bits_per_word = sizeof(ZFPWord) * 8;
   const size_t total_bits = bits_per_block * total_blocks;
