@@ -143,12 +143,6 @@ public:
       Gather2(fblock, scalars, offset, 1, static_cast<vtkm::Int32>(Dims[0]));
     }
 
-    for (int i = 0; i < 16; ++i)
-    {
-      std::cout << " " << fblock[i];
-    }
-    std::cout << "\n";
-
     //zfp_encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);
     zfp::ZFPBlockEncoder<BlockSize, Scalar, BitstreamPortal> encoder;
     encoder.encode(fblock, MaxBits, vtkm::UInt32(blockIdx), stream);

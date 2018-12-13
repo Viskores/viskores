@@ -124,11 +124,6 @@ public:
       Gather1(fblock, scalars, logicalStart, 1);
     }
 
-    for (int i = 0; i < BlockSize; ++i)
-    {
-      std::cout << " " << fblock[i];
-    }
-    std::cout << "\n";
 
     //zfp_encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);
     zfp::ZFPBlockEncoder<BlockSize, Scalar, BitstreamPortal> encoder;

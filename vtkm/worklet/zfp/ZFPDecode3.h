@@ -101,7 +101,7 @@ public:
     //  std::cout<<" "<<fblock[i];
     //}
 
-    std::cout << "\n";
+    //std::cout<<"\n";
     vtkm::Id3 zfpBlock;
     zfpBlock[0] = blockIdx % ZFPDims[0];
     zfpBlock[1] = (blockIdx / ZFPDims[0]) % ZFPDims[1];

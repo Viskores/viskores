@@ -296,7 +296,7 @@ inline VTKM_EXEC void zfp_encodef(Scalar* fblock,
   using Int = typename zfp::zfp_traits<Scalar>::Int;
   zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, blockIdx);
   vtkm::Int32 emax = zfp::MaxExponent<BlockSize, Scalar>(fblock);
-  std::cout << "EMAX " << emax << "\n";
+  //  std::cout<<"EMAX "<<emax<<"\n";
   vtkm::Int32 maxprec =
     zfp::precision(emax, zfp::get_precision<Scalar>(), zfp::get_min_exp<Scalar>());
   vtkm::UInt32 e = maxprec ? emax + zfp::get_ebias<Scalar>() : 0;

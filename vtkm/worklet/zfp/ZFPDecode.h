@@ -183,10 +183,7 @@ VTKM_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
       for (; n < (BlockSize - 1) && bits && (bits--, !reader.read_bit()); n++)
         ;
 
-// deposit bit plane
-#ifdef VTKM_ENABLE_CUDA
-#pragma unroll
-#endif
+    // deposit bit plane
     for (int i = 0; x; i++, x >>= 1)
     {
       data[i] += (UInt)(x & 1u) << k;
@@ -201,9 +198,6 @@ VTKM_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
 template <vtkm::Int32 BlockSize, typename Scalar, typename Int>
 void zfp_convert(Scalar inv_w, Scalar* fblock, Int* iblock)
 {
-#ifdef VTKM_ENABLE_CUDA
-#pragma unroll
-#endif
   for (vtkm::Int32 i = 0; i < BlockSize; ++i)
   {
     fblock[i] = inv_w * (Scalar)iblock[i];
@@ -255,9 +249,6 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
 
     Int iblock[BlockSize];
     const zfp::ZFPCodec<BlockSize> codec;
-#ifdef VTKM_ENABLE_CUDA
-#pragma unroll
-#endif
     for (vtkm::Int32 i = 0; i < BlockSize; ++i)
     {
       vtkm::UInt8 idx = codec.CodecLookup(i);

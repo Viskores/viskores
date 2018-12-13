@@ -145,11 +145,11 @@ public:
       Gather3(fblock, scalars, Dims, offset);
     }
 
-    for (int i = 0; i < 64; ++i)
-    {
-      std::cout << " " << fblock[i];
-    }
-    std::cout << "\n";
+    //    for(int i = 0; i < 64; ++i)
+    //    {
+    //      std::cout<<" "<<fblock[i];
+    //    }
+    //    std::cout<<"\n";
     zfp::ZFPBlockEncoder<BlockSize, Scalar, BitstreamPortal> encoder;
 
     encoder.encode(fblock, MaxBits, vtkm::UInt32(blockIdx), stream);
