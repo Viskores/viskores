@@ -89,6 +89,7 @@ set(headers
   FieldRangeCompute.h
   FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
+  Initialize.h
   Logging.h
   MultiBlock.h
   PointLocator.h
@@ -144,6 +145,7 @@ set(sources
   internal/SimplePolymorphicContainer.cxx
   internal/SimplePolymorphicContainer.cxx
   internal/VirtualObjectTransfer.cxx
+  Initialize.cxx
   Logging.cxx
   MultiBlock.cxx
   RuntimeDeviceInformation.cxx

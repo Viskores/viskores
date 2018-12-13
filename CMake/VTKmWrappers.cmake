@@ -402,15 +402,15 @@ function(vtkm_unit_tests)
   set(backend ${VTKm_UT_BACKEND})
 
   set(enable_all_backends ${VTKm_UT_ALL_BACKENDS})
-  set(all_backends SERIAL)
+  set(all_backends Serial)
   if (VTKm_ENABLE_CUDA)
-    list(APPEND all_backends CUDA)
+    list(APPEND all_backends Cuda)
   endif()
   if (VTKm_ENABLE_TBB)
     list(APPEND all_backends TBB)
   endif()
   if (VTKm_ENABLE_OPENMP)
-    list(APPEND all_backends OPENMP)
+    list(APPEND all_backends OpenMP)
   endif()
 
   if(VTKm_UT_NAME)
@@ -440,7 +440,7 @@ function(vtkm_unit_tests)
   #cuda. This is so that we get the correctly named entry points generated
   create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES} ${extraArgs})
   #if all backends are enabled, we can use cuda compiler to handle all possible backends.
-  if(backend STREQUAL "CUDA" OR (enable_all_backends AND VTKm_ENABLE_CUDA))
+  if(backend STREQUAL "Cuda" OR (enable_all_backends AND VTKm_ENABLE_CUDA))
     vtkm_compile_as_cuda(cu_srcs ${VTKm_UT_SOURCES})
     set(VTKm_UT_SOURCES ${cu_srcs})
   endif()
@@ -458,28 +458,29 @@ function(vtkm_unit_tests)
       set (current_backend "")
       set(device_command_line_argument "")
     endif()
+    string(TOUPPER "${current_backend}" upper_backend)
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
       if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
-        add_test(NAME ${tname}${current_backend}
+        add_test(NAME ${tname}${upper_backend}
           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
                   $<TARGET_FILE:${test_prog}> ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
                   ${MPIEXEC_POSTFLAGS}
           )
       else()
-        add_test(NAME ${tname}${current_backend}
+        add_test(NAME ${tname}${upper_backend}
           COMMAND ${test_prog} ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
           )
       endif()
 
       #determine the timeout for all the tests based on the backend. CUDA tests
       #generally require more time because of kernel generation.
-      if (current_backend STREQUAL "CUDA")
+      if (current_backend STREQUAL "Cuda")
         set(timeout 1500)
       else()
         set(timeout 180)
       endif()
-      if(current_backend STREQUAL "OPENMP")
+      if(current_backend STREQUAL "OpenMP")
         #We need to have all OpenMP tests run serially as they
         #will uses all the system cores, and we will cause a N*N thread
         #explosion which causes the tests to run slower than when run
@@ -489,7 +490,7 @@ function(vtkm_unit_tests)
         set(run_serial False)
       endif()
 
-      set_tests_properties("${tname}${current_backend}" PROPERTIES
+      set_tests_properties("${tname}${upper_backend}" PROPERTIES
         TIMEOUT ${timeout}
         RUN_SERIAL ${run_serial}
       )

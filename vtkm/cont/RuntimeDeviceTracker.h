@@ -208,6 +208,12 @@ public:
   VTKM_CONT
   DeviceAdapterNameType GetDeviceName(DeviceAdapterId id) const;
 
+  /// Returns the id corresponding to the device adapter name. If @a name is
+  /// not recognized, DeviceAdapterTagUndefined is returned.
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  DeviceAdapterId GetDeviceAdapterId(DeviceAdapterNameType name) const;
+
 private:
   std::shared_ptr<detail::RuntimeDeviceTrackerInternals> Internals;
 

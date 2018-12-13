@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Error.h>
-#include <vtkm/testing/OptionParser.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/testing/Testing.h>
 #include <vtkm/thirdparty/diy/Configure.h>
 
@@ -45,23 +45,6 @@ namespace cont
 {
 namespace testing
 {
-namespace {
-using namespace vtkm::testing::option;
-// Lean parser related code
-enum optionIndex {DEVICE};
-struct Arg: public vtkm::testing::option::Arg
-{
-  static ArgStatus Required(const Option& option, bool)
-  {
-    return option.arg == 0 ? vtkm::testing::option::ARG_ILLEGAL : vtkm::testing::option::ARG_OK;
-  }
-};
-static Descriptor Usage[] =
-{
-  {DEVICE, 0, "d", "device", Arg::Required, " -- device \t specify a device to run on."},
-  {0,0,0,0,0,0}
-};
-}
 
 struct Testing
 {
@@ -70,33 +53,7 @@ public:
   template <class Func>
   static VTKM_CONT int Run(Func function, int argc = 0, char* argv[] = nullptr)
   {
-    argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
-    Stats  stats(Usage, argc, argv);
-    Option* options = new Option[stats.options_max];
-    Option* buffer = new Option[stats.buffer_max];
-
-    Parser parse(Usage, argc, argv, options, buffer);
-
-    if (parse.error())
-    {
-      return 1;
-    }
-
-    if (options[DEVICE])
-    {
-      Option* deviceOption = options[DEVICE];
-      vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::make_DeviceAdapterIdFromName(std::string(deviceOption->arg));
-      vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(deviceId);
-    }
-
-    std::vector<std::string> nonOptions;
-    for (int i = 0; i < parse.nonOptionsCount();i++)
-    {
-      nonOptions.push_back(std::string(parse.nonOption(i)));
-    }
-
-    delete[] options;
-    delete[] buffer;
+    vtkm::cont::Initialize(argc, argv);
 
     try
     {
@@ -129,38 +86,12 @@ public:
   template <class Func>
   static VTKM_CONT int RunOnDevice(Func function, int argc = 0, char* argv[] = nullptr)
   {
-    argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
-    Stats  stats(Usage, argc, argv);
-    Option* options = new Option[stats.options_max];
-    Option* buffer = new Option[stats.buffer_max];
-
-    Parser parse(Usage, argc, argv, options, buffer);
-
-    if (parse.error())
-    {
-      return 1;
-    }
-
-    vtkm::cont::DeviceAdapterId deviceId = vtkm::cont::make_DeviceAdapterId(VTKM_DEVICE_ADAPTER_ERROR);
-    if (options[DEVICE])
-    {
-      Option* deviceOption = options[DEVICE];
-      deviceId = vtkm::cont::make_DeviceAdapterIdFromName(std::string(deviceOption->arg));
-      vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(deviceId);
-    }
-
-    std::vector<std::string> nonOptions;
-    for (int i = 0; i < parse.nonOptionsCount();i++)
-    {
-      nonOptions.push_back(std::string(parse.nonOption(i)));
-    }
-
-    delete[] options;
-    delete[] buffer;
+    auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+    auto config = vtkm::cont::Initialize(argc, argv, opts);
 
     try
     {
-      function(deviceId);
+      function(config.Device);
     }
     catch (vtkm::testing::Testing::TestFailure& error)
     {

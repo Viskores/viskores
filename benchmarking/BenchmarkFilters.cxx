@@ -1283,7 +1283,7 @@ int BenchmarkBody(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-  vtkm::cont::InitLogging(argc, argv);
+  vtkm::cont::Initialize(argc, argv);
 
   int retval = 1;
   try

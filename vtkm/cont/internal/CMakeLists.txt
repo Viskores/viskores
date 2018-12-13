@@ -39,6 +39,7 @@ set(headers
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
   KXSort.h
+  OptionParser.h
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
   ReverseConnectivityBuilder.h
