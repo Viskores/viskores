@@ -154,7 +154,7 @@ struct BlockWriter
   }
 
   // TODO: optimize
-  vtkm::UInt32 write_bit(const unsigned int& bit)
+  vtkm::UInt32 VTKM_EXEC write_bit(const unsigned int& bit)
   {
     //bool print = m_word_index == 0  && m_start_bit == 0;
     const uint wbits = sizeof(Word) * 8;
