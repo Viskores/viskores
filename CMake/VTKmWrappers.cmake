@@ -282,16 +282,31 @@ function(vtkm_library)
   endif()
   set(lib_name ${VTKm_LIB_NAME})
 
+  if(VTKm_LIB_STATIC)
+    set(VTKm_LIB_type STATIC)
+  else()
+    if(VTKm_LIB_SHARED)
+      set(VTKm_LIB_type SHARED)
+    endif()
+    #if cuda requires static libaries force
+    #them no matter what
+    if(TARGET vtkm::cuda)
+      get_target_property(force_static vtkm::cuda REQUIRES_STATIC_BUILDS)
+      if(force_static)
+        set(VTKm_LIB_type STATIC)
+        message("Forcing ${lib_name} to be built statically as we are using CUDA 8.X, which doesn't support virtuals sufficiently in dynamic libraries.")
+      endif()
+    endif()
+
+  endif()
+
+
   if(TARGET vtkm::cuda)
     vtkm_compile_as_cuda(cu_srcs ${VTKm_LIB_WRAP_FOR_CUDA})
     set(VTKm_LIB_WRAP_FOR_CUDA ${cu_srcs})
   endif()
 
-  if(VTKm_LIB_STATIC)
-    set(VTKm_LIB_type STATIC)
-  elseif(VTKm_LIB_SHARED)
-    set(VTKm_LIB_type SHARED)
-  endif()
+
 
   add_library(${lib_name}
               ${VTKm_LIB_type}

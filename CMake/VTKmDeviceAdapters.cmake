@@ -134,6 +134,17 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     add_library(vtkm::cuda UNKNOWN IMPORTED GLOBAL)
   endif()
 
+  # Workaround issue with CUDA 8.X where virtual don't work when building
+  # VTK-m as shared. We don't want to force BUILD_SHARED_LIBS to a specific
+  # value as that could impact other projects that embed VTK-m. Instead what
+  # we do is make sure that libraries built by vtkm_library() are static
+  # if they use cuda
+  if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 9.0)
+    set_target_properties(vtkm::cuda PROPERTIES REQUIRES_STATIC_BUILDS TRUE)
+  else()
+    set_target_properties(vtkm::cuda PROPERTIES REQUIRES_STATIC_BUILDS FALSE)
+  endif()
+
   set_target_properties(vtkm::cuda PROPERTIES
     INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
   )
