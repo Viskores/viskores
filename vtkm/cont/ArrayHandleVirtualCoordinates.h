@@ -143,7 +143,7 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     const vtkm::cont::StorageVirtual* storage = obj.GetStorage();
-    if (obj.template IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
+    if (obj.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
     {
       using HandleType = vtkm::cont::ArrayHandleUniformPointCoordinates;
       using T = typename HandleType::ValueType;
@@ -152,7 +152,7 @@ public:
       diy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
       diy::save(bb, array->GetHandle());
     }
-    else if (obj.template IsType<RectilinearCoordsArrayType>())
+    else if (obj.IsType<RectilinearCoordsArrayType>())
     {
       using HandleType = RectilinearCoordsArrayType;
       using T = typename HandleType::ValueType;
