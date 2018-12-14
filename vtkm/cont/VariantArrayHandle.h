@@ -120,9 +120,9 @@ public:
   /// Returns true if this array matches the ValueType type passed in.
   ///
   template <typename T>
-  VTKM_CONT bool IsVirtualType()
+  VTKM_CONT bool IsValueType()
   {
-    return internal::variant::IsVirtualType<T>(this->ArrayContainer.get());
+    return internal::variant::IsValueType<T>(this->ArrayContainer.get());
   }
 
   /// Returns this array cast to the given \c ArrayHandle type. Throws \c
@@ -244,7 +244,7 @@ struct VariantArrayHandleTry
                   const vtkm::cont::internal::VariantArrayHandleContainerBase& container,
                   Args&&... args) const
   {
-    if (!called && vtkm::cont::internal::variant::IsVirtualType<T>(&container))
+    if (!called && vtkm::cont::internal::variant::IsValueType<T>(&container))
     {
       called = true;
       const auto* derived =

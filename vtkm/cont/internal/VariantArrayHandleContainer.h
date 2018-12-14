@@ -145,7 +145,7 @@ VTKM_CONT bool IsType(const VariantArrayHandleContainerBase* container)
 }
 
 template <typename T>
-VTKM_CONT bool IsVirtualType(const VariantArrayHandleContainerBase* container)
+VTKM_CONT bool IsValueType(const VariantArrayHandleContainerBase* container)
 {
   if (container == nullptr)
   { //you can't use typeid on nullptr of polymorphic types
@@ -182,7 +182,7 @@ struct VTKM_ALWAYS_EXPORT Caster<T, vtkm::cont::StorageTagVirtual>
   vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual> operator()(
     const VariantArrayHandleContainerBase* container) const
   {
-    if (!IsVirtualType<T>(container))
+    if (!IsValueType<T>(container))
     {
       VTKM_LOG_CAST_FAIL(container, vtkm::cont::ArrayHandleVirtual<T>);
       throwFailedDynamicCast(vtkm::cont::TypeName(container),
