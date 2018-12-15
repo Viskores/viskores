@@ -61,7 +61,7 @@ struct BlockReader
     //print_bits(Words.Get(Index));
   }
 
-  inline VTKM_EXEC uint read_bit()
+  inline VTKM_EXEC unsigned int read_bit()
   {
     vtkm::UInt32 bit = vtkm::UInt32(m_buffer) & 1u;
     ++m_current_bit;

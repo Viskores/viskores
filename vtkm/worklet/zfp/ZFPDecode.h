@@ -98,7 +98,7 @@ struct inv_transform<64>
   template <typename Int>
   VTKM_EXEC void inv_xform(Int* p)
   {
-    uint x, y, z;
+    unsigned int x, y, z;
     /* transform along z */
     for (y = 0; y < 4; y++)
       for (x = 0; x < 4; x++)

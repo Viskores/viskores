@@ -27,7 +27,7 @@ struct ZFPStream
   vtkm::Float64 SetRate(const vtkm::Float64 rate, const vtkm::Int32 dims, T vtkmNotUsed(valueType))
   {
     vtkm::UInt32 n = 1u << (2 * dims);
-    vtkm::UInt32 bits = (uint)floor(n * rate + 0.5);
+    vtkm::UInt32 bits = (unsigned int)floor(n * rate + 0.5);
     bits = zfp::MinBits<T>(bits);
     //if (wra) {
     //  /* for write random access, round up to next multiple of stream word size */

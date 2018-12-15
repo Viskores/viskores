@@ -105,19 +105,19 @@ struct BlockWriter
   inline VTKM_EXEC
     //void write_bits(const unsigned int &bits, const uint &n_bits, const uint &bit_offset)
     vtkm::UInt64
-    write_bits(const vtkm::UInt64& bits, const uint& n_bits)
+    write_bits(const vtkm::UInt64& bits, const unsigned int& n_bits)
   {
     //std::cout<<"write nbits "<<n_bits<<" "<<m_current_bit<<"\n";
     //bool print = m_word_index == 0  && m_start_bit == 0;
-    const uint wbits = sizeof(Word) * 8;
+    const unsigned int wbits = sizeof(Word) * 8;
     //if(bits == 0) { printf("no\n"); return;}
     //uint seg_start = (m_start_bit + bit_offset) % wbits;
     //int write_index = m_word_index + (m_start_bit + bit_offset) / wbits;
-    uint seg_start = (m_start_bit + m_current_bit) % wbits;
+    unsigned int seg_start = (m_start_bit + m_current_bit) % wbits;
     vtkm::Id write_index = m_word_index + vtkm::Id((m_start_bit + m_current_bit) / wbits);
-    uint seg_end = seg_start + n_bits - 1;
+    unsigned int seg_end = seg_start + n_bits - 1;
     //int write_index = m_word_index;
-    uint shift = seg_start;
+    unsigned int shift = seg_start;
     // we may be asked to write less bits than exist in 'bits'
     // so we have to make sure that anything after n is zero.
     // If this does not happen, then we may write into a zfp
@@ -157,15 +157,15 @@ struct BlockWriter
   vtkm::UInt32 VTKM_EXEC write_bit(const unsigned int& bit)
   {
     //bool print = m_word_index == 0  && m_start_bit == 0;
-    const uint wbits = sizeof(Word) * 8;
+    const unsigned int wbits = sizeof(Word) * 8;
     //if(bits == 0) { printf("no\n"); return;}
     //uint seg_start = (m_start_bit + bit_offset) % wbits;
     //int write_index = m_word_index + (m_start_bit + bit_offset) / wbits;
-    uint seg_start = (m_start_bit + m_current_bit) % wbits;
+    unsigned int seg_start = (m_start_bit + m_current_bit) % wbits;
     vtkm::Id write_index = m_word_index + vtkm::Id((m_start_bit + m_current_bit) / wbits);
     //uint seg_end = seg_start;
     //int write_index = m_word_index;
-    uint shift = seg_start;
+    unsigned int shift = seg_start;
     // we may be asked to write less bits than exist in 'bits'
     // so we have to make sure that anything after n is zero.
     // If this does not happen, then we may write into a zfp
