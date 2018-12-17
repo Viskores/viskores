@@ -81,12 +81,6 @@ void Test1D(int rate)
     //writeArray(compressed, "output.zfp");
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
-    auto port = decoded.GetPortalControl();
-    for (int i = 0; i < decoded.GetNumberOfValues(); i++)
-    {
-      std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i)
-                << std::endl;
-    }
   }
 }
 template <typename Scalar>
@@ -119,12 +113,6 @@ void Test2D(int rate)
     auto compressed = compressor.Compress(handle, rate, dims);
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
-    auto port = decoded.GetPortalControl();
-    for (int i = 0; i < decoded.GetNumberOfValues(); i++)
-    {
-      std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i)
-                << std::endl;
-    }
   }
 }
 template <typename Scalar>
