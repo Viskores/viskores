@@ -116,10 +116,10 @@ void TestZFP3DFilter(vtkm::Float64 rate)
 {
 
 
+  const vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataset = testDataSet.Make3DUniformDataSet2();
+  vtkm::cont::DataSet dataset = testDataSet.Make3DUniformDataSet3(dims);
   auto dynField = dataset.GetField("pointvar").GetData();
-  ;
   vtkm::cont::ArrayHandle<vtkm::Float64> field =
     dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
   auto oport = field.GetPortalControl();
