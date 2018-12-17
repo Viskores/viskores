@@ -116,7 +116,7 @@ void DataDump(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
   ;
   if (fp != NULL)
   {
-    fwrite(ptr, sizeof(T), osize, fp);
+    fwrite(ptr, sizeof(T), static_cast<size_t>(osize), fp);
   }
 
   fclose(fp);

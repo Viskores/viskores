@@ -79,11 +79,11 @@ struct BlockWriter
     //print_bits(*reinterpret_cast<vtkm::UInt64*>(&v));
   }
 
-  void print(int index)
-  {
-    vtkm::Int64 v = Portal.Add(index, 0);
-    //print_bits(*reinterpret_cast<vtkm::UInt64*>(&v));
-  }
+  //  void print(int index)
+  //  {
+  //    vtkm::Int64 v = Portal.Add(index, 0);
+  //    //print_bits(*reinterpret_cast<vtkm::UInt64*>(&v));
+  //  }
 
   inline VTKM_EXEC void Add(const vtkm::Id index, Word& value)
   {
