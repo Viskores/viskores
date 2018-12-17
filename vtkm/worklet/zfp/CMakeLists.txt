@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  ZFPBlockReader.h
   ZFPBlockWriter.h
   ZFPCodec.h
   ZFPDecode.h
