@@ -322,14 +322,14 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
 
   vtkm::cont::DataSetFieldAdd dsf;
   const vtkm::Id nVerts = base_size * base_size * base_size;
-  vtkm::Float32* pointvar = new vtkm::Float32[nVerts];
+  vtkm::Float64* pointvar = new vtkm::Float64[nVerts];
 
   for (vtkm::Id z = 0; z < base_size; ++z)
     for (vtkm::Id y = 0; y < base_size; ++y)
       for (vtkm::Id x = 0; x < base_size; ++x)
       {
         std::size_t index = static_cast<std::size_t>(z * base_size * base_size + y * base_size + x);
-        pointvar[index] = vtkm::Sqrt(vtkm::Float32(x * x + y * y + z * z));
+        pointvar[index] = vtkm::Sqrt(vtkm::Float64(x * x + y * y + z * z));
       }
 
   dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
