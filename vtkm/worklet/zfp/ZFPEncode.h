@@ -266,8 +266,9 @@ VTKM_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
   //}
 
   vtkm::UInt32 intprec = CHAR_BIT * (vtkm::UInt32)sizeof(UInt);
-  vtkm::UInt32 kmin = intprec > (vtkm::UInt32)maxprec ? intprec - maxprec : 0;
-  vtkm::UInt32 bits = maxbits;
+  vtkm::UInt32 kmin =
+    intprec > (vtkm::UInt32)maxprec ? intprec - static_cast<vtkm::UInt32>(maxprec) : 0;
+  vtkm::UInt32 bits = static_cast<vtkm::Int32>(maxbits);
   vtkm::UInt32 i, m;
   vtkm::UInt32 n = 0;
   vtkm::UInt64 x;

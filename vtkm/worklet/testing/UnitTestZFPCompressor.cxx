@@ -59,7 +59,6 @@ void Test1D(int rate)
   vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
   auto field = dynField.Cast<Handle64>();
-  auto oport = field.GetPortalControl();
   //writeArray(field, "orig.zfp");
   vtkm::worklet::ZFP1DCompressor compressor;
   vtkm::worklet::ZFP1DDecompressor decompressor;
@@ -92,7 +91,6 @@ void Test2D(int rate)
   vtkm::cont::DataSet dataset = testDataSet.Make2DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
   auto field = dynField.Cast<Handle64>();
-  auto oport = field.GetPortalControl();
 
   vtkm::worklet::ZFP2DCompressor compressor;
   vtkm::worklet::ZFP2DDecompressor decompressor;

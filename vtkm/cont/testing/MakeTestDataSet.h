@@ -346,7 +346,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(const vtkm::Id
 
   // add point scalar field
   vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
-  std::vector<vtkm::Float64> pointvar(numPoints);
+  std::vector<vtkm::Float64> pointvar(static_cast<size_t>(numPoints));
 
   vtkm::Float64 dx = vtkm::Float64(4.0 * vtkm::Pi()) / vtkm::Float64(dims[0] - 1);
   vtkm::Float64 dy = vtkm::Float64(2.0 * vtkm::Pi()) / vtkm::Float64(dims[1] - 1);
@@ -370,7 +370,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(const vtkm::Id
         {
           cv += vtkm::Sin(cz) + 1.5 * vtkm::Cos(vtkm::Sqrt(cx * cx + cy * cy + cz * cz) / 0.75);
         }
-        pointvar[idx] = cv;
+        pointvar[static_cast<size_t>(idx)] = cv;
         idx++;
       }
     } // y

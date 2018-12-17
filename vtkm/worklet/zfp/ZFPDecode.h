@@ -192,7 +192,7 @@ VTKM_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
   vtkm::UInt64 x;
   const vtkm::UInt32 kmin = 0;
   vtkm::Int32 bits = maxbits;
-  for (vtkm::UInt32 k = intprec, n = 0; bits && k-- > kmin;)
+  for (vtkm::UInt32 k = static_cast<vtkm::UInt32>(intprec), n = 0; bits && k-- > kmin;)
   {
     // read bit plane
     vtkm::UInt32 m = vtkm::Min(n, vtkm::UInt32(bits));
