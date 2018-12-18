@@ -20,7 +20,7 @@
 
 set(unit_tests
   UnitTestAverageByKey.cxx
-  UnitTestBoundingIntervalHierarchy.cxx
+  #UnitTestBoundingIntervalHierarchy.cxx
   UnitTestCellAverage.cxx
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
@@ -83,6 +83,7 @@ set(unit_tests
   UnitTestWarpVector.cxx
   UnitTestWaveletCompressor.cxx
   UnitTestWaveletGenerator.cxx
+  UnitTestZFPCompressor.cxx
  )
 
 
