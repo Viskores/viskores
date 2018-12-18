@@ -56,12 +56,12 @@ VTKM_EXEC inline void GatherPartial3(Scalar* q,
       {
         q[16 * z + 4 * y + x] = scalars.Get(offset);
       }
-      PadBlock(q + 16 * z + 4 * y, nx, 1);
+      PadBlock(q + 16 * z + 4 * y, static_cast<vtkm::UInt32>(nx), 1);
     }
 
     for (x = 0; x < 4; x++)
     {
-      PadBlock(q + 16 * z + x, ny, 4);
+      PadBlock(q + 16 * z + x, vtkm::UInt32(ny), 4);
     }
   }
 
@@ -69,7 +69,7 @@ VTKM_EXEC inline void GatherPartial3(Scalar* q,
   {
     for (x = 0; x < 4; x++)
     {
-      PadBlock(q + 4 * y + x, nz, 16);
+      PadBlock(q + 4 * y + x, vtkm::UInt32(nz), 16);
     }
   }
 }
@@ -171,7 +171,7 @@ public:
     //    std::cout<<"\n";
     zfp::ZFPBlockEncoder<BlockSize, Scalar, BitstreamPortal> encoder;
 
-    encoder.encode(fblock, MaxBits, vtkm::UInt32(blockIdx), stream);
+    encoder.encode(fblock, vtkm::Int32(MaxBits), vtkm::UInt32(blockIdx), stream);
     //blockWriter.print(0);
     //blockWriter.print(1);
   }

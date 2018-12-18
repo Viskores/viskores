@@ -149,13 +149,14 @@ inline VTKM_EXEC UInt int2uint(const Int x);
 template <>
 inline VTKM_EXEC vtkm::UInt64 int2uint<vtkm::Int64, vtkm::UInt64>(const vtkm::Int64 x)
 {
-  return (x + (vtkm::UInt64)0xaaaaaaaaaaaaaaaaull) ^ (vtkm::UInt64)0xaaaaaaaaaaaaaaaaull;
+  return (static_cast<vtkm::UInt64>(x) + (vtkm::UInt64)0xaaaaaaaaaaaaaaaaull) ^
+    (vtkm::UInt64)0xaaaaaaaaaaaaaaaaull;
 }
 
 template <>
 inline VTKM_EXEC vtkm::UInt32 int2uint<vtkm::Int32, vtkm::UInt32>(const vtkm::Int32 x)
 {
-  return (x + (vtkm::UInt32)0xaaaaaaaau) ^ (vtkm::UInt32)0xaaaaaaaau;
+  return (static_cast<vtkm::UInt32>(x) + (vtkm::UInt32)0xaaaaaaaau) ^ (vtkm::UInt32)0xaaaaaaaau;
 }
 
 
@@ -268,7 +269,7 @@ VTKM_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
   vtkm::UInt32 intprec = CHAR_BIT * (vtkm::UInt32)sizeof(UInt);
   vtkm::UInt32 kmin =
     intprec > (vtkm::UInt32)maxprec ? intprec - static_cast<vtkm::UInt32>(maxprec) : 0;
-  vtkm::UInt32 bits = static_cast<vtkm::Int32>(maxbits);
+  vtkm::UInt32 bits = static_cast<vtkm::UInt32>(maxbits);
   vtkm::UInt32 i, m;
   vtkm::UInt32 n = 0;
   vtkm::UInt64 x;
@@ -319,18 +320,18 @@ inline VTKM_EXEC void zfp_encodef(Scalar* fblock,
   //  std::cout<<"EMAX "<<emax<<"\n";
   vtkm::Int32 maxprec =
     zfp::precision(emax, zfp::get_precision<Scalar>(), zfp::get_min_exp<Scalar>());
-  vtkm::UInt32 e = maxprec ? emax + zfp::get_ebias<Scalar>() : 0;
+  vtkm::UInt32 e = vtkm::UInt32(maxprec ? emax + zfp::get_ebias<Scalar>() : 0);
   /* encode block only if biased exponent is nonzero */
   if (e)
   {
 
-    const vtkm::UInt32 ebits = zfp::get_ebits<Scalar>() + 1;
+    const vtkm::UInt32 ebits = vtkm::UInt32(zfp::get_ebits<Scalar>()) + 1;
     blockWriter.write_bits(2 * e + 1, ebits);
 
     Int iblock[BlockSize];
     zfp::fwd_cast<Int, Scalar, BlockSize>(iblock, fblock, emax);
 
-    encode_block<BlockSize>(blockWriter, maxbits - ebits, maxprec, iblock);
+    encode_block<BlockSize>(blockWriter, maxbits - vtkm::Int32(ebits), maxprec, iblock);
   }
 }
 

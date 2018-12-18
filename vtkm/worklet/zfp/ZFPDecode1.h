@@ -92,7 +92,8 @@ public:
     }
 
 
-    zfp::zfp_decode<BlockSize>(fblock, MaxBits, static_cast<vtkm::UInt32>(blockIdx), stream);
+    zfp::zfp_decode<BlockSize>(
+      fblock, vtkm::Int32(MaxBits), static_cast<vtkm::UInt32>(blockIdx), stream);
 
 
     vtkm::Id zfpBlock;

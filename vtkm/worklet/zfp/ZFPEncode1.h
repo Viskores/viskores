@@ -49,7 +49,7 @@ VTKM_EXEC inline void GatherPartial1(Scalar* q,
   vtkm::Id x;
   for (x = 0; x < nx; x++, offset += sx)
     q[x] = scalars.Get(offset);
-  PadBlock(q, nx, 1);
+  PadBlock(q, vtkm::UInt32(nx), 1);
 }
 
 template <typename Scalar, typename PortalType>
@@ -146,7 +146,7 @@ public:
 
     //zfp_encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);
     zfp::ZFPBlockEncoder<BlockSize, Scalar, BitstreamPortal> encoder;
-    encoder.encode(fblock, MaxBits, vtkm::UInt32(blockIdx), stream);
+    encoder.encode(fblock, static_cast<vtkm::Int32>(MaxBits), vtkm::UInt32(blockIdx), stream);
   }
 };
 }

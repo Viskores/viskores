@@ -52,10 +52,10 @@ struct BlockWriter
     , m_maxbits(maxbits)
     , Portal(portal)
   {
-    m_word_index = (block_idx * maxbits) / (sizeof(Word) * 8);
+    m_word_index = (block_idx * maxbits) / vtkm::Int32(sizeof(Word) * 8);
     // debug_index = m_word_index;
     //std::cout<<"** Block "<<block_idx<<" start "<<m_word_index<<"\n";
-    m_start_bit = vtkm::Int32((block_idx * maxbits) % (sizeof(Word) * 8));
+    m_start_bit = vtkm::Int32((block_idx * maxbits) % vtkm::Int32(sizeof(Word) * 8));
   }
 
   template <typename T>
@@ -109,12 +109,13 @@ struct BlockWriter
   {
     //std::cout<<"write nbits "<<n_bits<<" "<<m_current_bit<<"\n";
     //bool print = m_word_index == 0  && m_start_bit == 0;
-    const unsigned int wbits = sizeof(Word) * 8;
+    const int wbits = sizeof(Word) * 8;
     //if(bits == 0) { printf("no\n"); return;}
     //uint seg_start = (m_start_bit + bit_offset) % wbits;
     //int write_index = m_word_index + (m_start_bit + bit_offset) / wbits;
     unsigned int seg_start = (m_start_bit + m_current_bit) % wbits;
-    vtkm::Id write_index = m_word_index + vtkm::Id((m_start_bit + m_current_bit) / wbits);
+    vtkm::Id write_index = m_word_index;
+    write_index += vtkm::Id((m_start_bit + m_current_bit) / wbits);
     unsigned int seg_end = seg_start + n_bits - 1;
     //int write_index = m_word_index;
     unsigned int shift = seg_start;
@@ -157,12 +158,13 @@ struct BlockWriter
   vtkm::UInt32 VTKM_EXEC write_bit(const unsigned int& bit)
   {
     //bool print = m_word_index == 0  && m_start_bit == 0;
-    const unsigned int wbits = sizeof(Word) * 8;
+    const int wbits = sizeof(Word) * 8;
     //if(bits == 0) { printf("no\n"); return;}
     //uint seg_start = (m_start_bit + bit_offset) % wbits;
     //int write_index = m_word_index + (m_start_bit + bit_offset) / wbits;
     unsigned int seg_start = (m_start_bit + m_current_bit) % wbits;
-    vtkm::Id write_index = m_word_index + vtkm::Id((m_start_bit + m_current_bit) / wbits);
+    vtkm::Id write_index = m_word_index;
+    write_index += vtkm::Id((m_start_bit + m_current_bit) / wbits);
     //uint seg_end = seg_start;
     //int write_index = m_word_index;
     unsigned int shift = seg_start;

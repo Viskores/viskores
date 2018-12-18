@@ -165,13 +165,13 @@ struct inv_transform<4>
 VTKM_EXEC
 vtkm::Int64 uint2int(vtkm::UInt64 x)
 {
-  return (x ^ 0xaaaaaaaaaaaaaaaaull) - 0xaaaaaaaaaaaaaaaaull;
+  return static_cast<vtkm::Int64>((x ^ 0xaaaaaaaaaaaaaaaaull) - 0xaaaaaaaaaaaaaaaaull);
 }
 
 VTKM_EXEC
 vtkm::Int32 uint2int(vtkm::UInt32 x)
 {
-  return (x ^ 0xaaaaaaaau) - 0xaaaaaaaau;
+  return static_cast<vtkm::Int32>((x ^ 0xaaaaaaaau) - 0xaaaaaaaau);
 }
 
 // Note: I die a little inside everytime I write this sort of template
@@ -197,7 +197,7 @@ VTKM_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
     // read bit plane
     vtkm::UInt32 m = vtkm::Min(n, vtkm::UInt32(bits));
     bits -= m;
-    x = reader.read_bits(m);
+    x = reader.read_bits(static_cast<vtkm::Int32>(m));
     for (; n < BlockSize && bits && (bits--, reader.read_bit()); x += (Word)1 << n++)
       for (; n < (BlockSize - 1) && bits && (bits--, !reader.read_bit()); n++)
         ;
@@ -220,7 +220,7 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
                           vtkm::UInt32 blockIdx,
                           PortalType stream)
 {
-  zfp::BlockReader<BlockSize, PortalType> reader(stream, maxbits, blockIdx);
+  zfp::BlockReader<BlockSize, PortalType> reader(stream, maxbits, vtkm::Int32(blockIdx));
   using Int = typename zfp::zfp_traits<Scalar>::Int;
   using UInt = typename zfp::zfp_traits<Scalar>::UInt;
 
@@ -233,7 +233,7 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
 
   if (cont)
   {
-    vtkm::UInt32 ebits = zfp::get_ebits<Scalar>() + 1;
+    vtkm::UInt32 ebits = static_cast<vtkm::UInt32>(zfp::get_ebits<Scalar>()) + 1;
 
     vtkm::UInt32 emax;
     if (!zfp::is_int<Scalar>())
@@ -245,7 +245,8 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
       //std::cout<<"b "<<b<<"\n";
       //std::cout<<"ebias "<<zfp::get_ebias<Scalar>()<<"\n";
       //emax = vtkm::UInt32(b - zfp::get_ebias<Scalar>());
-      emax = vtkm::UInt32(reader.read_bits(ebits - 1) - zfp::get_ebias<Scalar>());
+      emax = vtkm::UInt32(reader.read_bits(static_cast<vtkm::Int32>(ebits) - 1));
+      emax -= static_cast<vtkm::UInt32>(zfp::get_ebias<Scalar>());
       //std::cout<<"EMAX "<<emax<<"\n";
     }
     else
@@ -279,7 +280,7 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
     //  std::cout<<"tid "<<i<<"  "<<iblock[i]<<"\n";
     //}
 
-    Scalar inv_w = dequantize<Int, Scalar>(1, emax);
+    Scalar inv_w = dequantize<Int, Scalar>(1, static_cast<vtkm::Int32>(emax));
 
     //std::cout<<"dequantize factor "<<inv_w<<"\n";
 

@@ -50,8 +50,8 @@ struct BlockReader
     , m_maxbits(maxbits)
     , MaxIndex(words.GetNumberOfValues() - 1)
   {
-    Index = (block_idx * maxbits) / (sizeof(Word) * 8);
-    m_buffer = Words.Get(Index);
+    Index = static_cast<size_t>(block_idx * maxbits) / (sizeof(Word) * 8);
+    m_buffer = static_cast<Word>(Words.Get(Index));
     m_current_bit = (block_idx * maxbits) % vtkm::Int32((sizeof(Word) * 8));
 
     m_buffer >>= m_current_bit;
@@ -73,7 +73,7 @@ struct BlockReader
       ++Index;
       if (Index > MaxIndex)
         return false;
-      m_buffer = Words.Get(Index);
+      m_buffer = static_cast<Word>(Words.Get(Index));
     }
     return bit;
   }
@@ -99,7 +99,7 @@ struct BlockReader
       // just read in 0s if someone asks for more bits past the end of the array.
       // not sure what the best way to deal with this i
       Index = vtkm::Min(MaxIndex, Index + 1);
-      m_buffer = Words.Get(Index);
+      m_buffer = static_cast<Word>(Words.Get(Index));
       next_read = n_bits - first_read;
     }
 
