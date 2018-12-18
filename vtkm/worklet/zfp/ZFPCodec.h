@@ -39,6 +39,7 @@ struct ZFPCodec;
 template <>
 struct ZFPCodec<4>
 {
+  VTKM_EXEC_CONT ZFPCodec() {}
   VTKM_EXEC vtkm::UInt8 CodecLookup(vtkm::Int32 x) const
   {
     VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt8 perm_1[4] = { 0, 1, 2, 3 };
@@ -49,6 +50,7 @@ struct ZFPCodec<4>
 template <>
 struct ZFPCodec<16>
 {
+  VTKM_EXEC_CONT ZFPCodec() {}
   VTKM_EXEC vtkm::UInt8 CodecLookup(vtkm::Int32 x) const
   {
     /* order coefficients (i, j) by i + j, then i^2 + j^2 */
@@ -86,6 +88,7 @@ struct ZFPCodec<16>
 template <>
 struct ZFPCodec<64>
 {
+  VTKM_EXEC_CONT ZFPCodec() {}
   VTKM_EXEC vtkm::UInt8 CodecLookup(vtkm::Int32 x) const
   {
     /* order coefficients (i, j, k) by i + j + k, then i^2 + j^2 + k^2 */
