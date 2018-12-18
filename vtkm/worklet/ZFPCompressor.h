@@ -73,7 +73,7 @@ public:
 
 
     size_t outbits = detail::CalcMem3d(paddedDims, stream.minbits);
-    vtkm::Id outsize = outbits / sizeof(ZFPWord);
+    vtkm::Id outsize = vtkm::Id(outbits / sizeof(ZFPWord));
 
     vtkm::cont::ArrayHandle<vtkm::Int64> output;
     // hopefully this inits/allocates the mem only on the device

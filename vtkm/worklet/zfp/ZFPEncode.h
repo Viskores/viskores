@@ -315,7 +315,7 @@ inline VTKM_EXEC void zfp_encodef(Scalar* fblock,
                                   PortalType& stream)
 {
   using Int = typename zfp::zfp_traits<Scalar>::Int;
-  zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, blockIdx);
+  zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, vtkm::Id(blockIdx));
   vtkm::Int32 emax = zfp::MaxExponent<BlockSize, Scalar>(fblock);
   //  std::cout<<"EMAX "<<emax<<"\n";
   vtkm::Int32 maxprec =
@@ -375,7 +375,7 @@ struct ZFPBlockEncoder<BlockSize, vtkm::Int32, PortalType>
                         PortalType& stream)
   {
     using Int = typename zfp::zfp_traits<vtkm::Int32>::Int;
-    zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, blockIdx);
+    zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, vtkm::Id(blockIdx));
     encode_block<BlockSize>(blockWriter, maxbits, get_precision<vtkm::Int32>(), (Int*)fblock);
   }
 };
@@ -389,7 +389,7 @@ struct ZFPBlockEncoder<BlockSize, vtkm::Int64, PortalType>
                         PortalType& stream)
   {
     using Int = typename zfp::zfp_traits<vtkm::Int64>::Int;
-    zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, blockIdx);
+    zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, vtkm::Id(blockIdx));
     encode_block<BlockSize>(blockWriter, maxbits, get_precision<vtkm::Int64>(), (Int*)fblock);
   }
 };
