@@ -90,11 +90,10 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ZFPDecompressor1D::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+inline VTKM_CONT bool ZFPDecompressor1D::DoMapField(vtkm::cont::DataSet&,
+                                                    const vtkm::cont::ArrayHandle<T, StorageType>&,
+                                                    const vtkm::filter::FieldMetadata&,
+                                                    const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   return false;
 }
