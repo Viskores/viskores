@@ -40,7 +40,7 @@ namespace cont
 {
 
 /// ArrayHandleVirtualCoordinates is a specialization of ArrayHandle.
-class VTKM_CONT_EXPORT ArrayHandleVirtualCoordinates final
+class VTKM_ALWAYS_EXPORT ArrayHandleVirtualCoordinates final
   : public vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>
 {
 public:
@@ -77,20 +77,6 @@ public:
     using ST = typename decltype(castedHandle)::StorageTag;
     this->Storage = std::make_shared<vtkm::cont::StorageAny<ValueType, ST>>(castedHandle);
   }
-
-  /// Returns this array cast to the given \c ArrayHandle type. Throws \c
-  /// ErrorBadType if the cast does not work. Use \c IsType
-  /// to check if the cast can happen.
-  ///
-  template <typename ArrayHandleType>
-  VTKM_CONT ArrayHandleType Cast() const
-  {
-    using T = typename ArrayHandleType::ValueType;
-    using S = typename ArrayHandleType::StorageTag;
-    const vtkm::cont::StorageVirtual* storage = this->GetStorage();
-    const auto* any = storage->Cast<vtkm::cont::StorageAny<T, S>>();
-    return any->GetHandle();
-  }
 };
 
 template <typename Functor, typename... Args>
@@ -109,7 +95,6 @@ void CastAndCall(const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
     f(coords, std::forward<Args>(args)...);
   }
 }
-
 
 
 template <>

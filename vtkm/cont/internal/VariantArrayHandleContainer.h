@@ -137,11 +137,11 @@ VTKM_CONT bool IsType(const VariantArrayHandleContainerBase* container)
   {
     return false;
   }
+
   using VT = typename ArrayHandleType::ValueType;
   using ST = typename ArrayHandleType::StorageTag;
-
   const vtkm::cont::StorageVirtual* storage = container->GetStorage();
-  return storage->IsType(typeid(vtkm::cont::internal::Storage<VT, ST>));
+  return storage->IsType<vtkm::cont::StorageAny<VT, ST>>();
 }
 
 template <typename T>
@@ -151,7 +151,9 @@ VTKM_CONT bool IsValueType(const VariantArrayHandleContainerBase* container)
   { //you can't use typeid on nullptr of polymorphic types
     return false;
   }
-  return typeid(VariantArrayHandleContainer<T>) == typeid(*container);
+
+  //needs optimizations based on platform. !OSX can use typeid
+  return (nullptr != dynamic_cast<const VariantArrayHandleContainer<T>*>(container));
 }
 
 

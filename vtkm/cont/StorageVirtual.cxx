@@ -88,12 +88,6 @@ void Storage<void, ::vtkm::cont::StorageTagVirtual>::ReleaseResources()
 }
 
 //--------------------------------------------------------------------
-bool Storage<void, ::vtkm::cont::StorageTagVirtual>::IsSameType(const std::type_info& other) const
-{
-  return typeid(*this) == other;
-}
-
-//--------------------------------------------------------------------
 std::unique_ptr<Storage<void, ::vtkm::cont::StorageTagVirtual>>
 Storage<void, ::vtkm::cont::StorageTagVirtual>::NewInstance() const
 {

@@ -51,16 +51,6 @@ public:
   void ReleaseResources();
 
 private:
-  // StorageAny is meant to be seamless when it comes to IsType so we will match
-  // when either the type_info is 'StorageAny<T,S>' or 'Storage<T,S>'. That is why
-  // we need to override the default implementation.
-  bool IsSameType(const std::type_info& other) const
-  {
-    //We don't wan to check just 'S' as that just the tag
-    using ST = typename vtkm::cont::internal::Storage<T, S>;
-    return other == typeid(ST) || other == typeid(*this);
-  }
-
   std::unique_ptr<StorageVirtual> MakeNewInstance() const
   {
     return std::unique_ptr<StorageVirtual>(new StorageAny<T, S>{ vtkm::cont::ArrayHandle<T, S>{} });

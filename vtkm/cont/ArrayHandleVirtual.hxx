@@ -22,12 +22,43 @@
 
 #include <vtkm/cont/ArrayHandleVirtual.h>
 
+#include <vtkm/cont/ArrayHandleAny.h>
 #include <vtkm/cont/TryExecute.h>
 
 namespace vtkm
 {
 namespace cont
 {
+
+template <typename T>
+template <typename ArrayHandleType>
+bool ArrayHandle<T, StorageTagVirtual>::IsSameType(
+  std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const
+{
+  if (!this->Storage)
+  {
+    return false;
+  }
+  using S = typename ArrayHandleType::StorageTag;
+  return this->Storage->template IsType<vtkm::cont::StorageAny<T, S>>();
+}
+
+template <typename T>
+template <typename ArrayHandleType>
+ArrayHandleType ArrayHandle<T, StorageTagVirtual>::CastToType(
+  std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const
+{
+  if (!this->Storage)
+  {
+    VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
+    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeName<ArrayHandleType>());
+  }
+  using S = typename ArrayHandleType::StorageTag;
+  const auto* any = this->Storage->template Cast<vtkm::cont::StorageAny<T, S>>();
+  return any->GetHandle();
+}
+
+
 namespace detail
 {
 template <typename DerivedPortal>
@@ -69,7 +100,6 @@ inline void make_hostPortal(Payload&& payload, Args&&... args)
 
 
 
-#include <vtkm/cont/ArrayHandleAny.h>
 //=============================================================================
 // Specializations of serialization related classes
 namespace diy

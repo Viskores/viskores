@@ -53,7 +53,8 @@ namespace internal
 {
 
 template <class ArrayPortalType>
-class Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>
+class VTKM_ALWAYS_EXPORT
+  Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>
 {
   using ClassType =
     Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>;

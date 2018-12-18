@@ -34,7 +34,7 @@ namespace vtkm
 namespace cont
 {
 
-struct StorageTagVirtual
+struct VTKM_ALWAYS_EXPORT StorageTagVirtual
 {
 };
 
@@ -99,7 +99,11 @@ public:
 
   /// Determines if storage types matches the type passed in.
   ///
-  bool IsType(const std::type_info& other) const { return this->IsSameType(other); }
+  template <typename DerivedStorage>
+  bool IsType() const
+  { //needs optimizations based on platform. !OSX can use typeid
+    return nullptr != dynamic_cast<const DerivedStorage*>(this);
+  }
 
   /// \brief Create a new storage of the same type as this storage.
   ///
@@ -155,7 +159,6 @@ private:
   // virtual void DoShrink(vtkm::Id numberOfValues) = 0;
 
   //RTTI routines
-  virtual bool IsSameType(const std::type_info&) const;
   virtual std::unique_ptr<Storage<void, ::vtkm::cont::StorageTagVirtual>> MakeNewInstance()
     const = 0;
 

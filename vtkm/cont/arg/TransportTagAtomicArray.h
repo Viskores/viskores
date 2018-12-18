@@ -89,31 +89,23 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
              vtkm::Id,
              vtkm::Id) const
   {
-    using S = vtkm::cont::StorageTagBasic;
-
-    const vtkm::cont::StorageVirtual* storage = array.GetStorage();
-    if (!storage)
-    {
-      throw vtkm::cont::ErrorBadValue("ArrayHandleVirtual must not have a nullptr for storage.");
-    }
-
-    if (!storage->IsType(typeid(vtkm::cont::internal::Storage<T, S>)))
+    using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
+    const bool is_type = vtkm::cont::IsType<ArrayHandleType>(array);
+    if (!is_type)
     {
 #if defined(VTKM_ENABLE_LOGGING)
-      using AH = vtkm::cont::ArrayHandle<T, S>;
-      VTKM_LOG_CAST_FAIL(array, AH);
+      VTKM_LOG_CAST_FAIL(array, ArrayHandleType);
 #endif
       throw vtkm::cont::ErrorBadValue("Arrays being used as atomic's must always have storage that "
                                       "is of the type StorageTagBasic.");
     }
 
-    const auto* any = static_cast<const vtkm::cont::StorageAny<T, S>*>(storage);
-    VTKM_LOG_CAST_SUCC(array, *any);
+    ArrayHandleType handle = vtkm::cont::Cast<ArrayHandleType>(array);
 
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using
     // the array.
-    ExecType obj(any->GetHandle());
+    ExecType obj(handle);
     return obj.PrepareForExecution(Device());
   }
 };
