@@ -35,30 +35,32 @@ namespace zfp
 
 
 template <typename Int, typename Scalar>
-VTKM_EXEC Scalar dequantize(const Int& x, const int& e);
+inline VTKM_EXEC Scalar dequantize(const Int& x, const int& e);
 
 template <>
-VTKM_EXEC vtkm::Float64 dequantize<vtkm::Int64, vtkm::Float64>(const vtkm::Int64& x,
-                                                               const vtkm::Int32& e)
+inline VTKM_EXEC vtkm::Float64 dequantize<vtkm::Int64, vtkm::Float64>(const vtkm::Int64& x,
+                                                                      const vtkm::Int32& e)
 {
   return vtkm::Ldexp((vtkm::Float64)x, e - (CHAR_BIT * scalar_sizeof<vtkm::Float64>() - 2));
 }
 
 template <>
-VTKM_EXEC vtkm::Float32 dequantize<vtkm::Int32, vtkm::Float32>(const vtkm::Int32& x,
-                                                               const vtkm::Int32& e)
+inline VTKM_EXEC vtkm::Float32 dequantize<vtkm::Int32, vtkm::Float32>(const vtkm::Int32& x,
+                                                                      const vtkm::Int32& e)
 {
   return vtkm::Ldexp((vtkm::Float32)x, e - (CHAR_BIT * scalar_sizeof<vtkm::Float32>() - 2));
 }
 
 template <>
-VTKM_EXEC vtkm::Int32 dequantize<vtkm::Int32, vtkm::Int32>(const vtkm::Int32&, const vtkm::Int32&)
+inline VTKM_EXEC vtkm::Int32 dequantize<vtkm::Int32, vtkm::Int32>(const vtkm::Int32&,
+                                                                  const vtkm::Int32&)
 {
   return 1;
 }
 
 template <>
-VTKM_EXEC vtkm::Int64 dequantize<vtkm::Int64, vtkm::Int64>(const vtkm::Int64&, const vtkm::Int32&)
+inline VTKM_EXEC vtkm::Int64 dequantize<vtkm::Int64, vtkm::Int64>(const vtkm::Int64&,
+                                                                  const vtkm::Int32&)
 {
   return 1;
 }
@@ -162,14 +164,14 @@ struct inv_transform<4>
 };
 
 
-VTKM_EXEC
-vtkm::Int64 uint2int(vtkm::UInt64 x)
+
+inline VTKM_EXEC vtkm::Int64 uint2int(vtkm::UInt64 x)
 {
   return static_cast<vtkm::Int64>((x ^ 0xaaaaaaaaaaaaaaaaull) - 0xaaaaaaaaaaaaaaaaull);
 }
 
-VTKM_EXEC
-vtkm::Int32 uint2int(vtkm::UInt32 x)
+
+inline VTKM_EXEC vtkm::Int32 uint2int(vtkm::UInt32 x)
 {
   return static_cast<vtkm::Int32>((x ^ 0xaaaaaaaau) - 0xaaaaaaaau);
 }

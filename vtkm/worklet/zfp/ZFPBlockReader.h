@@ -50,7 +50,7 @@ struct BlockReader
     , m_maxbits(maxbits)
     , MaxIndex(words.GetNumberOfValues() - 1)
   {
-    Index = static_cast<size_t>(block_idx * maxbits) / (sizeof(Word) * 8);
+    Index = vtkm::Id(static_cast<size_t>(block_idx * maxbits) / (sizeof(Word) * 8));
     m_buffer = static_cast<Word>(Words.Get(Index));
     m_current_bit = (block_idx * maxbits) % vtkm::Int32((sizeof(Word) * 8));
 

@@ -46,20 +46,21 @@ void print_bits(T bits)
   printf("\n");
 }
 
+
 template <typename T>
-vtkm::UInt32 MinBits(const vtkm::UInt32 bits)
+inline vtkm::UInt32 MinBits(const vtkm::UInt32 bits)
 {
   return bits;
 }
 
 template <>
-vtkm::UInt32 MinBits<vtkm::Float32>(const vtkm::UInt32 bits)
+inline vtkm::UInt32 MinBits<vtkm::Float32>(const vtkm::UInt32 bits)
 {
   return vtkm::Max(bits, 1 + 8u);
 }
 
 template <>
-vtkm::UInt32 MinBits<vtkm::Float64>(const vtkm::UInt32 bits)
+inline vtkm::UInt32 MinBits<vtkm::Float64>(const vtkm::UInt32 bits)
 {
   return vtkm::Max(bits, 1 + 11u);
 }

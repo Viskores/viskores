@@ -58,7 +58,7 @@ public:
   }
 }; //class MemTransfer
 
-size_t CalcMem3d(const vtkm::Id3 dims, const vtkm::UInt32 bits_per_block)
+inline size_t CalcMem3d(const vtkm::Id3 dims, const vtkm::UInt32 bits_per_block)
 {
   const size_t vals_per_block = 64;
   const size_t size = static_cast<size_t>(dims[0] * dims[1] * dims[2]);
@@ -69,8 +69,7 @@ size_t CalcMem3d(const vtkm::Id3 dims, const vtkm::UInt32 bits_per_block)
   return alloc_size * sizeof(ZFPWord);
 }
 
-
-size_t CalcMem2d(const vtkm::Id2 dims, const vtkm::UInt32 bits_per_block)
+inline size_t CalcMem2d(const vtkm::Id2 dims, const vtkm::UInt32 bits_per_block)
 {
   constexpr size_t vals_per_block = 16;
   const size_t size = static_cast<size_t>(dims[0] * dims[1]);
@@ -81,7 +80,7 @@ size_t CalcMem2d(const vtkm::Id2 dims, const vtkm::UInt32 bits_per_block)
   return alloc_size * sizeof(ZFPWord);
 }
 
-size_t CalcMem1d(const vtkm::Id dims, const vtkm::UInt32 bits_per_block)
+inline size_t CalcMem1d(const vtkm::Id dims, const vtkm::UInt32 bits_per_block)
 {
   constexpr size_t vals_per_block = 4;
   const size_t size = static_cast<size_t>(dims);
