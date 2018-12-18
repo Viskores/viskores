@@ -27,7 +27,7 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
-#include <vtkm/worklet/internal/ClipTables.h>
+#include <vtkm/worklet/clip/ClipTables.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>

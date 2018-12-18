@@ -94,6 +94,7 @@ set(header_impls
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
+add_subdirectory(clip)
 add_subdirectory(colorconversion)
 add_subdirectory(contour)
 add_subdirectory(contourtree)
