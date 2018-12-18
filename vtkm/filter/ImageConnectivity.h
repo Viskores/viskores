@@ -33,7 +33,7 @@ namespace filter
 class ImageConnectivity : public vtkm::filter::FilterField<ImageConnectivity>
 {
 public:
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMetadata,

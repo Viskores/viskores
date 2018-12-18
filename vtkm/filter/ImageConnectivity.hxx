@@ -26,7 +26,7 @@ namespace vtkm
 namespace filter
 {
 
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
