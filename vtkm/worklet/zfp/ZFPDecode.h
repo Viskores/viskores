@@ -214,14 +214,6 @@ VTKM_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
   //}
 }
 
-template <vtkm::Int32 BlockSize, typename Scalar, typename Int>
-void zfp_convert(Scalar inv_w, Scalar* fblock, Int* iblock)
-{
-  for (vtkm::Int32 i = 0; i < BlockSize; ++i)
-  {
-    fblock[i] = inv_w * (Scalar)iblock[i];
-  }
-}
 template <vtkm::Int32 BlockSize, typename Scalar, typename PortalType>
 VTKM_EXEC void zfp_decode(Scalar* fblock,
                           vtkm::Int32 maxbits,
@@ -291,7 +283,10 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
 
     //std::cout<<"dequantize factor "<<inv_w<<"\n";
 
-    zfp_convert<BlockSize>(inv_w, fblock, iblock);
+    for (vtkm::Int32 i = 0; i < BlockSize; ++i)
+    {
+      fblock[i] = inv_w * (Scalar)iblock[i];
+    }
   }
 }
 }

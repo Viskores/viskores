@@ -31,8 +31,10 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/zfp/ZFPTools.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+
 
 template <typename T>
 void writeArray(vtkm::cont::ArrayHandle<T>& field, std::string filename)
@@ -80,6 +82,12 @@ void Test1D(int rate)
     //writeArray(compressed, "output.zfp");
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
+    auto oport = decoded.GetPortalConstControl();
+    for (int i = 0; i < 4; i++)
+    {
+      std::cout << oport.Get(i) << " " << fPortal.Get(i) << " " << oport.Get(i) - fPortal.Get(i)
+                << std::endl;
+    }
   }
 }
 template <typename Scalar>
@@ -111,6 +119,12 @@ void Test2D(int rate)
     auto compressed = compressor.Compress(handle, rate, dims);
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
+    auto oport = decoded.GetPortalConstControl();
+    for (int i = 0; i < 4; i++)
+    {
+      std::cout << oport.Get(i) << " " << fPortal.Get(i) << " " << oport.Get(i) - fPortal.Get(i)
+                << std::endl;
+    }
   }
 }
 template <typename Scalar>
@@ -147,6 +161,12 @@ void Test3D(int rate)
 
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
+    auto oport = decoded.GetPortalConstControl();
+    for (int i = 0; i < 4; i++)
+    {
+      std::cout << oport.Get(i) << " " << fPortal.Get(i) << " " << oport.Get(i) - fPortal.Get(i)
+                << std::endl;
+    }
   }
 }
 
@@ -160,7 +180,7 @@ void TestZFP()
   //Test3D<vtkm::Int32>(4);
 }
 
-int UnitTestZFPCompressor(int, char* [])
+int UnitTestZFPCompressor(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestZFP);
+  return vtkm::cont::testing::Testing::Run(TestZFP, argc, argv);
 }
