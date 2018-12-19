@@ -319,7 +319,6 @@ public:
             }
           }
         }
-        clipStat = clipStat;
       }
     }
 
