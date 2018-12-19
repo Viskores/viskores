@@ -265,7 +265,6 @@ public:
     {
       (void)shape; // C4100 false positive workaround
       vtkm::Id caseId = 0;
-      ClipStats _clipStat;
       for (vtkm::IdComponent iter = pointCount - 1; iter >= 0; iter--)
       {
         if (!this->Invert && static_cast<vtkm::Float64>(scalars[iter]) <= this->Value)
@@ -282,29 +281,29 @@ public:
       vtkm::Id index = clippingData.GetCaseIndex(shape.Id, caseId);
       clipDataIndex = index;
       vtkm::Id numberOfCells = clippingData.ValueAt(index++);
-      _clipStat.NumberOfCells = numberOfCells;
+      clipStat.NumberOfCells = numberOfCells;
       for (vtkm::IdComponent shapes = 0; shapes < numberOfCells; shapes++)
       {
         vtkm::Id cellShape = clippingData.ValueAt(index++);
         vtkm::Id numberOfIndices = clippingData.ValueAt(index++);
         if (cellShape == 0)
         {
-          --_clipStat.NumberOfCells;
+          --clipStat.NumberOfCells;
           // Shape is 0, which is a case of interpolating new point within a cell
           // Gather stats for later operation.
-          _clipStat.NumberOfInCellPoints = 1;
-          _clipStat.NumberOfInCellInterpPoints = numberOfIndices;
+          clipStat.NumberOfInCellPoints = 1;
+          clipStat.NumberOfInCellInterpPoints = numberOfIndices;
           for (vtkm::IdComponent points = 0; points < numberOfIndices; points++, index++)
           {
             //Find how many points need to be calculated using edge interpolation.
             vtkm::Id element = clippingData.ValueAt(index);
-            _clipStat.NumberOfInCellEdgeIndices += (element < 100) ? 1 : 0;
+            clipStat.NumberOfInCellEdgeIndices += (element < 100) ? 1 : 0;
           }
         }
         else
         {
           // Collect number of indices required for storing current shape
-          _clipStat.NumberOfIndices += numberOfIndices;
+          clipStat.NumberOfIndices += numberOfIndices;
           // Collect number of new points
           for (vtkm::IdComponent points = 0; points < numberOfIndices; points++, index++)
           {
@@ -312,15 +311,15 @@ public:
             vtkm::Id element = clippingData.ValueAt(index);
             if (element == 255)
             {
-              _clipStat.NumberOfInCellIndices++;
+              clipStat.NumberOfInCellIndices++;
             }
             else if (element < 100)
             {
-              _clipStat.NumberOfEdgeIndices++;
+              clipStat.NumberOfEdgeIndices++;
             }
           }
         }
-        clipStat = _clipStat;
+        clipStat = clipStat;
       }
     }
 
