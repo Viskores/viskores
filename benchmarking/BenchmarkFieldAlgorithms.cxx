@@ -29,6 +29,7 @@
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -305,10 +306,7 @@ struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>
 {
 };
 
-struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32,
-                                            vtkm::Float64,
-                                            vtkm::Vec<vtkm::Float32, 3>,
-                                            vtkm::Vec<vtkm::Float64, 3>>
+struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Vec<vtkm::Float32, 3>>
 {
 };
 using StorageListTag = ::vtkm::cont::StorageListTagBasic;
@@ -376,6 +374,7 @@ private:
       Timer timer;
       BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
       vtkm::worklet::DispatcherMapField<BlackScholes<Value>> dispatcher(worklet);
+      dispatcher.SetDevice(DeviceAdapterTag());
 
       dispatcher.Invoke(
         this->StockPrice, this->OptionStrike, this->OptionYears, callResultHandle, putResultHandle);
@@ -414,6 +413,7 @@ private:
       Timer timer;
       BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
       vtkm::worklet::DispatcherMapField<BlackScholes<Value>> dispatcher(worklet);
+      dispatcher.SetDevice(DeviceAdapterTag());
 
       dispatcher.Invoke(dstocks, dstrikes, doptions, callResultHandle, putResultHandle);
 
@@ -455,10 +455,11 @@ private:
 
       Timer timer;
 
-      vtkm::worklet::DispatcherMapField<Mag>().Invoke(InputHandle, tempHandle1);
-      vtkm::worklet::DispatcherMapField<Sin>().Invoke(tempHandle1, tempHandle2);
-      vtkm::worklet::DispatcherMapField<Square>().Invoke(tempHandle2, tempHandle1);
-      vtkm::worklet::DispatcherMapField<Cos>().Invoke(tempHandle1, tempHandle2);
+      vtkm::worklet::Invoker invoke(DeviceAdapterTag{});
+      invoke(Mag{}, this->InputHandle, tempHandle1);
+      invoke(Sin{}, tempHandle1, tempHandle2);
+      invoke(Square{}, tempHandle2, tempHandle1);
+      invoke(Cos{}, tempHandle1, tempHandle2);
 
       return timer.GetElapsedTime();
     }
@@ -493,10 +494,11 @@ private:
 
       Timer timer;
 
-      vtkm::worklet::DispatcherMapField<Mag>().Invoke(dinput, dtemp1);
-      vtkm::worklet::DispatcherMapField<Sin>().Invoke(dtemp1, dtemp2);
-      vtkm::worklet::DispatcherMapField<Square>().Invoke(dtemp2, dtemp1);
-      vtkm::worklet::DispatcherMapField<Cos>().Invoke(dtemp1, dtemp2);
+      vtkm::worklet::Invoker invoke(DeviceAdapterTag{});
+      invoke(Mag{}, dinput, dtemp1);
+      invoke(Sin{}, dtemp1, dtemp2);
+      invoke(Square{}, dtemp2, dtemp1);
+      invoke(Cos{}, dtemp1, dtemp2);
 
       return timer.GetElapsedTime();
     }
@@ -534,7 +536,9 @@ private:
       vtkm::cont::ArrayHandle<Value> result;
 
       Timer timer;
-      vtkm::worklet::DispatcherMapField<FusedMath>().Invoke(this->InputHandle, result);
+      vtkm::worklet::DispatcherMapField<FusedMath> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(this->InputHandle, result);
       return timer.GetElapsedTime();
     }
 
@@ -565,7 +569,9 @@ private:
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
       Timer timer;
-      vtkm::worklet::DispatcherMapField<FusedMath>().Invoke(dinput, result);
+      vtkm::worklet::DispatcherMapField<FusedMath> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(dinput, result);
       return timer.GetElapsedTime();
     }
 
@@ -607,7 +613,9 @@ private:
       const std::size_t psize = static_cast<std::size_t>(cellSet.GetNumberOfPoints());
 
       this->EdgePairHandle.Allocate(numberOfEdges);
-      vtkm::worklet::DispatcherMapTopology<GenerateEdges>().Invoke(cellSet, this->EdgePairHandle);
+      vtkm::worklet::DispatcherMapTopology<GenerateEdges> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(cellSet, this->EdgePairHandle);
 
       this->weight.resize(esize);
       for (std::size_t i = 0; i < esize; ++i)
@@ -964,6 +972,9 @@ int main(int argc, char* argv[])
   }
 
   //now actually execute the benchmarks
-  return vtkm::benchmarking::BenchmarkFieldAlgorithms<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run(
-    benchmarks);
+  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(Device{});
+
+  return vtkm::benchmarking::BenchmarkFieldAlgorithms<Device>::Run(benchmarks);
 }

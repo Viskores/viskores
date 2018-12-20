@@ -167,6 +167,11 @@ int main(int argc, char* argv[])
   tbb::task_scheduler_init init(numThreads);
 #endif // TBB
 
+  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(Device{});
+
+
   BenchmarkValueType<vtkm::UInt8>();
   BenchmarkValueType<vtkm::Vec<vtkm::UInt8, 2>>();
   BenchmarkValueType<vtkm::Vec<vtkm::UInt8, 3>>();
