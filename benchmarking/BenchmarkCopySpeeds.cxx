@@ -140,6 +140,8 @@ void BenchmarkValueType()
 
 int main(int argc, char* argv[])
 {
+  vtkm::cont::InitLogging(argc, argv);
+
   using namespace vtkm::benchmarking;
 
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
@@ -164,6 +166,11 @@ int main(int argc, char* argv[])
   // Must not be destroyed as long as benchmarks are running:
   tbb::task_scheduler_init init(numThreads);
 #endif // TBB
+
+  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(Device{});
+
 
   BenchmarkValueType<vtkm::UInt8>();
   BenchmarkValueType<vtkm::Vec<vtkm::UInt8, 2>>();

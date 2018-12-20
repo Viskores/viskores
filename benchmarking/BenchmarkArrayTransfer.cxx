@@ -555,10 +555,16 @@ struct BenchmarkArrayTransfer
 }
 } // end namespace vtkm::benchmarking
 
-int main(int, char* [])
+int main(int argc, char* argv[])
 {
+  vtkm::cont::InitLogging(argc, argv);
+
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Benchmarks = vtkm::benchmarking::BenchmarkArrayTransfer<DeviceAdapter>;
+
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(DeviceAdapter{});
+
   bool result = Benchmarks::Run();
   return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }

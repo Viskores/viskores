@@ -215,8 +215,8 @@ private:
       Timer timer;
 
       vtkm::worklet::DispatcherMapTopology<AverageCellToPoint> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->InputHandle, cellSet, result);
-      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -251,9 +251,8 @@ private:
       Timer timer;
 
       vtkm::worklet::DispatcherMapTopology<AverageCellToPoint> dispatcher;
-
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(dinput, cellSet, result);
-      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -295,8 +294,8 @@ private:
       Timer timer;
 
       vtkm::worklet::DispatcherMapTopology<AveragePointToCell> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->InputHandle, cellSet, result);
-      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -331,8 +330,8 @@ private:
       Timer timer;
 
       vtkm::worklet::DispatcherMapTopology<AveragePointToCell> dispatcher;
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(dinput, cellSet, result);
-      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -379,8 +378,8 @@ private:
 
       Classification<Value> worklet(this->IsoValue);
       vtkm::worklet::DispatcherMapTopology<Classification<Value>> dispatcher(worklet);
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(dinput, cellSet, result);
-      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -413,8 +412,8 @@ private:
 
       Classification<Value> worklet(this->IsoValue);
       vtkm::worklet::DispatcherMapTopology<Classification<Value>> dispatcher(worklet);
+      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->InputHandle, cellSet, result);
-      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -461,6 +460,8 @@ public:
 
 int main(int argc, char* argv[])
 {
+  vtkm::cont::InitLogging(argc, argv);
+
   int benchmarks = 0;
   if (argc < 2)
   {
@@ -495,6 +496,9 @@ int main(int argc, char* argv[])
   }
 
   //now actually execute the benchmarks
-  return vtkm::benchmarking::BenchmarkTopologyAlgorithms<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run(
-    benchmarks);
+  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(Device{});
+
+  return vtkm::benchmarking::BenchmarkTopologyAlgorithms<Device>::Run(benchmarks);
 }

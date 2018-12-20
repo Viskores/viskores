@@ -1285,6 +1285,9 @@ int main(int argc, char* argv[])
 {
   vtkm::cont::Initialize(argc, argv);
 
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(Device{});
+
   int retval = 1;
   try
   {
