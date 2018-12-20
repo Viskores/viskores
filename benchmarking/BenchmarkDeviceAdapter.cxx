@@ -1194,6 +1194,8 @@ public:
 
 int main(int argc, char* argv[])
 {
+  vtkm::cont::InitLogging(argc, argv);
+
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
   int numThreads = tbb::task_scheduler_init::automatic;
 #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP

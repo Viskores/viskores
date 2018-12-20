@@ -140,6 +140,8 @@ void BenchmarkValueType()
 
 int main(int argc, char* argv[])
 {
+  vtkm::cont::InitLogging(argc, argv);
+
   using namespace vtkm::benchmarking;
 
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB

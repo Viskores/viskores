@@ -130,8 +130,10 @@ VTKM_MAKE_BENCHMARK(RayTracing, BenchRayTracing);
 }
 } // end namespace vtkm::benchmarking
 
-int main(int, char* [])
+int main(int argc, char* argv[])
 {
+  vtkm::cont::InitLogging(argc, argv);
+
   VTKM_RUN_BENCHMARK(RayTracing, vtkm::ListTagBase<vtkm::Float32>());
   return 0;
 }

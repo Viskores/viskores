@@ -920,6 +920,8 @@ public:
 
 int main(int argc, char* argv[])
 {
+  vtkm::cont::InitLogging(argc, argv);
+
   int benchmarks = 0;
   if (argc < 2)
   {
