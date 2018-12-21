@@ -71,26 +71,18 @@ public:
     const vtkm::Id totalBlocks = (paddedDims[0] / four) * (paddedDims[1] / (four));
 
 
-    size_t outbits = detail::CalcMem2d(paddedDims, stream.minbits);
+    size_t outbits = zfp::detail::CalcMem2d(paddedDims, stream.minbits);
     vtkm::Id outsize = vtkm::Id(outbits / sizeof(ZFPWord));
 
     vtkm::cont::ArrayHandle<vtkm::Int64> output;
     // hopefully this inits/allocates the mem only on the device
     vtkm::cont::ArrayHandleConstant<vtkm::Int64> zero(0, outsize);
     vtkm::cont::Algorithm::Copy(zero, output);
-    //    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
-    //    {
-    //      Timer timer;
-    //      vtkm::cont::ArrayHandleCounting<vtkm::Id> one(0,1,1);
-    //      vtkm::worklet::DispatcherMapField<detail::MemTransfer> dis;
-    //      dis.Invoke(one,data);
-
-    //      vtkm::Float64 time = timer.GetElapsedTime();
-    //    }
 
     // launch 1 thread per zfp block
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
+    //    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
     //    Timer timer;
     vtkm::worklet::DispatcherMapField<zfp::Encode2> compressDispatcher(
       zfp::Encode2(dims, paddedDims, stream.maxbits));

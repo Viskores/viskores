@@ -100,28 +100,17 @@ public:
     zfpBlock = blockIdx % ZFPDims;
     vtkm::Id logicalStart = zfpBlock * vtkm::Id(4);
 
-
-    //std::cout<<"Block ID "<<blockIdx<<"\n";
-    //std::cout<<"ZFP Block "<<zfpBlock<<"\n";
-    //std::cout<<"logicalStart Start "<<logicalStart<<"\n";
-    // get the offset into the field
-    //vtkm::Id offset = (zfpBlock[2]*4*ZFPDims[1] + zfpBlock[1] * 4)*ZFPDims[0] * 4 + zfpBlock[0] * 4;
-    //std::cout<<"ZFP block offset "<<offset<<"\n";
     bool partial = false;
     if (logicalStart + 4 > Dims)
       partial = true;
-    //std::cout<<"Dims "<<Dims<<"\n";
     if (partial)
     {
       const vtkm::Int32 nx =
         logicalStart + 4 > Dims ? vtkm::Int32(Dims - logicalStart) : vtkm::Int32(4);
-      //std::cout<<"Partial block "<<logicalStart<<" offset "<<offset<<"\n";
-      //std::cout<<"Nx "<<nx<<" "<<ny<<" "<<nz<<"\n";
       ScatterPartial1(fblock, scalars, logicalStart, nx);
     }
     else
     {
-      //std::cout<<"FULL block "<<zfpBlock<<"\n";
       Scatter1(fblock, scalars, logicalStart);
     }
   }

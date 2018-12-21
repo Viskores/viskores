@@ -39,6 +39,8 @@ namespace vtkm
 {
 namespace worklet
 {
+namespace zfp
+{
 namespace detail
 {
 
@@ -91,7 +93,6 @@ inline size_t CalcMem1d(const vtkm::Id dims, const vtkm::UInt32 bits_per_block)
   return alloc_size * sizeof(ZFPWord);
 }
 
-} // namespace detail
 
 template <typename T>
 T* GetVTKMPointer(vtkm::cont::ArrayHandle<T>& handle)
@@ -105,8 +106,8 @@ T* GetVTKMPointer(vtkm::cont::ArrayHandle<T>& handle)
   return &(*iter);
 }
 
-template <typename T>
-void DataDump(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
+template <typename T, typename S>
+void DataDump(vtkm::cont::ArrayHandle<T, S> handle, std::string fileName)
 {
 
   T* ptr = GetVTKMPointer(handle);
@@ -122,7 +123,8 @@ void DataDump(vtkm::cont::ArrayHandle<T> handle, std::string fileName)
 }
 
 
-
+} // namespace detail
+} // namespace zfp
 } // namespace worklet
 } // namespace vtkm
 #endif //  vtk_m_worklet_zfp_tools_h

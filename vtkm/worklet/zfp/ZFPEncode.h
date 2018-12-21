@@ -90,11 +90,9 @@ template <typename Int, typename Scalar, vtkm::Int32 BlockSize>
 inline VTKM_EXEC void fwd_cast(Int* iblock, const Scalar* fblock, vtkm::Int32 emax)
 {
   Scalar s = quantize<Scalar>(1, emax);
-  //std::cout<<"EMAX "<<emax<<" q "<<s<<"\n";
   for (vtkm::Int32 i = 0; i < BlockSize; ++i)
   {
     iblock[i] = static_cast<Int>(s * fblock[i]);
-    //std::cout<<i<<" f = "<<fblock[i]<<" i = "<<(vtkm::UInt64)iblock[i]<<"\n";
   }
 }
 
@@ -261,10 +259,6 @@ VTKM_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
 
   UInt ublock[BlockSize];
   fwd_order<UInt, Int, BlockSize>(ublock, iblock);
-  //for(int i = 0; i < BlockSize; ++i)
-  //{
-  //  std::cout<<"tid "<<i<<" --> nb "<<ublock[i]<<"\n";
-  //}
 
   vtkm::UInt32 intprec = CHAR_BIT * (vtkm::UInt32)sizeof(UInt);
   vtkm::UInt32 kmin =
@@ -273,7 +267,6 @@ VTKM_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
   vtkm::UInt32 i, m;
   vtkm::UInt32 n = 0;
   vtkm::UInt64 x;
-  //std::cout<<"Kmin "<<kmin<<"\n";
   /* encode one bit plane at a time from MSB to LSB */
   for (vtkm::UInt32 k = intprec; bits && k-- > kmin;)
   {
@@ -283,27 +276,17 @@ VTKM_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
     {
       x += (vtkm::UInt64)((ublock[i] >> k) & 1u) << i;
     }
-    //std::cout<<"Bit plane "<<x<<"\n";
     /* step 2: encode first n bits of bit plane */
     m = vtkm::Min(n, bits);
     bits -= m;
-    //std::cout<<"Bits left "<<bits<<" m "<<m<<"\n";
     x = stream.write_bits(x, m);
-    //std::cout<<"Wrote m "<<m<<" bits\n";
-    //vtkm::UInt32 temp = bits;
-    //std::cout<<"rem bitplane "<<x<<"\n";
     /* step 3: unary run-length encode remainder of bit plane */
     for (; n < BlockSize && bits && (bits--, stream.write_bit(!!x)); x >>= 1, n++)
     {
-      //std::cout<<"outer n "<<n<<" bits "<<bits<<"\n";
       for (; n < BlockSize - 1 && bits && (bits--, !stream.write_bit(x & 1u)); x >>= 1, n++)
       {
-        //std::cout<<"n "<<n<<" bits "<<bits<<"\n";
       }
     }
-    //temp = temp - bits;
-    //std::cout<<"rem bits "<<bits<<" intprec "<<intprec<<" k "<<k<<" encoded_bits "<<temp<<"\n";
-    //stream.print();
   }
 }
 

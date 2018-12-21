@@ -56,9 +56,6 @@ struct BlockReader
 
     m_buffer >>= m_current_bit;
     m_block_idx = block_idx;
-    //std::cout<<"Reader index "<<Index<<"\n";
-    //print_bits(m_buffer);
-    //print_bits(Words.Get(Index));
   }
 
   inline VTKM_EXEC unsigned int read_bit()
@@ -121,4 +118,4 @@ private:
 } // namespace zfp
 } // namespace worklet
 } // namespace vtkm
-#endif //  vtk_m_worklet_zfp_type_info_h
+#endif //  vtk_m_worklet_zfp_block_reader_h

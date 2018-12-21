@@ -40,44 +40,6 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace detail
-{
-
-//size_t CalcMem3d(const vtkm::Id3 dims,
-//                 const int bits_per_block)
-//{
-//  const size_t vals_per_block = 64;
-//  const size_t size = dims[0] * dims[1] * dims[2];
-//  size_t total_blocks = size / vals_per_block;
-//  const size_t bits_per_word = sizeof(ZFPWord) * 8;
-//  const size_t total_bits = bits_per_block * total_blocks;
-//  const size_t alloc_size = total_bits / bits_per_word;
-//  return alloc_size * sizeof(ZFPWord);
-//}
-
-//class MemTransfer : public vtkm::worklet::WorkletMapField
-//{
-//public:
-//  VTKM_CONT
-//  MemTransfer()
-//  {
-//  }
-//  using ControlSignature = void(FieldIn<>, WholeArrayInOut<>);
-//  using ExecutionSignature = void(_1, _2);
-
-//  template<typename PortalType>
-//  VTKM_EXEC
-//  void operator()(const vtkm::Id id,
-//                  PortalType& outValue) const
-//  {
-//    (void) id;
-//    (void) outValue;
-//  }
-//}; //class MemTransfer
-
-} // namespace detail
-
-
 class ZFPDecompressor
 {
 public:
@@ -111,29 +73,15 @@ public:
       (paddedDims[0] / four) * (paddedDims[1] / (four) * (paddedDims[2] / four));
 
 
-    detail::CalcMem3d(paddedDims, stream.minbits);
+    zfp::detail::CalcMem3d(paddedDims, stream.minbits);
 
-    output.Allocate(dims[0] * dims[1] * dims[2]);
     // hopefully this inits/allocates the mem only on the device
-    //
-    //vtkm::cont::ArrayHandleConstant<vtkm::Int64> zero(0, outsize);
-    //vtkm::cont::Algorithm::Copy(zero, output);
-    //
-    //    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
-    //    {
-    //      Timer timer;
-    //      vtkm::cont::ArrayHandleCounting<vtkm::Id> one(0,1,1);
-    //      vtkm::worklet::DispatcherMapField<detail::MemTransfer> dis;
-    //      dis.Invoke(one,output);
-    //      dis.Invoke(one,encodedData);
-
-    //      vtkm::Float64 time = timer.GetElapsedTime();
-    //      std::cout<<"Copy scalars "<<time<<"\n";
-    //    }
+    output.Allocate(dims[0] * dims[1] * dims[2]);
 
     // launch 1 thread per zfp block
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
+    //    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
     //    Timer timer;
     vtkm::worklet::DispatcherMapField<zfp::Decode3> decompressDispatcher(
       zfp::Decode3(dims, paddedDims, stream.maxbits));
