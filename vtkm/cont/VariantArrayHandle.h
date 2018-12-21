@@ -112,7 +112,7 @@ public:
   /// Returns true if this array matches the array handle type passed in.
   ///
   template <typename ArrayHandleType>
-  VTKM_CONT bool IsType()
+  VTKM_CONT bool IsType() const
   {
     return internal::variant::IsType<ArrayHandleType>(this->ArrayContainer.get());
   }
@@ -120,7 +120,7 @@ public:
   /// Returns true if this array matches the ValueType type passed in.
   ///
   template <typename T>
-  VTKM_CONT bool IsValueType()
+  VTKM_CONT bool IsValueType() const
   {
     return internal::variant::IsValueType<T>(this->ArrayContainer.get());
   }
@@ -231,6 +231,24 @@ private:
 };
 
 using VariantArrayHandle = vtkm::cont::VariantArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG>;
+
+
+//=============================================================================
+// Free function casting helpers
+
+template <typename ArrayHandleType, typename Ts>
+VTKM_CONT inline bool IsType(const vtkm::cont::VariantArrayHandleBase<Ts>& variant)
+{
+  return variant.template IsType<ArrayHandleType>();
+}
+
+template <typename ArrayHandleType, typename Ts>
+VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::VariantArrayHandleBase<Ts>& variant)
+{
+  return variant.template Cast<ArrayHandleType>();
+}
+
+
 
 namespace detail
 {
