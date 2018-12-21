@@ -64,7 +64,7 @@ void Test1D(int rate)
   vtkm::worklet::ZFP1DCompressor compressor;
   vtkm::worklet::ZFP1DDecompressor decompressor;
 
-  if (dynField.IsSameType(Handle64()))
+  if (vtkm::cont::IsType<Handle64>(dynField))
   {
     vtkm::cont::ArrayHandle<Scalar> handle;
     const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
@@ -101,7 +101,7 @@ void Test2D(int rate)
   vtkm::worklet::ZFP2DCompressor compressor;
   vtkm::worklet::ZFP2DDecompressor decompressor;
 
-  if (dynField.IsSameType(Handle64()))
+  if (vtkm::cont::IsType<Handle64>(dynField))
   {
     vtkm::cont::ArrayHandle<Scalar> handle;
     const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
@@ -141,7 +141,7 @@ void Test3D(int rate)
   vtkm::worklet::ZFPCompressor compressor;
   vtkm::worklet::ZFPDecompressor decompressor;
 
-  if (dynField.IsSameType(Handle64()))
+  if (vtkm::cont::IsType<Handle64>(dynField))
   {
     vtkm::cont::ArrayHandle<Scalar> handle;
     const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
