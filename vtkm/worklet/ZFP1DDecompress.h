@@ -51,9 +51,9 @@ namespace detail
 class ZFP1DDecompressor
 {
 public:
-  template <typename Scalar>
-  void Decompress(const vtkm::cont::ArrayHandle<vtkm::Int64>& encodedData,
-                  vtkm::cont::ArrayHandle<Scalar>& output,
+  template <typename Scalar, typename StorageIn, typename StorageOut>
+  void Decompress(const vtkm::cont::ArrayHandle<vtkm::Int64, StorageIn>& encodedData,
+                  vtkm::cont::ArrayHandle<Scalar, StorageOut>& output,
                   const vtkm::Float64 requestedRate,
                   vtkm::Id dims)
   {

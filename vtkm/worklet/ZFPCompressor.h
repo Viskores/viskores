@@ -44,10 +44,11 @@ namespace worklet
 class ZFPCompressor
 {
 public:
-  template <typename Scalar>
-  vtkm::cont::ArrayHandle<vtkm::Int64> Compress(const vtkm::cont::ArrayHandle<Scalar>& data,
-                                                const vtkm::Float64 requestedRate,
-                                                const vtkm::Id3 dims)
+  template <typename Scalar, typename Storage>
+  vtkm::cont::ArrayHandle<vtkm::Int64> Compress(
+    const vtkm::cont::ArrayHandle<Scalar, Storage>& data,
+    const vtkm::Float64 requestedRate,
+    const vtkm::Id3 dims)
   {
     DataDump(data, "uncompressed");
     zfp::ZFPStream stream;
