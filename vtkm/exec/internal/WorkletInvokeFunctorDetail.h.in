@@ -195,16 +195,16 @@ $endfor\
   // parameter is wrong and the types that did not match.
   auto $pname(0) = typename ReturnFetchType::ValueType(worklet($arg_list(num_params)));
 
-  returnFetch.Store(
-    threadIndices,
-    invocation.Parameters.template GetParameter<FetchInfo0::ControlParameterIndex>(),
-    $pname(0));
-
 $for(param_index in range(1, num_params+1))\
   fetch$(param_index).Store(threadIndices,
                invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>(),
                $pname(param_index));
 $endfor\
+
+  returnFetch.Store(
+    threadIndices,
+    invocation.Parameters.template GetParameter<FetchInfo0::ControlParameterIndex>(),
+    $pname(0));
 }
 
 template <typename WorkletType,
