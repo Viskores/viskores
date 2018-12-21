@@ -254,7 +254,6 @@ void CudaAllocator::Initialize()
 {
 #if CUDART_VERSION >= 8000
   std::call_once(IsInitialized, []() {
-    bool managedMemorySupported = true;
     int numDevices;
     VTKM_CUDA_CALL(cudaGetDeviceCount(&numDevices));
 
@@ -264,17 +263,15 @@ void CudaAllocator::Initialize()
     }
 
     // Check all devices, use the feature set supported by all
-    bool managed = true;
+    bool managedMemorySupported = true;
     cudaDeviceProp prop;
-    for (int i = 0; i < numDevices && managed; ++i)
+    for (int i = 0; i < numDevices && managedMemorySupported; ++i)
     {
       VTKM_CUDA_CALL(cudaGetDeviceProperties(&prop, i));
       // We check for concurrentManagedAccess, as devices with only the
       // managedAccess property have extra synchronization requirements.
-      managed = managed && prop.concurrentManagedAccess;
+      managedMemorySupported = managedMemorySupported && prop.concurrentManagedAccess;
     }
-
-    managedMemorySupported = managed;
 
 // Check if users want to disable managed memory
 #pragma warning(push)
@@ -283,11 +280,12 @@ void CudaAllocator::Initialize()
 #pragma warning(disable : 4996)
     const char* buf = std::getenv(NO_VTKM_MANAGED_MEMORY);
 #pragma warning(pop)
-    if (buf != nullptr)
-    {
-      ManagedMemoryEnabled = (std::string(buf) != "1");
+    if (managedMemorySupported && buf != nullptr)
+    { //only makes sense to disable managed memory if the hardware supports it
+      //in the first place
+      managedMemorySupported = (std::string(buf) != "1");
     }
-    ManagedMemoryEnabled = ManagedMemoryEnabled && managedMemorySupported;
+    ManagedMemoryEnabled = managedMemorySupported;
   });
 #endif
 }
