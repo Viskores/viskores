@@ -50,7 +50,7 @@ public:
     const vtkm::Float64 requestedRate,
     const vtkm::Id3 dims)
   {
-    DataDump(data, "uncompressed");
+    // DataDump(data, "uncompressed");
     zfp::ZFPStream stream;
     const vtkm::Int32 topoDims = 3;
     stream.SetRate(requestedRate, topoDims, vtkm::Float64());
