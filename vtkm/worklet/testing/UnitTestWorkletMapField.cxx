@@ -31,10 +31,10 @@ class TestMapFieldWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn<>, FieldOut<>, FieldInOut<>);
-  using ExecutionSignature = void(_1, _2, _3, WorkIndex);
+  using ExecutionSignature = _3(_1, _2, _3, WorkIndex);
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& in, T& out, T& inout, vtkm::Id workIndex) const
+  VTKM_EXEC T operator()(const T& in, T& out, T& inout, vtkm::Id workIndex) const
   {
     if (!test_equal(in, TestValue(workIndex, T()) + T(100)))
     {
@@ -45,13 +45,17 @@ public:
     {
       this->RaiseError("Got wrong in-out value.");
     }
-    inout = inout - T(100);
+
+    // We return the new value of inout. Since _3 is both an arg and return,
+    // this tests that the return value is set after updating the arg values.
+    return inout - T(100);
   }
 
   template <typename T1, typename T2, typename T3>
-  VTKM_EXEC void operator()(const T1&, const T2&, const T3&, vtkm::Id) const
+  VTKM_EXEC T3 operator()(const T1&, const T2&, const T3&, vtkm::Id) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
+    return vtkm::TypeTraits<T3>::ZeroInitialization();
   }
 };
 
