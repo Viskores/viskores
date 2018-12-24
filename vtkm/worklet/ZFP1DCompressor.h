@@ -45,12 +45,13 @@ namespace worklet
 class ZFP1DCompressor
 {
 public:
-  template <typename Scalar>
-  vtkm::cont::ArrayHandle<vtkm::Int64> Compress(const vtkm::cont::ArrayHandle<Scalar>& data,
-                                                const vtkm::Float64 requestedRate,
-                                                const vtkm::Id dims)
+  template <typename Scalar, typename Storage>
+  vtkm::cont::ArrayHandle<vtkm::Int64> Compress(
+    const vtkm::cont::ArrayHandle<Scalar, Storage>& data,
+    const vtkm::Float64 requestedRate,
+    const vtkm::Id dims)
   {
-    DataDump(data, "uncompressed");
+    // DataDump(data, "uncompressed");
     zfp::ZFPStream stream;
     constexpr vtkm::Int32 topoDims = 1;
     stream.SetRate(requestedRate, topoDims, vtkm::Float64());
@@ -68,27 +69,18 @@ public:
     const vtkm::Id totalBlocks = (paddedDims / four);
 
 
-    size_t outbits = detail::CalcMem1d(paddedDims, stream.minbits);
+    size_t outbits = zfp::detail::CalcMem1d(paddedDims, stream.minbits);
     vtkm::Id outsize = vtkm::Id(outbits / sizeof(ZFPWord));
 
     vtkm::cont::ArrayHandle<vtkm::Int64> output;
     // hopefully this inits/allocates the mem only on the device
     vtkm::cont::ArrayHandleConstant<vtkm::Int64> zero(0, outsize);
     vtkm::cont::Algorithm::Copy(zero, output);
-    //    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
-    //    {
-    //      Timer timer;
-    //      vtkm::cont::ArrayHandleCounting<vtkm::Id> one(0,1,1);
-    //      vtkm::worklet::DispatcherMapField<detail::MemTransfer> dis;
-    //      dis.Invoke(one,data);
-
-    //      vtkm::Float64 time = timer.GetElapsedTime();
-    //      std::cout<<"Copy scalars "<<time<<"\n";
-    //    }
 
     // launch 1 thread per zfp block
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
+    //    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
     //    Timer timer;
     vtkm::worklet::DispatcherMapField<zfp::Encode1> compressDispatcher(
       zfp::Encode1(dims, paddedDims, stream.maxbits));

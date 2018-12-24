@@ -39,7 +39,7 @@
 template <typename T>
 void writeArray(vtkm::cont::ArrayHandle<T>& field, std::string filename)
 {
-  auto val = vtkm::worklet::GetVTKMPointer(field);
+  auto val = vtkm::worklet::zfp::detail::GetVTKMPointer(field);
   std::ofstream output(filename, std::ios::binary | std::ios::out);
   output.write(reinterpret_cast<char*>(val), field.GetNumberOfValues() * 8);
   output.close();
@@ -60,8 +60,7 @@ void Test1D(int rate)
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
-  auto field = dynField.Cast<Handle64>();
-  //writeArray(field, "orig.zfp");
+
   vtkm::worklet::ZFP1DCompressor compressor;
   vtkm::worklet::ZFP1DDecompressor decompressor;
 
@@ -98,7 +97,6 @@ void Test2D(int rate)
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make2DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
-  auto field = dynField.Cast<Handle64>();
 
   vtkm::worklet::ZFP2DCompressor compressor;
   vtkm::worklet::ZFP2DDecompressor decompressor;
@@ -139,7 +137,6 @@ void Test3D(int rate)
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make3DUniformDataSet3(dims);
   auto dynField = dataset.GetField("pointvar").GetData();
-  ;
 
   vtkm::worklet::ZFPCompressor compressor;
   vtkm::worklet::ZFPDecompressor decompressor;

@@ -210,10 +210,6 @@ VTKM_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
       data[i] += (UInt)(x & 1u) << k;
     }
   }
-  //for (int i = 0; i < BlockSize; i++)
-  //{
-  //  std::cout<<"Decomp int "<<i<<" = "<<data[i]<<"\n";
-  //}
 }
 
 template <vtkm::Int32 BlockSize, typename Scalar, typename PortalType>
@@ -240,16 +236,8 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
     vtkm::UInt32 emax;
     if (!zfp::is_int<Scalar>())
     {
-      //std::cout<<"ebits "<<ebits<<"\n";
-      // read in the shared exponent
-      //vtkm::UInt64 b = reader.read_bits(ebits - 1);
-      //print_bits(b);
-      //std::cout<<"b "<<b<<"\n";
-      //std::cout<<"ebias "<<zfp::get_ebias<Scalar>()<<"\n";
-      //emax = vtkm::UInt32(b - zfp::get_ebias<Scalar>());
       emax = vtkm::UInt32(reader.read_bits(static_cast<vtkm::Int32>(ebits) - 1));
       emax -= static_cast<vtkm::UInt32>(zfp::get_ebias<Scalar>());
-      //std::cout<<"EMAX "<<emax<<"\n";
     }
     else
     {
@@ -269,22 +257,10 @@ VTKM_EXEC void zfp_decode(Scalar* fblock,
       iblock[idx] = uint2int(ublock[i]);
     }
 
-    //for (int i = 0; i < BlockSize; i++)
-    //{
-    //  std::cout<<"before xform tid "<<i<<"  "<<iblock[i]<<"\n";
-    //}
-
     inv_transform<BlockSize> trans;
     trans.inv_xform(iblock);
 
-    //for (int i = 0; i < BlockSize; i++)
-    //{
-    //  std::cout<<"tid "<<i<<"  "<<iblock[i]<<"\n";
-    //}
-
     Scalar inv_w = dequantize<Int, Scalar>(1, static_cast<vtkm::Int32>(emax));
-
-    //std::cout<<"dequantize factor "<<inv_w<<"\n";
 
     for (vtkm::Int32 i = 0; i < BlockSize; ++i)
     {

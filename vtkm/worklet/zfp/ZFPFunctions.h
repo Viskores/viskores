@@ -33,7 +33,7 @@ namespace zfp
 {
 
 template <typename T>
-void print_bits(T bits)
+void PrintBits(T bits)
 {
   const int bit_size = sizeof(T) * 8;
   for (int i = bit_size - 1; i >= 0; --i)
@@ -45,7 +45,6 @@ void print_bits(T bits)
   }
   printf("\n");
 }
-
 
 template <typename T>
 inline vtkm::UInt32 MinBits(const vtkm::UInt32 bits)

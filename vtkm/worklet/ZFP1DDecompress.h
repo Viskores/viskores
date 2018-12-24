@@ -51,9 +51,9 @@ namespace detail
 class ZFP1DDecompressor
 {
 public:
-  template <typename Scalar>
-  void Decompress(const vtkm::cont::ArrayHandle<vtkm::Int64>& encodedData,
-                  vtkm::cont::ArrayHandle<Scalar>& output,
+  template <typename Scalar, typename StorageIn, typename StorageOut>
+  void Decompress(const vtkm::cont::ArrayHandle<vtkm::Int64, StorageIn>& encodedData,
+                  vtkm::cont::ArrayHandle<Scalar, StorageOut>& output,
                   const vtkm::Float64 requestedRate,
                   vtkm::Id dims)
   {
@@ -76,29 +76,15 @@ public:
     vtkm::Id totalBlocks = (paddedDims / four);
 
 
-    detail::CalcMem1d(paddedDims, stream.minbits);
+    zfp::detail::CalcMem1d(paddedDims, stream.minbits);
 
-    output.Allocate(dims);
     // hopefully this inits/allocates the mem only on the device
-    //
-    //vtkm::cont::ArrayHandleConstant<vtkm::Int64> zero(0, outsize);
-    //vtkm::cont::Algorithm::Copy(zero, output);
-    //
-    //    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
-    //    {
-    //      Timer timer;
-    //      vtkm::cont::ArrayHandleCounting<vtkm::Id> one(0,1,1);
-    //      vtkm::worklet::DispatcherMapField<detail::MemTransfer> dis;
-    //      dis.Invoke(one,output);
-    //      dis.Invoke(one,encodedData);
-
-    //      vtkm::Float64 time = timer.GetElapsedTime();
-    //      std::cout<<"Copy scalars "<<time<<"\n";
-    //    }
+    output.Allocate(dims);
 
     // launch 1 thread per zfp block
     vtkm::cont::ArrayHandleCounting<vtkm::Id> blockCounter(0, 1, totalBlocks);
 
+    //    using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
     //    Timer timer;
     vtkm::worklet::DispatcherMapField<zfp::Decode1> decompressDispatcher(
       zfp::Decode1(dims, paddedDims, stream.maxbits));

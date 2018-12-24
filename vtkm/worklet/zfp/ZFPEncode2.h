@@ -103,33 +103,6 @@ public:
   {
     using Scalar = typename InputScalarPortal::ValueType;
 
-    //    typedef unsigned long long int ull;
-    //    typedef long long int ll;
-    //    const ull blockId = blockIdx.x +
-    //                        blockIdx.y * gridDim.x +
-    //                        gridDim.x * gridDim.y * blockIdx.z;
-
-    //    // each thread gets a block so the block index is
-    //    // the global thread index
-    //    const uint block_idx = blockId * blockDim.x + threadIdx.x;
-
-    //    if(block_idx >= tot_blocks)
-    //    {
-    //      // we can't launch the exact number of blocks
-    //      // so just exit if this isn't real
-    //      return;
-    //    }
-
-    //    uint2 block_dims;
-    //    block_dims.x = padded_dims.x >> 2;
-    //    block_dims.y = padded_dims.y >> 2;
-
-    //    // logical pos in 3d array
-    //    uint2 block;
-    //    block.x = (block_idx % block_dims.x) * 4;
-    //    block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4;
-    //    const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y;
-
     vtkm::Id2 zfpBlock;
     zfpBlock[0] = blockIdx % ZFPDims[0];
     zfpBlock[1] = (blockIdx / ZFPDims[0]) % ZFPDims[1];
@@ -138,10 +111,6 @@ public:
 
     constexpr vtkm::Int32 BlockSize = 16;
     Scalar fblock[BlockSize];
-
-    //    bool partial = false;
-    //    if(block.x + 4 > dims.x) partial = true;
-    //    if(block.y + 4 > dims.y) partial = true;
 
     bool partial = false;
     if (logicalStart[0] + 4 > Dims[0])
@@ -162,7 +131,6 @@ public:
       Gather2(fblock, scalars, offset, 1, static_cast<vtkm::Int32>(Dims[0]));
     }
 
-    //zfp_encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);
     zfp::ZFPBlockEncoder<BlockSize, Scalar, BitstreamPortal> encoder;
     encoder.encode(fblock, vtkm::Int32(MaxBits), vtkm::UInt32(blockIdx), stream);
   }
