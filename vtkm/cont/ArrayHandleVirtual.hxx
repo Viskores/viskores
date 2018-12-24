@@ -21,8 +21,7 @@
 #define vtk_m_cont_ArrayHandleVirtual_hxx
 
 #include <vtkm/cont/ArrayHandleVirtual.h>
-
-#include <vtkm/cont/ArrayHandleAny.h>
+#include <vtkm/cont/StorageAny.hxx>
 #include <vtkm/cont/TryExecute.h>
 
 namespace vtkm
@@ -57,48 +56,12 @@ ArrayHandleType ArrayHandle<T, StorageTagVirtual>::CastToType(
   const auto* any = this->Storage->template Cast<vtkm::cont::StorageAny<T, S>>();
   return any->GetHandle();
 }
-
-
-namespace detail
-{
-template <typename DerivedPortal>
-struct TransferToDevice
-{
-  template <typename DeviceAdapterTag, typename Payload, typename... Args>
-  bool operator()(DeviceAdapterTag devId, Payload&& payload, Args&&... args) const
-  {
-    using TransferType = cont::internal::VirtualObjectTransfer<DerivedPortal, DeviceAdapterTag>;
-
-
-    //construct all new transfer payload
-    auto host = std::unique_ptr<DerivedPortal>(new DerivedPortal(std::forward<Args>(args)...));
-    auto transfer = std::make_shared<TransferType>(host.get());
-    auto device = transfer->PrepareForExecution(true);
-
-    payload.updateDevice(devId, std::move(host), device, std::static_pointer_cast<void>(transfer));
-
-    return true;
-  }
-};
 }
-
-template <typename DerivedPortal, typename... Args>
-inline void make_transferToDevice(vtkm::cont::DeviceAdapterId devId, Args&&... args)
-{
-  vtkm::cont::TryExecuteOnDevice(
-    devId, detail::TransferToDevice<DerivedPortal>{}, std::forward<Args>(args)...);
-}
-
-template <typename DerivedPortal, typename Payload, typename... Args>
-inline void make_hostPortal(Payload&& payload, Args&&... args)
-{
-  auto host = std::unique_ptr<DerivedPortal>(new DerivedPortal(std::forward<Args>(args)...));
-  payload.updateHost(std::move(host));
-}
-}
-} // namespace vtkm::virts
+} // namespace vtkm::const
 
 
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 
 //=============================================================================
 // Specializations of serialization related classes
@@ -108,19 +71,46 @@ namespace diy
 template <typename T>
 struct Serialization<vtkm::cont::ArrayHandleVirtual<T>>
 {
-private:
-  using Type = vtkm::cont::ArrayHandleVirtual<T>;
-  using BaseType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>;
+
+  static VTKM_CONT void save(diy::BinaryBuffer& bb, const vtkm::cont::ArrayHandleVirtual<T>& obj)
+  {
+    vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::ArrayHandleVirtual<T>& obj)
+  {
+    vtkm::cont::ArrayHandle<T> array;
+    diy::load(bb, array);
+    obj = std::move(vtkm::cont::ArrayHandleVirtual<T>{ array });
+  }
+};
+
+template <typename T>
+struct IntAnySerializer
+{
+  using CountingType = vtkm::cont::ArrayHandleCounting<T>;
+  using ConstantType = vtkm::cont::ArrayHandleConstant<T>;
   using BasicType = vtkm::cont::ArrayHandle<T>;
 
-public:
-  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  static VTKM_CONT void save(diy::BinaryBuffer& bb, const vtkm::cont::ArrayHandleVirtual<T>& obj)
   {
-    if (obj.template IsType<vtkm::cont::ArrayHandleAny<T>>())
+    if (obj.template IsType<CountingType>())
     {
-      const auto& array = static_cast<const vtkm::cont::ArrayHandleAny<T>&>(obj);
-      diy::save(bb, vtkm::cont::TypeString<vtkm::cont::ArrayHandleAny<T>>::Get());
-      diy::save(bb, array);
+      diy::save(bb, vtkm::cont::TypeString<CountingType>::Get());
+
+      using S = typename CountingType::StorageTag;
+      const vtkm::cont::StorageVirtual* storage = obj.GetStorage();
+      auto* any = storage->Cast<vtkm::cont::StorageAny<T, S>>();
+      diy::save(bb, any->GetHandle());
+    }
+    else if (obj.template IsType<ConstantType>())
+    {
+      diy::save(bb, vtkm::cont::TypeString<ConstantType>::Get());
+
+      using S = typename ConstantType::StorageTag;
+      const vtkm::cont::StorageVirtual* storage = obj.GetStorage();
+      auto* any = storage->Cast<vtkm::cont::StorageAny<T, S>>();
+      diy::save(bb, any->GetHandle());
     }
     else
     {
@@ -129,31 +119,48 @@ public:
     }
   }
 
-  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::ArrayHandleVirtual<T>& obj)
   {
     std::string typeString;
     diy::load(bb, typeString);
 
-    if (typeString == vtkm::cont::TypeString<vtkm::cont::ArrayHandleAny<T>>::Get())
+    if (typeString == vtkm::cont::TypeString<CountingType>::Get())
     {
-      vtkm::cont::ArrayHandleAny<T> array;
+      CountingType array;
       diy::load(bb, array);
-      obj = std::move(array);
+      obj = std::move(vtkm::cont::ArrayHandleVirtual<T>{ array });
     }
-    else if (typeString == vtkm::cont::TypeString<BasicType>::Get())
+    else if (typeString == vtkm::cont::TypeString<ConstantType>::Get())
     {
-      BasicType array;
+      ConstantType array;
       diy::load(bb, array);
-      obj = std::move(vtkm::cont::ArrayHandleAny<T>{ array });
+      obj = std::move(vtkm::cont::ArrayHandleVirtual<T>{ array });
     }
     else
     {
-      throw vtkm::cont::ErrorBadType("Error deserializing ArrayHandleVirtual. TypeString: " +
-                                     typeString);
+      vtkm::cont::ArrayHandle<T> array;
+      diy::load(bb, array);
+      obj = std::move(vtkm::cont::ArrayHandleVirtual<T>{ array });
     }
   }
 };
-}
 
+
+template <>
+struct Serialization<vtkm::cont::ArrayHandleVirtual<vtkm::UInt8>>
+  : public IntAnySerializer<vtkm::UInt8>
+{
+};
+template <>
+struct Serialization<vtkm::cont::ArrayHandleVirtual<vtkm::Int32>>
+  : public IntAnySerializer<vtkm::Int32>
+{
+};
+template <>
+struct Serialization<vtkm::cont::ArrayHandleVirtual<vtkm::Int64>>
+  : public IntAnySerializer<vtkm::Int64>
+{
+};
+}
 
 #endif

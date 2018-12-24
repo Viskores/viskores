@@ -97,10 +97,10 @@ VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasi
 #undef VTKM_ARRAY_RANGE_COMPUTE_EXPORT_T
 #undef VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandleVirtualCoordinates& input,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
+// VTKM_CONT
+// vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+//   const vtkm::cont::ArrayHandleVirtualCoordinates& input,
+//   vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
 
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(

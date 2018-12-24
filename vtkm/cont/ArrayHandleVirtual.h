@@ -23,8 +23,10 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
+#include <vtkm/cont/StorageAny.h>
 #include <vtkm/cont/StorageVirtual.h>
 
 #include <memory>
@@ -55,15 +57,45 @@ public:
     using PortalConst = vtkm::ArrayPortalRef<T>;
   };
 
-  ///construct an invlaid virtual array handle that has a nullptr storage
-  ArrayHandle()
-    : Storage(nullptr){};
+
+  ///Construct a invalid ArrayHandleVirtual that has nullptr storage
+  VTKM_CONT ArrayHandle()
+    : Storage(nullptr)
+  {
+  }
+
+  ///Construct a valid ArrayHandleVirtual from an existing ArrayHandle
+  ///that doesn't derive from ArrayHandleVirtual.
+  ///Note left non-explicit to allow:
+  ///
+  /// std::vector<vtkm::cont::ArrayHandleVirtual<vtkm::Float64>> vectorOfArrays;
+  /// //Make basic array.
+  /// vtkm::cont::ArrayHandle<vtkm::Float64> basicArray;
+  ///  //Fill basicArray...
+  /// vectorOfArrays.push_back(basicArray);
+  ///
+  /// // Make fancy array.
+  /// vtkm::cont::ArrayHandleCounting<vtkm::Float64> fancyArray(-1.0, 0.1, ARRAY_SIZE);
+  /// vectorOfArrays.push_back(fancyArray);
+
+
+  template <typename S>
+  ArrayHandle(const vtkm::cont::ArrayHandle<T, S>& ah)
+    : Storage(std::make_shared<vtkm::cont::StorageAny<T, S>>(ah))
+  {
+    using is_base = std::is_base_of<vtkm::cont::StorageVirtual, S>;
+    static_assert(!is_base::value, "Wrong specialization for ArrayHandleVirtual selected");
+  }
+
+  ///Copy an existing ArrayHandleVirtual into this instance
+  ArrayHandle(const ArrayHandle<T, vtkm::cont::StorageTagVirtual>& src) = default;
 
 
   /// virtual destructor, as required to make sure derived classes that
   /// might have member variables are properly cleaned up.
   //
   virtual ~ArrayHandle() = default;
+
 
   ///Move existing shared_ptr of vtkm::cont::StorageVirtual to be
   ///owned by this ArrayHandleVirtual.
@@ -89,21 +121,39 @@ public:
                   "Storage for ArrayHandleVirtual needs to derive from vtkm::cont::StorageVirual");
   }
 
-  ///copy another existing virtual array handle
-  ArrayHandle(const ArrayHandle<T, vtkm::cont::StorageTagVirtual>& src) = default;
-
   ///move from one virtual array handle to another
   ArrayHandle(ArrayHandle<T, vtkm::cont::StorageTagVirtual>&& src) noexcept
     : Storage(std::move(src.Storage))
   {
   }
 
+  ///move from one a non-virtual array handle to virtual array handle
+  template <typename S>
+  ArrayHandle(ArrayHandle<T, S>&& src) noexcept
+    : Storage(std::make_shared<vtkm::cont::StorageAny<T, S>>(std::move(src)))
+  {
+  }
+
   VTKM_CONT ArrayHandle<T, vtkm::cont::StorageTagVirtual>& operator=(
     const ArrayHandle<T, vtkm::cont::StorageTagVirtual>& src) = default;
+  template <typename S>
+  VTKM_CONT ArrayHandle<T, vtkm::cont::StorageTagVirtual>& operator=(const ArrayHandle<T, S>& src)
+  {
+    this->Storage = std::make_shared<vtkm::cont::StorageAny<T, S>>(src);
+    return *this;
+  }
+
   VTKM_CONT ArrayHandle<T, vtkm::cont::StorageTagVirtual>& operator=(
     ArrayHandle<T, vtkm::cont::StorageTagVirtual>&& src) noexcept
   {
     this->Storage = std::move(src.Storage);
+    return *this;
+  }
+  template <typename S>
+  VTKM_CONT ArrayHandle<T, vtkm::cont::StorageTagVirtual>& operator=(
+    ArrayHandle<T, S>&& src) noexcept
+  {
+    this->Storage = std::make_shared<vtkm::cont::StorageAny<T, S>>(std::move(src));
     return *this;
   }
 
@@ -345,6 +395,15 @@ using ArrayHandleVirtual = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirt
 
 
 //=============================================================================
+/// A convenience function for creating an ArrayHandleVirtual.
+template <typename T, typename S>
+VTKM_CONT vtkm::cont::ArrayHandleVirtual<T> make_ArrayHandleVirtual(
+  const vtkm::cont::ArrayHandle<T, S>& ah)
+{
+  return vtkm::cont::ArrayHandleVirtual<T>(ah);
+}
+
+//=============================================================================
 // Free function casting helpers
 
 template <typename ArrayHandleType, typename T>
@@ -357,6 +416,29 @@ template <typename ArrayHandleType, typename T>
 VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::ArrayHandleVirtual<T>& virtHandle)
 {
   return virtHandle.template Cast<ArrayHandleType>();
+}
+
+//=============================================================================
+// Specializations of CastAndCall to help make sure ArrayHandleVirtual
+// holding a ArrayHandleUniformPointCoordinates works properly
+template <typename Functor, typename... Args>
+void CastAndCall(vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>> coords,
+                 Functor&& f,
+                 Args&&... args)
+{
+  using HandleType = ArrayHandleUniformPointCoordinates;
+  using T = typename HandleType::ValueType;
+  using S = typename HandleType::StorageTag;
+  if (coords.IsType<HandleType>())
+  {
+    const vtkm::cont::StorageVirtual* storage = coords.GetStorage();
+    auto* any = storage->Cast<vtkm::cont::StorageAny<T, S>>();
+    f(any->GetHandle(), std::forward<Args>(args)...);
+  }
+  else
+  {
+    f(coords, std::forward<Args>(args)...);
+  }
 }
 
 

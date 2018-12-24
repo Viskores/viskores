@@ -18,7 +18,6 @@
 //  this software.
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleAny.h>
 #include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
@@ -34,7 +33,6 @@
 
 namespace
 {
-
 // clang-format off
 template<typename T>
 void is_noexcept_movable()
@@ -79,27 +77,21 @@ struct IsNoExceptHandle
   void operator()(T) const
   {
     using HandleType = vtkm::cont::ArrayHandle<T>;
-    using AnyType = vtkm::cont::ArrayHandleAny<T>;
     using VirtualType = vtkm::cont::ArrayHandleVirtual<T>;
 
     //verify the handle type
     is_noexcept_movable<HandleType>();
-    is_noexcept_movable<AnyType>();
     is_noexcept_movable<VirtualType>();
 
     //verify the input portals of the handle
     is_noexcept_movable<decltype(
       std::declval<HandleType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}))>();
     is_noexcept_movable<decltype(
-      std::declval<AnyType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}))>();
-    is_noexcept_movable<decltype(
       std::declval<VirtualType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}))>();
 
     //verify the output portals of the handle
     is_noexcept_movable<decltype(
       std::declval<HandleType>().PrepareForOutput(2, vtkm::cont::DeviceAdapterTagSerial{}))>();
-    is_noexcept_movable<decltype(
-      std::declval<AnyType>().PrepareForOutput(2, vtkm::cont::DeviceAdapterTagSerial{}))>();
     is_noexcept_movable<decltype(
       std::declval<VirtualType>().PrepareForOutput(2, vtkm::cont::DeviceAdapterTagSerial{}))>();
   }

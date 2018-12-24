@@ -22,7 +22,6 @@ set(headers
   Algorithm.h
   ArrayCopy.h
   ArrayHandle.h
-  ArrayHandleAny.h
   ArrayHandleCartesianProduct.h
   ArrayHandleCast.h
   ArrayHandleCompositeVector.h
@@ -99,6 +98,7 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
+  StorageAny.h
   StorageBasic.h
   StorageImplicit.h
   StorageListTag.h
@@ -112,7 +112,6 @@ set(headers
 
 set(template_sources
   ArrayHandle.hxx
-  ArrayHandleAny.hxx
   ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
   BoundingIntervalHierarchy.hxx
@@ -122,7 +121,9 @@ set(template_sources
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
+  StorageAny.hxx
   StorageBasic.hxx
+  StorageVirtual.hxx
   )
 
 set(sources

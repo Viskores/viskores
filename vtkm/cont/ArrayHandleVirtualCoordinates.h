@@ -20,7 +20,6 @@
 #ifndef vtk_m_cont_ArrayHandleVirtualCoordinates_h
 #define vtk_m_cont_ArrayHandleVirtualCoordinates_h
 
-#include <vtkm/cont/ArrayHandleAny.h>
 #include <vtkm/cont/ArrayHandleVirtual.h>
 
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
@@ -64,8 +63,7 @@ public:
 
   template <typename S>
   explicit ArrayHandleVirtualCoordinates(const vtkm::cont::ArrayHandle<ValueType, S>& ah)
-    : vtkm::cont::ArrayHandleVirtual<ValueType>(
-        std::make_shared<vtkm::cont::StorageAny<ValueType, S>>(ah))
+    : vtkm::cont::ArrayHandleVirtual<ValueType>(ah)
   {
   }
 

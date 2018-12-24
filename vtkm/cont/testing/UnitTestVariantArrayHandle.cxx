@@ -22,7 +22,6 @@
 
 #include <vtkm/TypeTraits.h>
 
-#include <vtkm/cont/ArrayHandleAny.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleConstant.h>

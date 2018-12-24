@@ -104,15 +104,15 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
 } // namespace detail
 
 
-VTKM_CONT
-inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandleVirtualCoordinates& input,
-  vtkm::cont::RuntimeDeviceTracker tracker)
-{
-  auto array =
-    static_cast<const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>&>(input);
-  return ArrayRangeCompute(array, tracker);
-}
+// VTKM_CONT
+// inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+//   const vtkm::cont::ArrayHandleVirtualCoordinates& input,
+//   vtkm::cont::RuntimeDeviceTracker tracker)
+// {
+//   auto array =
+//     static_cast<const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>&>(input);
+//   return ArrayRangeCompute(array, tracker);
+// }
 
 VTKM_CONT
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
@@ -124,7 +124,6 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
     vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
-
 
   if (input.IsType<UniformHandleType>())
   {

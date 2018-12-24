@@ -25,7 +25,6 @@
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/ArrayHandleVirtual.hxx>
 
-#include <vtkm/cont/ArrayHandleAny.hxx>
 
 #include <memory>
 #include <vtkm/Types.h>
@@ -171,7 +170,7 @@ struct VTKM_ALWAYS_EXPORT Caster
     }
 
     //we know the storage isn't a virtual but another storage type
-    //that means that the container holds a vtkm::cont::ArrayHandleAny<T>
+    //that means that the container holds a vtkm::cont::StorageAny<T>
     const auto* any = static_cast<const vtkm::cont::StorageAny<T, S>*>(container->GetStorage());
     VTKM_LOG_CAST_SUCC(container, *any);
     return any->GetHandle();

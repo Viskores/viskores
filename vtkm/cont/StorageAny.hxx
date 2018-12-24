@@ -17,11 +17,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ArrayHandleAny_hxx
-#define vtk_m_cont_ArrayHandleAny_hxx
+#ifndef vtk_m_cont_StorageAny_hxx
+#define vtk_m_cont_StorageAny_hxx
 
-#include <vtkm/cont/ArrayHandleAny.h>
-#include <vtkm/cont/ArrayHandleVirtual.hxx>
+#include <vtkm/cont/StorageAny.h>
+#include <vtkm/cont/StorageVirtual.hxx>
 
 namespace vtkm
 {
@@ -33,6 +33,14 @@ template <typename T, typename S>
 StorageAny<T, S>::StorageAny(const vtkm::cont::ArrayHandle<T, S>& ah)
   : vtkm::cont::StorageVirtual()
   , Handle(ah)
+{
+}
+
+VTKM_CONT
+template <typename T, typename S>
+StorageAny<T, S>::StorageAny(vtkm::cont::ArrayHandle<T, S>&& ah) noexcept
+  : vtkm::cont::StorageVirtual(),
+    Handle(std::move(ah))
 {
 }
 
@@ -151,4 +159,4 @@ void StorageAny<T, S>::TransferPortalForOutput(vtkm::cont::internal::TransferInf
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_ArrayHandleAny_hxx
+#endif //vtk_m_cont_StorageAny_hxx

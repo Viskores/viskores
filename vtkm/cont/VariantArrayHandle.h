@@ -77,7 +77,7 @@ public:
   template <typename T, typename Storage>
   VTKM_CONT VariantArrayHandleBase(const vtkm::cont::ArrayHandle<T, Storage>& array)
     : ArrayContainer(std::make_shared<internal::VariantArrayHandleContainer<T>>(
-        vtkm::cont::ArrayHandleAny<T>{ array }))
+        vtkm::cont::ArrayHandleVirtual<T>{ array }))
   {
   }
 

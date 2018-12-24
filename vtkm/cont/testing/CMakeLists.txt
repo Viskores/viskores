@@ -55,6 +55,7 @@ set(unit_tests
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
+  UnitTestArrayHandleVirtual.cxx
   UnitTestVariantArrayHandle.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestCellLocator.cxx
