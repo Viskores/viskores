@@ -95,7 +95,7 @@ namespace detail
 {
 
 template <class ValueType, class StorageTag, class DeviceAdapterTag>
-VTKM_CONT void CopyFromHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
+VTKM_CONT void CopyFromHandle(const vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
                               vtkm::interop::BufferState& state,
                               DeviceAdapterTag)
 {
@@ -145,7 +145,7 @@ VTKM_CONT void CopyFromHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>& ha
 
 template <class ValueType, class DeviceAdapterTag>
 VTKM_CONT void CopyFromHandle(
-  vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>& handle,
+  const vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>& handle,
   vtkm::interop::BufferState& state,
   DeviceAdapterTag)
 {
@@ -196,7 +196,7 @@ public:
   }
 
   template <typename StorageTag>
-  VTKM_CONT void Transfer(vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle) const
+  VTKM_CONT void Transfer(const vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle) const
   {
     //make a buffer for the handle if the user has forgotten too
     if (!glIsBuffer(*this->State.GetHandle()))

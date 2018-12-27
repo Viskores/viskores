@@ -18,12 +18,6 @@
 //  this software.
 //============================================================================
 
-//We first check if VTKM_DEVICE_ADAPTER is defined, so that when TBB and CUDA
-//includes this file we use the device adapter that they have set.
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
 // Must be included before any other GL includes:
 #include <GL/glew.h>
 
@@ -31,6 +25,7 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/interop/TransferToOpenGL.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -53,7 +48,7 @@
 
 #include "LoadShaders.h"
 
-template <typename DeviceAdapter, typename T>
+template <typename T>
 struct HelloVTKMInterop
 {
   vtkm::Vec<vtkm::Int32, 2> Dims;
@@ -64,7 +59,7 @@ struct HelloVTKMInterop
   vtkm::interop::BufferState VBOState;
   vtkm::interop::BufferState ColorState;
 
-  vtkm::cont::Timer<DeviceAdapter> Timer;
+  vtkm::cont::Timer<> Timer;
 
   std::vector<vtkm::Vec<T, 3>> InputData;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> InHandle;
@@ -172,8 +167,8 @@ struct HelloVTKMInterop
     GenerateSurfaceWorklet worklet(t);
     DispatcherType(worklet).Invoke(this->InHandle, this->OutCoords, this->OutColors);
 
-    vtkm::interop::TransferToOpenGL(this->OutCoords, this->VBOState, DeviceAdapter());
-    vtkm::interop::TransferToOpenGL(this->OutColors, this->ColorState, DeviceAdapter());
+    vtkm::interop::TransferToOpenGL(this->OutCoords, this->VBOState);
+    vtkm::interop::TransferToOpenGL(this->OutColors, this->ColorState);
     this->render();
     if (t > 10)
     {
@@ -184,8 +179,7 @@ struct HelloVTKMInterop
 };
 
 //global static so that glut callback can access it
-using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-HelloVTKMInterop<DeviceAdapter, vtkm::Float32>* helloWorld = nullptr;
+HelloVTKMInterop<vtkm::Float32>* helloWorld = nullptr;
 
 // Render the output using simple OpenGL
 void run()
@@ -201,9 +195,8 @@ void idle()
 
 int main(int argc, char** argv)
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
-  std::cout << "Running Hello World example on device adapter: " << DeviceAdapterTraits::GetName()
-            << std::endl;
+  vtkm::cont::Initialize(argc, argv);
+  std::cout << "Running Hello World example: " << std::endl;
 
   glewExperimental = GL_TRUE;
   glutInit(&argc, argv);
@@ -221,7 +214,7 @@ int main(int argc, char** argv)
     std::cout << "glewInit failed\n";
   }
 
-  HelloVTKMInterop<DeviceAdapter, vtkm::Float32> hw(width, height);
+  HelloVTKMInterop<vtkm::Float32> hw(width, height);
   helloWorld = &hw;
 
   glutDisplayFunc(run);

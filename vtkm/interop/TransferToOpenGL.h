@@ -46,7 +46,8 @@ struct TransferToOpenGL
                             BufferState& state) const
   {
     vtkm::interop::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
-    return toGL.Transfer(handle);
+    toGL.Transfer(handle);
+    return true;
   }
 };
 }
@@ -64,7 +65,7 @@ struct TransferToOpenGL
 ///
 ///
 template <typename ValueType, class StorageTag, class DeviceAdapterTag>
-VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
+VTKM_CONT void TransferToOpenGL(const vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
                                 BufferState& state,
                                 DeviceAdapterTag)
 {
@@ -86,17 +87,17 @@ VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> h
 /// This function will throw exceptions if the transfer wasn't possible
 ///
 template <typename ValueType, typename StorageTag>
-VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
+VTKM_CONT void TransferToOpenGL(const vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
                                 BufferState& state)
 {
 
   vtkm::cont::DeviceAdapterId devId = handle.GetDeviceAdapterId();
-  bool success = vtkm::cont::TryExecuteOnDevice(devId, TransferToOpenGL, handle, state);
+  bool success = vtkm::cont::TryExecuteOnDevice(devId, detail::TransferToOpenGL{}, handle, state);
   if (!success)
   {
     //Generally we are here because the devId is undefined
     //or for some reason the last executed device is now disabled
-    success = vtkm::cont::TryExecute(TransferToOpenGL, handle, state);
+    success = vtkm::cont::TryExecute(detail::TransferToOpenGL{}, handle, state);
   }
   if (!success)
   {
