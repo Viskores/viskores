@@ -59,7 +59,6 @@ protected:
   using DefaultConstHandle = typename DefaultHandle::ExecutionTypes<Device>::PortalConst;
   using CartesianConstPortal = typename CartesianArrayHandle::ExecutionTypes<Device>::PortalConst;
 
-  vtkm::Float32 InverseDeltaScalar;
   DefaultConstHandle CoordPortals[3];
   CartesianConstPortal Coordinates;
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
@@ -331,14 +330,16 @@ public:
     : ColorMap(colorMap.PrepareForInput(Device()))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
+    , InverseDeltaScalar(minScalar)
     , Locator(locator)
   {
     ColorMapSize = colorMap.GetNumberOfValues() - 1;
     if ((maxScalar - minScalar) != 0.f)
+    {
       InverseDeltaScalar = 1.f / (maxScalar - minScalar);
-    else
-      InverseDeltaScalar = minScalar;
+    }
   }
+
   using ControlSignature = void(FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
@@ -527,13 +528,14 @@ public:
     : ColorMap(colorMap.PrepareForInput(Device()))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
+    , InverseDeltaScalar(minScalar)
     , Locator(locator)
   {
     ColorMapSize = colorMap.GetNumberOfValues() - 1;
     if ((maxScalar - minScalar) != 0.f)
+    {
       InverseDeltaScalar = 1.f / (maxScalar - minScalar);
-    else
-      InverseDeltaScalar = minScalar;
+    }
   }
   using ControlSignature = void(FieldIn<>,
                                 FieldIn<>,
