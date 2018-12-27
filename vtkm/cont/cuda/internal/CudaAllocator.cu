@@ -40,9 +40,16 @@ namespace
 static std::once_flag IsInitialized;
 #endif
 
-// True if concurrent pagable managed memory is not disabled by user via a system
-// environment variable and all devices support it.
+// Holds how VTK-m currently allocates memory.
+// When VTK-m is initialized we set this based on the hardware support ( HardwareSupportsManagedMemory ).
+// The user can explicitly disable managed memory through an enviornment variable
+// or by calling a function on the CudaAllocator.
+// Likewise managed memory can be re-enabled by calling a function on CudaAllocator
+// if and only if the underlying hardware supports pageable managed memory
 static bool ManagedMemoryEnabled = false;
+
+// True if concurrent pagable managed memory is supported by the machines hardware.
+static bool HardwareSupportsManagedMemory = false;
 
 // Avoid overhead of cudaMemAdvise and cudaMemPrefetchAsync for small buffers.
 // This value should be > 0 or else these functions will error out.
@@ -62,6 +69,35 @@ bool CudaAllocator::UsingManagedMemory()
 {
   CudaAllocator::Initialize();
   return ManagedMemoryEnabled;
+}
+
+void CudaAllocator::ForceManagedMemoryOff()
+{
+  if (HardwareSupportsManagedMemory)
+  {
+    ManagedMemoryEnabled = false;
+    VTKM_LOG_F(vtkm::cont::LogLevel::Info, "CudaAllocator disabling managed memory");
+  }
+  else
+  {
+    VTKM_LOG_F(
+      vtkm::cont::LogLevel::Warn,
+      "CudaAllocator trying to disable managed memory on hardware that doesn't support it");
+  }
+}
+
+void CudaAllocator::ForceManagedMemoryOn()
+{
+  if (HardwareSupportsManagedMemory)
+  {
+    ManagedMemoryEnabled = true;
+    VTKM_LOG_F(vtkm::cont::LogLevel::Info, "CudaAllocator enabling managed memory");
+  }
+  else
+  {
+    VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
+               "CudaAllocator trying to enable managed memory on hardware that doesn't support it");
+  }
 }
 
 bool CudaAllocator::IsDevicePointer(const void* ptr)
@@ -273,6 +309,13 @@ void CudaAllocator::Initialize()
       managedMemorySupported = managedMemorySupported && prop.concurrentManagedAccess;
     }
 
+    HardwareSupportsManagedMemory = managedMemorySupported;
+    ManagedMemoryEnabled = managedMemorySupported;
+
+    VTKM_LOG_F(vtkm::cont::LogLevel::Info,
+               "CudaAllocator hardware %s managed memory",
+               HardwareSupportsManagedMemory ? "supports" : "doesn't support");
+
 // Check if users want to disable managed memory
 #pragma warning(push)
 // getenv is not thread safe on windows but since it's inside a call_once block so
@@ -283,9 +326,11 @@ void CudaAllocator::Initialize()
     if (managedMemorySupported && buf != nullptr)
     { //only makes sense to disable managed memory if the hardware supports it
       //in the first place
-      managedMemorySupported = (std::string(buf) != "1");
+      ManagedMemoryEnabled = false;
+      VTKM_LOG_F(
+        vtkm::cont::LogLevel::Info,
+        "CudaAllocator disabling managed memory due to NO_VTKM_MANAGED_MEMORY env variable");
     }
-    ManagedMemoryEnabled = managedMemorySupported;
   });
 #endif
 }
