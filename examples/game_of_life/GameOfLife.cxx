@@ -31,6 +31,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/interop/TransferToOpenGL.h>
@@ -314,6 +315,8 @@ void populate(std::vector<vtkm::UInt8>& input_state,
 
 int main(int argc, char** argv)
 {
+  vtkm::cont::Initialize(argc, argv);
+
   glewExperimental = GL_TRUE;
   glutInit(&argc, argv);
 
