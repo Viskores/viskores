@@ -19,7 +19,8 @@
 //============================================================================
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/Initialize.h>
+
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
