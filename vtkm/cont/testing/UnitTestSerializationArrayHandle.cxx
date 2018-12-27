@@ -36,7 +36,8 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 #include <vtkm/cont/ArrayHandleZip.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
+
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/cont/testing/TestingSerialization.h>
 
@@ -75,12 +76,10 @@ constexpr vtkm::Id ArraySize = 10;
 
 using TestTypesList =
   vtkm::ListTagBase<vtkm::Int8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
-using TestStorageList = vtkm::ListTagBase<vtkm::cont::StorageTagBasic>;
 
 template <typename T, typename S>
-inline vtkm::cont::DynamicArrayHandleBase<vtkm::ListTagAppendUnique<TestTypesList, T>,
-                                          vtkm::ListTagAppendUnique<TestStorageList, S>>
-MakeTestDynamicArrayHandle(const vtkm::cont::ArrayHandle<T, S>& array)
+inline vtkm::cont::VariantArrayHandleBase<vtkm::ListTagAppendUnique<TestTypesList, T>>
+MakeTestVariantArrayHandle(const vtkm::cont::ArrayHandle<T, S>& array)
 {
   return array;
 }
@@ -92,7 +91,7 @@ struct TestArrayHandleBasic
   {
     auto array = RandomArrayHandle<T>::Make(ArraySize);
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -106,7 +105,7 @@ struct TestArrayHandleCartesianProduct
                                                    RandomArrayHandle<T>::Make(ArraySize),
                                                    RandomArrayHandle<T>::Make(ArraySize));
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -116,9 +115,9 @@ struct TestArrayHandleCast
   void operator()(T) const
   {
     auto array =
-      vtkm::cont::make_ArrayHandleCast(RandomArrayHandle<vtkm::Int8>::Make(ArraySize), T{});
+      vtkm::cont::make_ArrayHandleCast<T>(RandomArrayHandle<vtkm::Int8>::Make(ArraySize));
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -130,7 +129,7 @@ struct TestArrayHandleCompositeVector
     auto array = vtkm::cont::make_ArrayHandleCompositeVector(RandomArrayHandle<T>::Make(ArraySize),
                                                              RandomArrayHandle<T>::Make(ArraySize));
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -142,7 +141,7 @@ struct TestArrayHandleConcatenate
     auto array = vtkm::cont::make_ArrayHandleConcatenate(RandomArrayHandle<T>::Make(ArraySize),
                                                          RandomArrayHandle<T>::Make(ArraySize));
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -154,7 +153,7 @@ struct TestArrayHandleConstant
     T cval = RandomValue<T>::Make();
     auto array = vtkm::cont::make_ArrayHandleConstant(cval, ArraySize);
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -167,7 +166,7 @@ struct TestArrayHandleCounting
     T step = RandomValue<T>::Make(0, 5);
     auto array = vtkm::cont::make_ArrayHandleCounting(start, step, ArraySize);
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -180,7 +179,7 @@ struct TestArrayHandleExtractComponent
     auto array = vtkm::cont::make_ArrayHandleExtractComponent(
       RandomArrayHandle<T>::Make(ArraySize), RandomValue<vtkm::IdComponent>::Make(0, numComps - 1));
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -197,21 +196,21 @@ struct TestArrayHandleGroupVec
       {
         auto array = vtkm::cont::make_ArrayHandleGroupVec<3>(flat);
         RunTest(array);
-        RunTest(MakeTestDynamicArrayHandle(array));
+        RunTest(MakeTestVariantArrayHandle(array));
         break;
       }
       case 4:
       {
         auto array = vtkm::cont::make_ArrayHandleGroupVec<4>(flat);
         RunTest(array);
-        RunTest(MakeTestDynamicArrayHandle(array));
+        RunTest(MakeTestVariantArrayHandle(array));
         break;
       }
       default:
       {
         auto array = vtkm::cont::make_ArrayHandleGroupVec<2>(flat);
         RunTest(array);
-        RunTest(MakeTestDynamicArrayHandle(array));
+        RunTest(MakeTestVariantArrayHandle(array));
         break;
       }
     }
@@ -237,9 +236,9 @@ struct TestArrayHandleGroupVecVariable
                                                               vtkm::cont::make_ArrayHandle(comps));
     RunTest(array);
 
-    // cannot make a DynamicArrayHandle containing ArrayHandleGroupVecVariable
+    // cannot make a VariantArrayHandle containing ArrayHandleGroupVecVariable
     // because of the variable number of components of its values.
-    // RunTest(MakeTestDynamicArrayHandle(array));
+    // RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -270,7 +269,7 @@ struct TestArrayHandleImplicit
     ImplicitFunctor<T> functor(RandomValue<T>::Make(2, 9));
     auto array = vtkm::cont::make_ArrayHandleImplicit(functor, ArraySize);
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -279,7 +278,7 @@ void TestArrayHandleIndex()
   auto size = RandomValue<vtkm::Id>::Make(2, 10);
   auto array = vtkm::cont::ArrayHandleIndex(size);
   RunTest(array);
-  RunTest(MakeTestDynamicArrayHandle(array));
+  RunTest(MakeTestVariantArrayHandle(array));
 }
 
 struct TestArrayHandlePermutation
@@ -296,7 +295,7 @@ struct TestArrayHandlePermutation
       RandomArrayHandle<vtkm::Id>::Make(ArraySize, 0, ArraySize - 1),
       RandomArrayHandle<T>::Make(ArraySize));
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -307,7 +306,7 @@ struct TestArrayHandleReverse
   {
     auto array = vtkm::cont::make_ArrayHandleReverse(RandomArrayHandle<T>::Make(ArraySize));
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
 
@@ -330,7 +329,7 @@ struct TestArrayHandleSwizzle
         auto array = make_ArrayHandleSwizzle(RandomArrayHandle<vtkm::Vec<T, 3>>::Make(ArraySize),
                                              map2s[RandomValue<int>::Make(0, 5)]);
         RunTest(array);
-        RunTest(MakeTestDynamicArrayHandle(array));
+        RunTest(MakeTestVariantArrayHandle(array));
         break;
       }
       case 3:
@@ -339,12 +338,13 @@ struct TestArrayHandleSwizzle
         auto array = make_ArrayHandleSwizzle(RandomArrayHandle<vtkm::Vec<T, 3>>::Make(ArraySize),
                                              map3s[RandomValue<int>::Make(0, 5)]);
         RunTest(array);
-        RunTest(MakeTestDynamicArrayHandle(array));
+        RunTest(MakeTestVariantArrayHandle(array));
         break;
       }
     }
   }
 };
+
 
 struct TestArrayHandleTransform
 {
@@ -362,7 +362,7 @@ struct TestArrayHandleTransform
     template <typename T>
     VTKM_EXEC_CONT T operator()(const T& in) const
     {
-      return in / T{ 2 };
+      return static_cast<T>(in / T{ 2 });
     }
   };
 
@@ -372,7 +372,7 @@ struct TestArrayHandleTransform
     auto array = vtkm::cont::make_ArrayHandleTransform(RandomArrayHandle<T>::Make(ArraySize),
                                                        TransformFunctor{});
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 
   template <typename T>
@@ -381,7 +381,7 @@ struct TestArrayHandleTransform
     auto array = vtkm::cont::make_ArrayHandleTransform(
       RandomArrayHandle<T>::Make(ArraySize), TransformFunctor{}, InverseTransformFunctor{});
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 
   template <typename T>
@@ -404,7 +404,7 @@ void TestArrayHandleUniformPointCoordinates()
 {
   auto array = MakeRandomArrayHandleUniformPointCoordinates();
   RunTest(array);
-  RunTest(MakeTestDynamicArrayHandle(array));
+  RunTest(MakeTestVariantArrayHandle(array));
 }
 
 void TestArrayHandleVirtualCoordinates()
@@ -432,7 +432,7 @@ void TestArrayHandleVirtualCoordinates()
   }
 
   RunTest(array);
-  RunTest(MakeTestDynamicArrayHandle(array));
+  RunTest(MakeTestVariantArrayHandle(array));
 }
 
 struct TestArrayHandleZip
@@ -443,9 +443,10 @@ struct TestArrayHandleZip
     auto array = vtkm::cont::make_ArrayHandleZip(RandomArrayHandle<T>::Make(ArraySize),
                                                  vtkm::cont::ArrayHandleIndex(ArraySize));
     RunTest(array);
-    RunTest(MakeTestDynamicArrayHandle(array));
+    RunTest(MakeTestVariantArrayHandle(array));
   }
 };
+
 
 //-----------------------------------------------------------------------------
 void TestArrayHandleSerialization()

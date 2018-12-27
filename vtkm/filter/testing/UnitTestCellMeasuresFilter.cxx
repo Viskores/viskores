@@ -20,7 +20,6 @@
 
 #include "vtkm/filter/CellMeasures.h"
 
-#include "vtkm/cont/DynamicArrayHandle.h"
 #include "vtkm/cont/testing/MakeTestDataSet.h"
 #include "vtkm/cont/testing/Testing.h"
 
@@ -51,7 +50,7 @@ void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
 
   // Check that the empty measure name above produced a field with the expected name.
   vols.SetCellMeasureName("measure");
-  vtkm::cont::DynamicArrayHandle temp = outputData.GetField(vols.GetCellMeasureName()).GetData();
+  auto temp = outputData.GetField(vols.GetCellMeasureName()).GetData();
   VTKM_TEST_ASSERT(temp.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
                    "Output field could not be found or was improper.");
 

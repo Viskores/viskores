@@ -20,32 +20,36 @@
 
 #include <sstream>
 #include <typeindex>
-#include <vtkm/cont/DynamicArrayHandle.h>
+
+#include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {
 namespace cont
 {
+namespace internal
+{
+
+VariantArrayHandleContainerBase::VariantArrayHandleContainerBase()
+{
+}
+
+VariantArrayHandleContainerBase::~VariantArrayHandleContainerBase()
+{
+}
+}
+
 namespace detail
 {
-
-PolymorphicArrayHandleContainerBase::PolymorphicArrayHandleContainerBase()
-{
-}
-
-PolymorphicArrayHandleContainerBase::~PolymorphicArrayHandleContainerBase()
-{
-}
-
-void ThrowCastAndCallException(PolymorphicArrayHandleContainerBase* ptr,
-                               const std::type_info* type,
-                               const std::type_info* storage)
+void ThrowCastAndCallException(const vtkm::cont::internal::VariantArrayHandleContainerBase& ref,
+                               const std::type_info& type)
 {
   std::ostringstream out;
   out << "Could not find appropriate cast for array in CastAndCall1.\n"
          "Array: ";
-  ptr->PrintSummary(out);
-  out << "TypeList: " << type->name() << "\nStorageList: " << storage->name() << "\n";
+  ref.PrintSummary(out);
+  out << "TypeList: " << type.name() << "\n";
   throw vtkm::cont::ErrorBadValue(out.str());
 }
 }

@@ -29,13 +29,12 @@ namespace cont
 namespace detail
 {
 
-template <typename TypeList, typename StorageList>
+template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeComputeImpl(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
   vtkm::cont::Field::Association assoc,
-  TypeList,
-  StorageList)
+  TypeList)
 {
   vtkm::cont::Field field;
   try
@@ -48,16 +47,15 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeComputeImpl(
     return vtkm::cont::ArrayHandle<vtkm::Range>();
   }
 
-  return field.GetRange(TypeList(), StorageList());
+  return field.GetRange(TypeList());
 }
 
-template <typename TypeList, typename StorageList>
+template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeComputeImpl(
   const vtkm::cont::MultiBlock& multiblock,
   const std::string& name,
   vtkm::cont::Field::Association assoc,
-  TypeList,
-  StorageList)
+  TypeList)
 {
   std::vector<vtkm::Range> result_vector = std::accumulate(
     multiblock.begin(),
@@ -65,7 +63,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeComputeImpl(
     std::vector<vtkm::Range>(),
     [&](const std::vector<vtkm::Range>& accumulated_value, const vtkm::cont::DataSet& dataset) {
       vtkm::cont::ArrayHandle<vtkm::Range> block_range =
-        vtkm::cont::detail::FieldRangeComputeImpl(dataset, name, assoc, TypeList(), StorageList());
+        vtkm::cont::detail::FieldRangeComputeImpl(dataset, name, assoc, TypeList());
 
       std::vector<vtkm::Range> result = accumulated_value;
 

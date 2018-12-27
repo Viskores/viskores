@@ -23,6 +23,7 @@ set(headers
   ArrayHandleBasicImpl.h
   ArrayHandleBasicImpl.hxx
   ArrayHandleExecutionManager.h
+  VariantArrayHandleContainer.h
   ArrayManagerExecution.h
   ArrayManagerExecutionShareWithControl.h
   ArrayPortalFromIterators.h
@@ -45,6 +46,7 @@ set(headers
   ReverseConnectivityBuilder.h
   SimplePolymorphicContainer.h
   StorageError.h
+  TransferInfo.h
   VirtualObjectTransfer.h
   VirtualObjectTransferShareWithControl.h
   )

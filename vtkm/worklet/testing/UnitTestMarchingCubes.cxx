@@ -23,7 +23,6 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -266,12 +265,11 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   //Set point scalar
-  dataSet.AddField(vtkm::cont::Field("distanceToOrigin",
-                                     vtkm::cont::Field::Association::POINTS,
-                                     vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
+  dataSet.AddField(vtkm::cont::Field(
+    "distanceToOrigin", vtkm::cont::Field::Association::POINTS, distanceToOrigin));
   dataSet.AddField(vtkm::cont::Field("distanceToOther",
                                      vtkm::cont::Field::Association::POINTS,
-                                     vtkm::cont::DynamicArrayHandle(distanceToOther)));
+                                     vtkm::cont::VariantArrayHandle(distanceToOther)));
 
   CellSet cellSet("cells");
   cellSet.Fill((dim + 1) * (dim + 1) * (dim + 1), HexTag::Id, HexTraits::NUM_POINTS, connectivity);
@@ -288,7 +286,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
 void TestMarchingCubesUniformGrid()
 {
-  std::cout << "Testing MarchingCubes filter on a uniform grid" << std::endl;
+  std::cout << "Testing MarchingCubes worklet on a uniform grid" << std::endl;
 
   vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::DataSet dataSet = vtkm_ut_mc_worklet::MakeIsosurfaceTestDataSet(dims);
@@ -343,7 +341,7 @@ void TestMarchingCubesUniformGrid()
 
 void TestMarchingCubesExplicit()
 {
-  std::cout << "Testing MarchingCubes filter on explicit data" << std::endl;
+  std::cout << "Testing MarchingCubes worklet on explicit data" << std::endl;
 
   using DataSetGenerator = vtkm_ut_mc_worklet::MakeRadiantDataSet;
   using Vec3Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
@@ -402,11 +400,11 @@ void TestMarchingCubesExplicit()
   VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues(),
                    "Output cell data invalid");
   VTKM_TEST_ASSERT(test_equal(vertices.GetNumberOfValues(), 2472),
-                   "Wrong vertices result for MarchingCubes filter");
+                   "Wrong vertices result for MarchingCubes worklet");
   VTKM_TEST_ASSERT(test_equal(normals.GetNumberOfValues(), 2472),
-                   "Wrong normals result for MarchingCubes filter");
+                   "Wrong normals result for MarchingCubes worklet");
   VTKM_TEST_ASSERT(test_equal(scalars.GetNumberOfValues(), 2472),
-                   "Wrong scalars result for MarchingCubes filter");
+                   "Wrong scalars result for MarchingCubes worklet");
 }
 
 void TestMarchingCubes()

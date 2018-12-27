@@ -33,7 +33,6 @@
 
 namespace
 {
-
 // clang-format off
 template<typename T>
 void is_noexcept_movable()
@@ -77,10 +76,26 @@ struct IsNoExceptHandle
   template <typename T>
   void operator()(T) const
   {
-    is_noexcept_movable< vtkm::cont::ArrayHandle<T> >();
+    using HandleType = vtkm::cont::ArrayHandle<T>;
+    using VirtualType = vtkm::cont::ArrayHandleVirtual<T>;
+
+    //verify the handle type
+    is_noexcept_movable<HandleType>();
+    is_noexcept_movable<VirtualType>();
+
+    //verify the input portals of the handle
+    is_noexcept_movable<decltype(
+      std::declval<HandleType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}))>();
+    is_noexcept_movable<decltype(
+      std::declval<VirtualType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}))>();
+
+    //verify the output portals of the handle
+    is_noexcept_movable<decltype(
+      std::declval<HandleType>().PrepareForOutput(2, vtkm::cont::DeviceAdapterTagSerial{}))>();
+    is_noexcept_movable<decltype(
+      std::declval<VirtualType>().PrepareForOutput(2, vtkm::cont::DeviceAdapterTagSerial{}))>();
   }
 };
-
 }
 
 //-----------------------------------------------------------------------------
@@ -91,23 +106,22 @@ void TestContDataTypesHaveMoveSemantics()
   is_triv_noexcept_movable<vtkm::Vec<vtkm::Vec<float,3>,3>>();
 
 
-  //verify that ArrayHandles are noexcept movable
+  //verify that ArrayHandles and related portals are noexcept movable
   //allowing for efficient storage in containers such as std::vector
   vtkm::testing::Testing::TryTypes( IsNoExceptHandle{}, vtkm::TypeListTagAll{} );
 
-  //verify the DataSet, Field, and CoordinateSystem,
+  //verify the DataSet, Field, CoordinateSystem, and ArrayHandleVirtualCoordinates
   //all have efficient storage in containers such as std::vector
   is_noexcept_movable<vtkm::cont::DataSet>();
   is_noexcept_movable<vtkm::cont::Field>();
   is_noexcept_movable<vtkm::cont::CoordinateSystem>();
-
+  is_noexcept_movable<vtkm::cont::ArrayHandleVirtualCoordinates>();
 
   //verify the CellSetStructured, and CellSetExplicit
   //have efficient storage in containers such as std::vector
   is_noexcept_movable<vtkm::cont::CellSetStructured<2>>();
   is_noexcept_movable<vtkm::cont::CellSetStructured<3>>();
   is_noexcept_movable<vtkm::cont::CellSetExplicit<>>();
-
 }
 
 

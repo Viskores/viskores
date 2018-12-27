@@ -55,6 +55,8 @@ set(unit_tests
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
+  UnitTestArrayHandleVirtual.cxx
+  UnitTestVariantArrayHandle.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestCellLocator.cxx
   UnitTestCellSetExplicit.cxx
@@ -68,7 +70,6 @@ set(unit_tests
   UnitTestDataSetUniform.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
-  UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
   UnitTestFieldRangeCompute.cxx
   UnitTestLogging.cxx

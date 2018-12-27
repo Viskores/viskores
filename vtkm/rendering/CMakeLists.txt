@@ -87,7 +87,6 @@ set(headers
   )
 
 set(sources
-  Actor.cxx
   AxisAnnotation.cxx
   AxisAnnotation2D.cxx
   AxisAnnotation3D.cxx
@@ -154,6 +153,7 @@ set(osmesa_sources
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
+  Actor.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx

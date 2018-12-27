@@ -22,13 +22,14 @@ set(headers
   Algorithm.h
   ArrayCopy.h
   ArrayHandle.h
-  ArrayHandleCast.h
   ArrayHandleCartesianProduct.h
+  ArrayHandleCast.h
   ArrayHandleCompositeVector.h
+  ArrayHandleConcatenate.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
-  ArrayHandleExtractComponent.h
   ArrayHandleDiscard.h
+  ArrayHandleExtractComponent.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
@@ -40,16 +41,16 @@ set(headers
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayHandleView.h
+  ArrayHandleVirtual.h
   ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
-  ArrayHandleConcatenate.h
   ArrayRangeCompute.h
   AssignerMultiBlock.h
   AtomicArray.h
-  BoundingIntervalHierarchyNode.h
   BoundingIntervalHierarchy.h
+  BoundingIntervalHierarchyNode.h
   BoundsCompute.h
   BoundsGlobalCompute.h
   CellLocator.h
@@ -58,9 +59,9 @@ set(headers
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
+  CellSetPermutation.h
   CellSetSingleType.h
   CellSetStructured.h
-  CellSetPermutation.h
   ColorTable.h
   ColorTableSamples.h
   CoordinateSystem.h
@@ -72,7 +73,6 @@ set(headers
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
   DeviceAdapterListTag.h
-  DynamicArrayHandle.h
   DynamicCellSet.h
   EnvironmentTracker.h
   Error.h
@@ -80,8 +80,8 @@ set(headers
   ErrorBadDevice.h
   ErrorBadType.h
   ErrorBadValue.h
-  ErrorFilterExecution.h
   ErrorExecution.h
+  ErrorFilterExecution.h
   ErrorInternal.h
   ExecutionAndControlObjectBase.h
   ExecutionObjectBase.h
@@ -98,17 +98,21 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
+  StorageAny.h
   StorageBasic.h
   StorageImplicit.h
   StorageListTag.h
+  StorageVirtual.h
   Timer.h
   TryExecute.h
   TypeString.h
+  VariantArrayHandle.h
   VirtualObjectHandle.h
   )
 
 set(template_sources
   ArrayHandle.hxx
+  ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
   BoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
@@ -117,7 +121,9 @@ set(template_sources
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
+  StorageAny.hxx
   StorageBasic.hxx
+  StorageVirtual.hxx
   )
 
 set(sources
@@ -133,9 +139,9 @@ set(sources
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
-  DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
+  ErrorBadType.cxx
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
@@ -143,7 +149,7 @@ set(sources
   internal/ArrayManagerExecutionShareWithControl.cxx
   internal/DeviceAdapterTag.cxx
   internal/SimplePolymorphicContainer.cxx
-  internal/SimplePolymorphicContainer.cxx
+  internal/TransferInfo.cxx
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
@@ -151,7 +157,9 @@ set(sources
   RuntimeDeviceInformation.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
+  StorageVirtual.cxx
   TryExecute.cxx
+  VariantArrayHandle.cxx
   )
 
 # This list of sources has code that uses devices and so might need to be
@@ -169,6 +177,7 @@ vtkm_library( NAME vtkm_cont
               HEADERS ${headers}
               WRAP_FOR_CUDA ${device_sources}
             )
+
 add_subdirectory(internal)
 add_subdirectory(arg)
 add_subdirectory(serial)

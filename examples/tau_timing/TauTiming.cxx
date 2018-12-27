@@ -47,7 +47,6 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
 static bool printProgress = true;

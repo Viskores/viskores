@@ -53,5 +53,6 @@ void RenderTests()
 
 int UnitTestMapperVolume(int, char* [])
 {
+  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   return vtkm::cont::testing::Testing::Run(RenderTests);
 }

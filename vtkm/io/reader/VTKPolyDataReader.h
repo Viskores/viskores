@@ -49,15 +49,13 @@ inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
   vtkm::cont::ArrayHandle<T> out;
   out.Allocate(size);
 
-  using IteratorType = typename vtkm::cont::ArrayPortalToIterators<
-    typename vtkm::cont::ArrayHandle<T>::PortalControl>::IteratorType;
-  IteratorType outp = vtkm::cont::ArrayPortalToIteratorBegin(out.GetPortalControl());
+  auto outp = vtkm::cont::ArrayPortalToIteratorBegin(out.GetPortalControl());
   for (std::size_t i = 0; i < arrays.size(); ++i)
   {
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(arrays[i].GetPortalConstControl()),
               vtkm::cont::ArrayPortalToIteratorEnd(arrays[i].GetPortalConstControl()),
               outp);
-    using DifferenceType = typename std::iterator_traits<IteratorType>::difference_type;
+    using DifferenceType = typename std::iterator_traits<decltype(outp)>::difference_type;
     std::advance(outp, static_cast<DifferenceType>(arrays[i].GetNumberOfValues()));
   }
 

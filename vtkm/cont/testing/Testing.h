@@ -30,8 +30,8 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 
 // clang-format off
@@ -216,28 +216,28 @@ struct TestEqualArrayHandle
     }
   }
 
-  template <typename T, typename StorageTag, typename TypeList, typename StorageList>
+  template <typename T, typename StorageTag, typename TypeList>
   VTKM_CONT void operator()(
     const vtkm::cont::ArrayHandle<T, StorageTag>& array1,
-    const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& array2,
+    const vtkm::cont::VariantArrayHandleBase<TypeList>& array2,
     TestEqualResult& result) const
   {
     array2.CastAndCall(*this, array1, result);
   }
 
-  template <typename T, typename StorageTag, typename TypeList, typename StorageList>
+  template <typename T, typename StorageTag, typename TypeList>
   VTKM_CONT void operator()(
-    const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& array1,
+    const vtkm::cont::VariantArrayHandleBase<TypeList>& array1,
     const vtkm::cont::ArrayHandle<T, StorageTag>& array2,
     TestEqualResult& result) const
   {
     array1.CastAndCall(*this, array2, result);
   }
 
-  template <typename TypeList1, typename StorageList1, typename TypeList2, typename StorageList2>
+  template <typename TypeList1, typename TypeList2>
   VTKM_CONT void operator()(
-    const vtkm::cont::DynamicArrayHandleBase<TypeList1, StorageList1>& array1,
-    const vtkm::cont::DynamicArrayHandleBase<TypeList2, StorageList2>& array2,
+    const vtkm::cont::VariantArrayHandleBase<TypeList1>& array1,
+    const vtkm::cont::VariantArrayHandleBase<TypeList2>& array2,
     TestEqualResult& result) const
   {
     array2.CastAndCall(*this, array1, result);
@@ -359,12 +359,10 @@ inline VTKM_CONT TestEqualResult test_equal_CellSets(const CellSet1& cellset1,
   return result;
 }
 
-template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG,
-          typename FieldStorageList = VTKM_DEFAULT_STORAGE_LIST_TAG>
+template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG>
 inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
                                                    const vtkm::cont::Field& f2,
-                                                   FieldTypeList fTtypes = FieldTypeList(),
-                                                   FieldStorageList fStypes = FieldStorageList())
+                                                   FieldTypeList fTtypes = FieldTypeList())
 {
   TestEqualResult result;
 
@@ -397,8 +395,8 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
     }
   }
 
-  result = test_equal_ArrayHandles(f1.GetData().ResetTypeAndStorageLists(fTtypes, fStypes),
-                                   f2.GetData().ResetTypeAndStorageLists(fTtypes, fStypes));
+  result = test_equal_ArrayHandles(f1.GetData().ResetTypes(fTtypes),
+                                   f2.GetData().ResetTypes(fTtypes));
   if (!result)
   {
     result.PushMessage("data doesn't match");
@@ -408,13 +406,11 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
 }
 
 template <typename CellSetTypes = VTKM_DEFAULT_CELL_SET_LIST_TAG,
-          typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG,
-          typename FieldStorageList = VTKM_DEFAULT_STORAGE_LIST_TAG>
+          typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG>
 inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& ds1,
                                                      const vtkm::cont::DataSet& ds2,
                                                      CellSetTypes ctypes = CellSetTypes(),
-                                                     FieldTypeList fTtypes = FieldTypeList(),
-                                                     FieldStorageList fStypes = FieldStorageList())
+                                                     FieldTypeList fTtypes = FieldTypeList())
 {
   TestEqualResult result;
   if (ds1.GetNumberOfCoordinateSystems() != ds2.GetNumberOfCoordinateSystems())
@@ -458,7 +454,7 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
   }
   for (vtkm::IdComponent i = 0; i < ds1.GetNumberOfFields(); ++i)
   {
-    result = test_equal_Fields(ds1.GetField(i), ds2.GetField(i), fTtypes, fStypes);
+    result = test_equal_Fields(ds1.GetField(i), ds2.GetField(i), fTtypes);
     if (!result)
     {
       result.PushMessage(

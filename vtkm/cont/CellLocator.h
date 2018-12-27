@@ -25,6 +25,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/CellLocator.h>
 
 namespace vtkm

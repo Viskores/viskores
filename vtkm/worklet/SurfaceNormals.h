@@ -20,12 +20,14 @@
 #ifndef vtk_m_worklet_SurfaceNormals_h
 #define vtk_m_worklet_SurfaceNormals_h
 
+
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/CellTraits.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {
@@ -141,11 +143,10 @@ public:
     }
   }
 
-  template <typename CellSetType, typename CoordsStorageList, typename NormalCompType>
-  void Run(
-    const CellSetType& cellset,
-    const vtkm::cont::DynamicArrayHandleBase<vtkm::TypeListTagFieldVec3, CoordsStorageList>& points,
-    vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals)
+  template <typename CellSetType, typename NormalCompType>
+  void Run(const CellSetType& cellset,
+           const vtkm::cont::VariantArrayHandleBase<vtkm::TypeListTagFieldVec3>& points,
+           vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals)
   {
     if (this->Normalize)
     {
@@ -205,13 +206,9 @@ public:
     vtkm::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);
   }
 
-  template <typename CellSetType,
-            typename FaceNormalTypeList,
-            typename FaceNormalStorageList,
-            typename NormalCompType>
+  template <typename CellSetType, typename FaceNormalTypeList, typename NormalCompType>
   void Run(const CellSetType& cellset,
-           const vtkm::cont::DynamicArrayHandleBase<FaceNormalTypeList, FaceNormalStorageList>&
-             faceNormals,
+           const vtkm::cont::VariantArrayHandleBase<FaceNormalTypeList>& faceNormals,
            vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals)
   {
     vtkm::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);

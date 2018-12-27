@@ -231,18 +231,14 @@ inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::MultiBlock& input,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   using TypeList = typename DerivedPolicy::FieldTypeList;
-  using StorageList = typename DerivedPolicy::FieldStorageList;
   if (this->Range.IsNonEmpty())
   {
     this->ComputedRange = this->Range;
   }
   else
   {
-    auto handle = vtkm::cont::FieldRangeGlobalCompute(input,
-                                                      this->GetActiveFieldName(),
-                                                      this->GetActiveFieldAssociation(),
-                                                      TypeList(),
-                                                      StorageList());
+    auto handle = vtkm::cont::FieldRangeGlobalCompute(
+      input, this->GetActiveFieldName(), this->GetActiveFieldAssociation(), TypeList());
     if (handle.GetNumberOfValues() != 1)
     {
       throw vtkm::cont::ErrorFilterExecution("expecting scalar field.");

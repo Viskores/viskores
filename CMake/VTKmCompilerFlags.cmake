@@ -101,7 +101,7 @@ if(VTKM_COMPILER_IS_MSVC)
   #Setup MSVC warnings with CUDA and CXX
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd4702 -wd4505>)
   if(TARGET vtkm::cuda)
-    target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-wd4702,-wd4505  -Xcudafe=--display_error_number,--diag_suppress=1394,--diag_suppress=766>)
+    target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-wd4702,-wd4505  -Xcudafe=--diag_suppress=1394,--diag_suppress=766>)
   endif()
 
   if(MSVC_VERSION LESS 1900)
@@ -124,7 +124,7 @@ elseif(VTKM_COMPILER_IS_ICC)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   set(cxx_flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
-  set(cuda_flags -Xcudafe=--display_error_number -Xcompiler=-Wall,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-local-typedefs,-Wno-unused-function,-Wno-long-long,-Wcast-align,-Wconversion,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-Wunused-parameter,-fno-common)
+  set(cuda_flags -Xcompiler=-Wall,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-local-typedefs,-Wno-unused-function,-Wno-long-long,-Wcast-align,-Wconversion,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-Wunused-parameter,-fno-common)
 
   #GCC 5, 6 don't properly handle strict-overflow suppression through pragma's.
   #Instead of suppressing around the location of the strict-overflow you
@@ -140,6 +140,19 @@ elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   if(TARGET vtkm::cuda)
     target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags}>)
   endif()
+endif()
+
+#common warnings for all platforms when building cuda
+if(TARGET vtkm::cuda)
+  if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER 8.99.0)
+    #nvcc 9 introduced specific controls to disable the stack size warning
+    #otherwise we let the warning occur. We have to set this in CMAKE_CUDA_FLAGS
+    #as it is passed to the device link step, unlike compile_options
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xnvlink=--suppress-stack-size-warning")
+  endif()
+
+  set(display_error_nums -Xcudafe=--display_error_number)
+  target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${suppress_nvlink_stack_size_warnings} ${display_error_nums}>)
 endif()
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)

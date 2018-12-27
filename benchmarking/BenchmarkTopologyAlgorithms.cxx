@@ -136,7 +136,6 @@ struct ValueTypes
   : vtkm::ListTagBase<vtkm::UInt32, vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>
 {
 };
-using StorageListTag = ::vtkm::cont::StorageListTagBasic;
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of different field operations
@@ -145,11 +144,9 @@ class BenchmarkTopologyAlgorithms
 {
   using StorageTag = vtkm::cont::StorageTagBasic;
 
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
-
   using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
 
-  using ValueDynamicHandle = vtkm::cont::DynamicArrayHandleBase<ValueTypes, StorageListTag>;
+  using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
 
 private:
   template <typename T, typename Enable = void>
@@ -245,7 +242,7 @@ private:
       vtkm::cont::CellSetStructured<3> cellSet;
       cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
 
-      ValueDynamicHandle dinput(this->InputHandle);
+      ValueVariantHandle dinput(this->InputHandle);
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
       Timer timer;
@@ -324,7 +321,7 @@ private:
       vtkm::cont::CellSetStructured<3> cellSet;
       cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
 
-      ValueDynamicHandle dinput(this->InputHandle);
+      ValueVariantHandle dinput(this->InputHandle);
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
       Timer timer;
@@ -372,7 +369,7 @@ private:
       cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
       vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageTag> result;
 
-      ValueDynamicHandle dinput(this->InputHandle);
+      ValueVariantHandle dinput(this->InputHandle);
 
       Timer timer;
 

@@ -387,7 +387,7 @@ public:
       invDeltaScalar = 1.f / minScalar;
   }
   typedef void ControlSignature(FieldIn<>,
-                                FieldInOut<>,
+                                FieldOut<>,
                                 WholeArrayIn<ScalarRenderingTypes>,
                                 WholeArrayIn<>);
   typedef void ExecutionSignature(_1, _2, _3, _4);

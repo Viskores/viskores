@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/PointLocator.h>
 
 namespace vtkm

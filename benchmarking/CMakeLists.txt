@@ -17,7 +17,7 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
-function(add_benchmark name files)
+function(add_benchmark name files lib)
   set(benchmarks )
 
   add_executable(${name}_SERIAL ${files})
@@ -49,7 +49,7 @@ function(add_benchmark name files)
   endif()
 
   foreach(benchmark ${benchmarks})
-    target_link_libraries(${benchmark} PRIVATE vtkm_cont)
+    target_link_libraries(${benchmark} PRIVATE ${lib})
     set_target_properties(${benchmark} PROPERTIES
       RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
       )
@@ -69,19 +69,9 @@ set(benchmarks
   )
 
 foreach (benchmark ${benchmarks})
-  add_benchmark(${benchmark} ${benchmark}.cxx)
+  add_benchmark(${benchmark} ${benchmark}.cxx vtkm_cont)
 endforeach ()
 
 if(TARGET vtkm_rendering)
-  add_benchmark(BenchmarkRayTracing BenchmarkRayTracing.cxx)
-  target_link_libraries(BenchmarkRayTracing_SERIAL PRIVATE vtkm_rendering)
-  if(TARGET BenchmarkRayTracing_TBB)
-    target_link_libraries(BenchmarkRayTracing_TBB PRIVATE vtkm_rendering)
-  endif()
-  if(TARGET BenchmarkRayTracing_OPENMP)
-    target_link_libraries(BenchmarkRayTracing_OPENMP PRIVATE vtkm_rendering)
-  endif()
-  if(TARGET BenchmarkRayTracing_CUDA)
-    target_link_libraries(BenchmarkRayTracing_CUDA PRIVATE vtkm_rendering)
-  endif()
+  add_benchmark(BenchmarkRayTracing BenchmarkRayTracing.cxx vtkm_rendering)
 endif()

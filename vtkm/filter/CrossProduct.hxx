@@ -82,7 +82,7 @@ inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
         inDataSet.GetField(this->SecondaryFieldName, this->SecondaryFieldAssociation),
         policy,
         Traits())
-        .ResetTypeList(TypeList())
+        .ResetTypes(TypeList())
         .CastAndCall(functor, field);
     }
   }

@@ -115,7 +115,8 @@ private:
 /// array at that position.
 ///
 template <class FunctorType>
-class ArrayHandleImplicit : public detail::ArrayHandleImplicitTraits<FunctorType>::Superclass
+class VTKM_ALWAYS_EXPORT ArrayHandleImplicit
+  : public detail::ArrayHandleImplicitTraits<FunctorType>::Superclass
 {
 private:
   using ArrayTraits = typename detail::ArrayHandleImplicitTraits<FunctorType>;

@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/TypeTraits.h>
 
@@ -32,6 +32,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
@@ -45,7 +46,7 @@
 namespace vtkm
 {
 
-// DynamicArrayHandle requires its value type to have a defined VecTraits
+// VariantArrayHandle requires its value type to have a defined VecTraits
 // class. One of the tests is to use an "unusual" array of std::string
 // (which is pretty pointless but might tease out some assumptions).
 // Make an implementation here. Because I am lazy, this is only a partial
@@ -108,22 +109,21 @@ struct TestValueFunctor
 
 struct CheckFunctor
 {
-  template <typename T, typename Storage>
-  void operator()(vtkm::cont::ArrayHandle<T, Storage> array, bool& called) const
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandleVirtual<T>& array, bool& called) const
   {
     called = true;
     std::cout << "  Checking for type: " << typeid(T).name() << std::endl;
 
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Unexpected array size.");
 
-    typename vtkm::cont::ArrayHandle<T, Storage>::PortalConstControl portal =
-      array.GetPortalConstControl();
+    auto portal = array.GetPortalConstControl();
     CheckPortal(portal);
   }
 };
 
-template <typename TypeList, typename StorageList>
-void BasicDynamicArrayChecks(const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& array,
+template <typename TypeList>
+void BasicArrayVariantChecks(const vtkm::cont::VariantArrayHandleBase<TypeList>& array,
                              vtkm::IdComponent numComponents)
 {
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
@@ -132,9 +132,9 @@ void BasicDynamicArrayChecks(const vtkm::cont::DynamicArrayHandleBase<TypeList, 
                    "Dynamic array reports unexpected number of components.");
 }
 
-void CheckDynamicArray(vtkm::cont::DynamicArrayHandle array, vtkm::IdComponent numComponents)
+void CheckArrayVariant(vtkm::cont::VariantArrayHandle array, vtkm::IdComponent numComponents)
 {
-  BasicDynamicArrayChecks(array, numComponents);
+  BasicArrayVariantChecks(array, numComponents);
 
   bool called = false;
   array.CastAndCall(CheckFunctor(), called);
@@ -143,11 +143,11 @@ void CheckDynamicArray(vtkm::cont::DynamicArrayHandle array, vtkm::IdComponent n
     called, "The functor was never called (and apparently a bad value exception not thrown).");
 }
 
-template <typename TypeList, typename StorageList>
-void CheckDynamicArray(vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList> array,
+template <typename TypeList>
+void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array,
                        vtkm::IdComponent numComponents)
 {
-  BasicDynamicArrayChecks(array, numComponents);
+  BasicArrayVariantChecks(array, numComponents);
 
   bool called = false;
   CastAndCall(array, CheckFunctor(), called);
@@ -157,7 +157,7 @@ void CheckDynamicArray(vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>
 }
 
 template <typename T>
-vtkm::cont::DynamicArrayHandle CreateDynamicArray(T)
+vtkm::cont::VariantArrayHandle CreateArrayVariant(T)
 {
   // Declared static to prevent going out of scope.
   static T buffer[ARRAY_SIZE];
@@ -166,7 +166,7 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArray(T)
     buffer[index] = TestValue(index, T());
   }
 
-  return vtkm::cont::DynamicArrayHandle(vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE));
+  return vtkm::cont::VariantArrayHandle(vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE));
 }
 
 template <typename ArrayHandleType>
@@ -174,29 +174,32 @@ void CheckCastToArrayHandle(const ArrayHandleType& array)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
-  vtkm::cont::DynamicArrayHandle dynamicArray = array;
-  VTKM_TEST_ASSERT(!dynamicArray.IsType<vtkm::cont::ArrayHandle<std::string>>(),
+  vtkm::cont::VariantArrayHandle arrayVariant = array;
+  VTKM_TEST_ASSERT(!arrayVariant.IsType<vtkm::cont::ArrayHandle<std::string>>(),
                    "Dynamic array reporting is wrong type.");
 
   ArrayHandleType castArray1;
-  dynamicArray.CopyTo(castArray1);
-  VTKM_TEST_ASSERT(dynamicArray.IsSameType(castArray1), "Did not query handle correctly.");
+  arrayVariant.CopyTo(castArray1);
+  VTKM_TEST_ASSERT(arrayVariant.IsType<ArrayHandleType>(), "Did not query handle correctly.");
   VTKM_TEST_ASSERT(array == castArray1, "Did not get back same array.");
 
-  ArrayHandleType castArray2 =
-    dynamicArray.CastToTypeStorage<typename ArrayHandleType::ValueType,
-                                   typename ArrayHandleType::StorageTag>();
+  ArrayHandleType castArray2 = arrayVariant.Cast<ArrayHandleType>();
   VTKM_TEST_ASSERT(array == castArray2, "Did not get back same array.");
+
+  using T = typename ArrayHandleType::ValueType;
+  vtkm::cont::ArrayHandleVirtual<T> castArray3 = arrayVariant.AsVirtual<T>();
+  VTKM_TEST_ASSERT(castArray3.GetNumberOfValues() == castArray2.GetNumberOfValues(),
+                   "Did not get back virtual array handle representation.");
 }
 
-template <typename T, typename DynamicArrayType>
-void TryNewInstance(T, DynamicArrayType originalArray)
+template <typename T, typename ArrayVariantType>
+void TryNewInstance(T, ArrayVariantType originalArray)
 {
   // This check should already have been performed by caller, but just in case.
-  CheckDynamicArray(originalArray, vtkm::VecTraits<T>::NUM_COMPONENTS);
+  CheckArrayVariant(originalArray, vtkm::VecTraits<T>::NUM_COMPONENTS);
 
   std::cout << "Create new instance of array." << std::endl;
-  DynamicArrayType newArray = originalArray.NewInstance();
+  ArrayVariantType newArray = originalArray.NewInstance();
 
   std::cout << "Get a static instance of the new array (which checks the type)." << std::endl;
   vtkm::cont::ArrayHandle<T> staticArray;
@@ -209,7 +212,7 @@ void TryNewInstance(T, DynamicArrayType originalArray)
   {
     staticArray.GetPortalControl().Set(index, TestValue(index + 100, T()));
   }
-  CheckDynamicArray(originalArray, vtkm::VecTraits<T>::NUM_COMPONENTS);
+  CheckArrayVariant(originalArray, vtkm::VecTraits<T>::NUM_COMPONENTS);
 
   std::cout << "Set the new static array to expected values and make sure the new" << std::endl
             << "dynamic array points to the same new values." << std::endl;
@@ -217,15 +220,15 @@ void TryNewInstance(T, DynamicArrayType originalArray)
   {
     staticArray.GetPortalControl().Set(index, TestValue(index, T()));
   }
-  CheckDynamicArray(newArray, vtkm::VecTraits<T>::NUM_COMPONENTS);
+  CheckArrayVariant(newArray, vtkm::VecTraits<T>::NUM_COMPONENTS);
 }
 
 template <typename T>
 void TryDefaultType(T)
 {
-  vtkm::cont::DynamicArrayHandle array = CreateDynamicArray(T());
+  vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
 
-  CheckDynamicArray(array, vtkm::VecTraits<T>::NUM_COMPONENTS);
+  CheckArrayVariant(array, vtkm::VecTraits<T>::NUM_COMPONENTS);
 
   TryNewInstance(T(), array);
 }
@@ -235,23 +238,22 @@ struct TryBasicVTKmType
   template <typename T>
   void operator()(T) const
   {
-    vtkm::cont::DynamicArrayHandle array = CreateDynamicArray(T());
+    vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
 
-    CheckDynamicArray(array.ResetTypeList(vtkm::TypeListTagAll()),
-                      vtkm::VecTraits<T>::NUM_COMPONENTS);
+    CheckArrayVariant(array.ResetTypes(vtkm::TypeListTagAll()), vtkm::VecTraits<T>::NUM_COMPONENTS);
 
-    TryNewInstance(T(), array.ResetTypeList(vtkm::TypeListTagAll()));
+    TryNewInstance(T(), array.ResetTypes(vtkm::TypeListTagAll()));
   }
 };
 
 void TryUnusualType()
 {
   // A string is an unlikely type to be declared elsewhere in VTK-m.
-  vtkm::cont::DynamicArrayHandle array = CreateDynamicArray(std::string());
+  vtkm::cont::VariantArrayHandle array = CreateArrayVariant(std::string());
 
   try
   {
-    CheckDynamicArray(array, 1);
+    CheckArrayVariant(array, 1);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
   }
   catch (vtkm::cont::ErrorBadValue&)
@@ -259,35 +261,31 @@ void TryUnusualType()
     std::cout << "  Caught exception for unrecognized type." << std::endl;
   }
 
-  CheckDynamicArray(array.ResetTypeList(TypeListTagString()), 1);
+  CheckArrayVariant(array.ResetTypes(TypeListTagString()), 1);
   std::cout << "  Found type when type list was reset." << std::endl;
 }
 
 void TryUnusualStorage()
 {
-  vtkm::cont::DynamicArrayHandle array = ArrayHandleWithUnusualStorage<vtkm::Id>();
+  vtkm::cont::VariantArrayHandle array = ArrayHandleWithUnusualStorage<vtkm::Id>();
 
   try
   {
-    CheckDynamicArray(array, 1);
-    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
+    CheckArrayVariant(array, 1);
   }
-  catch (vtkm::cont::ErrorBadValue&)
+  catch (...)
   {
-    std::cout << "  Caught exception for unrecognized storage." << std::endl;
+    VTKM_TEST_FAIL("CastAndCall with Variant failed to handle unusual storage.");
   }
-
-  CheckDynamicArray(array.ResetStorageList(StorageListTagUnusual()), 1);
-  std::cout << "  Found instance when storage list was reset." << std::endl;
 }
 
 void TryUnusualTypeAndStorage()
 {
-  vtkm::cont::DynamicArrayHandle array = ArrayHandleWithUnusualStorage<std::string>();
+  vtkm::cont::VariantArrayHandle array = ArrayHandleWithUnusualStorage<std::string>();
 
   try
   {
-    CheckDynamicArray(array, 1);
+    CheckArrayVariant(array, 1);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type/storage.");
   }
   catch (vtkm::cont::ErrorBadValue&)
@@ -297,46 +295,12 @@ void TryUnusualTypeAndStorage()
 
   try
   {
-    CheckDynamicArray(array.ResetTypeList(TypeListTagString()), 1);
-    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
+    CheckArrayVariant(array.ResetTypes(TypeListTagString()), 1);
   }
-  catch (vtkm::cont::ErrorBadValue&)
+  catch (...)
   {
-    std::cout << "  Caught exception for unrecognized storage." << std::endl;
+    VTKM_TEST_FAIL("CastAndCall with Variant failed to handle unusual storage.");
   }
-
-  try
-  {
-    CheckDynamicArray(array.ResetStorageList(StorageListTagUnusual()), 1);
-    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
-  }
-  catch (vtkm::cont::ErrorBadValue&)
-  {
-    std::cout << "  Caught exception for unrecognized type." << std::endl;
-  }
-
-  try
-  {
-    //resetting the string and tag should result in a valid array handle
-    CheckDynamicArray(array.ResetTypeAndStorageLists(TypeListTagString(), StorageListTagUnusual()),
-                      1);
-  }
-  catch (vtkm::cont::ErrorBadValue&)
-  {
-    VTKM_TEST_FAIL("ResetTypeAndStorageLists should have handled the custom type/storage.");
-  }
-
-  CheckDynamicArray(
-    array.ResetTypeList(TypeListTagString()).ResetStorageList(StorageListTagUnusual()), 1);
-  std::cout << "  Found instance when type and storage lists were reset." << std::endl;
-
-  CheckDynamicArray(
-    array.ResetStorageList(StorageListTagUnusual()).ResetTypeList(TypeListTagString()), 1);
-  std::cout << "  Found instance when storage and type lists were reset." << std::endl;
-
-  CheckDynamicArray(array.ResetTypeAndStorageLists(TypeListTagString(), StorageListTagUnusual()),
-                    1);
-  std::cout << "  Found instance when storage and type lists were reset." << std::endl;
 }
 
 void TryCastToArrayHandle()
@@ -384,11 +348,11 @@ void TryCastToArrayHandle()
   std::cout << "  Uniform point coordinates array handle." << std::endl;
   CheckCastToArrayHandle(vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(ARRAY_SIZE)));
 
-  std::cout << "  Zip array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleZip(countingArray, array));
+  // std::cout << "  Zip array handle." << std::endl;
+  // CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleZip(countingArray, array));
 }
 
-void TestDynamicArrayHandle()
+void TestVariantArrayHandle()
 {
   std::cout << "Try common types with default type lists." << std::endl;
   std::cout << "*** vtkm::Id **********************" << std::endl;
@@ -422,7 +386,7 @@ void TestDynamicArrayHandle()
 
 } // anonymous namespace
 
-int UnitTestDynamicArrayHandle(int, char* [])
+int UnitTestVariantArrayHandle(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestDynamicArrayHandle);
+  return vtkm::cont::testing::Testing::Run(TestVariantArrayHandle);
 }

@@ -85,6 +85,17 @@ struct FetchArrayTopologyMapInImplementation
     // least as far as the returned VecFromPortalPermute is used.
     return ValueType(indices.GetIndicesFromPointer(), field);
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  static ValueType Load(const ThreadIndicesType& indices, const FieldExecObjectType* const field)
+  {
+    // It is important that we give the VecFromPortalPermute (ValueType) a
+    // pointer that will stay around during the time the Vec is valid. Thus, we
+    // should make sure that indices is a reference that goes up the stack at
+    // least as far as the returned VecFromPortalPermute is used.
+    return ValueType(indices.GetIndicesFromPointer(), field);
+  }
 };
 
 static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<1> make_VecAxisAlignedPointCoordinates(

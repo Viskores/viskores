@@ -28,7 +28,6 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/AtomicArray.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/rendering/MatrixHelpers.h>
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/worklet/DispatcherMapField.h>

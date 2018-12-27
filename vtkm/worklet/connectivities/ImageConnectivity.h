@@ -142,13 +142,13 @@ public:
     }
   };
 
-  template <typename T, typename S, typename OutputPortalType>
+  template <typename T, typename OutputPortalType>
   void Run(const vtkm::cont::CellSetStructured<2>& input,
-           const vtkm::cont::DynamicArrayHandleBase<T, S>& pixels,
+           const vtkm::cont::VariantArrayHandleBase<T>& pixels,
            OutputPortalType& componentsOut) const
   {
     using Types = vtkm::ListTagBase<vtkm::UInt8>;
-    vtkm::cont::CastAndCall(pixels.ResetTypeList(Types{}), RunImpl(), input, componentsOut);
+    vtkm::cont::CastAndCall(pixels.ResetTypes(Types{}), RunImpl(), input, componentsOut);
   }
 
   template <typename T, typename S, typename OutputPortalType>
