@@ -394,7 +394,6 @@ public:
     {
       (void)shape;
       vtkm::Id clipIndex = clipDataIndex;
-
       // Start index for the cells of this case.
       vtkm::Id cellIndex = clipStats.NumberOfCells;
       // Start index to store connevtivity of this case.
@@ -636,15 +635,13 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> cellPointReverseConnectivity;
     cellPointReverseConnectivity.Allocate(total.NumberOfInCellIndices);
-    vtkm::cont::ArrayHandle<vtkm::Id> cellPointInterpolationKeys;
-    cellPointInterpolationKeys.Allocate(total.NumberOfInCellInterpPoints);
-    vtkm::cont::ArrayHandle<vtkm::Id> cellPointInterpolationInfo;
-    cellPointInterpolationInfo.Allocate(total.NumberOfInCellInterpPoints);
     vtkm::cont::ArrayHandle<vtkm::Id> cellPointEdgeReverseConnectivity;
     cellPointEdgeReverseConnectivity.Allocate(total.NumberOfInCellEdgeIndices);
     vtkm::cont::ArrayHandle<EdgeInterpolation> cellPointEdgeInterpolation;
     cellPointEdgeInterpolation.Allocate(total.NumberOfInCellEdgeIndices);
 
+    this->InCellInterpolationKeys.Allocate(total.NumberOfInCellInterpPoints);
+    this->InCellInterpolationInfo.Allocate(total.NumberOfInCellInterpPoints);
     this->CellMapOutputToInput.Allocate(total.NumberOfCells);
 
     GenerateCellSet cellSetWorklet(value);
@@ -667,8 +664,7 @@ public:
 
     // Get unique EdgeInterpolation : unique edge points.
     // LowerBound for edgeInterpolation : get index into new edge points array.
-    // LowerBound for cellPoitnEdgeInterpolation : get index into new edge points array.
-    //vtkm::cont::ArrayHandle<clipping::EdgeInterpolation> uniqueEdgeInterpolations;
+    // LowerBound for cellPointEdgeInterpolation : get index into new edge points array.
     vtkm::cont::Algorithm::SortByKey(
       edgeInterpolation, edgePointReverseConnectivity, EdgeInterpolation::LessThanOp());
     vtkm::cont::Algorithm::Copy(edgeInterpolation, this->EdgePointsInterpolation);
@@ -697,9 +693,10 @@ public:
       scatterEdgePointConnectivity);
     scatterEdgeDispatcher.Invoke(
       edgeInterpolationIndexToUnique, edgePointReverseConnectivity, connectivity);
-    scatterEdgeDispatcher.Invoke(
-      cellInterpolationIndexToUnique, cellPointEdgeReverseConnectivity, cellPointInterpolationInfo);
-    //Add offset in connectivity of all new in-cell points.
+    scatterEdgeDispatcher.Invoke(cellInterpolationIndexToUnique,
+                                 cellPointEdgeReverseConnectivity,
+                                 this->InCellInterpolationInfo);
+    // Add offset in connectivity of all new in-cell points.
     ScatterInCellConnectivity scatterInCellPointConnectivity(this->InCellPointsOffset);
     vtkm::worklet::DispatcherMapField<ScatterInCellConnectivity> scatterInCellDispatcher(
       scatterInCellPointConnectivity);
