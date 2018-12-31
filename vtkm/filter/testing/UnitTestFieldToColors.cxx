@@ -91,7 +91,7 @@ void TestFieldToColors()
 }
 }
 
-int UnitTestFieldToColors(int, char* [])
+int UnitTestFieldToColors(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldToColors);
+  return vtkm::cont::testing::Testing::Run(TestFieldToColors, argc, argv);
 }

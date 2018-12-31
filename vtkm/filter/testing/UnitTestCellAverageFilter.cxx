@@ -143,7 +143,7 @@ void TestCellAverage()
 }
 }
 
-int UnitTestCellAverageFilter(int, char* [])
+int UnitTestCellAverageFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellAverage);
+  return vtkm::cont::testing::Testing::Run(TestCellAverage, argc, argv);
 }

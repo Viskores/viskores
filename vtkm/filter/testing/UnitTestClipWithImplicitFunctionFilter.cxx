@@ -139,7 +139,7 @@ void TestClip()
 
 } // anonymous namespace
 
-int UnitTestClipWithImplicitFunctionFilter(int, char* [])
+int UnitTestClipWithImplicitFunctionFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestClip);
+  return vtkm::cont::testing::Testing::Run(TestClip, argc, argv);
 }

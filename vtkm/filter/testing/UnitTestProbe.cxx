@@ -219,7 +219,7 @@ public:
 
 } // anonymous namespace
 
-int UnitTestProbe(int, char* [])
+int UnitTestProbe(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestProbe::Run);
+  return vtkm::cont::testing::Testing::Run(TestProbe::Run, argc, argv);
 }

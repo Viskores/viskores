@@ -136,7 +136,7 @@ void TestEntropy()
 } // TestFieldEntropy
 }
 
-int UnitTestEntropyFilter(int, char* [])
+int UnitTestEntropyFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestEntropy);
+  return vtkm::cont::testing::Testing::Run(TestEntropy, argc, argv);
 }

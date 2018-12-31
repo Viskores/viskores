@@ -138,7 +138,7 @@ void TestPointElevation()
   TestPointElevationWithPolicy();
 }
 
-int UnitTestPointElevationFilter(int, char* [])
+int UnitTestPointElevationFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestPointElevation);
+  return vtkm::cont::testing::Testing::Run(TestPointElevation, argc, argv);
 }

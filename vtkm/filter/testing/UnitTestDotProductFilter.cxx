@@ -172,7 +172,7 @@ void TestDotProduct()
 }
 } // anonymous namespace
 
-int UnitTestDotProductFilter(int, char* [])
+int UnitTestDotProductFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDotProduct);
+  return vtkm::cont::testing::Testing::Run(TestDotProduct, argc, argv);
 }

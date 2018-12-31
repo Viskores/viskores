@@ -67,7 +67,7 @@ void TestVectorMagnitude()
 }
 }
 
-int UnitTestVectorMagnitudeFilter(int, char* [])
+int UnitTestVectorMagnitudeFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVectorMagnitude);
+  return vtkm::cont::testing::Testing::Run(TestVectorMagnitude, argc, argv);
 }

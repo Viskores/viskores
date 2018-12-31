@@ -98,7 +98,7 @@ void TestClip()
 }
 }
 
-int UnitTestClipWithFieldFilter(int, char* [])
+int UnitTestClipWithFieldFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestClip);
+  return vtkm::cont::testing::Testing::Run(TestClip, argc, argv);
 }

@@ -130,7 +130,7 @@ static void TestMultiBlockHistogram()
   std::cout << std::endl;
 };
 
-int UnitTestMultiBlockHistogramFilter(int, char* [])
+int UnitTestMultiBlockHistogramFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestMultiBlockHistogram);
+  return vtkm::cont::testing::Testing::Run(TestMultiBlockHistogram, argc, argv);
 }

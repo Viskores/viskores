@@ -175,7 +175,7 @@ void TestFieldSelection()
 }
 }
 
-int UnitTestFieldSelection(int, char* [])
+int UnitTestFieldSelection(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldSelection);
+  return vtkm::cont::testing::Testing::Run(TestFieldSelection, argc, argv);
 }

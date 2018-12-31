@@ -102,7 +102,7 @@ void TestCellMeasures()
 
 } // anonymous namespace
 
-int UnitTestCellMeasuresFilter(int, char* [])
+int UnitTestCellMeasuresFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellMeasures);
+  return vtkm::cont::testing::Testing::Run(TestCellMeasures, argc, argv);
 }

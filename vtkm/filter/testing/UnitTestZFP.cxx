@@ -157,7 +157,7 @@ void TestZFPFilter()
 }
 } // anonymous namespace
 
-int UnitTestZFP(int, char* [])
+int UnitTestZFP(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(vtkm_ut_zfp_filter::TestZFPFilter);
+  return vtkm::cont::testing::Testing::Run(vtkm_ut_zfp_filter::TestZFPFilter, argc, argv);
 }

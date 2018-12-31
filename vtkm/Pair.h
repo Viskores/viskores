@@ -73,6 +73,7 @@ struct Pair
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   Pair(FirstType&& firstSrc, SecondType&& secondSrc)
     : first(std::move(firstSrc))

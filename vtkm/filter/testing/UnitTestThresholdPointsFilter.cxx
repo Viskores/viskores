@@ -129,7 +129,7 @@ public:
 };
 }
 
-int UnitTestThresholdPointsFilter(int, char* [])
+int UnitTestThresholdPointsFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingThresholdPoints());
+  return vtkm::cont::testing::Testing::Run(TestingThresholdPoints(), argc, argv);
 }
