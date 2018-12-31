@@ -91,10 +91,31 @@ void TestClipExplicit()
   }
 }
 
+// Adding for testing cases like Bug #329
+// Other tests cover the specific cases of clipping, this test
+// is to execute the clipping filter for a larger dataset.
+// In this case the output is not verified against a sample.
+void TestClipVolume()
+{
+  std::cout << "Testing Clip Filter on volumetric data" << std::endl;
+
+  vtkm::Id3 dims(10, 10, 10);
+  vtkm::cont::testing::MakeTestDataSet maker;
+  vtkm::cont::DataSet ds = maker.Make3DUniformDataSet3(dims);
+
+  vtkm::filter::ClipWithField clip;
+  clip.SetClipValue(0.0);
+  clip.SetActiveField("pointvar");
+  clip.SetFieldsToPass("pointvar", vtkm::cont::Field::Association::POINTS);
+
+  const vtkm::cont::DataSet outputData = clip.Execute(ds);
+}
+
 void TestClip()
 {
   //todo: add more clip tests
   TestClipExplicit();
+  TestClipVolume();
 }
 }
 
