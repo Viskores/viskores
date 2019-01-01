@@ -87,7 +87,7 @@ public:
 };
 }
 
-int UnitTestTetrahedralizeFilter(int, char* [])
+int UnitTestTetrahedralizeFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingTetrahedralize());
+  return vtkm::cont::testing::Testing::Run(TestingTetrahedralize(), argc, argv);
 }

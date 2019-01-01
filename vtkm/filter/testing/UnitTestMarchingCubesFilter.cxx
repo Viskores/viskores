@@ -517,7 +517,7 @@ void TestMarchingCubesFilter()
 
 } // anonymous namespace
 
-int UnitTestMarchingCubesFilter(int, char* [])
+int UnitTestMarchingCubesFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(vtkm_ut_mc_filter::TestMarchingCubesFilter);
+  return vtkm::cont::testing::Testing::Run(vtkm_ut_mc_filter::TestMarchingCubesFilter, argc, argv);
 }

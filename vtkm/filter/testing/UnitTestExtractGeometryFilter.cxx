@@ -152,7 +152,7 @@ public:
 };
 }
 
-int UnitTestExtractGeometryFilter(int, char* [])
+int UnitTestExtractGeometryFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingExtractGeometry());
+  return vtkm::cont::testing::Testing::Run(TestingExtractGeometry(), argc, argv);
 }

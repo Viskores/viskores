@@ -349,7 +349,7 @@ void TestHistogram()
 
 } // TestFieldHistogram
 
-int UnitTestHistogramFilter(int, char* [])
+int UnitTestHistogramFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestHistogram);
+  return vtkm::cont::testing::Testing::Run(TestHistogram, argc, argv);
 }

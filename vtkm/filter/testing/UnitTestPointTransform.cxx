@@ -203,7 +203,7 @@ void TestPointTransform()
 }
 
 
-int UnitTestPointTransform(int, char* [])
+int UnitTestPointTransform(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestPointTransform);
+  return vtkm::cont::testing::Testing::Run(TestPointTransform, argc, argv);
 }

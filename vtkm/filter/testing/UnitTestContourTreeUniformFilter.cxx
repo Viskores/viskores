@@ -168,7 +168,7 @@ public:
 };
 }
 
-int UnitTestContourTreeUniformFilter(int, char* [])
+int UnitTestContourTreeUniformFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniform());
+  return vtkm::cont::testing::Testing::Run(TestContourTreeUniform(), argc, argv);
 }

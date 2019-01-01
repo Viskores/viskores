@@ -289,7 +289,7 @@ void TestGhostZone()
 }
 }
 
-int UnitTestGhostZone(int, char* [])
+int UnitTestGhostZone(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestGhostZone);
+  return vtkm::cont::testing::Testing::Run(TestGhostZone, argc, argv);
 }

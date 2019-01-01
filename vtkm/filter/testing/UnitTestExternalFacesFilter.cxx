@@ -154,7 +154,7 @@ void TestExternalFacesFilter()
 
 } // anonymous namespace
 
-int UnitTestExternalFacesFilter(int, char* [])
+int UnitTestExternalFacesFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestExternalFacesFilter);
+  return vtkm::cont::testing::Testing::Run(TestExternalFacesFilter, argc, argv);
 }

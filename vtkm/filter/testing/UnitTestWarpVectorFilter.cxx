@@ -131,7 +131,7 @@ void TestWarpVectorFilter()
 }
 }
 
-int UnitTestWarpVectorFilter(int, char* [])
+int UnitTestWarpVectorFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestWarpVectorFilter);
+  return vtkm::cont::testing::Testing::Run(TestWarpVectorFilter, argc, argv);
 }

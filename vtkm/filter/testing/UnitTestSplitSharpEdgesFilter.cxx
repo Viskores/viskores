@@ -219,7 +219,7 @@ void TestSplitSharpEdgesFilter()
 
 } // anonymous namespace
 
-int UnitTestSplitSharpEdgesFilter(int, char* [])
+int UnitTestSplitSharpEdgesFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestSplitSharpEdgesFilter);
+  return vtkm::cont::testing::Testing::Run(TestSplitSharpEdgesFilter, argc, argv);
 }

@@ -127,7 +127,7 @@ void TestWarpScalarFilter()
 }
 }
 
-int UnitTestWarpScalarFilter(int, char* [])
+int UnitTestWarpScalarFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestWarpScalarFilter);
+  return vtkm::cont::testing::Testing::Run(TestWarpScalarFilter, argc, argv);
 }

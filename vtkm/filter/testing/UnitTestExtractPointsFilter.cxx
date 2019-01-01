@@ -169,7 +169,7 @@ public:
 };
 }
 
-int UnitTestExtractPointsFilter(int, char* [])
+int UnitTestExtractPointsFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingExtractPoints());
+  return vtkm::cont::testing::Testing::Run(TestingExtractPoints(), argc, argv);
 }

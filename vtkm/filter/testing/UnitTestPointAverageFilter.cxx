@@ -142,7 +142,7 @@ void TestPointAverage()
 }
 }
 
-int UnitTestPointAverageFilter(int, char* [])
+int UnitTestPointAverageFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestPointAverage);
+  return vtkm::cont::testing::Testing::Run(TestPointAverage, argc, argv);
 }

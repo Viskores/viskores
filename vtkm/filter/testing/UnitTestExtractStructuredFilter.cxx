@@ -527,7 +527,7 @@ public:
 };
 }
 
-int UnitTestExtractStructuredFilter(int, char* [])
+int UnitTestExtractStructuredFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingExtractStructured());
+  return vtkm::cont::testing::Testing::Run(TestingExtractStructured(), argc, argv);
 }

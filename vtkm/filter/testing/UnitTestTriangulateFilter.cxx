@@ -81,7 +81,7 @@ public:
 };
 }
 
-int UnitTestTriangulateFilter(int, char* [])
+int UnitTestTriangulateFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingTriangulate());
+  return vtkm::cont::testing::Testing::Run(TestingTriangulate(), argc, argv);
 }
