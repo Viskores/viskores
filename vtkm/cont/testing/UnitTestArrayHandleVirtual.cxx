@@ -242,8 +242,8 @@ void TestArrayHandleVirtual()
 
 } // end namespace UnitTestArrayHandleVirtualDetail
 
-int UnitTestArrayHandleVirtual(int, char* [])
+int UnitTestArrayHandleVirtual(int argc, char* argv[])
 {
   using namespace UnitTestArrayHandleVirtualDetail;
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleVirtual);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleVirtual, argc, argv);
 }

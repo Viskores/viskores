@@ -29,9 +29,10 @@
 
 #include <vtkm/cont/testing/TestingFancyArrayHandles.h>
 
-int UnitTestSerialArrayHandleFancy(int, char* [])
+int UnitTestSerialArrayHandleFancy(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
-  return vtkm::cont::testing::TestingFancyArrayHandles<vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingFancyArrayHandles<vtkm::cont::DeviceAdapterTagSerial>::Run(
+    argc, argv);
 }

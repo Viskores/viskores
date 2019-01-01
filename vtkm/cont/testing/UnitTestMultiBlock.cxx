@@ -150,7 +150,7 @@ void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& Righ
   return;
 }
 
-int UnitTestMultiBlock(int, char* [])
+int UnitTestMultiBlock(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(MultiBlockTest);
+  return vtkm::cont::testing::Testing::Run(MultiBlockTest, argc, argv);
 }

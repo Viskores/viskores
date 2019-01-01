@@ -135,7 +135,7 @@ struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
 }
 } // namespace vtkm::cont::internal
 
-int UnitTestDeviceAdapterAlgorithmGeneral(int, char* [])
+int UnitTestDeviceAdapterAlgorithmGeneral(int argc, char* argv[])
 {
   //need to enable DeviceAdapterTagTestAlgorithmGeneral as it
   //is not part of the default set of devices
@@ -143,5 +143,5 @@ int UnitTestDeviceAdapterAlgorithmGeneral(int, char* [])
   tracker.ResetDevice(vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral{});
 
   return vtkm::cont::testing::TestingDeviceAdapter<
-    vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>::Run();
+    vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>::Run(argc, argv);
 }

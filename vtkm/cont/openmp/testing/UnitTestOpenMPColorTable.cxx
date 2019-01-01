@@ -23,9 +23,10 @@
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/testing/TestingColorTable.h>
 
-int UnitTestOpenMPColorTable(int, char* [])
+int UnitTestOpenMPColorTable(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
-  return vtkm::cont::testing::TestingColorTable<vtkm::cont::DeviceAdapterTagOpenMP>::Run();
+  return vtkm::cont::testing::TestingColorTable<vtkm::cont::DeviceAdapterTagOpenMP>::Run(argc,
+                                                                                         argv);
 }

@@ -36,9 +36,9 @@ void TestImplicitFunctions()
 
 } // anonymous namespace
 
-int UnitTestCudaImplicitFunction(int, char* [])
+int UnitTestCudaImplicitFunction(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
-  return vtkm::cont::testing::Testing::Run(TestImplicitFunctions);
+  return vtkm::cont::testing::Testing::Run(TestImplicitFunctions, argc, argv);
 }

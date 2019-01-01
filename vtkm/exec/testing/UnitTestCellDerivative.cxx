@@ -359,7 +359,7 @@ void TestDerivative()
 
 } // anonymous namespace
 
-int UnitTestCellDerivative(int, char* [])
+int UnitTestCellDerivative(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestDerivative);
+  return vtkm::testing::Testing::Run(TestDerivative, argc, argv);
 }

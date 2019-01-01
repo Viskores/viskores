@@ -465,7 +465,7 @@ void TestVariantArrayHandle()
 
 } // anonymous namespace
 
-int UnitTestVariantArrayHandle(int, char* [])
+int UnitTestVariantArrayHandle(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVariantArrayHandle);
+  return vtkm::cont::testing::Testing::Run(TestVariantArrayHandle, argc, argv);
 }

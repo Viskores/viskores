@@ -312,7 +312,7 @@ void TestTaskSingular()
 
 } // anonymous namespace
 
-int UnitTestTaskSingular(int, char* [])
+int UnitTestTaskSingular(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestTaskSingular);
+  return vtkm::testing::Testing::Run(TestTaskSingular, argc, argv);
 }

@@ -21,8 +21,8 @@
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 #include <vtkm/exec/internal/testing/TestingTaskTiling.h>
 
-int UnitTestTaskTilingTBB(int, char* [])
+int UnitTestTaskTilingTBB(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(
-    vtkm::exec::internal::testing::TestTaskTiling<vtkm::cont::DeviceAdapterTagTBB>);
+    vtkm::exec::internal::testing::TestTaskTiling<vtkm::cont::DeviceAdapterTagTBB>, argc, argv);
 }

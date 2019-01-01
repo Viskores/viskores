@@ -26,10 +26,10 @@
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/testing/TestingArrayHandleVirtualCoordinates.h>
 
-int UnitTestCudaArrayHandleVirtualCoordinates(int, char* [])
+int UnitTestCudaArrayHandleVirtualCoordinates(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   return vtkm::cont::testing::TestingArrayHandleVirtualCoordinates<
-    vtkm::cont::DeviceAdapterTagCuda>::Run();
+    vtkm::cont::DeviceAdapterTagCuda>::Run(argc, argv);
 }

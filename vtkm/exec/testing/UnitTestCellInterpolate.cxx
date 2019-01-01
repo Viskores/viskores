@@ -174,7 +174,7 @@ void TestInterpolate()
 
 } // anonymous namespace
 
-int UnitTestCellInterpolate(int, char* [])
+int UnitTestCellInterpolate(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestInterpolate);
+  return vtkm::testing::Testing::Run(TestInterpolate, argc, argv);
 }

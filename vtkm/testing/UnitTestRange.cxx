@@ -144,7 +144,7 @@ void TestRange()
 
 } // anonymous namespace
 
-int UnitTestRange(int, char* [])
+int UnitTestRange(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestRange);
+  return vtkm::testing::Testing::Run(TestRange, argc, argv);
 }

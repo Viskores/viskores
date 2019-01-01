@@ -163,7 +163,7 @@ void TestPair()
 
 } // anonymous namespace
 
-int UnitTestPair(int, char* [])
+int UnitTestPair(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestPair);
+  return vtkm::testing::Testing::Run(TestPair, argc, argv);
 }

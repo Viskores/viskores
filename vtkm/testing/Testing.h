@@ -32,6 +32,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/cont/Logging.h>
+
 #include <exception>
 #include <iostream>
 #include <sstream>
@@ -310,8 +312,11 @@ public:
   /// \endcode
   ///
   template <class Func>
-  static VTKM_CONT int Run(Func function)
+  static VTKM_CONT int Run(Func function, int argc, char* argv[])
   {
+
+    vtkm::cont::InitLogging(argc, argv);
+
     try
     {
       function();

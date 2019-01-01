@@ -113,8 +113,8 @@ void VecFromPortalPermuteTest()
 
 } // namespace UnitTestVecFromPortalPermuteNamespace
 
-int UnitTestVecFromPortalPermute(int, char* [])
+int UnitTestVecFromPortalPermute(int argc, char* argv[])
 {
   return vtkm::testing::Testing::Run(
-    UnitTestVecFromPortalPermuteNamespace::VecFromPortalPermuteTest);
+    UnitTestVecFromPortalPermuteNamespace::VecFromPortalPermuteTest, argc, argv);
 }

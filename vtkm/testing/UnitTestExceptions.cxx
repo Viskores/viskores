@@ -20,6 +20,7 @@
 
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
@@ -28,8 +29,9 @@
 //------------------------------------------------------------------------------
 // This test ensures that exceptions thrown internally by the vtkm_cont library
 // can be correctly caught across library boundaries.
-int UnitTestExceptions(int, char* [])
+int UnitTestExceptions(int argc, char* argv[])
 {
+  vtkm::cont::Initialize(argc, argv);
   vtkm::cont::RuntimeDeviceTracker tracker;
 
   try

@@ -27,8 +27,9 @@
 
 #include <vtkm/cont/testing/TestingColorTable.h>
 
-int UnitTestSerialColorTable(int, char* [])
+int UnitTestSerialColorTable(int argc, char* argv[])
 {
   //TestingColorTable forces the device
-  return vtkm::cont::testing::TestingColorTable<vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingColorTable<vtkm::cont::DeviceAdapterTagSerial>::Run(argc,
+                                                                                         argv);
 }

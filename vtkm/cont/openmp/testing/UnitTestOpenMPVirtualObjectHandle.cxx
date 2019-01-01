@@ -44,7 +44,7 @@ void TestVirtualObjectHandle()
 
 } // anonymous namespace
 
-int UnitTestOpenMPVirtualObjectHandle(int, char* [])
+int UnitTestOpenMPVirtualObjectHandle(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVirtualObjectHandle);
+  return vtkm::cont::testing::Testing::Run(TestVirtualObjectHandle, argc, argv);
 }

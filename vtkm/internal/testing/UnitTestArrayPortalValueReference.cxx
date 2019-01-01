@@ -77,7 +77,7 @@ void DoTest()
 
 } // anonymous namespace
 
-int UnitTestArrayPortalValueReference(int, char* [])
+int UnitTestArrayPortalValueReference(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(DoTest);
+  return vtkm::cont::testing::Testing::Run(DoTest, argc, argv);
 }

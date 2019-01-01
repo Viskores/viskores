@@ -200,7 +200,7 @@ void TestDynamicTransform()
 
 } // anonymous namespace
 
-int UnitTestDynamicTransform(int, char* [])
+int UnitTestDynamicTransform(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDynamicTransform);
+  return vtkm::cont::testing::Testing::Run(TestDynamicTransform, argc, argv);
 }

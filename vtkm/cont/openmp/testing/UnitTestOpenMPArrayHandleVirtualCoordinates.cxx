@@ -23,10 +23,10 @@
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/testing/TestingArrayHandleVirtualCoordinates.h>
 
-int UnitTestOpenMPArrayHandleVirtualCoordinates(int, char* [])
+int UnitTestOpenMPArrayHandleVirtualCoordinates(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
   return vtkm::cont::testing::TestingArrayHandleVirtualCoordinates<
-    vtkm::cont::DeviceAdapterTagOpenMP>::Run();
+    vtkm::cont::DeviceAdapterTagOpenMP>::Run(argc, argv);
 }

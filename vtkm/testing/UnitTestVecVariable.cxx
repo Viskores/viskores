@@ -109,7 +109,7 @@ void TestVecVariable()
 
 } // anonymous namespace
 
-int UnitTestVecVariable(int, char* [])
+int UnitTestVecVariable(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestVecVariable);
+  return vtkm::testing::Testing::Run(TestVecVariable, argc, argv);
 }

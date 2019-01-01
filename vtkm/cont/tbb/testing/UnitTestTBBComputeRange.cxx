@@ -27,9 +27,9 @@
 
 #include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestTBBComputeRange(int, char* [])
+int UnitTestTBBComputeRange(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
-  return vtkm::cont::testing::TestingComputeRange<vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingComputeRange<vtkm::cont::DeviceAdapterTagTBB>::Run(argc, argv);
 }

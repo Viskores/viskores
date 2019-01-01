@@ -207,7 +207,7 @@ void TestWholeArrayTransport()
 
 } // Anonymous namespace
 
-int UnitTestTransportWholeArray(int, char* [])
+int UnitTestTransportWholeArray(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestWholeArrayTransport);
+  return vtkm::cont::testing::Testing::Run(TestWholeArrayTransport, argc, argv);
 }

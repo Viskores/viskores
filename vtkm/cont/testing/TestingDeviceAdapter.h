@@ -2457,7 +2457,10 @@ public:
   /// all members and classes required for driving vtkm algorithms. Returns an
   /// error code that can be returned from the main function of a test.
   ///
-  static VTKM_CONT int Run() { return vtkm::cont::testing::Testing::Run(TestAll()); }
+  static VTKM_CONT int Run(int argc, char* argv[])
+  {
+    return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
+  }
 };
 
 #undef ERROR_MESSAGE

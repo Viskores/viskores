@@ -55,7 +55,7 @@ void TestCheckExecObject()
 
 } // anonymous namespace
 
-int UnitTestTypeCheckExecObject(int, char* [])
+int UnitTestTypeCheckExecObject(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCheckExecObject);
+  return vtkm::cont::testing::Testing::Run(TestCheckExecObject, argc, argv);
 }

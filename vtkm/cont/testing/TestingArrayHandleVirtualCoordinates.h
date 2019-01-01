@@ -141,10 +141,10 @@ private:
   }
 
 public:
-  static int Run()
+  static int Run(int argc, char* argv[])
   {
     vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
-    return vtkm::cont::testing::Testing::Run(TestAll);
+    return vtkm::cont::testing::Testing::Run(TestAll, argc, argv);
   }
 };
 }

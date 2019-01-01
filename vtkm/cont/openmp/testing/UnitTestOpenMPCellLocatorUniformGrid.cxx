@@ -25,10 +25,10 @@
 
 #include <vtkm/cont/testing/TestingCellLocatorUniformGrid.h>
 
-int UnitTestOpenMPCellLocatorUniformGrid(int, char* [])
+int UnitTestOpenMPCellLocatorUniformGrid(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorUniformGrid<vtkm::cont::DeviceAdapterTagSerial>());
+    TestingCellLocatorUniformGrid<vtkm::cont::DeviceAdapterTagSerial>(), argc, argv);
 }

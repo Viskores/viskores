@@ -25,10 +25,10 @@
 
 #include <vtkm/cont/testing/TestingCellLocatorTwoLevelUniformGrid.h>
 
-int UnitTestCudaCellLocatorTwoLevelUniformGrid(int, char* [])
+int UnitTestCudaCellLocatorTwoLevelUniformGrid(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorTwoLevelUniformGrid<vtkm::cont::DeviceAdapterTagCuda>);
+    TestingCellLocatorTwoLevelUniformGrid<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 }

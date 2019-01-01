@@ -214,7 +214,7 @@ static void ThreeDimUniformTest()
   }
 }
 
-int UnitTestDataSetUniform(int, char* [])
+int UnitTestDataSetUniform(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDataSet_Uniform);
+  return vtkm::cont::testing::Testing::Run(TestDataSet_Uniform, argc, argv);
 }

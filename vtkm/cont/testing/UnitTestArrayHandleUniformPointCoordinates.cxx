@@ -76,7 +76,7 @@ void TestArrayHandleUniformPointCoordinates()
 
 } // anonymous namespace
 
-int UnitTestArrayHandleUniformPointCoordinates(int, char* [])
+int UnitTestArrayHandleUniformPointCoordinates(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleUniformPointCoordinates);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleUniformPointCoordinates, argc, argv);
 }

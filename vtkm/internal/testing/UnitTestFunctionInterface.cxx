@@ -540,7 +540,7 @@ void TestFunctionInterface()
 
 } // anonymous namespace
 
-int UnitTestFunctionInterface(int, char* [])
+int UnitTestFunctionInterface(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFunctionInterface);
+  return vtkm::cont::testing::Testing::Run(TestFunctionInterface, argc, argv);
 }

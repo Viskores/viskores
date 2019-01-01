@@ -302,7 +302,7 @@ void TestCompositeVector()
 
 } // anonymous namespace
 
-int UnitTestArrayHandleCompositeVector(int, char* [])
+int UnitTestArrayHandleCompositeVector(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCompositeVector);
+  return vtkm::cont::testing::Testing::Run(TestCompositeVector, argc, argv);
 }

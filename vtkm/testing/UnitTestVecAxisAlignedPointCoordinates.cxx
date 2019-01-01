@@ -145,7 +145,7 @@ void TestVecAxisAlignedPointCoordinates()
 
 } // anonymous namespace
 
-int UnitTestVecAxisAlignedPointCoordinates(int, char* [])
+int UnitTestVecAxisAlignedPointCoordinates(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestVecAxisAlignedPointCoordinates);
+  return vtkm::testing::Testing::Run(TestVecAxisAlignedPointCoordinates, argc, argv);
 }

@@ -305,12 +305,12 @@ private:
   // };
 
 public:
-  VTKM_CONT static int Run()
+  VTKM_CONT static int Run(int argc, char* argv[])
   {
     std::cout << "TestingOpenGLInterop Run() " << std::endl;
 
     //verify that we can transfer basic arrays and constant value arrays to opengl
-    vtkm::testing::Testing::TryTypes(TransferFunctor());
+    vtkm::testing::Testing::TryTypes(TransferFunctor(), argc, argv);
 
     //verify that openGL interop works with all grid types in that we can
     //transfer coordinates / verts and properties to openGL

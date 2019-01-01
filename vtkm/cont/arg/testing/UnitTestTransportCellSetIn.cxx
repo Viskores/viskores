@@ -96,7 +96,7 @@ void UnitTestCellSetIn()
 
 } // Anonymous namespace
 
-int UnitTestTransportCellSetIn(int, char* [])
+int UnitTestTransportCellSetIn(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(UnitTestCellSetIn);
+  return vtkm::cont::testing::Testing::Run(UnitTestCellSetIn, argc, argv);
 }

@@ -180,14 +180,15 @@ void RunEdgeCases()
 
 } //namespace
 
-int UnitTestCudaMath(int, char* [])
+int UnitTestCudaMath(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   int tests_valid = vtkm::cont::testing::Testing::Run(
-    UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagCuda>);
+    UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 
-  tests_valid += vtkm::cont::testing::Testing::Run(RunEdgeCases<vtkm::cont::DeviceAdapterTagCuda>);
+  tests_valid +=
+    vtkm::cont::testing::Testing::Run(RunEdgeCases<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 
   return tests_valid;
 }

@@ -27,9 +27,10 @@
 
 #include <vtkm/cont/testing/TestingDataSetExplicit.h>
 
-int UnitTestTBBDataSetExplicit(int, char* [])
+int UnitTestTBBDataSetExplicit(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
-  return vtkm::cont::testing::TestingDataSetExplicit<vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingDataSetExplicit<vtkm::cont::DeviceAdapterTagTBB>::Run(argc,
+                                                                                           argv);
 }

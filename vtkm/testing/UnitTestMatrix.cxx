@@ -617,7 +617,7 @@ void TestMatrices()
 
 } // anonymous namespace
 
-int UnitTestMatrix(int, char* [])
+int UnitTestMatrix(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestMatrices);
+  return vtkm::testing::Testing::Run(TestMatrices, argc, argv);
 }

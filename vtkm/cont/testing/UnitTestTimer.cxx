@@ -46,7 +46,7 @@ void Time()
 
 } // anonymous namespace
 
-int UnitTestTimer(int, char* [])
+int UnitTestTimer(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Time);
+  return vtkm::cont::testing::Testing::Run(Time, argc, argv);
 }

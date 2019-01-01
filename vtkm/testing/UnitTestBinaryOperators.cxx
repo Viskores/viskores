@@ -119,7 +119,7 @@ void TestBinaryOperators()
 
 } // anonymous namespace
 
-int UnitTestBinaryOperators(int, char* [])
+int UnitTestBinaryOperators(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestBinaryOperators);
+  return vtkm::testing::Testing::Run(TestBinaryOperators, argc, argv);
 }

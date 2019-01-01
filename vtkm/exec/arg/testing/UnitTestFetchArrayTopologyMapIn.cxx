@@ -242,7 +242,7 @@ void TestArrayTopologyMapIn()
 
 } // anonymous namespace
 
-int UnitTestFetchArrayTopologyMapIn(int, char* [])
+int UnitTestFetchArrayTopologyMapIn(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestArrayTopologyMapIn);
+  return vtkm::testing::Testing::Run(TestArrayTopologyMapIn, argc, argv);
 }

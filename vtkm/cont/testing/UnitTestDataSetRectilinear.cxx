@@ -204,7 +204,7 @@ static void ThreeDimRectilinearTest()
   }
 }
 
-int UnitTestDataSetRectilinear(int, char* [])
+int UnitTestDataSetRectilinear(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDataSet_Rectilinear);
+  return vtkm::cont::testing::Testing::Run(TestDataSet_Rectilinear, argc, argv);
 }

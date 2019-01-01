@@ -273,7 +273,7 @@ void TestAllPCoords()
 
 } // Anonymous namespace
 
-int UnitTestParametricCoordinates(int, char* [])
+int UnitTestParametricCoordinates(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestAllPCoords);
+  return vtkm::testing::Testing::Run(TestAllPCoords, argc, argv);
 }

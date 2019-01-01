@@ -67,7 +67,7 @@ void TestVTKWrite()
 
 } //Anonymous namespace
 
-int UnitTestVTKDataSetWriter(int, char* [])
+int UnitTestVTKDataSetWriter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVTKWrite);
+  return vtkm::cont::testing::Testing::Run(TestVTKWrite, argc, argv);
 }
