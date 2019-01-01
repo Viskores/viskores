@@ -180,12 +180,53 @@ struct Test
     }
   }
 
+
+  void TestIsType()
+  {
+    vtkm::cont::ArrayHandle<ValueType> handle;
+    VirtHandle virt(std::move(handle));
+
+    VTKM_TEST_ASSERT(vtkm::cont::IsType<decltype(virt)>(virt),
+                     "virt should by same type as decltype(virt)");
+    VTKM_TEST_ASSERT(vtkm::cont::IsType<decltype(handle)>(virt),
+                     "virt should by same type as decltype(handle)");
+
+    vtkm::cont::ArrayHandle<vtkm::Vec<ValueType, 3>> vecHandle;
+    VTKM_TEST_ASSERT(!vtkm::cont::IsType<decltype(vecHandle)>(virt),
+                     "virt shouldn't by same type as decltype(vecHandle)");
+  }
+
+  void TestCast()
+  {
+
+    vtkm::cont::ArrayHandle<ValueType> handle;
+    VirtHandle virt(handle);
+
+    auto c1 = vtkm::cont::Cast<decltype(virt)>(virt);
+    VTKM_TEST_ASSERT(c1 == virt, "virt should cast to VirtHandle");
+
+    auto c2 = vtkm::cont::Cast<decltype(handle)>(virt);
+    VTKM_TEST_ASSERT(c2 == handle, "virt should cast to HandleType");
+
+    using VecHandle = vtkm::cont::ArrayHandle<vtkm::Vec<ValueType, 3>>;
+    try
+    {
+      auto c3 = vtkm::cont::Cast<VecHandle>(virt);
+      VTKM_TEST_FAIL("Cast of T to Vec<T,3> should have failed");
+    }
+    catch (vtkm::cont::ErrorBadType&)
+    {
+    }
+  }
+
   void operator()()
   {
     TestConstructors();
     TestMoveConstructors();
     TestAssignmentOps();
     TestPrepareForExecution();
+    TestIsType();
+    TestCast();
   }
 };
 

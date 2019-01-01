@@ -31,20 +31,8 @@ namespace cont
 
 template <typename T>
 template <typename ArrayHandleType>
-bool ArrayHandle<T, StorageTagVirtual>::IsSameType(
-  std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const
-{
-  if (!this->Storage)
-  {
-    return false;
-  }
-  using S = typename ArrayHandleType::StorageTag;
-  return this->Storage->template IsType<vtkm::cont::StorageAny<T, S>>();
-}
-
-template <typename T>
-template <typename ArrayHandleType>
-ArrayHandleType ArrayHandle<T, StorageTagVirtual>::CastToType(
+ArrayHandleType inline ArrayHandle<T, StorageTagVirtual>::CastToType(
+  std::true_type vtkmNotUsed(valueTypesMatch),
   std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const
 {
   if (!this->Storage)

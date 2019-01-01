@@ -184,16 +184,12 @@ public:
     return true; // different valuetype and/or storage
   }
 
-  /// Returns true if this array's storage matches the type passed in.
+  /// Returns true if this array matches the type passed in.
   ///
   template <typename ArrayHandleType>
   VTKM_CONT bool IsType() const
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-    using VT = typename ArrayHandleType::ValueType;
-    static_assert(
-      std::is_same<VT, T>::value,
-      "ArrayHandleVirtual<ValueType> can only be casted to an ArrayHandle of the same ValueType.");
 
     //We need to determine if we are checking that `ArrayHandleType`
     //is a virtual array handle since that is an easy check.
@@ -201,7 +197,14 @@ public:
     //
     using ST = typename ArrayHandleType::StorageTag;
     using is_base = std::is_same<vtkm::cont::StorageTagVirtual, ST>;
-    return this->IsSameType<ArrayHandleType>(is_base{});
+
+    //Determine if the Value type of the virtual and ArrayHandleType
+    //are the same. This an easy compile time check, and doesn't need
+    // to be done at runtime.
+    using VT = typename ArrayHandleType::ValueType;
+    using same_value_type = std::is_same<T, VT>;
+
+    return this->IsSameType<ArrayHandleType>(same_value_type{}, is_base{});
   }
 
   /// Returns this array cast to the given \c ArrayHandle type. Throws \c
@@ -212,18 +215,20 @@ public:
   VTKM_CONT ArrayHandleType Cast() const
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-    using VT = typename ArrayHandleType::ValueType;
-    static_assert(
-      std::is_same<VT, T>::value,
-      "ArrayHandleVirtual<ValueType> can only be casted to an ArrayHandle of the same ValueType.");
-
     //We need to determine if we are checking that `ArrayHandleType`
     //is a virtual array handle since that is an easy check.
     //Or if we have to go ask the storage if they are holding
     //
     using ST = typename ArrayHandleType::StorageTag;
     using is_base = std::is_same<vtkm::cont::StorageTagVirtual, ST>;
-    return this->CastToType<ArrayHandleType>(is_base{});
+
+    //Determine if the Value type of the virtual and ArrayHandleType
+    //are the same. This an easy compile time check, and doesn't need
+    // to be done at runtime.
+    using VT = typename ArrayHandleType::ValueType;
+    using same_value_type = std::is_same<T, VT>;
+
+    return this->CastToType<ArrayHandleType>(same_value_type{}, is_base{});
   }
 
   /// Returns a new instance of an ArrayHandleVirtual with the same storage
@@ -353,27 +358,64 @@ protected:
 
 private:
   template <typename ArrayHandleType>
-  bool IsSameType(std::true_type vtkmNotUsed(inheritsFromArrayHandleVirtual)) const
+  inline bool IsSameType(std::false_type, std::true_type) const
+  {
+    return false;
+  }
+  template <typename ArrayHandleType>
+  inline bool IsSameType(std::false_type, std::false_type) const
+  {
+    return false;
+  }
+
+  template <typename ArrayHandleType>
+  inline bool IsSameType(std::true_type vtkmNotUsed(valueTypesMatch),
+                         std::true_type vtkmNotUsed(inheritsFromArrayHandleVirtual)) const
   {
     //All classes that derive from ArrayHandleVirtual have virtual methods so we can use
     //typeid directly.
     //needs optimizations based on platform. !OSX can use typeid
-    return nullptr != dynamic_cast<const ArrayHandleType*>(this);
+    auto casted = dynamic_cast<const ArrayHandleType*>(this);
+    return casted != nullptr;
   }
 
   template <typename ArrayHandleType>
-  bool IsSameType(std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const;
+  inline bool IsSameType(std::true_type vtkmNotUsed(valueTypesMatch),
+                         std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const
+  {
+    if (!this->Storage)
+    {
+      return false;
+    }
+    using S = typename ArrayHandleType::StorageTag;
+    return this->Storage->template IsType<vtkm::cont::StorageAny<T, S>>();
+  }
 
   template <typename ArrayHandleType>
-  ArrayHandleType CastToType(std::true_type vtkmNotUsed(inheritsFromArrayHandleVirtual)) const
+  inline ArrayHandleType CastToType(std::false_type vtkmNotUsed(valueTypesMatch),
+                                    std::true_type vtkmNotUsed(notFromArrayHandleVirtual)) const
+  {
+    VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
+    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeName<ArrayHandleType>());
+    return ArrayHandleType{};
+  }
+
+  template <typename ArrayHandleType>
+  inline ArrayHandleType CastToType(std::false_type vtkmNotUsed(valueTypesMatch),
+                                    std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const
+  {
+    VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
+    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeName<ArrayHandleType>());
+    return ArrayHandleType{};
+  }
+
+  template <typename ArrayHandleType>
+  inline ArrayHandleType CastToType(
+    std::true_type vtkmNotUsed(valueTypesMatch),
+    std::true_type vtkmNotUsed(inheritsFromArrayHandleVirtual)) const
   {
     //All classes that derive from ArrayHandleVirtual have virtual methods so we can use
     //dynamic_cast directly
-    if (!this->Storage)
-    {
-      VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
-      throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeName<ArrayHandleType>());
-    }
     const ArrayHandleType* derived = dynamic_cast<const ArrayHandleType*>(this);
     if (!derived)
     {
@@ -385,7 +427,8 @@ private:
   }
 
   template <typename ArrayHandleType>
-  ArrayHandleType CastToType(std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const;
+  ArrayHandleType CastToType(std::true_type vtkmNotUsed(valueTypesMatch),
+                             std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const;
 };
 
 //=============================================================================
@@ -406,12 +449,18 @@ VTKM_CONT vtkm::cont::ArrayHandleVirtual<T> make_ArrayHandleVirtual(
 //=============================================================================
 // Free function casting helpers
 
+/// Returns true if \c virtHandle matches the type of ArrayHandleType.
+///
 template <typename ArrayHandleType, typename T>
 VTKM_CONT inline bool IsType(const vtkm::cont::ArrayHandleVirtual<T>& virtHandle)
 {
   return virtHandle.template IsType<ArrayHandleType>();
 }
 
+/// Returns \c virtHandle cast to the given \c ArrayHandle type. Throws \c
+/// ErrorBadType if the cast does not work. Use \c IsType
+/// to check if the cast can happen.
+///
 template <typename ArrayHandleType, typename T>
 VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::ArrayHandleVirtual<T>& virtHandle)
 {
