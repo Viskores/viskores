@@ -26,6 +26,11 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 
+#include <vtkm/Bitset.h>
+#include <vtkm/Bounds.h>
+#include <vtkm/Pair.h>
+#include <vtkm/Range.h>
+
 #include <vtkm/TypeListTag.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -33,6 +38,7 @@
 
 namespace
 {
+
 // clang-format off
 template<typename T>
 void is_noexcept_movable()
@@ -55,12 +61,13 @@ void is_triv_noexcept_movable()
                          std::is_trivially_move_assignable<T>::value &&
 #endif
                          std::is_nothrow_move_constructible<T>::value &&
-                         std::is_nothrow_move_assignable<T>::value;
+                         std::is_nothrow_move_assignable<T>::value &&
+                         std::is_nothrow_constructible<T, T&&>::value;
 
   std::string msg = typeid(T).name() + std::string(" should be noexcept moveable");
   VTKM_TEST_ASSERT(valid, msg);
 }
-// clang-format o
+// clang-format on
 
 struct IsTrivNoExcept
 {
@@ -96,19 +103,30 @@ struct IsNoExceptHandle
       std::declval<VirtualType>().PrepareForOutput(2, vtkm::cont::DeviceAdapterTagSerial{}))>();
   }
 };
+
+struct vtkmComplexCustomTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<float, 3>, 3>,
+                                                  vtkm::Pair<vtkm::UInt64, vtkm::UInt64>,
+                                                  vtkm::Bitset<vtkm::UInt64>,
+                                                  vtkm::Bounds,
+                                                  vtkm::Range>
+{
+};
 }
 
 //-----------------------------------------------------------------------------
 void TestContDataTypesHaveMoveSemantics()
 {
   //verify the Vec types are triv and noexcept
-  vtkm::testing::Testing::TryTypes( IsTrivNoExcept{}, vtkm::TypeListTagVecCommon{} );
-  is_triv_noexcept_movable<vtkm::Vec<vtkm::Vec<float,3>,3>>();
+  vtkm::testing::Testing::TryTypes(IsTrivNoExcept{}, vtkm::TypeListTagVecCommon{});
+  //verify that vtkm::Pair, Bitset, Bounds, and Range are triv and noexcept
+  vtkm::testing::Testing::TryTypes(IsTrivNoExcept{}, vtkmComplexCustomTypes{});
 
 
   //verify that ArrayHandles and related portals are noexcept movable
   //allowing for efficient storage in containers such as std::vector
-  vtkm::testing::Testing::TryTypes( IsNoExceptHandle{}, vtkm::TypeListTagAll{} );
+  vtkm::testing::Testing::TryTypes(IsNoExceptHandle{}, vtkm::TypeListTagAll{});
+
+  vtkm::testing::Testing::TryTypes(IsNoExceptHandle{}, ::vtkmComplexCustomTypes{});
 
   //verify the DataSet, Field, CoordinateSystem, and ArrayHandleVirtualCoordinates
   //all have efficient storage in containers such as std::vector

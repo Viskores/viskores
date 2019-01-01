@@ -36,11 +36,6 @@ namespace vtkm
 template <typename MaskType>
 struct Bitset
 {
-  VTKM_EXEC_CONT Bitset()
-    : Mask(0)
-  {
-  }
-
   VTKM_EXEC_CONT void set(vtkm::Id bitIndex)
   {
     this->Mask = this->Mask | (static_cast<MaskType>(1) << bitIndex);
@@ -62,7 +57,7 @@ struct Bitset
   }
 
 private:
-  MaskType Mask;
+  MaskType Mask = 0;
 };
 
 } // namespace vtkm
