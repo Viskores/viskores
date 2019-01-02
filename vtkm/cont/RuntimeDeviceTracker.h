@@ -209,7 +209,8 @@ public:
   DeviceAdapterNameType GetDeviceName(DeviceAdapterId id) const;
 
   /// Returns the id corresponding to the device adapter name. If @a name is
-  /// not recognized, DeviceAdapterTagUndefined is returned.
+  /// not recognized, DeviceAdapterTagUndefined is returned. Queries for a
+  /// name are all case-insensitive.
   VTKM_CONT_EXPORT
   VTKM_CONT
   DeviceAdapterId GetDeviceAdapterId(DeviceAdapterNameType name) const;

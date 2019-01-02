@@ -38,6 +38,7 @@
 
 
 #include <algorithm>
+#include <cctype> //for tolower
 #include <map>
 #include <mutex>
 #include <sstream>
@@ -49,22 +50,33 @@ namespace
 struct VTKM_NEVER_EXPORT GetDeviceNameFunctor
 {
   vtkm::cont::DeviceAdapterNameType* Names;
+  vtkm::cont::DeviceAdapterNameType* LowerCaseNames;
 
   VTKM_CONT
-  GetDeviceNameFunctor(vtkm::cont::DeviceAdapterNameType* names)
+  GetDeviceNameFunctor(vtkm::cont::DeviceAdapterNameType* names,
+                       vtkm::cont::DeviceAdapterNameType* lower)
     : Names(names)
+    , LowerCaseNames(lower)
   {
     std::fill_n(this->Names, VTKM_MAX_DEVICE_ADAPTER_ID, "InvalidDeviceId");
+    std::fill_n(this->LowerCaseNames, VTKM_MAX_DEVICE_ADAPTER_ID, "invaliddeviceid");
   }
 
   template <typename Device>
   VTKM_CONT void operator()(Device device)
   {
+    auto lowerCaseFunc = [](char c) {
+      return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    };
+
     auto id = device.GetValue();
 
     if (id > 0 && id < VTKM_MAX_DEVICE_ADAPTER_ID)
     {
-      this->Names[id] = vtkm::cont::DeviceAdapterTraits<Device>::GetName();
+      auto name = vtkm::cont::DeviceAdapterTraits<Device>::GetName();
+      this->Names[id] = name;
+      std::transform(name.begin(), name.end(), name.begin(), lowerCaseFunc);
+      this->LowerCaseNames[id] = name;
     }
   }
 };
@@ -87,6 +99,7 @@ struct RuntimeDeviceTrackerInternals
 {
   bool RuntimeValid[VTKM_MAX_DEVICE_ADAPTER_ID];
   DeviceAdapterNameType DeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
+  DeviceAdapterNameType LowerCaseDeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
 };
 
 struct RuntimeDeviceTrackerFunctor
@@ -107,7 +120,7 @@ VTKM_CONT
 RuntimeDeviceTracker::RuntimeDeviceTracker()
   : Internals(std::make_shared<detail::RuntimeDeviceTrackerInternals>())
 {
-  GetDeviceNameFunctor functor(this->Internals->DeviceNames);
+  GetDeviceNameFunctor functor(this->Internals->DeviceNames, this->Internals->LowerCaseDeviceNames);
   vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
 
   this->Reset();
@@ -197,6 +210,9 @@ RuntimeDeviceTracker::RuntimeDeviceTracker(
 {
   std::copy_n(internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->RuntimeValid);
   std::copy_n(internals->DeviceNames, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->DeviceNames);
+  std::copy_n(internals->LowerCaseDeviceNames,
+              VTKM_MAX_DEVICE_ADAPTER_ID,
+              this->Internals->LowerCaseDeviceNames);
 }
 
 VTKM_CONT
@@ -265,22 +281,30 @@ DeviceAdapterNameType RuntimeDeviceTracker::GetDeviceName(DeviceAdapterId device
 VTKM_CONT
 DeviceAdapterId RuntimeDeviceTracker::GetDeviceAdapterId(DeviceAdapterNameType name) const
 {
-  if (name == "Any")
+  // The GetDeviceAdapterId call is case-insensitive so transform the name to be lower case
+  // as that is how we cache the case-insensitive version.
+  auto lowerCaseFunc = [](char c) {
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+  };
+  std::transform(name.begin(), name.end(), name.begin(), lowerCaseFunc);
+
+  //lower-case the name here
+  if (name == "any")
   {
     return vtkm::cont::DeviceAdapterTagAny{};
   }
-  else if (name == "Error")
+  else if (name == "error")
   {
     return vtkm::cont::DeviceAdapterTagError{};
   }
-  else if (name == "Undefined")
+  else if (name == "undefined")
   {
     return vtkm::cont::DeviceAdapterTagUndefined{};
   }
 
   for (vtkm::Int8 id = 0; id < VTKM_MAX_DEVICE_ADAPTER_ID; ++id)
   {
-    if (name == this->Internals->DeviceNames[id])
+    if (name == this->Internals->LowerCaseDeviceNames[id])
     {
       return vtkm::cont::make_DeviceAdapterId(id);
     }
