@@ -20,6 +20,7 @@
 #ifndef vtk_m_testing_Testing_h
 #define vtk_m_testing_Testing_h
 
+#include <vtkm/Bitset.h>
 #include <vtkm/Bounds.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
@@ -109,6 +110,9 @@ VTK_M_BASIC_TYPE(vtkm::UInt32);
 VTK_M_BASIC_TYPE(vtkm::Int64);
 VTK_M_BASIC_TYPE(vtkm::UInt64);
 
+VTK_M_BASIC_TYPE(vtkm::Bounds);
+VTK_M_BASIC_TYPE(vtkm::Range);
+
 #undef VTK_M_BASIC_TYPE
 
 template <typename T, vtkm::IdComponent Size>
@@ -129,6 +133,17 @@ struct TypeName<vtkm::Pair<T, U>>
   {
     std::stringstream stream;
     stream << "vtkm::Pair< " << TypeName<T>::Name() << ", " << TypeName<U>::Name() << " >";
+    return stream.str();
+  }
+};
+
+template <typename T>
+struct TypeName<vtkm::Bitset<T>>
+{
+  static std::string Name()
+  {
+    std::stringstream stream;
+    stream << "vtkm::Bitset< " << TypeName<T>::Name() << " >";
     return stream.str();
   }
 };
