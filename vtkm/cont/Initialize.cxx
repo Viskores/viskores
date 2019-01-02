@@ -182,8 +182,6 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     {
       auto id = vtkm::cont::make_DeviceAdapterId(options[DEVICE].arg);
       auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Forcing device '" << tracker.GetDeviceName(id) << "'");
       tracker.ForceDevice(id);
       config.Device = id;
     }

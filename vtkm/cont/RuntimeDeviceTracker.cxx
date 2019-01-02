@@ -137,6 +137,9 @@ VTKM_CONT
 void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, bool state)
 {
   this->CheckDevice(deviceId);
+
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             "Setting device '" << deviceId.GetName() << "' to " << state);
   this->Internals->RuntimeValid[deviceId.GetValue()] = state;
 }
 
@@ -196,6 +199,9 @@ void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
     throw vtkm::cont::ErrorBadValue(message.str());
   }
   this->CheckDevice(deviceId);
+
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             "Forcing execution to occur on device '" << deviceId.GetName() << "'");
 
   std::fill_n(this->Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, false);
 
