@@ -70,8 +70,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMultiMapper(int, char* [])
+int UnitTestMultiMapper(int argc, char* argv[])
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }
