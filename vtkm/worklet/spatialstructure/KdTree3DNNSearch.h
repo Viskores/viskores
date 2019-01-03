@@ -214,7 +214,7 @@ public:
 
 //set up stack size for cuda environment
 #ifdef VTKM_CUDA
-    std::size_t stackSizeBackup;
+    std::size_t stackSizeBackup(0);
     (void)stackSizeBackup;
     if (id.GetValue() == VTKM_DEVICE_ADAPTER_CUDA)
     {
