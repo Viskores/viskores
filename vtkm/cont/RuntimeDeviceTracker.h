@@ -217,6 +217,11 @@ public:
 private:
   std::shared_ptr<detail::RuntimeDeviceTrackerInternals> Internals;
 
+  // Deep Copy constructor.
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  RuntimeDeviceTracker(const std::shared_ptr<detail::RuntimeDeviceTrackerInternals>& internals);
+
   VTKM_CONT_EXPORT
   VTKM_CONT
   void CheckDevice(vtkm::cont::DeviceAdapterId deviceId) const;
@@ -243,9 +248,6 @@ private:
 /// so that these choices are marked and shared.
 ///
 /// Xcode's clang only supports thread_local from version 8
-#if !(defined(VTKM_CLANG) && (__apple_build_version__ < 8000000))
-thread_local static vtkm::cont::RuntimeDeviceTracker runtimeDeviceTracker;
-#endif
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker();
