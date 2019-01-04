@@ -154,13 +154,13 @@ private:
     probe.SetFieldsToPass({ "pointdata", "celldata" });
     auto output = probe.Execute(input);
 
-    TestResultArray(output.GetField("pointdata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("pointdata").GetData()),
                     GetExpectedPointData());
-    TestResultArray(output.GetField("celldata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("celldata").GetData()),
                     GetExpectedCellData());
-    TestResultArray(output.GetPointField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetPointField("HIDDEN").GetData()),
                     GetExpectedHiddenPoints());
-    TestResultArray(output.GetCellField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetCellField("HIDDEN").GetData()),
                     GetExpectedHiddenCells());
   }
 
@@ -176,13 +176,13 @@ private:
     probe.SetFieldsToPass({ "pointdata", "celldata" });
     auto output = probe.Execute(input);
 
-    TestResultArray(output.GetField("pointdata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("pointdata").GetData()),
                     GetExpectedPointData());
-    TestResultArray(output.GetField("celldata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("celldata").GetData()),
                     GetExpectedCellData());
-    TestResultArray(output.GetPointField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetPointField("HIDDEN").GetData()),
                     GetExpectedHiddenPoints());
-    TestResultArray(output.GetCellField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetCellField("HIDDEN").GetData()),
                     GetExpectedHiddenCells());
   }
 
@@ -198,13 +198,13 @@ private:
     probe.SetFieldsToPass({ "pointdata", "celldata" });
     auto output = probe.Execute(input);
 
-    TestResultArray(output.GetField("pointdata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("pointdata").GetData()),
                     GetExpectedPointData());
-    TestResultArray(output.GetField("celldata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("celldata").GetData()),
                     GetExpectedCellData());
-    TestResultArray(output.GetPointField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetPointField("HIDDEN").GetData()),
                     GetExpectedHiddenPoints());
-    TestResultArray(output.GetCellField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetCellField("HIDDEN").GetData()),
                     GetExpectedHiddenCells());
   }
 
