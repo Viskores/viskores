@@ -37,9 +37,9 @@
 
 #endif // VTKM_ENABLE_LOGGING
 
-#include <vtkm/testing/Testing.h> // for HumanSize
-
 #include <cassert>
+#include <iomanip>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
@@ -213,6 +213,36 @@ std::string GetStackTrace(vtkm::Int32 skip)
   }
 
   return result;
+}
+
+
+namespace
+{
+/// Convert a size in bytes to a human readable string (e.g. "64 bytes",
+/// "1.44 MiB", "128 GiB", etc). @a prec controls the fixed point precision
+/// of the stringified number.
+inline VTKM_CONT std::string HumanSize(vtkm::UInt64 bytes, int prec = 2)
+{
+  std::int64_t current = bytes;
+  std::int64_t previous = bytes;
+
+  constexpr const char* units[] = { "bytes", "KiB", "MiB", "GiB", "TiB", "PiB" };
+
+  //this way reduces the number of float divisions we do
+  int i = 0;
+  while (current > 1024)
+  {
+    previous = current;
+    current = current >> 10; //shift up by 1024
+    ++i;
+  }
+
+  const double bytesf =
+    (i == 0) ? static_cast<double>(previous) : static_cast<double>(previous) / 1024.;
+  std::ostringstream out;
+  out << std::fixed << std::setprecision(prec) << bytesf << " " << units[i];
+  return out.str();
+}
 }
 
 VTKM_CONT

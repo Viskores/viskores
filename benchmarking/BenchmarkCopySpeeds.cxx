@@ -33,6 +33,7 @@
 
 #include <vtkm/testing/Testing.h>
 
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -83,8 +84,9 @@ struct MeasureCopySpeed
     vtkm::UInt64 actualSize = sizeof(ValueType);
     actualSize *= static_cast<vtkm::UInt64>(this->Source.GetNumberOfValues());
     std::ostringstream out;
-    out << "Copying " << HumanSize(this->NumBytes) << " (actual=" << HumanSize(actualSize)
-        << ") of " << vtkm::testing::TypeName<ValueType>::Name() << "\n";
+    out << "Copying " << vtkm::cont::GetHumanReadableSize(this->NumBytes)
+        << " (actual=" << vtkm::cont::GetHumanReadableSize(actualSize) << ") of "
+        << vtkm::testing::TypeName<ValueType>::Name() << "\n";
     return out.str();
   }
 };
@@ -123,14 +125,14 @@ void BenchmarkValueType()
     {
       bench.GatherSamples(functor);
       vtkm::Float64 speed = static_cast<Float64>(size) / stats::Mean(bench.GetSamples());
-      speedStr = HumanSize(static_cast<UInt64>(speed)) + std::string("/s");
+      speedStr = vtkm::cont::GetHumanReadableSize(static_cast<UInt64>(speed)) + std::string("/s");
     }
     catch (vtkm::cont::ErrorBadAllocation&)
     {
       speedStr = "[allocation too large]";
     }
 
-    PrintRow(std::cout, HumanSize(size), speedStr);
+    PrintRow(std::cout, vtkm::cont::GetHumanReadableSize(size), speedStr);
   }
 
   std::cout << "\n";
