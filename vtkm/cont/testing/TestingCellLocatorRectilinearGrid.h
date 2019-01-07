@@ -106,7 +106,6 @@ public:
   {
     vtkm::Id calculated = CalculateCellId(pointIn);
     locator->FindCell(pointIn, cellId, parametric, (*this));
-    std::cout << " Calculated : " << calculated << ", Locator : " << cellId << std::endl;
     match = (calculated == cellId);
   }
 
