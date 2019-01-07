@@ -28,6 +28,7 @@ set(headers
   CellInterpolate.h
   CellLocator.h
   CellLocatorUniformGrid.h
+  CellLocatorRectilinearGrid.h
   CellMeasure.h
   ColorTable.h
   ConnectivityExplicit.h

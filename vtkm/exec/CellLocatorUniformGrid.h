@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
+//  Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2019 UT-Battelle, LLC.
+//  Copyright 2019 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -40,6 +40,15 @@ namespace exec
 template <typename DeviceAdapter>
 class CellLocatorUniformGrid : public vtkm::exec::CellLocator
 {
+private:
+  using FromType = vtkm::TopologyElementTagPoint;
+  using ToType = vtkm::TopologyElementTagCell;
+  using CellSetPortal = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                                           vtkm::TopologyElementTagCell,
+                                                           3>;
+  using CoordsPortal = typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
+    DeviceAdapter>::PortalConst;
+
 public:
   VTKM_CONT
   CellLocatorUniformGrid(const vtkm::Bounds& bounds,
@@ -91,13 +100,6 @@ public:
   }
 
 private:
-  using FromType = vtkm::TopologyElementTagPoint;
-  using ToType = vtkm::TopologyElementTagCell;
-  using CellSetPortal = typename vtkm::cont::CellSetStructured<
-    3>::template ExecutionTypes<DeviceAdapter, FromType, ToType>::ExecObjectType;
-  using CoordsPortal = typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
-
   vtkm::Bounds Bounds;
   vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
   vtkm::Id PlaneSize;

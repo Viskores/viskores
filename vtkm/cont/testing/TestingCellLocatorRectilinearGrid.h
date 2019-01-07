@@ -17,30 +17,42 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_testing_TestingCellLocatorUniformGrid_h
-#define vtk_m_cont_testing_TestingCellLocatorUniformGrid_h
+#ifndef vtk_m_cont_testing_TestingCellLocatorRectilinearGrid_h
+#define vtk_m_cont_testing_TestingCellLocatorRectilinearGrid_h
 
 #include <random>
 #include <string>
 
-#include <vtkm/cont/CellLocatorUniformGrid.h>
+#include <vtkm/cont/CellLocatorRectilinearGrid.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderRectilinear.h>
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/exec/CellLocatorUniformGrid.h>
+#include <vtkm/exec/CellLocatorRectilinearGrid.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+template <typename DeviceAdapter>
 class LocatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  LocatorWorklet(vtkm::Bounds& bounds_, vtkm::Vec<vtkm::Id, 3>& dims_)
-    : bounds(bounds_)
-    , dims(dims_)
+  using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+  using AxisPortalType = typename AxisHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using RectilinearType =
+    vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
+  using RectilinearPortalType =
+    typename RectilinearType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+
+  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Vec<vtkm::Id, 3>& dims, const RectilinearType& coords)
+    : Bounds(bounds)
+    , Dims(dims)
   {
+    RectilinearPortalType coordsPortal = coords.PrepareForInput(DeviceAdapter());
+    xAxis = coordsPortal.GetFirstPortal();
+    yAxis = coordsPortal.GetSecondPortal();
+    zAxis = coordsPortal.GetThirdPortal();
   }
 
   using ControlSignature = void(FieldIn<> pointIn,
@@ -54,16 +66,35 @@ public:
   template <typename PointType>
   VTKM_EXEC vtkm::Id CalculateCellId(const PointType& point) const
   {
-    if (!bounds.Contains(point))
+    if (!Bounds.Contains(point))
       return -1;
-    vtkm::Vec<vtkm::Id, 3> logical;
-    logical[0] = static_cast<vtkm::Id>(
-      vtkm::Floor((point[0] / bounds.X.Length()) * static_cast<vtkm::FloatDefault>(dims[0] - 1)));
-    logical[1] = static_cast<vtkm::Id>(
-      vtkm::Floor((point[1] / bounds.Y.Length()) * static_cast<vtkm::FloatDefault>(dims[1] - 1)));
-    logical[2] = static_cast<vtkm::Id>(
-      vtkm::Floor((point[2] / bounds.Z.Length()) * static_cast<vtkm::FloatDefault>(dims[2] - 1)));
-    return logical[2] * (dims[0] - 1) * (dims[1] - 1) + logical[1] * (dims[0] - 1) + logical[0];
+    vtkm::Vec<vtkm::Id, 3> logical(-1, -1, -1);
+    // Linear search in the coordinates.
+    vtkm::Id index;
+    /*Get floor X location*/
+    for (index = 0; index < this->Dims[0] - 1; index++)
+      if (xAxis.Get(index) <= point[0] && point[0] < xAxis.Get(index + 1))
+      {
+        logical[0] = index;
+        break;
+      }
+    /*Get floor Y location*/
+    for (index = 0; index < this->Dims[1] - 1; index++)
+      if (yAxis.Get(index) <= point[1] && point[1] < yAxis.Get(index + 1))
+      {
+        logical[1] = index;
+        break;
+      }
+    /*Get floor Z location*/
+    for (index = 0; index < this->Dims[2] - 1; index++)
+      if (zAxis.Get(index) <= point[2] && point[2] < zAxis.Get(index + 1))
+      {
+        logical[2] = index;
+        break;
+      }
+    if (logical[0] == -1 || logical[1] == -1 || logical[2] == -1)
+      return -1;
+    return logical[2] * (Dims[0] - 1) * (Dims[1] - 1) + logical[1] * (Dims[0] - 1) + logical[0];
   }
 
   template <typename PointType, typename LocatorType>
@@ -75,66 +106,86 @@ public:
   {
     vtkm::Id calculated = CalculateCellId(pointIn);
     locator->FindCell(pointIn, cellId, parametric, (*this));
+    std::cout << " Calculated : " << calculated << ", Locator : " << cellId << std::endl;
     match = (calculated == cellId);
   }
 
 private:
-  vtkm::Bounds bounds;
-  vtkm::Vec<vtkm::Id, 3> dims;
+  vtkm::Bounds Bounds;
+  vtkm::Vec<vtkm::Id, 3> Dims;
+  AxisPortalType xAxis;
+  AxisPortalType yAxis;
+  AxisPortalType zAxis;
 };
 
 template <typename DeviceAdapter>
-class TestingCellLocatorUniformGrid
+class TestingCellLocatorRectilinearGrid
 {
 public:
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
   void TestTest() const
   {
-    vtkm::cont::DataSet dataset = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
+    vtkm::cont::DataSetBuilderRectilinear dsb;
+    std::vector<vtkm::Float32> X(4), Y(3), Z(5);
+    X[0] = 0.0f;
+    X[1] = 1.0f;
+    X[2] = 3.0f;
+    X[3] = 4.0f;
+    Y[0] = 0.0f;
+    Y[1] = 1.0f;
+    Y[2] = 2.0f;
+    Z[0] = 0.0f;
+    Z[1] = 1.0f;
+    Z[2] = 3.0f;
+    Z[3] = 5.0f;
+    Z[4] = 6.0f;
+    vtkm::cont::DataSet dataset = dsb.Create(X, Y, Z);
+
+    using StructuredType = vtkm::cont::CellSetStructured<3>;
+    using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+    using RectilinearType =
+      vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
+
     vtkm::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
     vtkm::cont::DynamicCellSet cellSet = dataset.GetCellSet();
-
     vtkm::Bounds bounds = coords.GetBounds();
     std::cout << "X bounds : " << bounds.X.Min << " to " << bounds.X.Max << std::endl;
     std::cout << "Y bounds : " << bounds.Y.Min << " to " << bounds.Y.Max << std::endl;
     std::cout << "Z bounds : " << bounds.Z.Min << " to " << bounds.Z.Max << std::endl;
-
-    using StructuredType = vtkm::cont::CellSetStructured<3>;
     vtkm::Vec<vtkm::Id, 3> dims =
       cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
     std::cout << "Dimensions of dataset : " << dims << std::endl;
-
-    vtkm::cont::CellLocatorUniformGrid locator;
-    locator.SetCoordinates(coords);
-    locator.SetCellSet(cellSet);
-
-    locator.Update();
 
     // Generate some sample points.
     using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
     std::vector<PointType> pointsVec;
     std::default_random_engine dre;
-    std::uniform_real_distribution<vtkm::Float32> inBounds(0.0f, 4.0f);
+    std::uniform_real_distribution<vtkm::Float32> xCoords(0.0f, 4.0f);
+    std::uniform_real_distribution<vtkm::Float32> yCoords(0.0f, 2.0f);
+    std::uniform_real_distribution<vtkm::Float32> zCoords(0.0f, 6.0f);
     for (size_t i = 0; i < 10; i++)
     {
-      PointType point = vtkm::make_Vec(inBounds(dre), inBounds(dre), inBounds(dre));
-      pointsVec.push_back(point);
-    }
-    std::uniform_real_distribution<vtkm::Float32> outBounds(4.0f, 5.0f);
-    for (size_t i = 0; i < 5; i++)
-    {
-      PointType point = vtkm::make_Vec(outBounds(dre), outBounds(dre), outBounds(dre));
+      PointType point = vtkm::make_Vec(xCoords(dre), yCoords(dre), zCoords(dre));
       pointsVec.push_back(point);
     }
 
     vtkm::cont::ArrayHandle<PointType> points = vtkm::cont::make_ArrayHandle(pointsVec);
-    // Query the points using the locators.
+
+    // Initialize locator
+    vtkm::cont::CellLocatorRectilinearGrid locator;
+    locator.SetCoordinates(coords);
+    locator.SetCellSet(cellSet);
+    locator.Update();
+
+    // Query the points using the locator.
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
     vtkm::cont::ArrayHandle<PointType> parametric;
     vtkm::cont::ArrayHandle<bool> match;
-    LocatorWorklet worklet(bounds, dims);
-    vtkm::worklet::DispatcherMapField<LocatorWorklet> dispatcher(worklet);
+    LocatorWorklet<DeviceAdapter> worklet(
+      bounds, dims, coords.GetData().template Cast<RectilinearType>());
+
+    vtkm::worklet::DispatcherMapField<LocatorWorklet<DeviceAdapter>> dispatcher(worklet);
     dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(points, locator, cellIds, parametric, match);
 
