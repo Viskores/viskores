@@ -54,7 +54,7 @@ public:
   //use parents constructor
   using PortalVirtualBase::PortalVirtualBase;
 
-  VTKM_EXEC_CONT virtual ~ArrayPortalVirtual<T>() = default;
+  VTKM_EXEC_CONT virtual ~ArrayPortalVirtual<T>(){};
 
   VTKM_EXEC_CONT virtual T Get(vtkm::Id index) const noexcept = 0;
 
