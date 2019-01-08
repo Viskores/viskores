@@ -73,13 +73,19 @@ public:
     AxisPortals[1] = Coords.GetSecondPortal();
     AxisPortals[2] = Coords.GetThirdPortal();
 
-    MinPoint[0] = static_cast<vtkm::Float32>(AxisPortals[0].Get(0));
-    MinPoint[1] = static_cast<vtkm::Float32>(AxisPortals[1].Get(0));
-    MinPoint[2] = static_cast<vtkm::Float32>(AxisPortals[2].Get(0));
+    MinPoint[0] =
+      static_cast<vtkm::Float32>(coords.GetPortalConstControl().GetFirstPortal().Get(0));
+    MinPoint[1] =
+      static_cast<vtkm::Float32>(coords.GetPortalConstControl().GetSecondPortal().Get(0));
+    MinPoint[2] =
+      static_cast<vtkm::Float32>(coords.GetPortalConstControl().GetThirdPortal().Get(0));
 
-    MaxPoint[0] = static_cast<vtkm::Float32>(AxisPortals[0].Get(PointDimensions[0] - 1));
-    MaxPoint[1] = static_cast<vtkm::Float32>(AxisPortals[1].Get(PointDimensions[1] - 1));
-    MaxPoint[2] = static_cast<vtkm::Float32>(AxisPortals[2].Get(PointDimensions[2] - 1));
+    MaxPoint[0] = static_cast<vtkm::Float32>(
+      coords.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1));
+    MaxPoint[1] = static_cast<vtkm::Float32>(
+      coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1));
+    MaxPoint[2] = static_cast<vtkm::Float32>(
+      coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1));
   }
 
   VTKM_EXEC
@@ -108,7 +114,6 @@ public:
     }
     // Get the Cell Id from the point.
     vtkm::Vec<vtkm::Id, 3> logicalCell(0, 0, 0);
-
     for (vtkm::Int32 dim = 0; dim < 3; ++dim)
     {
       //
