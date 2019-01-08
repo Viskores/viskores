@@ -32,6 +32,15 @@ namespace internal
 {
 
 VariantArrayHandleContainerBase::VariantArrayHandleContainerBase()
+  : NumberOfComponents(0)
+  , TypeIndex(typeid(nullptr))
+{
+}
+
+VariantArrayHandleContainerBase::VariantArrayHandleContainerBase(vtkm::IdComponent numComps,
+                                                                 const std::type_info& typeinfo)
+  : NumberOfComponents(numComps)
+  , TypeIndex(typeinfo)
 {
 }
 

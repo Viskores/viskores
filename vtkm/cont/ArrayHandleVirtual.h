@@ -77,8 +77,6 @@ public:
   /// // Make fancy array.
   /// vtkm::cont::ArrayHandleCounting<vtkm::Float64> fancyArray(-1.0, 0.1, ARRAY_SIZE);
   /// vectorOfArrays.push_back(fancyArray);
-
-
   template <typename S>
   ArrayHandle(const vtkm::cont::ArrayHandle<T, S>& ah)
     : Storage(std::make_shared<vtkm::cont::StorageAny<T, S>>(ah))
@@ -372,9 +370,8 @@ private:
   inline bool IsSameType(std::true_type vtkmNotUsed(valueTypesMatch),
                          std::true_type vtkmNotUsed(inheritsFromArrayHandleVirtual)) const
   {
-    //All classes that derive from ArrayHandleVirtual have virtual methods so we can use
-    //typeid directly.
-    //needs optimizations based on platform. !OSX can use typeid
+    //The type being past has no requirements in being the most derived type
+    //so the typeid info won't match but dynamic_cast will work
     auto casted = dynamic_cast<const ArrayHandleType*>(this);
     return casted != nullptr;
   }
@@ -414,8 +411,8 @@ private:
     std::true_type vtkmNotUsed(valueTypesMatch),
     std::true_type vtkmNotUsed(inheritsFromArrayHandleVirtual)) const
   {
-    //All classes that derive from ArrayHandleVirtual have virtual methods so we can use
-    //dynamic_cast directly
+    //The type being passed has no requirements in being the most derived type
+    //so the typeid info won't match but dynamic_cast will work
     const ArrayHandleType* derived = dynamic_cast<const ArrayHandleType*>(this);
     if (!derived)
     {
