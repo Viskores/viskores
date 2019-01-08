@@ -39,14 +39,14 @@ template<class Vertex, class Callback>
 void for_each(const Vertex& from, const Vertex& to, const Callback& callback)
 {
     Vertex pos;
-    grid::detail::ForEach<Vertex, Callback, 0, detail::IsLast<Vertex,0>::value>()(pos, from, to, callback);
+    diy::detail::ForEach<Vertex, Callback, 0, detail::IsLast<Vertex,0>::value>()(pos, from, to, callback);
 }
 
 template<class Vertex, class Callback>
 void for_each(const Vertex& shape, const Callback& callback)
 {
     // specify grid namespace to disambiguate with std::for_each(...)
-    grid::for_each(Vertex::zero(), shape - Vertex::one(), callback);
+    diy::for_each(Vertex::zero(), shape - Vertex::one(), callback);
 }
 
 }

@@ -11,8 +11,7 @@ namespace mpi
                 inline
                 communicator(MPI_Comm comm = MPI_COMM_WORLD, bool owner = false);
 
-                inline
-                ~communicator();
+                ~communicator()                     { destroy(); }
 
                 communicator(const communicator& other):
                     comm_(other.comm_),
@@ -27,9 +26,9 @@ namespace mpi
                     owner_(other.owner_)                    { other.owner_ = false; }
 
     communicator&
-                operator=(const communicator& other)        { comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = false; return *this; }
+                operator=(const communicator& other)        { destroy(); comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = false; return *this; }
     communicator&
-                operator=(communicator&& other)             { comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = other.owner_; other.owner_ = false; return *this; }
+                operator=(communicator&& other)             { destroy(); comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = other.owner_; other.owner_ = false; return *this; }
 
       int       rank() const                        { return rank_; }
       int       size() const                        { return size_; }
@@ -105,6 +104,14 @@ namespace mpi
       communicator
                 split(int color, int key = 0) const;
 
+      //! duplicate
+      inline
+      void      duplicate(const communicator& other);
+
+    private:
+      inline
+      void      destroy();
+
     private:
       MPI_Comm  comm_;
       int       rank_;
@@ -127,8 +134,9 @@ communicator(MPI_Comm comm, bool owner):
 #endif
 }
 
+void
 diy::mpi::communicator::
-~communicator()
+destroy()
 {
 #ifndef DIY_NO_MPI
     if (owner_)
@@ -203,5 +211,17 @@ ibarrier() const
     // that tests true, but this requires redesigning some parts of our no-mpi
     // handling
     DIY_UNSUPPORTED_MPI_CALL(MPI_Ibarrier);
+#endif
+}
+
+
+void
+diy::mpi::communicator::
+duplicate(const communicator& other)
+{
+#ifndef DIY_NO_MPI
+    MPI_Comm newcomm;
+    MPI_Comm_dup(other.comm_, &newcomm);
+    (*this) = std::move(communicator(newcomm,true));
 #endif
 }

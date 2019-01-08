@@ -24,6 +24,14 @@ namespace diy
 
       // TODO: add error checking
       virtual inline void save_binary(const char* x, size_t count) override   { fwrite(x, 1, count, file); head += count; }
+      virtual inline void append_binary(const char* x, size_t count) override
+      {
+          size_t temp_pos = ftell(file);
+          fseek(file, static_cast<long>(tail), SEEK_END);
+          fwrite(x, 1, count, file);
+          tail += count;
+          fseek(file, temp_pos, SEEK_SET);
+      }
       virtual inline void load_binary(char* x, size_t count) override         { auto n = fread(x, 1, count, file); (void) n;}
       virtual inline void load_binary_back(char* x, size_t count) override    { fseek(file, static_cast<long>(tail), SEEK_END); auto n = fread(x, 1, count, file); tail += count; fseek(file, static_cast<long>(head), SEEK_SET); (void) n;}
 
