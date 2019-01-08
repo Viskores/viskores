@@ -4,6 +4,7 @@
 #if defined(_WIN32)
 #include <direct.h>
 #include <io.h>
+#include <share.h>
 #else
 #include <unistd.h>     // mkstemp() on Mac
 #include <dirent.h>
@@ -81,7 +82,8 @@ namespace utils
       _close(fd);
     }
 #else
-    void(::truncate(filename.c_str(), static_cast<off_t>(length)));
+    auto r = ::truncate(filename.c_str(), static_cast<off_t>(length));
+    (void) r;
 #endif
   }
 
@@ -108,10 +110,9 @@ namespace utils
 
 #else // defined(_WIN32)
 
-    const size_t slen = filename.size();
-    std::unique_ptr<char[]> s_template(new char[slen + 1]);
+    std::unique_ptr<char[]> s_template(new char[filename.size() + 1]);
     std::copy(filename.begin(), filename.end(), s_template.get());
-    s_template[slen] = 0;
+    s_template[filename.size()] = 0;
 
     int handle = -1;
 #if defined(__MACH__)
