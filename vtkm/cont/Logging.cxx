@@ -223,8 +223,8 @@ namespace
 /// of the stringified number.
 inline VTKM_CONT std::string HumanSize(vtkm::UInt64 bytes, int prec = 2)
 {
-  std::int64_t current = bytes;
-  std::int64_t previous = bytes;
+  vtkm::UInt64 current = bytes;
+  vtkm::UInt64 previous = bytes;
 
   constexpr const char* units[] = { "bytes", "KiB", "MiB", "GiB", "TiB", "PiB" };
 
