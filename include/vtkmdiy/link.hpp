@@ -15,6 +15,8 @@ namespace diy
   class Link
   {
     public:
+      using Neighbors = std::vector<BlockID>;
+
       virtual   ~Link()                             {}  // need to be able to delete derived classes
 
       int       size() const                        { return static_cast<int>(neighbors_.size()); }
@@ -31,13 +33,18 @@ namespace diy
 
       void      swap(Link& other)                   { neighbors_.swap(other.neighbors_); }
 
+      const Neighbors&
+                neighbors() const                   { return neighbors_; }
+      Neighbors&
+                neighbors()                         { return neighbors_; }
+
       virtual void  save(BinaryBuffer& bb) const    { diy::save(bb, neighbors_); }
       virtual void  load(BinaryBuffer& bb)          { diy::load(bb, neighbors_); }
 
       virtual size_t id() const                     { return 0; }
 
     private:
-      std::vector<BlockID>  neighbors_;
+      Neighbors neighbors_;
   };
 
   template<class Bounds_>

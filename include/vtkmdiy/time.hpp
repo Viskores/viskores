@@ -27,9 +27,9 @@ inline time_type get_time()
     // SOURCE: http://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows
     __int64 wintime;
     GetSystemTimeAsFileTime((FILETIME*)&wintime);
-    wintime      -=116444736000000000i64;  //1jan1601 to 1jan1970
-    long tv_sec  = static_cast<long>(wintime / 10000000i64);           //seconds
-    long tv_nsec = static_cast<long>(wintime % 10000000i64 *100);      //nano-seconds
+    wintime      -=116444736000000000LL;  //1jan1601 to 1jan1970
+    long tv_sec  = static_cast<long>(wintime / 10000000LL);           //seconds
+    long tv_nsec = static_cast<long>(wintime % 10000000LL *100);      //nano-seconds
     return static_cast<time_type>(tv_sec*1000 + tv_nsec/1000000);
 #else
     timespec ts;

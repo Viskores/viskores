@@ -121,7 +121,7 @@ namespace diy
       inline std::tuple<bool,int>
                     get_rank(int& rk, int gid) const;
 
-      inline void   set_rank(int rk, int gid, bool flush = true);
+      inline void   set_rank(const int& rk, int gid, bool flush = true);
       inline void   set_ranks(const std::vector<std::tuple<int,int>>& rank_gids);
 
       std::tuple<int,int>
@@ -223,7 +223,7 @@ diy::DynamicAssigner::
 ranks(const std::vector<int>& gids) const
 {
     bool all_cached = true;
-    std::vector<int> result(gids.size());
+    std::vector<int> result(gids.size(), -1);
     for (size_t i = 0; i < gids.size(); ++i)
     {
         auto cached_gidrk = get_rank(result[i], gids[i]);
@@ -239,7 +239,7 @@ ranks(const std::vector<int>& gids) const
 
 void
 diy::DynamicAssigner::
-set_rank(int rk, int gid, bool flush)
+set_rank(const int& rk, int gid, bool flush)
 {
     // TODO: update cache
 
