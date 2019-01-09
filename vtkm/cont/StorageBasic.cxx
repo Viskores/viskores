@@ -227,7 +227,7 @@ void StorageBasicBase::AllocateValues(vtkm::Id numberOfValues, vtkm::UInt64 size
     VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
                "Allocated control array of %s. [element count %llu]",
                vtkm::cont::GetSizeString(allocsize).c_str(),
-               numberOfValues);
+               static_cast<std::int64_t>(numberOfValues));
   }
   else
   {
