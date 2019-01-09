@@ -35,8 +35,6 @@ namespace cont
 
 class CellLocator : public vtkm::cont::ExecutionObjectBase
 {
-private:
-  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
 
 public:
   CellLocator()
@@ -72,6 +70,8 @@ public:
   {
     return PrepareForExecutionImpl(device).PrepareForExecution(device);
   }
+
+  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
 
 protected:
   void SetDirty() { Dirty = true; }

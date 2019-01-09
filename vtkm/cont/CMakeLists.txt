@@ -55,7 +55,9 @@ set(headers
   BoundsGlobalCompute.h
   CellLocator.h
   CellLocatorHelper.h
+  CellLocatorRectilinearGrid.h
   CellLocatorTwoLevelUniformGrid.h
+  CellLocatorUniformGrid.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h

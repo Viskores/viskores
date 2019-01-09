@@ -38,11 +38,11 @@ public:
   {
   }
 
-  vtkm::cont::CoordinateSystem GetCoords() const { return coordinates; }
+  vtkm::cont::CoordinateSystem GetCoordinates() const { return Coords; }
 
-  void SetCoords(const vtkm::cont::CoordinateSystem& coords)
+  void SetCoordinates(const vtkm::cont::CoordinateSystem& coords)
   {
-    coordinates = coords;
+    Coords = coords;
     dirty = true;
   }
 
@@ -58,15 +58,15 @@ public:
   template <typename DeviceAdapter>
   VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(DeviceAdapter device) const
   {
-    return PrepareForExecutionImp(device).PrepareForExecution(device);
+    return PrepareForExecutionImpl(device).PrepareForExecution(device);
   }
 
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;
-  VTKM_CONT virtual const HandleType PrepareForExecutionImp(
+  VTKM_CONT virtual const HandleType PrepareForExecutionImpl(
     vtkm::cont::DeviceAdapterId deviceId) const = 0;
 
 private:
-  vtkm::cont::CoordinateSystem coordinates;
+  vtkm::cont::CoordinateSystem Coords;
 
   bool dirty;
 };
