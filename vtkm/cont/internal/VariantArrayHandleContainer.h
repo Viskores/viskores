@@ -27,7 +27,8 @@
 
 
 #include <memory>
-#include <vtkm/Types.h>
+#include <typeindex>
+
 
 
 namespace vtkm
@@ -46,13 +47,17 @@ namespace internal
 ///
 struct VTKM_CONT_EXPORT VariantArrayHandleContainerBase
 {
+  vtkm::IdComponent NumberOfComponents;
+  std::type_index TypeIndex;
+
   VariantArrayHandleContainerBase();
+  VariantArrayHandleContainerBase(vtkm::IdComponent numComps, const std::type_info& hash);
 
   // This must exist so that subclasses are destroyed correctly.
   virtual ~VariantArrayHandleContainerBase();
 
   virtual vtkm::Id GetNumberOfValues() const = 0;
-  virtual vtkm::IdComponent GetNumberOfComponents() const = 0;
+  inline vtkm::IdComponent GetNumberOfComponents() const { return NumberOfComponents; }
 
   virtual void ReleaseResourcesExecution() = 0;
   virtual void ReleaseResources() = 0;
@@ -60,8 +65,6 @@ struct VTKM_CONT_EXPORT VariantArrayHandleContainerBase
   virtual void PrintSummary(std::ostream& out) const = 0;
 
   virtual std::shared_ptr<VariantArrayHandleContainerBase> NewInstance() const = 0;
-
-  virtual const vtkm::cont::StorageVirtual* GetStorage() const = 0;
 };
 
 /// \brief ArrayHandle container that can use C++ run-time type information.
@@ -78,21 +81,20 @@ struct VTKM_ALWAYS_EXPORT VariantArrayHandleContainer final : public VariantArra
   vtkm::cont::ArrayHandleVirtual<T> Array;
 
   VariantArrayHandleContainer()
-    : Array()
+    : VariantArrayHandleContainerBase(vtkm::VecTraits<T>::NUM_COMPONENTS, typeid(T))
+    , Array()
   {
   }
 
   VariantArrayHandleContainer(const vtkm::cont::ArrayHandleVirtual<T>& array)
-    : Array(array)
+    : VariantArrayHandleContainerBase(vtkm::VecTraits<T>::NUM_COMPONENTS, typeid(T))
+    , Array(array)
   {
   }
 
   ~VariantArrayHandleContainer<T>() = default;
 
   vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
-
-  vtkm::IdComponent GetNumberOfComponents() const { return vtkm::VecTraits<T>::NUM_COMPONENTS; }
-
 
   void ReleaseResourcesExecution() { this->Array.ReleaseResourcesExecution(); }
   void ReleaseResources() { this->Array.ReleaseResources(); }
@@ -106,8 +108,6 @@ struct VTKM_ALWAYS_EXPORT VariantArrayHandleContainer final : public VariantArra
   {
     return std::make_shared<VariantArrayHandleContainer<T>>(this->Array.NewInstance());
   }
-
-  const vtkm::cont::StorageVirtual* GetStorage() const { return this->Array.GetStorage(); }
 };
 
 namespace variant
@@ -128,21 +128,6 @@ struct GetContainer
   }
 };
 
-template <typename ArrayHandleType>
-VTKM_CONT bool IsType(const VariantArrayHandleContainerBase* container)
-{ //container could be nullptr
-  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-  if (!container)
-  {
-    return false;
-  }
-
-  using VT = typename ArrayHandleType::ValueType;
-  using ST = typename ArrayHandleType::StorageTag;
-  const vtkm::cont::StorageVirtual* storage = container->GetStorage();
-  return storage->IsType<vtkm::cont::StorageAny<VT, ST>>();
-}
-
 template <typename T>
 VTKM_CONT bool IsValueType(const VariantArrayHandleContainerBase* container)
 {
@@ -152,28 +137,39 @@ VTKM_CONT bool IsValueType(const VariantArrayHandleContainerBase* container)
   }
 
   //needs optimizations based on platform. !OSX can use typeid
-  return (nullptr != dynamic_cast<const VariantArrayHandleContainer<T>*>(container));
+  return container->TypeIndex == std::type_index(typeid(T));
+  // return (nullptr != dynamic_cast<const VariantArrayHandleContainer<T>*>(container));
 }
 
+template <typename ArrayHandleType>
+VTKM_CONT inline bool IsType(const VariantArrayHandleContainerBase* container)
+{ //container could be nullptr
+  using T = typename ArrayHandleType::ValueType;
+  if (!IsValueType<T>(container))
+  {
+    return false;
+  }
+
+  const auto* derived = static_cast<const VariantArrayHandleContainer<T>*>(container);
+  return vtkm::cont::IsType<ArrayHandleType>(derived->Array);
+}
 
 template <typename T, typename S>
 struct VTKM_ALWAYS_EXPORT Caster
 {
   vtkm::cont::ArrayHandle<T, S> operator()(const VariantArrayHandleContainerBase* container) const
   {
+    //This needs to be reworked
     using ArrayHandleType = vtkm::cont::ArrayHandle<T, S>;
-    if (!IsType<ArrayHandleType>(container))
+    if (!IsValueType<T>(container))
     {
       VTKM_LOG_CAST_FAIL(container, ArrayHandleType);
       throwFailedDynamicCast(vtkm::cont::TypeName(container),
                              vtkm::cont::TypeName<ArrayHandleType>());
     }
 
-    //we know the storage isn't a virtual but another storage type
-    //that means that the container holds a vtkm::cont::StorageAny<T>
-    const auto* any = static_cast<const vtkm::cont::StorageAny<T, S>*>(container->GetStorage());
-    VTKM_LOG_CAST_SUCC(container, *any);
-    return any->GetHandle();
+    const auto* derived = static_cast<const VariantArrayHandleContainer<T>*>(container);
+    return vtkm::cont::Cast<vtkm::cont::ArrayHandle<T, S>>(derived->Array);
   }
 };
 
