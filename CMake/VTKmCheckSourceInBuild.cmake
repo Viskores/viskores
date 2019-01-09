@@ -27,8 +27,6 @@
 ## cmake -DVTKm_SOURCE_DIR=<VTKm_SOURCE_DIR> -P <VTKm_SOURCE_DIR>/CMake/VTKMCheckSourceInBuild.cmake
 ##
 
-cmake_minimum_required(VERSION 2.8)
-
 set(FILES_TO_CHECK
   *.h
   *.h.in

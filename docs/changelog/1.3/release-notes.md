@@ -1210,7 +1210,7 @@ So a project that wants to build an executable that uses vtk-m would look like:
 
 ```cmake
 
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 project(HellowWorld CXX)
 
 #Find the VTK-m package.

@@ -60,6 +60,11 @@ function(vtkm_pyexpander_generated_file generated_file_name)
 endfunction(vtkm_pyexpander_generated_file)
 
 #-----------------------------------------------------------------------------
+# This function is not needed by the core infrastructure of VTK-m
+# as we now require CMake 3.11 on windows, and for tests we compile a single
+# executable for all backends, instead of compiling for each backend.
+# It is currently kept around so that examples which haven't been updated
+# continue to work
 function(vtkm_compile_as_cuda output)
   # We can't use set_source_files_properties(<> PROPERTIES LANGUAGE "CUDA")
   # for the following reasons:
@@ -302,11 +307,8 @@ function(vtkm_library)
 
 
   if(TARGET vtkm::cuda)
-    vtkm_compile_as_cuda(cu_srcs ${VTKm_LIB_WRAP_FOR_CUDA})
-    set(VTKm_LIB_WRAP_FOR_CUDA ${cu_srcs})
+    set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} PROPERTIES LANGUAGE "CUDA")
   endif()
-
-
 
   add_library(${lib_name}
               ${VTKm_LIB_type}
@@ -468,9 +470,8 @@ function(vtkm_unit_tests)
   #cuda. This is so that we get the correctly named entry points generated
   create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES} ${extraArgs})
   #if all backends are enabled, we can use cuda compiler to handle all possible backends.
-  if(backend STREQUAL "Cuda" OR (enable_all_backends AND VTKm_ENABLE_CUDA))
-    vtkm_compile_as_cuda(cu_srcs ${VTKm_UT_SOURCES})
-    set(VTKm_UT_SOURCES ${cu_srcs})
+  if(TARGET vtkm::cuda AND (backend STREQUAL "Cuda" OR enable_all_backends))
+    set_source_files_properties(${VTKm_UT_SOURCES} PROPERTIES LANGUAGE "CUDA")
   endif()
 
   add_executable(${test_prog} ${test_prog}.cxx ${VTKm_UT_SOURCES})

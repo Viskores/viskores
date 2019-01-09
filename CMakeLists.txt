@@ -18,18 +18,14 @@
 ##  this software.
 ##============================================================================
 
-# We require CMake 3.3 for Modern CMake which as features such as:
-#   - Support for target_sources
-#   - Support for usage requirements
-#
 # If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX.
 # We require CMake 3.11 with the MSVC generator as the $<COMPILE_LANGUAGE:>
 # generator expression is not supported on older versions.
-cmake_minimum_required(VERSION 3.3...3.12)
+cmake_minimum_required(VERSION 3.8...3.13)
 project (VTKm)
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-  cmake_minimum_required(VERSION 3.11...3.12 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.11...3.13 FATAL_ERROR)
 endif()
 
 # Update module path
@@ -84,6 +80,7 @@ set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include")
 #-----------------------------------------------------------------------------
 # vtkm_option(variable doc [initial])
 #   Provides an option if it is not already defined.
+# This can be replaced when CMake 3.13 is our cmake_minimum_required
 macro (vtkm_option variable)
   if (NOT DEFINED "${variable}")
     option("${variable}" ${ARGN})

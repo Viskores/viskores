@@ -29,14 +29,6 @@ set(headers
   VirtualObjectTransferTBB.h
   )
 
-if (VTKm_ENABLE_TBB)
-  if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.3)
-    if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.0)
-      # MESSAGE(FATAL_ERROR "VTK-m not tested with TBB before version 4.0. Please upgrade your TBB library.")
-    endif()
-  endif()
-endif()
-
 vtkm_declare_headers(ParallelSortTBB.hxx
                      parallel_sort.h
                      TESTABLE OFF)
@@ -49,13 +41,11 @@ target_sources(vtkm_cont PRIVATE
   )
 
 #-----------------------------------------------------------------------------
-if (NOT VTKm_ENABLE_TBB)
-  return()
+if (TARGET vtkm::tbb)
+  target_sources(vtkm_cont PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionTBB.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmTBB.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicTBB.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/ParallelSortTBB.cxx
+    )
 endif()
-
-target_sources(vtkm_cont PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionTBB.cxx
-  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmTBB.cxx
-  ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicTBB.cxx
-  ${CMAKE_CURRENT_SOURCE_DIR}/ParallelSortTBB.cxx
-)

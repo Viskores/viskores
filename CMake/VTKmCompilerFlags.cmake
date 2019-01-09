@@ -58,11 +58,7 @@ target_link_libraries(vtkm_compiler_flags
   INTERFACE $<BUILD_INTERFACE:vtkm_vectorization_flags>)
 
 # setup that we need C++11 support
-if(CMAKE_VERSION VERSION_LESS 3.8)
-  target_compile_features(vtkm_compiler_flags INTERFACE cxx_nullptr)
-else()
-  target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
-endif()
+target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
 
 # Enable large object support so we can have 2^32 addressable sections
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -123,8 +119,9 @@ elseif(VTKM_COMPILER_IS_ICC)
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd1478 -wd13379>)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
-  set(cxx_flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
-  set(cuda_flags -Xcompiler=-Wall,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-local-typedefs,-Wno-unused-function,-Wno-long-long,-Wcast-align,-Wconversion,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-Wunused-parameter,-fno-common)
+  set(cxx_flags -Wall -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
+
+  set(cuda_flags -Xcompiler=-Wall,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-local-typedefs,-Wno-unused-function,-Wcast-align,-Wconversion,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-Wunused-parameter,-fno-common)
 
   #GCC 5, 6 don't properly handle strict-overflow suppression through pragma's.
   #Instead of suppressing around the location of the strict-overflow you
@@ -152,7 +149,7 @@ if(TARGET vtkm::cuda)
   endif()
 
   set(display_error_nums -Xcudafe=--display_error_number)
-  target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${suppress_nvlink_stack_size_warnings} ${display_error_nums}>)
+  target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${display_error_nums}>)
 endif()
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)

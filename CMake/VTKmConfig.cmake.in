@@ -53,8 +53,8 @@
 #
 #
 
-if (CMAKE_VERSION VERSION_LESS "3.3")
-  message(FATAL_ERROR "VTK-m requires CMake 3.3+")
+if (CMAKE_VERSION VERSION_LESS "3.8")
+  message(FATAL_ERROR "VTK-m requires CMake 3.8+")
 endif()
 if("${CMAKE_GENERATOR}" MATCHES "Visual Studio" AND
    CMAKE_VERSION VERSION_LESS "3.11")
