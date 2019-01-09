@@ -78,9 +78,9 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(TARGETS vtkm_vectorization_flags EXPORT ${VTKm_EXPORT_NAME})
 endif()
 
-# If we are using MSVC stop after the interface so that the interface is
-# consistently defined even for compilers such as MSVC that we don't
-# have vectorization flag support for yet.
+# We currently don't know the vectorization flags for MSVC. But we want
+# the vtkm_vectorization_flags target to exist so we have a consistent
+# interface.
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   return()
 endif()

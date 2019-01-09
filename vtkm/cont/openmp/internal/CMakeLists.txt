@@ -34,18 +34,17 @@ set(headers
 
 vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_OPENMP})
 
+#These sources need to always be built
 target_sources(vtkm_cont PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorOpenMP.cxx
   )
 
 #-----------------------------------------------------------------------------
-if (NOT VTKm_ENABLE_OPENMP)
-  return()
+if (TARGET vtkm::openmp)
+  target_sources(vtkm_cont PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionOpenMP.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmOpenMP.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicOpenMP.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/ParallelRadixSortOpenMP.cxx
+    )
 endif()
-
-target_sources(vtkm_cont PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionOpenMP.cxx
-  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmOpenMP.cxx
-  ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicOpenMP.cxx
-  ${CMAKE_CURRENT_SOURCE_DIR}/ParallelRadixSortOpenMP.cxx
-)
