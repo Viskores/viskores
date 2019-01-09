@@ -671,6 +671,7 @@ diy::Master::
 iexchange_(const ICallback<Block>& f)
 {
     auto scoped = prof.scoped("iexchange");
+    DIY_UNUSED(scoped);
 
     // prepare for next round
     incoming_.erase(exchange_round_);
@@ -696,7 +697,7 @@ iexchange_(const ICallback<Block>& f)
 
             int nundeq_after = 0;
             int nunenq_after = 0;
-            for (size_t j = 0; j < cp.link()->size(); j++)
+            for (size_t j = 0; j < static_cast<size_t>(cp.link()->size()); j++)
             {
                 if (cp.incoming(cp.link()->target(j).gid))
                     ++nundeq_after;
@@ -737,6 +738,7 @@ diy::Master::
 comm_exchange(GidSendOrder& gid_order, IExchangeInfo* iexchange)
 {
     auto scoped = prof.scoped("comm-exchange");
+    DIY_UNUSED(scoped);
     send_outgoing_queues(gid_order, false, iexchange);
     while(nudge());                   // kick requests
     check_incoming_queues(iexchange);
@@ -846,6 +848,7 @@ diy::Master::
 icommunicate(IExchangeInfo* iexchange)
 {
     auto scoped = prof.scoped("icommunicate");
+    DIY_UNUSED(scoped);
 
     log->debug("Entering icommunicate()");
 
@@ -877,6 +880,7 @@ send_outgoing_queues(GidSendOrder&   gid_order,
                      IExchangeInfo*  iexchange)
 {
     auto scoped = prof.scoped("send-outgoing-queues");
+    DIY_UNUSED(scoped);
 
     while (inflight_sends().size() < gid_order.limit && !gid_order.empty())
     {
@@ -1089,6 +1093,7 @@ diy::Master::
 check_incoming_queues(IExchangeInfo* iexchange)
 {
     auto scoped = prof.scoped("check-incoming-queues");
+    DIY_UNUSED(scoped);
 
     mpi::optional<mpi::status> ostatus = comm_.iprobe(mpi::any_source, mpi::any_tag);
     while (ostatus)
