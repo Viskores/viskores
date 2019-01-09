@@ -145,8 +145,8 @@ private:
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
-  // TODO: Change timing to use logging in vtkm/cont/Logging.h
-  vtkm::cont::Timer<> totalTime;
+  vtkm::cont::Timer totalTime;
+  totalTime.Start();
   vtkm::Float64 prevTime = 0;
   vtkm::Float64 currTime = 0;
   std::cout << "ContourTreePPP2Mesh <options> <fileName>" << std::endl;

@@ -42,7 +42,8 @@ struct WaveletGeneratorFunctor
 
 void WaveletGeneratorTest()
 {
-  vtkm::cont::Timer<> timer;
+  vtkm::cont::Timer timer;
+  timer.Start();
   detail::WaveletGeneratorFunctor wgFunctor;
   vtkm::cont::TryExecute(wgFunctor);
 

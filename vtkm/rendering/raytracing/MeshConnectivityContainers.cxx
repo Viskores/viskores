@@ -192,7 +192,6 @@ UnstructuredSingleContainer::UnstructuredSingleContainer(
 
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("mesh_conn_construction");
-  vtkm::cont::Timer<cont::DeviceAdapterTagSerial> timer;
 
   Intersector.SetData(Coords, Triangles);
 }

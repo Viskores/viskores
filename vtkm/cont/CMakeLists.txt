@@ -171,6 +171,7 @@ set(device_sources
   ArrayRangeCompute.cxx
   CellSetExplicit.cxx
   CoordinateSystem.cxx
+  Timer.cxx
   )
 
 #-----------------------------------------------------------------------------

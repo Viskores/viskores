@@ -72,8 +72,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet,
                                    vtkm::IdComponent numPlanes,
                                    const vtkm::cont::DeviceAdapterId& id)
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using Timer = vtkm::cont::Timer<DeviceAdapter>;
+  using Timer = vtkm::cont::Timer;
 
   vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
   vtkm::cont::ArrayHandleVirtualCoordinates vertices = dataSet.GetCoordinateSystem().GetData();
@@ -87,14 +86,17 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet,
   std::cout << "Built Bounding Interval Hierarchy Tree" << std::endl;
 
   Timer centroidsTimer;
+  centroidsTimer.Start();
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> centroids;
   vtkm::worklet::DispatcherMapTopology<CellCentroidCalculator>().Invoke(
     cellSet, vertices, centroids);
-  //std::cout << "Centroids calculation time: " << centroidsTimer.GetElapsedTime() << "\n";
+  centroidsTimer.Stop();
+  std::cout << "Centroids calculation time: " << centroidsTimer.GetElapsedTime() << "\n";
 
   vtkm::cont::ArrayHandleCounting<vtkm::Id> expectedCellIds(0, 1, cellSet.GetNumberOfCells());
 
   Timer interpolationTimer;
+  interpolationTimer.Start();
   vtkm::cont::ArrayHandle<vtkm::IdComponent> results;
 #ifdef VTKM_CUDA
   //set up stack size for cuda envinroment
@@ -119,6 +121,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet,
   }
 #endif
   vtkm::Id numDiffs = vtkm::cont::Algorithm::Reduce(results, 0, vtkm::Add());
+  interpolationTimer.Stop();
   vtkm::Float64 timeDiff = interpolationTimer.GetElapsedTime();
   std::cout << "No of interpolations: " << results.GetNumberOfValues() << "\n";
   std::cout << "Interpolation time: " << timeDiff << "\n";

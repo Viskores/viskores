@@ -316,7 +316,7 @@ class BenchmarkFieldAlgorithms
 {
   using StorageTag = vtkm::cont::StorageTagBasic;
 
-  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
+  using Timer = vtkm::cont::Timer;
 
   using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
   using InterpVariantHandle = vtkm::cont::VariantArrayHandleBase<InterpValueTypes>;
@@ -366,7 +366,8 @@ private:
       const Value RISKFREE = 0.02f;
       const Value VOLATILITY = 0.30f;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
       vtkm::worklet::DispatcherMapField<BlackScholes<Value>> dispatcher(worklet);
       dispatcher.SetDevice(DeviceAdapterTag());
@@ -405,7 +406,8 @@ private:
       const Value RISKFREE = 0.02f;
       const Value VOLATILITY = 0.30f;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
       vtkm::worklet::DispatcherMapField<BlackScholes<Value>> dispatcher(worklet);
       dispatcher.SetDevice(DeviceAdapterTag());
@@ -448,7 +450,8 @@ private:
       vtkm::cont::ArrayHandle<Value> tempHandle1;
       vtkm::cont::ArrayHandle<Value> tempHandle2;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
 
       vtkm::worklet::Invoker invoke(DeviceAdapterTag{});
       invoke(Mag{}, this->InputHandle, tempHandle1);
@@ -487,7 +490,8 @@ private:
       ValueVariantHandle dtemp1(temp1);
       ValueVariantHandle dtemp2(temp2);
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
 
       vtkm::worklet::Invoker invoke(DeviceAdapterTag{});
       invoke(Mag{}, dinput, dtemp1);
@@ -530,10 +534,12 @@ private:
     {
       vtkm::cont::ArrayHandle<Value> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       vtkm::worklet::DispatcherMapField<FusedMath> dispatcher;
       dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->InputHandle, result);
+
       return timer.GetElapsedTime();
     }
 
@@ -563,10 +569,12 @@ private:
 
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       vtkm::worklet::DispatcherMapField<FusedMath> dispatcher;
       dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(dinput, result);
+
       return timer.GetElapsedTime();
     }
 
@@ -633,10 +641,12 @@ private:
     {
       vtkm::cont::ArrayHandle<Value> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       vtkm::worklet::DispatcherMapField<InterpolateField> dispatcher;
       dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->EdgePairHandle, this->WeightHandle, this->FieldHandle, result);
+
       return timer.GetElapsedTime();
     }
 
@@ -666,10 +676,12 @@ private:
       EdgeIdVariantHandle dedges(this->EdgePairHandle);
       vtkm::cont::ArrayHandle<Value> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       vtkm::worklet::DispatcherMapField<InterpolateField> dispatcher;
       dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(dedges, dweight, dfield, result);
+
       return timer.GetElapsedTime();
     }
 
@@ -731,10 +743,12 @@ private:
         static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(DeviceAdapterTag()));
       EvalWorklet eval(function);
 
-      vtkm::cont::Timer<DeviceAdapterTag> timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       EvalDispatcher dispatcher(eval);
       dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
+
       return timer.GetElapsedTime();
     }
 
@@ -767,10 +781,12 @@ private:
       auto sphere = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
       EvalWorklet eval(sphere.PrepareForExecution(DeviceAdapterTag()));
 
-      vtkm::cont::Timer<DeviceAdapterTag> timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       EvalDispatcher dispatcher(eval);
       dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
+
       return timer.GetElapsedTime();
     }
 
@@ -806,10 +822,12 @@ private:
       auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(DeviceAdapterTag()));
       EvalWorklet eval(f1, f2);
 
-      vtkm::cont::Timer<DeviceAdapterTag> timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       EvalDispatcher dispatcher(eval);
       dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
+
       return timer.GetElapsedTime();
     }
 
@@ -845,10 +863,12 @@ private:
       EvalWorklet eval(s1.PrepareForExecution(DeviceAdapterTag()),
                        s2.PrepareForExecution(DeviceAdapterTag()));
 
-      vtkm::cont::Timer<DeviceAdapterTag> timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       EvalDispatcher dispatcher(eval);
       dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
+
       return timer.GetElapsedTime();
     }
 

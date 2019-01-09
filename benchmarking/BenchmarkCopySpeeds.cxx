@@ -74,8 +74,10 @@ struct MeasureCopySpeed
 
   VTKM_CONT vtkm::Float64 operator()()
   {
-    vtkm::cont::Timer<DeviceAdapter> timer;
+    vtkm::cont::Timer timer{ DeviceAdapter() };
+    timer.Start();
     Algo::Copy(this->Source, this->Destination);
+
     return timer.GetElapsedTime();
   }
 

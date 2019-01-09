@@ -109,7 +109,8 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
 {
   // TODO: This should be switched to use the logging macros defined in vtkm/cont/logging.h
   // Start the timer
-  vtkm::cont::Timer<> timer;
+  vtkm::cont::Timer timer;
+  timer.Start();
   Timings.clear();
 
   // Check that the field is Ok
@@ -153,7 +154,7 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
   vtkm::Float64 totalTimeWorklet = 0;
   for (std::vector<std::pair<std::string, vtkm::Float64>>::size_type i = 0; i < Timings.size(); i++)
     totalTimeWorklet += Timings[i].second;
-  //std::cout<<"Total time measured by worklet: "<<totalTimeWorklet<<std::endl;
+  std::cout << "Total time measured by worklet: " << totalTimeWorklet << std::endl;
   Timings.push_back(std::pair<std::string, vtkm::Float64>(
     "Others (ContourTreePPP2 Filter): ", timer.GetElapsedTime() - totalTimeWorklet));
 

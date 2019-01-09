@@ -641,7 +641,8 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("bvh_constuct");
 
-  vtkm::cont::Timer<Device> constructTimer;
+  vtkm::cont::Timer constructTimer{ Device() };
+  constructTimer.Start();
   //
   //
   // This algorithm needs at least 2 AABBs
@@ -683,7 +684,8 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   BVHData bvh(numBBoxes, linearBVH.GetAABBs(), device);
 
 
-  vtkm::cont::Timer<Device> timer;
+  vtkm::cont::Timer timer{ Device() };
+  timer.Start();
   // Find the extent of all bounding boxes to generate normalization for morton codes
   vtkm::Vec<vtkm::Float32, 3> minExtent(vtkm::Infinity32(), vtkm::Infinity32(), vtkm::Infinity32());
   vtkm::Vec<vtkm::Float32, 3> maxExtent(
@@ -710,7 +712,7 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("calc_extents", time);
-  timer.Reset();
+  timer.Start();
 
   vtkm::Vec<vtkm::Float32, 3> deltaExtent = maxExtent - minExtent;
   vtkm::Vec<vtkm::Float32, 3> inverseExtent;
@@ -731,7 +733,7 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
 
   time = timer.GetElapsedTime();
   logger->AddLogData("morton_codes", time);
-  timer.Reset();
+  timer.Start();
 
   linearBVH.Allocate(bvh.GetNumberOfPrimitives(), device);
 
@@ -739,7 +741,7 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
 
   time = timer.GetElapsedTime();
   logger->AddLogData("sort_aabbs", time);
-  timer.Reset();
+  timer.Start();
 
   invoke(TreeBuilder<Device>{ bvh.mortonCodes, bvh.parent, bvh.GetNumberOfPrimitives() },
          bvh.leftChild,
@@ -747,7 +749,7 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
 
   time = timer.GetElapsedTime();
   logger->AddLogData("build_tree", time);
-  timer.Reset();
+  timer.Start();
 
   const vtkm::Int32 primitiveCount = vtkm::Int32(bvh.GetNumberOfPrimitives());
 
@@ -850,7 +852,8 @@ template <typename Device>
 void LinearBVH::ConstructOnDevice(Device device)
 {
   Logger* logger = Logger::GetInstance();
-  vtkm::cont::Timer<Device> timer;
+  vtkm::cont::Timer timer{ Device() };
+  timer.Start();
   logger->OpenLogEntry("bvh");
   if (!CanConstruct)
     throw vtkm::cont::ErrorBadValue(
