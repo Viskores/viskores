@@ -24,6 +24,8 @@
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/TransferInfo.h>
 
+#include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
+
 namespace vtkm
 {
 namespace cont
@@ -34,12 +36,39 @@ template <typename DerivedPortal>
 struct TransferToDevice
 {
   template <typename DeviceAdapterTag, typename Payload, typename... Args>
-  bool operator()(DeviceAdapterTag devId, Payload&& payload, Args&&... args) const
+  inline bool operator()(DeviceAdapterTag devId, Payload&& payload, Args&&... args) const
   {
     using TransferType = cont::internal::VirtualObjectTransfer<DerivedPortal, DeviceAdapterTag>;
+    using shared_memory_transfer =
+      std::is_base_of<vtkm::cont::internal::VirtualObjectTransferShareWithControl<DerivedPortal>,
+                      TransferType>;
 
+    return this->Transfer(
+      devId, shared_memory_transfer{}, std::forward<Payload>(payload), std::forward<Args>(args)...);
+  }
 
+  template <typename DeviceAdapterTag, typename Payload, typename... Args>
+  inline bool Transfer(DeviceAdapterTag devId,
+                       std::true_type,
+                       Payload&& payload,
+                       Args&&... args) const
+  { //shared memory transfer so we just need
+    auto smp_ptr = new DerivedPortal(std::forward<Args>(args)...);
+    auto host = std::unique_ptr<DerivedPortal>(smp_ptr);
+    payload.updateDevice(devId, std::move(host), smp_ptr, nullptr);
+
+    return true;
+  }
+
+  template <typename DeviceAdapterTag, typename Payload, typename... Args>
+  inline bool Transfer(DeviceAdapterTag devId,
+                       std::false_type,
+                       Payload&& payload,
+                       Args&&... args) const
+  { //separate memory transfer
     //construct all new transfer payload
+    using TransferType = cont::internal::VirtualObjectTransfer<DerivedPortal, DeviceAdapterTag>;
+
     auto host = std::unique_ptr<DerivedPortal>(new DerivedPortal(std::forward<Args>(args)...));
     auto transfer = std::make_shared<TransferType>(host.get());
     auto device = transfer->PrepareForExecution(true);
