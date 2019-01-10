@@ -320,7 +320,7 @@ class BenchmarkFieldAlgorithms
 
   using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
   using InterpVariantHandle = vtkm::cont::VariantArrayHandleBase<InterpValueTypes>;
-  using IdVariantHandle = vtkm::cont::VariantArrayHandleBase<vtkm::TypeListTagIndex>;
+  using EdgeIdVariantHandle = vtkm::cont::VariantArrayHandleBase<vtkm::TypeListTagId2>;
 
 private:
   template <typename Value>
@@ -662,8 +662,8 @@ private:
     vtkm::Float64 operator()()
     {
       InterpVariantHandle dfield(this->FieldHandle);
-      InterpVariantHandle dweight(this->WeightHandle);
-      IdVariantHandle dedges(this->EdgePairHandle);
+      ValueVariantHandle dweight(this->WeightHandle);
+      EdgeIdVariantHandle dedges(this->EdgePairHandle);
       vtkm::cont::ArrayHandle<Value> result;
 
       Timer timer;
