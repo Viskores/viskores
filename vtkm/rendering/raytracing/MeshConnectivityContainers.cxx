@@ -133,6 +133,8 @@ const MeshConnectivityBase* UnstructuredContainer::Construct(
       }
       return Handle.PrepareForExecution(CUDA());
 #endif
+    case VTKM_DEVICE_ADAPTER_SERIAL:
+      VTKM_FALLTHROUGH;
     default:
       using SERIAL = vtkm::cont::DeviceAdapterTagSerial;
       {
@@ -242,6 +244,8 @@ const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
       }
       return Handle.PrepareForExecution(CUDA());
 #endif
+    case VTKM_DEVICE_ADAPTER_SERIAL:
+      VTKM_FALLTHROUGH;
     default:
       using SERIAL = vtkm::cont::DeviceAdapterTagSerial;
       {
@@ -294,6 +298,8 @@ const MeshConnectivityBase* StructuredContainer::Construct(
     case VTKM_DEVICE_ADAPTER_CUDA:
       return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagCuda());
 #endif
+    case VTKM_DEVICE_ADAPTER_SERIAL:
+      VTKM_FALLTHROUGH;
     default:
       return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagSerial());
   }
