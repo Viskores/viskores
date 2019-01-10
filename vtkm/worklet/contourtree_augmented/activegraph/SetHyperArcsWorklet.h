@@ -80,10 +80,10 @@ class SetHyperArcsWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    WholeArrayInOut<IdType> treeHypernodes, // (input/output) hypernodes of the tree
-    WholeArrayOut<IdType> treeHyperarcs,    // (output) tree hyperarcs
-    WholeArrayIn<IdType> graphHyperarcs,    // (input) hyperarcs from the portal
-    WholeArrayIn<IdType> graphSuperID);     // (input) active graph superID
+    WholeArrayInOut treeHypernodes, // (input/output) hypernodes of the tree
+    WholeArrayOut treeHyperarcs,    // (output) tree hyperarcs
+    WholeArrayIn graphHyperarcs,    // (input) hyperarcs from the portal
+    WholeArrayIn graphSuperID);     // (input) active graph superID
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
   using InputDomain = _1;
 

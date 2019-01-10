@@ -167,7 +167,7 @@ struct KernelSplatterFilterUniformGrid
   //-----------------------------------------------------------------------
   struct zero_voxel : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = void(_1, WorkIndex, _2);
     //
     VTKM_CONT
@@ -197,14 +197,8 @@ struct KernelSplatterFilterUniformGrid
     Kernel kernel_;
 
   public:
-    using ControlSignature = void(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldOut<>,
-                                  FieldOut<>,
-                                  FieldOut<>,
-                                  FieldOut<>);
+    using ControlSignature =
+      void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut, FieldOut, FieldOut, FieldOut);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
@@ -263,7 +257,7 @@ struct KernelSplatterFilterUniformGrid
   class ComputeLocalNeighborId : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+    using ControlSignature = void(FieldIn, FieldIn, FieldOut);
     using ExecutionSignature = void(_1, _2, WorkIndex, _3);
 
     VTKM_CONT
@@ -295,14 +289,8 @@ struct KernelSplatterFilterUniformGrid
     Kernel kernel;
 
   public:
-    using ControlSignature = void(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldOut<>,
-                                  FieldOut<>);
+    using ControlSignature =
+      void(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, FieldOut, FieldOut);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
@@ -360,7 +348,7 @@ struct KernelSplatterFilterUniformGrid
   class UpdateVoxelSplats : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<>, FieldIn<>, WholeArrayOut<Scalar>);
+    using ControlSignature = void(FieldIn, FieldIn, WholeArrayOut);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT

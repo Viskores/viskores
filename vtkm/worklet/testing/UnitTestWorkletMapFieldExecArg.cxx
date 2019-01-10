@@ -33,10 +33,7 @@ struct TestExecObjectWorklet
   class Worklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<IdType>,
-                                  WholeArrayIn<vtkm::ListTagBase<T>>,
-                                  WholeArrayOut<vtkm::ListTagBase<T>>,
-                                  FieldOut<vtkm::ListTagBase<T>>);
+    using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut, FieldOut);
     using ExecutionSignature = void(_1, _2, _3, _4);
 
     template <typename InPortalType, typename OutPortalType>

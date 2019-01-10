@@ -75,9 +75,9 @@ namespace cosmotools
 class ComputeNeighborBins : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> partIndx,
-                                FieldIn<IdType> binId,               // (input) bin Id
-                                WholeArrayOut<IdType> leftNeighbor); // (output) neighbor Id
+  using ControlSignature = void(FieldIn partIndx,
+                                FieldIn binId,               // (input) bin Id
+                                WholeArrayOut leftNeighbor); // (output) neighbor Id
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 

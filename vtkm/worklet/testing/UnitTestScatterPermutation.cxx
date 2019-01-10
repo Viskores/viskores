@@ -37,8 +37,8 @@ class Worklet : public vtkm::worklet::WorkletMapCellToPoint
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
-                                FieldOutPoint<IdType> outPointId,
-                                FieldOutPoint<IdComponentType> outVisit);
+                                FieldOutPoint outPointId,
+                                FieldOutPoint outVisit);
   using ExecutionSignature = void(InputIndex, VisitIndex, _2, _3);
   using InputDomain = _1;
 

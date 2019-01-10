@@ -43,7 +43,7 @@ VTKM_EXEC T clamp(const T& val, const T& min, const T& max)
 class PointElevation : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   VTKM_CONT

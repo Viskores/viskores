@@ -87,17 +87,17 @@ public:
   //struct _11 : vtkm::exec::arg::BasicArg<11> {  };
 
   typedef void ControlSignature(
-    FieldIn<IdType> outdegree,               // (input) outdegree
-    WholeArrayIn<IdType> sortOrder,          // (input) sort order
-    WholeArrayIn<IdType> sortIndices,        // (input) sort indices
-    ExecObject meshStructure,                // (input) execution object with the mesh structure
-    FieldIn<IdType> firstEdge,               // (input)
-    FieldIn<IdType> globalIndex,             // (input)
-    WholeArrayIn<IdType> extrema,            // (input)
-    WholeArrayIn<IdType> neighbourhoodMasks, // (input)
-    WholeArrayOut<IdType> edgeNear,          // (output) edgeNear
-    WholeArrayOut<IdType> edgeFar,           // (output) edgeFar
-    WholeArrayOut<IdType> activeEdges);      // (output) activeEdges
+    FieldIn outdegree,               // (input) outdegree
+    WholeArrayIn sortOrder,          // (input) sort order
+    WholeArrayIn sortIndices,        // (input) sort indices
+    ExecObject meshStructure,        // (input) execution object with the mesh structure
+    FieldIn firstEdge,               // (input)
+    FieldIn globalIndex,             // (input)
+    WholeArrayIn extrema,            // (input)
+    WholeArrayIn neighbourhoodMasks, // (input)
+    WholeArrayOut edgeNear,          // (output) edgeNear
+    WholeArrayOut edgeFar,           // (output) edgeFar
+    WholeArrayOut activeEdges);      // (output) activeEdges
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11);
   using InputDomain = _1;
 

@@ -74,7 +74,7 @@ public:
   {
     ZFPDims = PaddedDims / 4;
   }
-  using ControlSignature = void(FieldIn<>, WholeArrayOut<>, WholeArrayIn<> bitstream);
+  using ControlSignature = void(FieldIn, WholeArrayOut, WholeArrayIn bitstream);
   using ExecutionSignature = void(_1, _2, _3);
 
   template <typename InputScalarPortal, typename BitstreamPortal>

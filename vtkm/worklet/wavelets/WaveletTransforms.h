@@ -56,8 +56,8 @@ enum ExtensionDirection
 class ExtensionWorklet3D : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension
-                                WholeArrayIn<ScalarAll>); // signal
+  using ControlSignature = void(WholeArrayOut, // extension
+                                WholeArrayIn); // signal
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -845,12 +845,12 @@ private:
 class ForwardTransform3DLeftRight : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left extension
-                                WholeArrayIn<ScalarAll>,   // signal
-                                WholeArrayIn<ScalarAll>,   // right extension
-                                WholeArrayIn<ScalarAll>,   // lowFilter
-                                WholeArrayIn<ScalarAll>,   // highFilter
-                                WholeArrayOut<ScalarAll>); // cA followed by cD
+  using ControlSignature = void(WholeArrayIn,   // left extension
+                                WholeArrayIn,   // signal
+                                WholeArrayIn,   // right extension
+                                WholeArrayIn,   // lowFilter
+                                WholeArrayIn,   // highFilter
+                                WholeArrayOut); // cA followed by cD
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
   using InputDomain = _6;
 
@@ -998,12 +998,12 @@ private:
 class ForwardTransform3DTopDown : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left extension
-                                WholeArrayIn<ScalarAll>,   // signal
-                                WholeArrayIn<ScalarAll>,   // right extension
-                                WholeArrayIn<ScalarAll>,   // lowFilter
-                                WholeArrayIn<ScalarAll>,   // highFilter
-                                WholeArrayOut<ScalarAll>); // cA followed by cD
+  using ControlSignature = void(WholeArrayIn,   // left extension
+                                WholeArrayIn,   // signal
+                                WholeArrayIn,   // right extension
+                                WholeArrayIn,   // lowFilter
+                                WholeArrayIn,   // highFilter
+                                WholeArrayOut); // cA followed by cD
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
   using InputDomain = _6;
 
@@ -1151,12 +1151,12 @@ private:
 class ForwardTransform3DFrontBack : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left extension
-                                WholeArrayIn<ScalarAll>,   // signal
-                                WholeArrayIn<ScalarAll>,   // right extension
-                                WholeArrayIn<ScalarAll>,   // lowFilter
-                                WholeArrayIn<ScalarAll>,   // highFilter
-                                WholeArrayOut<ScalarAll>); // cA followed by cD
+  using ControlSignature = void(WholeArrayIn,   // left extension
+                                WholeArrayIn,   // signal
+                                WholeArrayIn,   // right extension
+                                WholeArrayIn,   // lowFilter
+                                WholeArrayIn,   // highFilter
+                                WholeArrayOut); // cA followed by cD
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
   using InputDomain = _6;
 
@@ -1317,14 +1317,14 @@ private:
 class InverseTransform3DLeftRight : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>, // ext1
-                                WholeArrayIn<ScalarAll>, // ext2
-                                WholeArrayIn<ScalarAll>, // ext3
-                                WholeArrayIn<ScalarAll>, // ext4
-                                WholeArrayIn<ScalarAll>, // cA+cD (signal)
-                                WholeArrayIn<ScalarAll>, // lowFilter
-                                WholeArrayIn<ScalarAll>, // highFilter
-                                FieldOut<ScalarAll>);    // outptu coefficients
+  using ControlSignature = void(WholeArrayIn, // ext1
+                                WholeArrayIn, // ext2
+                                WholeArrayIn, // ext3
+                                WholeArrayIn, // ext4
+                                WholeArrayIn, // cA+cD (signal)
+                                WholeArrayIn, // lowFilter
+                                WholeArrayIn, // highFilter
+                                FieldOut);    // outptu coefficients
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   using InputDomain = _8;
 
@@ -1548,14 +1548,14 @@ private:
 class InverseTransform3DTopDown : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>, // ext1
-                                WholeArrayIn<ScalarAll>, // ext2
-                                WholeArrayIn<ScalarAll>, // ext3
-                                WholeArrayIn<ScalarAll>, // ext4
-                                WholeArrayIn<ScalarAll>, // cA+cD (signal)
-                                WholeArrayIn<ScalarAll>, // lowFilter
-                                WholeArrayIn<ScalarAll>, // highFilter
-                                FieldOut<ScalarAll>);    // outptu coefficients
+  using ControlSignature = void(WholeArrayIn, // ext1
+                                WholeArrayIn, // ext2
+                                WholeArrayIn, // ext3
+                                WholeArrayIn, // ext4
+                                WholeArrayIn, // cA+cD (signal)
+                                WholeArrayIn, // lowFilter
+                                WholeArrayIn, // highFilter
+                                FieldOut);    // outptu coefficients
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   using InputDomain = _8;
 
@@ -1779,14 +1779,14 @@ private:
 class InverseTransform3DFrontBack : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>, // ext1
-                                WholeArrayIn<ScalarAll>, // ext2
-                                WholeArrayIn<ScalarAll>, // ext3
-                                WholeArrayIn<ScalarAll>, // ext4
-                                WholeArrayIn<ScalarAll>, // cA+cD (signal)
-                                WholeArrayIn<ScalarAll>, // lowFilter
-                                WholeArrayIn<ScalarAll>, // highFilter
-                                FieldOut<ScalarAll>);    // outptu coefficients
+  using ControlSignature = void(WholeArrayIn, // ext1
+                                WholeArrayIn, // ext2
+                                WholeArrayIn, // ext3
+                                WholeArrayIn, // ext4
+                                WholeArrayIn, // cA+cD (signal)
+                                WholeArrayIn, // lowFilter
+                                WholeArrayIn, // highFilter
+                                FieldOut);    // outptu coefficients
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   using InputDomain = _8;
 
@@ -2250,8 +2250,8 @@ private:
 class ExtensionWorklet2D : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
-                                WholeArrayIn<ScalarAll>); // signal part
+  using ControlSignature = void(WholeArrayOut, // extension part
+                                WholeArrayIn); // signal part
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -2394,12 +2394,12 @@ private:
 class ForwardTransform2D : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left/top extension
-                                WholeArrayIn<ScalarAll>,   // sigIn
-                                WholeArrayIn<ScalarAll>,   // right/bottom extension
-                                WholeArrayIn<ScalarAll>,   // lowFilter
-                                WholeArrayIn<ScalarAll>,   // highFilter
-                                WholeArrayOut<ScalarAll>); // cA followed by cD
+  using ControlSignature = void(WholeArrayIn,   // left/top extension
+                                WholeArrayIn,   // sigIn
+                                WholeArrayIn,   // right/bottom extension
+                                WholeArrayIn,   // lowFilter
+                                WholeArrayIn,   // highFilter
+                                WholeArrayOut); // cA followed by cD
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
   using InputDomain = _6;
 
@@ -2579,14 +2579,14 @@ private:
 class InverseTransform2D : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>, // ext1
-                                WholeArrayIn<ScalarAll>, // ext2
-                                WholeArrayIn<ScalarAll>, // ext3
-                                WholeArrayIn<ScalarAll>, // ext4
-                                WholeArrayIn<ScalarAll>, // cA+cD (signal)
-                                WholeArrayIn<ScalarAll>, // lowFilter
-                                WholeArrayIn<ScalarAll>, // highFilter
-                                FieldOut<ScalarAll>);    // outptu coeffs
+  using ControlSignature = void(WholeArrayIn, // ext1
+                                WholeArrayIn, // ext2
+                                WholeArrayIn, // ext3
+                                WholeArrayIn, // ext4
+                                WholeArrayIn, // cA+cD (signal)
+                                WholeArrayIn, // lowFilter
+                                WholeArrayIn, // highFilter
+                                FieldOut);    // outptu coeffs
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   using InputDomain = _8;
 
@@ -2884,10 +2884,10 @@ private:
 class ForwardTransform : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // sigIn
-                                WholeArrayIn<ScalarAll>,   // lowFilter
-                                WholeArrayIn<ScalarAll>,   // highFilter
-                                WholeArrayOut<ScalarAll>); // cA followed by cD
+  using ControlSignature = void(WholeArrayIn,   // sigIn
+                                WholeArrayIn,   // lowFilter
+                                WholeArrayIn,   // highFilter
+                                WholeArrayOut); // cA followed by cD
   using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _1;
 
@@ -2963,10 +2963,10 @@ private:
 class InverseTransformOdd : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // Input: coeffs, cA followed by cD
-                                WholeArrayIn<ScalarAll>,   // lowFilter
-                                WholeArrayIn<ScalarAll>,   // highFilter
-                                WholeArrayOut<ScalarAll>); // output
+  using ControlSignature = void(WholeArrayIn,   // Input: coeffs, cA followed by cD
+                                WholeArrayIn,   // lowFilter
+                                WholeArrayIn,   // highFilter
+                                WholeArrayOut); // output
   using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _1;
 
@@ -3045,10 +3045,10 @@ private:
 class InverseTransformEven : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // Input: coeffs, cA followed by cD
-                                WholeArrayIn<ScalarAll>,   // lowFilter
-                                WholeArrayIn<ScalarAll>,   // highFilter
-                                WholeArrayOut<ScalarAll>); // output
+  using ControlSignature = void(WholeArrayIn,   // Input: coeffs, cA followed by cD
+                                WholeArrayIn,   // lowFilter
+                                WholeArrayIn,   // highFilter
+                                WholeArrayOut); // output
   using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _1;
 
@@ -3129,7 +3129,7 @@ private:
 class ThresholdWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldInOut<ScalarAll>); // Thresholding in-place
+  using ControlSignature = void(FieldInOut); // Thresholding in-place
   using ExecutionSignature = void(_1);
   using InputDomain = _1;
 
@@ -3158,7 +3158,7 @@ private:
 class SquaredDeviation : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
   using InputDomain = _1;
 
@@ -3184,7 +3184,7 @@ private:
 class Differencer : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<ScalarAll>, FieldIn<ScalarAll>, FieldOut<ScalarAll>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut);
   using ExecutionSignature = _3(_1, _2);
   using InputDomain = _1;
 
@@ -3198,7 +3198,7 @@ public:
 class SquareWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
   using InputDomain = _1;
 
@@ -3212,7 +3212,7 @@ public:
 class CopyWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<ScalarAll>, WholeArrayOut<ScalarAll>);
+  using ControlSignature = void(WholeArrayIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -3236,8 +3236,8 @@ private:
 class LeftSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
-                                WholeArrayIn<ScalarAll>); // signal part
+  using ControlSignature = void(WholeArrayOut, // extension part
+                                WholeArrayIn); // signal part
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -3264,8 +3264,8 @@ private:
 class LeftSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
-                                WholeArrayIn<ScalarAll>); // signal part
+  using ControlSignature = void(WholeArrayOut, // extension part
+                                WholeArrayIn); // signal part
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -3292,8 +3292,8 @@ private:
 class LeftASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
-                                WholeArrayIn<ScalarAll>); // signal part
+  using ControlSignature = void(WholeArrayOut, // extension part
+                                WholeArrayIn); // signal part
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -3320,8 +3320,8 @@ private:
 class LeftASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
-                                WholeArrayIn<ScalarAll>); // signal part
+  using ControlSignature = void(WholeArrayOut, // extension part
+                                WholeArrayIn); // signal part
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -3348,8 +3348,8 @@ private:
 class RightSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
-                                WholeArrayIn<ScalarAll>); // signal part
+  using ControlSignature = void(WholeArrayOut, // extension part
+                                WholeArrayIn); // signal part
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -3376,8 +3376,8 @@ private:
 class RightSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
-                                WholeArrayIn<ScalarAll>); // signal part
+  using ControlSignature = void(WholeArrayOut, // extension part
+                                WholeArrayIn); // signal part
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -3404,8 +3404,8 @@ private:
 class RightASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
-                                WholeArrayIn<ScalarAll>); // signal part
+  using ControlSignature = void(WholeArrayOut, // extension part
+                                WholeArrayIn); // signal part
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -3432,8 +3432,8 @@ private:
 class RightASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
-                                WholeArrayIn<ScalarAll>); // signal part
+  using ControlSignature = void(WholeArrayOut, // extension part
+                                WholeArrayIn); // signal part
   using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
@@ -3460,7 +3460,7 @@ private:
 class AssignZeroWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayInOut<ScalarAll>);
+  using ControlSignature = void(WholeArrayInOut);
   using ExecutionSignature = void(_1, WorkIndex);
 
   // Constructor
@@ -3488,7 +3488,7 @@ private:
 class AssignZero2DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayInOut<ScalarAll>);
+  using ControlSignature = void(WholeArrayInOut);
   using ExecutionSignature = void(_1, WorkIndex);
 
   // Constructor
@@ -3536,7 +3536,7 @@ private:
 class AssignZero3DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayInOut<ScalarAll>);
+  using ControlSignature = void(WholeArrayInOut);
   using ExecutionSignature = void(_1, WorkIndex);
 
   // Constructor
@@ -3595,8 +3595,8 @@ private:
 class RectangleCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<ScalarAll>,        // Input, small rectangle
-                                WholeArrayOut<ScalarAll>); // Output, big rectangle
+  using ControlSignature = void(FieldIn,        // Input, small rectangle
+                                WholeArrayOut); // Output, big rectangle
   using ExecutionSignature = void(_1, _2, WorkIndex);
 
   // Constructor
@@ -3649,8 +3649,8 @@ private:
 class CubeCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<ScalarAll>,        // Input, small cube
-                                WholeArrayOut<ScalarAll>); // Output, big cube
+  using ControlSignature = void(FieldIn,        // Input, small cube
+                                WholeArrayOut); // Output, big cube
   using ExecutionSignature = void(_1, _2, WorkIndex);
 
   // Constructor

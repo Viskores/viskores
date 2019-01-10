@@ -280,9 +280,7 @@ public:
   class CountBinsL1 : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    using ControlSignature = void(CellSetIn cellset,
-                                  FieldInPoint<Vec3> coords,
-                                  FieldOutCell<IdType> bincount);
+    using ControlSignature = void(CellSetIn cellset, FieldInPoint coords, FieldOutCell bincount);
     using ExecutionSignature = void(_2, _3);
 
     CountBinsL1(const vtkm::exec::twolevelgrid::Grid& grid)
@@ -306,9 +304,9 @@ public:
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldInPoint<Vec3> coords,
-                                  FieldInCell<IdType> offsets,
-                                  WholeArrayOut<IdType> binIds);
+                                  FieldInPoint coords,
+                                  FieldInCell offsets,
+                                  WholeArrayOut binIds);
     using ExecutionSignature = void(_2, _3, _4);
 
     FindBinsL1(const vtkm::exec::twolevelgrid::Grid& grid)
@@ -338,9 +336,7 @@ public:
   class GenerateBinsL1 : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<IdType> binIds,
-                                  FieldIn<IdType> cellCounts,
-                                  WholeArrayOut<vtkm::ListTagBase<DimVec3>> dimensions);
+    using ControlSignature = void(FieldIn binIds, FieldIn cellCounts, WholeArrayOut dimensions);
     using ExecutionSignature = void(_1, _2, _3);
 
     using InputDomain = _1;
@@ -368,9 +364,9 @@ public:
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldInPoint<Vec3> coords,
-                                  WholeArrayIn<vtkm::ListTagBase<DimVec3>> binDimensions,
-                                  FieldOutCell<IdType> bincount);
+                                  FieldInPoint coords,
+                                  WholeArrayIn binDimensions,
+                                  FieldOutCell bincount);
     using ExecutionSignature = void(_2, _3, _4);
 
     CountBinsL2(const vtkm::exec::twolevelgrid::Grid& grid)
@@ -404,12 +400,12 @@ public:
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldInPoint<Vec3> coords,
-                                  WholeArrayIn<vtkm::ListTagBase<DimVec3>> binDimensions,
-                                  WholeArrayIn<IdType> binStarts,
-                                  FieldInCell<IdType> offsets,
-                                  WholeArrayOut<IdType> binIds,
-                                  WholeArrayOut<IdType> cellIds);
+                                  FieldInPoint coords,
+                                  WholeArrayIn binDimensions,
+                                  WholeArrayIn binStarts,
+                                  FieldInCell offsets,
+                                  WholeArrayOut binIds,
+                                  WholeArrayOut cellIds);
     using ExecutionSignature = void(InputIndex, _2, _3, _4, _5, _6, _7);
 
     FindBinsL2(const vtkm::exec::twolevelgrid::Grid& grid)
@@ -456,11 +452,11 @@ public:
   class GenerateBinsL2 : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<IdType> binIds,
-                                  FieldIn<IdType> startsIn,
-                                  FieldIn<IdType> countsIn,
-                                  WholeArrayOut<IdType> startsOut,
-                                  WholeArrayOut<IdType> countsOut);
+    using ControlSignature = void(FieldIn binIds,
+                                  FieldIn startsIn,
+                                  FieldIn countsIn,
+                                  WholeArrayOut startsOut,
+                                  WholeArrayOut countsOut);
     using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
     using InputDomain = _1;
@@ -622,12 +618,12 @@ public:
   class FindCellWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<Vec3> points,
+    using ControlSignature = void(FieldIn points,
                                   WholeCellSetIn<> cellSet,
-                                  WholeArrayIn<Vec3> coordinates,
+                                  WholeArrayIn coordinates,
                                   ExecObject lookupStruct,
-                                  FieldOut<IdType> cellIds,
-                                  FieldOut<Vec3> parametricCoordinates);
+                                  FieldOut cellIds,
+                                  FieldOut parametricCoordinates);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
     using InputDomain = _1;

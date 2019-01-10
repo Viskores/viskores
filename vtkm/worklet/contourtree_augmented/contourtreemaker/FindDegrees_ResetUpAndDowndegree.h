@@ -81,9 +81,9 @@ namespace contourtree_maker_inc
 class FindDegrees_ResetUpAndDowndegree : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeSupernodes,  // (input)
-                                WholeArrayOut<IdType> updegree,    // (output)
-                                WholeArrayOut<IdType> downdegree); // (output)
+  typedef void ControlSignature(FieldIn activeSupernodes,  // (input)
+                                WholeArrayOut updegree,    // (output)
+                                WholeArrayOut downdegree); // (output)
   typedef void ExecutionSignature(_1, _2, _3);
   using InputDomain = _1;
 

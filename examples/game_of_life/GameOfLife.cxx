@@ -72,9 +72,9 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
   using CountingHandle = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
 
   using ControlSignature = void(CellSetIn,
-                                FieldInNeighborhood<> prevstate,
-                                FieldOut<> state,
-                                FieldOut<> color);
+                                FieldInNeighborhood prevstate,
+                                FieldOut state,
+                                FieldOut color);
 
   using ExecutionSignature = void(_2, _3, _4);
 

@@ -51,7 +51,7 @@ class CountFaces : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CountFaces() {}
-  using ControlSignature = void(WholeArrayIn<>, FieldOut<>);
+  using ControlSignature = void(WholeArrayIn, FieldOut);
   using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename ShapePortalType>
   VTKM_EXEC inline void operator()(const ShapePortalType& shapes,
@@ -88,13 +88,13 @@ class MortonNeighbor : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   MortonNeighbor() {}
-  using ControlSignature = void(WholeArrayIn<>,
-                                WholeArrayInOut<Id3Type>,
-                                WholeArrayIn<>,
-                                WholeArrayIn<>,
-                                WholeArrayIn<>,
-                                WholeArrayOut<>,
-                                WholeArrayInOut<>);
+  using ControlSignature = void(WholeArrayIn,
+                                WholeArrayInOut,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayOut,
+                                WholeArrayInOut);
   using ExecutionSignature = void(_1, _2, WorkIndex, _3, _4, _5, _6, _7);
 
   VTKM_EXEC
@@ -269,7 +269,7 @@ public:
   VTKM_CONT
   ExternalTriangles() {}
   using ControlSignature =
-    void(FieldIn<>, WholeArrayIn<>, WholeArrayIn<>, WholeArrayIn<>, WholeArrayOut<>, FieldIn<>);
+    void(FieldIn, WholeArrayIn, WholeArrayIn, WholeArrayIn, WholeArrayOut, FieldIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   template <typename ShapePortalType,
             typename InIndicesPortalType,
@@ -331,7 +331,7 @@ public:
 class WriteFaceConn : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, WholeArrayOut<IdType>);
+  using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_CONT
@@ -383,7 +383,7 @@ public:
     Segments[5] = Segments[4] + cellDims[1] * cellDims[0];
     Segments[6] = Segments[5] + cellDims[1] * cellDims[0];
   }
-  using ControlSignature = void(FieldIn<>, WholeArrayOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2);
   template <typename TrianglePortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& index, TrianglePortalType& triangles) const
@@ -489,7 +489,7 @@ class CountExternalTriangles : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CountExternalTriangles() {}
-  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayIn, FieldOut);
   using ExecutionSignature = void(_1, _2, _3);
   template <typename ShapePortalType>
   VTKM_EXEC inline void operator()(const vtkm::Vec<vtkm::Id, 3>& faceIdPair,

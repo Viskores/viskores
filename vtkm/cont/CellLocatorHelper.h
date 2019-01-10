@@ -79,11 +79,11 @@ public:
                                                                 DIM>;
 
   public:
-    using ControlSignature = void(FieldIn<Vec3> points,
+    using ControlSignature = void(FieldIn points,
                                   WholeCellSetIn<> cellSet,
-                                  WholeArrayIn<Vec3> coordinates,
-                                  FieldOut<IdType> cellIds,
-                                  FieldOut<Vec3> parametricCoordinates);
+                                  WholeArrayIn coordinates,
+                                  FieldOut cellIds,
+                                  FieldOut parametricCoordinates);
     using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
     template <typename CoordsPortalType, vtkm::IdComponent DIM>

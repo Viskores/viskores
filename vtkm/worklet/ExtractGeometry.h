@@ -49,9 +49,9 @@ public:
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
-                                  WholeArrayIn<Vec3> coordinates,
+                                  WholeArrayIn coordinates,
                                   ExecObject implicitFunction,
-                                  FieldOutCell<BoolType> passFlags);
+                                  FieldOutCell passFlags);
     using ExecutionSignature = _4(PointCount, PointIndices, _2, _3);
 
     ExtractCellsByVOI() = default;

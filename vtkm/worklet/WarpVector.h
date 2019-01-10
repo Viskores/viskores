@@ -43,7 +43,7 @@ public:
   class WarpVectorImp : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<Vec3>, FieldIn<Vec3>, FieldOut<Vec3>);
+    using ControlSignature = void(FieldIn, FieldIn, FieldOut);
     using ExecutionSignature = _3(_1, _2);
     VTKM_CONT
     WarpVectorImp(vtkm::FloatDefault scale)

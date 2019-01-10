@@ -38,7 +38,7 @@ struct VorticityTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<vtkm::Float32, 3>,
 
 struct Vorticity : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<VorticityTypes> input, FieldOut<Vec3> output);
+  using ControlSignature = void(FieldIn input, FieldOut output);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 

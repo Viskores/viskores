@@ -81,12 +81,12 @@ namespace active_graph_inc
 class TransferSaddleStartsUpdateEdgeSorter : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeVertices,    // (input) active activeVertices
-                                WholeArrayIn<IdType> activeEdges,  // (input) active edges
-                                WholeArrayIn<IdType> firstEdge,    // (input) first edge
-                                WholeArrayIn<IdType> newFirstEdge, // (input) new first edge
-                                WholeArrayIn<IdType> newOutDegree, // (input) new out degree
-                                WholeArrayOut<IdType> edgeSorter); // (output) edge sorter
+  typedef void ControlSignature(FieldIn activeVertices,    // (input) active activeVertices
+                                WholeArrayIn activeEdges,  // (input) active edges
+                                WholeArrayIn firstEdge,    // (input) first edge
+                                WholeArrayIn newFirstEdge, // (input) new first edge
+                                WholeArrayIn newOutDegree, // (input) new out degree
+                                WholeArrayOut edgeSorter); // (output) edge sorter
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

@@ -30,7 +30,7 @@
 class TestWholeArrayWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn<>, WholeArrayInOut<>, WholeArrayOut<>);
+  using ControlSignature = void(WholeArrayIn, WholeArrayInOut, WholeArrayOut);
   using ExecutionSignature = void(WorkIndex, _1, _2, _3);
 
   template <typename InPortalType, typename InOutPortalType, typename OutPortalType>
@@ -60,7 +60,7 @@ public:
 class TestAtomicArrayWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<>, AtomicArrayInOut<>);
+  using ControlSignature = void(FieldIn, AtomicArrayInOut);
   using ExecutionSignature = void(WorkIndex, _2);
   using InputDomain = _1;
 

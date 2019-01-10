@@ -80,9 +80,9 @@ namespace contourtree
 class ResetDegrees : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> superID,           // input
-                                WholeArrayOut<IdType> updegree,    // output
-                                WholeArrayOut<IdType> downdegree); // output
+  using ControlSignature = void(FieldIn superID,           // input
+                                WholeArrayOut updegree,    // output
+                                WholeArrayOut downdegree); // output
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 

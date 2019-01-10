@@ -70,7 +70,7 @@ public:
     : SampleDistance(sampleDistance)
   {
   }
-  using ControlSignature = void(FieldIn<>, FieldInOut<>);
+  using ControlSignature = void(FieldIn, FieldInOut);
   using ExecutionSignature = void(_1, _2);
   template <typename FloatType>
   VTKM_EXEC inline void operator()(const vtkm::UInt8& status, FloatType& currentDistance) const
@@ -356,7 +356,7 @@ public:
     : Offset(offset)
   {
   }
-  using ControlSignature = void(FieldIn<>, FieldInOut<>);
+  using ControlSignature = void(FieldIn, FieldInOut);
   using ExecutionSignature = void(_1, _2);
 
   VTKM_EXEC inline void operator()(const vtkm::UInt8& status, FloatType& distance) const
@@ -374,14 +374,14 @@ private:
 public:
   LocateCell() {}
 
-  using ControlSignature = void(FieldInOut<>,
-                                WholeArrayIn<>,
-                                FieldIn<>,
-                                FieldInOut<>,
-                                FieldInOut<>,
-                                FieldInOut<>,
-                                FieldInOut<>,
-                                FieldIn<>,
+  using ControlSignature = void(FieldInOut,
+                                WholeArrayIn,
+                                FieldIn,
+                                FieldInOut,
+                                FieldInOut,
+                                FieldInOut,
+                                FieldInOut,
+                                FieldIn,
                                 ExecObject meshConnectivity);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
 
@@ -481,14 +481,14 @@ public:
   }
 
 
-  using ControlSignature = void(FieldInOut<>,
-                                WholeArrayIn<>,
-                                FieldInOut<>,
-                                FieldInOut<>,
-                                FieldInOut<>,
-                                FieldInOut<>,
-                                FieldIn<>,
-                                FieldInOut<>,
+  using ControlSignature = void(FieldInOut,
+                                WholeArrayIn,
+                                FieldInOut,
+                                FieldInOut,
+                                FieldInOut,
+                                FieldInOut,
+                                FieldIn,
+                                FieldInOut,
                                 ExecObject meshConnectivity);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
 
@@ -595,10 +595,10 @@ public:
   VTKM_CONT
   AddPathLengths() {}
 
-  using ControlSignature = void(FieldIn<RayStatusType>,            // ray status
-                                FieldIn<ScalarRenderingTypes>,     // cell enter distance
-                                FieldIn<ScalarRenderingTypes>,     // cell exit distance
-                                FieldInOut<ScalarRenderingTypes>); // ray absorption data
+  using ControlSignature = void(FieldIn,     // ray status
+                                FieldIn,     // cell enter distance
+                                FieldIn,     // cell exit distance
+                                FieldInOut); // ray absorption data
 
   using ExecutionSignature = void(_1, _2, _3, _4);
 
@@ -637,13 +637,13 @@ public:
   {
   }
 
-  using ControlSignature = void(FieldIn<RayStatusType>,                // ray status
-                                FieldIn<ScalarRenderingTypes>,         // cell enter distance
-                                FieldIn<ScalarRenderingTypes>,         // cell exit distance
-                                FieldInOut<ScalarRenderingTypes>,      // current distance
-                                WholeArrayIn<ScalarRenderingTypes>,    // cell absorption data array
-                                WholeArrayInOut<ScalarRenderingTypes>, // ray absorption data
-                                FieldIn<IdType>);                      // current cell
+  using ControlSignature = void(FieldIn,         // ray status
+                                FieldIn,         // cell enter distance
+                                FieldIn,         // cell exit distance
+                                FieldInOut,      // current distance
+                                WholeArrayIn,    // cell absorption data array
+                                WholeArrayInOut, // ray absorption data
+                                FieldIn);        // current cell
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
 
@@ -702,15 +702,15 @@ public:
   {
   }
 
-  using ControlSignature = void(FieldIn<>,                          // ray status
-                                FieldIn<>,                          // cell enter distance
-                                FieldIn<>,                          // cell exit distance
-                                FieldInOut<>,                       // current distance
-                                WholeArrayIn<ScalarRenderingTypes>, // cell absorption data array
-                                WholeArrayIn<ScalarRenderingTypes>, // cell emission data array
-                                WholeArrayInOut<>,                  // ray absorption data
-                                WholeArrayInOut<>,                  // ray emission data
-                                FieldIn<>);                         // current cell
+  using ControlSignature = void(FieldIn,         // ray status
+                                FieldIn,         // cell enter distance
+                                FieldIn,         // cell exit distance
+                                FieldInOut,      // current distance
+                                WholeArrayIn,    // cell absorption data array
+                                WholeArrayIn,    // cell emission data array
+                                WholeArrayInOut, // ray absorption data
+                                WholeArrayInOut, // ray emission data
+                                FieldIn);        // current cell
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, WorkIndex);
 
@@ -805,7 +805,7 @@ public:
     , BGColor(bgcolor)
   {
   }
-  using ControlSignature = void(FieldIn<>, WholeArrayIn<>);
+  using ControlSignature = void(FieldIn, WholeArrayIn);
   using ExecutionSignature = void(_1, _2);
 
 
@@ -890,14 +890,14 @@ public:
   }
 
 
-  using ControlSignature = void(FieldIn<>,
-                                WholeArrayIn<ScalarRenderingTypes>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldInOut<>,
-                                FieldInOut<>,
-                                WholeArrayIn<>,
-                                WholeArrayInOut<>);
+  using ControlSignature = void(FieldIn,
+                                WholeArrayIn,
+                                FieldIn,
+                                FieldIn,
+                                FieldInOut,
+                                FieldInOut,
+                                WholeArrayIn,
+                                WholeArrayInOut);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorMapType, typename FrameBufferType>
@@ -996,18 +996,18 @@ public:
   }
 
 
-  using ControlSignature = void(FieldIn<>,
-                                WholeArrayIn<Vec3>,
-                                WholeArrayIn<ScalarRenderingTypes>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldInOut<>,
-                                FieldIn<>,
-                                FieldInOut<>,
-                                FieldIn<>,
+  using ControlSignature = void(FieldIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                FieldIn,
+                                FieldIn,
+                                FieldInOut,
+                                FieldIn,
+                                FieldInOut,
+                                FieldIn,
                                 ExecObject meshConnectivity,
-                                WholeArrayIn<>,
-                                WholeArrayInOut<>);
+                                WholeArrayIn,
+                                WholeArrayInOut);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9, _10, _11, _12);
 
   template <typename PointPortalType,

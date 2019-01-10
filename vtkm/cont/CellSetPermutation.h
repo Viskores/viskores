@@ -46,9 +46,7 @@ namespace internal
 
 struct WriteConnectivity : public vtkm::worklet::WorkletMapPointToCell
 {
-  using ControlSignature = void(CellSetIn cellset,
-                                FieldInCell<IdType> offset,
-                                WholeArrayOut<> connectivity);
+  using ControlSignature = void(CellSetIn cellset, FieldInCell offset, WholeArrayOut connectivity);
   using ExecutionSignature = void(PointCount, PointIndices, _2, _3);
   using InputDomain = _1;
 

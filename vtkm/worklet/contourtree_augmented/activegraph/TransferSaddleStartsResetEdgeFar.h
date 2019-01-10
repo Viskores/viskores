@@ -81,9 +81,9 @@ namespace active_graph_inc
 class TransferSaddleStartsResetEdgeFar : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeEdges,      // (input) active edges
-                                WholeArrayIn<IdType> hyperarcs,   // (input) hyperarcs
-                                WholeArrayInOut<IdType> edgeFar); // (output) edge far
+  typedef void ControlSignature(FieldIn activeEdges,      // (input) active edges
+                                WholeArrayIn hyperarcs,   // (input) hyperarcs
+                                WholeArrayInOut edgeFar); // (output) edge far
   typedef void ExecutionSignature(_1, _2, _3);
   using InputDomain = _1;
 

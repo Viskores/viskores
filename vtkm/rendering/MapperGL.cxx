@@ -59,12 +59,12 @@ public:
     , SDiff(sDiff)
   {
   }
-  using ControlSignature = void(FieldIn<IdType> vertexId,
-                                WholeArrayIn<Id4Type> indices,
-                                WholeArrayIn<Scalar> scalar,
-                                WholeArrayIn<Vec3> verts,
-                                WholeArrayOut<Scalar> out_color,
-                                WholeArrayOut<Scalar> out_vertices);
+  using ControlSignature = void(FieldIn vertexId,
+                                WholeArrayIn indices,
+                                WholeArrayIn scalar,
+                                WholeArrayIn verts,
+                                WholeArrayOut out_color,
+                                WholeArrayOut out_vertices);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
   template <typename InputArrayIndexPortalType,

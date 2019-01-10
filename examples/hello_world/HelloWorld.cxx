@@ -139,7 +139,7 @@ struct HelloVTKMInterop
     {
     }
 
-    using ControlSignature = void(FieldIn<>, FieldOut<>, FieldOut<>);
+    using ControlSignature = void(FieldIn, FieldOut, FieldOut);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_EXEC

@@ -80,13 +80,13 @@ class SetSuperArcsSetTreeSuperarcs : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    FieldIn<IdType> treeSupernodes,             // (input) supernodes of the tree
-    WholeArrayIn<IdType> hyperarcs,             // (input) hyperarcs from the active graph
-    WholeArrayIn<IdType> treeHyperparents,      // (input) hyperparents from the tree
-    WholeArrayIn<IdType> superId,               // (input) superID from the active graph
-    WholeArrayIn<IdType> hyperId,               // (input) hyperID from the active graph
-    WholeArrayOut<IdType> treeSuperarcs,        // (output) superarcs from the tree
-    WholeArrayOut<IdType> treeFirstSuperchild); // (output) firstSuperchild from the tree
+    FieldIn treeSupernodes,             // (input) supernodes of the tree
+    WholeArrayIn hyperarcs,             // (input) hyperarcs from the active graph
+    WholeArrayIn treeHyperparents,      // (input) hyperparents from the tree
+    WholeArrayIn superId,               // (input) superID from the active graph
+    WholeArrayIn hyperId,               // (input) hyperID from the active graph
+    WholeArrayOut treeSuperarcs,        // (output) superarcs from the tree
+    WholeArrayOut treeFirstSuperchild); // (output) firstSuperchild from the tree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 

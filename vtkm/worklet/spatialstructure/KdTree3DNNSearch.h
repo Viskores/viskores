@@ -47,12 +47,12 @@ public:
   class NearestNeighborSearch3DWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> qcIn,
-                                  WholeArrayIn<> treeIdIn,
-                                  WholeArrayIn<> treeSplitIdIn,
-                                  WholeArrayIn<> treeCoordiIn,
-                                  FieldOut<> nnIdOut,
-                                  FieldInOut<> nnDisOut);
+    using ControlSignature = void(FieldIn qcIn,
+                                  WholeArrayIn treeIdIn,
+                                  WholeArrayIn treeSplitIdIn,
+                                  WholeArrayIn treeCoordiIn,
+                                  FieldOut nnIdOut,
+                                  FieldInOut nnDisOut);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
     VTKM_CONT

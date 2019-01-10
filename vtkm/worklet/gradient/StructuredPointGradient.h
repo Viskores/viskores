@@ -42,8 +42,8 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
 {
 
   using ControlSignature = void(CellSetIn,
-                                FieldInNeighborhood<Vec3> points,
-                                FieldInNeighborhood<StructuredPointGradientInType<T>>,
+                                FieldInNeighborhood points,
+                                FieldInNeighborhood,
                                 GradientOutputs outputFields);
 
   using ExecutionSignature = void(Boundary, _2, _3, _4);

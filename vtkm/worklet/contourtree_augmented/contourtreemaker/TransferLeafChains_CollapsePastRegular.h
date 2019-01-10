@@ -81,9 +81,9 @@ namespace contourtree_maker_inc
 class TransferLeafChains_CollapsePastRegular : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeSupernodes, // (input)
-                                WholeArrayInOut<IdType> outbound, // (output)
-                                WholeArrayInOut<IdType> inbound   // (output)
+  typedef void ControlSignature(FieldIn activeSupernodes, // (input)
+                                WholeArrayInOut outbound, // (output)
+                                WholeArrayInOut inbound   // (output)
                                 );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;

@@ -80,12 +80,12 @@ class SetArcsConnectNodes : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    WholeArrayInOut<IdType> treeArcs, // (input/output) tree,arcs
-    WholeArrayIn<IdType>
+    WholeArrayInOut treeArcs, // (input/output) tree,arcs
+    WholeArrayIn
       nodes, // (input) nodes of tree sorted by tree.superparents using SuperArcNodeComparator
-    WholeArrayIn<IdType> treeSuperparents, // (input) tree superparents
-    WholeArrayIn<IdType> treeSuperarcs,    // (input) tree superarcs
-    WholeArrayIn<IdType> treeSupernodes);  // (input) tree supernodes
+    WholeArrayIn treeSuperparents, // (input) tree superparents
+    WholeArrayIn treeSuperarcs,    // (input) tree superarcs
+    WholeArrayIn treeSupernodes);  // (input) tree supernodes
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;

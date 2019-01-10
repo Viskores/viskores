@@ -43,9 +43,7 @@ namespace particleadvection
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> idx,
-                                ExecObject integrator,
-                                ExecObject integralCurve);
+  using ControlSignature = void(FieldIn idx, ExecObject integrator, ExecObject integralCurve);
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
@@ -143,7 +141,7 @@ class Subtract : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   Subtract() {}
-  using ControlSignature = void(FieldOut<>, FieldIn<>, FieldIn<>);
+  using ControlSignature = void(FieldOut, FieldIn, FieldIn);
   using ExecutionSignature = void(_1, _2, _3);
   VTKM_EXEC void operator()(vtkm::Id& res, const vtkm::Id& x, const vtkm::Id& y) const
   {

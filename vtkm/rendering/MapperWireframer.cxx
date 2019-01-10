@@ -47,7 +47,7 @@ public:
   VTKM_CONT
   CreateConnectivity() {}
 
-  using ControlSignature = void(FieldIn<>, WholeArrayOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayOut);
 
   using ExecutionSignature = void(_1, _2);
 
@@ -73,10 +73,7 @@ public:
   {
   }
 
-  using ControlSignature = void(FieldIn<>,
-                                FieldIn<vtkm::TypeListTagScalarAll>,
-                                FieldOut<>,
-                                FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut, FieldOut);
 
   using ExecutionSignature = void(_1, _2, _3, _4);
   template <typename ScalarType>
@@ -114,7 +111,7 @@ public:
 #endif
 struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
 {
-  using ControlSignature = void(CellSetIn cellSet, FieldOutCell<> numEdges);
+  using ControlSignature = void(CellSetIn cellSet, FieldOutCell numEdges);
   using ExecutionSignature = _2(CellShape shape, PointCount numPoints);
   using InputDomain = _1;
 
@@ -135,7 +132,7 @@ struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
 
 struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
 {
-  using ControlSignature = void(CellSetIn cellSet, FieldOutCell<> edgeIndices);
+  using ControlSignature = void(CellSetIn cellSet, FieldOutCell edgeIndices);
   using ExecutionSignature = void(CellShape, PointIndices, VisitIndex, _2);
   using InputDomain = _1;
   using ScatterType = vtkm::worklet::ScatterCounting;

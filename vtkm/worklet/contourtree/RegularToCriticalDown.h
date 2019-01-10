@@ -81,10 +81,10 @@ namespace contourtree
 class RegularToCriticalDown : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> vertexID,               // (input) candidate index
-                                WholeArrayIn<IdType> mergeArcs,         // (input) merge arcs
-                                WholeArrayIn<IdType> regularToCritical, // (input)
-                                FieldOut<IdType> sortVector);           // (output)
+  using ControlSignature = void(FieldIn vertexID,               // (input) candidate index
+                                WholeArrayIn mergeArcs,         // (input) merge arcs
+                                WholeArrayIn regularToCritical, // (input)
+                                FieldOut sortVector);           // (output)
   using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 

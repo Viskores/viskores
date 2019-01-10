@@ -33,7 +33,7 @@ namespace colorconversion
 
 struct ConvertToRGBA : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<> in, FieldOut<> out);
+  using ControlSignature = void(FieldIn in, FieldOut out);
   using ExecutionSignature = _2(_1);
 
   ConvertToRGBA(vtkm::Float32 alpha)

@@ -89,11 +89,11 @@ template <typename DeviceAdapter>
 class TransferLeafChains_TransferToContourTree : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeSupernodes,                // (input)
-                                WholeArrayOut<IdType> contourTreeHyperparents,   // (output)
-                                WholeArrayOut<IdType> contourTreeHyperarcs,      // (output)
-                                WholeArrayOut<IdType> contourTreeSuperarcs,      // (output)
-                                WholeArrayOut<IdType> contourTreeWhenTransferred // (output)
+  typedef void ControlSignature(FieldIn activeSupernodes,                // (input)
+                                WholeArrayOut contourTreeHyperparents,   // (output)
+                                WholeArrayOut contourTreeHyperarcs,      // (output)
+                                WholeArrayOut contourTreeSuperarcs,      // (output)
+                                WholeArrayOut contourTreeWhenTransferred // (output)
                                 );
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);

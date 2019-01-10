@@ -80,12 +80,11 @@ class AugmentMergeTrees_SetAugmentedMergeArcs : public vtkm::worklet::WorkletMap
 {
 public:
   typedef void ControlSignature(
-    WholeArrayIn<IdType>
-      contourTreeActiveSupernodes,              // (input) active supernodes from the contour tree
-    WholeArrayIn<IdType> mergetreeSuperparents, // (input)
-    WholeArrayIn<IdType> mergetreeSuperarcs,    // (input)
-    WholeArrayIn<IdType> newMergetreeID,        // (input)
-    WholeArrayOut<IdType> augmentedMergetreeSuperarcs); // (output)
+    WholeArrayIn contourTreeActiveSupernodes,   // (input) active supernodes from the contour tree
+    WholeArrayIn mergetreeSuperparents,         // (input)
+    WholeArrayIn mergetreeSuperarcs,            // (input)
+    WholeArrayIn newMergetreeID,                // (input)
+    WholeArrayOut augmentedMergetreeSuperarcs); // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 

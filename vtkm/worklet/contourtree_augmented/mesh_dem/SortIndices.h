@@ -78,9 +78,8 @@ namespace mesh_dem
 class SortIndices : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    WholeArrayIn<IdType> sortOrder,     // (input) index into active vertices
-    WholeArrayOut<IdType> sortIndices); // (output) whether critical
+  typedef void ControlSignature(WholeArrayIn sortOrder,     // (input) index into active vertices
+                                WholeArrayOut sortIndices); // (output) whether critical
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 

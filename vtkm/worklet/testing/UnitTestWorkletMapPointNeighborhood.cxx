@@ -39,9 +39,7 @@ namespace test_pointneighborhood
 struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood
 {
 
-  using ControlSignature = void(FieldInNeighborhood<Scalar> neighbors,
-                                CellSetIn,
-                                FieldOut<Scalar> maxV);
+  using ControlSignature = void(FieldInNeighborhood neighbors, CellSetIn, FieldOut maxV);
 
   using ExecutionSignature = void(Boundary, _1, _3);
   //verify input domain can be something other than first parameter
@@ -97,7 +95,7 @@ struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood
 
 struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood
 {
-  using ControlSignature = void(CellSetIn topology, FieldIn<Vec3> pointCoords);
+  using ControlSignature = void(CellSetIn topology, FieldIn pointCoords);
   using ExecutionSignature =
     void(_2, WorkIndex, InputIndex, OutputIndex, ThreadIndices, VisitIndex);
 
@@ -133,7 +131,7 @@ struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood
 
 struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood
 {
-  using ControlSignature = void(CellSetIn topology, FieldIn<Vec3> pointCoords);
+  using ControlSignature = void(CellSetIn topology, FieldIn pointCoords);
   using ExecutionSignature =
     void(_2, WorkIndex, InputIndex, OutputIndex, ThreadIndices, VisitIndex);
 

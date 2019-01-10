@@ -41,7 +41,7 @@ class CountSegments : public vtkm::worklet::WorkletMapPointToCell
 public:
   VTKM_CONT
   CountSegments() {}
-  typedef void ControlSignature(CellSetIn cellset, FieldOut<>);
+  typedef void ControlSignature(CellSetIn cellset, FieldOut);
   typedef void ExecutionSignature(CellShape, _2);
 
   VTKM_EXEC
@@ -77,7 +77,7 @@ class Pointify : public vtkm::worklet::WorkletMapPointToCell
 public:
   VTKM_CONT
   Pointify() {}
-  typedef void ControlSignature(CellSetIn cellset, FieldInCell<>, WholeArrayOut<>);
+  typedef void ControlSignature(CellSetIn cellset, FieldInCell, WholeArrayOut);
   typedef void ExecutionSignature(_2, CellShape, PointIndices, WorkIndex, _3);
 
   template <typename VecType, typename OutputPortal>
@@ -160,7 +160,7 @@ class Iterator : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   Iterator() {}
-  typedef void ControlSignature(FieldOut<>);
+  typedef void ControlSignature(FieldOut);
   typedef void ExecutionSignature(_1, WorkIndex);
   VTKM_EXEC
   void operator()(vtkm::Id2& index, const vtkm::Id2& idx) const { index = idx; }
@@ -190,7 +190,7 @@ public:
       InverseDelta = 0.f; // just map scalar to 0;
   }
 
-  typedef void ControlSignature(FieldIn<>, FieldOut<>, WholeArrayIn<Scalar>);
+  typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3);
 
   template <typename ScalarPortalType>

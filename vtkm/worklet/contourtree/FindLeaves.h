@@ -81,12 +81,12 @@ namespace contourtree
 class FindLeaves : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> superID,           // (input) super nodes
-                                WholeArrayIn<IdType> updegree,     // (input)
-                                WholeArrayIn<IdType> downdegree,   // (input)
-                                WholeArrayIn<IdType> joinArc,      // (input)
-                                WholeArrayIn<IdType> splitArc,     // (input)
-                                WholeArrayInOut<IdType> superarc); // (i/o)
+  using ControlSignature = void(FieldIn superID,           // (input) super nodes
+                                WholeArrayIn updegree,     // (input)
+                                WholeArrayIn downdegree,   // (input)
+                                WholeArrayIn joinArc,      // (input)
+                                WholeArrayIn splitArc,     // (input)
+                                WholeArrayInOut superarc); // (i/o)
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

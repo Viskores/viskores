@@ -47,7 +47,7 @@ public:
   public:
     VTKM_CONT
     CountTriangles() {}
-    using ControlSignature = void(CellSetIn cellset, FieldOut<>);
+    using ControlSignature = void(CellSetIn cellset, FieldOut);
     using ExecutionSignature = void(CellShape, _2);
 
     VTKM_EXEC
@@ -87,7 +87,7 @@ public:
   {
 
   public:
-    using ControlSignature = void(CellSetIn cellset, FieldInTo<>, WholeArrayOut<>);
+    using ControlSignature = void(CellSetIn cellset, FieldInTo, WholeArrayOut);
     using ExecutionSignature = void(FromIndices, _2, _3);
     VTKM_CONT
     TrianglulateStructured() {}
@@ -192,7 +192,7 @@ public:
   public:
     VTKM_CONT
     IndicesSort() {}
-    using ControlSignature = void(FieldInOut<>);
+    using ControlSignature = void(FieldInOut);
     using ExecutionSignature = void(_1);
     VTKM_EXEC
     void operator()(vtkm::Vec<vtkm::Id, 4>& triangleIndices) const
@@ -247,7 +247,7 @@ public:
     UniqueTriangles() {}
 
     using ControlSignature = void(WholeArrayIn<vtkm::ListTagBase<vtkm::Vec<vtkm::Id, 4>>>,
-                                  WholeArrayOut<vtkm::ListTagBase<vtkm::UInt8>>);
+                                  WholeArrayOut);
     using ExecutionSignature = void(_1, _2, WorkIndex);
 
     VTKM_EXEC
@@ -278,7 +278,7 @@ public:
   public:
     VTKM_CONT
     Trianglulate() {}
-    using ControlSignature = void(CellSetIn cellset, FieldInCell<>, WholeArrayOut<>);
+    using ControlSignature = void(CellSetIn cellset, FieldInCell, WholeArrayOut);
     using ExecutionSignature = void(_2, CellShape, PointIndices, WorkIndex, _3);
 
     template <typename VecType, typename OutputPortal>

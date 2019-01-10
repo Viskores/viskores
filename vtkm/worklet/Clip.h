@@ -245,11 +245,8 @@ public:
     {
     }
 
-    using ControlSignature = void(CellSetIn,
-                                  FieldInPoint<ScalarAll>,
-                                  ExecObject clippingData,
-                                  FieldOutCell<TypeClipStats>,
-                                  FieldOutCell<IdType>);
+    using ControlSignature =
+      void(CellSetIn, FieldInPoint, ExecObject clippingData, FieldOutCell, FieldOutCell);
 
     using ExecutionSignature = void(CellShape, PointCount, _2, _3, _4, _5);
 
@@ -337,19 +334,19 @@ public:
     }
 
     using ControlSignature = void(CellSetIn,
-                                  FieldInPoint<ScalarAll>,
-                                  FieldInCell<IdType> clipTableIndices,
-                                  FieldInCell<TypeClipStats> clipStats,
+                                  FieldInPoint,
+                                  FieldInCell clipTableIndices,
+                                  FieldInCell clipStats,
                                   ExecObject clipTables,
                                   ExecObject connectivityObject,
-                                  WholeArrayOut<IdType> edgePointReverseConnectivity,
-                                  WholeArrayOut<TypeEdgeInterp> edgePointInterpolation,
-                                  WholeArrayOut<IdType> inCellReverseConnectivity,
-                                  WholeArrayOut<IdType> inCellEdgeReverseConnectivity,
-                                  WholeArrayOut<TypeEdgeInterp> inCellEdgeInterpolation,
-                                  WholeArrayOut<IdType> inCellInterpolationKeys,
-                                  WholeArrayOut<IdType> inCellInterpolationInfo,
-                                  WholeArrayOut<IdType> cellMapOutputToInput);
+                                  WholeArrayOut edgePointReverseConnectivity,
+                                  WholeArrayOut edgePointInterpolation,
+                                  WholeArrayOut inCellReverseConnectivity,
+                                  WholeArrayOut inCellEdgeReverseConnectivity,
+                                  WholeArrayOut inCellEdgeInterpolation,
+                                  WholeArrayOut inCellInterpolationKeys,
+                                  WholeArrayOut inCellInterpolationInfo,
+                                  WholeArrayOut cellMapOutputToInput);
 
     using ExecutionSignature = void(CellShape,
                                     WorkIndex,
@@ -540,9 +537,9 @@ public:
     {
     }
 
-    using ControlSignature = void(FieldIn<IdType> sourceValue,
-                                  FieldIn<IdType> destinationIndices,
-                                  WholeArrayOut<IdType> destinationData);
+    using ControlSignature = void(FieldIn sourceValue,
+                                  FieldIn destinationIndices,
+                                  WholeArrayOut destinationData);
 
     using ExecutionSignature = void(_1, _2, _3);
 
@@ -569,8 +566,7 @@ public:
     {
     }
 
-    using ControlSignature = void(FieldIn<IdType> destinationIndices,
-                                  WholeArrayOut<IdType> destinationData);
+    using ControlSignature = void(FieldIn destinationIndices, WholeArrayOut destinationData);
 
     using ExecutionSignature = void(_1, _2);
 
@@ -794,8 +790,7 @@ public:
       {
       }
 
-      using ControlSignature = void(FieldIn<TypeEdgeInterp> edgeInterpolations,
-                                    WholeArrayInOut<> outputField);
+      using ControlSignature = void(FieldIn edgeInterpolations, WholeArrayInOut outputField);
 
       using ExecutionSignature = void(_1, _2, WorkIndex);
 
@@ -818,9 +813,7 @@ public:
     class PerformInCellInterpolations : public vtkm::worklet::WorkletReduceByKey
     {
     public:
-      using ControlSignature = void(KeysIn keys,
-                                    ValuesIn<TypeMappedValue> toReduce,
-                                    ReducedValuesOut<TypeMappedValue> centroid);
+      using ControlSignature = void(KeysIn keys, ValuesIn toReduce, ReducedValuesOut centroid);
 
       using ExecutionSignature = void(_2, _3);
 

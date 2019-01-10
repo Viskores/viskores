@@ -81,10 +81,10 @@ namespace contourtree
 class SkipVertex : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> superID,            // (input) index into supernodes
-                                WholeArrayIn<IdType> superarcs,     // (input)
-                                WholeArrayInOut<IdType> joinArcs,   // (i/o)
-                                WholeArrayInOut<IdType> splitArcs); // (i/o)
+  using ControlSignature = void(FieldIn superID,            // (input) index into supernodes
+                                WholeArrayIn superarcs,     // (input)
+                                WholeArrayInOut joinArcs,   // (i/o)
+                                WholeArrayInOut splitArcs); // (i/o)
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 

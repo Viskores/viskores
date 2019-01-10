@@ -47,9 +47,9 @@ class ImageGraft<2> : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
   using ControlSignature = void(CellSetIn,
-                                FieldInNeighborhood<> comp,
-                                FieldInNeighborhood<> color,
-                                FieldOut<> newComp);
+                                FieldInNeighborhood comp,
+                                FieldInNeighborhood color,
+                                FieldOut newComp);
 
   using ExecutionSignature = _4(_2, _3);
 

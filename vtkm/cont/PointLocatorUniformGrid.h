@@ -49,7 +49,7 @@ public:
   class BinPointsWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> coord, FieldOut<> label);
+    using ControlSignature = void(FieldIn coord, FieldOut label);
 
     using ExecutionSignature = void(_1, _2);
 

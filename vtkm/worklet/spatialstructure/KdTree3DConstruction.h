@@ -49,7 +49,7 @@ public:
   class ComputeFlag : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> rank, FieldIn<> pointCountInSeg, FieldOut<> flag);
+    using ControlSignature = void(FieldIn rank, FieldIn pointCountInSeg, FieldOut flag);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
@@ -68,7 +68,7 @@ public:
   class InverseArray : public vtkm::worklet::WorkletMapField
   { //only for 0/1 array
   public:
-    using ControlSignature = void(FieldIn<> in, FieldOut<> out);
+    using ControlSignature = void(FieldIn in, FieldOut out);
     using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
@@ -88,7 +88,7 @@ public:
   {
   public:
     using ControlSignature =
-      void(FieldIn<> B, FieldIn<> D, FieldIn<> F, FieldIn<> G, FieldIn<> H, FieldOut<> I);
+      void(FieldIn B, FieldIn D, FieldIn F, FieldIn G, FieldIn H, FieldOut I);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
     VTKM_CONT
@@ -112,7 +112,7 @@ public:
   class ScatterArray : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> in, FieldIn<> index, WholeArrayOut<> out);
+    using ControlSignature = void(FieldIn in, FieldIn index, WholeArrayOut out);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
@@ -130,7 +130,7 @@ public:
   class NewSegmentId : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> inSegmentId, FieldIn<> flag, FieldOut<> outSegmentId);
+    using ControlSignature = void(FieldIn inSegmentId, FieldIn flag, FieldOut outSegmentId);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
@@ -149,10 +149,10 @@ public:
   class SaveSplitPointId : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> pointId,
-                                  FieldIn<> flag,
-                                  FieldIn<> oldSplitPointId,
-                                  FieldOut<> newSplitPointId);
+    using ControlSignature = void(FieldIn pointId,
+                                  FieldIn flag,
+                                  FieldIn oldSplitPointId,
+                                  FieldOut newSplitPointId);
     using ExecutionSignature = void(_1, _2, _3, _4);
 
     VTKM_CONT
@@ -174,7 +174,7 @@ public:
   class FindSplitPointId : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> pointId, FieldIn<> rank, FieldOut<> splitIdInsegment);
+    using ControlSignature = void(FieldIn pointId, FieldIn rank, FieldOut splitIdInsegment);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
@@ -193,7 +193,7 @@ public:
   class ArrayAdd : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> inArray0, FieldIn<> inArray1, FieldOut<> outArray);
+    using ControlSignature = void(FieldIn inArray0, FieldIn inArray1, FieldOut outArray);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
@@ -209,10 +209,7 @@ public:
   class SeprateVec3AryHandle : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> inVec3,
-                                  FieldOut<> out0,
-                                  FieldOut<> out1,
-                                  FieldOut<> out2);
+    using ControlSignature = void(FieldIn inVec3, FieldOut out0, FieldOut out1, FieldOut out2);
     using ExecutionSignature = void(_1, _2, _3, _4);
 
     VTKM_CONT

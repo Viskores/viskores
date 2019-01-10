@@ -40,14 +40,14 @@ class FindQuadAABBs : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   FindQuadAABBs() {}
-  typedef void ControlSignature(FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                WholeArrayIn<Vec3RenderingTypes>);
+  typedef void ControlSignature(FieldIn,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   template <typename PointPortalType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 5> quadId,
@@ -327,13 +327,8 @@ class CalculateNormals : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CalculateNormals() {}
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                WholeArrayIn<Vec3RenderingTypes>,
-                                WholeArrayIn<>);
+  typedef void
+    ControlSignature(FieldIn, FieldIn, FieldOut, FieldOut, FieldOut, WholeArrayIn, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   template <typename Precision, typename PointPortalType, typename IndicesPortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& hitIndex,
@@ -386,10 +381,7 @@ public:
     else
       invDeltaScalar = 1.f / minScalar;
   }
-  typedef void ControlSignature(FieldIn<>,
-                                FieldOut<>,
-                                WholeArrayIn<ScalarRenderingTypes>,
-                                WholeArrayIn<>);
+  typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4);
   template <typename ScalarPortalType, typename IndicesPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& hitIndex,

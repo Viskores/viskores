@@ -82,10 +82,10 @@ class CopyNeighbors : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature =
-    void(FieldIn<IdType> activeSupernode,       // (input) index into supernodes
-         WholeArrayIn<IdType> activeSupernodes, // (input) active supernode vertex IDs
-         WholeArrayIn<IdType> arcs,             // (input) merge tree arcs
-         FieldOut<IdType> sortVector);          // (output) neighbors for active edge
+    void(FieldIn activeSupernode,       // (input) index into supernodes
+         WholeArrayIn activeSupernodes, // (input) active supernode vertex IDs
+         WholeArrayIn arcs,             // (input) merge tree arcs
+         FieldOut sortVector);          // (output) neighbors for active edge
   using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 

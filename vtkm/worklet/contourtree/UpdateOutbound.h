@@ -81,8 +81,8 @@ namespace contourtree
 class UpdateOutbound : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> superID,           // input
-                                WholeArrayInOut<IdType> outbound); // i/o
+  using ControlSignature = void(FieldIn superID,           // input
+                                WholeArrayInOut outbound); // i/o
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 

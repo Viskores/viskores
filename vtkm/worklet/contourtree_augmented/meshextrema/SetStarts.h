@@ -80,9 +80,9 @@ class SetStarts : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    FieldIn<IdType> sortIndices,       // (input) index into active vertices
-    ExecObject meshStructure,          // (input) execution object with the mesh structure
-    WholeArrayOut<IdType> meshExtema); // (output) whether critical
+    FieldIn sortIndices,       // (input) index into active vertices
+    ExecObject meshStructure,  // (input) execution object with the mesh structure
+    WholeArrayOut meshExtema); // (output) whether critical
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;
 

@@ -31,7 +31,7 @@
 class TestMapFieldWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<>, FieldOut<>, FieldInOut<>);
+  using ControlSignature = void(FieldIn, FieldOut, FieldInOut);
   using ExecutionSignature = _3(_1, _2, _3, WorkIndex);
 
   template <typename T>
@@ -63,7 +63,7 @@ public:
 class TestMapFieldWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<ScalarAll>, FieldOut<ScalarAll>, FieldInOut<ScalarAll>);
+  using ControlSignature = void(FieldIn, FieldOut, FieldInOut);
   using ExecutionSignature = _2(_1, _3, WorkIndex);
 
   template <typename T1, typename T3>

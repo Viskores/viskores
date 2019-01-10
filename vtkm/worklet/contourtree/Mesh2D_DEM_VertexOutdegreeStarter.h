@@ -97,11 +97,11 @@ namespace contourtree
 class Mesh2D_DEM_VertexOutdegreeStarter : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> vertex,        // (input) index into active vertices
-                                FieldIn<IdType> nbrMask,       // (input) neighbor mask
-                                WholeArrayIn<IdType> arcArray, // (input) chain extrema
-                                FieldOut<IdType> outdegree,    // (output) outdegree
-                                FieldOut<IdType> isCritical);  // (output) whether critical
+  using ControlSignature = void(FieldIn vertex,        // (input) index into active vertices
+                                FieldIn nbrMask,       // (input) neighbor mask
+                                WholeArrayIn arcArray, // (input) chain extrema
+                                FieldOut outdegree,    // (output) outdegree
+                                FieldOut isCritical);  // (output) whether critical
   using ExecutionSignature = void(_1, _2, _3, _4, _5 /*, _6*/);
   using InputDomain = _1;
 

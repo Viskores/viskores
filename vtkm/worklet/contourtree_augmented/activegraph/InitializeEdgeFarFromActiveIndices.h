@@ -82,9 +82,9 @@ namespace active_graph_inc
 class InitializeEdgeFarFromActiveIndices : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayInOut<IdType> edgeFar,     // (input/output) edge far
-                                WholeArrayIn<IdType> extrema,        // (input) extremum
-                                WholeArrayIn<IdType> activeIndices); // (input) activeIndices
+  typedef void ControlSignature(WholeArrayInOut edgeFar,     // (input/output) edge far
+                                WholeArrayIn extrema,        // (input) extremum
+                                WholeArrayIn activeIndices); // (input) activeIndices
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;
 

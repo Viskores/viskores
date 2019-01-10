@@ -62,7 +62,7 @@ namespace
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  using ControlSignature = void(FieldIn vertexId, FieldOut v);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 

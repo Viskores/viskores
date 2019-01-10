@@ -40,7 +40,7 @@ public:
   struct Merge : vtkm::worklet::WorkletMapField
   {
     using ControlSignature =
-      void(FieldIn<>, FieldIn<>, FieldIn<>, WholeArrayIn<>, FieldOut<>, FieldOut<>, FieldOut<>);
+      void(FieldIn, FieldIn, FieldIn, WholeArrayIn, FieldOut, FieldOut, FieldOut);
     using ExecutionSignature = void(_1, _2, _3, VisitIndex, _4, _5, _6, _7);
     using InputDomain = _1;
 

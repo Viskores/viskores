@@ -340,12 +340,7 @@ public:
     }
   }
 
-  using ControlSignature = void(FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                WholeArrayInOut<>,
-                                WholeArrayIn<ScalarRenderingTypes>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
@@ -537,12 +532,7 @@ public:
       InverseDeltaScalar = 1.f / (maxScalar - minScalar);
     }
   }
-  using ControlSignature = void(FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                WholeArrayInOut<>,
-                                WholeArrayIn<ScalarRenderingTypes>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
@@ -684,7 +674,7 @@ public:
   VTKM_EXEC
   vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
 
-  using ControlSignature = void(FieldIn<>, FieldOut<>, FieldInOut<>, FieldInOut<>, FieldIn<>);
+  using ControlSignature = void(FieldIn, FieldOut, FieldInOut, FieldInOut, FieldIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   template <typename Precision>
   VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& rayDir,

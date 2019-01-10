@@ -103,10 +103,10 @@ public:
   {
   };
 
-  using ControlSignature = void(FieldIn<IdType> vertex,       // (input) index of vertex
-                                WholeArrayIn<TagType> values, // (input) values within mesh
-                                FieldOut<IdType> chain,       // (output) modify the chains
-                                FieldOut<IdType> linkMask);   // (output) modify the mask
+  using ControlSignature = void(FieldIn vertex,      // (input) index of vertex
+                                WholeArrayIn values, // (input) values within mesh
+                                FieldOut chain,      // (output) modify the chains
+                                FieldOut linkMask);  // (output) modify the mask
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
