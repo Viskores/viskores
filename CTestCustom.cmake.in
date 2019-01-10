@@ -50,6 +50,7 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # disable nvlink warnings about virtual functions. The Stack size warnings can only
   # be silenced in CUDA >=9, without disabling all nvlink warnings.
   "nvlink warning : Stack size for entry function.*NearestNeighborSearch.*"
+  "nvlink warning : Stack size for entry function.*BoundingIntervalHierarchyTester.*"
   "nvlink warning : Stack size for entry function.*ArrayPortalRef.*"
   "nvlink warning : Stack size for entry function.*ArrayPortalWrapper.*"
   "nvlink warning : .*ArrayPortalWrapper.* has address taken but no possible call to it"
