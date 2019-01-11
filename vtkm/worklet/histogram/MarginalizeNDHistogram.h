@@ -46,7 +46,7 @@ public:
   BinaryCompare bop;
   vtkm::Id var;
 
-  using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_EXEC
@@ -63,7 +63,7 @@ public:
 class To1DIndex : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<> bin, FieldIn<> binIndexIn, FieldOut<> binIndexOut);
+  using ControlSignature = void(FieldIn bin, FieldIn binIndexIn, FieldOut binIndexOut);
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 

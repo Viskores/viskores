@@ -79,9 +79,9 @@ namespace contourtree_maker_inc
 class ComputeHyperAndSuperStructure_ResetHyperparentsId : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<IdType> superSortIndex,            // (input)
-                                WholeArrayInOut<IdType> contourTreeHyperparents // (input/output)
-                                );                                              // (output)
+  typedef void ControlSignature(WholeArrayIn superSortIndex,            // (input)
+                                WholeArrayInOut contourTreeHyperparents // (input/output)
+                                );                                      // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 

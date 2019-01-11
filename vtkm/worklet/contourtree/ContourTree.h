@@ -242,9 +242,7 @@ public:
 struct VertexAssigned : vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> supernode,
-                                WholeArrayIn<IdType> superarcs,
-                                FieldOut<IdType> hasSuperArc);
+  using ControlSignature = void(FieldIn supernode, WholeArrayIn superarcs, FieldOut hasSuperArc);
   using ExecutionSignature = _3(_1, _2);
   using InputDomain = _1;
 

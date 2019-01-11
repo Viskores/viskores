@@ -80,9 +80,9 @@ namespace contourtree
 class FillSupernodes : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> upCandidate,   // (input)
-                                FieldIn<IdType> downCandidate, // (input)
-                                FieldOut<IdType> isSupernode); // (output)
+  using ControlSignature = void(FieldIn upCandidate,   // (input)
+                                FieldIn downCandidate, // (input)
+                                FieldOut isSupernode); // (output)
   using ExecutionSignature = _3(_1, _2);
   using InputDomain = _1;
 

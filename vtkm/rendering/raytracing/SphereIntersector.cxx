@@ -41,15 +41,15 @@ class FindSphereAABBs : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   FindSphereAABBs() {}
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                WholeArrayIn<Vec3RenderingTypes>);
+  typedef void ControlSignature(FieldIn,
+                                FieldIn,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
   template <typename PointPortalType>
   VTKM_EXEC void operator()(const vtkm::Id pointId,
@@ -222,13 +222,8 @@ class CalculateNormals : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CalculateNormals() {}
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                WholeArrayIn<Vec3RenderingTypes>,
-                                WholeArrayIn<>);
+  typedef void
+    ControlSignature(FieldIn, FieldIn, FieldOut, FieldOut, FieldOut, WholeArrayIn, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   template <typename Precision, typename PointPortalType, typename IndicesPortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& hitIndex,
@@ -274,10 +269,7 @@ public:
     else
       invDeltaScalar = 1.f / minScalar;
   }
-  typedef void ControlSignature(FieldIn<>,
-                                FieldOut<>,
-                                WholeArrayIn<ScalarRenderingTypes>,
-                                WholeArrayIn<>);
+  typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4);
   template <typename ScalarPortalType, typename IndicesPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
@@ -376,7 +368,10 @@ void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
 
   vtkm::worklet::DispatcherMapField<detail::GetScalar<Precision>>(
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-    .Invoke(rays.HitIdx, rays.Scalar, *scalarField, PointIds);
+    .Invoke(rays.HitIdx,
+            rays.Scalar,
+            scalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+            PointIds);
 }
 
 void SphereIntersector::IntersectionData(Ray<vtkm::Float32>& rays,

@@ -38,7 +38,7 @@ struct DivergenceTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<vtkm::Float32, 3>
 
 struct Divergence : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<DivergenceTypes> input, FieldOut<Scalar> output);
+  using ControlSignature = void(FieldIn input, FieldOut output);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 

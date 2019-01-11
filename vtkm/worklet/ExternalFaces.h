@@ -60,8 +60,8 @@ struct ExternalFaces
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet,
-                                  FieldOut<> numFacesInCell,
-                                  FieldInPoint<Vec3> pointCoordinates);
+                                  FieldOut numFacesInCell,
+                                  FieldInPoint pointCoordinates);
     using ExecutionSignature = _2(CellShape, _3);
     using InputDomain = _1;
 
@@ -133,10 +133,10 @@ struct ExternalFaces
   public:
     using ControlSignature = void(CellSetIn inCellSet,
                                   WholeCellSetIn<> inputCell,
-                                  FieldOut<> faceShapes,
-                                  FieldOut<> facePointCount,
-                                  FieldOut<> faceConnectivity,
-                                  FieldInPoint<Vec3> pointCoordinates);
+                                  FieldOut faceShapes,
+                                  FieldOut facePointCount,
+                                  FieldOut faceConnectivity,
+                                  FieldInPoint pointCoordinates);
     using ExecutionSignature = void(CellShape, VisitIndex, InputIndex, _2, _3, _4, _5, _6);
     using InputDomain = _1;
 
@@ -322,7 +322,7 @@ struct ExternalFaces
   class NumFacesPerCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    using ControlSignature = void(CellSetIn inCellSet, FieldOut<> numFacesInCell);
+    using ControlSignature = void(CellSetIn inCellSet, FieldOut numFacesInCell);
     using ExecutionSignature = _2(CellShape);
     using InputDomain = _1;
 
@@ -338,9 +338,9 @@ struct ExternalFaces
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldOut<> faceHashes,
-                                  FieldOut<> originCells,
-                                  FieldOut<> originFaces);
+                                  FieldOut faceHashes,
+                                  FieldOut originCells,
+                                  FieldOut originFaces);
     using ExecutionSignature = void(_2, _3, _4, CellShape, FromIndices, InputIndex, VisitIndex);
     using InputDomain = _1;
 
@@ -371,9 +371,9 @@ struct ExternalFaces
   public:
     using ControlSignature = void(KeysIn keys,
                                   WholeCellSetIn<> inputCells,
-                                  ValuesIn<> originCells,
-                                  ValuesIn<> originFaces,
-                                  ReducedValuesOut<> numOutputCells);
+                                  ValuesIn originCells,
+                                  ValuesIn originFaces,
+                                  ReducedValuesOut numOutputCells);
     using ExecutionSignature = _5(_2, _3, _4);
     using InputDomain = _1;
 
@@ -488,9 +488,9 @@ public:
   public:
     using ControlSignature = void(KeysIn keys,
                                   WholeCellSetIn<> inputCells,
-                                  ValuesIn<> originCells,
-                                  ValuesIn<> originFaces,
-                                  ReducedValuesOut<> numPointsInFace);
+                                  ValuesIn originCells,
+                                  ValuesIn originFaces,
+                                  ReducedValuesOut numPointsInFace);
     using ExecutionSignature = _5(_2, _3, _4, VisitIndex);
     using InputDomain = _1;
 
@@ -523,11 +523,11 @@ public:
   public:
     using ControlSignature = void(KeysIn keys,
                                   WholeCellSetIn<> inputCells,
-                                  ValuesIn<> originCells,
-                                  ValuesIn<> originFaces,
-                                  ReducedValuesOut<> shapesOut,
-                                  ReducedValuesOut<> connectivityOut,
-                                  ReducedValuesOut<> cellIdMapOut);
+                                  ValuesIn originCells,
+                                  ValuesIn originFaces,
+                                  ReducedValuesOut shapesOut,
+                                  ReducedValuesOut connectivityOut,
+                                  ReducedValuesOut cellIdMapOut);
     using ExecutionSignature = void(_2, _3, _4, VisitIndex, _5, _6, _7);
     using InputDomain = _1;
 
@@ -572,7 +572,7 @@ public:
   class IsPolyDataCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    using ControlSignature = void(CellSetIn inCellSet, FieldOut<> isPolyDataCell);
+    using ControlSignature = void(CellSetIn inCellSet, FieldOut isPolyDataCell);
     using ExecutionSignature = _2(CellShape);
     using InputDomain = _1;
 
@@ -588,7 +588,7 @@ public:
   public:
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    using ControlSignature = void(CellSetIn inCellSet, FieldOut<> numPoints);
+    using ControlSignature = void(CellSetIn inCellSet, FieldOut numPoints);
     using ExecutionSignature = _2(PointCount);
     using InputDomain = _1;
 
@@ -601,9 +601,9 @@ public:
     using ScatterType = vtkm::worklet::ScatterCounting;
 
     using ControlSignature = void(CellSetIn inputTopology,
-                                  FieldOut<> shapes,
-                                  FieldOut<> pointIndices,
-                                  FieldOut<> cellIdMapOut);
+                                  FieldOut shapes,
+                                  FieldOut pointIndices,
+                                  FieldOut cellIdMapOut);
     using ExecutionSignature = void(CellShape, PointIndices, InputIndex, _2, _3, _4);
 
     template <typename CellShape, typename InPointIndexType, typename OutPointIndexType>

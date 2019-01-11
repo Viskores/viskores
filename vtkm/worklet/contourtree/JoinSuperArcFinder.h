@@ -113,10 +113,10 @@ public:
   {
   };
 
-  using ControlSignature = void(FieldIn<IdType> vertex,           // (input) index into sorted edges
-                                WholeArrayIn<TagType> values,     // (input) data values
-                                WholeArrayInOut<IdType> saddles,  // (in out) saddles
-                                WholeArrayInOut<IdType> extrema); // (in out) maxima
+  using ControlSignature = void(FieldIn vertex,           // (input) index into sorted edges
+                                WholeArrayIn values,      // (input) data values
+                                WholeArrayInOut saddles,  // (in out) saddles
+                                WholeArrayInOut extrema); // (in out) maxima
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 

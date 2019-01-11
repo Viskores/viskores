@@ -80,12 +80,12 @@ class SetArcsSlideVertices : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    WholeArrayIn<IdType> treeArcs, // (input) arcs from the tree
-    WholeArrayIn<IdType>
+    WholeArrayIn treeArcs, // (input) arcs from the tree
+    WholeArrayIn
       meshExtrema, // (input) extrema from the mesh (i.e, pits or peaks depending on if we have a join or split tree)
-    WholeArrayIn<IdType> treeFirstSuperchild,  // (input) firstSuperchild from the tree
-    WholeArrayIn<IdType> treeSupernodes,       // (input) supernodes from the tree
-    WholeArrayInOut<IdType> treeSuperparents); // (input/output) superparents from the tree
+    WholeArrayIn treeFirstSuperchild,  // (input) firstSuperchild from the tree
+    WholeArrayIn treeSupernodes,       // (input) supernodes from the tree
+    WholeArrayInOut treeSuperparents); // (input/output) superparents from the tree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 

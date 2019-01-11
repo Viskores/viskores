@@ -171,10 +171,10 @@ template <typename ScalarType>
 class TestEvaluatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<> inputPoint,
+  using ControlSignature = void(FieldIn inputPoint,
                                 ExecObject evaluator,
-                                FieldOut<> validity,
-                                FieldOut<> outputPoint);
+                                FieldOut validity,
+                                FieldOut outputPoint);
 
   using ExecutionSignature = void(_1, _2, _3, _4);
 
@@ -222,10 +222,10 @@ template <typename ScalarType>
 class TestIntegratorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<> inputPoint,
+  using ControlSignature = void(FieldIn inputPoint,
                                 ExecObject integrator,
-                                FieldOut<> validity,
-                                FieldOut<> outputPoint);
+                                FieldOut validity,
+                                FieldOut outputPoint);
 
   using ExecutionSignature = void(_1, _2, _3, _4);
 

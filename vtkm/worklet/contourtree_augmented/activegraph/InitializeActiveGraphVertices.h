@@ -80,16 +80,15 @@ namespace active_graph_inc
 class InitializeActiveGraphVertices : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    FieldIn<IdType> sortIndex,             // (input) sort index
-    WholeArrayIn<IdType> outDegrees,       // (input) outDegress for each vertex
-    WholeArrayIn<IdType> inverseIndex,     // (input) inverse index for each vertex
-    WholeArrayIn<IdType> extrema,          // (input) extrema array
-    WholeArrayOut<IdType> activeIndices,   // (output) active indices
-    WholeArrayOut<IdType> globalIndex,     // (output) global index
-    WholeArrayOut<IdType> outdegree,       // (output) out degree
-    WholeArrayOut<IdType> hyperarcs,       // (output) hyperacrs
-    WholeArrayOut<IdType> activeVertices); // (output) activeVertices
+  typedef void ControlSignature(FieldIn sortIndex,         // (input) sort index
+                                WholeArrayIn outDegrees,   // (input) outDegress for each vertex
+                                WholeArrayIn inverseIndex, // (input) inverse index for each vertex
+                                WholeArrayIn extrema,      // (input) extrema array
+                                WholeArrayOut activeIndices,   // (output) active indices
+                                WholeArrayOut globalIndex,     // (output) global index
+                                WholeArrayOut outdegree,       // (output) out degree
+                                WholeArrayOut hyperarcs,       // (output) hyperacrs
+                                WholeArrayOut activeVertices); // (output) activeVertices
   typedef void ExecutionSignature(_1, _2, _3, _4, InputIndex, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 

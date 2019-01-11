@@ -48,9 +48,9 @@ public:
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldInPoint<Vec3> coordinates,
+                                  FieldInPoint coordinates,
                                   ExecObject function,
-                                  FieldOutPoint<BoolType> passFlags);
+                                  FieldOutPoint passFlags);
     using ExecutionSignature = _4(_2, _3);
 
     VTKM_CONT

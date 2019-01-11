@@ -62,9 +62,7 @@ public:
   class Worklet : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    using ControlSignature = void(CellSetIn cellset,
-                                  FieldInPoint<Vec3> points,
-                                  FieldOutCell<Vec3> normals);
+    using ControlSignature = void(CellSetIn cellset, FieldInPoint points, FieldOutCell normals);
     using ExecutionSignature = void(CellShape, _2, _3);
 
     using InputDomain = _1;
@@ -170,8 +168,8 @@ public:
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldInCell<Vec3> faceNormals,
-                                  FieldOutPoint<Vec3> pointNormals);
+                                  FieldInCell faceNormals,
+                                  FieldOutPoint pointNormals);
     using ExecutionSignature = void(CellCount, _2, _3);
 
     using InputDomain = _1;

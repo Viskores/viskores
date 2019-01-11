@@ -37,7 +37,7 @@ namespace detail
 template <typename T>
 struct CylToCar : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Vec3>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   //Functor
@@ -53,7 +53,7 @@ struct CylToCar : public vtkm::worklet::WorkletMapField
 template <typename T>
 struct CarToCyl : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Vec3>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   //Functor
@@ -77,7 +77,7 @@ struct CarToCyl : public vtkm::worklet::WorkletMapField
 template <typename T>
 struct SphereToCar : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Vec3>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   //Functor
@@ -104,7 +104,7 @@ struct SphereToCar : public vtkm::worklet::WorkletMapField
 template <typename T>
 struct CarToSphere : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Vec3>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   //Functor

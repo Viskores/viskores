@@ -43,8 +43,8 @@ template <typename T>
 struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 {
   using ControlSignature = void(CellSetIn,
-                                FieldInPoint<Vec3> pointCoordinates,
-                                FieldInPoint<CellGradientInType<T>> inputField,
+                                FieldInPoint pointCoordinates,
+                                FieldInPoint inputField,
                                 GradientOutputs outputFields);
 
   using ExecutionSignature = void(CellShape, PointCount, _2, _3, _4);

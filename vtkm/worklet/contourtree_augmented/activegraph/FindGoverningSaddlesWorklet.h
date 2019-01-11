@@ -82,12 +82,12 @@ namespace active_graph_inc
 class FindGoverningSaddlesWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> edgeNo,             // (input) edge number
-                                WholeArrayInOut<IdType> edgeSorter, // (input/output) edge sorter
-                                WholeArrayIn<IdType> edgeFar,       // (input) edge far
-                                WholeArrayIn<IdType> edgeNear,      // (input) edge near
-                                WholeArrayOut<IdType> hyperarcs,    // (output) hyperarcs
-                                WholeArrayOut<IdType> outdegree);   // (output) outdegree
+  typedef void ControlSignature(FieldIn edgeNo,             // (input) edge number
+                                WholeArrayInOut edgeSorter, // (input/output) edge sorter
+                                WholeArrayIn edgeFar,       // (input) edge far
+                                WholeArrayIn edgeNear,      // (input) edge near
+                                WholeArrayOut hyperarcs,    // (output) hyperarcs
+                                WholeArrayOut outdegree);   // (output) outdegree
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

@@ -47,7 +47,7 @@ namespace triangulate
 class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(CellSetIn cellset, FieldOutCell<> connectivityOut);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell connectivityOut);
   using ExecutionSignature = void(PointIndices, _2, VisitIndex);
   using InputDomain = _1;
 

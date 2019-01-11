@@ -98,10 +98,9 @@ namespace contourtree
 class TrunkBuilder : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature =
-    void(FieldIn<IdType> vertexID,           // (input) index into active vertices
-         WholeArrayIn<IdType> chainExtremum, // (input) chain extemum for vertices
-         WholeArrayOut<IdType> prunesTo);    // (output) where a vertex prunes to
+  using ControlSignature = void(FieldIn vertexID,           // (input) index into active vertices
+                                WholeArrayIn chainExtremum, // (input) chain extemum for vertices
+                                WholeArrayOut prunesTo);    // (output) where a vertex prunes to
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 

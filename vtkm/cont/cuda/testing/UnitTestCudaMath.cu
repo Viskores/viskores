@@ -45,7 +45,7 @@ namespace
 
 struct TriggerICE : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut);
   using ExecutionSignature = _3(_1, _2, WorkIndex);
 
 #if __CUDA_ARCH__

@@ -33,7 +33,7 @@ namespace colorconversion
 
 struct ConvertToRGB : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<> in, FieldOut<> out);
+  using ControlSignature = void(FieldIn in, FieldOut out);
   using ExecutionSignature = _2(_1);
 
   template <typename T>

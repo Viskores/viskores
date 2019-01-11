@@ -101,7 +101,7 @@ namespace contourtree
 class ChainDoubler : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> vertexID, WholeArrayInOut<IdType> chains);
+  using ControlSignature = void(FieldIn vertexID, WholeArrayInOut chains);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 

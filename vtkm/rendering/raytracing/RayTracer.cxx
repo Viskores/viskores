@@ -78,7 +78,7 @@ public:
     }
 
     using ControlSignature =
-      void(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
+      void(FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
     template <typename ColorPortalType, typename Precision, typename ColorMapPortalType>
@@ -148,7 +148,7 @@ public:
     VTKM_CONT
     MapScalarToColor() {}
 
-    using ControlSignature = void(FieldIn<>, FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
+    using ControlSignature = void(FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
     using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
 
     template <typename ColorPortalType, typename Precision, typename ColorMapPortalType>

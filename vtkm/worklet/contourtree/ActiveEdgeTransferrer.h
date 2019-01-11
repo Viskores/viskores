@@ -97,17 +97,16 @@ namespace contourtree
 class ActiveEdgeTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature =
-    void(FieldIn<IdType> vertexID,              // (input) active vertex ID
-         FieldIn<IdType> newPosition,           // (input) new position of edge in array
-         FieldIn<IdType> newOutdegree,          // (input) the new updegree computed
-         WholeArrayIn<IdType> activeEdges,      // (input) active edges
-         WholeArrayIn<IdType> prunesTo,         // (input) where a vertex prunes to
-         WholeArrayInOut<IdType> firstEdge,     // (i/o) first edge of each active vertex
-         WholeArrayInOut<IdType> outdegree,     // (i/o) existing vertex updegrees
-         WholeArrayInOut<IdType> chainExtremum, // (i/o) chain extremum for vertices
-         WholeArrayInOut<IdType> edgeFar,       // (i/o) high end of each edge
-         WholeArrayOut<IdType> newActiveEdges); // (output) new active edge list
+  using ControlSignature = void(FieldIn vertexID,          // (input) active vertex ID
+                                FieldIn newPosition,       // (input) new position of edge in array
+                                FieldIn newOutdegree,      // (input) the new updegree computed
+                                WholeArrayIn activeEdges,  // (input) active edges
+                                WholeArrayIn prunesTo,     // (input) where a vertex prunes to
+                                WholeArrayInOut firstEdge, // (i/o) first edge of each active vertex
+                                WholeArrayInOut outdegree, // (i/o) existing vertex updegrees
+                                WholeArrayInOut chainExtremum, // (i/o) chain extremum for vertices
+                                WholeArrayInOut edgeFar,       // (i/o) high end of each edge
+                                WholeArrayOut newActiveEdges); // (output) new active edge list
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10);
   using InputDomain = _1;
 

@@ -61,7 +61,7 @@ namespace internal
 /// in a cluster.
 struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
 {
-  using ControlSignature = void(KeysIn clusterIds, ValuesIn<> points, ReducedValuesOut<> repPoints);
+  using ControlSignature = void(KeysIn clusterIds, ValuesIn points, ReducedValuesOut repPoints);
   using ExecutionSignature = _3(_2);
   using InputDomain = _1;
 
@@ -150,7 +150,7 @@ struct VertexClustering
     GridInfo Grid;
 
   public:
-    using ControlSignature = void(FieldIn<Vec3>, FieldOut<IdType>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
@@ -189,8 +189,8 @@ struct VertexClustering
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldInPoint<IdType> pointClusterIds,
-                                  FieldOutCell<Id3Type> cellClusterIds);
+                                  FieldInPoint pointClusterIds,
+                                  FieldOutCell cellClusterIds);
     using ExecutionSignature = void(_2, _3);
 
     VTKM_CONT
@@ -211,7 +211,7 @@ struct VertexClustering
   class IndexingWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<IdType>, WholeArrayOut<IdType>);
+    using ControlSignature = void(FieldIn, WholeArrayOut);
     using ExecutionSignature = void(WorkIndex, _1, _2); // WorkIndex: use vtkm indexing
 
     template <typename OutPortalType>
@@ -237,7 +237,7 @@ struct VertexClustering
     }
 
   public:
-    using ControlSignature = void(FieldIn<Id3Type>, FieldOut<Id3Type>, WholeArrayIn<IdType>);
+    using ControlSignature = void(FieldIn, FieldOut, WholeArrayIn);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
@@ -285,7 +285,7 @@ struct VertexClustering
     vtkm::Int64 NPoints;
 
   public:
-    using ControlSignature = void(FieldIn<Id3Type>, FieldOut<TypeInt64>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
@@ -308,7 +308,7 @@ struct VertexClustering
     vtkm::Int64 NPoints;
 
   public:
-    using ControlSignature = void(FieldIn<TypeInt64>, FieldOut<Id3Type>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT

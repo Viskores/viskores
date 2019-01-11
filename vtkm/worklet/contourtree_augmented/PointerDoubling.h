@@ -83,7 +83,7 @@ namespace contourtree_augmented
 class PointerDoubling : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexID, WholeArrayInOut<IdType> chains);
+  typedef void ControlSignature(FieldIn vertexID, WholeArrayInOut chains);
   typedef void ExecutionSignature(_1, _2);
   using InputDomain = _1;
 

@@ -40,7 +40,7 @@ struct CellDeepCopy
 {
   struct CountCellPoints : vtkm::worklet::WorkletMapPointToCell
   {
-    using ControlSignature = void(CellSetIn inputTopology, FieldOut<> numPointsInCell);
+    using ControlSignature = void(CellSetIn inputTopology, FieldOut numPointsInCell);
     using ExecutionSignature = _2(PointCount);
 
     VTKM_EXEC
@@ -49,9 +49,7 @@ struct CellDeepCopy
 
   struct PassCellStructure : vtkm::worklet::WorkletMapPointToCell
   {
-    using ControlSignature = void(CellSetIn inputTopology,
-                                  FieldOut<> shapes,
-                                  FieldOut<> pointIndices);
+    using ControlSignature = void(CellSetIn inputTopology, FieldOut shapes, FieldOut pointIndices);
     using ExecutionSignature = void(CellShape, PointIndices, _2, _3);
 
     template <typename CellShape, typename InPointIndexType, typename OutPointIndexType>

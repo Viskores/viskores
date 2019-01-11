@@ -31,7 +31,7 @@ namespace
 {
 struct CellCentroidCalculator : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn, FieldInPoint<>, FieldOut<>);
+  typedef void ControlSignature(CellSetIn, FieldInPoint, FieldOut);
   typedef _3 ExecutionSignature(_1, PointCount, _2);
 
   template <typename CellShape, typename InputPointField>
@@ -48,7 +48,7 @@ struct CellCentroidCalculator : public vtkm::worklet::WorkletMapPointToCell
 
 struct BoundingIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, ExecObject, FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, ExecObject, FieldIn, FieldOut);
   typedef _4 ExecutionSignature(_1, _2, _3);
 
   template <typename Point, typename BoundingIntervalHierarchyExecObject>

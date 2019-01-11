@@ -49,7 +49,7 @@ namespace tetrahedralize
 class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(CellSetIn cellset, FieldOutCell<> connectivityOut);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell connectivityOut);
   using ExecutionSignature = void(PointIndices, _2, ThreadIndices);
   using InputDomain = _1;
 

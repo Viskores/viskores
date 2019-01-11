@@ -38,10 +38,10 @@ namespace test_explicit
 class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(FieldInCell<Scalar> inCells,
-                                FieldInPoint<Scalar> inPoints,
+  using ControlSignature = void(FieldInCell inCells,
+                                FieldInPoint inPoints,
                                 CellSetIn topology,
-                                FieldOutCell<Scalar> outCells);
+                                FieldOutCell outCells);
   using ExecutionSignature = void(_1, _4, _2, PointCount, CellShape, PointIndices);
   using InputDomain = _3;
 
@@ -97,7 +97,11 @@ static void TestMaxPointOrCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<::test_explicit::MaxPointOrCellValue> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar"), dataSet.GetField("pointvar"), &cellset, result);
+  dispatcher.Invoke(
+    dataSet.GetField("cellvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    dataSet.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    &cellset,
+    result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),

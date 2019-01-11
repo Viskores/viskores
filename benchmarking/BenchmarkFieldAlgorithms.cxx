@@ -66,8 +66,7 @@ class BlackScholes : public vtkm::worklet::WorkletMapField
   T Volatility;
 
 public:
-  using ControlSignature =
-    void(FieldIn<Scalar>, FieldIn<Scalar>, FieldIn<Scalar>, FieldOut<Scalar>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldOut, FieldOut);
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
   BlackScholes(T risk, T volatility)
@@ -129,7 +128,7 @@ public:
 class Mag : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
@@ -142,7 +141,7 @@ public:
 class Square : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Scalar>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
@@ -155,7 +154,7 @@ public:
 class Sin : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Scalar>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
@@ -168,7 +167,7 @@ public:
 class Cos : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Scalar>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
@@ -181,7 +180,7 @@ public:
 class FusedMath : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T>
@@ -201,7 +200,7 @@ public:
 class GenerateEdges : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(CellSetIn cellset, WholeArrayOut<> edgeIds);
+  using ControlSignature = void(CellSetIn cellset, WholeArrayOut edgeIds);
   using ExecutionSignature = void(PointIndices, ThreadIndices, _2);
   using InputDomain = _1;
 
@@ -227,10 +226,10 @@ public:
 class InterpolateField : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Id2Type> interpolation_ids,
-                                FieldIn<Scalar> interpolation_weights,
-                                WholeArrayIn<> inputField,
-                                FieldOut<> output);
+  using ControlSignature = void(FieldIn interpolation_ids,
+                                FieldIn interpolation_weights,
+                                WholeArrayIn inputField,
+                                FieldOut output);
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
@@ -260,7 +259,7 @@ template <typename ImplicitFunction>
 class EvaluateImplicitFunction : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   EvaluateImplicitFunction(const ImplicitFunction* function)
@@ -282,7 +281,7 @@ template <typename T1, typename T2>
 class Evaluate2ImplicitFunctions : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   Evaluate2ImplicitFunctions(const T1* f1, const T2* f2)
@@ -321,7 +320,7 @@ class BenchmarkFieldAlgorithms
 
   using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
   using InterpVariantHandle = vtkm::cont::VariantArrayHandleBase<InterpValueTypes>;
-  using IdVariantHandle = vtkm::cont::VariantArrayHandleBase<vtkm::TypeListTagIndex>;
+  using EdgeIdVariantHandle = vtkm::cont::VariantArrayHandleBase<vtkm::TypeListTagId2>;
 
 private:
   template <typename Value>
@@ -663,8 +662,8 @@ private:
     vtkm::Float64 operator()()
     {
       InterpVariantHandle dfield(this->FieldHandle);
-      InterpVariantHandle dweight(this->WeightHandle);
-      IdVariantHandle dedges(this->EdgePairHandle);
+      ValueVariantHandle dweight(this->WeightHandle);
+      EdgeIdVariantHandle dedges(this->EdgePairHandle);
       vtkm::cont::ArrayHandle<Value> result;
 
       Timer timer;

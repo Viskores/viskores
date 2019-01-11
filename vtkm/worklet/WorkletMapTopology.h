@@ -78,10 +78,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldInTo : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<ToTopologyType>;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -91,10 +90,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldInFrom : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<FromTopologyType>;
     using FetchTag = vtkm::exec::arg::FetchTagArrayTopologyMapIn;
   };
@@ -104,10 +102,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
@@ -117,10 +114,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };
@@ -190,17 +186,13 @@ class WorkletMapPointToCell
   : public WorkletMapTopology<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
 {
 public:
-  template <typename TypeList = AllTypes>
-  using FieldInPoint = FieldInFrom<TypeList>;
+  using FieldInPoint = FieldInFrom;
 
-  template <typename TypeList = AllTypes>
-  using FieldInCell = FieldInTo<TypeList>;
+  using FieldInCell = FieldInTo;
 
-  template <typename TypeList = AllTypes>
-  using FieldOutCell = FieldOut<TypeList>;
+  using FieldOutCell = FieldOut;
 
-  template <typename TypeList = AllTypes>
-  using FieldInOutCell = FieldInOut<TypeList>;
+  using FieldInOutCell = FieldInOut;
 
   using PointCount = FromCount;
 
@@ -213,17 +205,13 @@ class WorkletMapCellToPoint
   : public WorkletMapTopology<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
 {
 public:
-  template <typename TypeList = AllTypes>
-  using FieldInCell = FieldInFrom<TypeList>;
+  using FieldInCell = FieldInFrom;
 
-  template <typename TypeList = AllTypes>
-  using FieldInPoint = FieldInTo<TypeList>;
+  using FieldInPoint = FieldInTo;
 
-  template <typename TypeList = AllTypes>
-  using FieldOutPoint = FieldOut<TypeList>;
+  using FieldOutPoint = FieldOut;
 
-  template <typename TypeList = AllTypes>
-  using FieldInOutPoint = FieldInOut<TypeList>;
+  using FieldInOutPoint = FieldInOut;
 
   using CellCount = FromCount;
 

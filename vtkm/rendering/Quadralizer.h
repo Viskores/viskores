@@ -46,7 +46,7 @@ public:
   public:
     VTKM_CONT
     CountQuads() {}
-    typedef void ControlSignature(CellSetIn cellset, FieldOut<>);
+    typedef void ControlSignature(CellSetIn cellset, FieldOut);
     typedef void ExecutionSignature(CellShape, _2);
 
     VTKM_EXEC
@@ -86,7 +86,7 @@ public:
   {
 
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInTo<>, WholeArrayOut<>);
+    typedef void ControlSignature(CellSetIn cellset, FieldInTo, WholeArrayOut);
     typedef void ExecutionSignature(FromIndices, _2, _3);
     //typedef _1 InputDomain;
     VTKM_CONT
@@ -179,7 +179,7 @@ public:
   public:
     VTKM_CONT
     Quadralize() {}
-    typedef void ControlSignature(CellSetIn cellset, FieldInCell<>, WholeArrayOut<>);
+    typedef void ControlSignature(CellSetIn cellset, FieldInCell, WholeArrayOut);
     typedef void ExecutionSignature(_2, CellShape, PointIndices, WorkIndex, _3);
 
     template <typename VecType, typename OutputPortal>

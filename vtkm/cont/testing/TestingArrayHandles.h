@@ -90,7 +90,7 @@ struct TestingArrayHandles
 
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = _2(_1);
 
     template <class ValueType>

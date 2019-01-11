@@ -34,7 +34,7 @@ namespace worklet
 class SineWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1, WorkIndex);
 
   template <typename T>

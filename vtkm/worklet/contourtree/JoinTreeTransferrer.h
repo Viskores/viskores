@@ -98,13 +98,12 @@ namespace contourtree
 class JoinTreeTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature =
-    void(FieldIn<IdType> vertex,            // (input) index into active vertices
-         FieldIn<IdType> prunesTo,          // (input) where vertex is pruned to
-         WholeArrayIn<IdType> valueIndex,   // (input) indices into main array
-         WholeArrayIn<IdType> chainExtemum, // (input) chain extemum for vertices
-         WholeArrayOut<IdType> saddles,     // (output) saddle array for writing
-         WholeArrayOut<IdType> arcArray);   // (output) arc / max array for writing
+  using ControlSignature = void(FieldIn vertex,            // (input) index into active vertices
+                                FieldIn prunesTo,          // (input) where vertex is pruned to
+                                WholeArrayIn valueIndex,   // (input) indices into main array
+                                WholeArrayIn chainExtemum, // (input) chain extemum for vertices
+                                WholeArrayOut saddles,     // (output) saddle array for writing
+                                WholeArrayOut arcArray);   // (output) arc / max array for writing
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

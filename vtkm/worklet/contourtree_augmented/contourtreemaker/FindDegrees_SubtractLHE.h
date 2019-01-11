@@ -81,8 +81,8 @@ class FindDegrees_SubtractLHE : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    WholeArrayIn<IdType> inNeighbour, // (input)
-    WholeArrayOut<IdType>
+    WholeArrayIn inNeighbour, // (input)
+    WholeArrayOut
       upOrDowndegree); // (output) updegree in the case of the join tree and downdegree in the case of the split tree
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;

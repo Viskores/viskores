@@ -49,9 +49,9 @@ class ParametricToWorldCoordinates : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
-                                FieldInPoint<Vec3> coords,
-                                FieldInOutCell<Vec3> pcs,
-                                FieldOutCell<Vec3> wcs);
+                                FieldInPoint coords,
+                                FieldInOutCell pcs,
+                                FieldOutCell wcs);
   using ExecutionSignature = void(CellShape, _2, _3, _4);
 
   using ScatterType = vtkm::worklet::ScatterPermutation<>;

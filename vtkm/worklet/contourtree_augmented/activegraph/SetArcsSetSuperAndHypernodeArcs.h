@@ -80,11 +80,11 @@ class SetArcsSetSuperAndHypernodeArcs : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    WholeArrayIn<IdType> graphGlobalIndex,   // (input) global index from the graph
-    WholeArrayIn<IdType> graphHyperarcs,     // (input) hyperarcs from the portal
-    WholeArrayIn<IdType> graphHyperID,       // (input) active graph hyperID
-    WholeArrayOut<IdType> treeArcs,          // (output) arcs of the tree
-    WholeArrayOut<IdType> treeSuperparents); // (output) superparents of the tree
+    WholeArrayIn graphGlobalIndex,   // (input) global index from the graph
+    WholeArrayIn graphHyperarcs,     // (input) hyperarcs from the portal
+    WholeArrayIn graphHyperID,       // (input) active graph hyperID
+    WholeArrayOut treeArcs,          // (output) arcs of the tree
+    WholeArrayOut treeSuperparents); // (output) superparents of the tree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 

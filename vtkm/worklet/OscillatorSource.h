@@ -59,7 +59,7 @@ struct Oscillator
 class OscillatorSource : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
+  typedef void ControlSignature(FieldIn, FieldOut);
   typedef _2 ExecutionSignature(_1);
 
   VTKM_CONT

@@ -41,32 +41,24 @@ namespace arg
 /// that is valid for atomic access. There are many restrictions on the
 /// type of data that can be used for an atomic array.
 ///
-template <typename TypeList = vtkm::cont::AtomicArrayTypeListTag>
-struct TypeCheckTagAtomicArray
-{
-  VTKM_IS_LIST_TAG(TypeList);
-};
+struct TypeCheckTagAtomicArray;
 
-template <typename TypeList, typename ArrayType>
-struct TypeCheck<TypeCheckTagAtomicArray<TypeList>, ArrayType>
+template <typename ArrayType>
+struct TypeCheck<TypeCheckTagAtomicArray, ArrayType>
 {
   static constexpr bool value = false;
 };
 
-template <typename T, typename TypeList>
-struct TypeCheck<TypeCheckTagAtomicArray<TypeList>,
-                 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
+template <typename T>
+struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
 {
-  static constexpr bool value = (vtkm::ListContains<TypeList, T>::value &&
-                                 vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value);
+  static constexpr bool value = vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value;
 };
 
-template <typename T, typename TypeList>
-struct TypeCheck<TypeCheckTagAtomicArray<TypeList>,
-                 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
+template <typename T>
+struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
 {
-  static constexpr bool value = (vtkm::ListContains<TypeList, T>::value &&
-                                 vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value);
+  static constexpr bool value = vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value;
 };
 }
 }

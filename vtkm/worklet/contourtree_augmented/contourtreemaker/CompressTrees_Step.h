@@ -79,10 +79,10 @@ namespace contourtree_maker_inc
 class CompressTrees_Step : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeSupernodes,               // (input)
-                                WholeArrayIn<IdType> contourTreeSuperarcs,      // (input)
-                                WholeArrayInOut<IdType> augmentedJoinSuperarcs, // (input/output)
-                                WholeArrayInOut<IdType> augmentedSplitSuperarcs // (input/output)
+  typedef void ControlSignature(FieldIn activeSupernodes,               // (input)
+                                WholeArrayIn contourTreeSuperarcs,      // (input)
+                                WholeArrayInOut augmentedJoinSuperarcs, // (input/output)
+                                WholeArrayInOut augmentedSplitSuperarcs // (input/output)
                                 );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
   using InputDomain = _1;

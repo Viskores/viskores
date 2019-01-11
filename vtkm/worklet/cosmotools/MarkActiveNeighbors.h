@@ -77,14 +77,14 @@ class MarkActiveNeighbors : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature =
-    void(FieldIn<IdType> index,                 // (input) particle index
-         FieldIn<IdType> partId,                // (input) particle id sorted
-         FieldIn<IdType> binId,                 // (input) bin Id per particle
-         WholeArrayIn<IdType> partIdArray,      // (input) sequence imposed on sorted particle Ids
-         WholeArrayIn<Vec3TagType<T>> location, // (input) location of particles
-         WholeArrayIn<IdType> firstPartId,      // (input) vector of first particle indices
-         WholeArrayIn<IdType> lastPartId,       // (input) vector of last particle indices
-         FieldOut<UInt32TagType> flag);         // (output) active bin neighbors mask
+    void(FieldIn index,            // (input) particle index
+         FieldIn partId,           // (input) particle id sorted
+         FieldIn binId,            // (input) bin Id per particle
+         WholeArrayIn partIdArray, // (input) sequence imposed on sorted particle Ids
+         WholeArrayIn location,    // (input) location of particles
+         WholeArrayIn firstPartId, // (input) vector of first particle indices
+         WholeArrayIn lastPartId,  // (input) vector of last particle indices
+         FieldOut flag);           // (output) active bin neighbors mask
   using ExecutionSignature = _8(_1, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 

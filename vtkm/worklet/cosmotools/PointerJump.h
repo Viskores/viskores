@@ -74,7 +74,7 @@ namespace cosmotools
 class PointerJump : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> index, WholeArrayInOut<IdType> D);
+  using ControlSignature = void(FieldIn index, WholeArrayInOut D);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 

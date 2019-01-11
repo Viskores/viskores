@@ -80,10 +80,10 @@ class InitializeNeighbourhoodMasksAndOutDegrees : public vtkm::worklet::WorkletM
 {
 public:
   typedef void ControlSignature(
-    FieldIn<IdType> sortIndex,                // (input) sort index
-    ExecObject meshStructure,                 // (input) execution object with the mesh structure
-    WholeArrayOut<IdType> neighbourhoodMasks, // (output) neighbourhoodMask for each vertex
-    WholeArrayOut<IdType> outDegrees);        // (outpur) outDegress for each vertex
+    FieldIn sortIndex,                // (input) sort index
+    ExecObject meshStructure,         // (input) execution object with the mesh structure
+    WholeArrayOut neighbourhoodMasks, // (output) neighbourhoodMask for each vertex
+    WholeArrayOut outDegrees);        // (outpur) outDegress for each vertex
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
   using InputDomain = _1;
 

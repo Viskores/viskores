@@ -49,7 +49,7 @@ class MemTransfer : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   MemTransfer() {}
-  using ControlSignature = void(FieldIn<>, WholeArrayInOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayInOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename PortalType>

@@ -129,96 +129,6 @@ public:
   /// identity scatter (1-to-1 input to output).
   using ScatterType = vtkm::worklet::ScatterIdentity;
 
-  /// \brief A type list containing the type vtkm::Id.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using IdType = vtkm::TypeListTagId;
-
-  /// \brief A type list containing the type vtkm::Id2.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Id2Type = vtkm::TypeListTagId2;
-
-  /// \brief A type list containing the type vtkm::Id3.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Id3Type = vtkm::TypeListTagId3;
-
-  /// \brief A type list containing the type vtkm::IdComponent.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using IdComponentType = vtkm::TypeListTagIdComponent;
-
-  /// \brief A list of types commonly used for indexing.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Index = vtkm::TypeListTagIndex;
-
-  /// \brief A list of types commonly used for scalar fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Scalar = vtkm::TypeListTagFieldScalar;
-
-  /// \brief A list of all basic types used for scalar fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using ScalarAll = vtkm::TypeListTagScalarAll;
-
-  /// \brief A list of types commonly used for vector fields of 2 components.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Vec2 = vtkm::TypeListTagFieldVec2;
-
-  /// \brief A list of types commonly used for vector fields of 3 components.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Vec3 = vtkm::TypeListTagFieldVec3;
-
-  /// \brief A list of types commonly used for vector fields of 4 components.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Vec4 = vtkm::TypeListTagFieldVec4;
-
-  /// \brief A list of all basic types used for vector fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using VecAll = vtkm::TypeListTagVecAll;
-
-  /// \brief A list of types (scalar and vector) commonly used in fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using FieldCommon = vtkm::TypeListTagField;
-
-  /// \brief A list of vector types commonly used in fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using VecCommon = vtkm::TypeListTagVecCommon;
-
-  /// \brief A list of generally common types.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using CommonTypes = vtkm::TypeListTagCommon;
-
-  /// \brief A list of all basic types.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using AllTypes = vtkm::TypeListTagAll;
-
   /// \c ControlSignature tag for whole input arrays.
   ///
   /// The \c WholeArrayIn control signature tag specifies an \c ArrayHandle
@@ -229,10 +139,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template <typename TypeList = AllTypes>
   struct WholeArrayIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -248,10 +157,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template <typename TypeList = AllTypes>
   struct WholeArrayOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -268,10 +176,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template <typename TypeList = AllTypes>
   struct WholeArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -288,10 +195,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template <typename TypeList = AllTypes>
   struct AtomicArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagAtomicArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagAtomicArray;
     using TransportTag = vtkm::cont::arg::TransportTagAtomicArray;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };

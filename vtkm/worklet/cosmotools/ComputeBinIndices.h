@@ -75,10 +75,10 @@ template <typename T>
 class ComputeBinIndices : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> binId, // (input) bin Id
-                                FieldOut<IdType> binX, // (output) bin indices
-                                FieldOut<IdType> binY,
-                                FieldOut<IdType> binZ);
+  using ControlSignature = void(FieldIn binId, // (input) bin Id
+                                FieldOut binX, // (output) bin indices
+                                FieldOut binY,
+                                FieldOut binZ);
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 

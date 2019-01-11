@@ -82,9 +82,9 @@ namespace active_graph_inc
 class TransferRegularPointsWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeVertices,   // (input) active vertices
-                                WholeArrayIn<IdType> hyperarcs,   // (input) hyperarcs
-                                WholeArrayOut<IdType> outdegree); // (output) outdegree
+  typedef void ControlSignature(FieldIn activeVertices,   // (input) active vertices
+                                WholeArrayIn hyperarcs,   // (input) hyperarcs
+                                WholeArrayOut outdegree); // (output) outdegree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;
 

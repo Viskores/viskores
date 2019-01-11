@@ -108,7 +108,7 @@ public:
     return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
   }
 
-  using ControlSignature = void(FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut, FieldOut);
 
   using ExecutionSignature = void(WorkIndex, _1, _2);
   VTKM_EXEC
@@ -209,7 +209,7 @@ public:
     CurrentSample = currentSample;
   }
 
-  typedef void ControlSignature(FieldOut<>, FieldOut<>, FieldOut<>, FieldIn<>);
+  typedef void ControlSignature(FieldOut, FieldOut, FieldOut, FieldIn);
 
   typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4);
   VTKM_EXEC
@@ -295,7 +295,7 @@ public:
   }
 
   using ControlSignature =
-    void(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
+    void(FieldOut, FieldOut, FieldOut, FieldOut, FieldOut, FieldOut, FieldOut);
 
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
   template <typename Precision>
@@ -386,7 +386,7 @@ public:
     vtkm::Normalize(nlook);
   }
 
-  using ControlSignature = void(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut, FieldOut, FieldOut, FieldOut);
 
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
   template <typename Precision>

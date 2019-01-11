@@ -60,10 +60,10 @@ ShiftArrayHandleByOne(const vtkm::cont::ArrayHandle<vtkm::Id>& array)
 
 struct ReverseInputToOutputMapWorklet : vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<IdType> outputStartIndices,
-                                FieldIn<IdType> outputEndIndices,
-                                WholeArrayOut<IdType> outputToInputMap,
-                                WholeArrayOut<IdComponentType> visit);
+  using ControlSignature = void(FieldIn outputStartIndices,
+                                FieldIn outputEndIndices,
+                                WholeArrayOut outputToInputMap,
+                                WholeArrayOut visit);
   using ExecutionSignature = void(_1, _2, _3, _4, InputIndex);
   using InputDomain = _2;
 
@@ -98,8 +98,7 @@ struct ReverseInputToOutputMapWorklet : vtkm::worklet::WorkletMapField
 
 struct SubtractToVisitIndexWorklet : vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<IdType> startsOfGroup,
-                                WholeArrayOut<IdComponentType> visit);
+  using ControlSignature = void(FieldIn startsOfGroup, WholeArrayOut visit);
   using ExecutionSignature = void(InputIndex, _1, _2);
   using InputDomain = _1;
 

@@ -84,13 +84,13 @@ struct SplitProperties
 struct CellRangesExtracter : public vtkm::worklet::WorkletMapPointToCell
 {
   typedef void ControlSignature(CellSetIn,
-                                WholeArrayIn<>,
-                                FieldOutCell<>,
-                                FieldOutCell<>,
-                                FieldOutCell<>,
-                                FieldOutCell<>,
-                                FieldOutCell<>,
-                                FieldOutCell<>);
+                                WholeArrayIn,
+                                FieldOutCell,
+                                FieldOutCell,
+                                FieldOutCell,
+                                FieldOutCell,
+                                FieldOutCell,
+                                FieldOutCell);
   typedef void ExecutionSignature(_1, PointIndices, _2, _3, _4, _5, _6, _7, _8);
 
   template <typename CellShape, typename PointIndicesVec, typename PointsPortal>
@@ -124,7 +124,7 @@ struct CellRangesExtracter : public vtkm::worklet::WorkletMapPointToCell
 struct LEQWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldIn, FieldOut, FieldOut);
   typedef void ExecutionSignature(_1, _2, _3, _4);
   using InputDomain = _1;
 
@@ -146,7 +146,7 @@ template <>
 struct FilterRanges<true> : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2, _3, _4);
   using InputDomain = _1;
 
@@ -164,7 +164,7 @@ template <>
 struct FilterRanges<false> : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2, _3, _4);
   using InputDomain = _1;
 
@@ -181,7 +181,7 @@ public:
 struct SplitPlaneCalculatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2);
   using InputDomain = _1;
 
@@ -204,12 +204,7 @@ public:
 struct SplitPropertiesCalculator : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                WholeArrayInOut<>);
+  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, InputIndex);
   using InputDomain = _1;
 
@@ -252,14 +247,14 @@ public:
 struct SplitSelector : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>,
-                                WholeArrayIn<>,
-                                WholeArrayIn<>,
-                                WholeArrayIn<>,
-                                FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>);
+  typedef void ControlSignature(FieldIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                FieldIn,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
 
@@ -374,7 +369,7 @@ public:
 
 struct CalculateSplitDirectionFlag : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
@@ -402,7 +397,7 @@ struct CalculateSplitDirectionFlag : public vtkm::worklet::WorkletMapField
 
 struct SegmentSplitter : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2, _3, _4);
   using InputDomain = _1;
 
@@ -435,7 +430,7 @@ struct SegmentSplitter : public vtkm::worklet::WorkletMapField
 struct SplitIndicesCalculator : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
@@ -460,7 +455,7 @@ public:
 
 struct Scatter : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, WholeArrayOut<>);
+  typedef void ControlSignature(FieldIn, FieldIn, WholeArrayOut);
   typedef void ExecutionSignature(_1, _2, _3);
   using InputDomain = _1;
 
@@ -482,7 +477,7 @@ ValueArrayHandle ScatterArray(const ValueArrayHandle& input, const IndexArrayHan
 
 struct NonSplitIndexCalculator : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2);
   using InputDomain = _1;
 
@@ -509,12 +504,7 @@ struct NonSplitIndexCalculator : public vtkm::worklet::WorkletMapField
 
 struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                WholeArrayInOut<>);
+  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

@@ -32,14 +32,14 @@ namespace
 class IntersectionPointMap : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldInOut<>,
-                                FieldInOut<>,
-                                FieldInOut<>,
-                                FieldInOut<>);
+  typedef void ControlSignature(FieldIn,
+                                FieldIn,
+                                FieldIn,
+                                FieldIn,
+                                FieldInOut,
+                                FieldInOut,
+                                FieldInOut,
+                                FieldInOut);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   template <typename Precision>
   VTKM_EXEC inline void operator()(const vtkm::Id& hitIndex,

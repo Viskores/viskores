@@ -80,9 +80,9 @@ namespace contourtree
 class RegularToCriticalUp : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> candIndex,       // (input) index into candidates
-                                FieldIn<IdType> candidate,       // (input) candidate index
-                                WholeArrayOut<IdType> critical); // (output)
+  using ControlSignature = void(FieldIn candIndex,       // (input) index into candidates
+                                FieldIn candidate,       // (input) candidate index
+                                WholeArrayOut critical); // (output)
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 

@@ -55,9 +55,7 @@ enum BenchmarkName
 class AveragePointToCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(FieldInPoint<> inPoints,
-                                CellSetIn cellset,
-                                FieldOutCell<> outCells);
+  using ControlSignature = void(FieldInPoint inPoints, CellSetIn cellset, FieldOutCell outCells);
   using ExecutionSignature = void(_1, PointCount, _3);
   using InputDomain = _2;
 
@@ -79,7 +77,7 @@ public:
 class AverageCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
 {
 public:
-  using ControlSignature = void(FieldInCell<> inCells, CellSetIn topology, FieldOut<> outPoints);
+  using ControlSignature = void(FieldInCell inCells, CellSetIn topology, FieldOut outPoints);
   using ExecutionSignature = void(_1, _3, CellCount);
   using InputDomain = _2;
 
@@ -106,9 +104,7 @@ template <typename T>
 class Classification : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(FieldInPoint<> inNodes,
-                                CellSetIn cellset,
-                                FieldOutCell<IdComponentType> outCaseId);
+  using ControlSignature = void(FieldInPoint inNodes, CellSetIn cellset, FieldOutCell outCaseId);
   using ExecutionSignature = void(_1, _3);
   using InputDomain = _2;
 

@@ -97,15 +97,14 @@ namespace contourtree
 class VertexDegreeUpdater : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature =
-    void(FieldIn<IdType> vertexID,             // (input) active vertices
-         WholeArrayIn<IdType> activeEdges,     // (input) active edges
-         WholeArrayIn<IdType> edgeFar,         // (input) high ends of edges
-         WholeArrayIn<IdType> firstEdge,       // (input) first edge for each active vertex
-         WholeArrayIn<IdType> prunesTo,        // (input) where vertex is pruned to
-         WholeArrayIn<IdType> outdegree,       // (input) updegree of vertex
-         WholeArrayInOut<IdType> chainExtemum, // (i/o) chain extemum for vertices
-         FieldOut<IdType> newOutdegree);       // (output) new updegree of vertex
+  using ControlSignature = void(FieldIn vertexID,         // (input) active vertices
+                                WholeArrayIn activeEdges, // (input) active edges
+                                WholeArrayIn edgeFar,     // (input) high ends of edges
+                                WholeArrayIn firstEdge, // (input) first edge for each active vertex
+                                WholeArrayIn prunesTo,  // (input) where vertex is pruned to
+                                WholeArrayIn outdegree, // (input) updegree of vertex
+                                WholeArrayInOut chainExtemum, // (i/o) chain extemum for vertices
+                                FieldOut newOutdegree);       // (output) new updegree of vertex
   using ExecutionSignature = _8(_1, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 

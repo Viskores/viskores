@@ -90,7 +90,7 @@ class LinearBVHBuilder::CountingIterator : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CountingIterator() {}
-  using ControlSignature = void(FieldOut<>);
+  using ControlSignature = void(FieldOut);
   using ExecutionSignature = void(WorkIndex, _1);
   VTKM_EXEC
   void operator()(const vtkm::Id& index, vtkm::Id& outId) const { outId = index; }
@@ -115,7 +115,7 @@ public:
   {
     this->OutputPortal = outputPortal.PrepareForOutput(size, Device());
   }
-  using ControlSignature = void(FieldIn<>);
+  using ControlSignature = void(FieldIn);
   using ExecutionSignature = void(WorkIndex, _1);
   VTKM_EXEC
   void operator()(const vtkm::Id& outIndex, const vtkm::Id& inIndex) const
@@ -131,7 +131,7 @@ public:
   VTKM_CONT
   CreateLeafs() {}
 
-  typedef void ControlSignature(FieldIn<>, WholeArrayOut<>);
+  typedef void ControlSignature(FieldIn, WholeArrayOut);
   typedef void ExecutionSignature(_1, _2, WorkIndex);
 
   template <typename LeafPortalType>
@@ -167,7 +167,7 @@ public:
   {
     this->OutputPortal = outputPortal.PrepareForOutput(size, Device());
   }
-  using ControlSignature = void(FieldIn<>);
+  using ControlSignature = void(FieldIn);
   using ExecutionSignature = void(WorkIndex, _1);
   VTKM_EXEC
   void operator()(const vtkm::Id& outIndex, const vtkm::Id& inIndex) const
@@ -258,13 +258,13 @@ public:
   {
     this->FlatBVH = flatBVH.PrepareForOutput((LeafCount - 1) * 4, Device());
   }
-  using ControlSignature = void(WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>,
-                                WholeArrayIn<>);
+  using ControlSignature = void(WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn);
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
 
   template <typename InputPortalType, typename OffsetPortalType>
@@ -483,7 +483,7 @@ public:
     InnerCount = LeafCount - 1;
     this->ParentPortal = parentHandle.PrepareForOutput(InnerCount + LeafCount, Device());
   }
-  using ControlSignature = void(FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut, FieldOut);
   using ExecutionSignature = void(WorkIndex, _1, _2);
   VTKM_EXEC
   void operator()(const vtkm::Id& index, vtkm::Id& leftChild, vtkm::Id& rightChild) const

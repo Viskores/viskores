@@ -21,6 +21,8 @@
 #include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
+#include <vtkm/filter/WarpVector.h>
+
 namespace vtkm
 {
 namespace filter
@@ -48,7 +50,11 @@ inline VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(
   using vecType = vtkm::Vec<T, 3>;
   auto vectorF = inDataSet.GetField(this->VectorFieldName, this->VectorFieldAssociation);
   vtkm::cont::ArrayHandle<vecType> result;
-  this->Worklet.Run(field, vtkm::filter::ApplyPolicy(vectorF, policy), this->Scale, result);
+  this->Worklet.Run(
+    field,
+    vtkm::filter::ApplyPolicy(vectorF, policy, vtkm::filter::FilterTraits<WarpVector>()),
+    this->Scale,
+    result);
 
   return internal::CreateResult(inDataSet,
                                 result,

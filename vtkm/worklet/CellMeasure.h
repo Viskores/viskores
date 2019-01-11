@@ -74,8 +74,8 @@ class CellMeasure : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
-                                FieldInPoint<Vec3> pointCoords,
-                                FieldOutCell<Scalar> volumesOut);
+                                FieldInPoint pointCoords,
+                                FieldOutCell volumesOut);
   using ExecutionSignature = void(CellShape, PointCount, _2, _3);
   using InputDomain = _1;
 

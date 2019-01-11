@@ -82,13 +82,13 @@ namespace active_graph_inc
 class TransferSaddleStartsSetNewOutdegreeForSaddles : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeVertices,      // (input) active edges
-                                WholeArrayIn<IdType> firstEdge,      // (input) first edge
-                                WholeArrayIn<IdType> outdegree,      // (input) outdegree
-                                WholeArrayIn<IdType> activeEdges,    // (input) active edges
-                                WholeArrayIn<IdType> hyperarcs,      // (input) hyperarcs
-                                WholeArrayIn<IdType> edgeFar,        // (input) edgeFar
-                                WholeArrayOut<IdType> newOutdegree); // (output) new outdegree
+  typedef void ControlSignature(FieldIn activeVertices,      // (input) active edges
+                                WholeArrayIn firstEdge,      // (input) first edge
+                                WholeArrayIn outdegree,      // (input) outdegree
+                                WholeArrayIn activeEdges,    // (input) active edges
+                                WholeArrayIn hyperarcs,      // (input) hyperarcs
+                                WholeArrayIn edgeFar,        // (input) edgeFar
+                                WholeArrayOut newOutdegree); // (output) new outdegree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 

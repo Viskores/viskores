@@ -81,13 +81,13 @@ namespace active_graph_inc
 class CompactActiveEdgesComputeNewVertexOutdegree : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeVertices,
-                                WholeArrayIn<IdType> activeEdges,
-                                WholeArrayIn<IdType> edgeFar,
-                                WholeArrayIn<IdType> firstEdge,
-                                WholeArrayIn<IdType> outdegree,
-                                WholeArrayInOut<IdType> hyperarcs,
-                                FieldOut<IdType> newOutdegree);
+  typedef void ControlSignature(FieldIn activeVertices,
+                                WholeArrayIn activeEdges,
+                                WholeArrayIn edgeFar,
+                                WholeArrayIn firstEdge,
+                                WholeArrayIn outdegree,
+                                WholeArrayInOut hyperarcs,
+                                FieldOut newOutdegree);
   typedef _7 ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

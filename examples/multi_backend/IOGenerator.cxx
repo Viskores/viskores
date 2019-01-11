@@ -34,7 +34,7 @@
 
 struct WaveField : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Vec3>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T>

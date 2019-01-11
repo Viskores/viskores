@@ -46,7 +46,7 @@ public:
     : eye_pos(_eye_pos)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2);
   template <typename VecType, typename OutType>
   VTKM_EXEC inline void operator()(const VecType& pos, OutType& out) const

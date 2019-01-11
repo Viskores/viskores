@@ -43,11 +43,8 @@ public:
   {
   }
 
-  using ControlSignature = void(FieldIn<> pointIn,
-                                ExecObject locator,
-                                FieldOut<> cellId,
-                                FieldOut<> parametric,
-                                FieldOut<> match);
+  using ControlSignature =
+    void(FieldIn pointIn, ExecObject locator, FieldOut cellId, FieldOut parametric, FieldOut match);
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
 

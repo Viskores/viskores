@@ -163,11 +163,11 @@ public:
   class MakeStreamLines : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<IdType> seedId,
-                                  FieldIn<> position,
-                                  WholeArrayOut<IdComponentType> numIndices,
-                                  WholeArrayOut<IdComponentType> validPoint,
-                                  WholeArrayOut<Vec3> streamLines);
+    using ControlSignature = void(FieldIn seedId,
+                                  FieldIn position,
+                                  WholeArrayOut numIndices,
+                                  WholeArrayOut validPoint,
+                                  WholeArrayOut streamLines);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, VisitIndex);
     using InputDomain = _1;
 

@@ -128,7 +128,10 @@ void TestClippingExplicit()
   vtkm::worklet::Clip clip;
   bool invertClip = false;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, invertClip);
+    clip.Run(ds.GetCellSet(0),
+             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+             clipValue,
+             invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
@@ -181,7 +184,10 @@ void TestClippingStructured()
   bool invertClip = false;
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, invertClip);
+    clip.Run(ds.GetCellSet(0),
+             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+             clipValue,
+             invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
   CoordsOutType coords = clip.ProcessPointField(coordsIn);
