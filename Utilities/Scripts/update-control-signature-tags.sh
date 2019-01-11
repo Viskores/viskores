@@ -57,6 +57,7 @@ do
     sed_command="$sed_command -e 's/\\([^a-zA-Z]\\)$tag<[^<>,]*<[^<>]*<[^<>]*>[^<>]>[^<>,]*>/\\1$tag/g'"
 done
 
+echo -n "Converting files in `realpath $1`"
 for file in `eval $find_command`
 do
     eval $sed_command $file > $file._do_update_sig
@@ -67,4 +68,7 @@ do
         rm $file
         mv $file._do_update_sig $file
     fi
+    echo -n "."
 done
+
+echo done
