@@ -32,8 +32,6 @@ namespace
 class IntersectionPointMap : public vtkm::worklet::WorkletMapField
 {
 public:
-  VTKM_CONT
-  IntersectionPointMap() {}
   typedef void ControlSignature(FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
