@@ -43,6 +43,7 @@ set(headers
   MarchingCubes.h
   Mask.h
   MaskPoints.h
+  MeshQuality.h
   NDEntropy.h
   NDHistogram.h
   OscillatorSource.h
@@ -104,6 +105,7 @@ set(header_template_sources
   MarchingCubes.hxx
   Mask.hxx
   MaskPoints.hxx
+  MeshQuality.hxx
   NDEntropy.hxx
   NDHistogram.hxx
   OscillatorSource.hxx

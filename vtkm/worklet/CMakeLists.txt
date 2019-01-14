@@ -44,6 +44,7 @@ set(headers
   MaskNone.h
   MaskPoints.h
   MaskSelect.h
+  MeshQuality.h
   NDimsEntropy.h
   NDimsHistMarginalization.h
   NDimsHistogram.h
