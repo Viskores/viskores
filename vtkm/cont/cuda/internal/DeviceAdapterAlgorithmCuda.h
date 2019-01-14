@@ -1142,6 +1142,21 @@ public:
     output.Shrink(newSize);
   }
 
+  template <typename T, typename U, class SIn, class SStencil, class SOut>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<U, SIn>& input,
+                               const vtkm::cont::ArrayHandle<T, SStencil>& stencil,
+                               vtkm::cont::ArrayHandle<U, SOut>& output,
+                               const vtkm::Id& output_size)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+    vtkm::Id size = stencil.GetNumberOfValues();
+    CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+                 stencil.PrepareForInput(DeviceAdapterTagCuda()),
+                 output.PrepareForOutput(output_size, DeviceAdapterTagCuda()),
+                 ::vtkm::NotZeroInitialized()); //yes on the stencil
+  }
+
+
   template <typename T, typename U, class SIn, class SOut>
   VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, SIn>& input,
                                      vtkm::Id inputStartIndex,
@@ -1208,552 +1223,549 @@ public:
   }
 
   template <typename T, class SIn, class SVal, class SOut>
-  VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<T, SIn>& input,
-                                    const vtkm::cont::ArrayHandle<T, SVal>& values,
-                                    vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+  //resized array
+  vtkm::cont::ArrayHandle<U, SOut> temp;
+  temp.Allocate(copyOutEnd);
+  CopySubRange(output, 0, outSize, temp);
+  output = temp;
+}
+}
+CopySubRangePortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+                   inputStartIndex,
+                   numberOfElementsToCopy,
+                   output.PrepareForInPlace(DeviceAdapterTagCuda()),
+                   outputIndex);
+return true;
+}
 
-    vtkm::Id numberOfValues = values.GetNumberOfValues();
-    LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+template <typename T, class SIn, class SVal, class SOut>
+VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<T, SIn>& input,
+                                  const vtkm::cont::ArrayHandle<T, SVal>& values,
+                                  vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  vtkm::Id numberOfValues = values.GetNumberOfValues();
+  LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+                    values.PrepareForInput(DeviceAdapterTagCuda()),
+                    output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+}
+
+template <typename T, class SIn, class SVal, class SOut, class BinaryCompare>
+VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<T, SIn>& input,
+                                  const vtkm::cont::ArrayHandle<T, SVal>& values,
+                                  vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output,
+                                  BinaryCompare binary_compare)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  vtkm::Id numberOfValues = values.GetNumberOfValues();
+  LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+                    values.PrepareForInput(DeviceAdapterTagCuda()),
+                    output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+                    binary_compare);
+}
+
+template <class SIn, class SOut>
+VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<vtkm::Id, SIn>& input,
+                                  vtkm::cont::ArrayHandle<vtkm::Id, SOut>& values_output)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+                    values_output.PrepareForInPlace(DeviceAdapterTagCuda()));
+}
+
+template <typename T, typename U, class SIn>
+VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, SIn>& input, U initialValue)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  const vtkm::Id numberOfValues = input.GetNumberOfValues();
+  if (numberOfValues <= 0)
+  {
+    return initialValue;
+  }
+  return ReducePortal(input.PrepareForInput(DeviceAdapterTagCuda()), initialValue);
+}
+
+template <typename T, typename U, class SIn, class BinaryFunctor>
+VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, SIn>& input,
+                          U initialValue,
+                          BinaryFunctor binary_functor)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  const vtkm::Id numberOfValues = input.GetNumberOfValues();
+  if (numberOfValues <= 0)
+  {
+    return initialValue;
+  }
+  return ReducePortal(input.PrepareForInput(DeviceAdapterTagCuda()), initialValue, binary_functor);
+}
+
+template <typename T, typename U, class KIn, class VIn, class KOut, class VOut, class BinaryFunctor>
+VTKM_CONT static void ReduceByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                  const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                  vtkm::cont::ArrayHandle<T, KOut>& keys_output,
+                                  vtkm::cont::ArrayHandle<U, VOut>& values_output,
+                                  BinaryFunctor binary_functor)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  //there is a concern that by default we will allocate too much
+  //space for the keys/values output. 1 option is to
+  const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+  if (numberOfValues <= 0)
+  {
+    return;
+  }
+  vtkm::Id reduced_size =
+    ReduceByKeyPortal(keys.PrepareForInput(DeviceAdapterTagCuda()),
                       values.PrepareForInput(DeviceAdapterTagCuda()),
-                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+                      keys_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+                      values_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+                      binary_functor);
+
+  keys_output.Shrink(reduced_size);
+  values_output.Shrink(reduced_size);
+}
+
+template <typename T, class SIn, class SOut>
+VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
+                                 vtkm::cont::ArrayHandle<T, SOut>& output)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  const vtkm::Id numberOfValues = input.GetNumberOfValues();
+  if (numberOfValues <= 0)
+  {
+    output.PrepareForOutput(0, DeviceAdapterTagCuda());
+    return vtkm::TypeTraits<T>::ZeroInitialization();
   }
 
-  template <typename T, class SIn, class SVal, class SOut, class BinaryCompare>
-  VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<T, SIn>& input,
-                                    const vtkm::cont::ArrayHandle<T, SVal>& values,
-                                    vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output,
-                                    BinaryCompare binary_compare)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+  //We need call PrepareForInput on the input argument before invoking a
+  //function. The order of execution of parameters of a function is undefined
+  //so we need to make sure input is called before output, or else in-place
+  //use case breaks.
+  auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
+  return ScanExclusivePortal(inputPortal,
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+}
 
-    vtkm::Id numberOfValues = values.GetNumberOfValues();
-    LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values.PrepareForInput(DeviceAdapterTagCuda()),
-                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                      binary_compare);
+template <typename T, class SIn, class SOut, class BinaryFunctor>
+VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
+                                 vtkm::cont::ArrayHandle<T, SOut>& output,
+                                 BinaryFunctor binary_functor,
+                                 const T& initialValue)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  const vtkm::Id numberOfValues = input.GetNumberOfValues();
+  if (numberOfValues <= 0)
+  {
+    output.PrepareForOutput(0, DeviceAdapterTagCuda());
+    return vtkm::TypeTraits<T>::ZeroInitialization();
   }
 
-  template <class SIn, class SOut>
-  VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<vtkm::Id, SIn>& input,
-                                    vtkm::cont::ArrayHandle<vtkm::Id, SOut>& values_output)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values_output.PrepareForInPlace(DeviceAdapterTagCuda()));
-  }
-
-  template <typename T, typename U, class SIn>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, SIn>& input, U initialValue)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = input.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      return initialValue;
-    }
-    return ReducePortal(input.PrepareForInput(DeviceAdapterTagCuda()), initialValue);
-  }
-
-  template <typename T, typename U, class SIn, class BinaryFunctor>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, SIn>& input,
-                            U initialValue,
-                            BinaryFunctor binary_functor)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = input.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      return initialValue;
-    }
-    return ReducePortal(
-      input.PrepareForInput(DeviceAdapterTagCuda()), initialValue, binary_functor);
-  }
-
-  template <typename T,
-            typename U,
-            class KIn,
-            class VIn,
-            class KOut,
-            class VOut,
-            class BinaryFunctor>
-  VTKM_CONT static void ReduceByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                    const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                    vtkm::cont::ArrayHandle<T, KOut>& keys_output,
-                                    vtkm::cont::ArrayHandle<U, VOut>& values_output,
-                                    BinaryFunctor binary_functor)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    //there is a concern that by default we will allocate too much
-    //space for the keys/values output. 1 option is to
-    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      return;
-    }
-    vtkm::Id reduced_size =
-      ReduceByKeyPortal(keys.PrepareForInput(DeviceAdapterTagCuda()),
-                        values.PrepareForInput(DeviceAdapterTagCuda()),
-                        keys_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                        values_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                        binary_functor);
-
-    keys_output.Shrink(reduced_size);
-    values_output.Shrink(reduced_size);
-  }
-
-  template <typename T, class SIn, class SOut>
-  VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
-                                   vtkm::cont::ArrayHandle<T, SOut>& output)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = input.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
-    }
-
-    //We need call PrepareForInput on the input argument before invoking a
-    //function. The order of execution of parameters of a function is undefined
-    //so we need to make sure input is called before output, or else in-place
-    //use case breaks.
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
-    return ScanExclusivePortal(inputPortal,
-                               output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
-  }
-
-  template <typename T, class SIn, class SOut, class BinaryFunctor>
-  VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
-                                   vtkm::cont::ArrayHandle<T, SOut>& output,
-                                   BinaryFunctor binary_functor,
-                                   const T& initialValue)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = input.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
-    }
-
-    //We need call PrepareForInput on the input argument before invoking a
-    //function. The order of execution of parameters of a function is undefined
-    //so we need to make sure input is called before output, or else in-place
-    //use case breaks.
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
-    return ScanExclusivePortal(inputPortal,
-                               output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                               binary_functor,
-                               initialValue);
-  }
-
-  template <typename T, class SIn, class SOut>
-  VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
-                                   vtkm::cont::ArrayHandle<T, SOut>& output)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = input.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
-    }
-
-    //We need call PrepareForInput on the input argument before invoking a
-    //function. The order of execution of parameters of a function is undefined
-    //so we need to make sure input is called before output, or else in-place
-    //use case breaks.
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
-    return ScanInclusivePortal(inputPortal,
-                               output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
-  }
-
-  template <typename T, class SIn, class SOut, class BinaryFunctor>
-  VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
-                                   vtkm::cont::ArrayHandle<T, SOut>& output,
-                                   BinaryFunctor binary_functor)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = input.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
-    }
-
-    //We need call PrepareForInput on the input argument before invoking a
-    //function. The order of execution of parameters of a function is undefined
-    //so we need to make sure input is called before output, or else in-place
-    //use case breaks.
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
-    return ScanInclusivePortal(
-      inputPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()), binary_functor);
-  }
-
-  template <typename T, typename U, typename KIn, typename VIn, typename VOut>
-  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
-    }
-
-    //We need call PrepareForInput on the input argument before invoking a
-    //function. The order of execution of parameters of a function is undefined
-    //so we need to make sure input is called before output, or else in-place
-    //use case breaks.
-    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
-    ScanInclusiveByKeyPortal(
-      keysPortal, valuesPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
-  }
-
-  template <typename T,
-            typename U,
-            typename KIn,
-            typename VIn,
-            typename VOut,
-            typename BinaryFunctor>
-  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output,
-                                           BinaryFunctor binary_functor)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
-    }
-
-    //We need call PrepareForInput on the input argument before invoking a
-    //function. The order of execution of parameters of a function is undefined
-    //so we need to make sure input is called before output, or else in-place
-    //use case breaks.
-    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
-    ScanInclusiveByKeyPortal(keysPortal,
-                             valuesPortal,
+  //We need call PrepareForInput on the input argument before invoking a
+  //function. The order of execution of parameters of a function is undefined
+  //so we need to make sure input is called before output, or else in-place
+  //use case breaks.
+  auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
+  return ScanExclusivePortal(inputPortal,
                              output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                             ::thrust::equal_to<T>(),
-                             binary_functor);
+                             binary_functor,
+                             initialValue);
+}
+
+template <typename T, class SIn, class SOut>
+VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
+                                 vtkm::cont::ArrayHandle<T, SOut>& output)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  const vtkm::Id numberOfValues = input.GetNumberOfValues();
+  if (numberOfValues <= 0)
+  {
+    output.PrepareForOutput(0, DeviceAdapterTagCuda());
+    return vtkm::TypeTraits<T>::ZeroInitialization();
   }
 
-  template <typename T, typename U, typename KIn, typename VIn, typename VOut>
-  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output)
+  //We need call PrepareForInput on the input argument before invoking a
+  //function. The order of execution of parameters of a function is undefined
+  //so we need to make sure input is called before output, or else in-place
+  //use case breaks.
+  auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
+  return ScanInclusivePortal(inputPortal,
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+}
+
+template <typename T, class SIn, class SOut, class BinaryFunctor>
+VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, SIn>& input,
+                                 vtkm::cont::ArrayHandle<T, SOut>& output,
+                                 BinaryFunctor binary_functor)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  const vtkm::Id numberOfValues = input.GetNumberOfValues();
+  if (numberOfValues <= 0)
   {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
-      return;
-    }
-
-    //We need call PrepareForInput on the input argument before invoking a
-    //function. The order of execution of parameters of a function is undefined
-    //so we need to make sure input is called before output, or else in-place
-    //use case breaks.
-    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
-    ScanExclusiveByKeyPortal(keysPortal,
-                             valuesPortal,
-                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                             vtkm::TypeTraits<T>::ZeroInitialization(),
-                             ::thrust::equal_to<T>(),
-                             vtkm::Add());
+    output.PrepareForOutput(0, DeviceAdapterTagCuda());
+    return vtkm::TypeTraits<T>::ZeroInitialization();
   }
 
-  template <typename T,
-            typename U,
-            typename KIn,
-            typename VIn,
-            typename VOut,
-            typename BinaryFunctor>
-  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output,
-                                           const U& initialValue,
-                                           BinaryFunctor binary_functor)
+  //We need call PrepareForInput on the input argument before invoking a
+  //function. The order of execution of parameters of a function is undefined
+  //so we need to make sure input is called before output, or else in-place
+  //use case breaks.
+  auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
+  return ScanInclusivePortal(
+    inputPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()), binary_functor);
+}
+
+template <typename T, typename U, typename KIn, typename VIn, typename VOut>
+VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                         const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                         vtkm::cont::ArrayHandle<U, VOut>& output)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+  if (numberOfValues <= 0)
   {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
-    if (numberOfValues <= 0)
-    {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
-      return;
-    }
-
-    //We need call PrepareForInput on the input argument before invoking a
-    //function. The order of execution of parameters of a function is undefined
-    //so we need to make sure input is called before output, or else in-place
-    //use case breaks.
-    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
-    ScanExclusiveByKeyPortal(keysPortal,
-                             valuesPortal,
-                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                             initialValue,
-                             ::thrust::equal_to<T>(),
-                             binary_functor);
+    output.PrepareForOutput(0, DeviceAdapterTagCuda());
   }
 
-  // we use cuda pinned memory to reduce the amount of synchronization
-  // and mem copies between the host and device.
-  struct VTKM_CONT_EXPORT PinnedErrorArray
+  //We need call PrepareForInput on the input argument before invoking a
+  //function. The order of execution of parameters of a function is undefined
+  //so we need to make sure input is called before output, or else in-place
+  //use case breaks.
+  auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
+  auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
+  ScanInclusiveByKeyPortal(
+    keysPortal, valuesPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+}
+
+template <typename T, typename U, typename KIn, typename VIn, typename VOut, typename BinaryFunctor>
+VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                         const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                         vtkm::cont::ArrayHandle<U, VOut>& output,
+                                         BinaryFunctor binary_functor)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+  if (numberOfValues <= 0)
   {
-    char* HostPtr = nullptr;
-    char* DevicePtr = nullptr;
-    vtkm::Id Size = 0;
-  };
+    output.PrepareForOutput(0, DeviceAdapterTagCuda());
+  }
 
-  VTKM_CONT_EXPORT
-  static const PinnedErrorArray& GetPinnedErrorArray();
+  //We need call PrepareForInput on the input argument before invoking a
+  //function. The order of execution of parameters of a function is undefined
+  //so we need to make sure input is called before output, or else in-place
+  //use case breaks.
+  auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
+  auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
+  ScanInclusiveByKeyPortal(keysPortal,
+                           valuesPortal,
+                           output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+                           ::thrust::equal_to<T>(),
+                           binary_functor);
+}
 
-  VTKM_CONT_EXPORT
-  static void CheckForErrors(); // throws vtkm::cont::ErrorExecution
+template <typename T, typename U, typename KIn, typename VIn, typename VOut>
+VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                         const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                         vtkm::cont::ArrayHandle<U, VOut>& output)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-  VTKM_CONT_EXPORT
-  static void SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
+  const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+  if (numberOfValues <= 0)
+  {
+    output.PrepareForOutput(0, DeviceAdapterTagCuda());
+    return;
+  }
 
-  VTKM_CONT_EXPORT
-  static void GetBlocksAndThreads(vtkm::UInt32& blocks,
-                                  vtkm::UInt32& threadsPerBlock,
-                                  vtkm::Id size);
+  //We need call PrepareForInput on the input argument before invoking a
+  //function. The order of execution of parameters of a function is undefined
+  //so we need to make sure input is called before output, or else in-place
+  //use case breaks.
+  auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
+  auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
+  ScanExclusiveByKeyPortal(keysPortal,
+                           valuesPortal,
+                           output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+                           vtkm::TypeTraits<T>::ZeroInitialization(),
+                           ::thrust::equal_to<T>(),
+                           vtkm::Add());
+}
 
-  VTKM_CONT_EXPORT
-  static void GetBlocksAndThreads(vtkm::UInt32& blocks, dim3& threadsPerBlock, const dim3& size);
+template <typename T, typename U, typename KIn, typename VIn, typename VOut, typename BinaryFunctor>
+VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                         const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                         vtkm::cont::ArrayHandle<U, VOut>& output,
+                                         const U& initialValue,
+                                         BinaryFunctor binary_functor)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-  VTKM_CONT_EXPORT
-  static void LogKernelLaunch(const cudaFuncAttributes& func_attrs,
-                              const std::type_info& worklet_info,
-                              vtkm::UInt32 blocks,
-                              vtkm::UInt32 threadsPerBlock,
-                              vtkm::Id size);
+  const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+  if (numberOfValues <= 0)
+  {
+    output.PrepareForOutput(0, DeviceAdapterTagCuda());
+    return;
+  }
 
-  VTKM_CONT_EXPORT
-  static void LogKernelLaunch(const cudaFuncAttributes& func_attrs,
-                              const std::type_info& worklet_info,
-                              vtkm::UInt32 blocks,
-                              dim3 threadsPerBlock,
-                              const dim3& size);
+  //We need call PrepareForInput on the input argument before invoking a
+  //function. The order of execution of parameters of a function is undefined
+  //so we need to make sure input is called before output, or else in-place
+  //use case breaks.
+  auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
+  auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
+  ScanExclusiveByKeyPortal(keysPortal,
+                           valuesPortal,
+                           output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+                           initialValue,
+                           ::thrust::equal_to<T>(),
+                           binary_functor);
+}
+
+// we use cuda pinned memory to reduce the amount of synchronization
+// and mem copies between the host and device.
+struct VTKM_CONT_EXPORT PinnedErrorArray
+{
+  char* HostPtr = nullptr;
+  char* DevicePtr = nullptr;
+  vtkm::Id Size = 0;
+};
+
+VTKM_CONT_EXPORT
+static const PinnedErrorArray& GetPinnedErrorArray();
+
+VTKM_CONT_EXPORT
+static void CheckForErrors(); // throws vtkm::cont::ErrorExecution
+
+VTKM_CONT_EXPORT
+static void SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
+
+VTKM_CONT_EXPORT
+static void GetBlocksAndThreads(vtkm::UInt32& blocks, vtkm::UInt32& threadsPerBlock, vtkm::Id size);
+
+VTKM_CONT_EXPORT
+static void GetBlocksAndThreads(vtkm::UInt32& blocks, dim3& threadsPerBlock, const dim3& size);
+
+VTKM_CONT_EXPORT
+static void LogKernelLaunch(const cudaFuncAttributes& func_attrs,
+                            const std::type_info& worklet_info,
+                            vtkm::UInt32 blocks,
+                            vtkm::UInt32 threadsPerBlock,
+                            vtkm::Id size);
+
+VTKM_CONT_EXPORT
+static void LogKernelLaunch(const cudaFuncAttributes& func_attrs,
+                            const std::type_info& worklet_info,
+                            vtkm::UInt32 blocks,
+                            dim3 threadsPerBlock,
+                            const dim3& size);
 
 public:
-  template <typename WType, typename IType>
-  static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided1D<WType, IType>& functor,
-                           vtkm::Id numInstances)
+template <typename WType, typename IType>
+static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided1D<WType, IType>& functor,
+                         vtkm::Id numInstances)
+{
+  VTKM_ASSERT(numInstances >= 0);
+  if (numInstances < 1)
   {
-    VTKM_ASSERT(numInstances >= 0);
-    if (numInstances < 1)
-    {
-      // No instances means nothing to run. Just return.
-      return;
-    }
+    // No instances means nothing to run. Just return.
+    return;
+  }
 
-    CheckForErrors();
-    SetupErrorBuffer(functor);
+  CheckForErrors();
+  SetupErrorBuffer(functor);
 
-    vtkm::UInt32 blocks, threadsPerBlock;
-    GetBlocksAndThreads(blocks, threadsPerBlock, numInstances);
+  vtkm::UInt32 blocks, threadsPerBlock;
+  GetBlocksAndThreads(blocks, threadsPerBlock, numInstances);
 
 #ifdef VTKM_ENABLE_LOGGING
-    if (GetStderrLogLevel() >= vtkm::cont::LogLevel::KernelLaunches)
-    {
-      using FunctorType = vtkm::exec::cuda::internal::TaskStrided1D<WType, IType>;
-      cudaFuncAttributes empty_kernel_attrs;
-      VTKM_CUDA_CALL(cudaFuncGetAttributes(&empty_kernel_attrs,
-                                           cuda::internal::TaskStrided1DLaunch<FunctorType>));
-      LogKernelLaunch(empty_kernel_attrs, typeid(WType), blocks, threadsPerBlock, numInstances);
-    }
+  if (GetStderrLogLevel() >= vtkm::cont::LogLevel::KernelLaunches)
+  {
+    using FunctorType = vtkm::exec::cuda::internal::TaskStrided1D<WType, IType>;
+    cudaFuncAttributes empty_kernel_attrs;
+    VTKM_CUDA_CALL(
+      cudaFuncGetAttributes(&empty_kernel_attrs, cuda::internal::TaskStrided1DLaunch<FunctorType>));
+    LogKernelLaunch(empty_kernel_attrs, typeid(WType), blocks, threadsPerBlock, numInstances);
+  }
 #endif
 
-    cuda::internal::TaskStrided1DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
-      functor, numInstances);
+  cuda::internal::TaskStrided1DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
+    functor, numInstances);
+}
+
+template <typename WType, typename IType>
+static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided3D<WType, IType>& functor,
+                         vtkm::Id3 rangeMax)
+{
+  VTKM_ASSERT((rangeMax[0] >= 0) && (rangeMax[1] >= 0) && (rangeMax[2] >= 0));
+  if ((rangeMax[0] < 1) || (rangeMax[1] < 1) || (rangeMax[2] < 1))
+  {
+    // No instances means nothing to run. Just return.
+    return;
   }
 
-  template <typename WType, typename IType>
-  static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided3D<WType, IType>& functor,
-                           vtkm::Id3 rangeMax)
-  {
-    VTKM_ASSERT((rangeMax[0] >= 0) && (rangeMax[1] >= 0) && (rangeMax[2] >= 0));
-    if ((rangeMax[0] < 1) || (rangeMax[1] < 1) || (rangeMax[2] < 1))
-    {
-      // No instances means nothing to run. Just return.
-      return;
-    }
+  CheckForErrors();
+  SetupErrorBuffer(functor);
 
-    CheckForErrors();
-    SetupErrorBuffer(functor);
+  const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
+                    static_cast<vtkm::UInt32>(rangeMax[1]),
+                    static_cast<vtkm::UInt32>(rangeMax[2]));
 
-    const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
-                      static_cast<vtkm::UInt32>(rangeMax[1]),
-                      static_cast<vtkm::UInt32>(rangeMax[2]));
-
-    vtkm::UInt32 blocks;
-    dim3 threadsPerBlock;
-    GetBlocksAndThreads(blocks, threadsPerBlock, ranges);
+  vtkm::UInt32 blocks;
+  dim3 threadsPerBlock;
+  GetBlocksAndThreads(blocks, threadsPerBlock, ranges);
 
 #ifdef VTKM_ENABLE_LOGGING
-    if (GetStderrLogLevel() >= vtkm::cont::LogLevel::KernelLaunches)
-    {
-      using FunctorType = vtkm::exec::cuda::internal::TaskStrided3D<WType, IType>;
-      cudaFuncAttributes empty_kernel_attrs;
-      VTKM_CUDA_CALL(cudaFuncGetAttributes(&empty_kernel_attrs,
-                                           cuda::internal::TaskStrided3DLaunch<FunctorType>));
-      LogKernelLaunch(empty_kernel_attrs, typeid(WType), blocks, threadsPerBlock, ranges);
-    }
+  if (GetStderrLogLevel() >= vtkm::cont::LogLevel::KernelLaunches)
+  {
+    using FunctorType = vtkm::exec::cuda::internal::TaskStrided3D<WType, IType>;
+    cudaFuncAttributes empty_kernel_attrs;
+    VTKM_CUDA_CALL(
+      cudaFuncGetAttributes(&empty_kernel_attrs, cuda::internal::TaskStrided3DLaunch<FunctorType>));
+    LogKernelLaunch(empty_kernel_attrs, typeid(WType), blocks, threadsPerBlock, ranges);
+  }
 #endif
 
-    cuda::internal::TaskStrided3DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
-      functor, ranges);
-  }
+  cuda::internal::TaskStrided3DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(functor,
+                                                                                           ranges);
+}
 
-  template <class Functor>
-  VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+template <class Functor>
+VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::exec::cuda::internal::TaskStrided1D<Functor, vtkm::internal::NullType> kernel(functor);
+  vtkm::exec::cuda::internal::TaskStrided1D<Functor, vtkm::internal::NullType> kernel(functor);
 
-    ScheduleTask(kernel, numInstances);
-  }
+  ScheduleTask(kernel, numInstances);
+}
 
-  template <class Functor>
-  VTKM_CONT static void Schedule(Functor functor, const vtkm::Id3& rangeMax)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+template <class Functor>
+VTKM_CONT static void Schedule(Functor functor, const vtkm::Id3& rangeMax)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::exec::cuda::internal::TaskStrided3D<Functor, vtkm::internal::NullType> kernel(functor);
-    ScheduleTask(kernel, rangeMax);
-  }
+  vtkm::exec::cuda::internal::TaskStrided3D<Functor, vtkm::internal::NullType> kernel(functor);
+  ScheduleTask(kernel, rangeMax);
+}
 
-  template <typename T, class Storage>
-  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+template <typename T, class Storage>
+VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda()));
-  }
+  SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda()));
+}
 
-  template <typename T, class Storage, class BinaryCompare>
-  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
+template <typename T, class Storage, class BinaryCompare>
+VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
+                           BinaryCompare binary_compare)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda()), binary_compare);
+}
+
+template <typename T, typename U, class StorageT, class StorageU>
+VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                vtkm::cont::ArrayHandle<U, StorageU>& values)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda()),
+                  values.PrepareForInPlace(DeviceAdapterTagCuda()));
+}
+
+template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
+VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                BinaryCompare binary_compare)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda()),
+                  values.PrepareForInPlace(DeviceAdapterTagCuda()),
+                  binary_compare);
+}
+
+template <typename T, class Storage>
+VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  vtkm::Id newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda()));
+
+  values.Shrink(newSize);
+}
+
+template <typename T, class Storage, class BinaryCompare>
+VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                              BinaryCompare binary_compare)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda()), binary_compare);
-  }
+  vtkm::Id newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda()), binary_compare);
 
-  template <typename T, typename U, class StorageT, class StorageU>
-  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
-                                  vtkm::cont::ArrayHandle<U, StorageU>& values)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+  values.Shrink(newSize);
+}
 
-    SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda()),
-                    values.PrepareForInPlace(DeviceAdapterTagCuda()));
-  }
+template <typename T, class SIn, class SVal, class SOut>
+VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<T, SIn>& input,
+                                  const vtkm::cont::ArrayHandle<T, SVal>& values,
+                                  vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-  template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
-  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
-                                  vtkm::cont::ArrayHandle<U, StorageU>& values,
+  vtkm::Id numberOfValues = values.GetNumberOfValues();
+  UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+                    values.PrepareForInput(DeviceAdapterTagCuda()),
+                    output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+}
+
+template <typename T, class SIn, class SVal, class SOut, class BinaryCompare>
+VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<T, SIn>& input,
+                                  const vtkm::cont::ArrayHandle<T, SVal>& values,
+                                  vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output,
                                   BinaryCompare binary_compare)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda()),
-                    values.PrepareForInPlace(DeviceAdapterTagCuda()),
+  vtkm::Id numberOfValues = values.GetNumberOfValues();
+  UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+                    values.PrepareForInput(DeviceAdapterTagCuda()),
+                    output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
                     binary_compare);
-  }
+}
 
-  template <typename T, class Storage>
-  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+template <class SIn, class SOut>
+VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<vtkm::Id, SIn>& input,
+                                  vtkm::cont::ArrayHandle<vtkm::Id, SOut>& values_output)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::Id newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda()));
+  UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+                    values_output.PrepareForInPlace(DeviceAdapterTagCuda()));
+}
 
-    values.Shrink(newSize);
-  }
+VTKM_CONT static void Synchronize()
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-  template <typename T, class Storage, class BinaryCompare>
-  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
-                               BinaryCompare binary_compare)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    vtkm::Id newSize =
-      UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda()), binary_compare);
-
-    values.Shrink(newSize);
-  }
-
-  template <typename T, class SIn, class SVal, class SOut>
-  VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<T, SIn>& input,
-                                    const vtkm::cont::ArrayHandle<T, SVal>& values,
-                                    vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    vtkm::Id numberOfValues = values.GetNumberOfValues();
-    UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values.PrepareForInput(DeviceAdapterTagCuda()),
-                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
-  }
-
-  template <typename T, class SIn, class SVal, class SOut, class BinaryCompare>
-  VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<T, SIn>& input,
-                                    const vtkm::cont::ArrayHandle<T, SVal>& values,
-                                    vtkm::cont::ArrayHandle<vtkm::Id, SOut>& output,
-                                    BinaryCompare binary_compare)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    vtkm::Id numberOfValues = values.GetNumberOfValues();
-    UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values.PrepareForInput(DeviceAdapterTagCuda()),
-                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                      binary_compare);
-  }
-
-  template <class SIn, class SOut>
-  VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<vtkm::Id, SIn>& input,
-                                    vtkm::cont::ArrayHandle<vtkm::Id, SOut>& values_output)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values_output.PrepareForInPlace(DeviceAdapterTagCuda()));
-  }
-
-  VTKM_CONT static void Synchronize()
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
-    CheckForErrors();
-  }
-};
+  VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
+  CheckForErrors();
+}
+}
+;
 
 template <>
 class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagCuda>
@@ -1769,19 +1781,3 @@ public:
     using Task = vtkm::exec::cuda::internal::TaskStrided1D<WorkletType, InvocationType>;
     return Task(worklet, invocation, globalIndexOffset);
   }
-
-  template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::cuda::internal::TaskStrided3D<WorkletType, InvocationType> MakeTask(
-    WorkletType& worklet,
-    InvocationType& invocation,
-    vtkm::Id3,
-    vtkm::Id globalIndexOffset = 0)
-  {
-    using Task = vtkm::exec::cuda::internal::TaskStrided3D<WorkletType, InvocationType>;
-    return Task(worklet, invocation, globalIndexOffset);
-  }
-};
-}
-} // namespace vtkm::cont
-
-#endif //vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmCuda_h
