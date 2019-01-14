@@ -134,6 +134,44 @@ public:
     output.Shrink(writePos);
   }
 
+  template <typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output,
+                               const vtkm::Id& output_size)
+  {
+    ::vtkm::NotZeroInitialized unary_predicate;
+    CopyIf(input, stencil, output, output_size, unary_predicate);
+  }
+
+
+  template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output,
+                               const vtkm::Id& output_size,
+                               UnaryPredicate predicate)
+  {
+    vtkm::Id inputSize = input.GetNumberOfValues();
+    VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
+
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
+    auto stencilPortal = stencil.PrepareForInput(DeviceAdapterTagSerial());
+    auto outputPortal = output.PrepareForOutput(output_size, DeviceAdapterTagSerial());
+
+    vtkm::Id readPos = 0;
+    vtkm::Id writePos = 0;
+
+    for (; readPos < inputSize; ++readPos)
+    {
+      if (predicate(stencilPortal.Get(readPos)))
+      {
+        outputPortal.Set(writePos, inputPortal.Get(readPos));
+        ++writePos;
+      }
+    }
+  }
+
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                      vtkm::Id inputStartIndex,

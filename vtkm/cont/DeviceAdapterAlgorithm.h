@@ -93,6 +93,13 @@ struct DeviceAdapterAlgorithm
                                vtkm::cont::ArrayHandle<T, COut>& output,
                                UnaryPredicate unary_predicate);
 
+  template <typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output,
+                               const vtkm::Id& output_size);
+
+
   /// \brief Copy the contents of a section of one ArrayHandle to another
   ///
   /// Copies the a range of elements of \c input to \c output. The number of
