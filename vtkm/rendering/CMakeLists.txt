@@ -202,7 +202,7 @@ elseif(VTKm_ENABLE_EGL_CONTEXT)
 endif()
 
 #-----------------------------------------------------------------------------
-target_link_libraries(vtkm_rendering PUBLIC vtkm_cont)
+target_link_libraries(vtkm_rendering PUBLIC vtkm_filter)
 
 
 if(UNIX AND NOT APPLE)

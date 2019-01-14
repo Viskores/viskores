@@ -37,6 +37,6 @@ if(TARGET OpenGL::GL AND
   else()
     add_executable(HelloWorld HelloWorld.cxx LoadShaders.h)
   endif()
-  target_link_libraries(HelloWorld PRIVATE vtkm_cont ${gl_libs})
+  target_link_libraries(HelloWorld PRIVATE vtkm_filter ${gl_libs})
 
 endif()

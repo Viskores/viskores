@@ -28,13 +28,13 @@ find_package(VTKm REQUIRED QUIET)
 add_executable(Oscillator_SERIAL Oscillator.cxx)
 target_compile_definitions(Oscillator_SERIAL PRIVATE
   "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-target_link_libraries(Oscillator_SERIAL PRIVATE vtkm_cont)
+target_link_libraries(Oscillator_SERIAL PRIVATE vtkm_filter)
 
 if (TARGET vtkm::tbb)
   add_executable(Oscillator_TBB Oscillator.cxx)
   target_compile_definitions(Oscillator_TBB PRIVATE
     "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  target_link_libraries(Oscillator_TBB PRIVATE vtkm_cont)
+  target_link_libraries(Oscillator_TBB PRIVATE vtkm_filter)
 endif()
 
 if (TARGET vtkm::cuda)
@@ -42,5 +42,5 @@ if (TARGET vtkm::cuda)
   add_executable(Oscillator_CUDA ${oscillatorCudaSrc})
   target_compile_definitions(Oscillator_CUDA PRIVATE
     "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  target_link_libraries(Oscillator_CUDA PRIVATE vtkm_cont)
+  target_link_libraries(Oscillator_CUDA PRIVATE vtkm_filter)
 endif()
