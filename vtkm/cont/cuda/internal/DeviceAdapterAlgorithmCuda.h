@@ -1389,3 +1389,8 @@ public:
     using Task = vtkm::exec::cuda::internal::TaskStrided1D<WorkletType, InvocationType>;
     return Task(worklet, invocation, globalIndexOffset);
   }
+};
+}
+} // namespace vtkm::cont
+
+#endif //vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmCuda_h
