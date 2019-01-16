@@ -115,8 +115,9 @@ add_subdirectory(wavelets)
 add_subdirectory(particleadvection)
 add_subdirectory(zfp)
 
-vtkm_declare_headers(${headers})
-vtkm_declare_headers(${header_impls} TESTABLE OFF)
+vtkm_declare_headers(${headers}
+                     ${header_impls}
+                     )
 
 
 #-----------------------------------------------------------------------------

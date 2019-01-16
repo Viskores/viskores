@@ -32,7 +32,7 @@ set(headers
   VirtualObjectTransferOpenMP.h
   )
 
-vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_OPENMP})
+vtkm_declare_headers(${headers})
 
 #These sources need to always be built
 target_sources(vtkm_cont PRIVATE

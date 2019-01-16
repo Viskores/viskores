@@ -26,7 +26,7 @@ set(headers
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
-vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
+vtkm_declare_headers(CUDA ${headers})
 
 #-----------------------------------------------------------------------------
 if (TARGET vtkm::cuda)
