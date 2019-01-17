@@ -24,7 +24,7 @@ set(headers
   )
 
 #-----------------------------------------------------------------------------
-vtkm_declare_headers(${headers} TESTABLE FALSE)
+vtkm_declare_headers(${headers})
 
 if(VTKm_ENABLE_TESTING AND TARGET vtkm_rendering)
   add_subdirectory(testing)

@@ -22,7 +22,7 @@ set(headers
   TestingOpenGLInterop.h
   TestingTransferFancyHandles.h
   )
-vtkm_declare_headers(${headers} TESTABLE FALSE)
+vtkm_declare_headers(${headers})
 
 
 if(NOT TARGET GLUT::GLUT)

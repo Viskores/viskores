@@ -53,8 +53,9 @@ set(header_impls
 add_subdirectory(internal)
 add_subdirectory(arg)
 
-vtkm_declare_headers(${headers})
-vtkm_declare_headers(${header_impls} TESTABLE OFF)
+vtkm_declare_headers(${headers}
+                    ${header_impls}
+                    )
 
 
 #-----------------------------------------------------------------------------

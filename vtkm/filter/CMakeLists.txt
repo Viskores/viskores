@@ -133,9 +133,7 @@ set(header_template_sources
   ZFPDecompressor3D.hxx
 )
 
-vtkm_declare_headers(${headers}
-  EXCLUDE_FROM_TESTING ${header_template_sources}
-  )
+vtkm_declare_headers(${headers})
 
 add_subdirectory(internal)
 

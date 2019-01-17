@@ -29,11 +29,10 @@ set(headers
   VirtualObjectTransferTBB.h
   )
 
-vtkm_declare_headers(ParallelSortTBB.hxx
-                     parallel_sort.h
-                     TESTABLE OFF)
-
-vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})
+vtkm_declare_headers(${headers}
+   ParallelSortTBB.hxx
+   parallel_sort.h
+   )
 
 #These sources need to always be built
 target_sources(vtkm_cont PRIVATE

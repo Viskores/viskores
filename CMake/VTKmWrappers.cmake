@@ -97,86 +97,6 @@ function(vtkm_compile_as_cuda output)
 endfunction()
 
 #-----------------------------------------------------------------------------
-function(vtkm_add_header_build_test name dir_prefix use_cuda)
-  set(hfiles ${ARGN})
-
-  #only attempt to add a test build executable if we have any headers to
-  #test. this might not happen when everything depends on thrust.
-  list(LENGTH hfiles num_srcs)
-  if (${num_srcs} EQUAL 0)
-    return()
-  endif()
-
-  set(ext "cxx")
-  if(use_cuda)
-    set(ext "cu")
-  endif()
-
-  set(srcs)
-  foreach (header ${hfiles})
-    get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
-    if( NOT cant_be_tested )
-      string(REPLACE "/" "_" headername "${header}")
-      string(REPLACE "." "_" headername "${headername}")
-      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext})
-
-      #By using file generate we will not trigger CMake execution when
-      #a header gets touched
-      file(GENERATE
-        OUTPUT ${src}
-        CONTENT "
-//mark that we are including headers as test for completeness.
-//This is used by headers that include thrust to properly define a proper
-//device backend / system
-#define VTKM_TEST_HEADER_BUILD
-#include <${dir_prefix}/${header}>
-int ${headername}_${headerextension}_testbuild_symbol;"
-        )
-
-      list(APPEND srcs ${src})
-    endif()
-  endforeach()
-
-  set_source_files_properties(${hfiles}
-    PROPERTIES HEADER_FILE_ONLY TRUE
-    )
-
-  if(TARGET TestBuild_${name})
-    #If the target already exists just add more sources to it
-    target_sources(TestBuild_${name} PRIVATE ${srcs})
-  else()
-    add_library(TestBuild_${name} STATIC ${srcs} ${hfiles})
-    # Send the libraries created for test builds to their own directory so as to
-    # not pollute the directory with useful libraries.
-    set_property(TARGET TestBuild_${name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
-    set_property(TARGET TestBuild_${name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
-
-    target_link_libraries(TestBuild_${name}
-      PRIVATE
-        $<BUILD_INTERFACE:vtkm_developer_flags>
-        vtkm_compiler_flags
-        vtkm_taotuple
-    )
-
-    if(TARGET vtkm::tbb)
-      #make sure that we have the tbb include paths when tbb is enabled.
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm::tbb)
-    endif()
-
-    if(TARGET vtkm_diy)
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm_diy)
-    endif()
-
-    if(TARGET vtkm_rendering_gl_context)
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm_rendering_gl_context)
-    endif()
-
-
-  endif()
-
-endfunction()
-
-#-----------------------------------------------------------------------------
 function(vtkm_generate_export_header lib_name)
   # Get the location of this library in the directory structure
   # export headers work on the directory structure more than the lib_name
@@ -229,36 +149,15 @@ endfunction(vtkm_install_headers)
 
 #-----------------------------------------------------------------------------
 function(vtkm_declare_headers)
-  #TODO: look at the testable and cuda options
   set(options CUDA)
-  set(oneValueArgs TESTABLE)
-  set(multiValueArgs EXCLUDE_FROM_TESTING)
+  set(oneValueArgs)
+  set(multiValueArgs)
   cmake_parse_arguments(VTKm_DH "${options}"
     "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
     )
 
-  #The testable keyword allows the caller to turn off the header testing,
-  #mainly used so that backends can be installed even when they can't be
-  #built on the machine.
-  #Since this is an optional property not setting it means you do want testing
-  if(NOT DEFINED VTKm_DH_TESTABLE)
-      set(VTKm_DH_TESTABLE ON)
-  endif()
-
-  set(hfiles ${VTKm_DH_UNPARSED_ARGUMENTS} ${VTKm_DH_EXCLUDE_FROM_TESTING})
   vtkm_get_kit_name(name dir_prefix)
-
-  #only do header testing if enable testing is turned on
-  if (VTKm_ENABLE_TESTING AND VTKm_DH_TESTABLE)
-    set_source_files_properties(${VTKm_DH_EXCLUDE_FROM_TESTING}
-      PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE
-      )
-
-    vtkm_add_header_build_test(
-      "${name}" "${dir_prefix}" "${VTKm_DH_CUDA}" ${hfiles})
-  endif()
-
   vtkm_install_headers("${dir_prefix}" ${hfiles})
 endfunction(vtkm_declare_headers)
 

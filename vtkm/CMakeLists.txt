@@ -75,8 +75,6 @@ vtkm_pyexpander_generated_file(Math.h)
 vtkm_declare_headers(
   ${headers}
   ${template_sources}
-  EXCLUDE_FROM_TESTING
-    ${template_sources}
 )
 
 #-----------------------------------------------------------------------------
