@@ -113,11 +113,10 @@ private:
 template <typename T, class ArrayPortalType, class DeviceAdapterTag>
 class ArrayTransfer<T, StorageTagImplicit<ArrayPortalType>, DeviceAdapterTag>
 {
-private:
+public:
   using StorageTag = StorageTagImplicit<ArrayPortalType>;
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
 
-public:
   using ValueType = T;
 
   using PortalControl = typename StorageType::PortalType;

@@ -70,8 +70,8 @@ struct ScalarFunctor
 
 struct ArrayHandleScalarFunctor
 {
-  template <typename T>
-  void operator()(const vtkm::cont::ArrayHandleVirtual<T>&) const
+  template <typename ArrayType>
+  void operator()(const ArrayType&) const
   {
     VTKM_TEST_FAIL("Called wrong form of functor operator.");
   }

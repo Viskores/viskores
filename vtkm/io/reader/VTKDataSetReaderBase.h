@@ -852,11 +852,16 @@ private:
     {
     }
 
-    template <typename T>
-    void operator()(const vtkm::cont::ArrayHandleVirtual<T>& handle) const
+    template <typename ArrayHandleType>
+    void operator()(const ArrayHandleType& handle) const
     {
+      VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+      using T = typename ArrayHandleType::ValueType;
+
       if (this->Permutation.GetNumberOfValues() < 1)
+      {
         return;
+      }
       vtkm::cont::ArrayHandle<T> out;
       out.Allocate(this->Permutation.GetNumberOfValues());
 

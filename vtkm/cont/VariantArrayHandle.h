@@ -29,6 +29,7 @@
 
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/StorageListTag.h>
 #include <vtkm/cont/internal/DynamicTransform.h>
 
 #include <vtkm/cont/internal/VariantArrayHandleContainer.h>
@@ -173,13 +174,45 @@ public:
     return VariantArrayHandleBase<NewTypeList>(*this);
   }
 
-  /// Attempts to cast the held array to a specific value type,
+  //@{
+  /// \brief Call a functor using the underlying array type.
+  ///
+  /// \c CastAndCall Attempts to cast the held array to a specific value type,
   /// then call the given functor with the cast array. The types
   /// tried in the cast are those in the lists defined by the TypeList.
-  /// By default \c VariantArrayHandle set this to VTKM_DEFAULT_TYPE_LIST_TAG.
+  /// By default \c VariantArrayHandle set this to \c VTKM_DEFAULT_TYPE_LIST_TAG.
   ///
-  template <typename Functor, typename... Args>
-  VTKM_CONT void CastAndCall(Functor&& f, Args&&...) const;
+  /// In addition to the value type, an \c ArrayHandle also requires a storage tag.
+  /// By default, \c CastAndCall attempts to cast the array using the storage tags
+  /// listed in \c VTKM_DEFAULT_STORAGE_LIST_TAG. You can optionally give a custom
+  /// list of storage tags as the second argument. If the storage of the underlying
+  /// array does not match any of the storage tags given, then the array will
+  /// be cast to an \c ArrayHandleVirtual, which can hold any array given the
+  /// appropriate value type. To always use \c ArrayHandleVirtual, pass
+  /// \c vtkm::ListTagEmpty as thefirst argument.
+  ///
+  /// As previous stated, if a storage tag list is provided, it is given in the
+  /// first argument. The functor to call with the cast array is given as the next
+  /// argument (or the first argument if a storage tag list is not provided).
+  /// The remaning arguments, if any, are passed to the functor.
+  ///
+  /// The functor will be called with the cast array as its first argument. Any
+  /// remaining arguments are passed from the arguments to \c CastAndCall.
+  ///
+  template <typename FunctorOrStorageList, typename... Args>
+  VTKM_CONT void CastAndCall(FunctorOrStorageList&& functorOrStorageList, Args&&... args) const
+  {
+    this->CastAndCallImpl(vtkm::internal::ListTagCheck<FunctorOrStorageList>(),
+                          std::forward<FunctorOrStorageList>(functorOrStorageList),
+                          std::forward<Args>(args)...);
+  }
+
+  template <typename Functor>
+  VTKM_CONT void CastAndCall(Functor&& f) const
+  {
+    this->CastAndCallImpl(std::false_type(), std::forward<Functor>(f));
+  }
+  //@}
 
   /// \brief Create a new array of the same type as this array.
   ///
@@ -228,6 +261,18 @@ public:
 private:
   friend struct internal::variant::GetContainer;
   std::shared_ptr<vtkm::cont::internal::VariantArrayHandleContainerBase> ArrayContainer;
+
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallImpl(std::false_type, Functor&& f, Args&&... args) const
+  {
+    this->CastAndCallImpl(std::true_type(),
+                          VTKM_DEFAULT_STORAGE_LIST_TAG(),
+                          std::forward<Functor>(f),
+                          std::forward<Args>(args)...);
+  }
+
+  template <typename StorageTagList, typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallImpl(std::true_type, StorageTagList, Functor&& f, Args&&...) const;
 };
 
 using VariantArrayHandle = vtkm::cont::VariantArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG>;
@@ -255,6 +300,37 @@ namespace detail
 
 struct VariantArrayHandleTry
 {
+  template <typename T, typename Storage, typename Functor, typename... Args>
+  void operator()(brigand::list<T, Storage>,
+                  Functor&& f,
+                  bool& called,
+                  const vtkm::cont::internal::VariantArrayHandleContainerBase& container,
+                  Args&&... args) const
+  {
+    using DerivedArrayType = vtkm::cont::ArrayHandle<T, Storage>;
+    if (!called && vtkm::cont::internal::variant::IsType<DerivedArrayType>(&container))
+    {
+      called = true;
+      const auto* derivedContainer =
+        static_cast<const vtkm::cont::internal::VariantArrayHandleContainer<T>*>(&container);
+      DerivedArrayType derivedArray = derivedContainer->Array.template Cast<DerivedArrayType>();
+      VTKM_LOG_CAST_SUCC(container, derivedArray);
+
+      // If you get a compile error here, it means that you have called CastAndCall for a
+      // vtkm::cont::VariantArrayHandle and the arguments of the functor do not match those
+      // being passed. This is often because it is calling the functor with an ArrayHandle
+      // type that was not expected. Either add overloads to the functor to accept all
+      // possible array types or constrain the types tried for the CastAndCall. Note that
+      // the functor will be called with an array of type vtkm::cont::ArrayHandle<T, S>.
+      // Directly using a subclass of ArrayHandle (e.g. vtkm::cont::ArrayHandleConstant<T>)
+      // might not work.
+      f(derivedArray, std::forward<Args>(args)...);
+    }
+  }
+};
+
+struct VariantArrayHandleTryFallback
+{
   template <typename T, typename Functor, typename... Args>
   void operator()(T,
                   Functor&& f,
@@ -268,30 +344,73 @@ struct VariantArrayHandleTry
       const auto* derived =
         static_cast<const vtkm::cont::internal::VariantArrayHandleContainer<T>*>(&container);
       VTKM_LOG_CAST_SUCC(container, derived);
+
+      // If you get a compile error here, it means that you have called CastAndCall for a
+      // vtkm::cont::VariantArrayHandle and the arguments of the functor do not match those
+      // being passed. This is often because it is calling the functor with an ArrayHandle
+      // type that was not expected. Either add overloads to the functor to accept all
+      // possible array types or constrain the types tried for the CastAndCall. Note that
+      // the functor will be called with an array of type vtkm::cont::ArrayHandle<T, S>.
+      // Directly using a subclass of ArrayHandle (e.g. vtkm::cont::ArrayHandleConstant<T>)
+      // might not work.
       f(derived->Array, std::forward<Args>(args)...);
     }
   }
 };
 
+template <typename T>
+struct IsUndefinedStorage
+{
+};
+template <typename T, typename U>
+struct IsUndefinedStorage<brigand::list<T, U>> : vtkm::cont::internal::IsInValidArrayHandle<T, U>
+{
+};
+
+template <typename TypeList, typename StorageList>
+struct ListTagDynamicTypes : vtkm::detail::ListRoot
+{
+  using crossProduct = typename vtkm::ListCrossProduct<TypeList, StorageList>;
+  // using list = typename crossProduct::list;
+  using list = ::brigand::remove_if<typename crossProduct::list, IsUndefinedStorage<brigand::_1>>;
+};
+
+
 VTKM_CONT_EXPORT void ThrowCastAndCallException(
   const vtkm::cont::internal::VariantArrayHandleContainerBase&,
   const std::type_info&);
+
 } // namespace detail
 
 
 
 template <typename TypeList>
-template <typename Functor, typename... Args>
-VTKM_CONT void VariantArrayHandleBase<TypeList>::CastAndCall(Functor&& f, Args&&... args) const
+template <typename StorageTagList, typename Functor, typename... Args>
+VTKM_CONT void VariantArrayHandleBase<TypeList>::CastAndCallImpl(std::true_type,
+                                                                 StorageTagList,
+                                                                 Functor&& f,
+                                                                 Args&&... args) const
 {
+  using crossProduct = detail::ListTagDynamicTypes<TypeList, StorageTagList>;
+
   bool called = false;
   const auto& ref = *this->ArrayContainer;
   vtkm::ListForEach(detail::VariantArrayHandleTry{},
-                    TypeList{},
+                    crossProduct{},
                     std::forward<Functor>(f),
                     called,
                     ref,
                     std::forward<Args>(args)...);
+  if (!called)
+  {
+    // try to fall back to using ArrayHandleVirtual
+    vtkm::ListForEach(detail::VariantArrayHandleTryFallback{},
+                      TypeList{},
+                      std::forward<Functor>(f),
+                      called,
+                      ref,
+                      std::forward<Args>(args)...);
+  }
   if (!called)
   {
     // throw an exception
@@ -363,7 +482,7 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& obj)
   {
-    vtkm::cont::CastAndCall(obj, internal::VariantArrayHandleSerializeFunctor{}, bb);
+    obj.CastAndCall(vtkm::ListTagEmpty(), internal::VariantArrayHandleSerializeFunctor{}, bb);
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& obj)
