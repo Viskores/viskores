@@ -95,12 +95,6 @@ public:
   }
 };
 
-struct StorageListTagUnusual
-  : vtkm::ListTagBase<ArrayHandleWithUnusualStorage<vtkm::Id>::StorageTag,
-                      ArrayHandleWithUnusualStorage<std::string>::StorageTag>
-{
-};
-
 template <typename T>
 struct TestValueFunctor
 {
@@ -110,10 +104,44 @@ struct TestValueFunctor
 struct CheckFunctor
 {
   template <typename T>
-  void operator()(const vtkm::cont::ArrayHandleVirtual<T>& array, bool& called) const
+  void operator()(const vtkm::cont::ArrayHandle<T>& array,
+                  bool& calledBasic,
+                  bool& vtkmNotUsed(calledUnusual),
+                  bool& vtkmNotUsed(calledVirtual)) const
   {
-    called = true;
-    std::cout << "  Checking for type: " << typeid(T).name() << std::endl;
+    calledBasic = true;
+    std::cout << "  Checking for basic array type: " << typeid(T).name() << std::endl;
+
+    VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Unexpected array size.");
+
+    auto portal = array.GetPortalConstControl();
+    CheckPortal(portal);
+  }
+
+  template <typename T>
+  void operator()(
+    const vtkm::cont::ArrayHandle<T, typename ArrayHandleWithUnusualStorage<T>::StorageTag>& array,
+    bool& vtkmNotUsed(calledBasic),
+    bool& calledUnusual,
+    bool& vtkmNotUsed(calledVirtual)) const
+  {
+    calledUnusual = true;
+    std::cout << "  Checking for unusual array type: " << typeid(T).name() << std::endl;
+
+    VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Unexpected array size.");
+
+    auto portal = array.GetPortalConstControl();
+    CheckPortal(portal);
+  }
+
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandleVirtual<T>& array,
+                  bool& vtkmNotUsed(calledBasic),
+                  bool& vtkmNotUsed(calledUnusual),
+                  bool& calledVirtual) const
+  {
+    calledVirtual = true;
+    std::cout << "  Checking for virtual array type: " << typeid(T).name() << std::endl;
 
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Unexpected array size.");
 
@@ -132,28 +160,78 @@ void BasicArrayVariantChecks(const vtkm::cont::VariantArrayHandleBase<TypeList>&
                    "Dynamic array reports unexpected number of components.");
 }
 
-void CheckArrayVariant(vtkm::cont::VariantArrayHandle array, vtkm::IdComponent numComponents)
-{
-  BasicArrayVariantChecks(array, numComponents);
-
-  bool called = false;
-  array.CastAndCall(CheckFunctor(), called);
-
-  VTKM_TEST_ASSERT(
-    called, "The functor was never called (and apparently a bad value exception not thrown).");
-}
-
 template <typename TypeList>
 void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array,
-                       vtkm::IdComponent numComponents)
+                       vtkm::IdComponent numComponents,
+                       bool isBasicArray,
+                       bool isUnusualArray)
 {
   BasicArrayVariantChecks(array, numComponents);
 
-  bool called = false;
-  CastAndCall(array, CheckFunctor(), called);
+  std::cout << "  CastAndCall with default storage" << std::endl;
+  bool calledBasic = false;
+  bool calledUnusual = false;
+  bool calledVirtual = false;
+  CastAndCall(array, CheckFunctor(), calledBasic, calledUnusual, calledVirtual);
 
   VTKM_TEST_ASSERT(
-    called, "The functor was never called (and apparently a bad value exception not thrown).");
+    calledBasic || calledUnusual || calledVirtual,
+    "The functor was never called (and apparently a bad value exception not thrown).");
+  if (isBasicArray)
+  {
+    VTKM_TEST_ASSERT(calledBasic, "The functor was never called with the basic array fast path");
+    VTKM_TEST_ASSERT(!calledUnusual, "The functor was somehow called with the unusual fast path");
+    VTKM_TEST_ASSERT(!calledVirtual, "The functor was somehow called with the virtual path");
+  }
+  else
+  {
+    VTKM_TEST_ASSERT(!calledBasic, "The array somehow got cast to a basic storage.");
+    VTKM_TEST_ASSERT(!calledUnusual, "The array somehow got cast to an unusual storage.");
+  }
+
+  std::cout << "  CastAndCall with no storage" << std::endl;
+  calledBasic = false;
+  calledUnusual = false;
+  calledVirtual = false;
+  array.CastAndCall(
+    vtkm::ListTagEmpty(), CheckFunctor(), calledBasic, calledUnusual, calledVirtual);
+  VTKM_TEST_ASSERT(
+    calledBasic || calledUnusual || calledVirtual,
+    "The functor was never called (and apparently a bad value exception not thrown).");
+  VTKM_TEST_ASSERT(!calledBasic, "The array somehow got cast to a basic storage.");
+  VTKM_TEST_ASSERT(!calledUnusual, "The array somehow got cast to an unusual storage.");
+
+  std::cout << "  CastAndCall with extra storage" << std::endl;
+  calledBasic = false;
+  calledUnusual = false;
+  calledVirtual = false;
+  array.CastAndCall(vtkm::ListTagBase<vtkm::cont::StorageTagBasic,
+                                      ArrayHandleWithUnusualStorage<vtkm::Id>::StorageTag,
+                                      ArrayHandleWithUnusualStorage<std::string>::StorageTag>(),
+                    CheckFunctor(),
+                    calledBasic,
+                    calledUnusual,
+                    calledVirtual);
+  VTKM_TEST_ASSERT(
+    calledBasic || calledUnusual || calledVirtual,
+    "The functor was never called (and apparently a bad value exception not thrown).");
+  if (isBasicArray)
+  {
+    VTKM_TEST_ASSERT(calledBasic, "The functor was never called with the basic array fast path");
+    VTKM_TEST_ASSERT(!calledUnusual, "The functor was somehow called with the unusual fast path");
+    VTKM_TEST_ASSERT(!calledVirtual, "The functor was somehow called with the virtual path");
+  }
+  else if (isUnusualArray)
+  {
+    VTKM_TEST_ASSERT(calledUnusual, "The functor was never called with the unusual fast path");
+    VTKM_TEST_ASSERT(!calledBasic, "The functor was somehow called with the basic fast path");
+    VTKM_TEST_ASSERT(!calledVirtual, "The functor was somehow called with the virtual path");
+  }
+  else
+  {
+    VTKM_TEST_ASSERT(!calledBasic, "The array somehow got cast to a basic storage.");
+    VTKM_TEST_ASSERT(!calledUnusual, "The array somehow got cast to an unusual storage.");
+  }
 }
 
 template <typename T>
@@ -196,7 +274,7 @@ template <typename T, typename ArrayVariantType>
 void TryNewInstance(T, ArrayVariantType originalArray)
 {
   // This check should already have been performed by caller, but just in case.
-  CheckArrayVariant(originalArray, vtkm::VecTraits<T>::NUM_COMPONENTS);
+  CheckArrayVariant(originalArray, vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 
   std::cout << "Create new instance of array." << std::endl;
   ArrayVariantType newArray = originalArray.NewInstance();
@@ -212,7 +290,7 @@ void TryNewInstance(T, ArrayVariantType originalArray)
   {
     staticArray.GetPortalControl().Set(index, TestValue(index + 100, T()));
   }
-  CheckArrayVariant(originalArray, vtkm::VecTraits<T>::NUM_COMPONENTS);
+  CheckArrayVariant(originalArray, vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 
   std::cout << "Set the new static array to expected values and make sure the new" << std::endl
             << "dynamic array points to the same new values." << std::endl;
@@ -220,7 +298,7 @@ void TryNewInstance(T, ArrayVariantType originalArray)
   {
     staticArray.GetPortalControl().Set(index, TestValue(index, T()));
   }
-  CheckArrayVariant(newArray, vtkm::VecTraits<T>::NUM_COMPONENTS);
+  CheckArrayVariant(newArray, vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 }
 
 template <typename T>
@@ -228,7 +306,7 @@ void TryDefaultType(T)
 {
   vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
 
-  CheckArrayVariant(array, vtkm::VecTraits<T>::NUM_COMPONENTS);
+  CheckArrayVariant(array, vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 
   TryNewInstance(T(), array);
 }
@@ -240,7 +318,8 @@ struct TryBasicVTKmType
   {
     vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
 
-    CheckArrayVariant(array.ResetTypes(vtkm::TypeListTagAll()), vtkm::VecTraits<T>::NUM_COMPONENTS);
+    CheckArrayVariant(
+      array.ResetTypes(vtkm::TypeListTagAll()), vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 
     TryNewInstance(T(), array.ResetTypes(vtkm::TypeListTagAll()));
   }
@@ -253,7 +332,7 @@ void TryUnusualType()
 
   try
   {
-    CheckArrayVariant(array, 1);
+    CheckArrayVariant(array, 1, true, false);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
   }
   catch (vtkm::cont::ErrorBadValue&)
@@ -261,7 +340,7 @@ void TryUnusualType()
     std::cout << "  Caught exception for unrecognized type." << std::endl;
   }
 
-  CheckArrayVariant(array.ResetTypes(TypeListTagString()), 1);
+  CheckArrayVariant(array.ResetTypes(TypeListTagString()), 1, true, false);
   std::cout << "  Found type when type list was reset." << std::endl;
 }
 
@@ -271,7 +350,7 @@ void TryUnusualStorage()
 
   try
   {
-    CheckArrayVariant(array, 1);
+    CheckArrayVariant(array, 1, false, true);
   }
   catch (...)
   {
@@ -285,7 +364,7 @@ void TryUnusualTypeAndStorage()
 
   try
   {
-    CheckArrayVariant(array, 1);
+    CheckArrayVariant(array, 1, false, true);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type/storage.");
   }
   catch (vtkm::cont::ErrorBadValue&)
@@ -295,7 +374,7 @@ void TryUnusualTypeAndStorage()
 
   try
   {
-    CheckArrayVariant(array.ResetTypes(TypeListTagString()), 1);
+    CheckArrayVariant(array.ResetTypes(TypeListTagString()), 1, false, true);
   }
   catch (...)
   {
