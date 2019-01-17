@@ -26,6 +26,8 @@
 
 #include <vtkm/cont/VariantArrayHandle.h>
 
+#include <sstream>
+
 namespace vtkm
 {
 namespace worklet

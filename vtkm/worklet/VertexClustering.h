@@ -382,7 +382,7 @@ public:
     vtkm::cont::VariantArrayHandle repPointArray;
     {
       vtkm::worklet::Keys<vtkm::Id> keys;
-      keys.BuildArrays(pointCidArray, vtkm::worklet::Keys<vtkm::Id>::SortType::Stable);
+      keys.BuildArrays(pointCidArray, vtkm::worklet::KeysSortType::Stable);
 
       // For mapping properties, this map will select an arbitrary point from
       // the cluster:

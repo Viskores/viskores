@@ -106,6 +106,7 @@ set(sources_no_device
 # This is a list of sources that has code that runs on devices and might need to
 # be compiled with a device-specific compiler (like CUDA).
 set(sources_device
+  Keys.cxx
   ScatterCounting.cxx
   )
 
