@@ -57,21 +57,6 @@ public:
   }
 };
 
-class TestAtomicArrayWorklet : public vtkm::worklet::WorkletMapField
-{
-public:
-  using ControlSignature = void(FieldIn, AtomicArrayInOut);
-  using ExecutionSignature = void(WorkIndex, _2);
-  using InputDomain = _1;
-
-  template <typename AtomicArrayType>
-  VTKM_EXEC void operator()(const vtkm::Id& index, const AtomicArrayType& atomicArray) const
-  {
-    using ValueType = typename AtomicArrayType::ValueType;
-    atomicArray.Add(0, static_cast<ValueType>(index));
-  }
-};
-
 namespace map_whole_array
 {
 
@@ -121,37 +106,6 @@ struct DoTestWholeArrayWorklet
   }
 };
 
-struct DoTestAtomicArrayWorklet
-{
-  using WorkletType = TestAtomicArrayWorklet;
-
-  // This just demonstrates that the WholeArray tags support dynamic arrays.
-  VTKM_CONT
-  void CallWorklet(const vtkm::cont::VariantArrayHandle& inOutArray) const
-  {
-    std::cout << "Create and run dispatcher." << std::endl;
-    vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), inOutArray);
-  }
-
-  template <typename T>
-  VTKM_CONT void operator()(T) const
-  {
-    std::cout << "Set up data." << std::endl;
-    T inOutValue = 0;
-
-    vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle(&inOutValue, 1);
-
-    this->CallWorklet(vtkm::cont::VariantArrayHandle(inOutHandle));
-
-    std::cout << "Check result." << std::endl;
-    T result = inOutHandle.GetPortalConstControl().Get(0);
-
-    VTKM_TEST_ASSERT(result == (ARRAY_SIZE * (ARRAY_SIZE - 1)) / 2,
-                     "Got wrong summation in atomic array.");
-  }
-};
-
 void TestWorkletMapFieldExecArg(vtkm::cont::DeviceAdapterId id)
 {
   std::cout << "Testing Worklet with WholeArray on device adapter: " << id.GetName() << std::endl;
@@ -159,10 +113,6 @@ void TestWorkletMapFieldExecArg(vtkm::cont::DeviceAdapterId id)
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(map_whole_array::DoTestWholeArrayWorklet(),
                                    vtkm::TypeListTagCommon());
-
-  std::cout << "--- Worklet accepting atomics." << std::endl;
-  vtkm::testing::Testing::TryTypes(map_whole_array::DoTestAtomicArrayWorklet(),
-                                   vtkm::cont::AtomicArrayTypeListTag());
 }
 
 } // anonymous namespace
