@@ -65,13 +65,15 @@ public:
   VTKM_EXEC void operator()(T index) const
   {
     //Todo: rename this function to DoTaskSingular
-    detail::DoWorkletInvokeFunctor(this->Worklet,
-                                   this->Invocation,
-                                   this->Worklet.GetThreadIndices(index,
-                                                                  this->Invocation.OutputToInputMap,
-                                                                  this->Invocation.VisitArray,
-                                                                  this->Invocation.GetInputDomain(),
-                                                                  GlobalIndexOffset));
+    detail::DoWorkletInvokeFunctor(
+      this->Worklet,
+      this->Invocation,
+      this->Worklet.GetThreadIndices(index,
+                                     this->Invocation.OutputToInputMap,
+                                     this->Invocation.VisitArray,
+                                     this->Invocation.ThreadToOutputMap,
+                                     this->Invocation.GetInputDomain(),
+                                     GlobalIndexOffset));
   }
 
 private:

@@ -153,6 +153,7 @@ template <typename WorkletType,
           vtkm::IdComponent InputDomainIndex,
           typename OutputToInputMapType,
           typename VisitArrayType,
+          typename ThreadToOutputMapType,
           typename ThreadIndicesType,
           $template_params(num_params)>
 VTKM_EXEC void DoWorkletInvokeFunctor(
@@ -162,7 +163,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    vtkm::internal::FunctionInterface<$signature(num_params)>,
                                    InputDomainIndex,
                                    OutputToInputMapType,
-                                   VisitArrayType>& invocation,
+                                   VisitArrayType, ThreadToOutputMapType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
   using Invocation =  vtkm::internal::Invocation<ParameterInterface,
@@ -212,7 +213,7 @@ template <typename WorkletType,
           typename ControlInterface,
           vtkm::IdComponent InputDomainIndex,
           typename OutputToInputMapType,
-          typename VisitArrayType,
+          typename VisitArrayType, typename ThreadToOutputMapType,
           typename ThreadIndicesType,
           $template_params(num_params, start=1)>
 VTKM_EXEC void DoWorkletInvokeFunctor(
@@ -222,7 +223,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
                                    InputDomainIndex,
                                    OutputToInputMapType,
-                                   VisitArrayType>& invocation,
+                                   VisitArrayType, ThreadToOutputMapType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
   using Invocation =
