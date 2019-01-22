@@ -365,9 +365,10 @@ void TestTaskStrided()
 
 } // anonymous namespace
 
-int UnitTestTaskStrided(int, char* [])
+int UnitTestTaskStrided(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestTaskStrided<vtkm::cont::DeviceAdapterTagCuda>);
+  return vtkm::cont::testing::Testing::Run(
+    TestTaskStrided<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 }
 
 #if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)

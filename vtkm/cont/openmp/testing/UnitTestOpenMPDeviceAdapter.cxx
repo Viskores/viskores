@@ -24,9 +24,10 @@
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-int UnitTestOpenMPDeviceAdapter(int, char* [])
+int UnitTestOpenMPDeviceAdapter(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
-  return vtkm::cont::testing::TestingDeviceAdapter<vtkm::cont::DeviceAdapterTagOpenMP>::Run();
+  return vtkm::cont::testing::TestingDeviceAdapter<vtkm::cont::DeviceAdapterTagOpenMP>::Run(argc,
+                                                                                            argv);
 }

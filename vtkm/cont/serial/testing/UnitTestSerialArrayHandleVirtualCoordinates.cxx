@@ -27,10 +27,10 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/TestingArrayHandleVirtualCoordinates.h>
 
-int UnitTestSerialArrayHandleVirtualCoordinates(int, char* [])
+int UnitTestSerialArrayHandleVirtualCoordinates(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::TestingArrayHandleVirtualCoordinates<
-    vtkm::cont::DeviceAdapterTagSerial>::Run();
+    vtkm::cont::DeviceAdapterTagSerial>::Run(argc, argv);
 }

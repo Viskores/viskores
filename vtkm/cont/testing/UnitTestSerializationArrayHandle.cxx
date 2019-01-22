@@ -512,7 +512,7 @@ void TestArrayHandleSerialization()
 } // anonymous namespace
 
 //-----------------------------------------------------------------------------
-int UnitTestSerializationArrayHandle(int, char* [])
+int UnitTestSerializationArrayHandle(int argc, char* argv[])
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
 
@@ -525,7 +525,7 @@ int UnitTestSerializationArrayHandle(int, char* [])
   diy::mpi::broadcast(comm, seed, 0);
   generator.seed(seed);
 
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleSerialization);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleSerialization, argc, argv);
 }
 
 //-----------------------------------------------------------------------------

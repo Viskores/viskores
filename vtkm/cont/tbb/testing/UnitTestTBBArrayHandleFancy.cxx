@@ -26,9 +26,10 @@
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 #include <vtkm/cont/testing/TestingFancyArrayHandles.h>
 
-int UnitTestTBBArrayHandleFancy(int, char* [])
+int UnitTestTBBArrayHandleFancy(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
-  return vtkm::cont::testing::TestingFancyArrayHandles<vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingFancyArrayHandles<vtkm::cont::DeviceAdapterTagTBB>::Run(argc,
+                                                                                             argv);
 }

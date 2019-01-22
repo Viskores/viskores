@@ -81,7 +81,7 @@ static void TestHash()
 
 } // anonymous namespace
 
-int UnitTestHash(int, char* [])
+int UnitTestHash(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestHash);
+  return vtkm::testing::Testing::Run(TestHash, argc, argv);
 }

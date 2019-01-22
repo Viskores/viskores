@@ -21,8 +21,10 @@
 #include <vtkm/interop/testing/TestingTransferFancyHandles.h>
 #include <vtkm/rendering/CanvasEGL.h>
 
-int UnitTestFancyTransferEGL(int, char* [])
+int UnitTestFancyTransferEGL(int argc, char* argv[])
 {
+  vtkm::cont::Initialize(argc, argv);
+
   //get egl canvas to construct a context for us
   vtkm::rendering::CanvasEGL canvas(1024, 1024);
   canvas.Initialize();

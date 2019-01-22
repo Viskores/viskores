@@ -46,7 +46,7 @@ void TestTypeSizes()
 }
 }
 
-int UnitTestConfigureFor32(int, char* [])
+int UnitTestConfigureFor32(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestTypeSizes);
+  return vtkm::testing::Testing::Run(TestTypeSizes, argc, argv);
 }

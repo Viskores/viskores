@@ -277,8 +277,8 @@ void TestDataSetBuilderExplicit()
 
 } // namespace DataSetBuilderExplicitNamespace
 
-int UnitTestDataSetBuilderExplicit(int, char* [])
+int UnitTestDataSetBuilderExplicit(int argc, char* argv[])
 {
   using namespace DataSetBuilderExplicitNamespace;
-  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderExplicit);
+  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderExplicit, argc, argv);
 }

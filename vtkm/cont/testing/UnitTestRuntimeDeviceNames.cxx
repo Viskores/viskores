@@ -109,7 +109,7 @@ void TestNames()
 
 } // end anon namespace
 
-int UnitTestRuntimeDeviceNames(int, char* [])
+int UnitTestRuntimeDeviceNames(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestNames);
+  return vtkm::cont::testing::Testing::Run(TestNames, argc, argv);
 }

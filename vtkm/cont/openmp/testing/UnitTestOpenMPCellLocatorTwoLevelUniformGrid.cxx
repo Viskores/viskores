@@ -23,10 +23,10 @@
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/testing/TestingCellLocatorTwoLevelUniformGrid.h>
 
-int UnitTestOpenMPCellLocatorTwoLevelUniformGrid(int, char* [])
+int UnitTestOpenMPCellLocatorTwoLevelUniformGrid(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorTwoLevelUniformGrid<vtkm::cont::DeviceAdapterTagOpenMP>);
+    TestingCellLocatorTwoLevelUniformGrid<vtkm::cont::DeviceAdapterTagOpenMP>, argc, argv);
 }

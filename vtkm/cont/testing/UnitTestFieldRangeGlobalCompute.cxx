@@ -212,7 +212,7 @@ static void TestFieldRangeGlobalCompute()
 };
 }
 
-int UnitTestFieldRangeGlobalCompute(int, char* [])
+int UnitTestFieldRangeGlobalCompute(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldRangeGlobalCompute);
+  return vtkm::cont::testing::Testing::Run(TestFieldRangeGlobalCompute, argc, argv);
 }

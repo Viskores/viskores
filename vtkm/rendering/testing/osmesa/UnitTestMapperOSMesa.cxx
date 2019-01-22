@@ -60,7 +60,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperOSMesa(int, char* [])
+int UnitTestMapperOSMesa(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

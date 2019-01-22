@@ -361,7 +361,7 @@ void TestComponentMapValidator()
 
 } // end anon namespace
 
-int UnitTestArrayHandleSwizzle(int, char* [])
+int UnitTestArrayHandleSwizzle(int argc, char* argv[])
 {
   try
   {
@@ -373,5 +373,5 @@ int UnitTestArrayHandleSwizzle(int, char* [])
     return EXIT_FAILURE;
   }
 
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleSwizzle);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleSwizzle, argc, argv);
 }

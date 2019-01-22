@@ -1375,10 +1375,10 @@ public:
   /// all the fancy array handles that vtkm supports. Returns an
   /// error code that can be returned from the main function of a test.
   ///
-  static VTKM_CONT int Run()
+  static VTKM_CONT int Run(int argc, char* argv[])
   {
     vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
-    return vtkm::cont::testing::Testing::Run(TestAll());
+    return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
   }
 };
 }

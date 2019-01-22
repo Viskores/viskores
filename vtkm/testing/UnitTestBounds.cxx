@@ -142,7 +142,7 @@ void TestBounds()
 
 } // anonymous namespace
 
-int UnitTestBounds(int, char* [])
+int UnitTestBounds(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestBounds);
+  return vtkm::testing::Testing::Run(TestBounds, argc, argv);
 }

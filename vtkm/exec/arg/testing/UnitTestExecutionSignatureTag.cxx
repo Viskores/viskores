@@ -44,7 +44,7 @@ void TestExecutionSignatures()
 
 } // anonymous namespace
 
-int UnitTestExecutionSignatureTag(int, char* [])
+int UnitTestExecutionSignatureTag(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestExecutionSignatures);
+  return vtkm::testing::Testing::Run(TestExecutionSignatures, argc, argv);
 }

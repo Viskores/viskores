@@ -162,7 +162,7 @@ void TestArrayManagerShare()
 
 } // Anonymous namespace
 
-int UnitTestArrayManagerExecutionShareWithControl(int, char* [])
+int UnitTestArrayManagerExecutionShareWithControl(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayManagerShare);
+  return vtkm::cont::testing::Testing::Run(TestArrayManagerShare, argc, argv);
 }

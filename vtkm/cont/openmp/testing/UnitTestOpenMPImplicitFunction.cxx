@@ -37,7 +37,7 @@ void TestImplicitFunctions()
 
 } // anonymous namespace
 
-int UnitTestOpenMPImplicitFunction(int, char* [])
+int UnitTestOpenMPImplicitFunction(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestImplicitFunctions);
+  return vtkm::cont::testing::Testing::Run(TestImplicitFunctions, argc, argv);
 }

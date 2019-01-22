@@ -27,9 +27,10 @@
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-int UnitTestTBBDeviceAdapter(int, char* [])
+int UnitTestTBBDeviceAdapter(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
-  return vtkm::cont::testing::TestingDeviceAdapter<vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingDeviceAdapter<vtkm::cont::DeviceAdapterTagTBB>::Run(argc,
+                                                                                         argv);
 }

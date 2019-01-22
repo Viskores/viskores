@@ -25,8 +25,8 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
 
-int UnitTestMath(int, char* [])
+int UnitTestMath(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(
-    UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagSerial>);
+    UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagSerial>, argc, argv);
 }

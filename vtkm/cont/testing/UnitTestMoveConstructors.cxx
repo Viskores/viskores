@@ -144,7 +144,7 @@ void TestContDataTypesHaveMoveSemantics()
 
 
 //-----------------------------------------------------------------------------
-int UnitTestMoveConstructors(int, char* [])
+int UnitTestMoveConstructors(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestContDataTypesHaveMoveSemantics);
+  return vtkm::cont::testing::Testing::Run(TestContDataTypesHaveMoveSemantics, argc, argv);
 }

@@ -102,7 +102,7 @@ void Detection()
 
 } // anonymous namespace
 
-int UnitTestRuntimeDeviceInformation(int, char* [])
+int UnitTestRuntimeDeviceInformation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Detection);
+  return vtkm::cont::testing::Testing::Run(Detection, argc, argv);
 }

@@ -46,16 +46,16 @@ void GoodAssert()
 
 } // anonymous namespace
 
-int UnitTestContTesting(int, char* [])
+int UnitTestContTesting(int argc, char* argv[])
 {
   std::cout << "-------\nThis call should fail." << std::endl;
-  if (vtkm::cont::testing::Testing::Run(TestFail) == 0)
+  if (vtkm::cont::testing::Testing::Run(TestFail, argc, argv) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
   }
   std::cout << "-------\nThis call should fail." << std::endl;
-  if (vtkm::cont::testing::Testing::Run(BadTestAssert) == 0)
+  if (vtkm::cont::testing::Testing::Run(BadTestAssert, argc, argv) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
@@ -63,5 +63,5 @@ int UnitTestContTesting(int, char* [])
 
   std::cout << "-------\nThis call should pass." << std::endl;
   // This is what your main function typically looks like.
-  return vtkm::cont::testing::Testing::Run(GoodAssert);
+  return vtkm::cont::testing::Testing::Run(GoodAssert, argc, argv);
 }

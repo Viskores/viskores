@@ -163,7 +163,7 @@ void TestArrayIteratorFromArrayPortal()
 
 } // Anonymous namespace
 
-int UnitTestIteratorFromArrayPortal(int, char* [])
+int UnitTestIteratorFromArrayPortal(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayIteratorFromArrayPortal);
+  return vtkm::cont::testing::Testing::Run(TestArrayIteratorFromArrayPortal, argc, argv);
 }

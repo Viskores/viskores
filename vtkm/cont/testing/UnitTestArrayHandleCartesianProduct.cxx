@@ -113,8 +113,8 @@ void TestArrayHandleCartesianProduct()
 
 } // namespace ArrayHandleCartesianProductNamespace
 
-int UnitTestArrayHandleCartesianProduct(int, char* [])
+int UnitTestArrayHandleCartesianProduct(int argc, char* argv[])
 {
   using namespace ArrayHandleCartesianProductNamespace;
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleCartesianProduct);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleCartesianProduct, argc, argv);
 }

@@ -192,7 +192,7 @@ void TestCellSetExplicit()
 
 } // anonymous namespace
 
-int UnitTestCellSetExplicit(int, char* [])
+int UnitTestCellSetExplicit(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellSetExplicit);
+  return vtkm::cont::testing::Testing::Run(TestCellSetExplicit, argc, argv);
 }

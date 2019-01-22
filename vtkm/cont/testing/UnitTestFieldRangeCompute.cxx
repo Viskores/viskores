@@ -164,7 +164,7 @@ static void TestFieldRangeCompute()
                                                  vtkm::make_Vec(2048, 2048, 2048));
 };
 
-int UnitTestFieldRangeCompute(int, char* [])
+int UnitTestFieldRangeCompute(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldRangeCompute);
+  return vtkm::cont::testing::Testing::Run(TestFieldRangeCompute, argc, argv);
 }

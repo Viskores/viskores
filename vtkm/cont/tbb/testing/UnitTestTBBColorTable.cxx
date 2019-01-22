@@ -27,9 +27,9 @@
 
 #include <vtkm/cont/testing/TestingColorTable.h>
 
-int UnitTestTBBColorTable(int, char* [])
+int UnitTestTBBColorTable(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
-  return vtkm::cont::testing::TestingColorTable<vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingColorTable<vtkm::cont::DeviceAdapterTagTBB>::Run(argc, argv);
 }

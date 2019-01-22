@@ -417,7 +417,7 @@ void TestDispatcherBase()
 
 } // anonymous namespace
 
-int UnitTestDispatcherBase(int, char* [])
+int UnitTestDispatcherBase(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDispatcherBase);
+  return vtkm::cont::testing::Testing::Run(TestDispatcherBase, argc, argv);
 }

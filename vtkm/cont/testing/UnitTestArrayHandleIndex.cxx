@@ -41,8 +41,8 @@ void TestArrayHandleIndex()
 
 } // namespace UnitTestArrayHandleIndexNamespace
 
-int UnitTestArrayHandleIndex(int, char* [])
+int UnitTestArrayHandleIndex(int argc, char* argv[])
 {
   using namespace UnitTestArrayHandleIndexNamespace;
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleIndex);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleIndex, argc, argv);
 }

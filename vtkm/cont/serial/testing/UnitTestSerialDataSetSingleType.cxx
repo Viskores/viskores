@@ -26,9 +26,10 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/TestingDataSetSingleType.h>
 
-int UnitTestSerialDataSetSingleType(int, char* [])
+int UnitTestSerialDataSetSingleType(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
-  return vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagSerial>::Run(
+    argc, argv);
 }

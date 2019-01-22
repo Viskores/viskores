@@ -87,7 +87,7 @@ void TestCheckArray()
 
 } // anonymous namespace
 
-int UnitTestTypeCheckArray(int, char* [])
+int UnitTestTypeCheckArray(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCheckArray);
+  return vtkm::cont::testing::Testing::Run(TestCheckArray, argc, argv);
 }

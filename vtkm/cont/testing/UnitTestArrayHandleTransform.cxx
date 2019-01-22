@@ -188,7 +188,7 @@ void TestArrayHandleTransform()
 
 } // anonymous namespace
 
-int UnitTestArrayHandleTransform(int, char* [])
+int UnitTestArrayHandleTransform(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleTransform);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleTransform, argc, argv);
 }

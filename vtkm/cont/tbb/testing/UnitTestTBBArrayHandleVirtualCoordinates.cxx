@@ -26,10 +26,10 @@
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 #include <vtkm/cont/testing/TestingArrayHandleVirtualCoordinates.h>
 
-int UnitTestTBBArrayHandleVirtualCoordinates(int, char* [])
+int UnitTestTBBArrayHandleVirtualCoordinates(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
   return vtkm::cont::testing::TestingArrayHandleVirtualCoordinates<
-    vtkm::cont::DeviceAdapterTagTBB>::Run();
+    vtkm::cont::DeviceAdapterTagTBB>::Run(argc, argv);
 }

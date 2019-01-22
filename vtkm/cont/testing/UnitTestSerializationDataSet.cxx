@@ -107,7 +107,7 @@ void TestDataSetSerialization()
 
 } // anonymous namespace
 
-int UnitTestSerializationDataSet(int, char* [])
+int UnitTestSerializationDataSet(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDataSetSerialization);
+  return vtkm::cont::testing::Testing::Run(TestDataSetSerialization, argc, argv);
 }

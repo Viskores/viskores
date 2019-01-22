@@ -624,7 +624,7 @@ void TestReadingVTKDataSet()
   TestReadingStructuredGridBin();
 }
 
-int UnitTestVTKDataSetReader(int, char* [])
+int UnitTestVTKDataSetReader(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestReadingVTKDataSet);
+  return vtkm::cont::testing::Testing::Run(TestReadingVTKDataSet, argc, argv);
 }

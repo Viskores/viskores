@@ -25,10 +25,10 @@
 
 #include <vtkm/cont/testing/TestingCellLocatorRectilinearGrid.h>
 
-int UnitTestSerialCellLocatorRectilinearGrid(int, char* [])
+int UnitTestSerialCellLocatorRectilinearGrid(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorRectilinearGrid<vtkm::cont::DeviceAdapterTagSerial>());
+    TestingCellLocatorRectilinearGrid<vtkm::cont::DeviceAdapterTagSerial>(), argc, argv);
 }

@@ -260,7 +260,7 @@ void TestArrayHandlePermutation()
 
 } // anonymous namespace
 
-int UnitTestArrayHandlePermutation(int, char* [])
+int UnitTestArrayHandlePermutation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandlePermutation);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandlePermutation, argc, argv);
 }

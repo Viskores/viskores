@@ -84,7 +84,7 @@ void TestArrayHandleImplicit()
 
 } // anonymous namespace
 
-int UnitTestArrayHandleImplicit(int, char* [])
+int UnitTestArrayHandleImplicit(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleImplicit);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleImplicit, argc, argv);
 }

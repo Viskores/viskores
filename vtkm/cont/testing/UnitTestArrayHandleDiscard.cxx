@@ -135,8 +135,8 @@ void TestArrayHandleDiscard()
 
 } // end namespace UnitTestArrayHandleDiscardDetail
 
-int UnitTestArrayHandleDiscard(int, char* [])
+int UnitTestArrayHandleDiscard(int argc, char* argv[])
 {
   using namespace UnitTestArrayHandleDiscardDetail;
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleDiscard);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleDiscard, argc, argv);
 }

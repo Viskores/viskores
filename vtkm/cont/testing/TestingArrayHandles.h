@@ -456,10 +456,10 @@ private:
   };
 
 public:
-  static VTKM_CONT int Run()
+  static VTKM_CONT int Run(int argc, char* argv[])
   {
     vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
-    return vtkm::cont::testing::Testing::Run(TryArrayHandleType());
+    return vtkm::cont::testing::Testing::Run(TryArrayHandleType(), argc, argv);
   }
 };
 }

@@ -229,7 +229,7 @@ void TestWorkletInvokeFunctor()
 
 } // anonymous namespace
 
-int UnitTestWorkletInvokeFunctor(int, char* [])
+int UnitTestWorkletInvokeFunctor(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestWorkletInvokeFunctor);
+  return vtkm::testing::Testing::Run(TestWorkletInvokeFunctor, argc, argv);
 }

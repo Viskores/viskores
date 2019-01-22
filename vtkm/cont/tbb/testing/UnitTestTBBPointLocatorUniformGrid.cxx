@@ -25,10 +25,10 @@
 
 #include <vtkm/cont/testing/TestingPointLocatorUniformGrid.h>
 
-int UnitTestTBBPointLocatorUniformGrid(int, char* [])
+int UnitTestTBBPointLocatorUniformGrid(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
   return vtkm::cont::testing::Testing::Run(
-    TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagTBB>());
+    TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagTBB>(), argc, argv);
 }

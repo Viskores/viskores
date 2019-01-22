@@ -75,7 +75,7 @@ void TestExecObjectFetch()
 
 } // anonymous namespace
 
-int UnitTestFetchExecObject(int, char* [])
+int UnitTestFetchExecObject(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestExecObjectFetch);
+  return vtkm::testing::Testing::Run(TestExecObjectFetch, argc, argv);
 }

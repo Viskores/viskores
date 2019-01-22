@@ -589,12 +589,12 @@ public:
     }
   };
 
-  static int Run()
+  static int Run(int argc, char* argv[])
   {
     //We need to verify the color table runs on this specific device
     //so we need to force our single device
     vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
-    return vtkm::cont::testing::Testing::Run(TestAll());
+    return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
   }
 };
 }

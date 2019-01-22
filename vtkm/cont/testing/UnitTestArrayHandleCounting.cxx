@@ -143,8 +143,8 @@ void TestArrayHandleCounting()
 
 } // namespace UnitTestArrayHandleCountingNamespace
 
-int UnitTestArrayHandleCounting(int, char* [])
+int UnitTestArrayHandleCounting(int argc, char* argv[])
 {
   using namespace UnitTestArrayHandleCountingNamespace;
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleCounting);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleCounting, argc, argv);
 }

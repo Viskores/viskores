@@ -51,7 +51,7 @@ void TestBufferTypePicker()
 }
 }
 
-int UnitTestBufferTypePicker(int, char* [])
+int UnitTestBufferTypePicker(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestBufferTypePicker);
+  return vtkm::cont::testing::Testing::Run(TestBufferTypePicker, argc, argv);
 }

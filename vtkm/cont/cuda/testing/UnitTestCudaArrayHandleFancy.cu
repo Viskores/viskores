@@ -28,11 +28,11 @@
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
 #include <vtkm/cont/testing/TestingFancyArrayHandles.h>
 
-int UnitTestCudaArrayHandleFancy(int, char* [])
+int UnitTestCudaArrayHandleFancy(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
-  int result =
-    vtkm::cont::testing::TestingFancyArrayHandles<vtkm::cont::DeviceAdapterTagCuda>::Run();
+  int result = vtkm::cont::testing::TestingFancyArrayHandles<vtkm::cont::DeviceAdapterTagCuda>::Run(
+    argc, argv);
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

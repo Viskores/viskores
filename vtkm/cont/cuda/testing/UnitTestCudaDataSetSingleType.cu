@@ -28,11 +28,11 @@
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
 #include <vtkm/cont/testing/TestingDataSetSingleType.h>
 
-int UnitTestCudaDataSetSingleType(int, char* [])
+int UnitTestCudaDataSetSingleType(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
-  int result =
-    vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagCuda>::Run();
+  int result = vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagCuda>::Run(
+    argc, argv);
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

@@ -47,7 +47,7 @@ void TestControlSignatures()
 
 } // anonymous namespace
 
-int UnitTestControlSignatureTag(int, char* [])
+int UnitTestControlSignatureTag(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestControlSignatures);
+  return vtkm::cont::testing::Testing::Run(TestControlSignatures, argc, argv);
 }

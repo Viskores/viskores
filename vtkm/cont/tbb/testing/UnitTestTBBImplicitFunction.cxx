@@ -36,9 +36,9 @@ void TestImplicitFunctions()
 
 } // anonymous namespace
 
-int UnitTestTBBImplicitFunction(int, char* [])
+int UnitTestTBBImplicitFunction(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
-  return vtkm::cont::testing::Testing::Run(TestImplicitFunctions);
+  return vtkm::cont::testing::Testing::Run(TestImplicitFunctions, argc, argv);
 }

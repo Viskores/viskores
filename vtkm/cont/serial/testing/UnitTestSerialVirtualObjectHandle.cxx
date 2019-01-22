@@ -37,9 +37,9 @@ void TestVirtualObjectHandle()
 
 } // anonymous namespace
 
-int UnitTestSerialVirtualObjectHandle(int, char* [])
+int UnitTestSerialVirtualObjectHandle(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
-  return vtkm::cont::testing::Testing::Run(TestVirtualObjectHandle);
+  return vtkm::cont::testing::Testing::Run(TestVirtualObjectHandle, argc, argv);
 }

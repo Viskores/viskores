@@ -193,7 +193,7 @@ void TestCellSetPermutation()
 
 } // anonymous namespace
 
-int UnitTestCellSetPermutation(int, char* [])
+int UnitTestCellSetPermutation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellSetPermutation);
+  return vtkm::cont::testing::Testing::Run(TestCellSetPermutation, argc, argv);
 }

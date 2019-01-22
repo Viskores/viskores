@@ -22,8 +22,10 @@
 #include <vtkm/interop/testing/TestingTransferFancyHandles.h>
 #include <vtkm/rendering/CanvasOSMesa.h>
 
-int UnitTestFancyTransferOSMesa(int, char* [])
+int UnitTestFancyTransferOSMesa(int argc, char* argv[])
 {
+  vtkm::cont::Initialize(argc, argv);
+
   //get osmesa canvas to construct a context for us
   vtkm::rendering::CanvasOSMesa canvas(1024, 1024);
   canvas.Initialize();

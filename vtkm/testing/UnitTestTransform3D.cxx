@@ -214,7 +214,7 @@ void TestTransforms()
 
 } // anonymous namespace
 
-int UnitTestTransform3D(int, char* [])
+int UnitTestTransform3D(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestTransforms);
+  return vtkm::testing::Testing::Run(TestTransforms, argc, argv);
 }

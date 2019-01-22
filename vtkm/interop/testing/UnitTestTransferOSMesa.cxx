@@ -24,8 +24,10 @@
 //This sets up testing with the default device adapter and array container
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
-int UnitTestTransferOSMesa(int, char* [])
+int UnitTestTransferOSMesa(int argc, char* argv[])
 {
+  vtkm::cont::Initialize(argc, argv);
+
   //get osmesa canvas to construct a context for us
   vtkm::rendering::CanvasOSMesa canvas(1024, 1024);
   canvas.Initialize();

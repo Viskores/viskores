@@ -236,7 +236,7 @@ void TestArrayHandleExtractComponent()
 
 } // end anon namespace
 
-int UnitTestArrayHandleExtractComponent(int, char* [])
+int UnitTestArrayHandleExtractComponent(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleExtractComponent);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleExtractComponent, argc, argv);
 }

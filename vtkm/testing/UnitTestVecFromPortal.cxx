@@ -104,7 +104,7 @@ void VecFromPortalTest()
 
 } // namespace UnitTestVecFromPortalNamespace
 
-int UnitTestVecFromPortal(int, char* [])
+int UnitTestVecFromPortal(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(UnitTestVecFromPortalNamespace::VecFromPortalTest);
+  return vtkm::testing::Testing::Run(UnitTestVecFromPortalNamespace::VecFromPortalTest, argc, argv);
 }

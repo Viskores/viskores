@@ -21,9 +21,9 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/exec/internal/testing/TestingTaskTiling.h>
 
-int UnitTestTaskTilingSerial(int, char* [])
+int UnitTestTaskTilingSerial(int argc, char* argv[])
 {
 
   return vtkm::cont::testing::Testing::Run(
-    vtkm::exec::internal::testing::TestTaskTiling<vtkm::cont::DeviceAdapterTagSerial>);
+    vtkm::exec::internal::testing::TestTaskTiling<vtkm::cont::DeviceAdapterTagSerial>, argc, argv);
 }

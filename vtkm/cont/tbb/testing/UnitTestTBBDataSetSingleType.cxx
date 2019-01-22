@@ -27,9 +27,10 @@
 
 #include <vtkm/cont/testing/TestingDataSetSingleType.h>
 
-int UnitTestTBBDataSetSingleType(int, char* [])
+int UnitTestTBBDataSetSingleType(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
-  return vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagTBB>::Run(argc,
+                                                                                             argv);
 }

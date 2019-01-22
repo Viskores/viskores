@@ -187,7 +187,7 @@ void TestExecNeighborhoodFetch()
 
 } // anonymous namespace
 
-int UnitTestFetchArrayNeighborhoodIn(int, char* [])
+int UnitTestFetchArrayNeighborhoodIn(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestExecNeighborhoodFetch);
+  return vtkm::testing::Testing::Run(TestExecNeighborhoodFetch, argc, argv);
 }

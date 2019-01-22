@@ -51,7 +51,7 @@ struct Testing
 public:
 
   template <class Func>
-  static VTKM_CONT int Run(Func function, int argc = 0, char* argv[] = nullptr)
+  static VTKM_CONT int Run(Func function, int argc, char* argv[])
   {
     vtkm::cont::Initialize(argc, argv);
 

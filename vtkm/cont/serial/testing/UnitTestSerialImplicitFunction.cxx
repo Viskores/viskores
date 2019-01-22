@@ -36,9 +36,9 @@ void TestImplicitFunctions()
 
 } // anonymous namespace
 
-int UnitTestSerialImplicitFunction(int, char* [])
+int UnitTestSerialImplicitFunction(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
-  return vtkm::cont::testing::Testing::Run(TestImplicitFunctions);
+  return vtkm::cont::testing::Testing::Run(TestImplicitFunctions, argc, argv);
 }

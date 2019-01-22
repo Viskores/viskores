@@ -302,8 +302,8 @@ void TestDataSetBuilderRectilinear()
 
 } // namespace DataSetBuilderRectilinearNamespace
 
-int UnitTestDataSetBuilderRectilinear(int, char* [])
+int UnitTestDataSetBuilderRectilinear(int argc, char* argv[])
 {
   using namespace DataSetBuilderRectilinearNamespace;
-  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderRectilinear);
+  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderRectilinear, argc, argv);
 }

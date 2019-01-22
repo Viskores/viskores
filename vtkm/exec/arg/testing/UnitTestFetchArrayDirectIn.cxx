@@ -91,7 +91,7 @@ void TestExecObjectFetch()
 
 } // anonymous namespace
 
-int UnitTestFetchArrayDirectIn(int, char* [])
+int UnitTestFetchArrayDirectIn(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestExecObjectFetch);
+  return vtkm::testing::Testing::Run(TestExecObjectFetch, argc, argv);
 }

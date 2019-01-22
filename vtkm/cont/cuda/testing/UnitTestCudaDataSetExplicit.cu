@@ -27,10 +27,11 @@
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
 #include <vtkm/cont/testing/TestingDataSetExplicit.h>
 
-int UnitTestCudaDataSetExplicit(int, char* [])
+int UnitTestCudaDataSetExplicit(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
-  int result = vtkm::cont::testing::TestingDataSetExplicit<vtkm::cont::DeviceAdapterTagCuda>::Run();
+  int result =
+    vtkm::cont::testing::TestingDataSetExplicit<vtkm::cont::DeviceAdapterTagCuda>::Run(argc, argv);
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

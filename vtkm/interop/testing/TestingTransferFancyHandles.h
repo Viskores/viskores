@@ -267,7 +267,10 @@ public:
     }
   };
 
-  static int Run() { return vtkm::cont::testing::Testing::Run(TestAll()); }
+  static int Run(int argc, char* argv[])
+  {
+    return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
+  }
 };
 }
 }

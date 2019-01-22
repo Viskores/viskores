@@ -75,34 +75,34 @@ void CleanTests()
 
 } // anonymous namespace
 
-int UnitTestTesting(int, char* [])
+int UnitTestTesting(int argc, char* argv[])
 {
   std::cout << "This call should fail." << std::endl;
-  if (vtkm::testing::Testing::Run(Fail) == 0)
+  if (vtkm::testing::Testing::Run(Fail, argc, argv) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
   }
   std::cout << "This call should fail." << std::endl;
-  if (vtkm::testing::Testing::Run(Fail2) == 0)
+  if (vtkm::testing::Testing::Run(Fail2, argc, argv) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
   }
   std::cout << "This call should fail." << std::endl;
-  if (vtkm::testing::Testing::Run(BadAssert) == 0)
+  if (vtkm::testing::Testing::Run(BadAssert, argc, argv) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
   }
   std::cout << "This call should fail." << std::endl;
-  if (vtkm::testing::Testing::Run(BadAssert2) == 0)
+  if (vtkm::testing::Testing::Run(BadAssert2, argc, argv) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
   }
   std::cout << "This call should fail." << std::endl;
-  if (vtkm::testing::Testing::Run(BadAssert3) == 0)
+  if (vtkm::testing::Testing::Run(BadAssert3, argc, argv) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
@@ -110,5 +110,5 @@ int UnitTestTesting(int, char* [])
 
   std::cout << "This call should pass." << std::endl;
   // This is what your main function typically looks like.
-  return vtkm::testing::Testing::Run(CleanTests);
+  return vtkm::testing::Testing::Run(CleanTests, argc, argv);
 }
