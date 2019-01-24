@@ -36,7 +36,7 @@ class VTKM_ALWAYS_EXPORT ErrorBadType : public Error
 {
 public:
   ErrorBadType(const std::string& message)
-    : Error(message)
+    : Error(message, true)
   {
   }
 };
