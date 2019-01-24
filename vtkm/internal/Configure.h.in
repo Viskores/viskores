@@ -20,8 +20,14 @@
 #ifndef vtk_m_internal_Configure_h
 #define vtk_m_internal_Configure_h
 
+// Defined when NVCC is compiling either __host__ or __device__ code.
 #ifdef __CUDACC__
 #define VTKM_CUDA
+#endif
+
+// Defined only when NVCC is compiling __device__ code.
+#ifdef __CUDA_ARCH__
+#define VTKM_CUDA_DEVICE_PASS
 #endif
 
 #if defined(_MSC_VER)

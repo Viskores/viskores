@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #endif // !VTKM_CUDA
 
-#if !defined(__CUDA_ARCH__)
+#if !defined(VTKM_CUDA_DEVICE_PASS)
 #define VTKM_USE_STL
 #include <algorithm>
 #endif
