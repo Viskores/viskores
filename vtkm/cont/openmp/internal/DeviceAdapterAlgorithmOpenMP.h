@@ -397,7 +397,7 @@ class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagOpenMP>
 {
 public:
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
+  static vtkm::exec::openmp::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
                                                              const InvocationType& invocation,
                                                              vtkm::Id,
                                                              vtkm::Id globalIndexOffset = 0)
@@ -406,7 +406,7 @@ public:
   }
 
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
+  static vtkm::exec::openmp::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
                                                              const InvocationType& invocation,
                                                              vtkm::Id3,
                                                              vtkm::Id globalIndexOffset = 0)
