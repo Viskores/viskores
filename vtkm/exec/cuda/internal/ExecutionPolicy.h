@@ -196,7 +196,7 @@ __host__ __device__::thrust::pair<OutputIterator1, OutputIterator2> reduce_by_ke
                           binary_op);
 
 //only sync if we are being invoked from the host
-#ifndef __CUDA_ARCH__
+#ifndef VTKM_CUDA_DEVICE_PASS
   VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
 #endif
 

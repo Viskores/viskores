@@ -325,12 +325,12 @@ public:
     return static_cast<vtkm::Id>((this->EndIterator - this->BeginIterator));
   }
 
-//The __CUDA_ARCH__ define makes sure that the device only signature
+//The VTKM_CUDA_DEVICE_PASS define makes sure that the device only signature
 //only shows up for the device compilation. This allows the nvcc compiler
 //to have separate host and device code paths for the same method. This
 //solves the problem of trying to call a device only method from a
 //device/host method
-#if __CUDA_ARCH__
+#ifdef VTKM_CUDA_DEVICE_PASS
   __device__ ValueType Get(vtkm::Id index) const
   {
     return vtkm::exec::cuda::internal::load_through_texture<ValueType>::get(this->BeginIterator +
