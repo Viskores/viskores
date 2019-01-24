@@ -45,6 +45,7 @@ set(unit_tests
   UnitTestNDimsEntropy.cxx
   UnitTestNDimsHistogram.cxx
   UnitTestNDimsHistMarginalization.cxx
+  UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx

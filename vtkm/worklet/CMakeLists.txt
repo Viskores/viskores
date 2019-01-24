@@ -49,6 +49,10 @@ set(headers
   NDimsHistMarginalization.h
   NDimsHistogram.h
   Normalize.h
+  OrientCellNormals.h
+  OrientNormals.h
+  OrientPointNormals.h
+  OrientPointAndCellNormals.h
   OscillatorSource.h
   ParticleAdvection.h
   PointAverage.h
