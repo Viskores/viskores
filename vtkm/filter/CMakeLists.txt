@@ -134,6 +134,7 @@ set(header_template_sources
 )
 
 vtkm_declare_headers(${headers})
+vtkm_declare_headers(${header_template_sources})
 
 add_subdirectory(internal)
 
