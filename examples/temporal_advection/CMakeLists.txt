@@ -28,14 +28,14 @@ project(TemporalAdvection CXX)
 find_package(VTKm REQUIRED QUIET)
 
 add_executable(Temporal_Advection_SERIAL TemporalAdvection.cxx)
-target_link_libraries(Temporal_Advection_SERIAL PRIVATE vtkm_cont)
+target_link_libraries(Temporal_Advection_SERIAL PRIVATE vtkm_filter)
 
 if(TARGET vtkm::tbb)
   add_executable(Temporal_Advection_TBB TemporalAdvectionTBB.cxx)
-  target_link_libraries(Temporal_Advection_TBB PRIVATE vtkm_cont)
+  target_link_libraries(Temporal_Advection_TBB PRIVATE vtkm_filter)
 endif()
 
 if(TARGET vtkm::cuda)
   add_executable(Temporal_Advection_CUDA TemporalAdvection.cu)
-  target_link_libraries(Temporal_Advection_CUDA PRIVATE vtkm_cont)
+  target_link_libraries(Temporal_Advection_CUDA PRIVATE vtkm_filter)
 endif()

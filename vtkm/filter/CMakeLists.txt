@@ -136,6 +136,13 @@ set(header_template_sources
 vtkm_declare_headers(${headers})
 vtkm_declare_headers(${header_template_sources})
 
+# Create an interface library for vtkm_filter. At some point, this will be replaced with a real
+# library that contains pre-built filters. That would be created with the vtkm_library CMake
+# function (defined in VTKmWrappers.cmake).
+add_library(vtkm_filter INTERFACE)
+target_link_libraries(vtkm_filter INTERFACE vtkm_worklet)
+install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
+
 add_subdirectory(internal)
 
 #-----------------------------------------------------------------------------

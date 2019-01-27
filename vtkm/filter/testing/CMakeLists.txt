@@ -66,4 +66,8 @@ set(unit_tests
   UnitTestZFP.cxx
  )
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS)
+vtkm_unit_tests(
+  SOURCES ${unit_tests}
+  LIBRARIES vtkm_filter
+  ALL_BACKENDS
+  )
