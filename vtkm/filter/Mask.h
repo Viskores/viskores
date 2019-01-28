@@ -65,7 +65,6 @@ public:
 private:
   vtkm::Id Stride;
   bool CompactPoints;
-  vtkm::filter::CleanGrid Compactor;
   vtkm::worklet::Mask Worklet;
 };
 }

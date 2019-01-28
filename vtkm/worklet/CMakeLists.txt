@@ -62,6 +62,7 @@ set(headers
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
+  PointMerge.h
   PointTransform.h
   Probe.h
   RemoveUnusedPoints.h

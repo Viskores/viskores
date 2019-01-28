@@ -35,6 +35,8 @@ vtkm::cont::DataSet MakeDataTestSet1()
   vtkm::cont::DataSet ds = MakeTestDataSet().Make3DUniformDataSet1();
 
   vtkm::filter::CleanGrid clean;
+  clean.SetCompactPointFields(false);
+  clean.SetMergePoints(false);
   return clean.Execute(ds);
 }
 

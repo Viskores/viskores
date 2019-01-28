@@ -63,7 +63,7 @@ struct ArrayPortalValueReference
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  operator ValueType(void) const { return this->Portal.Get(this->Index); }
+  operator ValueType(void) const { return this->Get(); }
 
   // Declaring Set as const seems a little weird because we are changing the value. But remember
   // that ArrayPortalReference is only a reference class. The reference itself does not change,
