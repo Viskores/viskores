@@ -21,45 +21,22 @@
 #define vtk_m_worklet_Keys_cxx
 #include <vtkm/worklet/Keys.h>
 
-#define VTK_M_RM_PAREN(T) vtkm::cont::detail::GetTypeInParentheses<void T>::type
-
-#define VTK_M_KEYS_EXPORT_TYPE(T)                                                                  \
-  template class VTKM_WORKLET_EXPORT vtkm::worklet::Keys<VTK_M_RM_PAREN(T)>;                       \
-  template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<VTK_M_RM_PAREN(T)>::BuildArrays( \
-    const vtkm::cont::ArrayHandle<VTK_M_RM_PAREN(T)>& keys,                                        \
-    vtkm::worklet::KeysSortType sort,                                                              \
-    vtkm::cont::DeviceAdapterId device);                                                           \
-  template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<VTK_M_RM_PAREN(T)>::BuildArrays( \
-    const vtkm::cont::ArrayHandleVirtual<VTK_M_RM_PAREN(T)>& keys,                                 \
-    vtkm::worklet::KeysSortType sort,                                                              \
-    vtkm::cont::DeviceAdapterId device);                                                           \
-  template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<VTK_M_RM_PAREN(                  \
-    T)>::BuildArraysInPlace(vtkm::cont::ArrayHandle<VTK_M_RM_PAREN(T)>& keys,                      \
-                            vtkm::worklet::KeysSortType sort,                                      \
-                            vtkm::cont::DeviceAdapterId device);                                   \
-  extern template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<VTK_M_RM_PAREN(           \
-    T)>::BuildArraysInPlace(vtkm::cont::ArrayHandleVirtual<VTK_M_RM_PAREN(T)>& keys,               \
-                            vtkm::worklet::KeysSortType sort,                                      \
-                            vtkm::cont::DeviceAdapterId device)
-
 #define VTK_M_KEYS_EXPORT(T)                                                                       \
-  VTK_M_KEYS_EXPORT_TYPE((T));                                                                     \
-  VTK_M_KEYS_EXPORT_TYPE((vtkm::Vec<T, 2>));                                                       \
-  VTK_M_KEYS_EXPORT_TYPE((vtkm::Vec<T, 3>));                                                       \
-  VTK_M_KEYS_EXPORT_TYPE((vtkm::Vec<T, 4>))
+  template class VTKM_WORKLET_EXPORT vtkm::worklet::Keys<T>;                                       \
+  template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays(                 \
+    const vtkm::cont::ArrayHandle<T>& keys,                                                        \
+    vtkm::worklet::KeysSortType sort,                                                              \
+    vtkm::cont::DeviceAdapterId device);                                                           \
+  template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays(                 \
+    const vtkm::cont::ArrayHandleVirtual<T>& keys,                                                 \
+    vtkm::worklet::KeysSortType sort,                                                              \
+    vtkm::cont::DeviceAdapterId device)
 
-VTK_M_KEYS_EXPORT(char);
-VTK_M_KEYS_EXPORT(vtkm::Int8);
-VTK_M_KEYS_EXPORT(vtkm::UInt8);
-VTK_M_KEYS_EXPORT(vtkm::Int16);
-VTK_M_KEYS_EXPORT(vtkm::UInt16);
-VTK_M_KEYS_EXPORT(vtkm::Int32);
-VTK_M_KEYS_EXPORT(vtkm::UInt32);
-VTK_M_KEYS_EXPORT(vtkm::Int64);
-VTK_M_KEYS_EXPORT(vtkm::UInt64);
-VTK_M_KEYS_EXPORT(vtkm::Float32);
-VTK_M_KEYS_EXPORT(vtkm::Float64);
+VTK_M_KEYS_EXPORT(vtkm::HashType);
+VTK_M_KEYS_EXPORT(vtkm::Id);
+VTK_M_KEYS_EXPORT(vtkm::Id3);
+#ifdef VTKM_USE_64BIT_IDS
+VTK_M_KEYS_EXPORT(vtkm::IdComponent);
+#endif
 
 #undef VTK_M_KEYS_EXPORT
-#undef VTK_M_KEYS_EXPORT_TYPE
-#undef VTK_M_RM_PAREN
