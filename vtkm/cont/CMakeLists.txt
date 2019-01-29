@@ -126,6 +126,7 @@ set(template_sources
   StorageAny.hxx
   StorageBasic.hxx
   StorageVirtual.hxx
+  VirtualObjectHandle.hxx
   )
 
 set(sources
