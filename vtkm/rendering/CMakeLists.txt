@@ -83,6 +83,7 @@ set(headers
   View1D.h
   View2D.h
   View3D.h
+  Wireframer.h
   WorldAnnotator.h
   )
 
@@ -105,7 +106,6 @@ set(sources
   MapperQuad.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
-  #MapperWireframer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
@@ -190,14 +190,16 @@ vtkm_library(
   WRAP_FOR_CUDA ${device_sources}
   )
 
+# Install all headers no matter what backend was selected
+vtkm_declare_headers(${opengl_headers})
+vtkm_declare_headers(${osmesa_headers})
+vtkm_declare_headers(${egl_headers})
+
 if(VTKm_ENABLE_GL_CONTEXT)
-  vtkm_declare_headers(${opengl_headers})
   target_sources(vtkm_rendering PRIVATE ${opengl_sources})
 elseif(VTKm_ENABLE_OSMESA_CONTEXT)
-  vtkm_declare_headers(${opengl_headers} ${osmesa_headers})
   target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${osmesa_sources})
 elseif(VTKm_ENABLE_EGL_CONTEXT)
-  vtkm_declare_headers(${opengl_headers} ${egl_headers})
   target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${egl_sources})
 endif()
 

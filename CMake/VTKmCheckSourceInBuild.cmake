@@ -35,7 +35,6 @@ set(FILES_TO_CHECK
   )
 
 set(EXCEPTIONS
-  kxsort.h
   )
 
 set(DIRECTORY_EXCEPTIONS
@@ -62,6 +61,7 @@ function(check_directory directory parent_CMakeLists_contents)
     file(READ "${directory}/CMakeLists.txt" CMakeLists_contents)
   endif()
 
+  set(send_fatal_error FALSE)
   foreach (glob_expression ${FILES_TO_CHECK})
     file(GLOB file_list
       RELATIVE "${directory}"
@@ -78,7 +78,6 @@ function(check_directory directory parent_CMakeLists_contents)
       endforeach(exception)
 
       if(NOT skip)
-        message("Checking ${file}")
         # Remove .in suffix. These are generally configured files that generate
         # new files that are actually used in the build.
         string(REGEX REPLACE ".in$" "" file_check "${file}")
@@ -92,15 +91,20 @@ function(check_directory directory parent_CMakeLists_contents)
             position
             )
           if(${position} LESS 0)
-            message(SEND_ERROR
+            message(STATUS
               "****************************************************************
 ${file_check} is not found in ${directory}/CMakeLists.txt
 This indicates that the file is not part of the build system. Thus it might be missing build targets. All such files should be explicitly handled by CMake.")
+            set(send_fatal_error True)
           endif() # Not in parent's CMakeLists.txt
         endif() # Not in CMakeLists.txt
       endif() # Not skipped
     endforeach (file)
   endforeach(glob_expression)
+
+  if(send_fatal_error)
+    message(FATAL_ERROR "errors found in ${directory}")
+  endif()
 
   file(GLOB file_list
     LIST_DIRECTORIES true
