@@ -116,7 +116,6 @@ set(template_sources
   ArrayHandle.hxx
   ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
-  BoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
   ColorTable.hxx
@@ -129,6 +128,7 @@ set(template_sources
   )
 
 set(sources
+  BoundingIntervalHierarchy.cxx
   ArrayHandle.cxx
   AssignerMultiBlock.cxx
   BoundsCompute.cxx

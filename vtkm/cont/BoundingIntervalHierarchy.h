@@ -130,6 +130,4 @@ private:
 } // namespace cont
 } // namespace vtkm
 
-#include <vtkm/cont/BoundingIntervalHierarchy.hxx>
-
 #endif // vtk_m_cont_BoundingIntervalHierarchy_h

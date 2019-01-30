@@ -815,7 +815,6 @@ public:
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
     }
-#if 0
     else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
       vtkm::cont::BoundingIntervalHierarchy locator;
@@ -824,8 +823,8 @@ public:
       locator.Update();
       this->Locator = std::make_shared<vtkm::cont::BoundingIntervalHierarchy>(locator);
       vtkm::cont::SingleCellExplicitInterpolationHelper interpolationHelper(cellset);
-      this->InterpolationHelper
-        = std::make_shared<vtkm::cont::SingleCellExplicitInterpolationHelper>(interpolationHelper);
+      this->InterpolationHelper =
+        std::make_shared<vtkm::cont::SingleCellExplicitInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
@@ -835,10 +834,9 @@ public:
       locator.Update();
       this->Locator = std::make_shared<vtkm::cont::BoundingIntervalHierarchy>(locator);
       vtkm::cont::CellExplicitInterpolationHelper interpolationHelper(cellset);
-      this->InterpolationHelper
-        = std::make_shared<vtkm::cont::CellExplicitInterpolationHelper>(interpolationHelper);
+      this->InterpolationHelper =
+        std::make_shared<vtkm::cont::CellExplicitInterpolationHelper>(interpolationHelper);
     }
-#endif
     else
       throw vtkm::cont::ErrorInternal("Unsupported cellset type.");
   }
