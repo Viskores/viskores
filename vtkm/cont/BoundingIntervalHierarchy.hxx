@@ -17,6 +17,10 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+
+#ifndef vtk_m_cont_BoundingIntervalHierarchy_hxx
+#define vtk_m_cont_BoundingIntervalHierarchy_hxx
+
 #include <vtkm/Bounds.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
@@ -555,3 +559,5 @@ const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(
 
 } //namespace cont
 } //namespace vtkm
+
+#endif // vtk_m_cont_BoundingIntervalHierarchy_hxx

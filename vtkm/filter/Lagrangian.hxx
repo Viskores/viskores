@@ -237,53 +237,16 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
-  using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using RectilinearType =
-    vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
 
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
   vtkm::worklet::ParticleAdvection particleadvection;
   vtkm::worklet::ParticleAdvectionResult res;
 
-  if (coords.GetData().IsType<RectilinearType>())
-  {
-    using RectilinearGridEvalType =
-      vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldHandle>;
-    using RK4IntegratorType =
-      vtkm::worklet::particleadvection::RK4Integrator<RectilinearGridEvalType>;
-    /*
-  * If Euler step is preferred.
-  using EulerIntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<RectilinearGridEvalType, T>;
-  */
-    RectilinearGridEvalType eval(coords, cells, field);
-    RK4IntegratorType rk4(eval, static_cast<vtkm::Float32>(this->stepSize));
-    /*
-  * If Euler step is preferred.
-  EulerIntegratorType euler(eval, static_cast<vtkm::FloatDefault>(this->stepSize));
-  */
-    res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
-  }
-  else if (coords.GetData().IsType<UniformType>())
-  {
-    using UniformGridEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
-    using RK4IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<UniformGridEvalType>;
-    /*
-  * If Euler step is preferred.
-  using EulerIntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<UniformGridEvalType, T>;
-  */
-    UniformGridEvalType eval(coords, cells, field);
-    RK4IntegratorType rk4(eval, static_cast<vtkm::Float32>(this->stepSize));
-    /*
-  * If Euler step is preferred.
-  EulerIntegratorType euler(eval, static_cast<vtkm::FloatDefault>(this->stepSize));
-  */
-    res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
-  }
-  else
-  {
-    std::cout << "Data set type is not rectilinear or uniform." << std::endl;
-  }
+  GridEvalType gridEval(coords, cells, field);
+  RK4Type rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
+  res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
 
   auto particle_positions = res.positions;
   auto particle_stepstaken = res.stepsTaken;
