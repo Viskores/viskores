@@ -200,7 +200,9 @@ if(TARGET vtkm::openmp)
   list(APPEND backends vtkm::openmp)
 endif()
 if (VTKm_ENABLE_LOGGING)
-  list(APPEND DL_LIBS ${CMAKE_DL_LIBS}) # dladdr function
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+  list(APPEND DL_LIBS ${CMAKE_DL_LIBS} Threads::Threads) # dladdr function
 endif()
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends} ${DL_LIBS})
 if(TARGET vtkm_diy)
