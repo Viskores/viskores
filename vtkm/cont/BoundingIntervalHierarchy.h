@@ -21,6 +21,8 @@
 #ifndef vtk_m_cont_BoundingIntervalHierarchy_h
 #define vtk_m_cont_BoundingIntervalHierarchy_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
@@ -34,8 +36,7 @@ namespace vtkm
 {
 namespace cont
 {
-
-class BoundingIntervalHierarchy : public vtkm::cont::CellLocator
+class VTKM_CONT_EXPORT BoundingIntervalHierarchy : public vtkm::cont::CellLocator
 {
 private:
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
