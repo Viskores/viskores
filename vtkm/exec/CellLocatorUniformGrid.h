@@ -65,6 +65,14 @@ public:
   {
     CellSet = cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType());
     Coords = coords.PrepareForInput(DeviceAdapter());
+
+    vtkm::Id3 cellDims = cellSet.GetCellDimensions();
+    this->Scale[0] = static_cast<vtkm::FloatDefault>(cellDims[0] - 1) /
+      static_cast<vtkm::FloatDefault>(Bounds.X.Length());
+    this->Scale[1] = static_cast<vtkm::FloatDefault>(cellDims[1] - 1) /
+      static_cast<vtkm::FloatDefault>(Bounds.Y.Length());
+    this->Scale[2] = static_cast<vtkm::FloatDefault>(cellDims[2] - 1) /
+      static_cast<vtkm::FloatDefault>(Bounds.Z.Length());
   }
 
   VTKM_EXEC
@@ -80,19 +88,13 @@ public:
     }
     // Get the Cell Id from the point.
     vtkm::Vec<vtkm::Id, 3> logicalCell;
-    logicalCell[0] =
-      static_cast<vtkm::Id>(vtkm::Floor((point[0] - Bounds.X.Min) * RangeTransform[0]));
-    logicalCell[1] =
-      static_cast<vtkm::Id>(vtkm::Floor((point[1] - Bounds.Y.Min) * RangeTransform[1]));
-    logicalCell[2] =
-      static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * RangeTransform[2]));
+    logicalCell[0] = static_cast<vtkm::Id>(vtkm::Floor((point[0] - Bounds.X.Min) * Scale[0]));
+    logicalCell[1] = static_cast<vtkm::Id>(vtkm::Floor((point[1] - Bounds.Y.Min) * Scale[1]));
+    logicalCell[2] = static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * Scale[2]));
+
     // Get the actual cellId, from the logical cell index of the cell
     cellId = logicalCell[2] * PlaneSize + logicalCell[1] * RowSize + logicalCell[0];
-    if (cellId >= CellSet.GetNumberOfElements())
-    {
-      cellId = -1;
-      return;
-    }
+
     bool success = false;
     using IndicesType = typename CellSetPortal::IndicesType;
     IndicesType cellPointIndices = CellSet.GetIndices(cellId);
@@ -110,6 +112,7 @@ private:
   vtkm::Id RowSize;
   CellSetPortal CellSet;
   CoordsPortal Coords;
+  vtkm::Vec<vtkm::FloatDefault, 3> Scale;
 };
 }
 }
