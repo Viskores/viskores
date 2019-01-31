@@ -88,7 +88,11 @@ public:
       static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * RangeTransform[2]));
     // Get the actual cellId, from the logical cell index of the cell
     cellId = logicalCell[2] * PlaneSize + logicalCell[1] * RowSize + logicalCell[0];
-
+    if (cellId >= CellSet.GetNumberOfElements())
+    {
+      cellId = -1;
+      return;
+    }
     bool success = false;
     using IndicesType = typename CellSetPortal::IndicesType;
     IndicesType cellPointIndices = CellSet.GetIndices(cellId);

@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  CellInterpolationHelper.h
   GridEvaluators.h
   Integrators.h
   Particles.h
