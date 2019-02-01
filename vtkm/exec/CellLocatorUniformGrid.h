@@ -53,26 +53,18 @@ public:
   VTKM_CONT
   CellLocatorUniformGrid(const vtkm::Bounds& bounds,
                          const vtkm::Vec<vtkm::FloatDefault, 3> rangeTransform,
-                         const vtkm::Id planeSize,
-                         const vtkm::Id rowSize,
+                         const vtkm::Vec<vtkm::Id, 3> cellDims,
                          const vtkm::cont::CellSetStructured<3>& cellSet,
                          const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
                          DeviceAdapter)
     : Bounds(bounds)
     , RangeTransform(rangeTransform)
-    , PlaneSize(planeSize)
-    , RowSize(rowSize)
+    , CellDims(cellDims)
+    , PlaneSize(cellDims[0] * cellDims[1])
+    , RowSize(cellDims[0])
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType()))
+    , Coords(coords.PrepareForInput(DeviceAdapter()))
   {
-    CellSet = cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType());
-    Coords = coords.PrepareForInput(DeviceAdapter());
-
-    vtkm::Id3 cellDims = cellSet.GetCellDimensions();
-    this->Scale[0] = static_cast<vtkm::FloatDefault>(cellDims[0] - 1) /
-      static_cast<vtkm::FloatDefault>(Bounds.X.Length());
-    this->Scale[1] = static_cast<vtkm::FloatDefault>(cellDims[1] - 1) /
-      static_cast<vtkm::FloatDefault>(Bounds.Y.Length());
-    this->Scale[2] = static_cast<vtkm::FloatDefault>(cellDims[2] - 1) /
-      static_cast<vtkm::FloatDefault>(Bounds.Z.Length());
   }
 
   VTKM_EXEC
@@ -88,9 +80,15 @@ public:
     }
     // Get the Cell Id from the point.
     vtkm::Vec<vtkm::Id, 3> logicalCell;
-    logicalCell[0] = static_cast<vtkm::Id>(vtkm::Floor((point[0] - Bounds.X.Min) * Scale[0]));
-    logicalCell[1] = static_cast<vtkm::Id>(vtkm::Floor((point[1] - Bounds.Y.Min) * Scale[1]));
-    logicalCell[2] = static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * Scale[2]));
+    logicalCell[0] = (point[0] == Bounds.X.Max)
+      ? CellDims[0] - 1
+      : static_cast<vtkm::Id>(vtkm::Floor((point[0] - Bounds.X.Min) * RangeTransform[0]));
+    logicalCell[1] = (point[1] == Bounds.Y.Max)
+      ? CellDims[1] - 1
+      : static_cast<vtkm::Id>(vtkm::Floor((point[1] - Bounds.Y.Min) * RangeTransform[1]));
+    logicalCell[2] = (point[2] == Bounds.Z.Max)
+      ? CellDims[2] - 1
+      : static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * RangeTransform[2]));
 
     // Get the actual cellId, from the logical cell index of the cell
     cellId = logicalCell[2] * PlaneSize + logicalCell[1] * RowSize + logicalCell[0];
@@ -108,11 +106,11 @@ public:
 private:
   vtkm::Bounds Bounds;
   vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
+  vtkm::Vec<vtkm::Id, 3> CellDims;
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;
   CellSetPortal CellSet;
   CoordsPortal Coords;
-  vtkm::Vec<vtkm::FloatDefault, 3> Scale;
 };
 }
 }
