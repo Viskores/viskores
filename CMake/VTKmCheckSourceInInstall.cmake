@@ -19,7 +19,7 @@
 ##============================================================================
 
 ## This CMake script checks to make sure that each source file explicitly
-## listed in the CMakeLists.txt is installed.
+## inside a project is installed.
 ## To run this script, execute CMake as follows:
 ##
 ## cmake -DMODE=[INSTALL|VERIFY|CLEANUP]
@@ -28,7 +28,7 @@
 #        -DVTKm_INSTALL_INCLUDE_DIR=<VTKm_INSTALL_INCLUDE_DIR>
 #        -DVTKm_ENABLE_RENDERING=<VTKm_ENABLE_RENDERING>
 #        -DVTKm_ENABLE_LOGGING=<VTKm_ENABLE_LOGGING>
-#        -P <VTKm_SOURCE_DIR>/CMake/VTKMCheckSourceInBuild.cmake
+#        -P <VTKm_SOURCE_DIR>/CMake/VTKMCheckSourceInInstall.cmake
 ##
 
 if (NOT DEFINED MODE)
@@ -126,13 +126,13 @@ function(do_verify root_dir prefix)
     )
 
   set(file_exceptions
-    cont/cuda/internal/testing/Testing.h
     cont/ColorTablePrivate.hxx
     )
 
+  #by default every header in a testing directory doesn't need to be installed
+  set(directory_exceptions ".*/testing" )
   # These exceptions should be based on the status of the associated
   # cmake option
-  set(directory_exceptions )
   if(NOT VTKm_ENABLE_RENDERING)
     list(APPEND directory_exceptions rendering)
   endif()

@@ -323,10 +323,6 @@ if (VTKm_ENABLE_TESTING)
   # increase timeout since on some machines CopyrightStatement test takes a long time.
   set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
 
-  add_test(NAME SourceInBuild
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInBuild.cmake"
-    )
-
   if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     set(command_args
       "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
