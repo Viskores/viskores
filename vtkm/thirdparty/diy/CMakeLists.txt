@@ -63,6 +63,8 @@ install(TARGETS vtkm_diy
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(DIRECTORY vtkmdiy
     DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
-  install(FILES ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h
+  install(FILES
+    ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/diy.h
     DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
 endif()

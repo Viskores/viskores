@@ -174,7 +174,7 @@ struct TypeString<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename T>
@@ -188,9 +188,9 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto portal = obj.GetPortalConstControl();
-    diy::save(bb, portal.GetStart());
-    diy::save(bb, portal.GetStep());
-    diy::save(bb, portal.GetNumberOfValues());
+    vtkmdiy::save(bb, portal.GetStart());
+    vtkmdiy::save(bb, portal.GetStep());
+    vtkmdiy::save(bb, portal.GetNumberOfValues());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -198,9 +198,9 @@ public:
     T start{}, step{};
     vtkm::Id count = 0;
 
-    diy::load(bb, start);
-    diy::load(bb, step);
-    diy::load(bb, count);
+    vtkmdiy::load(bb, start);
+    vtkmdiy::load(bb, step);
+    vtkmdiy::load(bb, count);
 
     obj = vtkm::cont::make_ArrayHandleCounting(start, step, count);
   }

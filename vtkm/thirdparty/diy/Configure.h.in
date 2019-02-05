@@ -42,11 +42,16 @@
  * we will make this configurable.*/
 #define DIY_NO_THREADS
 
-#if VTKM_USE_EXTERNAL_DIY
-# define VTKM_DIY(header) <header>
+/* Need to provide a way to for Serialziation
+ * specializations to be injected into the correct
+ * namespace. This solves the issue while allowing
+ * for VTK-m to support an internal and external diy
+ * existing at the same time. */
+#if(VTKM_USE_EXTERNAL_DIY)
+# define mangled_diy_namespace diy
 #else
-# define VTKM_DIY(header) <vtkmdiy/include/header>
-# define diy vtkmdiy // mangle namespace diy
+# define mangled_diy_namespace vtkmdiy
 #endif
+
 
 #endif

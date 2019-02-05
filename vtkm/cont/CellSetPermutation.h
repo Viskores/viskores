@@ -414,7 +414,7 @@ struct TypeString<vtkm::cont::CellSetPermutation<CSType, AHValidCellIds>>
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename CSType, typename AHValidCellIds>
@@ -426,19 +426,19 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    diy::save(bb, cs.GetName());
-    diy::save(bb, cs.GetFullCellSet());
-    diy::save(bb, cs.GetValidCellIds());
+    vtkmdiy::save(bb, cs.GetName());
+    vtkmdiy::save(bb, cs.GetFullCellSet());
+    vtkmdiy::save(bb, cs.GetValidCellIds());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
     std::string name;
-    diy::load(bb, name);
+    vtkmdiy::load(bb, name);
     CSType fullCS;
-    diy::load(bb, fullCS);
+    vtkmdiy::load(bb, fullCS);
     AHValidCellIds validCellIds;
-    diy::load(bb, validCellIds);
+    vtkmdiy::load(bb, validCellIds);
 
     cs = make_CellSetPermutation(validCellIds, fullCS, name);
   }

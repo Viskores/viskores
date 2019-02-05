@@ -400,7 +400,7 @@ struct TypeString<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename IdxAH, typename ValAH>
@@ -414,8 +414,8 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetIndexArray());
-    diy::save(bb, storage.GetValueArray());
+    vtkmdiy::save(bb, storage.GetIndexArray());
+    vtkmdiy::save(bb, storage.GetValueArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -423,8 +423,8 @@ public:
     IdxAH indices;
     ValAH values;
 
-    diy::load(bb, indices);
-    diy::load(bb, values);
+    vtkmdiy::load(bb, indices);
+    vtkmdiy::load(bb, values);
 
     obj = vtkm::cont::make_ArrayHandlePermutation(indices, values);
   }

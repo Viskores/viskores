@@ -752,7 +752,7 @@ struct TypeString<vtkm::cont::ArrayHandle<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 namespace internal
@@ -804,7 +804,7 @@ private:
     template <typename AH>
     void operator()(const AH& ah, BinaryBuffer& bb) const
     {
-      diy::save(bb, ah);
+      vtkmdiy::save(bb, ah);
     }
   };
 
@@ -813,7 +813,7 @@ private:
     template <typename AH>
     void operator()(AH& ah, BinaryBuffer& bb) const
     {
-      diy::load(bb, ah);
+      vtkmdiy::load(bb, ah);
     }
   };
 
