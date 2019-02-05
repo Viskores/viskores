@@ -357,8 +357,10 @@ public:
     }
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    vtkm::cont::Timer<> totalTimer;
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer totalTimer;
+    totalTimer.Start();
+    vtkm::cont::Timer timer;
+    timer.Start();
 #endif
 
     //////////////////////////////////////////////
@@ -374,8 +376,9 @@ public:
     mapPointsDispatcher.Invoke(coordinates, pointCidArray);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+    timer.stop();
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// pass 2 : Choose a representative point from each cluster for the output:
@@ -399,7 +402,7 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after reducing points (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// Pass 3 : Decimated mesh generation
@@ -415,7 +418,7 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after clustering cells (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
@@ -460,7 +463,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       this->CellIdMap = vtkm::worklet::StableSortIndices::Sort(pointId3HashArray);
@@ -469,7 +472,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       // Create a temporary permutation array and use that for unhashing.
@@ -485,7 +488,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       this->CellIdMap = vtkm::worklet::StableSortIndices::Sort(pointId3Array);
@@ -494,7 +497,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       // Permute the connectivity array into a basic array handle. Use a

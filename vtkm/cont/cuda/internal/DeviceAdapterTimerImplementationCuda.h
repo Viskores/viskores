@@ -50,6 +50,16 @@ public:
 
   VTKM_CONT void Reset();
 
+  VTKM_CONT void Start();
+
+  VTKM_CONT void Stop();
+
+  VTKM_CONT bool Started();
+
+  VTKM_CONT bool Stopped();
+
+  VTKM_CONT bool Ready();
+
   VTKM_CONT vtkm::Float64 GetElapsedTime();
 
 private:
@@ -59,8 +69,10 @@ private:
   void operator=(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>&) =
     delete;
 
+  bool StartReady;
+  bool StopReady;
   cudaEvent_t StartEvent;
-  cudaEvent_t EndEvent;
+  cudaEvent_t StopEvent;
 };
 }
 } // namespace vtkm::cont

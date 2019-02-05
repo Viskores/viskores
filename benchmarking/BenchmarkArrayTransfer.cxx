@@ -45,7 +45,7 @@ struct BenchmarkArrayTransfer
 {
   using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   using StorageTag = vtkm::cont::StorageTagBasic;
-  using Timer = vtkm::cont::Timer<DeviceAdapter>;
+  using Timer = vtkm::cont::Timer;
 
   //------------- Functors for benchmarks --------------------------------------
 
@@ -171,7 +171,8 @@ struct BenchmarkArrayTransfer
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Time the copy:
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       ReadValues<PortalType> functor(array.PrepareForInput(DeviceAdapter()),
                                      ValueTypeTraits::ZeroInitialization());
       Algo::Schedule(functor, this->NumValues);
@@ -212,9 +213,11 @@ struct BenchmarkArrayTransfer
       ArrayType array;
 
       // Time the write:
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       WriteValues<PortalType> functor(array.PrepareForOutput(this->NumValues, DeviceAdapter()));
       Algo::Schedule(functor, this->NumValues);
+
       return timer.GetElapsedTime();
     }
   };
@@ -254,7 +257,8 @@ struct BenchmarkArrayTransfer
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Time the copy:
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       ReadWriteValues<PortalType> functor(array.PrepareForInPlace(DeviceAdapter()));
       Algo::Schedule(functor, this->NumValues);
       return timer.GetElapsedTime();
@@ -301,7 +305,8 @@ struct BenchmarkArrayTransfer
       array.ReleaseResourcesExecution();
 
       // Time the copy:
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
 
       // Copy to device:
       ReadValues<PortalExecType> functor(array.PrepareForInput(DeviceAdapter()),
@@ -360,7 +365,8 @@ struct BenchmarkArrayTransfer
       array.ReleaseResourcesExecution();
 
       // Time the copy:
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
 
       // Do work on device:
       ReadWriteValues<PortalExecType> functor(array.PrepareForInPlace(DeviceAdapter()));
@@ -411,7 +417,8 @@ struct BenchmarkArrayTransfer
       ArrayType array;
 
       // Time the copy:
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
 
       // Allocate/write data on device
       WriteValues<PortalExecType> functor(array.PrepareForOutput(this->NumValues, DeviceAdapter()));
@@ -464,7 +471,8 @@ struct BenchmarkArrayTransfer
       ArrayType array;
 
       // Time the copy:
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
 
       // Allocate/write data on device
       WriteValues<PortalExecType> functor(array.PrepareForOutput(this->NumValues, DeviceAdapter()));
@@ -516,7 +524,8 @@ struct BenchmarkArrayTransfer
       ArrayType array;
 
       // Time the copy:
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
 
       // Allocate/write data on device
       WriteValues<PortalExecType> functor(array.PrepareForOutput(this->NumValues, DeviceAdapter()));

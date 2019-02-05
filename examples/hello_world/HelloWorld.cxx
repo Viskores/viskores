@@ -59,7 +59,7 @@ struct HelloVTKMInterop
   vtkm::interop::BufferState VBOState;
   vtkm::interop::BufferState ColorState;
 
-  vtkm::cont::Timer<> Timer;
+  vtkm::cont::Timer Timer;
 
   std::vector<vtkm::Vec<T, 3>> InputData;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> InHandle;
@@ -78,6 +78,7 @@ struct HelloVTKMInterop
     , OutCoords()
     , OutColors()
   {
+    Timer.Start();
     int dim = 256;
     this->InputData.reserve(static_cast<std::size_t>(dim * dim));
     for (int i = 0; i < dim; ++i)

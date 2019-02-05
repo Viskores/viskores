@@ -250,7 +250,8 @@ struct RenderGameOfLife
   }
 };
 
-vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> gTimer;
+vtkm::cont::Timer gTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+gTimer.Start();
 vtkm::cont::DataSet* gData = nullptr;
 GameOfLife* gFilter = nullptr;
 RenderGameOfLife* gRenderer = nullptr;

@@ -84,7 +84,8 @@ int main(int argc, char* argv[])
     //run once to get the CUDA code warmed up
     dispatcher.Invoke(input, output);
 
-    vtkm::cont::Timer<DeviceTag> timer;
+    vtkm::cont::Timer timer{ DeviceTag() };
+    timer.Start();
 
     for (int i = 0; i < 3; ++i)
     {
@@ -117,7 +118,8 @@ int main(int argc, char* argv[])
   //run once to get the CUDA code warmed up
   dispatcher.Invoke(input, output);
 
-  vtkm::cont::Timer<DeviceTag> timer;
+  vtkm::cont::Timer timer{ DeviceTag() };
+  timer.Start();
 
   for (int i = 0; i < 3; ++i)
   {

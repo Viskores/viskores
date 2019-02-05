@@ -1134,7 +1134,8 @@ template <typename FloatType>
 void ConnectivityTracer::IntersectCell(Ray<FloatType>& rays,
                                        detail::RayTracking<FloatType>& tracker)
 {
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
   vtkm::worklet::DispatcherMapField<LocateCell> locateDispatch;
   locateDispatch.Invoke(rays.HitIdx,
                         this->Coords,
@@ -1163,7 +1164,8 @@ void ConnectivityTracer::AccumulatePathLengths(Ray<FloatType>& rays,
 template <typename FloatType>
 void ConnectivityTracer::FindLostRays(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker)
 {
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
 
   vtkm::worklet::DispatcherMapField<RayBumper> bumpDispatch;
   bumpDispatch.Invoke(rays.HitIdx,
@@ -1184,7 +1186,8 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
 {
   using SampleP = SampleCellAssocPoints<FloatType>;
   using SampleC = SampleCellAssocCells<FloatType>;
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
 
   VTKM_ASSERT(rays.Buffers.at(0).GetNumChannels() == 4);
 
@@ -1231,7 +1234,8 @@ template <typename FloatType>
 void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
                                         detail::RayTracking<FloatType>& tracker)
 {
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
   if (HasEmission)
   {
     bool divideEmisByAbsorp = false;
@@ -1303,7 +1307,8 @@ void ConnectivityTracer::OffsetMinDistances(Ray<FloatType>& rays)
 template <typename FloatType>
 void ConnectivityTracer::FindMeshEntry(Ray<FloatType>& rays)
 {
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> entryTimer;
+  vtkm::cont::Timer entryTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+  entryTimer.Start();
   //
   // if ray misses the external face it will be marked RAY_EXITED_MESH
   //

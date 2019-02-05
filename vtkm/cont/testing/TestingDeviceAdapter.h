@@ -585,27 +585,33 @@ private:
   VTKM_CONT
   static void TestTimer()
   {
-    std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing Timer" << std::endl;
+    auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+    if (tracker.CanRunOn(DeviceAdapterTag()))
+    {
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing Timer" << std::endl;
 
-    vtkm::cont::Timer<DeviceAdapterTag> timer;
+      vtkm::cont::Timer timer{ DeviceAdapterTag() };
+      timer.Start();
 
-    std::cout << "Timer started. Sleeping..." << std::endl;
+      std::cout << "Timer started. Sleeping..." << std::endl;
 
 #ifndef _WIN32
-    sleep(1);
+      sleep(1);
 #else
-    Sleep(1000);
+      Sleep(1000);
 #endif
 
-    std::cout << "Woke up. Check time." << std::endl;
+      std::cout << "Woke up. Check time." << std::endl;
 
-    vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+      timer.Stop();
+      vtkm::Float64 elapsedTime = timer.GetElapsedTime();
 
-    std::cout << "Elapsed time: " << elapsedTime << std::endl;
+      std::cout << "Elapsed time: " << elapsedTime << std::endl;
 
-    VTKM_TEST_ASSERT(elapsedTime > 0.999, "Timer did not capture full second wait.");
-    VTKM_TEST_ASSERT(elapsedTime < 2.0, "Timer counted too far or system really busy.");
+      VTKM_TEST_ASSERT(elapsedTime > 0.999, "Timer did not capture full second wait.");
+      VTKM_TEST_ASSERT(elapsedTime < 2.0, "Timer counted too far or system really busy.");
+    }
   }
 
   VTKM_CONT

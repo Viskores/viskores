@@ -793,7 +793,8 @@ template <typename Precision, typename Device>
 void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<Precision>& rays,
                                               Device)
 {
-  vtkm::cont::Timer<Device> renderTimer;
+  vtkm::cont::Timer renderTimer{ Device() };
+  renderTimer.Start();
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("volume_render_structured");
   logger->AddLogData("device", GetDeviceString(Device()));
@@ -808,7 +809,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     SampleDistance = vtkm::Magnitude(extent) / defaultNumberOfSamples;
   }
 
-  vtkm::cont::Timer<Device> timer;
+  vtkm::cont::Timer timer{ Device() };
+  timer.Start();
   vtkm::worklet::DispatcherMapField<CalcRayStart> calcRayStartDispatcher(
     CalcRayStart(this->SpatialExtent));
   calcRayStartDispatcher.SetDevice(Device());
@@ -817,7 +819,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("calc_ray_start", time);
-  timer.Reset();
+  timer.Start();
 
   bool isSupportedField =
     (ScalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
@@ -908,7 +910,6 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
   time = timer.GetElapsedTime();
   logger->AddLogData("sample", time);
-  timer.Reset();
 
   time = renderTimer.GetElapsedTime();
   logger->CloseLogEntry(time);
