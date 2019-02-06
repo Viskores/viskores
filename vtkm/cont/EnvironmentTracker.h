@@ -23,15 +23,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/vtkm_cont_export.h>
 #include <vtkm/internal/ExportMacros.h>
-#include <vtkm/thirdparty/diy/Configure.h>
 
-namespace diy
-{
-namespace mpi
-{
-class communicator;
-}
-}
+#include <vtkm/thirdparty/diy/diy.h>
 
 namespace vtkm
 {
@@ -46,10 +39,10 @@ class VTKM_CONT_EXPORT EnvironmentTracker
 {
 public:
   VTKM_CONT
-  static void SetCommunicator(const diy::mpi::communicator& comm);
+  static void SetCommunicator(const vtkmdiy::mpi::communicator& comm);
 
   VTKM_CONT
-  static const diy::mpi::communicator& GetCommunicator();
+  static const vtkmdiy::mpi::communicator& GetCommunicator();
 };
 }
 }

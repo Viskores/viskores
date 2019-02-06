@@ -21,15 +21,7 @@
 
 #include <vtkm/cont/EnvironmentTracker.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/Configure.h>
-#include VTKM_DIY(diy/decomposition.hpp)
-#include VTKM_DIY(diy/master.hpp)
-#include VTKM_DIY(diy/partners/all-reduce.hpp)
-#include VTKM_DIY(diy/reduce.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/diy.h>
 
 #include <algorithm>
 #include <functional>
@@ -78,56 +70,57 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
 
   using VectorOfRangesT = std::vector<vtkm::Range>;
 
-  diy::Master master(comm,
-                     1,
-                     -1,
-                     []() -> void* { return new VectorOfRangesT(); },
-                     [](void* ptr) { delete static_cast<VectorOfRangesT*>(ptr); });
+  vtkmdiy::Master master(comm,
+                         1,
+                         -1,
+                         []() -> void* { return new VectorOfRangesT(); },
+                         [](void* ptr) { delete static_cast<VectorOfRangesT*>(ptr); });
 
-  diy::ContiguousAssigner assigner(/*num ranks*/ comm.size(), /*global-num-blocks*/ comm.size());
-  diy::RegularDecomposer<diy::DiscreteBounds> decomposer(
-    /*dim*/ 1, diy::interval(0, comm.size() - 1), comm.size());
+  vtkmdiy::ContiguousAssigner assigner(/*num ranks*/ comm.size(),
+                                       /*global-num-blocks*/ comm.size());
+  vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds> decomposer(
+    /*dim*/ 1, vtkmdiy::interval(0, comm.size() - 1), comm.size());
   decomposer.decompose(comm.rank(), assigner, master);
   assert(master.size() == 1); // each rank will have exactly 1 block.
   *master.block<VectorOfRangesT>(0) = v_ranges;
 
-  diy::RegularAllReducePartners all_reduce_partners(decomposer, /*k*/ 2);
+  vtkmdiy::RegularAllReducePartners all_reduce_partners(decomposer, /*k*/ 2);
 
-  auto callback =
-    [](VectorOfRangesT* data, const diy::ReduceProxy& srp, const diy::RegularMergePartners&) {
-      const auto selfid = srp.gid();
-      // 1. dequeue.
-      std::vector<int> incoming;
-      srp.incoming(incoming);
-      for (const int gid : incoming)
+  auto callback = [](
+    VectorOfRangesT* data, const vtkmdiy::ReduceProxy& srp, const vtkmdiy::RegularMergePartners&) {
+    const auto selfid = srp.gid();
+    // 1. dequeue.
+    std::vector<int> incoming;
+    srp.incoming(incoming);
+    for (const int gid : incoming)
+    {
+      if (gid != selfid)
       {
-        if (gid != selfid)
-        {
-          VectorOfRangesT message;
-          srp.dequeue(gid, message);
+        VectorOfRangesT message;
+        srp.dequeue(gid, message);
 
-          // if the number of components we've seen so far is less than those
-          // in the received message, resize so we can accommodate all components
-          // in the message. If the message has fewer components, it has no
-          // effect.
-          data->resize(std::max(data->size(), message.size()));
+        // if the number of components we've seen so far is less than those
+        // in the received message, resize so we can accommodate all components
+        // in the message. If the message has fewer components, it has no
+        // effect.
+        data->resize(std::max(data->size(), message.size()));
 
-          std::transform(
-            message.begin(), message.end(), data->begin(), data->begin(), std::plus<vtkm::Range>());
-        }
+        std::transform(
+          message.begin(), message.end(), data->begin(), data->begin(), std::plus<vtkm::Range>());
       }
-      // 2. enqueue
-      for (int cc = 0; cc < srp.out_link().size(); ++cc)
+    }
+    // 2. enqueue
+    for (int cc = 0; cc < srp.out_link().size(); ++cc)
+    {
+      auto target = srp.out_link().target(cc);
+      if (target.gid != selfid)
       {
-        auto target = srp.out_link().target(cc);
-        if (target.gid != selfid)
-        {
-          srp.enqueue(target, *data);
-        }
+        srp.enqueue(target, *data);
       }
-    };
+    }
+  };
 
-  diy::reduce(master, assigner, all_reduce_partners, callback);
+  vtkmdiy::reduce(master, assigner, all_reduce_partners, callback);
   assert(master.size() == 1); // each rank will have exactly 1 block.
 
   return vtkm::cont::make_ArrayHandle(*master.block<VectorOfRangesT>(0), vtkm::CopyFlag::On);

@@ -22,10 +22,6 @@
 
 #include <vtkm/cont/TypeString.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/Configure.h>
-#include VTKM_DIY(diy/serialization.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
 
 #endif // vtk_m_cont_Serialization_h

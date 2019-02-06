@@ -282,7 +282,7 @@ struct TypeString<vtkm::cont::CellSetSingleType<ConnectivityST>>
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename ConnectivityST>
@@ -294,26 +294,26 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    diy::save(bb, cs.GetName());
-    diy::save(bb, cs.GetNumberOfPoints());
-    diy::save(bb, cs.GetCellShape(0));
-    diy::save(bb, cs.GetNumberOfPointsInCell(0));
-    diy::save(
+    vtkmdiy::save(bb, cs.GetName());
+    vtkmdiy::save(bb, cs.GetNumberOfPoints());
+    vtkmdiy::save(bb, cs.GetCellShape(0));
+    vtkmdiy::save(bb, cs.GetNumberOfPointsInCell(0));
+    vtkmdiy::save(
       bb, cs.GetConnectivityArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
     std::string name;
-    diy::load(bb, name);
+    vtkmdiy::load(bb, name);
     vtkm::Id numberOfPoints = 0;
-    diy::load(bb, numberOfPoints);
+    vtkmdiy::load(bb, numberOfPoints);
     vtkm::UInt8 shape;
-    diy::load(bb, shape);
+    vtkmdiy::load(bb, shape);
     vtkm::IdComponent count;
-    diy::load(bb, count);
+    vtkmdiy::load(bb, count);
     vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST> connectivity;
-    diy::load(bb, connectivity);
+    vtkmdiy::load(bb, connectivity);
 
     cs = Type(name);
     cs.Fill(numberOfPoints, shape, count, connectivity);

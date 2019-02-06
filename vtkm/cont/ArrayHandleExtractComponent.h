@@ -337,7 +337,7 @@ struct TypeString<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH>
@@ -351,16 +351,16 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetComponent());
-    diy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, storage.GetComponent());
+    vtkmdiy::save(bb, storage.GetArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     vtkm::IdComponent component = 0;
     AH array;
-    diy::load(bb, component);
-    diy::load(bb, array);
+    vtkmdiy::load(bb, component);
+    vtkmdiy::load(bb, array);
 
     obj = vtkm::cont::make_ArrayHandleExtractComponent(array, component);
   }

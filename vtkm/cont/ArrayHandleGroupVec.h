@@ -393,7 +393,7 @@ struct TypeString<vtkm::cont::ArrayHandle<vtkm::Vec<typename AH::ValueType, NUM_
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH, vtkm::IdComponent NUM_COMPS>
@@ -406,13 +406,13 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    diy::save(bb, obj.GetStorage().GetSourceArray());
+    vtkmdiy::save(bb, obj.GetStorage().GetSourceArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     AH array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
 
     obj = vtkm::cont::make_ArrayHandleGroupVec<NUM_COMPS>(array);
   }

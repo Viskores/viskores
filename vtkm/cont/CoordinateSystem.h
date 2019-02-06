@@ -143,7 +143,7 @@ struct DynamicTransformTraits<vtkm::cont::CoordinateSystem>
 
 //=============================================================================
 // Specializations of serialization related classes
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <>
@@ -151,16 +151,16 @@ struct Serialization<vtkm::cont::CoordinateSystem>
 {
   static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::CoordinateSystem& cs)
   {
-    diy::save(bb, cs.GetName());
-    diy::save(bb, cs.GetData());
+    vtkmdiy::save(bb, cs.GetName());
+    vtkmdiy::save(bb, cs.GetData());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::CoordinateSystem& cs)
   {
     std::string name;
-    diy::load(bb, name);
+    vtkmdiy::load(bb, name);
     vtkm::cont::ArrayHandleVirtualCoordinates array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
     cs = vtkm::cont::CoordinateSystem(name, array);
   }
 };

@@ -19,11 +19,7 @@
 //============================================================================
 #include <vtkm/cont/EnvironmentTracker.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/mpi.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/diy.h>
 
 namespace vtkm
 {
@@ -31,15 +27,15 @@ namespace cont
 {
 namespace internal
 {
-static diy::mpi::communicator GlobalCommuncator(MPI_COMM_NULL);
+static vtkmdiy::mpi::communicator GlobalCommuncator(MPI_COMM_NULL);
 }
 
-void EnvironmentTracker::SetCommunicator(const diy::mpi::communicator& comm)
+void EnvironmentTracker::SetCommunicator(const vtkmdiy::mpi::communicator& comm)
 {
   vtkm::cont::internal::GlobalCommuncator = comm;
 }
 
-const diy::mpi::communicator& EnvironmentTracker::GetCommunicator()
+const vtkmdiy::mpi::communicator& EnvironmentTracker::GetCommunicator()
 {
 #ifndef DIY_NO_MPI
   int flag;
@@ -49,7 +45,7 @@ const diy::mpi::communicator& EnvironmentTracker::GetCommunicator()
     int argc = 0;
     char** argv = nullptr;
     MPI_Init(&argc, &argv);
-    internal::GlobalCommuncator = diy::mpi::communicator(MPI_COMM_WORLD);
+    internal::GlobalCommuncator = vtkmdiy::mpi::communicator(MPI_COMM_WORLD);
   }
 #endif
   return vtkm::cont::internal::GlobalCommuncator;

@@ -522,7 +522,7 @@ int UnitTestSerializationArrayHandle(int argc, char* argv[])
     seed = static_cast<decltype(seed)>(std::time(nullptr));
     std::cout << "using seed: " << seed << "\n";
   }
-  diy::mpi::broadcast(comm, seed, 0);
+  vtkmdiy::mpi::broadcast(comm, seed, 0);
   generator.seed(seed);
 
   return vtkm::cont::testing::Testing::Run(TestArrayHandleSerialization, argc, argv);
