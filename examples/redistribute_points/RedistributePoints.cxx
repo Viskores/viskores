@@ -23,10 +23,7 @@
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/mpi.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
 
 #include "RedistributePoints.h"
 
@@ -36,8 +33,8 @@ using std::endl;
 
 int main(int argc, char* argv[])
 {
-  diy::mpi::environment env(argc, argv);
-  auto comm = diy::mpi::communicator(MPI_COMM_WORLD);
+  vtkmdiy::mpi::environment env(argc, argv);
+  auto comm = vtkmdiy::mpi::communicator(MPI_COMM_WORLD);
   vtkm::cont::EnvironmentTracker::SetCommunicator(comm);
 
   if (argc != 3)

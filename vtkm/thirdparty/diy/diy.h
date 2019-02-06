@@ -34,12 +34,13 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include VTKM_DIY_INCLUDE(assigner.hpp)
 #include VTKM_DIY_INCLUDE(decomposition.hpp)
 #include VTKM_DIY_INCLUDE(master.hpp)
+#include VTKM_DIY_INCLUDE(mpi.hpp)
 #include VTKM_DIY_INCLUDE(partners/all-reduce.hpp)
 #include VTKM_DIY_INCLUDE(partners/broadcast.hpp)
 #include VTKM_DIY_INCLUDE(partners/swap.hpp)
 #include VTKM_DIY_INCLUDE(reduce.hpp)
+#include VTKM_DIY_INCLUDE(reduce-operations.hpp)
 #include VTKM_DIY_INCLUDE(serialization.hpp)
-#include VTKM_DIY_INCLUDE(mpi.hpp)
 #undef VTKM_DIY_INCLUDE
 VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
