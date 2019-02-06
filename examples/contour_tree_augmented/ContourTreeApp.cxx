@@ -330,7 +330,8 @@ int main(int argc, char* argv[])
   if (computeBranchDecomposition)
   {
     // TODO: Change timing to use logging in vtkm/cont/Logging.h
-    vtkm::cont::Timer<> branchDecompTimer;
+    vtkm::cont::Timer branchDecompTimer;
+    branchDecompTimer.Start();
     // compute the volume for each hyperarc and superarc
     cppp2_ns::IdArrayType superarcIntrinsicWeight;
     cppp2_ns::IdArrayType superarcDependentWeight;
@@ -346,6 +347,7 @@ int main(int argc, char* argv[])
     std::cout << std::setw(42) << std::left << "Compute Volume Weights"
               << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
     branchDecompTimer.Reset();
+    branchDecompTimer.Start();
 
     // compute the branch decomposition by volume
     cppp2_ns::IdArrayType whichBranch;

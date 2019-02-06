@@ -251,7 +251,6 @@ struct RenderGameOfLife
 };
 
 vtkm::cont::Timer gTimer{ vtkm::cont::DeviceAdapterTagSerial() };
-gTimer.Start();
 vtkm::cont::DataSet* gData = nullptr;
 GameOfLife* gFilter = nullptr;
 RenderGameOfLife* gRenderer = nullptr;
@@ -364,6 +363,7 @@ int main(int argc, char** argv)
   gFilter = &filter;
   gRenderer = &renderer;
 
+  gTimer.Start();
   glutDisplayFunc([]() {
     const vtkm::Float32 c = static_cast<vtkm::Float32>(gTimer.GetElapsedTime());
 
