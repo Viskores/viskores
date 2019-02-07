@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestAddGhostZone.cxx
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
   UnitTestCleanGrid.cxx
