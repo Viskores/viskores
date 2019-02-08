@@ -1,5 +1,5 @@
-#ifndef DIY_TIME_HPP
-#define DIY_TIME_HPP
+#ifndef VTKMDIY_TIME_HPP
+#define VTKMDIY_TIME_HPP
 
 #ifndef _WIN32
 #include <sys/time.h>

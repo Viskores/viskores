@@ -1,5 +1,5 @@
-#ifndef DIY_MPI_IO_HPP
-#define DIY_MPI_IO_HPP
+#ifndef VTKMDIY_MPI_IO_HPP
+#define VTKMDIY_MPI_IO_HPP
 
 #include "../constants.h"
 
@@ -73,7 +73,7 @@ diy::mpi::io::file::
 file(const communicator& comm__, const std::string& filename, int mode)
 : comm_(comm__)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   int ret = MPI_File_open(comm__, const_cast<char*>(filename.c_str()), mode, MPI_INFO_NULL, &fh);
   if (ret)
       throw std::runtime_error("DIY cannot open file: " + filename);
@@ -89,7 +89,7 @@ void
 diy::mpi::io::file::
 close()
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   if (fh != MPI_FILE_NULL)
     MPI_File_close(&fh);
 #endif
@@ -99,7 +99,7 @@ diy::mpi::io::offset
 diy::mpi::io::file::
 size() const
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   offset sz;
   MPI_File_get_size(fh, &sz);
   return sz;
@@ -112,7 +112,7 @@ void
 diy::mpi::io::file::
 resize(diy::mpi::io::offset size_)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   MPI_File_set_size(fh, size_);
 #else
   DIY_UNUSED(size_);
@@ -124,7 +124,7 @@ void
 diy::mpi::io::file::
 read_at(offset o, char* buffer, size_t size_)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   status s;
   MPI_File_read_at(fh, o, buffer, static_cast<int>(size_), detail::get_mpi_datatype<char>(), &s.s);
 #else
@@ -147,7 +147,7 @@ void
 diy::mpi::io::file::
 read_at_all(offset o, char* buffer, size_t size_)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   status s;
   MPI_File_read_at_all(fh, o, buffer, static_cast<int>(size_), detail::get_mpi_datatype<char>(), &s.s);
 #else
@@ -170,7 +170,7 @@ void
 diy::mpi::io::file::
 write_at(offset o, const char* buffer, size_t size_)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   status s;
   MPI_File_write_at(fh, o, (void *)buffer, static_cast<int>(size_), detail::get_mpi_datatype<char>(), &s.s);
 #else
@@ -193,7 +193,7 @@ void
 diy::mpi::io::file::
 write_at_all(offset o, const char* buffer, size_t size_)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   status s;
   MPI_File_write_at_all(fh, o, (void *)buffer, static_cast<int>(size_), detail::get_mpi_datatype<char>(), &s.s);
 #else

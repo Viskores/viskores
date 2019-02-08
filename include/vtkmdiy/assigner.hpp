@@ -1,5 +1,5 @@
-#ifndef DIY_ASSIGNER_HPP
-#define DIY_ASSIGNER_HPP
+#ifndef VTKMDIY_ASSIGNER_HPP
+#define VTKMDIY_ASSIGNER_HPP
 
 #include <vector>
 #include <tuple>

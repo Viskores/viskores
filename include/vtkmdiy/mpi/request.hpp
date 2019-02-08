@@ -19,7 +19,7 @@ namespace mpi
 diy::mpi::status
 diy::mpi::request::wait()
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   status s;
   MPI_Wait(&r, &s.s);
   return s;
@@ -31,7 +31,7 @@ diy::mpi::request::wait()
 diy::mpi::optional<diy::mpi::status>
 diy::mpi::request::test()
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   status s;
   int flag;
   MPI_Test(&r, &flag, &s.s);
@@ -44,7 +44,7 @@ diy::mpi::request::test()
 void
 diy::mpi::request::cancel()
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   MPI_Cancel(&r);
 #endif
 }

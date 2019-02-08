@@ -1,5 +1,5 @@
-#ifndef DIY_MASTER_HPP
-#define DIY_MASTER_HPP
+#ifndef VTKMDIY_MASTER_HPP
+#define VTKMDIY_MASTER_HPP
 
 #include <vector>
 #include <map>
@@ -624,7 +624,7 @@ exchange(bool remote)
 
   log->debug("Starting exchange");
 
-#ifdef DIY_NO_MPI
+#ifdef VTKM_DIY_NO_MPI
   // remote doesn't need to do anything special if there is no mpi, but we also
   // can't just use it because of the ibarrier
   remote = false;
@@ -798,7 +798,7 @@ rcomm_exchange()
         {
             if (gid_order.empty() && inflight_sends().empty())
             {
-            #ifndef DIY_NO_MPI
+            #ifndef VTKM_DIY_NO_MPI
                 ibarr_req = comm_.ibarrier();
                 ibarr_act = true;
             #else

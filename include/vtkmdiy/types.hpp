@@ -1,5 +1,5 @@
-#ifndef DIY_TYPES_HPP
-#define DIY_TYPES_HPP
+#ifndef VTKMDIY_TYPES_HPP
+#define VTKMDIY_TYPES_HPP
 
 #include <iostream>
 #include "constants.h"

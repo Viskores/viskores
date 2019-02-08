@@ -1,5 +1,5 @@
-#ifndef DIY_BLOCK_TRAITS_HPP
-#define DIY_BLOCK_TRAITS_HPP
+#ifndef VTKMDIY_BLOCK_TRAITS_HPP
+#define VTKMDIY_BLOCK_TRAITS_HPP
 
 #include "traits.hpp"
 

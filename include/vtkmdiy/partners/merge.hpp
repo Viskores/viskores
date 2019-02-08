@@ -1,5 +1,5 @@
-#ifndef DIY_PARTNERS_MERGE_HPP
-#define DIY_PARTNERS_MERGE_HPP
+#ifndef VTKMDIY_PARTNERS_MERGE_HPP
+#define VTKMDIY_PARTNERS_MERGE_HPP
 
 #include "common.hpp"
 
