@@ -24,7 +24,7 @@
 #include <vtkm/cont/VariantArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/thirdparty/diy/diy.h>
+#include <vtkm/thirdparty/diy/serialization.h>
 
 #include <random>
 

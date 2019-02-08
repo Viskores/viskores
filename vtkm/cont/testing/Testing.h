@@ -33,7 +33,7 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 
-#include <vtkm/thirdparty/diy/diy.h>
+#include <vtkm/thirdparty/diy/serialization.h>
 
 namespace vtkm
 {

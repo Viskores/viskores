@@ -66,5 +66,6 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(FILES
     ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h
     ${CMAKE_CURRENT_SOURCE_DIR}/diy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/serialization.h
     DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
 endif()
