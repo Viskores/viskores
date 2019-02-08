@@ -1,5 +1,5 @@
-#ifndef DIY_IO_UTILS_HPP
-#define DIY_IO_UTILS_HPP
+#ifndef VTKMDIY_IO_UTILS_HPP
+#define VTKMDIY_IO_UTILS_HPP
 
 #if defined(_WIN32)
 #include <direct.h>

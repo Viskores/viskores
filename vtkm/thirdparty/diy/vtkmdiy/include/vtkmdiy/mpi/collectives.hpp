@@ -15,7 +15,7 @@ namespace mpi
   {
     static void broadcast(const communicator& comm, T& x, int root)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       MPI_Bcast(address(x), count(x), datatype(x), root, comm);
 #else
       DIY_UNUSED(comm);
@@ -26,7 +26,7 @@ namespace mpi
 
     static void broadcast(const communicator& comm, std::vector<T>& x, int root)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       size_t sz = x.size();
       Collectives<size_t, void*>::broadcast(comm, sz, root);
 
@@ -43,7 +43,7 @@ namespace mpi
 
     static request ibroadcast(const communicator& comm, T& x, int root)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       request r;
       MPI_Ibcast(address(x), count(x), datatype(x), root, comm, &r.r);
       return r;
@@ -58,7 +58,7 @@ namespace mpi
     static void gather(const communicator& comm, const T& in, std::vector<T>& out, int root)
     {
       out.resize(comm.size());
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       MPI_Gather(address(in), count(in), datatype(in), address(out), count(in), datatype(out), root, comm);
 #else
       DIY_UNUSED(comm);
@@ -69,7 +69,7 @@ namespace mpi
 
     static void gather(const communicator& comm, const std::vector<T>& in, std::vector< std::vector<T> >& out, int root)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       std::vector<int>  counts(comm.size());
       Collectives<int,void*>::gather(comm, count(in), counts, root);
 
@@ -104,7 +104,7 @@ namespace mpi
 
     static void gather(const communicator& comm, const T& in, int root)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       MPI_Gather(address(in), count(in), datatype(in), address(in), count(in), datatype(in), root, comm);
 #else
       DIY_UNUSED(comm);
@@ -116,7 +116,7 @@ namespace mpi
 
     static void gather(const communicator& comm, const std::vector<T>& in, int root)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       Collectives<int,void*>::gather(comm, count(in), root);
 
       MPI_Gatherv(address(in), count(in), datatype(in),
@@ -134,7 +134,7 @@ namespace mpi
     static void all_gather(const communicator& comm, const T& in, std::vector<T>& out)
     {
       out.resize(comm.size());
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       MPI_Allgather(address(in), count(in), datatype(in),
                     address(out), count(in), datatype(in),
                     comm);
@@ -146,7 +146,7 @@ namespace mpi
 
     static void all_gather(const communicator& comm, const std::vector<T>& in, std::vector< std::vector<T> >& out)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       std::vector<int>  counts(comm.size());
       Collectives<int,void*>::all_gather(comm, count(in), counts);
 
@@ -180,7 +180,7 @@ namespace mpi
 
     static void reduce(const communicator& comm, const T& in, T& out, int root, const Op&)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       MPI_Reduce(address(in), address(out), count(in), datatype(in),
                  detail::mpi_op<Op>::get(),
                  root, comm);
@@ -193,7 +193,7 @@ namespace mpi
 
     static void reduce(const communicator& comm, const T& in, int root, const Op&)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       MPI_Reduce(address(in), address(in), count(in), datatype(in),
                  detail::mpi_op<Op>::get(),
                  root, comm);
@@ -207,7 +207,7 @@ namespace mpi
 
     static void all_reduce(const communicator& comm, const T& in, T& out, const Op&)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       MPI_Allreduce(address(in), address(out), count(in), datatype(in),
                     detail::mpi_op<Op>::get(),
                     comm);
@@ -219,7 +219,7 @@ namespace mpi
 
     static void all_reduce(const communicator& comm, const std::vector<T>& in, std::vector<T>& out, const Op&)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       out.resize(in.size());
       MPI_Allreduce(address(in), address(out), count(in),
                     datatype(in),
@@ -233,7 +233,7 @@ namespace mpi
 
     static void scan(const communicator& comm, const T& in, T& out, const Op&)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       MPI_Scan(address(in), address(out), count(in), datatype(in),
                detail::mpi_op<Op>::get(),
                comm);
@@ -245,7 +245,7 @@ namespace mpi
 
     static void all_to_all(const communicator& comm, const std::vector<T>& in, std::vector<T>& out, int n = 1)
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       // n specifies how many elements go to/from every process from every process;
       // the sizes of in and out are expected to be n * comm.size()
 

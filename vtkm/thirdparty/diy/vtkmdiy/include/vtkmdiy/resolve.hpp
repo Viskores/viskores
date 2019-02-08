@@ -1,5 +1,5 @@
-#ifndef DIY_RESOLVE_HPP
-#define DIY_RESOLVE_HPP
+#ifndef VTKMDIY_RESOLVE_HPP
+#define VTKMDIY_RESOLVE_HPP
 
 #include "master.hpp"
 #include "assigner.hpp"
