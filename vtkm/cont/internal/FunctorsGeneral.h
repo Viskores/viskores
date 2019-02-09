@@ -38,7 +38,7 @@ namespace internal
 
 // Binary function object wrapper which can detect and handle calling the
 // wrapped operator with complex value types such as
-// IteratorFromArrayPortalValue which happen when passed an input array that
+// ArrayPortalValueReference which happen when passed an input array that
 // is implicit.
 template <typename ResultType, typename Function>
 struct WrappedBinaryOperator
