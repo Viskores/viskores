@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  AddGhostZone.h
   CellAverage.h
   CellMeasures.h
   CleanGrid.h
@@ -79,6 +80,7 @@ set(headers
 )
 
 set(header_template_sources
+  AddGhostZone.hxx
   CellAverage.hxx
   CellMeasures.hxx
   CleanGrid.hxx

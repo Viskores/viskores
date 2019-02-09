@@ -47,6 +47,7 @@ set(headers
   Pair.h
   Range.h
   RangeId.h
+  RangeId2.h
   RangeId3.h
   StaticAssert.h
   Swap.h
