@@ -1,5 +1,5 @@
-#ifndef DIY_REDUCE_OPERATIONS_HPP
-#define DIY_REDUCE_OPERATIONS_HPP
+#ifndef VTKMDIY_REDUCE_OPERATIONS_HPP
+#define VTKMDIY_REDUCE_OPERATIONS_HPP
 
 #include "reduce.hpp"
 #include "partners/swap.hpp"

@@ -1,5 +1,5 @@
-#ifndef DIY_IO_SHARED_HPP
-#define DIY_IO_SHARED_HPP
+#ifndef VTKMDIY_IO_SHARED_HPP
+#define VTKMDIY_IO_SHARED_HPP
 
 #include <sstream>
 #include <fstream>

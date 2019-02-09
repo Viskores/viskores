@@ -1,5 +1,5 @@
-#ifndef DIY_REDUCE_HPP
-#define DIY_REDUCE_HPP
+#ifndef VTKMDIY_REDUCE_HPP
+#define VTKMDIY_REDUCE_HPP
 
 #include <vector>
 #include "master.hpp"

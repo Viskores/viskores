@@ -22,6 +22,6 @@
 
 #include <vtkm/cont/TypeString.h>
 
-#include <vtkm/thirdparty/diy/diy.h>
+#include <vtkm/thirdparty/diy/serialization.h>
 
 #endif // vtk_m_cont_Serialization_h

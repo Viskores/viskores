@@ -34,13 +34,13 @@
 
 /* Whether to use MPI support in DIY */
 #if !defined(VTKM_ENABLE_MPI)
-# define DIY_NO_MPI
+# define VTKM_DIY_NO_MPI
 #endif
 
 /* initially, we disable DIY threads.
  * once we've sorted out how DIY threads and vtkm work together
  * we will make this configurable.*/
-#define DIY_NO_THREADS
+#define VTKM_DIY_NO_THREADS
 
 /* Need to provide a way to for Serialziation
  * specializations to be injected into the correct

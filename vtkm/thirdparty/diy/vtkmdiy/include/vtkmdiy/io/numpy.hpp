@@ -1,5 +1,5 @@
-#ifndef DIY_IO_NMPY_HPP
-#define DIY_IO_NMPY_HPP
+#ifndef VTKMDIY_IO_NMPY_HPP
+#define VTKMDIY_IO_NMPY_HPP
 
 #include <sstream>
 #include <complex>

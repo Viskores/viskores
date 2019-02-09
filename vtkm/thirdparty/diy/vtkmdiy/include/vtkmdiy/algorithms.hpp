@@ -1,5 +1,5 @@
-#ifndef DIY_ALGORITHMS_HPP
-#define DIY_ALGORITHMS_HPP
+#ifndef VTKMDIY_ALGORITHMS_HPP
+#define VTKMDIY_ALGORITHMS_HPP
 
 #include <vector>
 

@@ -37,7 +37,7 @@ void EnvironmentTracker::SetCommunicator(const vtkmdiy::mpi::communicator& comm)
 
 const vtkmdiy::mpi::communicator& EnvironmentTracker::GetCommunicator()
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   int flag;
   MPI_Initialized(&flag);
   if (!flag)

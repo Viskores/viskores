@@ -1,5 +1,5 @@
-#ifndef DIY_COVER_HPP
-#define DIY_COVER_HPP
+#ifndef VTKMDIY_COVER_HPP
+#define VTKMDIY_COVER_HPP
 
 #include <vector>
 #include <map>

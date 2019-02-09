@@ -1,5 +1,5 @@
-#ifndef DIY_PROXY_HPP
-#define DIY_PROXY_HPP
+#ifndef VTKMDIY_PROXY_HPP
+#define VTKMDIY_PROXY_HPP
 
 
 namespace diy
