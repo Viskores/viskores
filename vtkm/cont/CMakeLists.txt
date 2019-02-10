@@ -100,7 +100,6 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageAny.h
   StorageBasic.h
   StorageImplicit.h
   StorageListTag.h
@@ -123,7 +122,6 @@ set(template_sources
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
-  StorageAny.hxx
   StorageBasic.hxx
   StorageVirtual.hxx
   VirtualObjectHandle.hxx

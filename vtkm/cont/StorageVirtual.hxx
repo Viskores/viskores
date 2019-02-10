@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_StorageVirtual_hxx
 #define vtk_m_cont_StorageVirtual_hxx
 
-#include <vtkm/cont/StorageAny.hxx>
+#include <vtkm/cont/StorageVirtual.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/TransferInfo.h>
 
@@ -78,7 +78,7 @@ struct TransferToDevice
     return true;
   }
 };
-}
+} // namespace detail
 
 template <typename DerivedPortal, typename... Args>
 inline void make_transferToDevice(vtkm::cont::DeviceAdapterId devId, Args&&... args)
@@ -93,8 +93,141 @@ inline void make_hostPortal(Payload&& payload, Args&&... args)
   auto host = std::unique_ptr<DerivedPortal>(new DerivedPortal(std::forward<Args>(args)...));
   payload.updateHost(std::move(host));
 }
+
+namespace internal
+{
+namespace detail
+{
+
+VTKM_CONT
+template <typename T, typename S>
+StorageVirtualImpl<T, S>::StorageVirtualImpl(const vtkm::cont::ArrayHandle<T, S>& ah)
+  : vtkm::cont::internal::detail::StorageVirtual()
+  , Handle(ah)
+{
 }
 
+VTKM_CONT
+template <typename T, typename S>
+StorageVirtualImpl<T, S>::StorageVirtualImpl(vtkm::cont::ArrayHandle<T, S>&& ah) noexcept
+  : vtkm::cont::internal::detail::StorageVirtual(),
+    Handle(std::move(ah))
+{
+}
+
+/// release execution side resources
+template <typename T, typename S>
+void StorageVirtualImpl<T, S>::ReleaseResourcesExecution()
+{
+  vtkm::cont::internal::detail::StorageVirtual::ReleaseResourcesExecution();
+  this->Handle.ReleaseResourcesExecution();
+}
+
+/// release control side resources
+template <typename T, typename S>
+void StorageVirtualImpl<T, S>::ReleaseResources()
+{
+  vtkm::cont::internal::detail::StorageVirtual::ReleaseResources();
+  this->Handle.ReleaseResources();
+}
+
+struct PortalWrapperToDevice
+{
+  template <typename DeviceAdapterTag, typename Handle>
+  bool operator()(DeviceAdapterTag device,
+                  Handle&& handle,
+                  vtkm::cont::internal::TransferInfoArray& payload) const
+  {
+    auto portal = handle.PrepareForInput(device);
+    using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
+    vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
+    return transfer(device, payload, portal);
+  }
+  template <typename DeviceAdapterTag, typename Handle>
+  bool operator()(DeviceAdapterTag device,
+                  Handle&& handle,
+                  vtkm::Id numberOfValues,
+                  vtkm::cont::internal::TransferInfoArray& payload,
+                  vtkm::cont::internal::detail::StorageVirtual::OutputMode mode) const
+  {
+    using ACCESS_MODE = vtkm::cont::internal::detail::StorageVirtual::OutputMode;
+    if (mode == ACCESS_MODE::WRITE)
+    {
+      auto portal = handle.PrepareForOutput(numberOfValues, device);
+      using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
+      vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
+      return transfer(device, payload, portal);
+    }
+    else
+    {
+      auto portal = handle.PrepareForInPlace(device);
+      using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
+      vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
+      return transfer(device, payload, portal);
+    }
+  }
+};
+
+template <typename T, typename S>
+void StorageVirtualImpl<T, S>::ControlPortalForInput(
+  vtkm::cont::internal::TransferInfoArray& payload) const
+{
+  auto portal = this->Handle.GetPortalConstControl();
+  using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
+  vtkm::cont::make_hostPortal<DerivedPortal>(payload, portal);
+}
+
+template <typename HandleType>
+void make_writableHostPortal(std::true_type,
+                             vtkm::cont::internal::TransferInfoArray& payload,
+                             HandleType& handle)
+{
+  auto portal = handle.GetPortalControl();
+  using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
+  vtkm::cont::make_hostPortal<DerivedPortal>(payload, portal);
+}
+template <typename HandleType>
+void make_writableHostPortal(std::false_type,
+                             vtkm::cont::internal::TransferInfoArray& payload,
+                             HandleType&)
+{
+  payload.updateHost(nullptr);
+  throw vtkm::cont::ErrorBadValue(
+    "ArrayHandleAny was bound to an ArrayHandle that doesn't support output.");
+}
+
+template <typename T, typename S>
+void StorageVirtualImpl<T, S>::ControlPortalForOutput(
+  vtkm::cont::internal::TransferInfoArray& payload)
+{
+  using HT = vtkm::cont::ArrayHandle<T, S>;
+  constexpr auto isWriteable = typename vtkm::cont::internal::IsWriteableArrayHandle<HT>::type{};
+
+  detail::make_writableHostPortal(isWriteable, payload, this->Handle);
+}
+
+template <typename T, typename S>
+void StorageVirtualImpl<T, S>::TransferPortalForInput(
+  vtkm::cont::internal::TransferInfoArray& payload,
+  vtkm::cont::DeviceAdapterId devId) const
+{
+  vtkm::cont::TryExecuteOnDevice(devId, detail::PortalWrapperToDevice(), this->Handle, payload);
+}
+
+
+template <typename T, typename S>
+void StorageVirtualImpl<T, S>::TransferPortalForOutput(
+  vtkm::cont::internal::TransferInfoArray& payload,
+  vtkm::cont::internal::detail::StorageVirtual::OutputMode mode,
+  vtkm::Id numberOfValues,
+  vtkm::cont::DeviceAdapterId devId)
+{
+  vtkm::cont::TryExecuteOnDevice(
+    devId, detail::PortalWrapperToDevice(), this->Handle, numberOfValues, payload, mode);
+}
+}
+} // namespace internal::detail
+}
 } // namespace vtkm::cont::
 
 #endif
