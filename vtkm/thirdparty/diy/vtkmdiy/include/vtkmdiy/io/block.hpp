@@ -1,5 +1,5 @@
-#ifndef DIY_IO_BLOCK_HPP
-#define DIY_IO_BLOCK_HPP
+#ifndef VTKMDIY_IO_BLOCK_HPP
+#define VTKMDIY_IO_BLOCK_HPP
 
 #include <string>
 #include <algorithm>

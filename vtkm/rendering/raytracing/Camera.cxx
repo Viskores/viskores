@@ -758,13 +758,15 @@ template <typename Precision>
 VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds boundingBox)
 {
   Logger* logger = Logger::GetInstance();
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> createTimer;
+  vtkm::cont::Timer createTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+  createTimer.Start();
   logger->OpenLogEntry("ray_camera");
 
   bool ortho = this->CameraView.GetMode() == vtkm::rendering::Camera::MODE_2D;
   this->UpdateDimensions(rays, boundingBox, ortho);
   this->WriteSettingsToLog();
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
   //Set the origin of the ray back to the camera position
 
   Precision infinity;
@@ -782,7 +784,7 @@ VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds b
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("camera_memset", time);
-  timer.Reset();
+  timer.Start();
 
   //Reset the camera look vector
   this->Look = this->LookAt - this->Position;

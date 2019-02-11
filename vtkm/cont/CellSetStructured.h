@@ -143,7 +143,7 @@ struct TypeString<vtkm::cont::CellSetStructured<DIMENSION>>
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <vtkm::IdComponent DIMENSION>
@@ -155,18 +155,18 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    diy::save(bb, cs.GetName());
-    diy::save(bb, cs.GetPointDimensions());
-    diy::save(bb, cs.GetGlobalPointIndexStart());
+    vtkmdiy::save(bb, cs.GetName());
+    vtkmdiy::save(bb, cs.GetPointDimensions());
+    vtkmdiy::save(bb, cs.GetGlobalPointIndexStart());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
     std::string name;
-    diy::load(bb, name);
+    vtkmdiy::load(bb, name);
     typename Type::SchedulingRangeType dims, start;
-    diy::load(bb, dims);
-    diy::load(bb, start);
+    vtkmdiy::load(bb, dims);
+    vtkmdiy::load(bb, start);
 
     cs = Type(name);
     cs.SetPointDimensions(dims);

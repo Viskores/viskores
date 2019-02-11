@@ -1,7 +1,7 @@
-#ifndef DIY_THREAD_H
-#define DIY_THREAD_H
+#ifndef VTKMDIY_THREAD_H
+#define VTKMDIY_THREAD_H
 
-#ifdef DIY_NO_THREADS
+#ifdef VTKM_DIY_NO_THREADS
 #include "no-thread.hpp"
 #else
 

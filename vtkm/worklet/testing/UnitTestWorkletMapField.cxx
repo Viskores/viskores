@@ -140,16 +140,29 @@ struct DoVariantTestWorklet
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
       vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
-      dispatcher.Invoke(inputVariant, outputVariant, inoutVariant);
+      dispatcher.Invoke(inputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
+                        outputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
+                        inoutVariant.ResetTypes(vtkm::ListTagBase<T>{}));
       CheckPortal(outputHandle.GetPortalConstControl());
       CheckPortal(inoutHandle.GetPortalConstControl());
     }
 
     { //Verify we can pass by pointer
-      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
       vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
-      dispatcher.Invoke(&inputVariant, &outputVariant, &inoutVariant);
+
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+      dispatcher.Invoke(&inputVariant, outputHandle, inoutHandle);
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+      dispatcher.Invoke(inputHandle, &outputVariant, inoutHandle);
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+      dispatcher.Invoke(inputHandle, outputHandle, &inoutVariant);
       CheckPortal(outputHandle.GetPortalConstControl());
       CheckPortal(inoutHandle.GetPortalConstControl());
     }

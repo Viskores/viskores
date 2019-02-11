@@ -1,5 +1,5 @@
-#ifndef DIY_POINT_HPP
-#define DIY_POINT_HPP
+#ifndef VTKMDIY_POINT_HPP
+#define VTKMDIY_POINT_HPP
 
 #include <iostream>
 #include <vector>

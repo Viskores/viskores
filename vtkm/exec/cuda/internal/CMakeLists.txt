@@ -28,7 +28,7 @@ set(headers
   )
 
 #-----------------------------------------------------------------------------
-vtkm_declare_headers(CUDA ${headers})
+vtkm_declare_headers(${headers})
 
 set_source_files_properties(ThrustPatches.h
                             PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE)

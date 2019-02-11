@@ -145,8 +145,8 @@ private:
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
-  // TODO: Change timing to use logging in vtkm/cont/Logging.h
-  vtkm::cont::Timer<> totalTime;
+  vtkm::cont::Timer totalTime;
+  totalTime.Start();
   vtkm::Float64 prevTime = 0;
   vtkm::Float64 currTime = 0;
   std::cout << "ContourTreePPP2Mesh <options> <fileName>" << std::endl;
@@ -330,7 +330,8 @@ int main(int argc, char* argv[])
   if (computeBranchDecomposition)
   {
     // TODO: Change timing to use logging in vtkm/cont/Logging.h
-    vtkm::cont::Timer<> branchDecompTimer;
+    vtkm::cont::Timer branchDecompTimer;
+    branchDecompTimer.Start();
     // compute the volume for each hyperarc and superarc
     cppp2_ns::IdArrayType superarcIntrinsicWeight;
     cppp2_ns::IdArrayType superarcDependentWeight;
@@ -346,6 +347,7 @@ int main(int argc, char* argv[])
     std::cout << std::setw(42) << std::left << "Compute Volume Weights"
               << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
     branchDecompTimer.Reset();
+    branchDecompTimer.Start();
 
     // compute the branch decomposition by volume
     cppp2_ns::IdArrayType whichBranch;

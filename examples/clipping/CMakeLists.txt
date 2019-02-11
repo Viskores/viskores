@@ -28,13 +28,13 @@ find_package(VTKm REQUIRED QUIET)
 add_executable(Clipping_SERIAL Clipping.cxx)
 target_compile_definitions(Clipping_SERIAL PRIVATE
                            "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-target_link_libraries(Clipping_SERIAL PRIVATE vtkm_cont)
+target_link_libraries(Clipping_SERIAL PRIVATE vtkm_filter)
 
 if(TARGET vtkm::tbb)
   add_executable(Clipping_TBB Clipping.cxx)
   target_compile_definitions(Clipping_TBB PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  target_link_libraries(Clipping_TBB PRIVATE vtkm_cont)
+  target_link_libraries(Clipping_TBB PRIVATE vtkm_filter)
 endif()
 
 if(TARGET vtkm::cuda)
@@ -43,5 +43,5 @@ if(TARGET vtkm::cuda)
 
   target_compile_definitions(Clipping_CUDA PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  target_link_libraries(Clipping_CUDA PRIVATE vtkm_cont)
+  target_link_libraries(Clipping_CUDA PRIVATE vtkm_filter)
 endif()

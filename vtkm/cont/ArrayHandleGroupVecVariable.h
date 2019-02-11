@@ -534,7 +534,7 @@ struct TypeString<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename SAH, typename OAH>
@@ -547,8 +547,8 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    diy::save(bb, obj.GetStorage().GetSourceArray());
-    diy::save(bb, obj.GetStorage().GetOffsetsArray());
+    vtkmdiy::save(bb, obj.GetStorage().GetSourceArray());
+    vtkmdiy::save(bb, obj.GetStorage().GetOffsetsArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -556,8 +556,8 @@ public:
     SAH src;
     OAH off;
 
-    diy::load(bb, src);
-    diy::load(bb, off);
+    vtkmdiy::load(bb, src);
+    vtkmdiy::load(bb, off);
 
     obj = vtkm::cont::make_ArrayHandleGroupVecVariable(src, off);
   }

@@ -33,7 +33,7 @@ DeviceAdapterTimerImplementation<
   vtkm::cont::DeviceAdapterTagCuda>::DeviceAdapterTimerImplementation()
 {
   VTKM_CUDA_CALL(cudaEventCreate(&this->StartEvent));
-  VTKM_CUDA_CALL(cudaEventCreate(&this->EndEvent));
+  VTKM_CUDA_CALL(cudaEventCreate(&this->StopEvent));
   this->Reset();
 }
 
@@ -45,21 +45,72 @@ DeviceAdapterTimerImplementation<
   // VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR catching any issues from these calls
   // later.
   cudaEventDestroy(this->StartEvent);
-  cudaEventDestroy(this->EndEvent);
+  cudaEventDestroy(this->StopEvent);
 }
 
 void DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Reset()
 {
+  this->StartReady = false;
+  this->StopReady = false;
+}
+
+void DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Start()
+{
   VTKM_CUDA_CALL(cudaEventRecord(this->StartEvent, cudaStreamPerThread));
   VTKM_CUDA_CALL(cudaEventSynchronize(this->StartEvent));
+  this->StartReady = true;
 }
+
+void DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Stop()
+{
+  VTKM_CUDA_CALL(cudaEventRecord(this->StopEvent, cudaStreamPerThread));
+  this->StopReady = true;
+}
+
+bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Started()
+{
+  return this->StartReady;
+}
+
+bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Stopped()
+{
+  return this->StopReady;
+}
+
+// Callbacks without a mandated order(in independent streams) execute in undefined
+// order and maybe serialized. So Instead CudaEventQuery is used here.
+// Ref link: https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__STREAM.html
+bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Ready()
+{
+  if (cudaEventQuery(this->StopEvent) == cudaSuccess)
+  {
+    return true;
+  }
+  return false;
+}
+
 
 vtkm::Float64 DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::GetElapsedTime()
 {
-  VTKM_CUDA_CALL(cudaEventRecord(this->EndEvent, cudaStreamPerThread));
-  VTKM_CUDA_CALL(cudaEventSynchronize(this->EndEvent));
+  assert(this->StartReady);
+  if (!this->StartReady)
+  {
+    VTKM_LOG_F(vtkm::cont::LogLevel::Error,
+               "Start() function should be called first then trying to call GetElapsedTime().");
+    return 0;
+  }
+  bool manualStop = true;
+  if (!this->StopReady)
+  {
+    manualStop = false;
+    this->Stop();
+  }
+
+  VTKM_CUDA_CALL(cudaEventSynchronize(this->StopEvent));
   float elapsedTimeMilliseconds;
-  VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, this->StartEvent, this->EndEvent));
+  VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, this->StartEvent, this->StopEvent));
+  // Reset Stop flag to its original state
+  this->StopReady = manualStop;
   return static_cast<vtkm::Float64>(0.001f * elapsedTimeMilliseconds);
 }
 }

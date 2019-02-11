@@ -28,11 +28,7 @@
 
 #include <vector>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/assigner.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/diy.h>
 
 #ifdef VTKM_MSVC
 #pragma warning(push)
@@ -49,7 +45,7 @@ class MultiBlock;
 
 /// \brief Assigner for `MultiBlock` blocks.
 ///
-/// `AssignerMultiBlock` is a `diy::StaticAssigner` implementation that uses
+/// `AssignerMultiBlock` is a `vtkmdiy::StaticAssigner` implementation that uses
 /// `MultiBlock`'s block distribution to build global-id/rank associations
 /// needed for several `diy` operations.
 /// It uses a contiguous assignment strategy to map blocks to global ids i.e.
@@ -59,7 +55,7 @@ class MultiBlock;
 /// essential it gets created on all ranks irrespective of whether the rank has
 /// any blocks.
 ///
-class VTKM_CONT_EXPORT AssignerMultiBlock : public diy::StaticAssigner
+class VTKM_CONT_EXPORT AssignerMultiBlock : public vtkmdiy::StaticAssigner
 {
 public:
   /// Initialize the assigner using a multiblock dataset.
@@ -72,7 +68,7 @@ public:
   AssignerMultiBlock(vtkm::Id num_blocks);
 
   ///@{
-  /// diy::Assigner API implementation.
+  /// vtkmdiy::Assigner API implementation.
   VTKM_CONT
   void local_gids(int rank, std::vector<int>& gids) const override;
 

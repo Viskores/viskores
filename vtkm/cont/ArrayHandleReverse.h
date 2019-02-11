@@ -269,7 +269,7 @@ struct TypeString<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH>
@@ -282,13 +282,13 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    diy::save(bb, obj.GetStorage().GetArray());
+    vtkmdiy::save(bb, obj.GetStorage().GetArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     AH array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
     obj = vtkm::cont::make_ArrayHandleReverse(array);
   }
 };

@@ -26,7 +26,7 @@ namespace mpi
 bool
 diy::mpi::status::cancelled() const
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   int flag;
   MPI_Test_cancelled(const_cast<MPI_Status*>(&s), &flag);
   return flag;
@@ -39,7 +39,7 @@ template<class T>
 int
 diy::mpi::status::count() const
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   int c;
   MPI_Get_count(const_cast<MPI_Status*>(&s), detail::get_mpi_datatype<T>(), &c);
   return c;

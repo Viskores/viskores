@@ -83,7 +83,7 @@ struct TypeString<vtkm::cont::ArrayHandleIndex>
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <>

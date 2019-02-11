@@ -27,24 +27,6 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
 
-namespace vtkm
-{
-namespace cont
-{
-namespace cuda
-{
-namespace internal
-{
-
-static __global__ void DetermineIfValidCudaDevice()
-{
-  //used only to see if we can launch kernels. It is possible to have a
-  //CUDA capable device, but still fail to have CUDA support.
-}
-}
-}
-}
-}
 namespace
 {
 static std::once_flag deviceQueryFlag;
@@ -64,28 +46,11 @@ void queryNumberOfDevicesandHighestArchSupported(vtkm::Int32& nod, vtkm::Int32& 
     for (vtkm::Int32 i = 0; i < numDevices; i++)
     {
       cudaDeviceProp prop;
-      VTKM_CUDA_CALL(cudaGetDeviceProperties(&prop, i));
-      const vtkm::Int32 arch = (prop.major * 10) + prop.minor;
-      archVersion = vtkm::Max(arch, archVersion);
-    }
-
-    //Make sure we can actually launch a kernel. This could fail for any
-    //of the following reasons:
-    //
-    // 1. cudaErrorInsufficientDriver, caused by out of data drives
-    // 2. cudaErrorDevicesUnavailable, caused by another process locking the
-    //    device or somebody disabling cuda support on the device
-    // 3. cudaErrorNoKernelImageForDevice we built for a compute version
-    //    greater than the device we are running on
-    // Most likely others that I don't even know about
-    if (numDevices > 0)
-    {
-      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice<<<1, 1, 0, cudaStreamPerThread>>>();
-      cudaStreamSynchronize(cudaStreamPerThread);
-      if (cudaSuccess != cudaGetLastError())
+      res = cudaGetDeviceProperties(&prop, i);
+      if (res == cudaSuccess)
       {
-        numDevices = 0;
-        archVersion = 0;
+        const vtkm::Int32 arch = (prop.major * 10) + prop.minor;
+        archVersion = vtkm::Max(arch, archVersion);
       }
     }
   });
@@ -112,7 +77,7 @@ DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>::DeviceAdapterRun
 
 bool DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>::Exists() const
 {
-  return this->NumberOfDevices > 0 && this->HighestArchSupported >= 20;
+  return this->NumberOfDevices > 0 && this->HighestArchSupported >= 30;
 }
 }
 } // namespace vtkm::cont

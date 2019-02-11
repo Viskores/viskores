@@ -434,7 +434,7 @@ struct DynamicTransformTraits<vtkm::cont::VariantArrayHandleBase<TypeList>>
 
 //=============================================================================
 // Specializations of serialization related classes
-namespace diy
+namespace mangled_diy_namespace
 {
 
 namespace internal
@@ -445,8 +445,8 @@ struct VariantArrayHandleSerializeFunctor
   template <typename ArrayHandleType>
   void operator()(const ArrayHandleType& ah, BinaryBuffer& bb) const
   {
-    diy::save(bb, vtkm::cont::TypeString<ArrayHandleType>::Get());
-    diy::save(bb, ah);
+    vtkmdiy::save(bb, vtkm::cont::TypeString<ArrayHandleType>::Get());
+    vtkmdiy::save(bb, ah);
   }
 };
 
@@ -464,7 +464,7 @@ struct VariantArrayHandleDeserializeFunctor
     if (!success && (typeString == vtkm::cont::TypeString<ArrayHandleType>::Get()))
     {
       ArrayHandleType ah;
-      diy::load(bb, ah);
+      vtkmdiy::load(bb, ah);
       dh = vtkm::cont::VariantArrayHandleBase<TypeList>(ah);
       success = true;
     }
@@ -488,7 +488,7 @@ public:
   static VTKM_CONT void load(BinaryBuffer& bb, Type& obj)
   {
     std::string typeString;
-    diy::load(bb, typeString);
+    vtkmdiy::load(bb, typeString);
 
     bool success = false;
     vtkm::ListForEach(

@@ -69,7 +69,7 @@ set(benchmarks
   )
 
 foreach (benchmark ${benchmarks})
-  add_benchmark(${benchmark} ${benchmark}.cxx vtkm_cont)
+  add_benchmark(${benchmark} ${benchmark}.cxx vtkm_filter)
 endforeach ()
 
 if(TARGET vtkm_rendering)

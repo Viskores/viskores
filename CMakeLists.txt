@@ -153,9 +153,6 @@ include(VTKmCompilerFlags)
 
 
 #-----------------------------------------------------------------------------
-
-
-#-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)
   enable_testing()
   # Only include CTest if it has not been included by a superproject. The
@@ -170,24 +167,6 @@ if (VTKm_ENABLE_TESTING)
 
   configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
-
-  #-----------------------------------------------------------------------------
-  # Add "meta" tests that check the state of the repository
-  # SystemInformation prints out information about the current configuration
-  # CopyrightStatement checks that the copyright statement is in all source files
-  # SourceInBuild checks that all source files are listed in the build
-  add_test(NAME SystemInformation
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmSystemInformation.cmake"
-    )
-  add_test(NAME CopyrightStatement
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
-    )
-  # increase timeout since on some machines CopyrightStatement test takes a long time.
-  set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
-
-  add_test(NAME SourceInBuild
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInBuild.cmake"
-    )
 
   #-----------------------------------------------------------------------------
   # Find the Python interpreter, which we will use during the build process
@@ -325,3 +304,59 @@ endif()
 if(VTKm_ENABLE_EXAMPLES)
   add_subdirectory(examples)
 endif(VTKm_ENABLE_EXAMPLES)
+
+#-----------------------------------------------------------------------------
+if (VTKm_ENABLE_TESTING)
+
+  #-----------------------------------------------------------------------------
+  # Add "meta" tests that check the state of the repository
+  # SystemInformation prints out information about the current configuration
+  # CopyrightStatement checks that the copyright statement is in all source files
+  # SourceInBuild checks that all source files are listed in the build
+  # SourceInInstall checks that all source files are installed in the build
+  add_test(NAME SystemInformation
+    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmSystemInformation.cmake"
+    )
+  add_test(NAME CopyrightStatement
+    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
+    )
+  # increase timeout since on some machines CopyrightStatement test takes a long time.
+  set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
+
+  if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+    set(command_args
+      "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
+      "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}"
+      "-DVTKm_INSTALL_INCLUDE_DIR=${VTKm_INSTALL_INCLUDE_DIR}"
+      "-DVTKm_ENABLE_RENDERING=${VTKm_ENABLE_RENDERING}"
+      "-DVTKm_ENABLE_LOGGING=${VTKm_ENABLE_LOGGING}"
+      )
+
+    #By having this as separate tests using fixtures, it will allow us in
+    #the future to write tests that build against the installed version
+    add_test(NAME TestInstallSetup
+      COMMAND ${CMAKE_COMMAND}
+        "-DMODE=INSTALL"
+        ${command_args}
+        -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInInstall.cmake"
+      )
+
+    add_test(NAME SourceInInstall
+      COMMAND ${CMAKE_COMMAND}
+        "-DMODE=VERIFY"
+        ${command_args}
+        -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInInstall.cmake"
+      )
+
+    add_test(NAME TestInstallCleanup
+      COMMAND ${CMAKE_COMMAND}
+       "-DMODE=CLEANUP"
+        ${command_args}
+        -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInInstall.cmake"
+      )
+
+    set_tests_properties(TestInstallSetup PROPERTIES FIXTURES_SETUP vtkm_installed)
+    set_tests_properties(SourceInInstall PROPERTIES FIXTURES_REQUIRED vtkm_installed)
+    set_tests_properties(TestInstallCleanup PROPERTIES FIXTURES_CLEANUP vtkm_installed)
+  endif()
+endif()

@@ -458,7 +458,7 @@ struct TypeString<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH1, typename AH2, typename AH3>
@@ -472,9 +472,9 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetFirstArray());
-    diy::save(bb, storage.GetSecondArray());
-    diy::save(bb, storage.GetThirdArray());
+    vtkmdiy::save(bb, storage.GetFirstArray());
+    vtkmdiy::save(bb, storage.GetSecondArray());
+    vtkmdiy::save(bb, storage.GetThirdArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -483,9 +483,9 @@ public:
     AH2 array2;
     AH3 array3;
 
-    diy::load(bb, array1);
-    diy::load(bb, array2);
-    diy::load(bb, array3);
+    vtkmdiy::load(bb, array1);
+    vtkmdiy::load(bb, array2);
+    vtkmdiy::load(bb, array3);
 
     obj = vtkm::cont::make_ArrayHandleCartesianProduct(array1, array2, array3);
   }

@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestAddGhostZone.cxx
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
   UnitTestCleanGrid.cxx
@@ -66,4 +67,8 @@ set(unit_tests
   UnitTestZFP.cxx
  )
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS)
+vtkm_unit_tests(
+  SOURCES ${unit_tests}
+  LIBRARIES vtkm_filter
+  ALL_BACKENDS
+  )

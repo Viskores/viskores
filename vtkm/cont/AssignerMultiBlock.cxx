@@ -22,11 +22,8 @@
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/MultiBlock.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/mpi.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+
+#include <vtkm/thirdparty/diy/diy.h>
 
 #include <algorithm> // std::lower_bound
 #include <numeric>   // std::iota
@@ -44,15 +41,15 @@ AssignerMultiBlock::AssignerMultiBlock(const vtkm::cont::MultiBlock& mb)
 
 VTKM_CONT
 AssignerMultiBlock::AssignerMultiBlock(vtkm::Id num_blocks)
-  : diy::StaticAssigner(vtkm::cont::EnvironmentTracker::GetCommunicator().size(), 1)
+  : vtkmdiy::StaticAssigner(vtkm::cont::EnvironmentTracker::GetCommunicator().size(), 1)
   , IScanBlockCounts()
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   if (comm.size() > 1)
   {
     vtkm::Id iscan;
-    diy::mpi::scan(comm, num_blocks, iscan, std::plus<vtkm::Id>());
-    diy::mpi::all_gather(comm, iscan, this->IScanBlockCounts);
+    vtkmdiy::mpi::scan(comm, num_blocks, iscan, std::plus<vtkm::Id>());
+    vtkmdiy::mpi::all_gather(comm, iscan, this->IScanBlockCounts);
   }
   else
   {

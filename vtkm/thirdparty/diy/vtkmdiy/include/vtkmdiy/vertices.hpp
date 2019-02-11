@@ -1,5 +1,5 @@
-#ifndef DIY_VERTICES_HPP
-#define DIY_VERTICES_HPP
+#ifndef VTKMDIY_VERTICES_HPP
+#define VTKMDIY_VERTICES_HPP
 
 #include <iterator>
 

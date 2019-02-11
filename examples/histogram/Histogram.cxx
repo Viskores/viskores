@@ -31,11 +31,7 @@
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/mpi.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/diy.h>
 
 #include <mpi.h>
 
@@ -69,7 +65,7 @@ int main(int argc, char* argv[])
   MPI_Init(&argc, &argv);
 
   // tell VTK-m the communicator to use.
-  vtkm::cont::EnvironmentTracker::SetCommunicator(diy::mpi::communicator(MPI_COMM_WORLD));
+  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(MPI_COMM_WORLD));
 
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);

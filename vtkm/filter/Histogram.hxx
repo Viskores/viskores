@@ -30,16 +30,7 @@
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/filter/internal/CreateResult.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/Configure.h>
-#include VTKM_DIY(diy/decomposition.hpp)
-#include VTKM_DIY(diy/master.hpp)
-#include VTKM_DIY(diy/partners/broadcast.hpp)
-#include VTKM_DIY(diy/partners/swap.hpp)
-#include VTKM_DIY(diy/reduce.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/diy.h>
 
 namespace vtkm
 {
@@ -53,8 +44,8 @@ class DistributedHistogram
   {
   public:
     void operator()(vtkm::cont::ArrayHandle<vtkm::Id>* result,
-                    const diy::ReduceProxy& srp,
-                    const diy::RegularMergePartners&) const
+                    const vtkmdiy::ReduceProxy& srp,
+                    const vtkmdiy::RegularMergePartners&) const
     {
       const auto selfid = srp.gid();
       // 1. dequeue.
@@ -119,7 +110,7 @@ public:
       return numLocalBlocks == 0 ? ArrayType() : this->LocalBlocks[0];
     }
 
-    diy::Master master(
+    vtkmdiy::Master master(
       comm,
       /*threads*/ 1,
       /*limit*/ -1,
@@ -127,8 +118,8 @@ public:
       [](void* ptr) { delete static_cast<vtkm::cont::ArrayHandle<vtkm::Id>*>(ptr); });
 
     vtkm::cont::AssignerMultiBlock assigner(numLocalBlocks);
-    diy::RegularDecomposer<diy::DiscreteBounds> decomposer(
-      /*dims*/ 1, diy::interval(0, assigner.nblocks() - 1), assigner.nblocks());
+    vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds> decomposer(
+      /*dims*/ 1, vtkmdiy::interval(0, assigner.nblocks() - 1), assigner.nblocks());
     decomposer.decompose(comm.rank(), assigner, master);
 
     assert(static_cast<vtkm::Id>(master.size()) == numLocalBlocks);
@@ -137,9 +128,9 @@ public:
       *master.block<ArrayType>(static_cast<int>(cc)) = this->LocalBlocks[static_cast<size_t>(cc)];
     }
 
-    diy::RegularMergePartners partners(decomposer, /*k=*/2);
+    vtkmdiy::RegularMergePartners partners(decomposer, /*k=*/2);
     // reduce to block-0.
-    diy::reduce(master, assigner, partners, Reducer());
+    vtkmdiy::reduce(master, assigner, partners, Reducer());
 
     ArrayType result;
     if (master.local(0))
@@ -159,21 +150,21 @@ private:
     if (comm.size() > 1)
     {
       using ArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
-      diy::Master master(
+      vtkmdiy::Master master(
         comm,
         /*threads*/ 1,
         /*limit*/ -1,
         []() -> void* { return new vtkm::cont::ArrayHandle<vtkm::Id>(); },
         [](void* ptr) { delete static_cast<vtkm::cont::ArrayHandle<vtkm::Id>*>(ptr); });
 
-      diy::ContiguousAssigner assigner(comm.size(), comm.size());
-      diy::RegularDecomposer<diy::DiscreteBounds> decomposer(
-        1, diy::interval(0, comm.size() - 1), comm.size());
+      vtkmdiy::ContiguousAssigner assigner(comm.size(), comm.size());
+      vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds> decomposer(
+        1, vtkmdiy::interval(0, comm.size() - 1), comm.size());
       decomposer.decompose(comm.rank(), assigner, master);
       assert(master.size() == 1); // number of local blocks should be 1 per rank.
       *master.block<ArrayType>(0) = data;
-      diy::RegularBroadcastPartners partners(decomposer, /*k=*/2);
-      diy::reduce(master, assigner, partners, Reducer());
+      vtkmdiy::RegularBroadcastPartners partners(decomposer, /*k=*/2);
+      vtkmdiy::reduce(master, assigner, partners, Reducer());
       data = *master.block<ArrayType>(0);
     }
   }

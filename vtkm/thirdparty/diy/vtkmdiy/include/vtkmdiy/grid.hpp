@@ -1,5 +1,5 @@
-#ifndef DIY_GRID_HPP
-#define DIY_GRID_HPP
+#ifndef VTKMDIY_GRID_HPP
+#define VTKMDIY_GRID_HPP
 
 #include "point.hpp"
 

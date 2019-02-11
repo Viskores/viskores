@@ -177,7 +177,7 @@ class BenchmarkDeviceAdapter
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
+  using Timer = vtkm::cont::Timer;
 
 public:
   // Various kernels used by the different benchmarks to accelerate
@@ -284,8 +284,10 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Algorithm::Copy(ValueHandle_src, ValueHandle_dst);
+
       return timer.GetElapsedTime();
     }
 
@@ -331,8 +333,10 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Algorithm::CopyIf(ValueHandle, StencilHandle, OutHandle);
+
       return timer.GetElapsedTime();
     }
 
@@ -388,8 +392,10 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Algorithm::LowerBounds(InputHandle, ValueHandle, OutHandle);
+
       return timer.GetElapsedTime();
     }
 
@@ -442,7 +448,8 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Value tmp = Algorithm::Reduce(InputHandle, vtkm::TypeTraits<Value>::ZeroInitialization());
       vtkm::Float64 time = timer.GetElapsedTime();
       if (tmp != this->Result)
@@ -494,7 +501,8 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Algorithm::ReduceByKey(KeyHandle, ValueHandle, KeysOut, ValuesOut, vtkm::Add());
       return timer.GetElapsedTime();
     }
@@ -542,7 +550,8 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Algorithm::ScanInclusive(ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
@@ -580,7 +589,8 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Algorithm::ScanExclusive(ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
@@ -624,7 +634,8 @@ private:
       ValueArrayHandle array;
       Algorithm::Copy(this->ValueHandle, array);
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Algorithm::Sort(array);
       return timer.GetElapsedTime();
     }
@@ -679,7 +690,8 @@ private:
       Algorithm::Copy(this->KeyHandle, keys);
       Algorithm::Copy(this->ValueHandle, values);
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Algorithm::SortByKey(keys, values);
       return timer.GetElapsedTime();
     }
@@ -737,7 +749,8 @@ private:
       vtkm::cont::ArrayHandle<vtkm::Id> indices;
       Algorithm::Copy(vtkm::cont::ArrayHandleIndex(arraySize), indices);
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       SSI::Sort(ValueHandle, indices);
       return timer.GetElapsedTime();
     }
@@ -786,7 +799,8 @@ private:
     {
       IndexArrayHandle indices;
       Algorithm::Copy(this->IndexHandle, indices);
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       SSI::Unique(this->ValueHandle, indices);
       return timer.GetElapsedTime();
     }
@@ -843,7 +857,8 @@ private:
       ValueArrayHandle array;
       Algorithm::Copy(this->ValueHandle, array);
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       Algorithm::Unique(array);
       return timer.GetElapsedTime();
     }
@@ -900,7 +915,8 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      vtkm::cont::Timer timer;
+      timer.Start();
       Algorithm::UpperBounds(InputHandle, ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
