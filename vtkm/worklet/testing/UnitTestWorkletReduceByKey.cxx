@@ -46,9 +46,9 @@ namespace
     }                                                                                              \
   } while (false)
 
-static constexpr vtkm::Id ARRAY_SIZE = 1033;
-static constexpr vtkm::IdComponent GROUP_SIZE = 10;
-static constexpr vtkm::Id NUM_UNIQUE = ARRAY_SIZE / GROUP_SIZE;
+#define ARRAY_SIZE 1033
+#define GROUP_SIZE 10
+#define NUM_UNIQUE (vtkm::Id)(ARRAY_SIZE / GROUP_SIZE)
 
 struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
