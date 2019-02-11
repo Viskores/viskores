@@ -38,6 +38,8 @@ namespace rendering
 
 class VTKM_RENDERING_EXPORT View
 {
+  struct InternalData;
+
 public:
   View(const vtkm::rendering::Scene& scene,
        const vtkm::rendering::Mapper& mapper,
@@ -55,52 +57,40 @@ public:
   virtual ~View();
 
   VTKM_CONT
-  const vtkm::rendering::Scene& GetScene() const { return this->Scene; }
+  const vtkm::rendering::Scene& GetScene() const;
   VTKM_CONT
-  vtkm::rendering::Scene& GetScene() { return this->Scene; }
+  vtkm::rendering::Scene& GetScene();
   VTKM_CONT
-  void SetScene(const vtkm::rendering::Scene& scene) { this->Scene = scene; }
+  void SetScene(const vtkm::rendering::Scene& scene);
 
   VTKM_CONT
-  const vtkm::rendering::Mapper& GetMapper() const { return *this->MapperPointer; }
+  const vtkm::rendering::Mapper& GetMapper() const;
   VTKM_CONT
-  vtkm::rendering::Mapper& GetMapper() { return *this->MapperPointer; }
+  vtkm::rendering::Mapper& GetMapper();
 
   VTKM_CONT
-  const vtkm::rendering::Canvas& GetCanvas() const { return *this->CanvasPointer; }
+  const vtkm::rendering::Canvas& GetCanvas() const;
   VTKM_CONT
-  vtkm::rendering::Canvas& GetCanvas() { return *this->CanvasPointer; }
+  vtkm::rendering::Canvas& GetCanvas();
 
   VTKM_CONT
-  const vtkm::rendering::WorldAnnotator& GetWorldAnnotator() const
-  {
-    return *this->WorldAnnotatorPointer;
-  }
+  const vtkm::rendering::WorldAnnotator& GetWorldAnnotator() const;
 
   VTKM_CONT
-  const vtkm::rendering::Camera& GetCamera() const { return this->Camera; }
+  const vtkm::rendering::Camera& GetCamera() const;
   VTKM_CONT
-  vtkm::rendering::Camera& GetCamera() { return this->Camera; }
+  vtkm::rendering::Camera& GetCamera();
   VTKM_CONT
-  void SetCamera(const vtkm::rendering::Camera& camera) { this->Camera = camera; }
+  void SetCamera(const vtkm::rendering::Camera& camera);
 
   VTKM_CONT
-  const vtkm::rendering::Color& GetBackgroundColor() const
-  {
-    return this->CanvasPointer->GetBackgroundColor();
-  }
+  const vtkm::rendering::Color& GetBackgroundColor() const;
 
   VTKM_CONT
-  void SetBackgroundColor(const vtkm::rendering::Color& color)
-  {
-    this->CanvasPointer->SetBackgroundColor(color);
-  }
+  void SetBackgroundColor(const vtkm::rendering::Color& color);
 
   VTKM_CONT
-  void SetForegroundColor(const vtkm::rendering::Color& color)
-  {
-    this->CanvasPointer->SetForegroundColor(color);
-  }
+  void SetForegroundColor(const vtkm::rendering::Color& color);
 
   virtual void Initialize();
 
@@ -111,13 +101,13 @@ public:
   void SaveAs(const std::string& fileName) const;
 
   VTKM_CONT
-  void SetAxisColor(vtkm::rendering::Color c) { this->AxisColor = c; }
+  void SetAxisColor(vtkm::rendering::Color c);
 
   VTKM_CONT
-  void ClearAnnotations() { Annotations.clear(); }
+  void ClearAnnotations();
 
   VTKM_CONT
-  void AddAnnotation(vtkm::rendering::TextAnnotation* ann) { Annotations.push_back(ann); }
+  void AddAnnotation(std::unique_ptr<vtkm::rendering::TextAnnotation> ann);
 
 protected:
   void SetupForWorldSpace(bool viewportClip = true);
@@ -129,12 +119,7 @@ protected:
   vtkm::rendering::Color AxisColor = vtkm::rendering::Color::white;
 
 private:
-  vtkm::rendering::Scene Scene;
-  std::shared_ptr<vtkm::rendering::Mapper> MapperPointer;
-  std::shared_ptr<vtkm::rendering::Canvas> CanvasPointer;
-  std::shared_ptr<vtkm::rendering::WorldAnnotator> WorldAnnotatorPointer;
-  std::vector<vtkm::rendering::TextAnnotation*> Annotations;
-  vtkm::rendering::Camera Camera;
+  std::shared_ptr<InternalData> Internal;
 };
 }
 } //namespace vtkm::rendering
