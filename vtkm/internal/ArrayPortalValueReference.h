@@ -81,19 +81,19 @@ struct ArrayPortalValueReference
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  ArrayPortalValueReference<ArrayPortalType>& operator=(
-    const ArrayPortalValueReference<ArrayPortalType>& rhs)
+  template <typename OtherPortalType>
+  VTKM_EXEC_CONT ArrayPortalValueReference<ArrayPortalType>& operator=(
+    const ArrayPortalValueReference<OtherPortalType>& rhs)
   {
-    this->Set(rhs.Portal.Get(rhs.Index));
+    this->Set(static_cast<ValueType>(rhs.Portal.Get(rhs.Index)));
     return *this;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  ValueType operator=(const ValueType& value)
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator=(T&& value)
   {
-    this->Set(value);
+    this->Set(std::forward<T>(value));
     return value;
   }
 
