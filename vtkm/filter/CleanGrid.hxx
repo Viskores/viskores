@@ -38,6 +38,7 @@ inline VTKM_CONT CleanGrid::CleanGrid()
   , MergePoints(true)
   , Tolerance(1.0e-6)
   , ToleranceIsAbsolute(false)
+  , RemoveDegenerateCells(true)
   , FastMerge(true)
 {
 }
@@ -52,14 +53,23 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
   VecId numCellSets = static_cast<VecId>(inData.GetNumberOfCellSets());
   std::vector<CellSetType> outputCellSets(numCellSets);
 
+  VecId activeCoordIndex = static_cast<VecId>(this->GetActiveCoordinateSystemIndex());
+
   // Do a deep copy of the cells to new CellSetExplicit structures
   for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; ++cellSetIndex)
   {
     vtkm::cont::DynamicCellSet inCellSet =
       inData.GetCellSet(static_cast<vtkm::IdComponent>(cellSetIndex));
-
-    vtkm::worklet::CellDeepCopy::Run(vtkm::filter::ApplyPolicy(inCellSet, policy),
-                                     outputCellSets[cellSetIndex]);
+    if (inCellSet.IsType<CellSetType>())
+    {
+      // Is expected type, do a shallow copy
+      outputCellSets[cellSetIndex] = inCellSet.Cast<CellSetType>();
+    }
+    else
+    {
+      vtkm::worklet::CellDeepCopy::Run(vtkm::filter::ApplyPolicy(inCellSet, policy),
+                                       outputCellSets[cellSetIndex]);
+    }
   }
 
   VecId numCoordSystems = static_cast<VecId>(inData.GetNumberOfCoordinateSystems());
@@ -99,8 +109,7 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
   // Optionally find and merge coincident points
   if (this->GetMergePoints())
   {
-    vtkm::cont::CoordinateSystem activeCoordSystem =
-      outputCoordinateSystems[static_cast<VecId>(this->GetActiveCoordinateSystemIndex())];
+    vtkm::cont::CoordinateSystem activeCoordSystem = outputCoordinateSystems[activeCoordIndex];
     vtkm::Bounds bounds = activeCoordSystem.GetBounds();
 
     vtkm::Float64 delta = this->GetTolerance();
@@ -116,7 +125,7 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
 
     for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
     {
-      if (coordSystemIndex == static_cast<VecId>(this->GetActiveCoordinateSystemIndex()))
+      if (coordSystemIndex == activeCoordIndex)
       {
         outputCoordinateSystems[coordSystemIndex] = activeCoordSystem;
       }
@@ -132,6 +141,12 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
     {
       outputCellSets[cellSetIndex] = this->PointMerger.MapCellSet(outputCellSets[cellSetIndex]);
     }
+  }
+
+  // Optionally remove degenerate cells
+  if (this->GetRemoveDegenerateCells())
+  {
+    outputCellSets[activeCoordIndex] = this->CellCompactor.Run(outputCellSets[activeCoordIndex]);
   }
 
   // Construct resulting data set with new cell sets
@@ -173,6 +188,10 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
       compactedArray = this->PointMerger.MapPointField(input);
     }
     result.AddField(fieldMeta.AsField(compactedArray));
+  }
+  else if (fieldMeta.IsCellField() && this->GetRemoveDegenerateCells())
+  {
+    result.AddField(fieldMeta.AsField(this->CellCompactor.ProcessCellField(input)));
   }
   else
   {

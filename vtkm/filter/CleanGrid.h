@@ -23,6 +23,7 @@
 #include <vtkm/filter/FilterDataSet.h>
 
 #include <vtkm/worklet/PointMerge.h>
+#include <vtkm/worklet/RemoveDegenerateCells.h>
 #include <vtkm/worklet/RemoveUnusedPoints.h>
 
 namespace vtkm
@@ -77,6 +78,12 @@ public:
   VTKM_CONT bool GetToleranceIsAbsolute() const { return this->ToleranceIsAbsolute; }
   VTKM_CONT void SetToleranceIsAbsolute(bool flag) { this->ToleranceIsAbsolute = flag; }
 
+  /// Determine whether a cell is degenerate (that is, has repeated points that drops
+  /// its dimensionalit) and removes them. This is on by default.
+  ///
+  VTKM_CONT bool GetRemoveDegenerateCells() const { return this->RemoveDegenerateCells; }
+  VTKM_CONT void SetRemoveDegenerateCells(bool flag) { this->RemoveDegenerateCells = flag; }
+
   /// When FastMerge is true (the default), some corners are cut when computing
   /// coincident points. The point merge will go faster but the tolerance will not
   /// be strictly followed.
@@ -103,14 +110,18 @@ private:
   bool MergePoints;
   vtkm::Float64 Tolerance;
   bool ToleranceIsAbsolute;
+  bool RemoveDegenerateCells;
   bool FastMerge;
 
   vtkm::worklet::RemoveUnusedPoints PointCompactor;
+  vtkm::worklet::RemoveDegenerateCells CellCompactor;
   vtkm::worklet::PointMerge PointMerger;
 };
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_CleanGrid_hxx
 #include <vtkm/filter/CleanGrid.hxx>
+#endif
 
 #endif //vtk_m_filter_CleanGrid_h

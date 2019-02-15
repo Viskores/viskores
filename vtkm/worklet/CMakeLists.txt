@@ -65,6 +65,7 @@ set(headers
   PointMerge.h
   PointTransform.h
   Probe.h
+  RemoveDegenerateCells.h
   RemoveUnusedPoints.h
   ScalarsToColors.h
   ScatterCounting.h
