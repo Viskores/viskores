@@ -22,7 +22,9 @@
 
 #include <vtkm/TypeTraits.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Timer.h>
 
@@ -40,10 +42,9 @@ namespace vtkm
 namespace benchmarking
 {
 
-template <typename DeviceAdapter>
 struct BenchmarkArrayTransfer
 {
-  using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  using Algo = vtkm::cont::Algorithm;
   using StorageTag = vtkm::cont::StorageTagBasic;
   using Timer = vtkm::cont::Timer;
 
@@ -139,11 +140,10 @@ struct BenchmarkArrayTransfer
 
   // Copies NumValues from control environment to execution environment and
   // accesses them as read-only.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchContToExecRead
   {
     using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using PortalType = typename ArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
     using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
 
     vtkm::Id NumValues;
@@ -164,7 +164,7 @@ struct BenchmarkArrayTransfer
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()()
+    vtkm::Float64 operator()() const
     {
       std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
                                  ValueTypeTraits::ZeroInitialization());
@@ -173,8 +173,8 @@ struct BenchmarkArrayTransfer
       // Time the copy:
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      ReadValues<PortalType> functor(array.PrepareForInput(DeviceAdapter()),
-                                     ValueTypeTraits::ZeroInitialization());
+      auto portal = array.PrepareForInput(DeviceAdapter());
+      ReadValues<decltype(portal)> functor(portal, ValueTypeTraits::ZeroInitialization());
       Algo::Schedule(functor, this->NumValues);
       return timer.GetElapsedTime();
     }
@@ -183,11 +183,10 @@ struct BenchmarkArrayTransfer
 
   // Writes values to ArrayHandle in execution environment. There is no actual
   // copy between control/execution in this case.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchContToExecWrite
   {
     using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using PortalType = typename ArrayType::template ExecutionTypes<DeviceAdapter>::Portal;
     using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
 
     vtkm::Id NumValues;
@@ -208,14 +207,15 @@ struct BenchmarkArrayTransfer
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()()
+    vtkm::Float64 operator()() const
     {
       ArrayType array;
 
       // Time the write:
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      WriteValues<PortalType> functor(array.PrepareForOutput(this->NumValues, DeviceAdapter()));
+      auto portal = array.PrepareForOutput(this->NumValues, DeviceAdapter());
+      WriteValues<decltype(portal)> functor(portal);
       Algo::Schedule(functor, this->NumValues);
 
       return timer.GetElapsedTime();
@@ -225,11 +225,10 @@ struct BenchmarkArrayTransfer
 
   // Copies NumValues from control environment to execution environment and
   // both reads and writes them.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchContToExecReadWrite
   {
     using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using PortalType = typename ArrayType::template ExecutionTypes<DeviceAdapter>::Portal;
     using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
 
     vtkm::Id NumValues;
@@ -250,7 +249,7 @@ struct BenchmarkArrayTransfer
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()()
+    vtkm::Float64 operator()() const
     {
       std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
                                  ValueTypeTraits::ZeroInitialization());
@@ -259,7 +258,8 @@ struct BenchmarkArrayTransfer
       // Time the copy:
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      ReadWriteValues<PortalType> functor(array.PrepareForInPlace(DeviceAdapter()));
+      auto portal = array.PrepareForInPlace(DeviceAdapter());
+      ReadWriteValues<decltype(portal)> functor(portal);
       Algo::Schedule(functor, this->NumValues);
       return timer.GetElapsedTime();
     }
@@ -268,7 +268,7 @@ struct BenchmarkArrayTransfer
 
   // Copies NumValues from control environment to execution environment and
   // back, then accesses them as read-only.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchRoundTripRead
   {
     using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
@@ -295,7 +295,7 @@ struct BenchmarkArrayTransfer
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()()
+    vtkm::Float64 operator()() const
     {
       std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
                                  ValueTypeTraits::ZeroInitialization());
@@ -309,8 +309,8 @@ struct BenchmarkArrayTransfer
       timer.Start();
 
       // Copy to device:
-      ReadValues<PortalExecType> functor(array.PrepareForInput(DeviceAdapter()),
-                                         ValueTypeTraits::ZeroInitialization());
+      auto portal = array.PrepareForInput(DeviceAdapter());
+      ReadValues<PortalExecType> functor(portal, ValueTypeTraits::ZeroInitialization());
       Algo::Schedule(functor, this->NumValues);
 
       // Copy back to host and read:
@@ -328,7 +328,7 @@ struct BenchmarkArrayTransfer
 
   // Copies NumValues from control environment to execution environment and
   // back, then reads and writes them in-place.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchRoundTripReadWrite
   {
     using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
@@ -355,7 +355,7 @@ struct BenchmarkArrayTransfer
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()()
+    vtkm::Float64 operator()() const
     {
       std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
                                  ValueTypeTraits::ZeroInitialization());
@@ -369,7 +369,8 @@ struct BenchmarkArrayTransfer
       timer.Start();
 
       // Do work on device:
-      ReadWriteValues<PortalExecType> functor(array.PrepareForInPlace(DeviceAdapter()));
+      auto portal = array.PrepareForInPlace(DeviceAdapter());
+      ReadWriteValues<PortalExecType> functor(portal);
       Algo::Schedule(functor, this->NumValues);
 
       ReadWriteValues<PortalContType> cFunctor(array.GetPortalControl());
@@ -385,7 +386,7 @@ struct BenchmarkArrayTransfer
 
   // Write NumValues to device allocated memory and copies them back to control
   // for reading.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchExecToContRead
   {
     using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
@@ -412,7 +413,7 @@ struct BenchmarkArrayTransfer
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()()
+    vtkm::Float64 operator()() const
     {
       ArrayType array;
 
@@ -421,7 +422,8 @@ struct BenchmarkArrayTransfer
       timer.Start();
 
       // Allocate/write data on device
-      WriteValues<PortalExecType> functor(array.PrepareForOutput(this->NumValues, DeviceAdapter()));
+      auto portal = array.PrepareForOutput(this->NumValues, DeviceAdapter());
+      WriteValues<PortalExecType> functor(portal);
       Algo::Schedule(functor, this->NumValues);
 
       // Read back on host:
@@ -439,7 +441,7 @@ struct BenchmarkArrayTransfer
 
   // Write NumValues to device allocated memory and copies them back to control
   // and overwrites them.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchExecToContWrite
   {
     using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
@@ -475,7 +477,8 @@ struct BenchmarkArrayTransfer
       timer.Start();
 
       // Allocate/write data on device
-      WriteValues<PortalExecType> functor(array.PrepareForOutput(this->NumValues, DeviceAdapter()));
+      auto portal = array.PrepareForOutput(this->NumValues, DeviceAdapter());
+      WriteValues<PortalExecType> functor(portal);
       Algo::Schedule(functor, this->NumValues);
 
       // Read back on host:
@@ -492,7 +495,7 @@ struct BenchmarkArrayTransfer
 
   // Write NumValues to device allocated memory and copies them back to control
   // for reading and writing.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchExecToContReadWrite
   {
     using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
@@ -528,7 +531,8 @@ struct BenchmarkArrayTransfer
       timer.Start();
 
       // Allocate/write data on device
-      WriteValues<PortalExecType> functor(array.PrepareForOutput(this->NumValues, DeviceAdapter()));
+      auto portal = array.PrepareForOutput(this->NumValues, DeviceAdapter());
+      WriteValues<PortalExecType> functor(portal);
       Algo::Schedule(functor, this->NumValues);
 
       // Read back on host:
@@ -547,17 +551,16 @@ struct BenchmarkArrayTransfer
 
   using TestTypes = vtkm::ListTagBase<vtkm::Float32>;
 
-  static VTKM_CONT bool Run()
+  static VTKM_CONT bool Run(vtkm::cont::DeviceAdapterId id)
   {
-    VTKM_RUN_BENCHMARK(ContToExecRead, TestTypes());
-    VTKM_RUN_BENCHMARK(ContToExecWrite, TestTypes());
-    VTKM_RUN_BENCHMARK(ContToExecReadWrite, TestTypes());
-    VTKM_RUN_BENCHMARK(RoundTripRead, TestTypes());
-    VTKM_RUN_BENCHMARK(RoundTripReadWrite, TestTypes());
-    VTKM_RUN_BENCHMARK(ExecToContRead, TestTypes());
-    VTKM_RUN_BENCHMARK(ExecToContWrite, TestTypes());
-    VTKM_RUN_BENCHMARK(ExecToContReadWrite, TestTypes());
-
+    VTKM_RUN_BENCHMARK(ContToExecRead, TestTypes(), id);
+    VTKM_RUN_BENCHMARK(ContToExecWrite, TestTypes(), id);
+    VTKM_RUN_BENCHMARK(ContToExecReadWrite, TestTypes(), id);
+    VTKM_RUN_BENCHMARK(RoundTripRead, TestTypes(), id);
+    VTKM_RUN_BENCHMARK(RoundTripReadWrite, TestTypes(), id);
+    VTKM_RUN_BENCHMARK(ExecToContRead, TestTypes(), id);
+    VTKM_RUN_BENCHMARK(ExecToContWrite, TestTypes(), id);
+    VTKM_RUN_BENCHMARK(ExecToContReadWrite, TestTypes(), id);
     return true;
   }
 };
@@ -566,14 +569,11 @@ struct BenchmarkArrayTransfer
 
 int main(int argc, char* argv[])
 {
-  vtkm::cont::InitLogging(argc, argv);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
 
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using Benchmarks = vtkm::benchmarking::BenchmarkArrayTransfer<DeviceAdapter>;
+  using Benchmarks = vtkm::benchmarking::BenchmarkArrayTransfer;
 
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(DeviceAdapter{});
-
-  bool result = Benchmarks::Run();
+  bool result = Benchmarks::Run(config.Device);
   return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }
