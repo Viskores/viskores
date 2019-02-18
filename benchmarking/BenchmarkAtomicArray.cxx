@@ -62,7 +62,7 @@ class BenchmarkAtomicArray
 {
 public:
   using Algo = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-  using Timer = vtkm::cont::Timer<Device>;
+  using Timer = vtkm::cont::Timer;
 
   // Benchmarks AtomicArray::Add such that each work index writes to adjacent
   // indices.
@@ -102,8 +102,10 @@ public:
       auto portal = array.PrepareForExecution(Device{});
       Worker<decltype(portal)> worker{ this->ArraySize, portal };
 
-      Timer timer;
+      Timer timer{ Device() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -156,8 +158,10 @@ public:
       auto portal = this->Data.PrepareForOutput(this->ArraySize, Device{});
       Worker<decltype(portal)> worker{ this->ArraySize, portal };
 
-      Timer timer;
+      Timer timer{ Device() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -217,8 +221,10 @@ public:
       auto portal = array.PrepareForExecution(Device{});
       Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
 
-      Timer timer;
+      Timer timer{ Device() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -276,8 +282,10 @@ public:
       auto portal = this->Data.PrepareForOutput(this->ArraySize, Device{});
       Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
 
-      Timer timer;
+      Timer timer{ Device() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -342,8 +350,10 @@ public:
       auto portal = array.PrepareForExecution(Device{});
       Worker<decltype(portal)> worker{ this->ArraySize, portal };
 
-      Timer timer;
+      Timer timer{ Device() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -398,7 +408,8 @@ public:
       auto portal = this->Data.PrepareForOutput(this->ArraySize, Device{});
       Worker<decltype(portal)> worker{ this->ArraySize, portal };
 
-      Timer timer;
+      Timer timer{ Device() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
       return timer.GetElapsedTime();
     }
@@ -468,8 +479,10 @@ public:
       auto portal = array.PrepareForExecution(Device{});
       Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
 
-      Timer timer;
+      Timer timer{ Device() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -529,8 +542,10 @@ public:
       auto portal = this->Data.PrepareForOutput(this->ArraySize, Device{});
       Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
 
-      Timer timer;
+      Timer timer{ Device() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 

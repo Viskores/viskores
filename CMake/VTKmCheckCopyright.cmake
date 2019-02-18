@@ -234,7 +234,6 @@ foreach (glob_expression ${FILES_TO_CHECK})
     endforeach(exception)
 
     if (NOT skip)
-      message("Checking ${file}")
       check_copyright("${VTKm_SOURCE_DIR}/${file}")
     endif (NOT skip)
   endforeach (file)

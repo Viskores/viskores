@@ -25,5 +25,5 @@ find_package(VTKm REQUIRED QUIET)
 
 add_executable(Lagrangian_SERIAL lagrangian.cxx ABCfield.h)
 target_compile_definitions(Lagrangian_SERIAL PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-target_link_libraries(Lagrangian_SERIAL PRIVATE vtkm_cont)
+target_link_libraries(Lagrangian_SERIAL PRIVATE vtkm_filter)
 target_link_libraries(Lagrangian_SERIAL ${VTKm_LIBRARIES})

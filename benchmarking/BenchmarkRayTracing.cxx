@@ -114,7 +114,8 @@ struct BenchRayTracing
   VTKM_CONT
   vtkm::Float64 operator()()
   {
-    vtkm::cont::Timer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> timer;
+    vtkm::cont::Timer timer;
+    timer.Start();
 
     RayCamera.CreateRays(Rays, Coords.GetBounds());
     Tracer.Render(Rays);

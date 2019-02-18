@@ -106,7 +106,7 @@ struct TypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
 
 //=============================================================================
 // Specializations of serialization related classes
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <>
@@ -132,8 +132,8 @@ public:
       using T = typename HandleType::ValueType;
       using S = typename HandleType::StorageTag;
       auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
-      diy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
-      diy::save(bb, array->GetHandle());
+      vtkmdiy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
+      vtkmdiy::save(bb, array->GetHandle());
     }
     else if (obj.IsType<RectilinearCoordsArrayType>())
     {
@@ -141,12 +141,12 @@ public:
       using T = typename HandleType::ValueType;
       using S = typename HandleType::StorageTag;
       auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
-      diy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
-      diy::save(bb, array->GetHandle());
+      vtkmdiy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
+      vtkmdiy::save(bb, array->GetHandle());
     }
     else
     {
-      diy::save(bb, vtkm::cont::TypeString<BasicCoordsType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::TypeString<BasicCoordsType>::Get());
       vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
     }
   }
@@ -154,24 +154,24 @@ public:
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     std::string typeString;
-    diy::load(bb, typeString);
+    vtkmdiy::load(bb, typeString);
 
     if (typeString == vtkm::cont::TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>::Get())
     {
       vtkm::cont::ArrayHandleUniformPointCoordinates array;
-      diy::load(bb, array);
+      vtkmdiy::load(bb, array);
       obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
     }
     else if (typeString == vtkm::cont::TypeString<RectilinearCoordsArrayType>::Get())
     {
       RectilinearCoordsArrayType array;
-      diy::load(bb, array);
+      vtkmdiy::load(bb, array);
       obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
     }
     else if (typeString == vtkm::cont::TypeString<BasicCoordsType>::Get())
     {
       BasicCoordsType array;
-      diy::load(bb, array);
+      vtkmdiy::load(bb, array);
       obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
     }
     else

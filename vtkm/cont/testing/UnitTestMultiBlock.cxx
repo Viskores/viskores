@@ -35,11 +35,7 @@
 #include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/thirdparty/diy/Configure.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/master.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/diy.h>
 
 void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet);
 static void MultiBlockTest()

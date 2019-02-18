@@ -36,5 +36,5 @@ else()
   add_executable(CosmoHaloFinder CosmoHaloFinder.cxx)
 endif()
 
-target_link_libraries(CosmoCenterFinder PRIVATE vtkm_cont)
-target_link_libraries(CosmoHaloFinder PRIVATE vtkm_cont)
+target_link_libraries(CosmoCenterFinder PRIVATE vtkm_filter)
+target_link_libraries(CosmoHaloFinder PRIVATE vtkm_filter)

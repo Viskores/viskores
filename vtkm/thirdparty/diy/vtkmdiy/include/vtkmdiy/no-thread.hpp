@@ -1,5 +1,5 @@
-#ifndef DIY_NO_THREAD_HPP
-#define DIY_NO_THREAD_HPP
+#ifndef VTKMDIY_NO_THREAD_HPP
+#define VTKMDIY_NO_THREAD_HPP
 
 #include <utility>
 #include <functional>

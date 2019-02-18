@@ -66,17 +66,6 @@ struct DoTestWholeArrayWorklet
 {
   using WorkletType = TestWholeArrayWorklet;
 
-  // This just demonstrates that the WholeArray tags support dynamic arrays.
-  VTKM_CONT
-  void CallWorklet(const vtkm::cont::VariantArrayHandle& inArray,
-                   const vtkm::cont::VariantArrayHandle& inOutArray,
-                   const vtkm::cont::VariantArrayHandle& outArray) const
-  {
-    std::cout << "Create and run dispatcher." << std::endl;
-    vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(inArray, inOutArray, outArray);
-  }
-
   template <typename T>
   VTKM_CONT void operator()(T) const
   {
@@ -96,9 +85,11 @@ struct DoTestWholeArrayWorklet
     // Output arrays must be preallocated.
     outHandle.Allocate(ARRAY_SIZE);
 
-    this->CallWorklet(vtkm::cont::VariantArrayHandle(inHandle),
-                      vtkm::cont::VariantArrayHandle(inOutHandle),
-                      vtkm::cont::VariantArrayHandle(outHandle));
+    vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
+    dispatcher.Invoke(
+      vtkm::cont::VariantArrayHandle(inHandle).ResetTypes(vtkm::ListTagBase<T>{}),
+      vtkm::cont::VariantArrayHandle(inOutHandle).ResetTypes(vtkm::ListTagBase<T>{}),
+      vtkm::cont::VariantArrayHandle(outHandle).ResetTypes(vtkm::ListTagBase<T>{}));
 
     std::cout << "Check result." << std::endl;
     CheckPortal(inOutHandle.GetPortalConstControl());

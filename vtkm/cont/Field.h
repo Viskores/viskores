@@ -321,7 +321,7 @@ struct SerializableField
 } // namespace cont
 } // namespace vtkm
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename TypeList>
@@ -335,17 +335,17 @@ public:
   {
     const auto& field = serializable.Field;
 
-    diy::save(bb, field.GetName());
-    diy::save(bb, static_cast<int>(field.GetAssociation()));
+    vtkmdiy::save(bb, field.GetName());
+    vtkmdiy::save(bb, static_cast<int>(field.GetAssociation()));
     if (field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
     {
-      diy::save(bb, field.GetAssocCellSet());
+      vtkmdiy::save(bb, field.GetAssocCellSet());
     }
     else if (field.GetAssociation() == vtkm::cont::Field::Association::LOGICAL_DIM)
     {
-      diy::save(bb, field.GetAssocLogicalDim());
+      vtkmdiy::save(bb, field.GetAssocLogicalDim());
     }
-    diy::save(bb, field.GetData().ResetTypes(TypeList{}));
+    vtkmdiy::save(bb, field.GetData().ResetTypes(TypeList{}));
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& serializable)
@@ -353,30 +353,30 @@ public:
     auto& field = serializable.Field;
 
     std::string name;
-    diy::load(bb, name);
+    vtkmdiy::load(bb, name);
     int assocVal = 0;
-    diy::load(bb, assocVal);
+    vtkmdiy::load(bb, assocVal);
 
     auto assoc = static_cast<vtkm::cont::Field::Association>(assocVal);
     vtkm::cont::VariantArrayHandleBase<TypeList> data;
     if (assoc == vtkm::cont::Field::Association::CELL_SET)
     {
       std::string assocCellSetName;
-      diy::load(bb, assocCellSetName);
-      diy::load(bb, data);
+      vtkmdiy::load(bb, assocCellSetName);
+      vtkmdiy::load(bb, data);
       field =
         vtkm::cont::Field(name, assoc, assocCellSetName, vtkm::cont::VariantArrayHandle(data));
     }
     else if (assoc == vtkm::cont::Field::Association::LOGICAL_DIM)
     {
       vtkm::IdComponent assocLogicalDim;
-      diy::load(bb, assocLogicalDim);
-      diy::load(bb, data);
+      vtkmdiy::load(bb, assocLogicalDim);
+      vtkmdiy::load(bb, data);
       field = vtkm::cont::Field(name, assoc, assocLogicalDim, vtkm::cont::VariantArrayHandle(data));
     }
     else
     {
-      diy::load(bb, data);
+      vtkmdiy::load(bb, data);
       field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
     }
   }

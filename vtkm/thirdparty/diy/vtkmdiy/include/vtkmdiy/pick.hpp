@@ -1,5 +1,5 @@
-#ifndef DIY_PICK_HPP
-#define DIY_PICK_HPP
+#ifndef VTKMDIY_PICK_HPP
+#define VTKMDIY_PICK_HPP
 
 #include "link.hpp"
 

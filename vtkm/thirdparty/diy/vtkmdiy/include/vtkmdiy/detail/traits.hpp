@@ -17,8 +17,8 @@ the standard library.
 
 */
 
-#ifndef DIY_UTILS_TRAITS_HPP
-#define DIY_UTILS_TRAITS_HPP
+#ifndef VTKMDIY_UTILS_TRAITS_HPP
+#define VTKMDIY_UTILS_TRAITS_HPP
 
 #include <cstdlib>
 #include <tuple>

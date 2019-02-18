@@ -336,21 +336,63 @@ class DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
   VTKM_CONT DeviceAdapterTimerImplementation() { this->Reset(); }
+
   VTKM_CONT void Reset()
   {
     vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::Synchronize();
-    this->StartTime = ::tbb::tick_count::now();
+    this->StartReady = false;
+    this->StopReady = false;
   }
+
+  VTKM_CONT void Start()
+  {
+    this->Reset();
+    this->StartTime = ::tbb::tick_count::now();
+    this->StartReady = true;
+  }
+
+  VTKM_CONT void Stop()
+  {
+    this->StopTime = ::tbb::tick_count::now();
+    this->StopReady = true;
+  }
+
+  VTKM_CONT bool Started() { return this->StartReady; }
+
+  VTKM_CONT bool Stopped() { return this->StopReady; }
+
+  VTKM_CONT bool Ready() { return true; }
+
   VTKM_CONT vtkm::Float64 GetElapsedTime()
   {
+    assert(this->StartReady);
+    if (!this->StartReady)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Start() function should be called first then trying to call Stop() and"
+                 " GetElapsedTime().");
+      return 0;
+    }
+    bool manualStop = true;
+    if (!this->StopReady)
+    {
+      manualStop = false;
+      this->Stop();
+    }
     vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::Synchronize();
-    ::tbb::tick_count currentTime = ::tbb::tick_count::now();
-    ::tbb::tick_count::interval_t elapsedTime = currentTime - this->StartTime;
+    ::tbb::tick_count::interval_t elapsedTime = this->StopTime - this->StartTime;
+
+    // Reset StopReady flag to its original state
+    this->StopReady = manualStop;
+
     return static_cast<vtkm::Float64>(elapsedTime.seconds());
   }
 
 private:
+  bool StartReady;
+  bool StopReady;
   ::tbb::tick_count StartTime;
+  ::tbb::tick_count StopTime;
 };
 
 template <>
@@ -358,19 +400,19 @@ class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(WorkletType& worklet,
-                                                             InvocationType& invocation,
-                                                             vtkm::Id,
-                                                             vtkm::Id globalIndexOffset = 0)
+  static vtkm::exec::tbb::internal::TaskTiling1D MakeTask(WorkletType& worklet,
+                                                          InvocationType& invocation,
+                                                          vtkm::Id,
+                                                          vtkm::Id globalIndexOffset = 0)
   {
     return vtkm::exec::tbb::internal::TaskTiling1D(worklet, invocation, globalIndexOffset);
   }
 
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(WorkletType& worklet,
-                                                             InvocationType& invocation,
-                                                             vtkm::Id3,
-                                                             vtkm::Id globalIndexOffset = 0)
+  static vtkm::exec::tbb::internal::TaskTiling3D MakeTask(WorkletType& worklet,
+                                                          InvocationType& invocation,
+                                                          vtkm::Id3,
+                                                          vtkm::Id globalIndexOffset = 0)
   {
     return vtkm::exec::tbb::internal::TaskTiling3D(worklet, invocation, globalIndexOffset);
   }

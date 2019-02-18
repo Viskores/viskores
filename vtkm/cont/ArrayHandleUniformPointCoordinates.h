@@ -85,7 +85,7 @@ struct TypeString<vtkm::cont::ArrayHandle<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <>
@@ -99,9 +99,9 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto portal = obj.GetPortalConstControl();
-    diy::save(bb, portal.GetDimensions());
-    diy::save(bb, portal.GetOrigin());
-    diy::save(bb, portal.GetSpacing());
+    vtkmdiy::save(bb, portal.GetDimensions());
+    vtkmdiy::save(bb, portal.GetOrigin());
+    vtkmdiy::save(bb, portal.GetSpacing());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -109,9 +109,9 @@ public:
     vtkm::Id3 dims;
     typename BaseType::ValueType origin, spacing;
 
-    diy::load(bb, dims);
-    diy::load(bb, origin);
-    diy::load(bb, spacing);
+    vtkmdiy::load(bb, dims);
+    vtkmdiy::load(bb, origin);
+    vtkmdiy::load(bb, spacing);
 
     obj = vtkm::cont::ArrayHandleUniformPointCoordinates(dims, origin, spacing);
   }

@@ -1,5 +1,5 @@
-#ifndef DIY_DECOMPOSITION_HPP
-#define DIY_DECOMPOSITION_HPP
+#ifndef VTKMDIY_DECOMPOSITION_HPP
+#define VTKMDIY_DECOMPOSITION_HPP
 
 #include <vector>
 #include <algorithm>

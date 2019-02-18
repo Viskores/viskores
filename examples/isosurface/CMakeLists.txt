@@ -34,16 +34,16 @@ if(TARGET OpenGL::GL AND
 
   set(gl_libs OpenGL::GL OpenGL::GLU GLEW::GLEW GLUT::GLUT)
   add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx quaternion.h)
-  target_link_libraries(IsosurfaceUniformGrid_SERIAL PRIVATE vtkm_cont ${gl_libs})
+  target_link_libraries(IsosurfaceUniformGrid_SERIAL PRIVATE vtkm_filter ${gl_libs})
 
   if(TARGET vtkm::cuda)
     add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu quaternion.h)
-    target_link_libraries(IsosurfaceUniformGrid_CUDA PRIVATE vtkm_cont ${gl_libs})
+    target_link_libraries(IsosurfaceUniformGrid_CUDA PRIVATE vtkm_filter ${gl_libs})
   endif()
 
   if(TARGET vtkm::tbb)
     add_executable(IsosurfaceUniformGrid_TBB IsosurfaceUniformGridTBB.cxx quaternion.h)
-    target_link_libraries(IsosurfaceUniformGrid_TBB PRIVATE vtkm_cont ${gl_libs})
+    target_link_libraries(IsosurfaceUniformGrid_TBB PRIVATE vtkm_filter ${gl_libs})
   endif()
 
 endif()

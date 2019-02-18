@@ -364,7 +364,7 @@ struct DynamicCellSetCheck<vtkm::cont::DynamicCellSetBase<CellSetList>>
 
 //=============================================================================
 // Specializations of serialization related classes
-namespace diy
+namespace mangled_diy_namespace
 {
 
 namespace internal
@@ -375,8 +375,8 @@ struct DynamicCellSetSerializeFunctor
   template <typename CellSetType>
   void operator()(const CellSetType& cs, BinaryBuffer& bb) const
   {
-    diy::save(bb, vtkm::cont::TypeString<CellSetType>::Get());
-    diy::save(bb, cs);
+    vtkmdiy::save(bb, vtkm::cont::TypeString<CellSetType>::Get());
+    vtkmdiy::save(bb, cs);
   }
 };
 
@@ -393,7 +393,7 @@ struct DynamicCellSetDeserializeFunctor
     if (!success && (typeString == vtkm::cont::TypeString<CellSetType>::Get()))
     {
       CellSetType cs;
-      diy::load(bb, cs);
+      vtkmdiy::load(bb, cs);
       dh = vtkm::cont::DynamicCellSetBase<CellSetTypes>(cs);
       success = true;
     }
@@ -417,7 +417,7 @@ public:
   static VTKM_CONT void load(BinaryBuffer& bb, Type& obj)
   {
     std::string typeString;
-    diy::load(bb, typeString);
+    vtkmdiy::load(bb, typeString);
 
     bool success = false;
     vtkm::ListForEach(internal::DynamicCellSetDeserializeFunctor<CellSetTypes>{},

@@ -46,7 +46,9 @@
 //----------------------------------------------------------------------------
 #if defined(__VTKM_GAUSSIAN_SPLATTER_BENCHMARK) && !defined(START_TIMER_BLOCK)
 // start timer
-#define START_TIMER_BLOCK(name) vtkm::cont::Timer<DeviceAdapter> timer_##name;
+#define START_TIMER_BLOCK(name)                                                                    \
+  vtkm::cont::Timer timer_##name{ DeviceAdapter() };                                               \
+  timer_##name.Start();
 
 // stop timer
 #define END_TIMER_BLOCK(name)                                                                      \
@@ -453,7 +455,7 @@ struct KernelSplatterFilterUniformGrid
     START_TIMER_BLOCK(numNeighborsExclusiveSum)
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanExclusive(numNeighbors,
                                                                      numNeighborsExclusiveSum);
-    END_TIMER_BLOCK(numNeighborsExclusiveSum)
+    //END_TIMER_BLOCK(numNeighborsExclusiveSum)
     debug::OutputArrayDebug(numNeighborsExclusiveSum, "numNeighborsExclusiveSum");
 
     //---------------------------------------------------------------

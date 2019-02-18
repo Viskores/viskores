@@ -129,7 +129,7 @@ struct TypeString<vtkm::cont::ArrayHandleCast<T, AH>>
 }
 } // namespace vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename T1, typename T2>

@@ -140,7 +140,7 @@ class BenchmarkTopologyAlgorithms
 {
   using StorageTag = vtkm::cont::StorageTagBasic;
 
-  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
+  using Timer = vtkm::cont::Timer;
 
   using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
 
@@ -205,7 +205,8 @@ private:
       cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
 
       vtkm::worklet::DispatcherMapTopology<AverageCellToPoint> dispatcher;
       dispatcher.SetDevice(DeviceAdapterTag());
@@ -241,7 +242,8 @@ private:
       ValueVariantHandle dinput(this->InputHandle);
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
 
       vtkm::worklet::DispatcherMapTopology<AverageCellToPoint> dispatcher;
       dispatcher.SetDevice(DeviceAdapterTag());
@@ -284,7 +286,8 @@ private:
       cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
 
       vtkm::worklet::DispatcherMapTopology<AveragePointToCell> dispatcher;
       dispatcher.SetDevice(DeviceAdapterTag());
@@ -320,7 +323,8 @@ private:
       ValueVariantHandle dinput(this->InputHandle);
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
 
       vtkm::worklet::DispatcherMapTopology<AveragePointToCell> dispatcher;
       dispatcher.SetDevice(DeviceAdapterTag());
@@ -367,7 +371,8 @@ private:
 
       ValueVariantHandle dinput(this->InputHandle);
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
 
       Classification<Value> worklet(this->IsoValue);
       vtkm::worklet::DispatcherMapTopology<Classification<Value>> dispatcher(worklet);
@@ -401,13 +406,15 @@ private:
       cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
       vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageTag> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
 
       Classification<Value> worklet(this->IsoValue);
       vtkm::worklet::DispatcherMapTopology<Classification<Value>> dispatcher(worklet);
       dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->InputHandle, cellSet, result);
 
+      timer.Stop();
       return timer.GetElapsedTime();
     }
 

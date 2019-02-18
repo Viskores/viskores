@@ -149,16 +149,8 @@ endfunction(vtkm_install_headers)
 
 #-----------------------------------------------------------------------------
 function(vtkm_declare_headers)
-  set(options CUDA)
-  set(oneValueArgs)
-  set(multiValueArgs)
-  cmake_parse_arguments(VTKm_DH "${options}"
-    "${oneValueArgs}" "${multiValueArgs}"
-    ${ARGN}
-    )
-
   vtkm_get_kit_name(name dir_prefix)
-  vtkm_install_headers("${dir_prefix}" ${hfiles})
+  vtkm_install_headers("${dir_prefix}" ${ARGN})
 endfunction(vtkm_declare_headers)
 
 #-----------------------------------------------------------------------------
@@ -254,10 +246,9 @@ function(vtkm_library)
   #generate the export header and install it
   vtkm_generate_export_header(${lib_name})
 
-  #test and install the headers
+  #install the headers
   vtkm_declare_headers(${VTKm_LIB_HEADERS}
-                       EXCLUDE_FROM_TESTING ${VTKm_LIB_TEMPLATE_SOURCES}
-                       )
+                       ${VTKm_LIB_TEMPLATE_SOURCES})
 
   # When building libraries/tests that are part of the VTK-m repository inherit
   # the properties from vtkm_developer_flags. The flags are intended only for

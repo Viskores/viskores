@@ -104,8 +104,9 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   {
     raytracing::Logger* logger = raytracing::Logger::GetInstance();
     logger->OpenLogEntry("mapper_volume");
-    vtkm::cont::Timer<> tot_timer;
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer tot_timer;
+    tot_timer.Start();
+    vtkm::cont::Timer timer;
 
     vtkm::rendering::raytracing::VolumeRendererStructured tracer;
 
@@ -130,7 +131,7 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 
     tracer.Render(rays);
 
-    timer.Reset();
+    timer.Start();
     this->Internals->Canvas->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
 
     if (this->Internals->CompositeBackground)

@@ -28,13 +28,13 @@ if (VTKm_ENABLE_MPI)
   add_executable(Histogram_SERIAL Histogram.cxx HistogramMPI.h HistogramMPI.hxx)
   target_compile_definitions(Histogram_SERIAL PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-  target_link_libraries(Histogram_SERIAL PRIVATE vtkm_cont)
+  target_link_libraries(Histogram_SERIAL PRIVATE vtkm_filter)
 
   if(TARGET vtkm::tbb)
     add_executable(Histogram_TBB Histogram.cxx HistogramMPI.h HistogramMPI.hxx)
     target_compile_definitions(Histogram_TBB PRIVATE
                                "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-    target_link_libraries(Histogram_TBB PRIVATE vtkm_cont)
+    target_link_libraries(Histogram_TBB PRIVATE vtkm_filter)
   endif()
 
   if(TARGET vtkm::cuda)
@@ -43,6 +43,6 @@ if (VTKm_ENABLE_MPI)
 
     target_compile_definitions(Histogram_CUDA PRIVATE
                                "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-    target_link_libraries(Histogram_CUDA PRIVATE vtkm_cont)
+    target_link_libraries(Histogram_CUDA PRIVATE vtkm_filter)
   endif()
 endif()

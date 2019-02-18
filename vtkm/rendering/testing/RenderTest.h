@@ -34,6 +34,8 @@
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
 
+#include <memory>
+
 namespace vtkm
 {
 namespace rendering
@@ -117,13 +119,13 @@ void Render(const vtkm::cont::DataSet& ds,
   ViewType view(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
-  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+  std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen("Test Plot",
                                               vtkm::rendering::Color(1, 1, 1, 1),
                                               .075f,
                                               vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
-                                              0.f);
-  view.AddAnnotation(titleAnnotation);
+                                              0.f));
+  view.AddAnnotation(std::move(titleAnnotation));
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
@@ -147,13 +149,13 @@ void Render(MapperType& mapper,
   ViewType view(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
-  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+  std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen("Test Plot",
                                               vtkm::rendering::Color(1, 1, 1, 1),
                                               .075f,
                                               vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
-                                              0.f);
-  view.AddAnnotation(titleAnnotation);
+                                              0.f));
+  view.AddAnnotation(std::move(titleAnnotation));
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
@@ -182,13 +184,13 @@ void Render(const vtkm::cont::DataSet& ds,
   ViewType view(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
-  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+  std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen("Test Plot",
                                               vtkm::rendering::Color(1, 1, 1, 1),
                                               .075f,
                                               vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
-                                              0.f);
-  view.AddAnnotation(titleAnnotation);
+                                              0.f));
+  view.AddAnnotation(std::move(titleAnnotation));
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
@@ -214,10 +216,10 @@ void Render(const vtkm::cont::DataSet& ds,
 
   ViewType view(scene, mapper, canvas, camera, background, foreground);
   // Print the title
-  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+  std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen(
-      "1D Test Plot", foreground, .1f, vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f), 0.f);
-  view.AddAnnotation(titleAnnotation);
+      "1D Test Plot", foreground, .1f, vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f), 0.f));
+  view.AddAnnotation(std::move(titleAnnotation));
   view.SetLogY(logY);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }

@@ -88,7 +88,11 @@ set(unit_tests
  )
 
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS)
+vtkm_unit_tests(
+  SOURCES ${unit_tests}
+  LIBRARIES vtkm_worklet
+  ALL_BACKENDS
+  )
 if (TARGET vtkm::cuda)
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
     set(problematic_cuda_srcs

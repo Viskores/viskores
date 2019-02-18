@@ -1,5 +1,5 @@
-#ifndef DIY_CONSTANTS_H
-#define DIY_CONSTANTS_H
+#ifndef VTKMDIY_CONSTANTS_H
+#define VTKMDIY_CONSTANTS_H
 
 // Default DIY_MAX_DIM to 4, unless provided by the user
 // (used for static min/max size in various Bounds)
@@ -19,6 +19,8 @@ enum
   DIY_T1 = 0x80  /* maximum-side t (later) neighbor */
 };
 
+#ifndef DIY_UNUSED
 #define DIY_UNUSED(expr) do { (void)(expr); } while (0)
+#endif
 
 #endif

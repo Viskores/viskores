@@ -47,4 +47,4 @@ if(TARGET vtkm::cuda)
 endif()
 
 add_executable(MultiBackend ${device_srcs} ${srcs} ${headers})
-target_link_libraries(MultiBackend PRIVATE vtkm_cont Threads::Threads)
+target_link_libraries(MultiBackend PRIVATE vtkm_filter Threads::Threads)

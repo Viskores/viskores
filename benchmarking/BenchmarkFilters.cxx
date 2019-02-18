@@ -172,7 +172,7 @@ public:
 template <class DeviceAdapterTag>
 class BenchmarkFilters
 {
-  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
+  using Timer = vtkm::cont::Timer;
 
   enum GradOpts
   {
@@ -229,7 +229,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -316,7 +317,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -354,7 +356,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -379,7 +382,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -403,7 +407,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -430,7 +435,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -456,7 +462,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -498,7 +505,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -542,7 +550,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -576,7 +585,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -601,7 +611,8 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapterTag() };
+      timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
     }
@@ -650,7 +661,8 @@ class BenchmarkFilters
                                      vtkm::TopologyElementTagPoint{});
         }
 
-        vtkm::cont::Timer<Device> timer;
+        Timer timer{ DeviceAdapterTag() };
+        timer.Start();
         cellSet.PrepareForInput(
           Device{}, vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
         this->Time = timer.GetElapsedTime();

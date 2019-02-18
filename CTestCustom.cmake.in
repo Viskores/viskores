@@ -37,6 +37,9 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   "CONTRIBUTING.md.*warning"
   "CodingConventions.md.*warning"
 
+  # disable static/dynamic weak symbol warnings
+  ".*ld: warning: direct access in function.*"
+
 
   # disable PTX warning about recursive functions. These look like they can't be silenced
   # without disabling all PTX warnings, show hide them on the dashboard.

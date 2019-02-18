@@ -426,7 +426,7 @@ struct TypeString<vtkm::cont::ArrayHandle<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH, vtkm::IdComponent NComps>
@@ -440,16 +440,16 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetArray());
-    diy::save(bb, storage.GetMap());
+    vtkmdiy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, storage.GetMap());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     AH array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
     vtkm::Vec<vtkm::IdComponent, NComps> map;
-    diy::load(bb, map);
+    vtkmdiy::load(bb, map);
     obj = vtkm::cont::make_ArrayHandleSwizzle(array, map);
   }
 };

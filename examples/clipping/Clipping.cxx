@@ -85,8 +85,10 @@ int main(int argc, char* argv[])
   vtkm::Float32 clipValue = std::stof(argv[argc - 2]);
   vtkm::worklet::Clip clip;
 
-  vtkm::cont::Timer<> total;
-  vtkm::cont::Timer<> timer;
+  vtkm::cont::Timer total;
+  total.Start();
+  vtkm::cont::Timer timer;
+  timer.Start();
   bool invertClip = false;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(input.GetCellSet(0),
@@ -100,12 +102,12 @@ int main(int argc, char* argv[])
 
 
   auto inCoords = input.GetCoordinateSystem(0).GetData();
-  timer.Reset();
+  timer.Start();
   auto outCoords = clip.ProcessCellField(inCoords);
   vtkm::Float64 processCoordinatesTime = timer.GetElapsedTime();
   output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", outCoords));
 
-  timer.Reset();
+  timer.Start();
   for (vtkm::Id i = 0; i < input.GetNumberOfFields(); ++i)
   {
     vtkm::cont::Field inField = input.GetField(i);

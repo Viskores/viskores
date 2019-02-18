@@ -48,7 +48,7 @@
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 // VTKM_UNREACHABLE_IMPL is compiler-specific:
-#if defined(__CUDA_ARCH__)
+#if defined(VTKM_CUDA_DEVICE_PASS)
 
 #define VTKM_UNREACHABLE_IMPL() (void)0 /* no-op, no known intrinsic */
 

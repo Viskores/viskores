@@ -23,4 +23,4 @@ set(headers
    Testing.h
    )
 
-vtkm_declare_headers(CUDA ${headers})
+vtkm_declare_headers(${headers})
