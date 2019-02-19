@@ -315,7 +315,7 @@ void TestEvaluators()
 
         //create an explicit cellset.
         vtkm::filter::CleanGrid cleanGrid;
-        dataSets.push_back(cleanGrid.Execute(dataSets[0]));
+        //dataSets.push_back(cleanGrid.Execute(dataSets[0]));
 
         vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
