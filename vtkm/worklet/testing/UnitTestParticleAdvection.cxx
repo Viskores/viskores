@@ -415,7 +415,7 @@ void TestParticleWorklets()
     dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dims));
     //create an explicit cellset.
     vtkm::filter::CleanGrid cleanGrid;
-    dataSets.push_back(cleanGrid.Execute(dataSets[0]));
+    //dataSets.push_back(cleanGrid.Execute(dataSets[0]));
 
     //Generate three random points.
     std::vector<vtkm::Vec<ScalarType, 3>> pts;
