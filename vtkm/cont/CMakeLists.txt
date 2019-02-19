@@ -129,7 +129,6 @@ set(template_sources
   )
 
 set(sources
-  BoundingIntervalHierarchy.cxx
   ArrayHandle.cxx
   AssignerMultiBlock.cxx
   BoundsCompute.cxx
@@ -169,6 +168,7 @@ set(sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   ArrayRangeCompute.cxx
+  BoundingIntervalHierarchy.cxx
   CellSetExplicit.cxx
   CoordinateSystem.cxx
   Timer.cxx
