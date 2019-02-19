@@ -24,7 +24,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/BoundingIntervalHierarchy.h>
+//#include <vtkm/cont/BoundingIntervalHierarchy.h>
 #include <vtkm/cont/CellLocator.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
@@ -175,6 +175,7 @@ public:
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
     }
+#if 0
     else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
       vtkm::cont::BoundingIntervalHierarchy locator;
@@ -197,6 +198,7 @@ public:
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::CellExplicitInterpolationHelper>(interpolationHelper);
     }
+#endif
     else
       throw vtkm::cont::ErrorInternal("Unsupported cellset type.");
   }
