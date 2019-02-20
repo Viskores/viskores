@@ -25,7 +25,6 @@
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
@@ -313,10 +312,6 @@ void TestEvaluators()
         dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dim));
         dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dim));
 
-        //create an explicit cellset.
-        vtkm::filter::CleanGrid cleanGrid;
-        //        dataSets.push_back(cleanGrid.Execute(dataSets[0]));
-
         vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
 
@@ -413,9 +408,6 @@ void TestParticleWorklets()
     std::vector<vtkm::cont::DataSet> dataSets;
     dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dims));
     dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dims));
-    //create an explicit cellset.
-    vtkm::filter::CleanGrid cleanGrid;
-    //    dataSets.push_back(cleanGrid.Execute(dataSets[0]));
 
     //Generate three random points.
     std::vector<vtkm::Vec<ScalarType, 3>> pts;
@@ -439,7 +431,6 @@ void TestParticleWorklets()
         auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
         auto stepsTakenArray = vtkm::cont::make_ArrayHandle(stepsTaken, vtkm::CopyFlag::On);
 
-        //        std::cout<<__FILE__<<" "<<__LINE__<<std::endl;
         if (i < 2)
         {
           vtkm::worklet::ParticleAdvection pa;
@@ -460,7 +451,6 @@ void TestParticleWorklets()
             res = s.Run(rk4, seedsArray, stepsTakenArray, maxSteps);
           ValidateStreamlineResult<ScalarType>(res, nSeeds, maxSteps);
         }
-        //        std::cout<<__FILE__<<" "<<__LINE__<<std::endl;
       }
     }
   }
