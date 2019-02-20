@@ -25,6 +25,7 @@
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
@@ -311,7 +312,9 @@ void TestEvaluators()
         std::vector<vtkm::cont::DataSet> dataSets;
         dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dim));
         dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dim));
-
+        //create an explicit cellset.
+        vtkm::filter::CleanGrid cleanGrid;
+        dataSets.push_back(cleanGrid.Execute(dataSets[0]));
         vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
 
@@ -414,6 +417,9 @@ void TestParticleWorklets()
     pts.push_back(RandomPoint<ScalarType>(bound));
     pts.push_back(RandomPoint<ScalarType>(bound));
     pts.push_back(RandomPoint<ScalarType>(bound));
+    //create an explicit cellset.
+    vtkm::filter::CleanGrid cleanGrid;
+    dataSets.push_back(cleanGrid.Execute(dataSets[0]));
 
     vtkm::Id nSeeds = static_cast<vtkm::Id>(pts.size());
     std::vector<vtkm::Id> stepsTaken = { 10, 20, 600 };

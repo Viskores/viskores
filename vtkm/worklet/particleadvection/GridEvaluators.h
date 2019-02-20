@@ -24,6 +24,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/BoundingIntervalHierarchy.h>
 #include <vtkm/cont/CellLocator.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
@@ -173,6 +174,28 @@ public:
       vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
+    }
+    else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
+    {
+      vtkm::cont::BoundingIntervalHierarchy locator;
+      locator.SetCoordinates(coordinates);
+      locator.SetCellSet(cellset);
+      locator.Update();
+      this->Locator = std::make_shared<vtkm::cont::BoundingIntervalHierarchy>(locator);
+      vtkm::cont::SingleCellExplicitInterpolationHelper interpolationHelper(cellset);
+      this->InterpolationHelper =
+        std::make_shared<vtkm::cont::SingleCellExplicitInterpolationHelper>(interpolationHelper);
+    }
+    else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
+    {
+      vtkm::cont::BoundingIntervalHierarchy locator;
+      locator.SetCoordinates(coordinates);
+      locator.SetCellSet(cellset);
+      locator.Update();
+      this->Locator = std::make_shared<vtkm::cont::BoundingIntervalHierarchy>(locator);
+      vtkm::cont::CellExplicitInterpolationHelper interpolationHelper(cellset);
+      this->InterpolationHelper =
+        std::make_shared<vtkm::cont::CellExplicitInterpolationHelper>(interpolationHelper);
     }
     else
       throw vtkm::cont::ErrorInternal("Unsupported cellset type.");
