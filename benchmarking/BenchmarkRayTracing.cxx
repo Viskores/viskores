@@ -50,18 +50,24 @@ namespace benchmarking
 template <typename Precision>
 struct BenchRayTracing
 {
-  vtkm::rendering::raytracing::RayTracer Tracer;
-  vtkm::rendering::raytracing::Camera RayCamera;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
-  vtkm::rendering::raytracing::Ray<Precision> Rays;
-  vtkm::Id NumberOfTriangles;
-  vtkm::cont::CoordinateSystem Coords;
-  vtkm::cont::DataSet Data;
 
-  VTKM_CONT BenchRayTracing()
+  VTKM_CONT ~BenchRayTracing() {}
+
+  VTKM_CONT BenchRayTracing() {}
+
+  VTKM_CONT
+  vtkm::Float64 operator()()
   {
+    vtkm::rendering::raytracing::RayTracer Tracer;
+    vtkm::rendering::raytracing::Camera RayCamera;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
+    vtkm::rendering::raytracing::Ray<Precision> Rays;
+    vtkm::cont::CoordinateSystem Coords;
+    vtkm::cont::DataSet Data;
+
+    vtkm::Id3 dims(128, 128, 128);
     vtkm::cont::testing::MakeTestDataSet maker;
-    Data = maker.Make3DUniformDataSet2();
+    Data = maker.Make3DUniformDataSet3(dims);
     Coords = Data.GetCoordinateSystem();
 
     vtkm::rendering::Camera camera;
@@ -72,8 +78,10 @@ struct BenchRayTracing
 
     vtkm::rendering::raytracing::TriangleExtractor triExtractor;
     triExtractor.ExtractCells(cellset);
+
     vtkm::rendering::raytracing::TriangleIntersector* triIntersector =
       new vtkm::rendering::raytracing::TriangleIntersector();
+
     triIntersector->SetData(Coords, triExtractor.GetTriangles());
     Tracer.AddShapeIntersector(triIntersector);
 
@@ -109,16 +117,20 @@ struct BenchRayTracing
 
     Tracer.SetColorMap(colors);
     Tracer.Render(Rays);
-  }
 
-  VTKM_CONT
-  vtkm::Float64 operator()()
-  {
     vtkm::cont::Timer timer;
     timer.Start();
 
     RayCamera.CreateRays(Rays, Coords.GetBounds());
-    Tracer.Render(Rays);
+    try
+    {
+      Tracer.Render(Rays);
+      Tracer.Render(Rays);
+    }
+    catch (vtkm::cont::ErrorBadValue& e)
+    {
+      std::cout << "exception " << e.what() << "\n";
+    }
 
     return timer.GetElapsedTime();
   }
@@ -130,6 +142,7 @@ struct BenchRayTracing
 VTKM_MAKE_BENCHMARK(RayTracing, BenchRayTracing);
 }
 } // end namespace vtkm::benchmarking
+
 
 int main(int argc, char* argv[])
 {
