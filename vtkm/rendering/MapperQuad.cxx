@@ -104,8 +104,7 @@ void MapperQuad::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   quadExtractor.ExtractCells(cellset);
   if (quadExtractor.GetNumberOfQuads() > 0)
   {
-    auto quadIntersector =
-      std::make_shared<raytracing::QuadIntersector>(raytracing::QuadIntersector());
+    auto quadIntersector = std::make_shared<raytracing::QuadIntersector>();
     quadIntersector->SetData(coords, quadExtractor.GetQuadIds());
     this->Internals->Tracer.AddShapeIntersector(quadIntersector);
     shapeBounds.Include(quadIntersector->GetShapeBounds());
