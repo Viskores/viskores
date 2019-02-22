@@ -20,6 +20,7 @@
 #ifndef vtk_m_rendering_raytracing_RayTracer_h
 #define vtk_m_rendering_raytracing_RayTracer_h
 
+#include <memory>
 #include <vector>
 
 #include <vtkm/cont/DataSet.h>
@@ -36,7 +37,7 @@ namespace raytracing
 class VTKM_RENDERING_EXPORT RayTracer
 {
 protected:
-  std::vector<ShapeIntersector*> Intersectors;
+  std::vector<std::shared_ptr<ShapeIntersector>> Intersectors;
   Camera camera;
   const vtkm::cont::Field* ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Float32> Scalars;
@@ -58,7 +59,7 @@ public:
   Camera& GetCamera();
 
   VTKM_CONT
-  void AddShapeIntersector(ShapeIntersector* intersector);
+  void AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersector);
 
   VTKM_CONT
   void SetField(const vtkm::cont::Field& scalarField, const vtkm::Range& scalarRange);

@@ -108,7 +108,8 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   triExtractor.ExtractCells(cellset);
   if (triExtractor.GetNumberOfTriangles() > 0)
   {
-    raytracing::TriangleIntersector* triIntersector = new raytracing::TriangleIntersector();
+    auto triIntersector =
+      std::make_shared<raytracing::TriangleIntersector>(raytracing::TriangleIntersector());
     triIntersector->SetData(coords, triExtractor.GetTriangles());
     this->Internals->Tracer.AddShapeIntersector(triIntersector);
     shapeBounds.Include(triIntersector->GetShapeBounds());

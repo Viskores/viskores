@@ -230,7 +230,7 @@ Camera& RayTracer::GetCamera()
 }
 
 
-void RayTracer::AddShapeIntersector(ShapeIntersector* intersector)
+void RayTracer::AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersector)
 {
   NumberOfShapes += intersector->GetNumberOfShapes();
   Intersectors.push_back(intersector);
@@ -269,12 +269,6 @@ vtkm::Id RayTracer::GetNumberOfShapes() const
 
 void RayTracer::Clear()
 {
-  size_t numShapes = Intersectors.size();
-  for (size_t i = 0; i < numShapes; ++i)
-  {
-    delete Intersectors[i];
-  }
-
   Intersectors.clear();
 }
 

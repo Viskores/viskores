@@ -184,7 +184,8 @@ void MapperCylinder::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 
   if (cylExtractor.GetNumberOfCylinders() > 0)
   {
-    raytracing::CylinderIntersector* cylIntersector = new raytracing::CylinderIntersector();
+    auto cylIntersector =
+      std::make_shared<raytracing::CylinderIntersector>(raytracing::CylinderIntersector());
     cylIntersector->SetData(coords, cylExtractor.GetCylIds(), cylExtractor.GetRadii());
     this->Internals->Tracer.AddShapeIntersector(cylIntersector);
     shapeBounds.Include(cylIntersector->GetShapeBounds());
