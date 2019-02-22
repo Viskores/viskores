@@ -238,7 +238,7 @@ void RayTracer::AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersecto
 
 void RayTracer::SetField(const vtkm::cont::Field& scalarField, const vtkm::Range& scalarRange)
 {
-  ScalarField = &scalarField;
+  ScalarField = scalarField;
   ScalarRange = scalarRange;
 }
 
