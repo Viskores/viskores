@@ -340,15 +340,15 @@ public:
   VTKM_CONT void Run(Ray<Precision>& rays,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
                      vtkm::cont::CoordinateSystem coordsHandle,
-                     const vtkm::cont::Field* scalarField,
+                     const vtkm::cont::Field scalarField,
                      const vtkm::Range& scalarRange)
   {
     bool isSupportedField =
-      (scalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-       scalarField->GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+      (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+       scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
     if (!isSupportedField)
       throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
-    bool isAssocPoints = scalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS;
+    bool isAssocPoints = scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
 
     // Find the triangle normal
     vtkm::worklet::DispatcherMapField<CalculateNormals>(CalculateNormals())
@@ -364,7 +364,7 @@ public:
                 rays.U,
                 rays.V,
                 rays.Scalar,
-                scalarField->GetData().ResetTypes(ScalarRenderingTypes()),
+                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
                 triangles);
     }
     else
@@ -373,7 +373,7 @@ public:
         NodalScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
         .Invoke(rays.HitIdx,
                 rays.Scalar,
-                scalarField->GetData().ResetTypes(ScalarRenderingTypes()),
+                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
                 triangles);
     }
   } // Run
@@ -525,14 +525,14 @@ VTKM_CONT void TriangleIntersector::IntersectRaysImp(Ray<Precision>& rays, bool 
 }
 
 VTKM_CONT void TriangleIntersector::IntersectionData(Ray<vtkm::Float32>& rays,
-                                                     const vtkm::cont::Field* scalarField,
+                                                     const vtkm::cont::Field scalarField,
                                                      const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);
 }
 
 VTKM_CONT void TriangleIntersector::IntersectionData(Ray<vtkm::Float64>& rays,
-                                                     const vtkm::cont::Field* scalarField,
+                                                     const vtkm::cont::Field scalarField,
                                                      const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);
@@ -540,7 +540,7 @@ VTKM_CONT void TriangleIntersector::IntersectionData(Ray<vtkm::Float64>& rays,
 
 template <typename Precision>
 VTKM_CONT void TriangleIntersector::IntersectionDataImp(Ray<Precision>& rays,
-                                                        const vtkm::cont::Field* scalarField,
+                                                        const vtkm::cont::Field scalarField,
                                                         const vtkm::Range& scalarRange)
 {
   ShapeIntersector::IntersectionPoint(rays);
