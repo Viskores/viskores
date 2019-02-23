@@ -202,6 +202,25 @@ struct ArrayPortalValueReference
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
+  VTKM_EXEC_CONT ValueType operator%=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs %= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator%=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs %= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
   VTKM_EXEC_CONT ValueType operator&=(const T& rhs) const
   {
     ValueType lhs = this->Get();
