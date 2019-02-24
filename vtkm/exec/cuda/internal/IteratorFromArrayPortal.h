@@ -22,6 +22,7 @@
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
+#include <vtkm/internal/ArrayPortalValueReference.h>
 #include <vtkm/internal/ExportMacros.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
@@ -41,56 +42,12 @@ namespace internal
 {
 
 template <class ArrayPortalType>
-struct PortalValue
-{
-  using ValueType = typename ArrayPortalType::ValueType;
-
-  VTKM_EXEC_CONT
-  PortalValue(const ArrayPortalType& portal, vtkm::Id index)
-    : Portal(portal)
-    , Index(index)
-  {
-  }
-
-  VTKM_EXEC
-  void Swap(PortalValue<ArrayPortalType>& rhs) throw()
-  {
-    //we need use the explicit type not a proxy temp object
-    //A proxy temp object would point to the same underlying data structure
-    //and would not hold the old value of *this once *this was set to rhs.
-    const ValueType aValue = *this;
-    *this = rhs;
-    rhs = aValue;
-  }
-
-  VTKM_EXEC
-  PortalValue<ArrayPortalType>& operator=(const PortalValue<ArrayPortalType>& rhs)
-  {
-    this->Portal.Set(this->Index, rhs.Portal.Get(rhs.Index));
-    return *this;
-  }
-
-  VTKM_EXEC
-  ValueType operator=(const ValueType& value) const
-  {
-    this->Portal.Set(this->Index, value);
-    return value;
-  }
-
-  VTKM_EXEC
-  operator ValueType(void) const { return this->Portal.Get(this->Index); }
-
-  const ArrayPortalType& Portal;
-  vtkm::Id Index;
-};
-
-template <class ArrayPortalType>
 class IteratorFromArrayPortal
   : public ::thrust::iterator_facade<IteratorFromArrayPortal<ArrayPortalType>,
                                      typename ArrayPortalType::ValueType,
                                      ::thrust::system::cuda::tag,
                                      ::thrust::random_access_traversal_tag,
-                                     PortalValue<ArrayPortalType>,
+                                     vtkm::internal::ArrayPortalValueReference<ArrayPortalType>,
                                      std::ptrdiff_t>
 {
 public:
@@ -109,9 +66,11 @@ public:
   }
 
   VTKM_EXEC
-  PortalValue<ArrayPortalType> operator[](std::ptrdiff_t idx) const //NEEDS to be signed
+  vtkm::internal::ArrayPortalValueReference<ArrayPortalType> operator[](
+    std::ptrdiff_t idx) const //NEEDS to be signed
   {
-    return PortalValue<ArrayPortalType>(this->Portal, this->Index + static_cast<vtkm::Id>(idx));
+    return vtkm::internal::ArrayPortalValueReference<ArrayPortalType>(
+      this->Portal, this->Index + static_cast<vtkm::Id>(idx));
   }
 
 private:
@@ -122,9 +81,9 @@ private:
   friend class ::thrust::iterator_core_access;
 
   VTKM_EXEC
-  PortalValue<ArrayPortalType> dereference() const
+  vtkm::internal::ArrayPortalValueReference<ArrayPortalType> dereference() const
   {
-    return PortalValue<ArrayPortalType>(this->Portal, this->Index);
+    return vtkm::internal::ArrayPortalValueReference<ArrayPortalType>(this->Portal, this->Index);
   }
 
   VTKM_EXEC
@@ -167,7 +126,8 @@ private:
 //
 //But for vtk-m we pass in facade objects, which are passed by value, but
 //must be treated as references. So do to do that properly we need to specialize
-//is_non_const_reference to state a PortalValue by value is valid for writing
+//is_non_const_reference to state an ArrayPortalValueReference by value is valid
+//for writing
 namespace thrust
 {
 namespace detail
@@ -177,7 +137,7 @@ template <typename T>
 struct is_non_const_reference;
 
 template <typename T>
-struct is_non_const_reference<vtkm::exec::cuda::internal::PortalValue<T>>
+struct is_non_const_reference<vtkm::internal::ArrayPortalValueReference<T>>
   : thrust::detail::true_type
 {
 };
