@@ -269,23 +269,13 @@ public:
 
   vtkm::Id GetNumberOfValues() const { return this->VirtualStorage->GetNumberOfValues(); }
 
-  void Allocate(vtkm::Id numberOfValues) { this->VirtualStorage->Allocate(numberOfValues); }
+  void Allocate(vtkm::Id numberOfValues);
 
-  void Shrink(vtkm::Id numberOfValues) { this->VirtualStorage->Shrink(numberOfValues); }
+  void Shrink(vtkm::Id numberOfValues);
 
-  void ReleaseResources() { this->VirtualStorage->ReleaseResources(); }
+  void ReleaseResources();
 
-  Storage<T, vtkm::cont::StorageTagVirtual> NewInstance() const
-  {
-    if (this->GetStorageVirtual())
-    {
-      return Storage<T, vtkm::cont::StorageTagVirtual>(this->GetStorageVirtual()->NewInstance());
-    }
-    else
-    {
-      return Storage<T, vtkm::cont::StorageTagVirtual>();
-    }
-  }
+  Storage<T, vtkm::cont::StorageTagVirtual> NewInstance() const;
 
   const detail::StorageVirtual* GetStorageVirtual() const { return this->VirtualStorage.get(); }
 

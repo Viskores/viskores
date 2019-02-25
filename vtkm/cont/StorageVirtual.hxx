@@ -239,9 +239,72 @@ void StorageVirtualImpl<T, S>::TransferPortalForOutput(
   vtkm::cont::TryExecuteOnDevice(
     devId, detail::PortalWrapperToDevice(), this->Handle, numberOfValues, payload, mode);
 }
+} // namespace detail
+
+template <typename T>
+void Storage<T, vtkm::cont::StorageTagVirtual>::Allocate(vtkm::Id numberOfValues)
+{
+  if (this->VirtualStorage)
+  {
+    this->VirtualStorage->Allocate(numberOfValues);
+  }
+  else if (numberOfValues != 0)
+  {
+    throw vtkm::cont::ErrorBadAllocation("Attempted to allocate memory in a virtual array that "
+                                         "does not have an underlying concrete array.");
+  }
+  else
+  {
+    // Allocating a non-existing array to 0 is OK.
+  }
 }
-} // namespace internal::detail
+
+template <typename T>
+void Storage<T, vtkm::cont::StorageTagVirtual>::Shrink(vtkm::Id numberOfValues)
+{
+  if (this->VirtualStorage)
+  {
+    this->VirtualStorage->Shrink(numberOfValues);
+  }
+  else if (numberOfValues != 0)
+  {
+    throw vtkm::cont::ErrorBadAllocation(
+      "Attempted to shrink a virtual array that does not have an underlying concrete array.");
+  }
+  else
+  {
+    // Shrinking a non-existing array to 0 is OK.
+  }
 }
-} // namespace vtkm::cont::
+
+template <typename T>
+void Storage<T, vtkm::cont::StorageTagVirtual>::ReleaseResources()
+{
+  if (this->VirtualStorage)
+  {
+    this->VirtualStorage->ReleaseResources();
+  }
+  else
+  {
+    // No concrete array, nothing allocated, nothing to do.
+  }
+}
+
+template <typename T>
+Storage<T, vtkm::cont::StorageTagVirtual> Storage<T, vtkm::cont::StorageTagVirtual>::NewInstance()
+  const
+{
+  if (this->GetStorageVirtual())
+  {
+    return Storage<T, vtkm::cont::StorageTagVirtual>(this->GetStorageVirtual()->NewInstance());
+  }
+  else
+  {
+    return Storage<T, vtkm::cont::StorageTagVirtual>();
+  }
+}
+}
+}
+} // namespace vtkm::cont::internal
 
 #endif
