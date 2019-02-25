@@ -62,13 +62,13 @@ public:
   ///
   /// Only needs to overridden by subclasses such as Zip that have member
   /// variables that themselves have execution memory
-  virtual void ReleaseResourcesExecution();
+  virtual void ReleaseResourcesExecution() = 0;
 
   /// Releases all resources in both the control and execution environments.
   ///
   /// Only needs to overridden by subclasses such as Zip that have member
   /// variables that themselves have execution memory
-  virtual void ReleaseResources();
+  virtual void ReleaseResources() = 0;
 
   /// Returns the number of entries in the array.
   ///
@@ -82,10 +82,7 @@ public:
   /// ErrorBadValue if the allocation is not feasible (for example, the
   /// array storage is read-only).
   ///
-  void Allocate(vtkm::Id numberOfValues)
-  {
-    std::cout << "StorageVirtual::Allocate(" << numberOfValues << ") Not Implemented!" << std::endl;
-  } //return this->DoAllocate(numberOfValues); }
+  virtual void Allocate(vtkm::Id numberOfValues) = 0;
 
   /// \brief Reduces the size of the array without changing its values.
   ///
@@ -95,10 +92,7 @@ public:
   /// \c numberOfValues must be equal or less than the preexisting size
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
-  void Shrink(vtkm::Id numberOfValues)
-  {
-    std::cout << "StorageVirtual::Shrink(" << numberOfValues << ") Not Implemented!." << std::endl;
-  } //return this->DoShrink(numberOfValues); }
+  virtual void Shrink(vtkm::Id numberOfValues) = 0;
 
   /// Determines if storage types matches the type passed in.
   ///
@@ -156,6 +150,16 @@ public:
     READ_WRITE
   };
 
+protected:
+  /// Drop the reference to the execution portal. The underlying array handle might still be
+  /// managing data on the execution side, but our references might be out of date, so drop
+  /// them and refresh them later if necessary.
+  void DropExecutionPortal();
+
+  /// Drop the reference to all portals. The underlying array handle might still be managing data,
+  /// but our references might be out of date, so drop them and refresh them later if necessary.
+  void DropAllPortals();
+
 private:
   //Memory management routines
   // virtual void DoAllocate(vtkm::Id numberOfValues) = 0;
@@ -198,10 +202,13 @@ public:
 
   const vtkm::cont::ArrayHandle<T, S>& GetHandle() const { return this->Handle; }
 
-  vtkm::Id GetNumberOfValues() const { return this->Handle.GetNumberOfValues(); }
+  vtkm::Id GetNumberOfValues() const override { return this->Handle.GetNumberOfValues(); }
 
-  void ReleaseResourcesExecution();
-  void ReleaseResources();
+  void ReleaseResourcesExecution() override;
+  void ReleaseResources() override;
+
+  void Allocate(vtkm::Id numberOfValues) override;
+  void Shrink(vtkm::Id numberOfValues) override;
 
 private:
   std::unique_ptr<vtkm::cont::internal::detail::StorageVirtual> MakeNewInstance() const

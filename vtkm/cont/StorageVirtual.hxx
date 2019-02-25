@@ -119,7 +119,7 @@ StorageVirtualImpl<T, S>::StorageVirtualImpl(vtkm::cont::ArrayHandle<T, S>&& ah)
 template <typename T, typename S>
 void StorageVirtualImpl<T, S>::ReleaseResourcesExecution()
 {
-  vtkm::cont::internal::detail::StorageVirtual::ReleaseResourcesExecution();
+  this->DropExecutionPortal();
   this->Handle.ReleaseResourcesExecution();
 }
 
@@ -127,8 +127,22 @@ void StorageVirtualImpl<T, S>::ReleaseResourcesExecution()
 template <typename T, typename S>
 void StorageVirtualImpl<T, S>::ReleaseResources()
 {
-  vtkm::cont::internal::detail::StorageVirtual::ReleaseResources();
+  this->DropAllPortals();
   this->Handle.ReleaseResources();
+}
+
+template <typename T, typename S>
+void StorageVirtualImpl<T, S>::Allocate(vtkm::Id numberOfValues)
+{
+  this->DropAllPortals();
+  this->Handle.Allocate(numberOfValues);
+}
+
+template <typename T, typename S>
+void StorageVirtualImpl<T, S>::Shrink(vtkm::Id numberOfValues)
+{
+  this->DropAllPortals();
+  this->Handle.Shrink(numberOfValues);
 }
 
 struct PortalWrapperToDevice

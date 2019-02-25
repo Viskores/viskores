@@ -71,14 +71,14 @@ StorageVirtual::~StorageVirtual()
 }
 
 //--------------------------------------------------------------------
-void StorageVirtual::ReleaseResourcesExecution()
+void StorageVirtual::DropExecutionPortal()
 {
   this->DeviceTransferState->releaseDevice();
   this->DeviceUpToDate = false;
 }
 
 //--------------------------------------------------------------------
-void StorageVirtual::ReleaseResources()
+void StorageVirtual::DropAllPortals()
 {
   this->DeviceTransferState->releaseAll();
   this->HostUpToDate = false;
