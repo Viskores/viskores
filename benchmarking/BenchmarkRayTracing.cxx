@@ -47,7 +47,7 @@ namespace vtkm
 namespace benchmarking
 {
 
-template <typename Precision>
+template <typename Precision, typename DeviceAdapter>
 struct BenchRayTracing
 {
   vtkm::rendering::raytracing::RayTracer Tracer;
@@ -118,9 +118,7 @@ struct BenchRayTracing
   VTKM_CONT
   vtkm::Float64 operator()()
   {
-
-
-    vtkm::cont::Timer timer;
+    vtkm::cont::Timer timer{ DeviceAdapter() };
     timer.Start();
 
     RayCamera.CreateRays(Rays, Coords.GetBounds());
@@ -147,12 +145,9 @@ VTKM_MAKE_BENCHMARK(RayTracing, BenchRayTracing);
 
 int main(int argc, char* argv[])
 {
-  vtkm::cont::InitLogging(argc, argv);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
 
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(Device{});
-
-  VTKM_RUN_BENCHMARK(RayTracing, vtkm::ListTagBase<vtkm::Float32>());
+  VTKM_RUN_BENCHMARK(RayTracing, vtkm::ListTagBase<vtkm::Float32>(), config.Device);
   return 0;
 }

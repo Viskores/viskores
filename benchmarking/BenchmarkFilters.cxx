@@ -62,9 +62,10 @@
 #include <sstream>
 #include <type_traits>
 
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
+#ifdef VTKM_ENABLE_TBB
 #include <tbb/task_scheduler_init.h>
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
+#endif
+#ifdef VTKM_ENABLE_OPENMP
 #include <omp.h>
 #endif
 
@@ -97,8 +98,6 @@
 namespace
 {
 
-using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-using DevTraits = vtkm::cont::DeviceAdapterTraits<Device>;
 
 // unscoped enum so we can use bitwise ops without a lot of hassle:
 enum BenchmarkName
@@ -156,6 +155,16 @@ using AllCellList = vtkm::ListTagJoin<StructuredCellList, UnstructuredCellList>;
 
 using CoordinateList = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
 
+struct WaveletGeneratorDataFunctor
+{
+  template <typename DeviceAdapter>
+  bool operator()(DeviceAdapter, vtkm::worklet::WaveletGenerator& gen)
+  {
+    InputDataSet = gen.GenerateDataSet<DeviceAdapter>();
+    return true;
+  }
+};
+
 class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
 {
 public:
@@ -169,7 +178,6 @@ public:
 };
 
 // Class implementing all filter benchmarks:
-template <class DeviceAdapterTag>
 class BenchmarkFilters
 {
   using Timer = vtkm::cont::Timer;
@@ -185,7 +193,7 @@ class BenchmarkFilters
     ScalarInput = 1 << 6
   };
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchGradient
   {
     vtkm::filter::Gradient Filter;
@@ -229,7 +237,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -293,7 +301,7 @@ class BenchmarkFilters
                       BenchGradient,
                       Gradient | PointGradient | Divergence | Vorticity | QCriterion);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchThreshold
   {
     vtkm::filter::Threshold Filter;
@@ -317,7 +325,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -328,7 +336,7 @@ class BenchmarkFilters
   };
   VTKM_MAKE_BENCHMARK(Threshold, BenchThreshold);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchThresholdPoints
   {
     bool CompactPoints;
@@ -356,7 +364,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -368,7 +376,7 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(ThresholdPoints, BenchThresholdPoints, false);
   VTKM_MAKE_BENCHMARK(ThresholdPointsCompact, BenchThresholdPoints, true);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchCellAverage
   {
     vtkm::filter::CellAverage Filter;
@@ -382,7 +390,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -393,7 +401,7 @@ class BenchmarkFilters
   };
   VTKM_MAKE_BENCHMARK(CellAverage, BenchCellAverage);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchPointAverage
   {
     vtkm::filter::PointAverage Filter;
@@ -407,7 +415,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -418,7 +426,7 @@ class BenchmarkFilters
   };
   VTKM_MAKE_BENCHMARK(PointAverage, BenchPointAverage);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchWarpScalar
   {
     vtkm::filter::WarpScalar Filter;
@@ -435,7 +443,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -446,7 +454,7 @@ class BenchmarkFilters
   };
   VTKM_MAKE_BENCHMARK(WarpScalar, BenchWarpScalar);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchWarpVector
   {
     vtkm::filter::WarpVector Filter;
@@ -462,7 +470,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -473,7 +481,7 @@ class BenchmarkFilters
   };
   VTKM_MAKE_BENCHMARK(WarpVector, BenchWarpVector);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchMarchingCubes
   {
     vtkm::filter::MarchingCubes Filter;
@@ -505,7 +513,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -535,7 +543,7 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(MarchingCubes3FTT, BenchMarchingCubes, 3, false, true, true);
   VTKM_MAKE_BENCHMARK(MarchingCubes12FTT, BenchMarchingCubes, 12, false, true, true);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchExternalFaces
   {
     vtkm::filter::ExternalFaces Filter;
@@ -550,7 +558,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -571,7 +579,7 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(ExternalFaces, BenchExternalFaces, false);
   VTKM_MAKE_BENCHMARK(ExternalFacesCompact, BenchExternalFaces, true);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchTetrahedralize
   {
     vtkm::filter::Tetrahedralize Filter;
@@ -585,7 +593,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -596,7 +604,7 @@ class BenchmarkFilters
   };
   VTKM_MAKE_BENCHMARK(Tetrahedralize, BenchTetrahedralize);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchVertexClustering
   {
     vtkm::filter::VertexClustering Filter;
@@ -611,7 +619,7 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
       this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
       return timer.GetElapsedTime();
@@ -633,7 +641,7 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(VertexClustering512, BenchVertexClustering, 512);
   VTKM_MAKE_BENCHMARK(VertexClustering1024, BenchVertexClustering, 1024);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchCellToPoint
   {
     struct PrepareForInput
@@ -661,10 +669,10 @@ class BenchmarkFilters
                                      vtkm::TopologyElementTagPoint{});
         }
 
-        Timer timer{ DeviceAdapterTag() };
+        Timer timer{ DeviceAdapter() };
         timer.Start();
         cellSet.PrepareForInput(
-          Device{}, vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
+          DeviceAdapter(), vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
         this->Time = timer.GetElapsedTime();
       }
     };
@@ -692,7 +700,7 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(CellToPoint, BenchCellToPoint);
 
 public:
-  static VTKM_CONT int Run(int benches)
+  static VTKM_CONT int Run(int benches, vtkm::cont::DeviceAdapterId id)
   {
     // This has no influence on the benchmarks. See issue #286.
     auto dummyTypes = vtkm::ListTagBase<vtkm::Int32>{};
@@ -703,104 +711,104 @@ public:
     {
       if (ReducedOptions)
       {
-        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes);
+        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes, id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientPoint, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientDivergence, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVorticity, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientQCriterion, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes);
+        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientPoint, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientDivergence, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVorticity, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientQCriterion, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes, id);
       }
     }
     if (benches & BenchmarkName::THRESHOLD)
     {
-      VTKM_RUN_BENCHMARK(Threshold, dummyTypes);
+      VTKM_RUN_BENCHMARK(Threshold, dummyTypes, id);
     }
     if (benches & BenchmarkName::THRESHOLD_POINTS)
     {
-      VTKM_RUN_BENCHMARK(ThresholdPoints, dummyTypes);
-      VTKM_RUN_BENCHMARK(ThresholdPointsCompact, dummyTypes);
+      VTKM_RUN_BENCHMARK(ThresholdPoints, dummyTypes, id);
+      VTKM_RUN_BENCHMARK(ThresholdPointsCompact, dummyTypes, id);
     }
     if (benches & BenchmarkName::CELL_AVERAGE)
     {
-      VTKM_RUN_BENCHMARK(CellAverage, dummyTypes);
+      VTKM_RUN_BENCHMARK(CellAverage, dummyTypes, id);
     }
     if (benches & BenchmarkName::POINT_AVERAGE)
     {
-      VTKM_RUN_BENCHMARK(PointAverage, dummyTypes);
+      VTKM_RUN_BENCHMARK(PointAverage, dummyTypes, id);
     }
     if (benches & BenchmarkName::WARP_SCALAR)
     {
-      VTKM_RUN_BENCHMARK(WarpScalar, dummyTypes);
+      VTKM_RUN_BENCHMARK(WarpScalar, dummyTypes, id);
     }
     if (benches & BenchmarkName::WARP_VECTOR)
     {
-      VTKM_RUN_BENCHMARK(WarpVector, dummyTypes);
+      VTKM_RUN_BENCHMARK(WarpVector, dummyTypes, id);
     }
     if (benches & BenchmarkName::MARCHING_CUBES)
     {
       if (ReducedOptions)
       {
-        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes);
+        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes, id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes1TFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes3TFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes1FTF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FTF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes1FTT, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FTT, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes);
+        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes3FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes1TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes3TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes1FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes3FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes1FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes3FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes, id);
       }
     }
     if (benches & BenchmarkName::EXTERNAL_FACES)
     {
-      VTKM_RUN_BENCHMARK(ExternalFaces, dummyTypes);
-      VTKM_RUN_BENCHMARK(ExternalFacesCompact, dummyTypes);
+      VTKM_RUN_BENCHMARK(ExternalFaces, dummyTypes, id);
+      VTKM_RUN_BENCHMARK(ExternalFacesCompact, dummyTypes, id);
     }
     if (benches & BenchmarkName::TETRAHEDRALIZE)
     {
-      VTKM_RUN_BENCHMARK(Tetrahedralize, dummyTypes);
+      VTKM_RUN_BENCHMARK(Tetrahedralize, dummyTypes, id);
     }
     if (benches & BenchmarkName::VERTEX_CLUSTERING)
     {
       if (ReducedOptions)
       {
-        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes);
+        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes, id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering64, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering128, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering512, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes);
+        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering64, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering128, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering512, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes, id);
       }
     }
     if (benches & BenchmarkName::CELL_TO_POINT)
     {
-      VTKM_RUN_BENCHMARK(CellToPoint, dummyTypes);
+      VTKM_RUN_BENCHMARK(CellToPoint, dummyTypes, id);
     }
 
     return 0;
@@ -936,7 +944,6 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
 
     PointVectorGenerator worklet(bounds);
     vtkm::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);
-    dispatch.SetDevice(Device());
     dispatch.Invoke(points, pvecs);
     InputDataSet.AddField(
       vtkm::cont::Field("GeneratedPointVectors", vtkm::cont::Field::Association::POINTS, pvecs));
@@ -1050,18 +1057,21 @@ void AssertFields(bool needPointScalars, bool needCellScalars, bool needPointVec
   }
 }
 
-int BenchmarkBody(int argc, char* argv[])
+int BenchmarkBody(const std::vector<std::string>& argv, vtkm::cont::DeviceAdapterId id)
 {
   int numThreads = 1;
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-  numThreads = tbb::task_scheduler_init::automatic;
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
-  numThreads = omp_get_max_threads();
-#endif // TBB
-
-  // Force the requested device in case a tracker is used internally by a filter:
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(Device());
+#ifdef VTKM_ENABLE_TBB
+  if (id == vtkm::cont::DeviceAdapterTagTBB())
+  {
+    numThreads = tbb::task_scheduler_init::automatic;
+  }
+#endif
+#ifdef VTKM_ENABLE_OPENMP
+  if (id == vtkm::cont::DeviceAdapterTagOpenMP())
+  {
+    numThreads = omp_get_max_threads();
+  }
+#endif
 
   int benches = BenchmarkName::NONE;
   std::string filename;
@@ -1073,7 +1083,7 @@ int BenchmarkBody(int argc, char* argv[])
 
   ReducedOptions = false;
 
-  for (int i = 1; i < argc; ++i)
+  for (size_t i = 0; i < argv.size(); ++i)
   {
     std::string arg = argv[i];
     std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
@@ -1174,13 +1184,11 @@ int BenchmarkBody(int argc, char* argv[])
     else if (arg == "numthreads")
     {
       ++i;
-      if (Device{} == vtkm::cont::DeviceAdapterTagOpenMP{} ||
-          Device{} == vtkm::cont::DeviceAdapterTagTBB{})
+      if (id == vtkm::cont::DeviceAdapterTagOpenMP() || id == vtkm::cont::DeviceAdapterTagTBB())
       {
         std::istringstream parse(argv[i]);
         parse >> numThreads;
-        std::cout << "Selected " << numThreads << " " << DevTraits::GetName() << " threads."
-                  << std::endl;
+        std::cout << "Selected " << numThreads << " " << id.GetName() << " threads." << std::endl;
       }
       else
       {
@@ -1194,12 +1202,19 @@ int BenchmarkBody(int argc, char* argv[])
     }
   }
 
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
+#ifdef VTKM_ENABLE_TBB
   // Must not be destroyed as long as benchmarks are running:
-  tbb::task_scheduler_init init(numThreads);
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
-  omp_set_num_threads(numThreads);
-#endif // TBB
+  if (id == vtkm::cont::DeviceAdapterTagTBB())
+  {
+    tbb::task_scheduler_init init(numThreads);
+  }
+#endif
+#ifdef VTKM_ENABLE_OPENMP
+  if (id == vtkm::cont::DeviceAdapterTagOpenMP())
+  {
+    omp_set_num_threads(numThreads);
+  }
+#endif
 
   if (benches == BenchmarkName::NONE)
   {
@@ -1222,7 +1237,10 @@ int BenchmarkBody(int argc, char* argv[])
               << " wavelet...\n";
     vtkm::worklet::WaveletGenerator gen;
     gen.SetExtent({ 0 }, { waveletDim });
-    InputDataSet = gen.GenerateDataSet<Device>();
+
+    // WaveletGenerator needs a template device argument not a id to deduce the portal type.
+    WaveletGeneratorDataFunctor genFunctor;
+    vtkm::cont::TryExecuteOnDevice(id, genFunctor, gen);
   }
 
   if (tetra)
@@ -1271,7 +1289,7 @@ int BenchmarkBody(int argc, char* argv[])
   std::cout << "\n";
 
   //now actually execute the benchmarks
-  int result = BenchmarkFilters<Device>::Run(benches);
+  int result = BenchmarkFilters::Run(benches, id);
 
   // Explicitly free resources before exit.
   InputDataSet.Clear();
@@ -1283,15 +1301,13 @@ int BenchmarkBody(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-  vtkm::cont::Initialize(argc, argv);
-
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(Device{});
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
 
   int retval = 1;
   try
   {
-    retval = BenchmarkBody(argc, argv);
+    retval = BenchmarkBody(config.Arguments, config.Device);
   }
   catch (std::exception& e)
   {
