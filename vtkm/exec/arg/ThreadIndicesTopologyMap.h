@@ -100,41 +100,20 @@ public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                                     const OutToInArrayType& outToIn,
-                                     const VisitArrayType& visit,
+                                     vtkm::Id inputIndex,
+                                     vtkm::IdComponent visitIndex,
+                                     vtkm::Id outputIndex,
                                      const ConnectivityType& connectivity,
                                      vtkm::Id globalThreadIndexOffset = 0)
-    : Superclass(threadIndex,
-                 outToIn.Get(threadIndex),
-                 visit.Get(threadIndex),
-                 globalThreadIndexOffset)
+    : Superclass(threadIndex, inputIndex, visitIndex, outputIndex, globalThreadIndexOffset)
     // The connectivity is stored in the invocation parameter at the given
     // input domain index. If this class is being used correctly, the type
     // of the domain will match the connectivity type used here. If there is
     // a compile error here about a type mismatch, chances are a worklet has
     // set its input domain incorrectly.
-    , IndicesFrom(connectivity.GetIndices(outToIn.Get(threadIndex)))
-    , CellShape(connectivity.GetCellShape(outToIn.Get(threadIndex)))
-  {
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                           vtkm::Id inIndex,
-                           vtkm::IdComponent visitIndex,
-                           const ConnectivityType& connectivity,
-                           vtkm::Id globalThreadIndexOffset = 0)
-    : Superclass(threadIndex, inIndex, visitIndex, globalThreadIndexOffset)
-    // The connectivity is stored in the invocation parameter at the given
-    // input domain index. If this class is being used correctly, the type
-    // of the domain will match the connectivity type used here. If there is
-    // a compile error here about a type mismatch, chances are a worklet has
-    // set its input domain incorrectly.
-    , IndicesFrom(connectivity.GetIndices(inIndex))
-    , CellShape(connectivity.GetCellShape(inIndex))
+    , IndicesFrom(connectivity.GetIndices(inputIndex))
+    , CellShape(connectivity.GetCellShape(inputIndex))
   {
   }
 
@@ -187,61 +166,51 @@ public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
-  template <typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                                     const OutToInArrayType& outToIn,
-                                     const VisitArrayType& visit,
+                                     vtkm::Id inIndex,
+                                     vtkm::IdComponent visitIndex,
+                                     vtkm::Id outIndex,
                                      const ConnectivityType& connectivity,
                                      vtkm::Id globalThreadIndexOffset = 0)
   {
-
-    this->InputIndex = outToIn.Get(threadIndex);
-    this->OutputIndex = threadIndex;
-    this->VisitIndex = visit.Get(threadIndex);
+    this->ThreadIndex = threadIndex;
+    this->InputIndex = inIndex;
+    this->VisitIndex = visitIndex;
+    this->OutputIndex = outIndex;
     this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
     this->IndicesFrom = connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = connectivity.GetCellShape(this->InputIndex);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
-  template <typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
-                                     const OutToInArrayType&,
-                                     const VisitArrayType& visit,
                                      const ConnectivityType& connectivity,
                                      const vtkm::Id globalThreadIndexOffset = 0)
   {
     // We currently only support multidimensional indices on one-to-one input-
     // to-output mappings. (We don't have a use case otherwise.)
-    // that is why the OutToInArrayType is ignored
+    // That is why we treat teh threadIndex as also the inputIndex and outputIndex
     const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
     const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
 
+    this->ThreadIndex = index;
     this->InputIndex = index;
     this->OutputIndex = index;
-    this->VisitIndex = visit.Get(index);
+    this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesFrom = connectivity.GetIndices(logicalIndex);
     this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
   VTKM_EXEC
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                           vtkm::Id vtkmNotUsed(inIndex),
-                           vtkm::IdComponent visitIndex,
-                           const ConnectivityType& connectivity,
-                           vtkm::Id globalThreadIndexOffset = 0)
-  {
-    this->InputIndex = threadIndex;
-    this->OutputIndex = threadIndex;
-    this->VisitIndex = visitIndex;
-    this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
-    this->IndicesFrom = connectivity.GetIndices(this->LogicalIndex);
-    this->CellShape = connectivity.GetCellShape(this->InputIndex);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
-  }
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The logical index into the input domain.
   ///
@@ -321,9 +290,10 @@ public:
   CellShapeTag GetCellShape() const { return this->CellShape; }
 
 private:
+  vtkm::Id ThreadIndex;
   vtkm::Id InputIndex;
-  vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;
+  vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
   IndicesFromType IndicesFrom;
   CellShapeTag CellShape;
@@ -351,35 +321,17 @@ public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
-  template <typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                                     const OutToInArrayType& outToIn,
-                                     const VisitArrayType& visit,
+                                     vtkm::Id inputIndex,
+                                     vtkm::IdComponent visitIndex,
+                                     vtkm::Id outputIndex,
                                      const PermutedConnectivityType& permutation,
                                      vtkm::Id globalThreadIndexOffset = 0)
   {
-    this->InputIndex = outToIn.Get(threadIndex);
-    this->OutputIndex = threadIndex;
-    this->VisitIndex = visit.Get(threadIndex);
-
-    const vtkm::Id permutedIndex = permutation.Portal.Get(this->InputIndex);
-    this->LogicalIndex = permutation.Connectivity.FlatToLogicalToIndex(permutedIndex);
-    this->IndicesFrom = permutation.Connectivity.GetIndices(this->LogicalIndex);
-    this->CellShape = permutation.Connectivity.GetCellShape(permutedIndex);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                           vtkm::Id vtkmNotUsed(inIndex),
-                           vtkm::IdComponent visitIndex,
-                           const PermutedConnectivityType& permutation,
-                           vtkm::Id globalThreadIndexOffset = 0)
-  {
-    this->InputIndex = threadIndex;
-    this->OutputIndex = threadIndex;
+    this->ThreadIndex = threadIndex;
+    this->InputIndex = inputIndex;
     this->VisitIndex = visitIndex;
+    this->OutputIndex = outputIndex;
 
     const vtkm::Id permutedIndex = permutation.Portal.Get(this->InputIndex);
     this->LogicalIndex = permutation.Connectivity.FlatToLogicalToIndex(permutedIndex);
@@ -387,6 +339,15 @@ public:
     this->CellShape = permutation.Connectivity.GetCellShape(permutedIndex);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
+
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The logical index into the input domain.
   ///
@@ -466,9 +427,10 @@ public:
   CellShapeTag GetCellShape() const { return this->CellShape; }
 
 private:
+  vtkm::Id ThreadIndex;
   vtkm::Id InputIndex;
-  vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;
+  vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
   IndicesFromType IndicesFrom;
   CellShapeTag CellShape;

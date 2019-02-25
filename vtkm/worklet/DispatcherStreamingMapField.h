@@ -189,24 +189,12 @@ class DispatcherStreamingMapField
                                             WorkletType,
                                             vtkm::worklet::WorkletMapField>;
   using ScatterType = typename Superclass::ScatterType;
+  using MaskType = typename WorkletType::MaskType;
 
 public:
-  // If you get a compile error here about there being no appropriate constructor for ScatterType,
-  // then that probably means that the worklet you are trying to execute has defined a custom
-  // ScatterType and that you need to create one (because there is no default way to construct
-  // the scatter). By convention, worklets that define a custom scatter type usually provide a
-  // static method named MakeScatter that constructs a scatter object.
-  VTKM_CONT
-  DispatcherStreamingMapField(const WorkletType& worklet = WorkletType(),
-                              const ScatterType& scatter = ScatterType())
-    : Superclass(worklet, scatter)
-    , NumberOfBlocks(1)
-  {
-  }
-
-  VTKM_CONT
-  DispatcherStreamingMapField(const ScatterType& scatter)
-    : Superclass(WorkletType(), scatter)
+  template <typename... T>
+  VTKM_CONT DispatcherStreamingMapField(T&&... args)
+    : Superclass(std::forward<T>(args)...)
     , NumberOfBlocks(1)
   {
   }
@@ -312,11 +300,16 @@ private:
       this->Scatter.GetOutputToInputMap(inputRange);
     typename ScatterType::VisitArrayType visitArray = this->Scatter.GetVisitArray(inputRange);
 
+    // Get the arrays used for masking output elements.
+    typename MaskType::ThreadToOutputMapType threadToOutputMap =
+      this->Mask.GetThreadToOutputMap(inputRange);
+
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
     this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
                            .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
-                           .ChangeVisitArray(visitArray.PrepareForInput(device)),
+                           .ChangeVisitArray(visitArray.PrepareForInput(device))
+                           .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device)),
                          outputRange,
                          globalIndexOffset,
                          device);

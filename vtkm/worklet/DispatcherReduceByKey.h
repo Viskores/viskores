@@ -45,21 +45,9 @@ class DispatcherReduceByKey
   using ScatterType = typename Superclass::ScatterType;
 
 public:
-  // If you get a compile error here about there being no appropriate constructor for ScatterType,
-  // then that probably means that the worklet you are trying to execute has defined a custom
-  // ScatterType and that you need to create one (because there is no default way to construct
-  // the scatter). By convention, worklets that define a custom scatter type usually provide a
-  // static method named MakeScatter that constructs a scatter object.
-  VTKM_CONT
-  DispatcherReduceByKey(const WorkletType& worklet = WorkletType(),
-                        const ScatterType& scatter = ScatterType())
-    : Superclass(worklet, scatter)
-  {
-  }
-
-  VTKM_CONT
-  DispatcherReduceByKey(const ScatterType& scatter)
-    : Superclass(WorkletType(), scatter)
+  template <typename... T>
+  VTKM_CONT DispatcherReduceByKey(T&&... args)
+    : Superclass(std::forward<T>(args)...)
   {
   }
 

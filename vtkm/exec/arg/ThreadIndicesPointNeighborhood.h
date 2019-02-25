@@ -65,19 +65,14 @@ class ThreadIndicesPointNeighborhood
 {
 
 public:
-  template <typename OutToInArrayType, typename VisitArrayType, vtkm::IdComponent Dimension>
+  template <vtkm::IdComponent Dimension>
   VTKM_EXEC ThreadIndicesPointNeighborhood(
     const vtkm::Id3& outIndex,
-    const OutToInArrayType&,
-    const VisitArrayType&,
     const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
                                              vtkm::TopologyElementTagPoint,
                                              Dimension>& connectivity,
     vtkm::Id globalThreadIndexOffset = 0)
     : State(outIndex, detail::To3D(connectivity.GetPointDimensions()))
-    , InputIndex(0)
-    , OutputIndex(0)
-    , VisitIndex(0)
     , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
     using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
@@ -85,41 +80,27 @@ public:
                                                                 Dimension>;
     using ConnRangeType = typename ConnectivityType::SchedulingRangeType;
     const ConnRangeType index = detail::Deflate(outIndex, ConnRangeType());
-    this->InputIndex = connectivity.LogicalToFlatToIndex(index);
-    this->OutputIndex = this->InputIndex;
-  }
-
-  template <typename OutToInArrayType, typename VisitArrayType, vtkm::IdComponent Dimension>
-  VTKM_EXEC ThreadIndicesPointNeighborhood(
-    const vtkm::Id& outIndex,
-    const OutToInArrayType& outToIn,
-    const VisitArrayType& visit,
-    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                             vtkm::TopologyElementTagPoint,
-                                             Dimension>& connectivity,
-    vtkm::Id globalThreadIndexOffset = 0)
-    : State(detail::To3D(connectivity.FlatToLogicalToIndex(outToIn.Get(outIndex))),
-            detail::To3D(connectivity.GetPointDimensions()))
-    , InputIndex(outToIn.Get(outIndex))
-    , OutputIndex(outIndex)
-    , VisitIndex(static_cast<vtkm::IdComponent>(visit.Get(outIndex)))
-    , GlobalThreadIndexOffset(globalThreadIndexOffset)
-  {
+    this->ThreadIndex = connectivity.LogicalToFlatToIndex(index);
+    this->InputIndex = this->ThreadIndex;
+    this->VisitIndex = 0;
+    this->OutputIndex = this->ThreadIndex;
   }
 
   template <vtkm::IdComponent Dimension>
   VTKM_EXEC ThreadIndicesPointNeighborhood(
-    const vtkm::Id& outIndex,
-    const vtkm::Id& inIndex,
-    const vtkm::IdComponent& visitIndex,
+    vtkm::Id threadIndex,
+    vtkm::Id inputIndex,
+    vtkm::IdComponent visitIndex,
+    vtkm::Id outputIndex,
     const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
                                              vtkm::TopologyElementTagPoint,
                                              Dimension>& connectivity,
     vtkm::Id globalThreadIndexOffset = 0)
-    : State(detail::To3D(connectivity.FlatToLogicalToIndex(inIndex)),
+    : State(detail::To3D(connectivity.FlatToLogicalToIndex(inputIndex)),
             detail::To3D(connectivity.GetPointDimensions()))
-    , InputIndex(inIndex)
-    , OutputIndex(outIndex)
+    , ThreadIndex(threadIndex)
+    , InputIndex(inputIndex)
+    , OutputIndex(outputIndex)
     , VisitIndex(visitIndex)
     , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
@@ -127,6 +108,9 @@ public:
 
   VTKM_EXEC
   const vtkm::exec::BoundaryState& GetBoundaryState() const { return this->State; }
+
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   VTKM_EXEC
   vtkm::Id GetInputIndex() const { return this->InputIndex; }
@@ -148,6 +132,7 @@ public:
 
 private:
   vtkm::exec::BoundaryState State;
+  vtkm::Id ThreadIndex;
   vtkm::Id InputIndex;
   vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;

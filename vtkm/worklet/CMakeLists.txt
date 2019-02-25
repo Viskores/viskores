@@ -50,7 +50,10 @@ set(headers
   Magnitude.h
   MarchingCubes.h
   Mask.h
+  MaskIndices.h
+  MaskNone.h
   MaskPoints.h
+  MaskSelect.h
   NDimsEntropy.h
   NDimsHistMarginalization.h
   NDimsHistogram.h
@@ -107,6 +110,7 @@ set(sources_no_device
 # be compiled with a device-specific compiler (like CUDA).
 set(sources_device
   Keys.cxx
+  MaskSelect.cxx
   ScatterCounting.cxx
   )
 
