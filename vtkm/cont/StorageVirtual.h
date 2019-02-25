@@ -211,23 +211,23 @@ public:
   void Shrink(vtkm::Id numberOfValues) override;
 
 private:
-  std::unique_ptr<vtkm::cont::internal::detail::StorageVirtual> MakeNewInstance() const
+  std::unique_ptr<vtkm::cont::internal::detail::StorageVirtual> MakeNewInstance() const override
   {
     return std::unique_ptr<vtkm::cont::internal::detail::StorageVirtual>(
       new StorageVirtualImpl<T, S>{ vtkm::cont::ArrayHandle<T, S>{} });
   }
 
 
-  void ControlPortalForInput(vtkm::cont::internal::TransferInfoArray& payload) const;
-  void ControlPortalForOutput(vtkm::cont::internal::TransferInfoArray& payload);
+  void ControlPortalForInput(vtkm::cont::internal::TransferInfoArray& payload) const override;
+  void ControlPortalForOutput(vtkm::cont::internal::TransferInfoArray& payload) override;
 
   void TransferPortalForInput(vtkm::cont::internal::TransferInfoArray& payload,
-                              vtkm::cont::DeviceAdapterId devId) const;
+                              vtkm::cont::DeviceAdapterId devId) const override;
 
   void TransferPortalForOutput(vtkm::cont::internal::TransferInfoArray& payload,
                                OutputMode mode,
                                vtkm::Id numberOfValues,
-                               vtkm::cont::DeviceAdapterId devId);
+                               vtkm::cont::DeviceAdapterId devId) override;
 
   vtkm::cont::ArrayHandle<T, S> Handle;
 };
