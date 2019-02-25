@@ -164,6 +164,9 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
+  classname(Thisclass&& src) noexcept : Superclass(std::move(src)) {}                              \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType,                        \
                                           typename__ Superclass::StorageTag>& src)                 \
     : Superclass(src)                                                                              \
@@ -171,9 +174,23 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
+  classname(vtkm::cont::ArrayHandle<typename__ Superclass::ValueType,                              \
+                                    typename__ Superclass::StorageTag>&& src) noexcept             \
+    : Superclass(std::move(src))                                                                   \
+  {                                                                                                \
+  }                                                                                                \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
   Thisclass& operator=(const Thisclass& src)                                                       \
   {                                                                                                \
     this->Superclass::operator=(src);                                                              \
+    return *this;                                                                                  \
+  }                                                                                                \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
+  Thisclass& operator=(Thisclass&& src) noexcept                                                   \
+  {                                                                                                \
+    this->Superclass::operator=(std::move(src));                                                   \
     return *this;                                                                                  \
   }                                                                                                \
                                                                                                    \
