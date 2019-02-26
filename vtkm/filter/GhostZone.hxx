@@ -23,6 +23,7 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
+#include <vtkm/filter/ExtractStructured.h>
 #include <vtkm/worklet/CellDeepCopy.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
@@ -62,6 +63,241 @@ private:
   vtkm::UInt8 RemoveType;
 };
 
+template <int DIMS>
+VTKM_EXEC_CONT vtkm::Vec<vtkm::Id, 3> getLogical(const vtkm::Id& index,
+                                                 const vtkm::Vec<vtkm::Id, 3>& cellDims);
+
+template <>
+VTKM_EXEC_CONT vtkm::Vec<vtkm::Id, 3> getLogical<3>(const vtkm::Id& index,
+                                                    const vtkm::Vec<vtkm::Id, 3>& cellDims)
+{
+  vtkm::Vec<vtkm::Id, 3> res(0, 0, 0);
+  res[0] = index % cellDims[0];
+  res[1] = (index / (cellDims[0])) % (cellDims[1]);
+  res[2] = index / ((cellDims[0]) * (cellDims[1]));
+  return res;
+}
+
+template <>
+VTKM_EXEC_CONT vtkm::Vec<vtkm::Id, 3> getLogical<2>(const vtkm::Id& index,
+                                                    const vtkm::Vec<vtkm::Id, 3>& cellDims)
+{
+  vtkm::Vec<vtkm::Id, 3> res(0, 0, 0);
+  res[0] = index % cellDims[0];
+  res[1] = index / cellDims[0];
+  return res;
+}
+
+template <>
+VTKM_EXEC_CONT vtkm::Vec<vtkm::Id, 3> getLogical<1>(const vtkm::Id& index,
+                                                    const vtkm::Vec<vtkm::Id, 3>&)
+{
+  vtkm::Vec<vtkm::Id, 3> res(0, 0, 0);
+  res[0] = index;
+  return res;
+}
+
+template <int DIMS>
+class RealMinMax : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  RealMinMax(vtkm::Vec<vtkm::Id, 3> cellDims,
+             bool removeAllGhost,
+             bool removeByType,
+             vtkm::UInt8 removeType)
+    : CellDims(cellDims)
+    , RemoveAllGhost(removeAllGhost)
+    , RemoveByType(removeByType)
+    , RemoveType(removeType)
+  {
+  }
+
+  typedef void ControlSignature(FieldIn, AtomicArrayInOut);
+  typedef void ExecutionSignature(_1, InputIndex, _2);
+
+  template <typename Atomic>
+  VTKM_EXEC void Max(Atomic& boom, const vtkm::Id& val, const vtkm::Id& index) const
+  {
+    vtkm::Id old = -1;
+    do
+    {
+      old = boom.CompareAndSwap(index, val, old);
+    } while (old < val);
+  }
+
+  template <typename Atomic>
+  VTKM_EXEC void Min(Atomic& boom, const vtkm::Id& val, const vtkm::Id& index) const
+  {
+    vtkm::Id old = std::numeric_limits<vtkm::Id>::max();
+    do
+    {
+      old = boom.CompareAndSwap(index, val, old);
+    } while (old > val);
+  }
+
+  template <typename T, typename AtomicType>
+  VTKM_EXEC void operator()(const T& value, const vtkm::Id& index, AtomicType& boom) const
+  {
+    // we are finding the logical min max of valid zones
+    if ((RemoveAllGhost && value != 0) || (RemoveByType && (value != 0 && value | RemoveType)))
+      return;
+
+    vtkm::Vec<vtkm::Id, 3> logical = getLogical<DIMS>(index, CellDims);
+
+    Min(boom, logical[0], 0);
+    Min(boom, logical[1], 1);
+    Min(boom, logical[2], 2);
+
+    Max(boom, logical[0], 3);
+    Max(boom, logical[1], 4);
+    Max(boom, logical[2], 5);
+  }
+
+private:
+  vtkm::Vec<vtkm::Id, 3> CellDims;
+  bool RemoveAllGhost;
+  bool RemoveByType;
+  vtkm::UInt8 RemoveType;
+};
+
+template <int DIMS>
+class Validate : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  Validate(vtkm::Vec<vtkm::Id, 3> cellDims,
+           bool removeAllGhost,
+           bool removeByType,
+           vtkm::UInt8 removeType,
+           vtkm::Vec<vtkm::Id, 3> validMin,
+           vtkm::Vec<vtkm::Id, 3> validMax)
+    : CellDims(cellDims)
+    , RemoveAll(removeAllGhost)
+    , RemoveByType(removeByType)
+    , RemoveVal(removeType)
+    , ValidMin(validMin)
+    , ValidMax(validMax)
+  {
+  }
+
+  typedef void ControlSignature(FieldIn, FieldOut);
+  typedef void ExecutionSignature(_1, InputIndex, _2);
+
+  template <typename T>
+  VTKM_EXEC void operator()(const T& value, const vtkm::Id& index, vtkm::UInt8& valid) const
+  {
+    valid = 0;
+    if (RemoveAll && value == 0)
+      return;
+    else if (RemoveByType && (value == 0 || (value & RemoveVal)))
+      return;
+
+    vtkm::Vec<vtkm::Id, 3> logical = getLogical<DIMS>(index, CellDims);
+    for (int i = 0; i < DIMS; i++)
+      if (logical[i] >= ValidMin[i] || logical[i] <= ValidMax[i])
+        valid = 1;
+  }
+
+private:
+  vtkm::Vec<vtkm::Id, 3> CellDims;
+  bool RemoveAll;
+  bool RemoveByType;
+  vtkm::UInt8 RemoveVal;
+  vtkm::Vec<vtkm::Id, 3> ValidMin;
+  vtkm::Vec<vtkm::Id, 3> ValidMax;
+};
+
+template <int DIMS, typename T, typename StorageType>
+bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
+              bool removeAllGhost,
+              bool removeByType,
+              vtkm::UInt8 removeType,
+              vtkm::Vec<vtkm::Id, 3>& min,
+              vtkm::Vec<vtkm::Id, 3>& max,
+              vtkm::Vec<vtkm::Id, 3> cellDims,
+              vtkm::Id size)
+{
+  vtkm::cont::ArrayHandle<vtkm::Id> minmax;
+  minmax.Allocate(6);
+  minmax.GetPortalControl().Set(0, std::numeric_limits<vtkm::Id>::max());
+  minmax.GetPortalControl().Set(1, std::numeric_limits<vtkm::Id>::max());
+  minmax.GetPortalControl().Set(2, std::numeric_limits<vtkm::Id>::max());
+  minmax.GetPortalControl().Set(3, std::numeric_limits<vtkm::Id>::min());
+  minmax.GetPortalControl().Set(4, std::numeric_limits<vtkm::Id>::min());
+  minmax.GetPortalControl().Set(5, std::numeric_limits<vtkm::Id>::min());
+
+  vtkm::worklet::DispatcherMapField<RealMinMax<3>>(
+    RealMinMax<3>(cellDims, removeAllGhost, removeByType, removeType))
+    .Invoke(ghostField, minmax);
+
+  vtkm::Vec<vtkm::Id, 3> validMin, validMax;
+  validMin[0] = minmax.GetPortalConstControl().Get(0);
+  validMin[1] = minmax.GetPortalConstControl().Get(1);
+  validMin[2] = minmax.GetPortalConstControl().Get(2);
+
+  validMax[0] = minmax.GetPortalConstControl().Get(3);
+  validMax[1] = minmax.GetPortalConstControl().Get(4);
+  validMax[2] = minmax.GetPortalConstControl().Get(5);
+
+  vtkm::cont::ArrayHandle<vtkm::UInt8> validFlags;
+  validFlags.Allocate(size);
+
+  min = validMin;
+  max = validMax;
+
+  vtkm::worklet::DispatcherMapField<Validate<DIMS>>(
+    Validate<DIMS>(cellDims, removeAllGhost, removeByType, removeType, validMin, validMax))
+    .Invoke(ghostField, validFlags);
+
+  vtkm::UInt8 res = vtkm::cont::Algorithm::Reduce(validFlags, vtkm::UInt8(0), vtkm::Maximum());
+  return res == 0;
+}
+
+template <typename T, typename StorageType>
+bool CanDoStructuredStrip(const vtkm::cont::DynamicCellSet& cells,
+                          const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
+                          bool removeAllGhost,
+                          bool removeByType,
+                          vtkm::UInt8 removeType,
+                          vtkm::Id3& min,
+                          vtkm::Id3& max)
+{
+  bool canDo = false;
+  vtkm::Id3 cellDims(1, 1, 1);
+
+  if (cells.IsSameType(vtkm::cont::CellSetStructured<1>()))
+  {
+    auto cells1D = cells.Cast<vtkm::cont::CellSetStructured<1>>();
+    vtkm::Id d = cells1D.GetCellDimensions();
+    cellDims[0] = d;
+    vtkm::Id sz = d;
+
+    canDo = CanStrip<1, T, StorageType>(
+      ghostField, removeAllGhost, removeByType, removeType, min, max, cellDims, sz);
+  }
+  else if (cells.IsSameType(vtkm::cont::CellSetStructured<2>()))
+  {
+    auto cells2D = cells.Cast<vtkm::cont::CellSetStructured<2>>();
+    vtkm::Id2 d = cells2D.GetCellDimensions();
+    cellDims[0] = d[0];
+    cellDims[1] = d[1];
+    vtkm::Id sz = cellDims[0] * cellDims[1];
+    canDo = CanStrip<2, T, StorageType>(
+      ghostField, removeAllGhost, removeByType, removeType, min, max, cellDims, sz);
+  }
+  else if (cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  {
+    auto cells3D = cells.Cast<vtkm::cont::CellSetStructured<3>>();
+    cellDims = cells3D.GetCellDimensions();
+    vtkm::Id sz = cellDims[0] * cellDims[1] * cellDims[2];
+    canDo = CanStrip<3, T, StorageType>(
+      ghostField, removeAllGhost, removeByType, removeType, min, max, cellDims, sz);
+  }
+
+  return canDo;
+}
+
 } // end anon namespace
 
 namespace vtkm
@@ -89,8 +325,30 @@ inline VTKM_CONT vtkm::cont::DataSet GhostZone::DoExecute(
 {
   //get the cells and coordinates of the dataset
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
-
   vtkm::cont::DynamicCellSet cellOut;
+
+  if (cells.IsSameType(vtkm::cont::CellSetStructured<1>()) ||
+      cells.IsSameType(vtkm::cont::CellSetStructured<2>()) ||
+      cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  {
+    vtkm::Id3 min, max;
+    if (CanDoStructuredStrip<T, StorageType>(cells,
+                                             field,
+                                             this->GetRemoveAllGhost(),
+                                             this->GetRemoveByType(),
+                                             this->GetRemoveType(),
+                                             min,
+                                             max))
+    {
+      vtkm::filter::ExtractStructured extract;
+      vtkm::RangeId3 range(min[0], max[0] + 2, min[1], max[1] + 2, min[2], max[2] + 2);
+      vtkm::Id3 sample(1, 1, 1);
+      extract.SetVOI(range);
+      extract.SetSampleRate(sample);
+      auto output = extract.Execute(input, vtkm::filter::GhostZonePolicy());
+      return output;
+    }
+  }
 
   if (this->GetRemoveAllGhost())
     cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
