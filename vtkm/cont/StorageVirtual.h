@@ -235,7 +235,7 @@ private:
 } // namespace detail
 
 template <typename T>
-class Storage<T, vtkm::cont::StorageTagVirtual>
+class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagVirtual>
 {
 public:
   using ValueType = T;
@@ -244,6 +244,9 @@ public:
   using PortalConstType = vtkm::ArrayPortalRef<T>;
 
   Storage() = default;
+
+  // Should never really be used, but just in case.
+  Storage(const Storage<T, vtkm::cont::StorageTagVirtual>&) = default;
 
   template <typename S>
   Storage(const vtkm::cont::ArrayHandle<T, S>& srcArray)
@@ -278,6 +281,7 @@ public:
   Storage<T, vtkm::cont::StorageTagVirtual> NewInstance() const;
 
   const detail::StorageVirtual* GetStorageVirtual() const { return this->VirtualStorage.get(); }
+  detail::StorageVirtual* GetStorageVirtual() { return this->VirtualStorage.get(); }
 
 private:
   std::shared_ptr<detail::StorageVirtual> VirtualStorage;
@@ -292,6 +296,8 @@ private:
 }
 } // namespace vtkm::cont
 
+#ifndef vtk_m_cont_StorageVirtual_hxx
 #include <vtkm/cont/StorageVirtual.hxx>
+#endif
 
 #endif

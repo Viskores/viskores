@@ -303,8 +303,141 @@ Storage<T, vtkm::cont::StorageTagVirtual> Storage<T, vtkm::cont::StorageTagVirtu
     return Storage<T, vtkm::cont::StorageTagVirtual>();
   }
 }
+
+namespace detail
+{
+
+template <typename T>
+class VTKM_ALWAYS_EXPORT ArrayTransferVirtual
+{
+  using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagVirtual>;
+  vtkm::cont::internal::detail::StorageVirtual* Storage;
+
+public:
+  using ValueType = T;
+
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
+
+  using PortalExecution = vtkm::ArrayPortalRef<ValueType>;
+  using PortalConstExecution = vtkm::ArrayPortalRef<ValueType>;
+
+  VTKM_CONT ArrayTransferVirtual(StorageType* storage)
+    : Storage(storage->GetStorageVirtual())
+  {
+  }
+
+  VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
+
+  VTKM_CONT PortalConstExecution PrepareForInput(vtkm::cont::DeviceAdapterId device)
+  {
+    return vtkm::make_ArrayPortalRef(static_cast<const vtkm::ArrayPortalVirtual<ValueType>*>(
+                                       this->Storage->PrepareForInput(device)),
+                                     this->GetNumberOfValues());
+  }
+
+  VTKM_CONT PortalExecution PrepareForOutput(vtkm::Id numberOfValues,
+                                             vtkm::cont::DeviceAdapterId device)
+  {
+    return make_ArrayPortalRef(static_cast<const vtkm::ArrayPortalVirtual<T>*>(
+                                 this->Storage->PrepareForOutput(numberOfValues, device)),
+                               numberOfValues);
+  }
+
+  VTKM_CONT PortalExecution PrepareForInPlace(vtkm::cont::DeviceAdapterId device)
+  {
+    return vtkm::make_ArrayPortalRef(static_cast<const vtkm::ArrayPortalVirtual<ValueType>*>(
+                                       this->Storage->PrepareForInPlace(device)),
+                                     this->GetNumberOfValues());
+  }
+
+  VTKM_CONT
+  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
+  {
+    // Implementation of this method should be unnecessary. The internal array handles should
+    // automatically retrieve the output data as necessary.
+  }
+
+  VTKM_CONT void Shrink(vtkm::Id numberOfValues) { this->Storage->Shrink(numberOfValues); }
+
+  VTKM_CONT void ReleaseResources() { this->Storage->ReleaseResourcesExecution(); }
+};
+
+#ifndef vtk_m_cont_StorageVirtual_cxx
+
+#define VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(T)                                                     \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<T>;                         \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>;           \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>;           \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 4>>
+
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(char);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::Int8);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::UInt8);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::Int16);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::UInt16);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::Int32);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::UInt32);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::Int64);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::UInt64);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::Float32);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(vtkm::Float64);
+
+#undef VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT
+
+#define VTK_M_STORAGE_VIRTUAL_EXPORT(T)                                                            \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT StorageVirtualImpl<T, VTKM_DEFAULT_STORAGE_TAG>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
+    StorageVirtualImpl<vtkm::Vec<T, 2>, VTKM_DEFAULT_STORAGE_TAG>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
+    StorageVirtualImpl<vtkm::Vec<T, 3>, VTKM_DEFAULT_STORAGE_TAG>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
+    StorageVirtualImpl<vtkm::Vec<T, 4>, VTKM_DEFAULT_STORAGE_TAG>
+
+VTK_M_STORAGE_VIRTUAL_EXPORT(char);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::Int8);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::UInt8);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::Int16);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::UInt16);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::Int32);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::UInt32);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::Int64);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::UInt64);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::Float32);
+VTK_M_STORAGE_VIRTUAL_EXPORT(vtkm::Float64);
+
+#undef VTK_M_STORAGE_VIRTUAL_EXPORT
+
+#endif //!vtk_m_cont_StorageVirtual_cxx
+} // namespace detail
+
+template <typename T, typename Device>
+struct ArrayTransfer<T, vtkm::cont::StorageTagVirtual, Device> : detail::ArrayTransferVirtual<T>
+{
+  using Superclass = detail::ArrayTransferVirtual<T>;
+
+  VTKM_CONT ArrayTransfer(vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagVirtual>* storage)
+    : Superclass(storage)
+  {
+  }
+
+  VTKM_CONT typename Superclass::PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  {
+    return this->Superclass::PrepareForInput(Device());
+  }
+
+  VTKM_CONT typename Superclass::PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  {
+    return this->Superclass::PrepareForOutput(numberOfValues, Device());
+  }
+
+  VTKM_CONT typename Superclass::PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  {
+    return this->Superclass::PrepareForInPlace(Device());
+  }
+};
 }
 }
 } // namespace vtkm::cont::internal
 
-#endif
+#endif // vtk_m_cont_StorageVirtual_hxx

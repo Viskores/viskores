@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -37,7 +37,8 @@ namespace cont
 
 
 template <typename T>
-class ArrayHandleVirtual : public vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>
+class VTKM_ALWAYS_EXPORT ArrayHandleVirtual
+  : public vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>
 {
   using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagVirtual>;
 
@@ -227,6 +228,17 @@ VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::ArrayHandleVirtual<T>& v
   return virtHandle.template Cast<ArrayHandleType>();
 }
 
+#if 0
+
+// The following specialization of CastAndCall has been disabled. The problem with it is that it
+// causes some common versions of GCC to give the warning "type attributes ignored after type is
+// already defined." GCC seems to have a problem with declaring an instance of a template twice
+// even when the type attributes match. (In some cases it is OK, in others it is not.) The easiest
+// solution is to just disable this CastAndCall that instantiates a specific version of
+// ArrayHandleVirtual. This specialization might be better handled elsewhere where the uniform
+// point coordinates are coupled with a structured cell set (and thus can derive several fast
+// paths) rather than generally for any field or array containing vec3s.
+
 //=============================================================================
 // Specializations of CastAndCall to help make sure ArrayHandleVirtual
 // holding a ArrayHandleUniformPointCoordinates works properly
@@ -250,6 +262,7 @@ void CastAndCall(vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>
     f(coords, std::forward<Args>(args)...);
   }
 }
+#endif
 
 
 
@@ -264,6 +277,34 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleVirtual<T>>
     return name;
   }
 };
+
+#ifndef vtk_m_cont_ArrayHandleVirtual_cxx
+
+#define VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(T)                                                       \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<T, StorageTagVirtual>;               \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleVirtual<T>;                           \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<T, 2>, StorageTagVirtual>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleVirtual<vtkm::Vec<T, 2>>;             \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<T, 3>, StorageTagVirtual>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleVirtual<vtkm::Vec<T, 3>>;             \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<T, 4>, StorageTagVirtual>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleVirtual<vtkm::Vec<T, 4>>
+
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(char);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::Int8);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::UInt8);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::Int16);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::UInt16);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::Int32);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::UInt32);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::Int64);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::UInt64);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::Float32);
+VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::Float64);
+
+#undef VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT
+
+#endif //vtk_m_cont_ArrayHandleVirtual_cxx
 }
 } //namespace vtkm::cont
 

@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -46,7 +46,7 @@ ArrayHandleType inline ArrayHandleVirtual<T>::CastToType(
   return castStorage->GetHandle();
 }
 }
-} // namespace vtkm::const
+} // namespace vtkm::cont
 
 
 #include <vtkm/cont/ArrayHandleConstant.h>
