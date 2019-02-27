@@ -58,7 +58,7 @@ public:
   void ConvertOutputToUnstructured() { this->ConvertToUnstructured = true; }
 
   VTKM_CONT
-  vtkm::UInt8 GetRemoveByType() const { return !this->RemoveAll; }
+  bool GetRemoveByType() const { return !this->RemoveAll; }
   VTKM_CONT
   vtkm::UInt8 GetRemoveType() const { return this->RemoveVals; }
   VTKM_CONT
