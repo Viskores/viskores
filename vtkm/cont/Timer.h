@@ -57,16 +57,7 @@ public:
   VTKM_CONT
   Timer();
 
-  template <typename DeviceAdapter>
-  VTKM_CONT Timer(DeviceAdapter id)
-    : Device(id)
-    , DeviceForQuery(DeviceAdapterTagAny())
-    , Internal(nullptr)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-    static_assert(DeviceAdapter::IsEnabled, "A disabled device is passed to the Timer");
-    this->Init();
-  }
+  VTKM_CONT Timer(vtkm::cont::DeviceAdapterId device);
 
   VTKM_CONT ~Timer();
 

@@ -165,6 +165,22 @@ Timer::Timer()
   this->Init();
 }
 
+Timer::Timer(vtkm::cont::DeviceAdapterId device)
+  : Device(device)
+  , DeviceForQuery(vtkm::cont::DeviceAdapterTagAny())
+  , Internal(nullptr)
+{
+  vtkm::cont::RuntimeDeviceTracker tracker;
+  if (device != DeviceAdapterTagAny() && !tracker.CanRunOn(device))
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+               "Device '" << device.GetName() << "' can not run on current Device."
+                                                 "Thus timer is not usable");
+  }
+
+  this->Init();
+}
+
 
 Timer::~Timer()
 {
