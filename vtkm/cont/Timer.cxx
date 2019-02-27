@@ -201,6 +201,21 @@ void Timer::Reset()
   vtkm::ListForEach(functor, detail::EnabledDeviceListTag(), this, TimerDispatchTag::Reset);
 }
 
+void Timer::Reset(vtkm::cont::DeviceAdapterId device)
+{
+  vtkm::cont::RuntimeDeviceTracker tracker;
+  if (device != DeviceAdapterTagAny() && !tracker.CanRunOn(device))
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+               "Device '" << device.GetName() << "' can not run on current Device."
+                                                 "Thus timer is not usable");
+  }
+
+  this->Device = device;
+  this->DeviceForQuery = vtkm::cont::DeviceAdapterTagAny();
+  this->Reset();
+}
+
 void Timer::Start()
 {
 

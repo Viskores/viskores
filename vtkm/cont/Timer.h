@@ -45,6 +45,8 @@ class EnabledDeviceTimerImpls;
 /// have the longest execution time if enabled.
 /// Per device adapter time query is also supported. It's useful when users want to reuse
 /// the same timer to measure the cuda kernal call as well as the cuda device execution.
+/// It is also possible to change the device adapter after construction by calling the form
+/// of the Reset method with a new DeviceAdapterId.
 ///
 /// The there is no guaranteed resolution of the time but should generally be
 /// good to about a millisecond.
@@ -63,6 +65,9 @@ public:
 
   /// Resets the timer.
   VTKM_CONT void Reset();
+
+  /// Resets the timer and changes the device to time on.
+  VTKM_CONT void Reset(vtkm::cont::DeviceAdapterId device);
 
   /// Start would call Reset function before starting the timer for convenience
   VTKM_CONT void Start();
