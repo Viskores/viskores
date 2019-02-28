@@ -46,7 +46,7 @@ public:
     : eye_pos(_eye_pos)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2);
   template <typename VecType, typename OutType>
   VTKM_EXEC inline void operator()(const VecType& pos, OutType& out) const
@@ -136,8 +136,9 @@ void MapperCylinder::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("mapper_cylinder");
-  vtkm::cont::Timer<> tot_timer;
-  vtkm::cont::Timer<> timer;
+  vtkm::cont::Timer tot_timer;
+  tot_timer.Start();
+  vtkm::cont::Timer timer;
 
 
   vtkm::Bounds shapeBounds;
@@ -183,7 +184,7 @@ void MapperCylinder::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 
   if (cylExtractor.GetNumberOfCylinders() > 0)
   {
-    raytracing::CylinderIntersector* cylIntersector = new raytracing::CylinderIntersector();
+    auto cylIntersector = std::make_shared<raytracing::CylinderIntersector>();
     cylIntersector->SetData(coords, cylExtractor.GetCylIds(), cylExtractor.GetRadii());
     this->Internals->Tracer.AddShapeIntersector(cylIntersector);
     shapeBounds.Include(cylIntersector->GetShapeBounds());
@@ -207,7 +208,7 @@ void MapperCylinder::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   this->Internals->Tracer.SetColorMap(this->ColorMap);
   this->Internals->Tracer.Render(this->Internals->Rays);
 
-  timer.Reset();
+  timer.Start();
   this->Internals->Canvas->WriteToCanvas(
     this->Internals->Rays, this->Internals->Rays.Buffers.at(0).Buffer, camera);
 

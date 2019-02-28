@@ -1,5 +1,5 @@
-#ifndef DIY_COLLECTION_HPP
-#define DIY_COLLECTION_HPP
+#ifndef VTKMDIY_COLLECTION_HPP
+#define VTKMDIY_COLLECTION_HPP
 
 #include <vector>
 

@@ -208,7 +208,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestNDEntropyFilter(int, char* [])
+int UnitTestNDEntropyFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunTest);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

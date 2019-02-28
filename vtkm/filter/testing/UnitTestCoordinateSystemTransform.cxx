@@ -198,7 +198,7 @@ void TestCoordinateSystemTransform()
 }
 
 
-int UnitTestCoordinateSystemTransform(int, char* [])
+int UnitTestCoordinateSystemTransform(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCoordinateSystemTransform);
+  return vtkm::cont::testing::Testing::Run(TestCoordinateSystemTransform, argc, argv);
 }

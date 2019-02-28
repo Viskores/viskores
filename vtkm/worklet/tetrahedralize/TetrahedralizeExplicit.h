@@ -26,7 +26,6 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -54,7 +53,7 @@ public:
   class TetrahedraPerCell : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> shapes, ExecObject tables, FieldOut<> tetrahedronCount);
+    using ControlSignature = void(FieldIn shapes, ExecObject tables, FieldOut tetrahedronCount);
     using ExecutionSignature = _3(_1, _2);
     using InputDomain = _1;
 
@@ -80,7 +79,7 @@ public:
   public:
     using ControlSignature = void(CellSetIn cellset,
                                   ExecObject tables,
-                                  FieldOutCell<> connectivityOut);
+                                  FieldOutCell connectivityOut);
     using ExecutionSignature = void(CellShape, PointIndices, _2, _3, VisitIndex);
     using InputDomain = _1;
 

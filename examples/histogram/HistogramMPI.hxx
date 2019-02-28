@@ -28,11 +28,7 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/mpi.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/diy.h>
 
 namespace example
 {
@@ -123,13 +119,12 @@ inline VTKM_CONT HistogramMPI::HistogramMPI()
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet HistogramMPI::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata&,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> binArray;
   T delta;
@@ -142,12 +137,11 @@ inline VTKM_CONT vtkm::cont::DataSet HistogramMPI::DoExecute(
                 static_cast<T>(this->ComputedRange.Min),
                 static_cast<T>(this->ComputedRange.Max),
                 delta,
-                binArray,
-                device);
+                binArray);
   }
   else
   {
-    worklet.Run(field, this->NumberOfBins, this->ComputedRange, delta, binArray, device);
+    worklet.Run(field, this->NumberOfBins, this->ComputedRange, delta, binArray);
   }
 
   this->BinDelta = static_cast<vtkm::Float64>(delta);

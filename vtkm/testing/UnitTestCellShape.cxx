@@ -67,7 +67,7 @@ void CellShapeTest()
 
 } // anonymous namespace
 
-int UnitTestCellShape(int, char* [])
+int UnitTestCellShape(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(CellShapeTest);
+  return vtkm::testing::Testing::Run(CellShapeTest, argc, argv);
 }

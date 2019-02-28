@@ -49,7 +49,7 @@ public:
   class BinPointsWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> coord, FieldOut<> label);
+    using ControlSignature = void(FieldIn coord, FieldOut label);
 
     using ExecutionSignature = void(_1, _2);
 
@@ -79,7 +79,7 @@ public:
   void Build() override
   {
     // Save training data points.
-    vtkm::cont::ArrayCopy(this->GetCoords().GetData(), this->coords);
+    vtkm::cont::ArrayCopy(this->GetCoordinates().GetData(), this->coords);
 
     // generate unique id for each input point
     vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(0, 1, this->coords.GetNumberOfValues());
@@ -125,7 +125,7 @@ public:
   };
 
   VTKM_CONT
-  const HandleType PrepareForExecutionImp(vtkm::cont::DeviceAdapterId deviceId) const override
+  const HandleType PrepareForExecutionImpl(vtkm::cont::DeviceAdapterId deviceId) const override
   {
     const bool success =
       vtkm::cont::TryExecuteOnDevice(deviceId, PrepareForExecutionFunctor(), *this, ExecHandle);

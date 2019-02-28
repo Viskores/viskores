@@ -57,8 +57,30 @@ struct ArrayPortalValueReference
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ValueType Get() const { return this->Portal.Get(this->Index); }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  operator ValueType(void) const { return this->Portal.Get(this->Index); }
+
+  // Declaring Set as const seems a little weird because we are changing the value. But remember
+  // that ArrayPortalReference is only a reference class. The reference itself does not change,
+  // just the thing that it is referencing. So declaring as const is correct and necessary so that
+  // you can set the value of a reference returned from a function (which is a right hand side
+  // value).
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void Set(ValueType&& value) const { this->Portal.Set(this->Index, std::move(value)); }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void Set(const ValueType& value) const { this->Portal.Set(this->Index, value); }
+
   VTKM_CONT
-  void Swap(ArrayPortalValueReference<ArrayPortalType>& rhs) throw()
+  void Swap(const ArrayPortalValueReference<ArrayPortalType>& rhs) const throw()
   {
     //we need use the explicit type not a proxy temp object
     //A proxy temp object would point to the same underlying data structure
@@ -68,27 +90,231 @@ struct ArrayPortalValueReference
     rhs = aValue;
   }
 
+  // Declaring operator= as const seems a little weird because we are changing the value. But
+  // remember that ArrayPortalReference is only a reference class. The reference itself does not
+  // change, just the thing that it is referencing. So declaring as const is correct and necessary
+  // so that you can set the value of a reference returned from a function (which is a right hand
+  // side value).
+
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalValueReference<ArrayPortalType>& operator=(
-    const ArrayPortalValueReference<ArrayPortalType>& rhs)
+  const ArrayPortalValueReference<ArrayPortalType>& operator=(ValueType&& value) const
   {
-    this->Portal.Set(this->Index, rhs.Portal.Get(rhs.Index));
+    this->Set(std::move(value));
     return *this;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ValueType operator=(const ValueType& value)
+  const ArrayPortalValueReference<ArrayPortalType>& operator=(const ValueType& value) const
   {
-    this->Portal.Set(this->Index, value);
-    return value;
+    this->Set(value);
+    return *this;
+  }
+
+  // This special overload of the operator= is to override the behavior of the default operator=
+  // (which has the wrong behavior) with behavior consistent with the other operator= methods.
+  // It is not declared const because the default operator= is not declared const. If you try
+  // to do this assignment with a const object, you will get one of the operator= above.
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT ArrayPortalValueReference<ArrayPortalType>& operator=(
+    const ArrayPortalValueReference<ArrayPortalType>& rhs)
+  {
+    this->Set(static_cast<ValueType>(rhs.Portal.Get(rhs.Index)));
+    return *this;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  operator ValueType(void) const { return this->Portal.Get(this->Index); }
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator+=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs += rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator+=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs += rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator-=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs -= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator-=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs -= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator*=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs *= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator*=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs *= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator/=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs /= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator/=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs /= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator%=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs %= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator%=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs %= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator&=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs &= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator&=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs &= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator|=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs |= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator|=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs |= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator^=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs ^= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator^=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs ^= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator>>=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs >>= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator>>=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs >>= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator<<=(const T& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs <<= rhs;
+    this->Set(lhs);
+    return lhs;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename T>
+  VTKM_EXEC_CONT ValueType operator<<=(const ArrayPortalValueReference<T>& rhs) const
+  {
+    ValueType lhs = this->Get();
+    lhs <<= rhs.Get();
+    this->Set(lhs);
+    return lhs;
+  }
+
+private:
   const ArrayPortalType& Portal;
   vtkm::Id Index;
 };
@@ -96,14 +322,14 @@ struct ArrayPortalValueReference
 //implement a custom swap function, since the std::swap won't work
 //since we return RValues instead of Lvalues
 template <typename T>
-void swap(vtkm::internal::ArrayPortalValueReference<T> a,
-          vtkm::internal::ArrayPortalValueReference<T> b)
+void swap(const vtkm::internal::ArrayPortalValueReference<T>& a,
+          const vtkm::internal::ArrayPortalValueReference<T>& b)
 {
   a.Swap(b);
 }
 
 template <typename T>
-void swap(vtkm::internal::ArrayPortalValueReference<T> a,
+void swap(const vtkm::internal::ArrayPortalValueReference<T>& a,
           typename vtkm::internal::ArrayPortalValueReference<T>::ValueType& b)
 {
   using ValueType = typename vtkm::internal::ArrayPortalValueReference<T>::ValueType;
@@ -114,12 +340,483 @@ void swap(vtkm::internal::ArrayPortalValueReference<T> a,
 
 template <typename T>
 void swap(typename vtkm::internal::ArrayPortalValueReference<T>::ValueType& a,
-          vtkm::internal::ArrayPortalValueReference<T> b)
+          const vtkm::internal::ArrayPortalValueReference<T>& b)
 {
   using ValueType = typename vtkm::internal::ArrayPortalValueReference<T>::ValueType;
   const ValueType tmp = b;
   b = a;
   a = tmp;
+}
+
+// The reason why all the operators on ArrayPortalValueReference are defined outside of the class
+// is so that in the case that the operator in question is not defined in the value type, these
+// operators will not be instantiated (and therefore cause a compile error) unless they are
+// directly used (in which case a compile error is appropriate).
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator==(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() == rhs)
+{
+  return lhs.Get() == rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator==(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() == rhs.Get())
+{
+  return lhs.Get() == rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator==(const typename RhsPortalType::ValueType& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs == rhs.Get())
+{
+  return lhs == rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator!=(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() != rhs)
+{
+  return lhs.Get() != rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator!=(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() != rhs.Get())
+{
+  return lhs.Get() != rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator!=(const typename RhsPortalType::ValueType& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs != rhs.Get())
+{
+  return lhs != rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator<(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() < rhs)
+{
+  return lhs.Get() < rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator<(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() < rhs.Get())
+{
+  return lhs.Get() < rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator<(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs < rhs.Get())
+{
+  return lhs < rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator>(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() > rhs)
+{
+  return lhs.Get() > rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator>(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() > rhs.Get())
+{
+  return lhs.Get() > rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator>(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs > rhs.Get())
+{
+  return lhs > rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator<=(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() <= rhs)
+{
+  return lhs.Get() <= rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator<=(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() <= rhs.Get())
+{
+  return lhs.Get() <= rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator<=(const typename RhsPortalType::ValueType& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs <= rhs.Get())
+{
+  return lhs <= rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator>=(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() >= rhs)
+{
+  return lhs.Get() >= rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator>=(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() >= rhs.Get())
+{
+  return lhs.Get() >= rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator>=(const typename RhsPortalType::ValueType& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs >= rhs.Get())
+{
+  return lhs >= rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator+(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() + rhs)
+{
+  return lhs.Get() + rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator+(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() + rhs.Get())
+{
+  return lhs.Get() + rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator+(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs + rhs.Get())
+{
+  return lhs + rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator-(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() - rhs)
+{
+  return lhs.Get() - rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator-(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() - rhs.Get())
+{
+  return lhs.Get() - rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator-(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs - rhs.Get())
+{
+  return lhs - rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator*(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() * rhs)
+{
+  return lhs.Get() * rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator*(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() * rhs.Get())
+{
+  return lhs.Get() * rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator*(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs * rhs.Get())
+{
+  return lhs * rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator/(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() / rhs)
+{
+  return lhs.Get() / rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator/(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() / rhs.Get())
+{
+  return lhs.Get() / rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator/(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs / rhs.Get())
+{
+  return lhs / rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator%(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() % rhs)
+{
+  return lhs.Get() % rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator%(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() % rhs.Get())
+{
+  return lhs.Get() % rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator%(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs % rhs.Get())
+{
+  return lhs % rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator^(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() ^ rhs)
+{
+  return lhs.Get() ^ rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator^(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() ^ rhs.Get())
+{
+  return lhs.Get() ^ rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator^(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs ^ rhs.Get())
+{
+  return lhs ^ rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator|(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() | rhs)
+{
+  return lhs.Get() | rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator|(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() | rhs.Get())
+{
+  return lhs.Get() | rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator|(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs | rhs.Get())
+{
+  return lhs | rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator&(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() & rhs)
+{
+  return lhs.Get() & rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator&(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() & rhs.Get())
+{
+  return lhs.Get() & rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator&(const typename RhsPortalType::ValueType& lhs,
+                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs & rhs.Get())
+{
+  return lhs & rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator<<(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() << rhs)
+{
+  return lhs.Get() << rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator<<(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() << rhs.Get())
+{
+  return lhs.Get() << rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator<<(const typename RhsPortalType::ValueType& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs << rhs.Get())
+{
+  return lhs << rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator>>(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() >> rhs)
+{
+  return lhs.Get() >> rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator>>(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() >> rhs.Get())
+{
+  return lhs.Get() >> rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator>>(const typename RhsPortalType::ValueType& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs >> rhs.Get())
+{
+  return lhs >> rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename PortalType>
+VTKM_EXEC_CONT auto operator~(const ArrayPortalValueReference<PortalType>& ref)
+  -> decltype(~ref.Get())
+{
+  return ~ref.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename PortalType>
+VTKM_EXEC_CONT auto operator!(const ArrayPortalValueReference<PortalType>& ref)
+  -> decltype(!ref.Get())
+{
+  return !ref.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator&&(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() && rhs)
+{
+  return lhs.Get() && rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator&&(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() && rhs.Get())
+{
+  return lhs.Get() && rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator&&(const typename RhsPortalType::ValueType& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs && rhs.Get())
+{
+  return lhs && rhs.Get();
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType>
+VTKM_EXEC_CONT auto operator||(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const typename LhsPortalType::ValueType& rhs)
+  -> decltype(lhs.Get() || rhs)
+{
+  return lhs.Get() || rhs;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename LhsPortalType, typename RhsPortalType>
+VTKM_EXEC_CONT auto operator||(const ArrayPortalValueReference<LhsPortalType>& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs.Get() || rhs.Get())
+{
+  return lhs.Get() || rhs.Get();
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename RhsPortalType>
+VTKM_EXEC_CONT auto operator||(const typename RhsPortalType::ValueType& lhs,
+                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+  -> decltype(lhs || rhs.Get())
+{
+  return lhs || rhs.Get();
 }
 }
 } // namespace vtkm::internal

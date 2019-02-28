@@ -19,7 +19,7 @@
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -33,10 +33,7 @@ struct TestExecObjectWorklet
   class Worklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<IdType>,
-                                  WholeArrayIn<vtkm::ListTagBase<T>>,
-                                  WholeArrayOut<vtkm::ListTagBase<T>>,
-                                  FieldOut<vtkm::ListTagBase<T>>);
+    using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut, FieldOut);
     using ExecutionSignature = void(_1, _2, _3, _4);
 
     template <typename InPortalType, typename OutPortalType>
@@ -94,7 +91,7 @@ struct DoTestWorklet
     outputHandle = vtkm::cont::ArrayHandle<T>();
     outputHandle.Allocate(ARRAY_SIZE);
 
-    vtkm::cont::DynamicArrayHandle outputFieldDynamic(outputFieldArray);
+    vtkm::cont::VariantArrayHandleBase<vtkm::ListTagBase<T>> outputFieldDynamic(outputFieldArray);
     dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldDynamic);
 
     std::cout << "Check dynamic array result." << std::endl;

@@ -80,9 +80,9 @@ class ComputeHyperAndSuperStructure_HypernodesSetFirstSuperchild
   : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<IdType> contourTreeHyperparents, // (input)
-                                WholeArrayIn<IdType> superSortIndex,          // (input)
-                                WholeArrayOut<IdType> contourTreeHypernodes   // (output)
+  typedef void ControlSignature(WholeArrayIn contourTreeHyperparents, // (input)
+                                WholeArrayIn superSortIndex,          // (input)
+                                WholeArrayOut contourTreeHypernodes   // (output)
                                 );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;

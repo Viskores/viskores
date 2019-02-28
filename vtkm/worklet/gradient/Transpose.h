@@ -39,7 +39,7 @@ struct TransposeType : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<T, 3>, 3>>
 template <typename T>
 struct Transpose3x3 : vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldInOut<TransposeType<T>> field);
+  using ControlSignature = void(FieldInOut field);
 
   using ExecutionSignature = void(_1);
   using InputDomain = _1;

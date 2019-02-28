@@ -17,43 +17,32 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
-function(add_benchmark name files)
-  set(benchmarks )
-
-  add_executable(${name}_SERIAL ${files})
-  list(APPEND benchmarks ${name}_SERIAL)
-  target_compile_definitions(${name}_SERIAL PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-
-  if (TARGET vtkm::tbb)
-    add_executable(${name}_TBB ${files})
-    list(APPEND benchmarks ${name}_TBB)
-    target_compile_definitions(${name}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  endif()
-
-  if (TARGET vtkm::openmp)
-    add_executable(${name}_OPENMP ${files})
-    list(APPEND benchmarks ${name}_OPENMP)
-    target_compile_definitions(${name}_OPENMP PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_OPENMP")
-  endif()
-
+function(add_benchmark)
+  set(options)
+  set(oneValueArgs NAME FILE)
+  set(multiValueArgs LIBS)
+  cmake_parse_arguments(VTKm_AB
+    "${options}" "${oneValueArgs}" "${multiValueArgs}"
+    ${ARGN}
+    )
+  set(exe_name ${VTKm_AB_NAME})
   if (TARGET vtkm::cuda)
-    get_filename_component(fname "${name}" NAME_WE)
-    get_filename_component(fullpath "${name}.cxx" ABSOLUTE)
+    get_filename_component(fname ${VTKm_AB_FILE} NAME_WE)
+    get_filename_component(fullpath ${VTKm_AB_FILE} ABSOLUTE)
     file(GENERATE
           OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu
           CONTENT "#include \"${fullpath}\"")
 
-    add_executable(${name}_CUDA ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu)
-    list(APPEND benchmarks ${name}_CUDA)
-    target_compile_definitions(${name}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+    add_executable(${exe_name} ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu)
+    set_property(TARGET ${exe_name} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+  else()
+    add_executable(${exe_name} ${VTKm_AB_FILE})
   endif()
 
-  foreach(benchmark ${benchmarks})
-    target_link_libraries(${benchmark} PRIVATE vtkm_cont)
-    set_target_properties(${benchmark} PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
-      )
-  endforeach()
+  target_link_libraries(${exe_name} PRIVATE ${VTKm_AB_LIBS})
+  set_target_properties(${exe_name} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
+    )
 
 
 endfunction()
@@ -69,19 +58,9 @@ set(benchmarks
   )
 
 foreach (benchmark ${benchmarks})
-  add_benchmark(${benchmark} ${benchmark}.cxx)
+  add_benchmark(NAME ${benchmark} FILE ${benchmark}.cxx LIBS vtkm_filter vtkm_cont)
 endforeach ()
 
 if(TARGET vtkm_rendering)
-  add_benchmark(BenchmarkRayTracing BenchmarkRayTracing.cxx)
-  target_link_libraries(BenchmarkRayTracing_SERIAL PRIVATE vtkm_rendering)
-  if(TARGET BenchmarkRayTracing_TBB)
-    target_link_libraries(BenchmarkRayTracing_TBB PRIVATE vtkm_rendering)
-  endif()
-  if(TARGET BenchmarkRayTracing_OPENMP)
-    target_link_libraries(BenchmarkRayTracing_OPENMP PRIVATE vtkm_rendering)
-  endif()
-  if(TARGET BenchmarkRayTracing_CUDA)
-    target_link_libraries(BenchmarkRayTracing_CUDA PRIVATE vtkm_rendering)
-  endif()
+  add_benchmark(NAME BenchmarkRayTracing FILE BenchmarkRayTracing.cxx LIBS vtkm_rendering)
 endif()

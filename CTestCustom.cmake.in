@@ -37,6 +37,10 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   "CONTRIBUTING.md.*warning"
   "CodingConventions.md.*warning"
 
+  # disable static/dynamic weak symbol warnings
+  ".*ld: warning: direct access in function.*"
+
+
   # disable PTX warning about recursive functions. These look like they can't be silenced
   # without disabling all PTX warnings, show hide them on the dashboard.
   # We explicitly only suppress specific worklets so we can see when new recursive
@@ -45,4 +49,14 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   "ptxas warning : Stack size for entry function.*BoundingIntervalHierarchy.*"
   "ptxas warning : Stack size for entry function.*CoordinatesPortal.*"
   "ptxas warning : Stack size for entry function.*CellRangesExtracter.*"
+
+  # disable nvlink warnings about virtual functions. The Stack size warnings can only
+  # be silenced in CUDA >=9, without disabling all nvlink warnings.
+  "nvlink warning : Stack size for entry function.*NearestNeighborSearch.*"
+  "nvlink warning : Stack size for entry function.*BoundingIntervalHierarchyTester.*"
+  "nvlink warning : Stack size for entry function.*ArrayPortalRef.*"
+  "nvlink warning : Stack size for entry function.*ArrayPortalWrapper.*"
+  "nvlink warning : .*ArrayPortalWrapper.* has address taken but no possible call to it"
+  "nvlink warning : .*ArrayPortalVirtual.* has address taken but no possible call to it"
+
 )

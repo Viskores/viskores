@@ -19,7 +19,6 @@
 ##============================================================================
 
 set(headers
-  ClipTables.h
   DispatcherBase.h
   TriangulateTables.h
   WorkletBase.h

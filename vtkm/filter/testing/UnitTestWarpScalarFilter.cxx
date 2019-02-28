@@ -64,19 +64,6 @@ vtkm::cont::DataSet MakeWarpScalarTestDataSet()
   return dataSet;
 }
 
-class PolicyWarpScalar : public vtkm::filter::PolicyBase<PolicyWarpScalar>
-{
-public:
-  using vecType = vtkm::Vec<vtkm::FloatDefault, 3>;
-  struct TypeListTagWarpScalarTags
-    : vtkm::ListTagBase<vtkm::cont::ArrayHandleConstant<vecType>::StorageTag,
-                        vtkm::cont::ArrayHandle<vecType>::StorageTag,
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>::StorageTag>
-  {
-  };
-  using FieldStorageList = TypeListTagWarpScalarTags;
-};
-
 void CheckResult(const vtkm::filter::WarpScalar& filter, const vtkm::cont::DataSet& result)
 {
   VTKM_TEST_ASSERT(result.HasField("warpscalar", vtkm::cont::Field::Association::POINTS),
@@ -124,7 +111,7 @@ void TestWarpScalarFilter()
     filter.SetUseCoordinateSystemAsPrimaryField(true);
     filter.SetNormalField("normal");
     filter.SetScalarFactorField("scalarfactor");
-    vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpScalar());
+    vtkm::cont::DataSet result = filter.Execute(ds);
     CheckResult(filter, result);
   }
 
@@ -134,13 +121,13 @@ void TestWarpScalarFilter()
     filter.SetPrimaryField("vec1");
     filter.SetNormalField("normal");
     filter.SetScalarFactorField("scalarfactor");
-    vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpScalar());
+    vtkm::cont::DataSet result = filter.Execute(ds);
     CheckResult(filter, result);
   }
 }
 }
 
-int UnitTestWarpScalarFilter(int, char* [])
+int UnitTestWarpScalarFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestWarpScalarFilter);
+  return vtkm::cont::testing::Testing::Run(TestWarpScalarFilter, argc, argv);
 }

@@ -79,12 +79,12 @@ public:
   {
   };
 
-  using ControlSignature = void(FieldIn<IdType> index, // (input) index into particles for one bin
-                                WholeArrayIn<IdType> partId,  // (input) original particle id
-                                WholeArrayIn<TagType> xLoc,   // (input) x location in domain
-                                WholeArrayIn<TagType> yLoc,   // (input) y location in domain
-                                WholeArrayIn<TagType> zLoc,   // (input) z location in domain
-                                FieldOut<TagType> potential); // (output) bin ID
+  using ControlSignature = void(FieldIn index,       // (input) index into particles for one bin
+                                WholeArrayIn partId, // (input) original particle id
+                                WholeArrayIn xLoc,   // (input) x location in domain
+                                WholeArrayIn yLoc,   // (input) y location in domain
+                                WholeArrayIn zLoc,   // (input) z location in domain
+                                FieldOut potential); // (output) bin ID
   using ExecutionSignature = _6(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 

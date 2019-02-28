@@ -47,7 +47,6 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
 static bool printProgress = true;
@@ -69,7 +68,7 @@ using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  using ControlSignature = void(FieldIn vertexId, FieldOut v);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 

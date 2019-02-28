@@ -66,7 +66,7 @@ void TestUnaryPredicates()
 
 } // anonymous namespace
 
-int UnitTestUnaryPredicates(int, char* [])
+int UnitTestUnaryPredicates(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestUnaryPredicates);
+  return vtkm::testing::Testing::Run(TestUnaryPredicates, argc, argv);
 }

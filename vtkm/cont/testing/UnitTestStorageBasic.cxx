@@ -185,7 +185,7 @@ void TestStorageBasic()
 
 } // Anonymous namespace
 
-int UnitTestStorageBasic(int, char* [])
+int UnitTestStorageBasic(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestStorageBasic);
+  return vtkm::cont::testing::Testing::Run(TestStorageBasic, argc, argv);
 }

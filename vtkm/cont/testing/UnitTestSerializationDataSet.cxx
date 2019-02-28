@@ -26,20 +26,18 @@ namespace
 {
 
 using FieldTypeList = vtkm::ListTagBase<vtkm::Float32>;
-using FieldStorageList = VTKM_DEFAULT_STORAGE_LIST_TAG;
 using CellSetTypes = vtkm::ListTagBase<vtkm::cont::CellSetExplicit<>,
                                        vtkm::cont::CellSetSingleType<>,
                                        vtkm::cont::CellSetStructured<1>,
                                        vtkm::cont::CellSetStructured<2>,
                                        vtkm::cont::CellSetStructured<3>>;
 
-using DataSetWrapper =
-  vtkm::cont::SerializableDataSet<FieldTypeList, FieldStorageList, CellSetTypes>;
+using DataSetWrapper = vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypes>;
 
 VTKM_CONT void TestEqualDataSet(const DataSetWrapper& ds1, const DataSetWrapper& ds2)
 {
   auto result = vtkm::cont::testing::test_equal_DataSets(
-    ds1.DataSet, ds2.DataSet, CellSetTypes{}, FieldTypeList{}, FieldStorageList{});
+    ds1.DataSet, ds2.DataSet, CellSetTypes{}, FieldTypeList{});
   VTKM_TEST_ASSERT(result, result.GetMergedMessage());
 }
 
@@ -109,7 +107,7 @@ void TestDataSetSerialization()
 
 } // anonymous namespace
 
-int UnitTestSerializationDataSet(int, char* [])
+int UnitTestSerializationDataSet(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDataSetSerialization);
+  return vtkm::cont::testing::Testing::Run(TestDataSetSerialization, argc, argv);
 }

@@ -26,8 +26,8 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {

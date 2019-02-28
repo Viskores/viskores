@@ -34,19 +34,24 @@
 
 /* Whether to use MPI support in DIY */
 #if !defined(VTKM_ENABLE_MPI)
-# define DIY_NO_MPI
+# define VTKM_DIY_NO_MPI
 #endif
 
 /* initially, we disable DIY threads.
  * once we've sorted out how DIY threads and vtkm work together
  * we will make this configurable.*/
-#define DIY_NO_THREADS
+#define VTKM_DIY_NO_THREADS
 
-#if VTKM_USE_EXTERNAL_DIY
-# define VTKM_DIY(header) <header>
+/* Need to provide a way to for Serialziation
+ * specializations to be injected into the correct
+ * namespace. This solves the issue while allowing
+ * for VTK-m to support an internal and external diy
+ * existing at the same time. */
+#if(VTKM_USE_EXTERNAL_DIY)
+# define mangled_diy_namespace diy
 #else
-# define VTKM_DIY(header) <vtkmdiy/include/header>
-# define diy vtkmdiy // mangle namespace diy
+# define mangled_diy_namespace vtkmdiy
 #endif
+
 
 #endif

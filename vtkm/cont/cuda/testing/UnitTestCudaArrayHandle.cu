@@ -26,9 +26,10 @@
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/testing/TestingArrayHandles.h>
 
-int UnitTestCudaArrayHandle(int, char* [])
+int UnitTestCudaArrayHandle(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
-  return vtkm::cont::testing::TestingArrayHandles<vtkm::cont::DeviceAdapterTagCuda>::Run();
+  return vtkm::cont::testing::TestingArrayHandles<vtkm::cont::DeviceAdapterTagCuda>::Run(argc,
+                                                                                         argv);
 }

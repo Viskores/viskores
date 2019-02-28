@@ -86,7 +86,6 @@ set(extra_headers
 #1. vtkm_declare_headers will do a flat install into the current respective
 #   build directory
 vtkm_get_kit_name(name dir_prefix)
-vtkm_add_header_build_test(${name} ${dir_prefix} FALSE ${extra_headers})
 vtkm_install_headers("${dir_prefix}/freudenthal_2D" freudenthal_2D/Types.h)
 vtkm_install_headers("${dir_prefix}/freudenthal_3D" freudenthal_3D/Types.h)
 vtkm_install_headers("${dir_prefix}/marchingcubes_3D" marchingcubes_3D/Types.h)

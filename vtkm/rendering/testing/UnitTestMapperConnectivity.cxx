@@ -59,7 +59,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperConnectivity(int, char* [])
+int UnitTestMapperConnectivity(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

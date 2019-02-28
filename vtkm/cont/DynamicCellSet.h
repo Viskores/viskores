@@ -100,7 +100,7 @@ VTKM_CONT CellSetType* DynamicCellSetTryCast(
 ///
 /// By default, \c DynamicCellSet will assume that the value type in the array
 /// matches one of the types specified by \c VTKM_DEFAULT_CELL_SET_LIST_TAG.
-/// This list can be changed by using the \c ResetTypeList method. It is
+/// This list can be changed by using the \c ResetCellSetList method. It is
 /// worthwhile to match these lists closely to the possible types that might be
 /// used. If a type is missing you will get a runtime error. If there are more
 /// types than necessary, then the template mechanism will create a lot of
@@ -364,7 +364,7 @@ struct DynamicCellSetCheck<vtkm::cont::DynamicCellSetBase<CellSetList>>
 
 //=============================================================================
 // Specializations of serialization related classes
-namespace diy
+namespace mangled_diy_namespace
 {
 
 namespace internal
@@ -375,8 +375,8 @@ struct DynamicCellSetSerializeFunctor
   template <typename CellSetType>
   void operator()(const CellSetType& cs, BinaryBuffer& bb) const
   {
-    diy::save(bb, vtkm::cont::TypeString<CellSetType>::Get());
-    diy::save(bb, cs);
+    vtkmdiy::save(bb, vtkm::cont::TypeString<CellSetType>::Get());
+    vtkmdiy::save(bb, cs);
   }
 };
 
@@ -393,7 +393,7 @@ struct DynamicCellSetDeserializeFunctor
     if (!success && (typeString == vtkm::cont::TypeString<CellSetType>::Get()))
     {
       CellSetType cs;
-      diy::load(bb, cs);
+      vtkmdiy::load(bb, cs);
       dh = vtkm::cont::DynamicCellSetBase<CellSetTypes>(cs);
       success = true;
     }
@@ -417,7 +417,7 @@ public:
   static VTKM_CONT void load(BinaryBuffer& bb, Type& obj)
   {
     std::string typeString;
-    diy::load(bb, typeString);
+    vtkmdiy::load(bb, typeString);
 
     bool success = false;
     vtkm::ListForEach(internal::DynamicCellSetDeserializeFunctor<CellSetTypes>{},

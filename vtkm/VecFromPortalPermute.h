@@ -75,8 +75,53 @@ public:
   }
 
 private:
-  const IndexVecType* Indices;
+  const IndexVecType* const Indices;
   PortalType Portal;
+};
+
+template <typename IndexVecType, typename PortalType>
+class VecFromPortalPermute<IndexVecType, const PortalType*>
+{
+public:
+  using ComponentType = typename std::remove_const<typename PortalType::ValueType>::type;
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  VecFromPortalPermute() {}
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  VecFromPortalPermute(const IndexVecType* indices, const PortalType* const portal)
+    : Indices(indices)
+    , Portal(portal)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  vtkm::IdComponent GetNumberOfComponents() const { return this->Indices->GetNumberOfComponents(); }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <vtkm::IdComponent DestSize>
+  VTKM_EXEC_CONT void CopyInto(vtkm::Vec<ComponentType, DestSize>& dest) const
+  {
+    vtkm::IdComponent numComponents = vtkm::Min(DestSize, this->GetNumberOfComponents());
+    for (vtkm::IdComponent index = 0; index < numComponents; index++)
+    {
+      dest[index] = (*this)[index];
+    }
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ComponentType operator[](vtkm::IdComponent index) const
+  {
+    return this->Portal->Get((*this->Indices)[index]);
+  }
+
+private:
+  const IndexVecType* const Indices;
+  const PortalType* const Portal;
 };
 
 template <typename IndexVecType, typename PortalType>
@@ -132,6 +177,14 @@ inline VTKM_EXEC VecFromPortalPermute<IndexVecType, PortalType> make_VecFromPort
   const PortalType& portal)
 {
   return VecFromPortalPermute<IndexVecType, PortalType>(index, portal);
+}
+
+template <typename IndexVecType, typename PortalType>
+inline VTKM_EXEC VecFromPortalPermute<IndexVecType, const PortalType*> make_VecFromPortalPermute(
+  const IndexVecType* index,
+  const PortalType* const portal)
+{
+  return VecFromPortalPermute<IndexVecType, const PortalType*>(index, portal);
 }
 
 } // namespace vtkm

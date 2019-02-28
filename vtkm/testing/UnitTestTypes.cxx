@@ -892,7 +892,7 @@ void TestTypes()
 
 } // anonymous namespace
 
-int UnitTestTypes(int, char* [])
+int UnitTestTypes(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestTypes);
+  return vtkm::testing::Testing::Run(TestTypes, argc, argv);
 }

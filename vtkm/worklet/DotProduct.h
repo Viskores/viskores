@@ -32,7 +32,7 @@ namespace worklet
 class DotProduct : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<VecAll>, FieldIn<VecAll>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2, _3);
 
   template <typename T, vtkm::IdComponent Size>

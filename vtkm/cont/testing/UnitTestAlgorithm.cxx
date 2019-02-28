@@ -191,7 +191,7 @@ void TestAll()
 
 } // anonymous namespace
 
-int UnitTestAlgorithm(int, char* [])
+int UnitTestAlgorithm(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestAll);
+  return vtkm::cont::testing::Testing::Run(TestAll, argc, argv);
 }

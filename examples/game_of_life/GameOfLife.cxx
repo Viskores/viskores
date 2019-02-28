@@ -31,6 +31,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/interop/TransferToOpenGL.h>
@@ -61,17 +62,9 @@
 
 #include "LoadShaders.h"
 
-//This is the list of devices to compile in support for. The order of the
-//devices determines the runtime preference.
-struct DevicesToTry : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
-                                        vtkm::cont::DeviceAdapterTagTBB,
-                                        vtkm::cont::DeviceAdapterTagSerial>
-{
-};
-
 struct GameOfLifePolicy : public vtkm::filter::PolicyBase<GameOfLifePolicy>
 {
-  using DeviceAdapterList = DevicesToTry;
+  using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8, vtkm::Vec<vtkm::UInt8, 4>>;
 };
 
 struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
@@ -79,9 +72,9 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
   using CountingHandle = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
 
   using ControlSignature = void(CellSetIn,
-                                FieldInNeighborhood<> prevstate,
-                                FieldOut<> state,
-                                FieldOut<> color);
+                                FieldInNeighborhood prevstate,
+                                FieldOut state,
+                                FieldOut color);
 
   using ExecutionSignature = void(_2, _3, _4);
 
@@ -231,7 +224,7 @@ struct RenderGameOfLife
 
     UploadData task(&this->ColorState,
                     data.GetField("colors", vtkm::cont::Field::Association::POINTS));
-    vtkm::cont::TryExecute(task, DevicesToTry());
+    vtkm::cont::TryExecute(task);
 
     vtkm::Float32 mvp[16] = { 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f,
                               0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 3.5f };
@@ -257,7 +250,7 @@ struct RenderGameOfLife
   }
 };
 
-vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> gTimer;
+vtkm::cont::Timer gTimer{ vtkm::cont::DeviceAdapterTagSerial() };
 vtkm::cont::DataSet* gData = nullptr;
 GameOfLife* gFilter = nullptr;
 RenderGameOfLife* gRenderer = nullptr;
@@ -322,6 +315,8 @@ void populate(std::vector<vtkm::UInt8>& input_state,
 
 int main(int argc, char** argv)
 {
+  vtkm::cont::Initialize(argc, argv);
+
   glewExperimental = GL_TRUE;
   glutInit(&argc, argv);
 
@@ -368,6 +363,7 @@ int main(int argc, char** argv)
   gFilter = &filter;
   gRenderer = &renderer;
 
+  gTimer.Start();
   glutDisplayFunc([]() {
     const vtkm::Float32 c = static_cast<vtkm::Float32>(gTimer.GetElapsedTime());
 

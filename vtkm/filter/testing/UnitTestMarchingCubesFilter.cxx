@@ -24,7 +24,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/CleanGrid.h>
 
@@ -35,7 +34,7 @@ namespace vtkm_ut_mc_filter
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  using ControlSignature = void(FieldIn vertexId, FieldOut v);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
@@ -229,22 +228,7 @@ public:
 
 class PolicyRadiantDataSet : public vtkm::filter::PolicyBase<PolicyRadiantDataSet>
 {
-  using DataHandleType = MakeRadiantDataSet::DataArrayHandle;
-  using CountingHandleType = MakeRadiantDataSet::ConnectivityArrayHandle;
-
-  using TransformHandleType =
-    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
-                                     CubeGridConnectivity>;
-
 public:
-  struct TypeListTagRadiantTypes : vtkm::ListTagBase<DataHandleType::StorageTag,
-                                                     CountingHandleType::StorageTag,
-                                                     TransformHandleType::StorageTag>
-  {
-  };
-
-  using FieldStorageList = TypeListTagRadiantTypes;
-
   struct TypeListTagRadiantCellSetTypes : vtkm::ListTagBase<MakeRadiantDataSet::CellSet>
   {
   };
@@ -281,12 +265,10 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   //Set point scalar
-  dataSet.AddField(vtkm::cont::Field("distanceToOrigin",
-                                     vtkm::cont::Field::Association::POINTS,
-                                     vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
-  dataSet.AddField(vtkm::cont::Field("distanceToOther",
-                                     vtkm::cont::Field::Association::POINTS,
-                                     vtkm::cont::DynamicArrayHandle(distanceToOther)));
+  dataSet.AddField(vtkm::cont::Field(
+    "distanceToOrigin", vtkm::cont::Field::Association::POINTS, distanceToOrigin));
+  dataSet.AddField(
+    vtkm::cont::Field("distanceToOther", vtkm::cont::Field::Association::POINTS, distanceToOther));
 
   CellSet cellSet("cells");
   cellSet.Fill(coordinates.GetNumberOfValues(), HexTag::Id, HexTraits::NUM_POINTS, connectivity);
@@ -384,7 +366,7 @@ void TestMarchingCubesCustomPolicy()
   //custom field type
   mc.SetActiveField("distanceToOrigin");
   mc.SetFieldsToPass({ "distanceToOrigin", "distanceToOther" });
-  vtkm::cont::DataSet outputData = mc.Execute(dataSet, PolicyRadiantDataSet());
+  vtkm::cont::DataSet outputData = mc.Execute(dataSet, PolicyRadiantDataSet{});
 
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");
@@ -535,7 +517,7 @@ void TestMarchingCubesFilter()
 
 } // anonymous namespace
 
-int UnitTestMarchingCubesFilter(int, char* [])
+int UnitTestMarchingCubesFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(vtkm_ut_mc_filter::TestMarchingCubesFilter);
+  return vtkm::cont::testing::Testing::Run(vtkm_ut_mc_filter::TestMarchingCubesFilter, argc, argv);
 }

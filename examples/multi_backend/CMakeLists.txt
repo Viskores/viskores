@@ -19,7 +19,7 @@
 ##  this software.
 ##
 ##=============================================================================
-cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.13 FATAL_ERROR)
 project(MultiBackend CXX)
 
 #Find the VTK-m package
@@ -47,4 +47,4 @@ if(TARGET vtkm::cuda)
 endif()
 
 add_executable(MultiBackend ${device_srcs} ${srcs} ${headers})
-target_link_libraries(MultiBackend PRIVATE vtkm_cont Threads::Threads)
+target_link_libraries(MultiBackend PRIVATE vtkm_filter Threads::Threads)

@@ -101,7 +101,7 @@ void TestSurfaceNormals()
 } // anonymous namespace
 
 
-int UnitTestSurfaceNormalsFilter(int, char* [])
+int UnitTestSurfaceNormalsFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals);
+  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals, argc, argv);
 }

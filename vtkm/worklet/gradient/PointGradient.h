@@ -45,8 +45,8 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
 {
   using ControlSignature = void(CellSetIn,
                                 WholeCellSetIn<Point, Cell>,
-                                WholeArrayIn<Vec3> pointCoordinates,
-                                WholeArrayIn<PointGradientInType<T>> inputField,
+                                WholeArrayIn pointCoordinates,
+                                WholeArrayIn inputField,
                                 GradientOutputs outputFields);
 
   using ExecutionSignature = void(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
@@ -73,7 +73,7 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
     for (vtkm::IdComponent i = 0; i < numCells; ++i)
     {
       const vtkm::Id cellId = cellIds[i];
-      CellThreadIndices cellIndices(cellId, cellId, 0, geometry);
+      CellThreadIndices cellIndices(cellId, cellId, 0, cellId, geometry);
 
       const CellShapeTag cellShape = cellIndices.GetCellShape();
 

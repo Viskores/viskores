@@ -32,7 +32,7 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/exec/CellEdge.h>
 
 namespace vtkm
@@ -161,9 +161,9 @@ public:
     }
     using ControlSignature = void(CellSetIn intputCells,
                                   WholeCellSetIn<Point, Cell>, // Query points from cell
-                                  FieldInCell<Vec3> faceNormals,
-                                  FieldOutPoint<IdType> newPointNum,
-                                  FieldOutPoint<IdType> cellNum);
+                                  FieldInCell faceNormals,
+                                  FieldOutPoint newPointNum,
+                                  FieldOutPoint cellNum);
     using ExecutionSignature = void(CellIndices incidentCells,
                                     InputIndex pointIndex,
                                     _2 pFromCellSet,
@@ -304,10 +304,10 @@ public:
     }
     using ControlSignature = void(CellSetIn intputCells,
                                   WholeCellSetIn<Point, Cell>, // Query points from cell
-                                  FieldInCell<Vec3> faceNormals,
-                                  FieldInPoint<IdType> newPointStartingIndex,
-                                  FieldInPoint<IdType> pointCellsStartingIndex,
-                                  WholeArrayOut<Id3Type> cellTopologyUpdateTuples);
+                                  FieldInCell faceNormals,
+                                  FieldInPoint newPointStartingIndex,
+                                  FieldInPoint pointCellsStartingIndex,
+                                  WholeArrayOut cellTopologyUpdateTuples);
     using ExecutionSignature = void(CellIndices incidentCells,
                                     InputIndex pointIndex,
                                     _2 pFromCellSet,

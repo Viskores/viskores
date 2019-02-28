@@ -50,16 +50,14 @@ struct VTKM_ALWAYS_EXPORT Cast
 template <typename T, typename ArrayHandleType>
 class ArrayHandleCast
   : public vtkm::cont::ArrayHandleTransform<ArrayHandleType,
-                                            internal::Cast<typename ArrayHandleType::ValueType, T>,
-                                            internal::Cast<T, typename ArrayHandleType::ValueType>>
+                                            internal::Cast<typename ArrayHandleType::ValueType, T>>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleCast,
     (ArrayHandleCast<T, ArrayHandleType>),
     (vtkm::cont::ArrayHandleTransform<ArrayHandleType,
-                                      internal::Cast<typename ArrayHandleType::ValueType, T>,
-                                      internal::Cast<T, typename ArrayHandleType::ValueType>>));
+                                      internal::Cast<typename ArrayHandleType::ValueType, T>>));
 
   ArrayHandleCast(const ArrayHandleType& handle)
     : Superclass(handle)
@@ -125,15 +123,13 @@ struct TypeString<vtkm::cont::internal::Cast<T1, T2>>
 template <typename T, typename AH>
 struct TypeString<vtkm::cont::ArrayHandleCast<T, AH>>
   : TypeString<
-      vtkm::cont::ArrayHandleTransform<AH,
-                                       vtkm::cont::internal::Cast<typename AH::ValueType, T>,
-                                       vtkm::cont::internal::Cast<T, typename AH::ValueType>>>
+      vtkm::cont::ArrayHandleTransform<AH, vtkm::cont::internal::Cast<typename AH::ValueType, T>>>
 {
 };
 }
 } // namespace vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename T1, typename T2>
@@ -147,9 +143,7 @@ struct Serialization<vtkm::cont::internal::Cast<T1, T2>>
 template <typename T, typename AH>
 struct Serialization<vtkm::cont::ArrayHandleCast<T, AH>>
   : Serialization<
-      vtkm::cont::ArrayHandleTransform<AH,
-                                       vtkm::cont::internal::Cast<typename AH::ValueType, T>,
-                                       vtkm::cont::internal::Cast<T, typename AH::ValueType>>>
+      vtkm::cont::ArrayHandleTransform<AH, vtkm::cont::internal::Cast<typename AH::ValueType, T>>>
 {
 };
 

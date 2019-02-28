@@ -29,7 +29,6 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
@@ -47,7 +46,9 @@
 //----------------------------------------------------------------------------
 #if defined(__VTKM_GAUSSIAN_SPLATTER_BENCHMARK) && !defined(START_TIMER_BLOCK)
 // start timer
-#define START_TIMER_BLOCK(name) vtkm::cont::Timer<DeviceAdapter> timer_##name;
+#define START_TIMER_BLOCK(name)                                                                    \
+  vtkm::cont::Timer timer_##name{ DeviceAdapter() };                                               \
+  timer_##name.Start();
 
 // stop timer
 #define END_TIMER_BLOCK(name)                                                                      \
@@ -168,7 +169,7 @@ struct KernelSplatterFilterUniformGrid
   //-----------------------------------------------------------------------
   struct zero_voxel : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = void(_1, WorkIndex, _2);
     //
     VTKM_CONT
@@ -198,14 +199,8 @@ struct KernelSplatterFilterUniformGrid
     Kernel kernel_;
 
   public:
-    using ControlSignature = void(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldOut<>,
-                                  FieldOut<>,
-                                  FieldOut<>,
-                                  FieldOut<>);
+    using ControlSignature =
+      void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut, FieldOut, FieldOut, FieldOut);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
@@ -264,7 +259,7 @@ struct KernelSplatterFilterUniformGrid
   class ComputeLocalNeighborId : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+    using ControlSignature = void(FieldIn, FieldIn, FieldOut);
     using ExecutionSignature = void(_1, _2, WorkIndex, _3);
 
     VTKM_CONT
@@ -296,14 +291,8 @@ struct KernelSplatterFilterUniformGrid
     Kernel kernel;
 
   public:
-    using ControlSignature = void(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldOut<>,
-                                  FieldOut<>);
+    using ControlSignature =
+      void(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, FieldOut, FieldOut);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
@@ -361,7 +350,7 @@ struct KernelSplatterFilterUniformGrid
   class UpdateVoxelSplats : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<>, FieldIn<>, WholeArrayOut<Scalar>);
+    using ControlSignature = void(FieldIn, FieldIn, WholeArrayOut);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
@@ -466,7 +455,7 @@ struct KernelSplatterFilterUniformGrid
     START_TIMER_BLOCK(numNeighborsExclusiveSum)
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanExclusive(numNeighbors,
                                                                      numNeighborsExclusiveSum);
-    END_TIMER_BLOCK(numNeighborsExclusiveSum)
+    //END_TIMER_BLOCK(numNeighborsExclusiveSum)
     debug::OutputArrayDebug(numNeighborsExclusiveSum, "numNeighborsExclusiveSum");
 
     //---------------------------------------------------------------

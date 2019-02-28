@@ -19,7 +19,7 @@
 ##  this software.
 ##
 ##=============================================================================
-cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.13 FATAL_ERROR)
 project(RedistributePoints CXX)
 
 #Find the VTK-m package
@@ -27,13 +27,13 @@ find_package(VTKm REQUIRED QUIET)
 add_executable(RedistributePoints_SERIAL RedistributePoints.cxx RedistributePoints.h)
 target_compile_definitions(RedistributePoints_SERIAL PRIVATE
                            "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-target_link_libraries(RedistributePoints_SERIAL PRIVATE vtkm_cont)
+target_link_libraries(RedistributePoints_SERIAL PRIVATE vtkm_filter)
 
 if(TARGET vtkm::tbb)
   add_executable(RedistributePoints_TBB RedistributePoints.cxx RedistributePoints.h)
   target_compile_definitions(RedistributePoints_TBB PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  target_link_libraries(RedistributePoints_TBB PRIVATE vtkm_cont)
+  target_link_libraries(RedistributePoints_TBB PRIVATE vtkm_filter)
 endif()
 
 if(TARGET vtkm::cuda)
@@ -42,5 +42,5 @@ if(TARGET vtkm::cuda)
 
   target_compile_definitions(RedistributePoints_CUDA PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  target_link_libraries(RedistributePoints_CUDA PRIVATE vtkm_cont)
+  target_link_libraries(RedistributePoints_CUDA PRIVATE vtkm_filter)
 endif()

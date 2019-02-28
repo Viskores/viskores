@@ -42,6 +42,14 @@ struct VTKM_CONT_EXPORT CudaAllocator
   /// that can be accessed concurrently by the CPU and GPUs.
   static VTKM_CONT bool UsingManagedMemory();
 
+  /// Force CUDA allocations to occur with unmanaged memory (aka cudaMalloc).
+  static VTKM_CONT void ForceManagedMemoryOff();
+
+  /// Force CUDA allocations to occur with pageable managed memory.
+  /// If the current hardware doesn't support pageable managed memory
+  /// VTK-m will ignore the request and continue to use unmanaged memory (aka cudaMalloc).
+  static VTKM_CONT void ForceManagedMemoryOn();
+
   /// Returns true if the pointer is accessible from a CUDA device.
   static VTKM_CONT bool IsDevicePointer(const void* ptr);
 

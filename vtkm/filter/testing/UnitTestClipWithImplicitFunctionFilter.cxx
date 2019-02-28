@@ -20,7 +20,6 @@
 
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -73,10 +72,10 @@ void TestClipStructured()
                    "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 12,
+  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 8,
                    "Wrong number of cells in the output dataset");
 
-  vtkm::cont::DynamicArrayHandle temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.CopyTo(resultArrayHandle);
 
@@ -106,6 +105,7 @@ void TestClipStructuredInverted()
   clip.SetInvertClip(invert);
   clip.SetFieldsToPass("scalars");
   auto outputData = clip.Execute(ds);
+
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
@@ -115,7 +115,7 @@ void TestClipStructuredInverted()
   VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 4,
                    "Wrong number of cells in the output dataset");
 
-  vtkm::cont::DynamicArrayHandle temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.CopyTo(resultArrayHandle);
 
@@ -139,7 +139,7 @@ void TestClip()
 
 } // anonymous namespace
 
-int UnitTestClipWithImplicitFunctionFilter(int, char* [])
+int UnitTestClipWithImplicitFunctionFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestClip);
+  return vtkm::cont::testing::Testing::Run(TestClip, argc, argv);
 }

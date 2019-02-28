@@ -94,8 +94,9 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("mapper_ray_tracer");
-  vtkm::cont::Timer<> tot_timer;
-  vtkm::cont::Timer<> timer;
+  vtkm::cont::Timer tot_timer;
+  tot_timer.Start();
+  vtkm::cont::Timer timer;
 
   // make sure we start fresh
   this->Internals->Tracer.Clear();
@@ -107,7 +108,7 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   triExtractor.ExtractCells(cellset);
   if (triExtractor.GetNumberOfTriangles() > 0)
   {
-    raytracing::TriangleIntersector* triIntersector = new raytracing::TriangleIntersector();
+    auto triIntersector = std::make_shared<raytracing::TriangleIntersector>();
     triIntersector->SetData(coords, triExtractor.GetTriangles());
     this->Internals->Tracer.AddShapeIntersector(triIntersector);
     shapeBounds.Include(triIntersector->GetShapeBounds());
@@ -133,7 +134,7 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   this->Internals->Tracer.SetShadingOn(this->Internals->Shade);
   this->Internals->Tracer.Render(this->Internals->Rays);
 
-  timer.Reset();
+  timer.Start();
   this->Internals->Canvas->WriteToCanvas(
     this->Internals->Rays, this->Internals->Rays.Buffers.at(0).Buffer, camera);
 

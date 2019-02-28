@@ -188,7 +188,7 @@ class CellIndexFilter : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CellIndexFilter() {}
-  typedef void ControlSignature(FieldInOut<>, WholeArrayIn<>);
+  typedef void ControlSignature(FieldInOut, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2);
   template <typename TrianglePortalType>
   VTKM_EXEC void operator()(vtkm::Id& hitIndex, TrianglePortalType& triangles) const
@@ -213,13 +213,8 @@ public:
   public:
     VTKM_CONT
     CalculateNormals() {}
-    typedef void ControlSignature(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldOut<>,
-                                  FieldOut<>,
-                                  FieldOut<>,
-                                  WholeArrayIn<Vec3RenderingTypes>,
-                                  WholeArrayIn<>);
+    typedef void
+      ControlSignature(FieldIn, FieldIn, FieldOut, FieldOut, FieldOut, WholeArrayIn, WholeArrayIn);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
     template <typename Precision, typename PointPortalType, typename IndicesPortalType>
     VTKM_EXEC inline void operator()(const vtkm::Id& hitIndex,
@@ -269,12 +264,12 @@ public:
       else
         invDeltaScalar = 0.f;
     }
-    typedef void ControlSignature(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldInOut<>,
-                                  WholeArrayIn<ScalarRenderingTypes>,
-                                  WholeArrayIn<>);
+    typedef void ControlSignature(FieldIn,
+                                  FieldIn,
+                                  FieldIn,
+                                  FieldInOut,
+                                  WholeArrayIn,
+                                  WholeArrayIn);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
     template <typename ScalarPortalType, typename IndicesPortalType>
     VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
@@ -319,10 +314,7 @@ public:
         invDeltaScalar = 1.f / minScalar;
     }
 
-    typedef void ControlSignature(FieldIn<>,
-                                  FieldOut<>,
-                                  WholeArrayIn<ScalarRenderingTypes>,
-                                  WholeArrayIn<>);
+    typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
 
     typedef void ExecutionSignature(_1, _2, _3, _4);
     template <typename ScalarPortalType, typename IndicesPortalType>
@@ -348,15 +340,15 @@ public:
   VTKM_CONT void Run(Ray<Precision>& rays,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
                      vtkm::cont::CoordinateSystem coordsHandle,
-                     const vtkm::cont::Field* scalarField,
+                     const vtkm::cont::Field scalarField,
                      const vtkm::Range& scalarRange)
   {
     bool isSupportedField =
-      (scalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-       scalarField->GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+      (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+       scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
     if (!isSupportedField)
       throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
-    bool isAssocPoints = scalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS;
+    bool isAssocPoints = scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
 
     // Find the triangle normal
     vtkm::worklet::DispatcherMapField<CalculateNormals>(CalculateNormals())
@@ -368,13 +360,21 @@ public:
     {
       vtkm::worklet::DispatcherMapField<LerpScalar<Precision>>(
         LerpScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.U, rays.V, rays.Scalar, *scalarField, triangles);
+        .Invoke(rays.HitIdx,
+                rays.U,
+                rays.V,
+                rays.Scalar,
+                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                triangles);
     }
     else
     {
       vtkm::worklet::DispatcherMapField<NodalScalar<Precision>>(
         NodalScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.Scalar, *scalarField, triangles);
+        .Invoke(rays.HitIdx,
+                rays.Scalar,
+                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                triangles);
     }
   } // Run
 
@@ -386,14 +386,14 @@ class FindTriangleAABBs : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   FindTriangleAABBs() {}
-  typedef void ControlSignature(FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                WholeArrayIn<Vec3RenderingTypes>);
+  typedef void ControlSignature(FieldIn,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   template <typename PointPortalType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 4> indices,
@@ -525,14 +525,14 @@ VTKM_CONT void TriangleIntersector::IntersectRaysImp(Ray<Precision>& rays, bool 
 }
 
 VTKM_CONT void TriangleIntersector::IntersectionData(Ray<vtkm::Float32>& rays,
-                                                     const vtkm::cont::Field* scalarField,
+                                                     const vtkm::cont::Field scalarField,
                                                      const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);
 }
 
 VTKM_CONT void TriangleIntersector::IntersectionData(Ray<vtkm::Float64>& rays,
-                                                     const vtkm::cont::Field* scalarField,
+                                                     const vtkm::cont::Field scalarField,
                                                      const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);
@@ -540,7 +540,7 @@ VTKM_CONT void TriangleIntersector::IntersectionData(Ray<vtkm::Float64>& rays,
 
 template <typename Precision>
 VTKM_CONT void TriangleIntersector::IntersectionDataImp(Ray<Precision>& rays,
-                                                        const vtkm::cont::Field* scalarField,
+                                                        const vtkm::cont::Field scalarField,
                                                         const vtkm::Range& scalarRange)
 {
   ShapeIntersector::IntersectionPoint(rays);

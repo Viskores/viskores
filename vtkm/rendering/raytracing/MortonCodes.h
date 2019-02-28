@@ -151,7 +151,7 @@ public:
   }
 
   using ControlSignature =
-    void(CellSetIn cellset, WholeArrayIn<>, FieldInTo<>, WholeArrayOut<>, WholeArrayOut<>);
+    void(CellSetIn cellset, WholeArrayIn, FieldInTo, WholeArrayOut, WholeArrayOut);
 
   using ExecutionSignature = void(CellShape, FromIndices, WorkIndex, _2, _3, _4, _5);
 
@@ -262,8 +262,7 @@ public:
   {
   }
 
-  using ControlSignature =
-    void(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
   typedef _7 InputDomain;
 

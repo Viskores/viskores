@@ -19,21 +19,21 @@
 ##  this software.
 ##
 ##=============================================================================
-cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.13 FATAL_ERROR)
 project(ParticleAdvection CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
 add_executable(Particle_Advection_SERIAL ParticleAdvection.cxx)
-target_link_libraries(Particle_Advection_SERIAL PRIVATE vtkm_cont)
+target_link_libraries(Particle_Advection_SERIAL PRIVATE vtkm_filter)
 
 if(TARGET vtkm::tbb)
   add_executable(Particle_Advection_TBB ParticleAdvectionTBB.cxx)
-  target_link_libraries(Particle_Advection_TBB PRIVATE vtkm_cont)
+  target_link_libraries(Particle_Advection_TBB PRIVATE vtkm_filter)
 endif()
 
 if(TARGET vtkm::cuda)
   add_executable(Particle_Advection_CUDA ParticleAdvection.cu)
-  target_link_libraries(Particle_Advection_CUDA PRIVATE vtkm_cont)
+  target_link_libraries(Particle_Advection_CUDA PRIVATE vtkm_filter)
 endif()

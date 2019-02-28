@@ -81,7 +81,7 @@ void TestTextureMemorySupport()
   TestVecTextureLoad();
 }
 
-int UnitTestTextureMemorySupport(int, char* [])
+int UnitTestTextureMemorySupport(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestTextureMemorySupport);
+  return vtkm::cont::testing::Testing::Run(TestTextureMemorySupport, argc, argv);
 }

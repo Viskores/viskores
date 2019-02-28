@@ -71,7 +71,7 @@ public:
     else
     {
       CastAndCall(
-        fieldArray.ResetTypeList(vtkm::TypeListTagScalarAll()),
+        fieldArray.ResetTypes(vtkm::TypeListTagScalarAll()),
         vtkm::worklet::histogram::ComputeBins(Bin1DIndex, numberOfBins, rangeOfValues, binDelta));
     }
   }

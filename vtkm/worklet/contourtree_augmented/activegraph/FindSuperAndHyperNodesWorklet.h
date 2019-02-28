@@ -79,15 +79,14 @@ namespace active_graph_inc
 class FindSuperAndHyperNodesWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    FieldIn<IdType> graphVertexIndex,          // (input) activeVertices
-    WholeArrayIn<IdType> hyperarcs,            // (input) hyperarcs
-    WholeArrayIn<IdType> newHypernodePosition, // (input) newHypernodePosition
-    WholeArrayIn<IdType> newSupernodePosition, // (input) newSupernodePosition
-    WholeArrayOut<IdType> hyperId,             // (output) hyperId
-    WholeArrayOut<IdType> treeHypernodes,      // (output) hypernodes of the tree
-    WholeArrayOut<IdType> treeSupernodes       // (output) supernodes of the tree
-    );                                         // (input/output) hyperarcs
+  typedef void ControlSignature(FieldIn graphVertexIndex,          // (input) activeVertices
+                                WholeArrayIn hyperarcs,            // (input) hyperarcs
+                                WholeArrayIn newHypernodePosition, // (input) newHypernodePosition
+                                WholeArrayIn newSupernodePosition, // (input) newSupernodePosition
+                                WholeArrayOut hyperId,             // (output) hyperId
+                                WholeArrayOut treeHypernodes, // (output) hypernodes of the tree
+                                WholeArrayOut treeSupernodes  // (output) supernodes of the tree
+                                );                            // (input/output) hyperarcs
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 

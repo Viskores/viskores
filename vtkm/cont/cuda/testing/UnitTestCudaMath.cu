@@ -45,10 +45,10 @@ namespace
 
 struct TriggerICE : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut);
   using ExecutionSignature = _3(_1, _2, WorkIndex);
 
-#if __CUDA_ARCH__
+#ifdef VTKM_CUDA_DEVICE_PASS
   template <class ValueType>
   __device__ ValueType operator()(const ValueType& bad,
                                   const ValueType& sane,
@@ -180,14 +180,15 @@ void RunEdgeCases()
 
 } //namespace
 
-int UnitTestCudaMath(int, char* [])
+int UnitTestCudaMath(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   int tests_valid = vtkm::cont::testing::Testing::Run(
-    UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagCuda>);
+    UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 
-  tests_valid += vtkm::cont::testing::Testing::Run(RunEdgeCases<vtkm::cont::DeviceAdapterTagCuda>);
+  tests_valid +=
+    vtkm::cont::testing::Testing::Run(RunEdgeCases<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 
   return tests_valid;
 }

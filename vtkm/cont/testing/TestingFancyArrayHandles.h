@@ -230,7 +230,7 @@ private:
 public:
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = _2(_1);
 
     template <class ValueType>
@@ -242,7 +242,7 @@ public:
 
   struct InplaceFunctorPair : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldInOut<>);
+    using ControlSignature = void(FieldInOut);
     using ExecutionSignature = void(_1);
 
     template <typename T>
@@ -795,7 +795,7 @@ private:
   // worklets.
   struct GroupVariableInputWorklet : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn<>);
+    using ControlSignature = void(FieldIn);
     using ExecutionSignature = void(_1, WorkIndex);
 
     template <typename InputType>
@@ -850,7 +850,7 @@ private:
   // worklets.
   struct GroupVariableOutputWorklet : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = void(_2, WorkIndex);
 
     template <typename OutputType>
@@ -1375,10 +1375,10 @@ public:
   /// all the fancy array handles that vtkm supports. Returns an
   /// error code that can be returned from the main function of a test.
   ///
-  static VTKM_CONT int Run()
+  static VTKM_CONT int Run(int argc, char* argv[])
   {
     vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
-    return vtkm::cont::testing::Testing::Run(TestAll());
+    return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
   }
 };
 }

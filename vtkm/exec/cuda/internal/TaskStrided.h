@@ -87,6 +87,7 @@ public:
         this->Worklet.GetThreadIndices(index,
                                        this->Invocation.OutputToInputMap,
                                        this->Invocation.VisitArray,
+                                       this->Invocation.ThreadToOutputMap,
                                        this->Invocation.GetInputDomain(),
                                        this->GlobalIndexOffset));
     }
@@ -157,6 +158,7 @@ public:
         this->Worklet.GetThreadIndices(index,
                                        this->Invocation.OutputToInputMap,
                                        this->Invocation.VisitArray,
+                                       this->Invocation.ThreadToOutputMap,
                                        this->Invocation.GetInputDomain(),
                                        this->GlobalIndexOffset));
     }

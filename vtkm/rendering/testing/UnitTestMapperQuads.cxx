@@ -58,7 +58,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperQuads(int, char* [])
+int UnitTestMapperQuads(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

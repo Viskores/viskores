@@ -19,17 +19,17 @@
 ##  this software.
 ##
 ##=============================================================================
-cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.13 FATAL_ERROR)
 project(ContourTree CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
 add_executable(ContourTreeMesh2D_SERIAL ContourTreeMesh2D.cxx)
-target_link_libraries(ContourTreeMesh2D_SERIAL vtkm_cont)
+target_link_libraries(ContourTreeMesh2D_SERIAL vtkm_filter)
 
 add_executable(ContourTreeMesh3D_SERIAL ContourTreeMesh3D.cxx)
-target_link_libraries(ContourTreeMesh3D_SERIAL vtkm_cont)
+target_link_libraries(ContourTreeMesh3D_SERIAL vtkm_filter)
 
 target_compile_definitions(ContourTreeMesh2D_SERIAL PRIVATE
                            "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
@@ -43,8 +43,8 @@ if(TARGET vtkm::cuda)
   vtkm_compile_as_cuda(cudaSource ContourTreeMesh3D.cxx)
   add_executable(ContourTreeMesh3D_CUDA ${cudaSource})
 
-  target_link_libraries(ContourTreeMesh2D_CUDA vtkm_cont)
-  target_link_libraries(ContourTreeMesh3D_CUDA vtkm_cont)
+  target_link_libraries(ContourTreeMesh2D_CUDA vtkm_filter)
+  target_link_libraries(ContourTreeMesh3D_CUDA vtkm_filter)
 
   target_compile_definitions(ContourTreeMesh2D_CUDA PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
@@ -56,8 +56,8 @@ if(TARGET vtkm::tbb)
   add_executable(ContourTreeMesh2D_TBB ContourTreeMesh2D.cxx)
   add_executable(ContourTreeMesh3D_TBB ContourTreeMesh3D.cxx)
 
-  target_link_libraries(ContourTreeMesh2D_TBB vtkm_cont)
-  target_link_libraries(ContourTreeMesh3D_TBB vtkm_cont)
+  target_link_libraries(ContourTreeMesh2D_TBB vtkm_filter)
+  target_link_libraries(ContourTreeMesh3D_TBB vtkm_filter)
 
   target_compile_definitions(ContourTreeMesh2D_TBB PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")

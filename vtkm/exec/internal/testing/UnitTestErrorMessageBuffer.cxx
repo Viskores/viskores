@@ -51,7 +51,7 @@ void TestErrorMessageBuffer()
 
 } // anonymous namespace
 
-int UnitTestErrorMessageBuffer(int, char* [])
+int UnitTestErrorMessageBuffer(int argc, char* argv[])
 {
-  return (vtkm::testing::Testing::Run(TestErrorMessageBuffer));
+  return vtkm::testing::Testing::Run(TestErrorMessageBuffer, argc, argv);
 }

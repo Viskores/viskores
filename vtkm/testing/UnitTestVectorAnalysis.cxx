@@ -264,7 +264,7 @@ void TestVectorAnalysis()
 
 } // anonymous namespace
 
-int UnitTestVectorAnalysis(int, char* [])
+int UnitTestVectorAnalysis(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestVectorAnalysis);
+  return vtkm::testing::Testing::Run(TestVectorAnalysis, argc, argv);
 }

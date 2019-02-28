@@ -60,6 +60,11 @@ function(vtkm_pyexpander_generated_file generated_file_name)
 endfunction(vtkm_pyexpander_generated_file)
 
 #-----------------------------------------------------------------------------
+# This function is not needed by the core infrastructure of VTK-m
+# as we now require CMake 3.11 on windows, and for tests we compile a single
+# executable for all backends, instead of compiling for each backend.
+# It is currently kept around so that examples which haven't been updated
+# continue to work
 function(vtkm_compile_as_cuda output)
   # We can't use set_source_files_properties(<> PROPERTIES LANGUAGE "CUDA")
   # for the following reasons:
@@ -89,86 +94,6 @@ function(vtkm_compile_as_cuda output)
     endif()
   endforeach()
   set(${output} ${_cuda_srcs} PARENT_SCOPE)
-endfunction()
-
-#-----------------------------------------------------------------------------
-function(vtkm_add_header_build_test name dir_prefix use_cuda)
-  set(hfiles ${ARGN})
-
-  #only attempt to add a test build executable if we have any headers to
-  #test. this might not happen when everything depends on thrust.
-  list(LENGTH hfiles num_srcs)
-  if (${num_srcs} EQUAL 0)
-    return()
-  endif()
-
-  set(ext "cxx")
-  if(use_cuda)
-    set(ext "cu")
-  endif()
-
-  set(srcs)
-  foreach (header ${hfiles})
-    get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
-    if( NOT cant_be_tested )
-      string(REPLACE "/" "_" headername "${header}")
-      string(REPLACE "." "_" headername "${headername}")
-      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext})
-
-      #By using file generate we will not trigger CMake execution when
-      #a header gets touched
-      file(GENERATE
-        OUTPUT ${src}
-        CONTENT "
-//mark that we are including headers as test for completeness.
-//This is used by headers that include thrust to properly define a proper
-//device backend / system
-#define VTKM_TEST_HEADER_BUILD
-#include <${dir_prefix}/${header}>
-int ${headername}_${headerextension}_testbuild_symbol;"
-        )
-
-      list(APPEND srcs ${src})
-    endif()
-  endforeach()
-
-  set_source_files_properties(${hfiles}
-    PROPERTIES HEADER_FILE_ONLY TRUE
-    )
-
-  if(TARGET TestBuild_${name})
-    #If the target already exists just add more sources to it
-    target_sources(TestBuild_${name} PRIVATE ${srcs})
-  else()
-    add_library(TestBuild_${name} STATIC ${srcs} ${hfiles})
-    # Send the libraries created for test builds to their own directory so as to
-    # not pollute the directory with useful libraries.
-    set_property(TARGET TestBuild_${name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
-    set_property(TARGET TestBuild_${name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
-
-    target_link_libraries(TestBuild_${name}
-      PRIVATE
-        $<BUILD_INTERFACE:vtkm_developer_flags>
-        vtkm_compiler_flags
-        vtkm_taotuple
-    )
-
-    if(TARGET vtkm::tbb)
-      #make sure that we have the tbb include paths when tbb is enabled.
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm::tbb)
-    endif()
-
-    if(TARGET vtkm_diy)
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm_diy)
-    endif()
-
-    if(TARGET vtkm_rendering_gl_context)
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm_rendering_gl_context)
-    endif()
-
-
-  endif()
-
 endfunction()
 
 #-----------------------------------------------------------------------------
@@ -224,37 +149,8 @@ endfunction(vtkm_install_headers)
 
 #-----------------------------------------------------------------------------
 function(vtkm_declare_headers)
-  #TODO: look at the testable and cuda options
-  set(options CUDA)
-  set(oneValueArgs TESTABLE)
-  set(multiValueArgs EXCLUDE_FROM_TESTING)
-  cmake_parse_arguments(VTKm_DH "${options}"
-    "${oneValueArgs}" "${multiValueArgs}"
-    ${ARGN}
-    )
-
-  #The testable keyword allows the caller to turn off the header testing,
-  #mainly used so that backends can be installed even when they can't be
-  #built on the machine.
-  #Since this is an optional property not setting it means you do want testing
-  if(NOT DEFINED VTKm_DH_TESTABLE)
-      set(VTKm_DH_TESTABLE ON)
-  endif()
-
-  set(hfiles ${VTKm_DH_UNPARSED_ARGUMENTS} ${VTKm_DH_EXCLUDE_FROM_TESTING})
   vtkm_get_kit_name(name dir_prefix)
-
-  #only do header testing if enable testing is turned on
-  if (VTKm_ENABLE_TESTING AND VTKm_DH_TESTABLE)
-    set_source_files_properties(${VTKm_DH_EXCLUDE_FROM_TESTING}
-      PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE
-      )
-
-    vtkm_add_header_build_test(
-      "${name}" "${dir_prefix}" "${VTKm_DH_CUDA}" ${hfiles})
-  endif()
-
-  vtkm_install_headers("${dir_prefix}" ${hfiles})
+  vtkm_install_headers("${dir_prefix}" ${ARGN})
 endfunction(vtkm_declare_headers)
 
 #-----------------------------------------------------------------------------
@@ -269,6 +165,7 @@ endfunction(vtkm_declare_headers)
 #   [WRAP_FOR_CUDA <source_list>]
 #   )
 function(vtkm_library)
+  set(options STATIC SHARED)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES WRAP_FOR_CUDA)
   cmake_parse_arguments(VTKm_LIB
@@ -281,18 +178,42 @@ function(vtkm_library)
   endif()
   set(lib_name ${VTKm_LIB_NAME})
 
-  if(TARGET vtkm::cuda)
-    vtkm_compile_as_cuda(cu_srcs ${VTKm_LIB_WRAP_FOR_CUDA})
-    set(VTKm_LIB_WRAP_FOR_CUDA ${cu_srcs})
+  if(VTKm_LIB_STATIC)
+    set(VTKm_LIB_type STATIC)
+  else()
+    if(VTKm_LIB_SHARED)
+      set(VTKm_LIB_type SHARED)
+    endif()
+    #if cuda requires static libaries force
+    #them no matter what
+    if(TARGET vtkm::cuda)
+      get_target_property(force_static vtkm::cuda REQUIRES_STATIC_BUILDS)
+      if(force_static)
+        set(VTKm_LIB_type STATIC)
+        message("Forcing ${lib_name} to be built statically as we are using CUDA 8.X, which doesn't support virtuals sufficiently in dynamic libraries.")
+      endif()
+    endif()
+
   endif()
 
 
+  if(TARGET vtkm::cuda)
+    set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} PROPERTIES LANGUAGE "CUDA")
+  endif()
+
   add_library(${lib_name}
+              ${VTKm_LIB_type}
               ${VTKm_LIB_SOURCES}
               ${VTKm_LIB_HEADERS}
               ${VTKm_LIB_TEMPLATE_SOURCES}
               ${VTKm_LIB_WRAP_FOR_CUDA}
               )
+
+  #when building either static or shared we want pic code
+  set_target_properties(${lib_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+  #specify when building with cuda we want separable compilation
+  set_property(TARGET ${lib_name} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
   #specify where to place the built library
   set_property(TARGET ${lib_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
@@ -325,10 +246,9 @@ function(vtkm_library)
   #generate the export header and install it
   vtkm_generate_export_header(${lib_name})
 
-  #test and install the headers
+  #install the headers
   vtkm_declare_headers(${VTKm_LIB_HEADERS}
-                       EXCLUDE_FROM_TESTING ${VTKm_LIB_TEMPLATE_SOURCES}
-                       )
+                       ${VTKm_LIB_TEMPLATE_SOURCES})
 
   # When building libraries/tests that are part of the VTK-m repository inherit
   # the properties from vtkm_developer_flags. The flags are intended only for
@@ -402,15 +322,15 @@ function(vtkm_unit_tests)
   set(backend ${VTKm_UT_BACKEND})
 
   set(enable_all_backends ${VTKm_UT_ALL_BACKENDS})
-  set(all_backends SERIAL)
+  set(all_backends Serial)
   if (VTKm_ENABLE_CUDA)
-    list(APPEND all_backends CUDA)
+    list(APPEND all_backends Cuda)
   endif()
   if (VTKm_ENABLE_TBB)
     list(APPEND all_backends TBB)
   endif()
   if (VTKm_ENABLE_OPENMP)
-    list(APPEND all_backends OPENMP)
+    list(APPEND all_backends OpenMP)
   endif()
 
   if(VTKm_UT_NAME)
@@ -440,17 +360,25 @@ function(vtkm_unit_tests)
   #cuda. This is so that we get the correctly named entry points generated
   create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES} ${extraArgs})
   #if all backends are enabled, we can use cuda compiler to handle all possible backends.
-  if(backend STREQUAL "CUDA" OR (enable_all_backends AND VTKm_ENABLE_CUDA))
-    vtkm_compile_as_cuda(cu_srcs ${VTKm_UT_SOURCES})
-    set(VTKm_UT_SOURCES ${cu_srcs})
+  if(TARGET vtkm::cuda AND (backend STREQUAL "Cuda" OR enable_all_backends))
+    set_source_files_properties(${VTKm_UT_SOURCES} PROPERTIES LANGUAGE "CUDA")
   endif()
 
   add_executable(${test_prog} ${test_prog}.cxx ${VTKm_UT_SOURCES})
+  set_property(TARGET ${test_prog} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+
   set_property(TARGET ${test_prog} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${test_prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
-  target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
+  #Starting in CMake 3.13, cmake will properly drop duplicate libraries
+  #from the link line so this workaround can be dropped
+  if (CMAKE_VERSION VERSION_LESS 3.13 AND "vtkm_rendering" IN_LIST VTKm_UT_LIBRARIES)
+    list(REMOVE_ITEM VTKm_UT_LIBRARIES "vtkm_cont")
+    target_link_libraries(${test_prog} PRIVATE ${VTKm_UT_LIBRARIES})
+  else()
+    target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
+  endif()
 
   foreach(current_backend ${all_backends})
     set (device_command_line_argument --device=${current_backend})
@@ -458,28 +386,29 @@ function(vtkm_unit_tests)
       set (current_backend "")
       set(device_command_line_argument "")
     endif()
+    string(TOUPPER "${current_backend}" upper_backend)
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
       if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
-        add_test(NAME ${tname}${current_backend}
+        add_test(NAME ${tname}${upper_backend}
           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
                   $<TARGET_FILE:${test_prog}> ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
                   ${MPIEXEC_POSTFLAGS}
           )
       else()
-        add_test(NAME ${tname}${current_backend}
+        add_test(NAME ${tname}${upper_backend}
           COMMAND ${test_prog} ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
           )
       endif()
 
       #determine the timeout for all the tests based on the backend. CUDA tests
       #generally require more time because of kernel generation.
-      if (current_backend STREQUAL "CUDA")
+      if (current_backend STREQUAL "Cuda")
         set(timeout 1500)
       else()
         set(timeout 180)
       endif()
-      if(current_backend STREQUAL "OPENMP")
+      if(current_backend STREQUAL "OpenMP")
         #We need to have all OpenMP tests run serially as they
         #will uses all the system cores, and we will cause a N*N thread
         #explosion which causes the tests to run slower than when run
@@ -489,7 +418,7 @@ function(vtkm_unit_tests)
         set(run_serial False)
       endif()
 
-      set_tests_properties("${tname}${current_backend}" PROPERTIES
+      set_tests_properties("${tname}${upper_backend}" PROPERTIES
         TIMEOUT ${timeout}
         RUN_SERIAL ${run_serial}
       )

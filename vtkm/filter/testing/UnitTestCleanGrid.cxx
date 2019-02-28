@@ -81,7 +81,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestCleanGrid(int, char* [])
+int UnitTestCleanGrid(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunTest);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

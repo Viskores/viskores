@@ -47,6 +47,7 @@ set(headers
   Pair.h
   Range.h
   RangeId.h
+  RangeId2.h
   RangeId3.h
   StaticAssert.h
   Swap.h
@@ -58,6 +59,7 @@ set(headers
   VecAxisAlignedPointCoordinates.h
   VecFromPortal.h
   VecFromPortalPermute.h
+  VecFromVirtPortal.h
   VectorAnalysis.h
   VecTraits.h
   VecVariable.h
@@ -74,8 +76,6 @@ vtkm_pyexpander_generated_file(Math.h)
 vtkm_declare_headers(
   ${headers}
   ${template_sources}
-  EXCLUDE_FROM_TESTING
-    ${template_sources}
 )
 
 #-----------------------------------------------------------------------------

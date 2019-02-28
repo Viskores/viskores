@@ -79,10 +79,10 @@ public:
   {
   };
 
-  using ControlSignature = void(FieldIn<IdType> partId,            // (input) particle Id
-                                FieldIn<TagType> potential1,       // (input) particle potential
-                                FieldIn<TagType> potential2,       // (input) minimum potential
-                                FieldOut<IdType> minParticleIndx); // (output) particle Id of min
+  using ControlSignature = void(FieldIn partId,            // (input) particle Id
+                                FieldIn potential1,        // (input) particle potential
+                                FieldIn potential2,        // (input) minimum potential
+                                FieldOut minParticleIndx); // (output) particle Id of min
   using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 

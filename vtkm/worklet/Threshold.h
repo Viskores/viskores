@@ -29,7 +29,6 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
 
@@ -55,9 +54,7 @@ public:
   class ThresholdByPointField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    using ControlSignature = void(CellSetIn cellset,
-                                  FieldInPoint<ScalarAll> scalars,
-                                  FieldOutCell<BoolType> passFlags);
+    using ControlSignature = void(CellSetIn cellset, FieldInPoint scalars, FieldOutCell passFlags);
 
     using ExecutionSignature = _3(_2, PointCount);
 
@@ -92,9 +89,7 @@ public:
   class ThresholdByCellField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    using ControlSignature = void(CellSetIn cellset,
-                                  FieldInTo<ScalarAll> scalars,
-                                  FieldOut<BoolType> passFlags);
+    using ControlSignature = void(CellSetIn cellset, FieldInTo scalars, FieldOut passFlags);
 
     using ExecutionSignature = _3(_2);
 

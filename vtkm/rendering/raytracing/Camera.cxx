@@ -108,7 +108,7 @@ public:
     return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
   }
 
-  using ControlSignature = void(FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut, FieldOut);
 
   using ExecutionSignature = void(WorkIndex, _1, _2);
   VTKM_EXEC
@@ -209,7 +209,7 @@ public:
     CurrentSample = currentSample;
   }
 
-  typedef void ControlSignature(FieldOut<>, FieldOut<>, FieldOut<>, FieldIn<>);
+  typedef void ControlSignature(FieldOut, FieldOut, FieldOut, FieldIn);
 
   typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4);
   VTKM_EXEC
@@ -295,7 +295,7 @@ public:
   }
 
   using ControlSignature =
-    void(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
+    void(FieldOut, FieldOut, FieldOut, FieldOut, FieldOut, FieldOut, FieldOut);
 
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
   template <typename Precision>
@@ -386,7 +386,7 @@ public:
     vtkm::Normalize(nlook);
   }
 
-  using ControlSignature = void(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut, FieldOut, FieldOut, FieldOut);
 
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
   template <typename Precision>
@@ -758,13 +758,15 @@ template <typename Precision>
 VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds boundingBox)
 {
   Logger* logger = Logger::GetInstance();
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> createTimer;
+  vtkm::cont::Timer createTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+  createTimer.Start();
   logger->OpenLogEntry("ray_camera");
 
   bool ortho = this->CameraView.GetMode() == vtkm::rendering::Camera::MODE_2D;
   this->UpdateDimensions(rays, boundingBox, ortho);
   this->WriteSettingsToLog();
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
   //Set the origin of the ray back to the camera position
 
   Precision infinity;
@@ -782,7 +784,7 @@ VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds b
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("camera_memset", time);
-  timer.Reset();
+  timer.Start();
 
   //Reset the camera look vector
   this->Look = this->LookAt - this->Position;

@@ -28,6 +28,8 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+#include <cctype> //for tolower
+
 namespace
 {
 
@@ -53,12 +55,37 @@ void TestName(const std::string& name, Tag tag, vtkm::cont::DeviceAdapterId id)
             << "\t" << tracker.GetDeviceName(id) << "\n"
             << "\t" << tracker.GetDeviceName(tag) << "\n";
 #endif
-
   VTKM_TEST_ASSERT(id.GetName() == name, "Id::GetName() failed.");
   VTKM_TEST_ASSERT(tag.GetName() == name, "Tag::GetName() failed.");
+  VTKM_TEST_ASSERT(vtkm::cont::make_DeviceAdapterId(id.GetValue()) == id,
+                   "make_DeviceAdapterId(int8) failed");
   VTKM_TEST_ASSERT(tracker.GetDeviceName(id) == name, "RTDeviceTracker::GetDeviceName(Id) failed.");
   VTKM_TEST_ASSERT(tracker.GetDeviceName(tag) == name,
                    "RTDeviceTracker::GetDeviceName(Tag) failed.");
+
+  //check going from name to device id
+  auto lowerCaseFunc = [](char c) {
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+  };
+
+  auto upperCaseFunc = [](char c) {
+    return static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+  };
+
+  if (id.IsValueValid())
+  { //only test make_DeviceAdapterId with valid device ids
+    VTKM_TEST_ASSERT(
+      vtkm::cont::make_DeviceAdapterId(name) == id, "make_DeviceAdapterId(", name, ") failed");
+
+    std::string casedName = name;
+    std::transform(casedName.begin(), casedName.end(), casedName.begin(), lowerCaseFunc);
+    VTKM_TEST_ASSERT(
+      vtkm::cont::make_DeviceAdapterId(casedName) == id, "make_DeviceAdapterId(", name, ") failed");
+
+    std::transform(casedName.begin(), casedName.end(), casedName.begin(), upperCaseFunc);
+    VTKM_TEST_ASSERT(
+      vtkm::cont::make_DeviceAdapterId(casedName) == id, "make_DeviceAdapterId(", name, ") failed");
+  }
 }
 
 void TestNames()
@@ -82,7 +109,7 @@ void TestNames()
 
 } // end anon namespace
 
-int UnitTestRuntimeDeviceNames(int, char* [])
+int UnitTestRuntimeDeviceNames(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestNames);
+  return vtkm::cont::testing::Testing::Run(TestNames, argc, argv);
 }

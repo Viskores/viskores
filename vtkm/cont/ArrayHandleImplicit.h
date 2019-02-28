@@ -115,7 +115,8 @@ private:
 /// array at that position.
 ///
 template <class FunctorType>
-class ArrayHandleImplicit : public detail::ArrayHandleImplicitTraits<FunctorType>::Superclass
+class VTKM_ALWAYS_EXPORT ArrayHandleImplicit
+  : public detail::ArrayHandleImplicitTraits<FunctorType>::Superclass
 {
 private:
   using ArrayTraits = typename detail::ArrayHandleImplicitTraits<FunctorType>;
@@ -172,7 +173,7 @@ struct TypeString<vtkm::cont::ArrayHandle<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename Functor>
@@ -185,17 +186,17 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    diy::save(bb, obj.GetNumberOfValues());
-    diy::save(bb, obj.GetPortalConstControl().GetFunctor());
+    vtkmdiy::save(bb, obj.GetNumberOfValues());
+    vtkmdiy::save(bb, obj.GetPortalConstControl().GetFunctor());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     vtkm::Id count = 0;
-    diy::load(bb, count);
+    vtkmdiy::load(bb, count);
 
     Functor functor;
-    diy::load(bb, functor);
+    vtkmdiy::load(bb, functor);
 
     obj = vtkm::cont::make_ArrayHandleImplicit(functor, count);
   }

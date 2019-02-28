@@ -24,8 +24,10 @@
 //This sets up testing with the default device adapter and array container
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
-int UnitTestTransferEGL(int, char* [])
+int UnitTestTransferEGL(int argc, char* argv[])
 {
+  vtkm::cont::Initialize(argc, argv);
+
   //get egl canvas to construct a context for us
   vtkm::rendering::CanvasEGL canvas(1024, 1024);
   canvas.Initialize();

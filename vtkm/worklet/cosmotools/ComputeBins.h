@@ -79,10 +79,10 @@ public:
   {
   };
 
-  using ControlSignature = void(FieldIn<TagType> xLoc,   // (input) x location in halo
-                                FieldIn<TagType> yLoc,   // (input) y location in halo
-                                FieldIn<TagType> zLoc,   // (input) z location in halo
-                                FieldOut<IdType> binId); // (output) bin Id
+  using ControlSignature = void(FieldIn xLoc,    // (input) x location in halo
+                                FieldIn yLoc,    // (input) y location in halo
+                                FieldIn zLoc,    // (input) z location in halo
+                                FieldOut binId); // (output) bin Id
   using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 

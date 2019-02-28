@@ -107,7 +107,7 @@ void RenderTests()
 }
 } //namespace
 
-int UnitTestMapperEGL(int, char* [])
+int UnitTestMapperEGL(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

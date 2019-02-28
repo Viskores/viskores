@@ -31,7 +31,7 @@ namespace
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  using ControlSignature = void(FieldIn vertexId, FieldOut v);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
@@ -136,7 +136,7 @@ void TestEntropy()
 } // TestFieldEntropy
 }
 
-int UnitTestEntropyFilter(int, char* [])
+int UnitTestEntropyFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestEntropy);
+  return vtkm::cont::testing::Testing::Run(TestEntropy, argc, argv);
 }

@@ -24,8 +24,9 @@
 
 #include <vtkm/interop/testing/TestingOpenGLInterop.h>
 
-int UnitTestTransferToOpenGLCuda(int, char* [])
+int UnitTestTransferToOpenGLCuda(int argc, char* argv[])
 {
+  vtkm::cont::Initialize(argc, argv);
   int result = 1;
   result =
     vtkm::interop::testing::TestingOpenGLInterop<vtkm::cont::cuda::DeviceAdapterTagCuda>::Run();

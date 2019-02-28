@@ -26,10 +26,10 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/TestingCellLocatorTwoLevelUniformGrid.h>
 
-int UnitTestSerialCellLocatorTwoLevelUniformGrid(int, char* [])
+int UnitTestSerialCellLocatorTwoLevelUniformGrid(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorTwoLevelUniformGrid<vtkm::cont::DeviceAdapterTagSerial>);
+    TestingCellLocatorTwoLevelUniformGrid<vtkm::cont::DeviceAdapterTagSerial>, argc, argv);
 }

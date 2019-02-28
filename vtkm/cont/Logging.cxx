@@ -37,12 +37,13 @@
 
 #endif // VTKM_ENABLE_LOGGING
 
-#include <vtkm/testing/Testing.h> // for HumanSize
-
 #include <cassert>
+#include <iomanip>
+#include <sstream>
+#include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 
-#ifdef VTKM_ENABLE_LOGGING
 namespace
 {
 
@@ -61,7 +62,7 @@ using LevelMapType = std::unordered_map<vtkm::cont::LogLevel, std::string, LogHa
 static bool Initialized = false;
 static LevelMapType LogLevelNames;
 
-void setLogLevelName(vtkm::cont::LogLevel level, const std::string& name)
+void setLogLevelName(vtkm::cont::LogLevel level, const std::string& name) noexcept
 {
   // if the log has been initialized, prevent modifications of the name map
   // to prevent race conditions.
@@ -71,11 +72,25 @@ void setLogLevelName(vtkm::cont::LogLevel level, const std::string& name)
   }
 }
 
-const char* verbosityToNameCallback(loguru::Verbosity verbosity)
+// Throws std::out_of_range if level not found.
+const std::string& getLogLevelName(vtkm::cont::LogLevel level)
 {
   const LevelMapType& names = LogLevelNames;
-  auto name = names.find(static_cast<vtkm::cont::LogLevel>(verbosity));
-  return name != names.end() ? name->second.c_str() : nullptr;
+  return names.at(static_cast<vtkm::cont::LogLevel>(level));
+}
+
+#ifdef VTKM_ENABLE_LOGGING
+const char* verbosityToNameCallback(loguru::Verbosity v)
+{
+  try
+  {
+    // Calling c_str on const string&.
+    return getLogLevelName(static_cast<vtkm::cont::LogLevel>(v)).c_str();
+  }
+  catch (std::out_of_range&)
+  {
+    return nullptr;
+  }
 }
 
 loguru::Verbosity nameToVerbosityCallback(const char* name)
@@ -90,9 +105,9 @@ loguru::Verbosity nameToVerbosityCallback(const char* name)
   }
   return loguru::Verbosity_INVALID;
 }
+#endif // VTKM_ENABLE_LOGGING
 
 } // end anon namespace
-#endif // VTKM_ENABLE_LOGGING
 
 namespace vtkm
 {
@@ -102,7 +117,6 @@ namespace cont
 VTKM_CONT
 void InitLogging(int& argc, char* argv[])
 {
-#ifdef VTKM_ENABLE_LOGGING
   SetLogLevelName(vtkm::cont::LogLevel::Off, "Off");
   SetLogLevelName(vtkm::cont::LogLevel::Fatal, "FATL");
   SetLogLevelName(vtkm::cont::LogLevel::Error, "ERR");
@@ -114,19 +128,21 @@ void InitLogging(int& argc, char* argv[])
   SetLogLevelName(vtkm::cont::LogLevel::MemTransfer, "MemT");
   SetLogLevelName(vtkm::cont::LogLevel::Cast, "Cast");
 
+
+#ifdef VTKM_ENABLE_LOGGING
   loguru::set_verbosity_to_name_callback(&verbosityToNameCallback);
   loguru::set_name_to_verbosity_callback(&nameToVerbosityCallback);
 
   loguru::init(argc, argv);
-
-  // Prevent LogLevelNames from being modified (makes thread safety easier)
-  Initialized = true;
 
   LOG_F(INFO, "Logging initialized.");
 #else  // VTKM_ENABLE_LOGGING
   (void)argc;
   (void)argv;
 #endif // VTKM_ENABLE_LOGGING
+
+  // Prevent LogLevelNames from being modified (makes thread safety easier)
+  Initialized = true;
 }
 
 void InitLogging()
@@ -199,6 +215,36 @@ std::string GetStackTrace(vtkm::Int32 skip)
   return result;
 }
 
+
+namespace
+{
+/// Convert a size in bytes to a human readable string (e.g. "64 bytes",
+/// "1.44 MiB", "128 GiB", etc). @a prec controls the fixed point precision
+/// of the stringified number.
+inline VTKM_CONT std::string HumanSize(vtkm::UInt64 bytes, int prec = 2)
+{
+  vtkm::UInt64 current = bytes;
+  vtkm::UInt64 previous = bytes;
+
+  constexpr const char* units[] = { "bytes", "KiB", "MiB", "GiB", "TiB", "PiB" };
+
+  //this way reduces the number of float divisions we do
+  int i = 0;
+  while (current > 1024)
+  {
+    previous = current;
+    current = current >> 10; //shift up by 1024
+    ++i;
+  }
+
+  const double bytesf =
+    (i == 0) ? static_cast<double>(previous) : static_cast<double>(previous) / 1024.;
+  std::ostringstream out;
+  out << std::fixed << std::setprecision(prec) << bytesf << " " << units[i];
+  return out.str();
+}
+}
+
 VTKM_CONT
 std::string GetHumanReadableSize(vtkm::UInt64 bytes, int prec)
 {
@@ -214,17 +260,40 @@ std::string GetSizeString(vtkm::UInt64 bytes, int prec)
 VTKM_CONT
 void SetLogLevelName(LogLevel level, const std::string& name)
 {
-#ifdef VTKM_ENABLE_LOGGING
   if (Initialized)
   {
     VTKM_LOG_F(LogLevel::Error, "SetLogLevelName called after InitLogging.");
     return;
   }
   setLogLevelName(level, name);
-#else  // VTKM_ENABLE_LOGGING
-  (void)level;
-  (void)name;
-#endif // VTKM_ENABLE_LOGGING
+}
+
+VTKM_CONT
+std::string GetLogLevelName(LogLevel level)
+{
+#ifdef VTKM_ENABLE_LOGGING
+  { // Check loguru lookup first:
+    const char* name = loguru::get_verbosity_name(static_cast<loguru::Verbosity>(level));
+    if (name)
+    {
+      return name;
+    }
+  }
+#else
+  {
+    try
+    {
+      return getLogLevelName(level);
+    }
+    catch (std::out_of_range&)
+    { /* fallthrough */
+    }
+  }
+#endif
+
+  // Create a string from the numeric value otherwise:
+  using T = std::underlying_type<LogLevel>::type;
+  return std::to_string(static_cast<T>(level));
 }
 }
 } // end namespace vtkm::cont

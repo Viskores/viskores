@@ -73,8 +73,11 @@ struct Pair
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  Pair(FirstType&& firstSrc, SecondType&& secondSrc)
+  Pair(FirstType&& firstSrc,
+       SecondType&& secondSrc) noexcept(noexcept(FirstType{ std::declval<FirstType&&>() },
+                                                 SecondType{ std::declval<SecondType&&>() }))
     : first(std::move(firstSrc))
     , second(std::move(secondSrc))
   {
@@ -91,7 +94,8 @@ struct Pair
   }
 
   template <typename U1, typename U2>
-  VTKM_EXEC_CONT Pair(vtkm::Pair<U1, U2>&& src)
+  VTKM_EXEC_CONT Pair(vtkm::Pair<U1, U2>&& src) noexcept(noexcept(U1{ std::declval<U1&&>() },
+                                                                  U2{ std::declval<U2&&>() }))
     : first(std::move(src.first))
     , second(std::move(src.second))
   {
@@ -105,7 +109,8 @@ struct Pair
   }
 
   template <typename U1, typename U2>
-  VTKM_EXEC_CONT Pair(std::pair<U1, U2>&& src)
+  VTKM_EXEC_CONT Pair(std::pair<U1, U2>&& src) noexcept(noexcept(U1{ std::declval<U1&&>() },
+                                                                 U2{ std::declval<U2&&>() }))
     : first(std::move(src.first))
     , second(std::move(src.second))
   {

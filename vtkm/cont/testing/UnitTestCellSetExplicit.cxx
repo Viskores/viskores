@@ -77,7 +77,7 @@ vtkm::cont::CellSetExplicit<> MakeTestCellSet2()
 
 struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
 {
-  using ControlSignature = void(CellSetIn cellset, FieldOutCell<IdType> numPoints);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell numPoints);
   using ExecutionSignature = void(PointIndices, _2);
   using InputDomain = _1;
 
@@ -90,7 +90,7 @@ struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
 
 struct WorkletCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
 {
-  using ControlSignature = void(CellSetIn cellset, FieldOutPoint<IdType> numCells);
+  using ControlSignature = void(CellSetIn cellset, FieldOutPoint numCells);
   using ExecutionSignature = void(CellIndices, _2);
   using InputDomain = _1;
 
@@ -192,7 +192,7 @@ void TestCellSetExplicit()
 
 } // anonymous namespace
 
-int UnitTestCellSetExplicit(int, char* [])
+int UnitTestCellSetExplicit(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellSetExplicit);
+  return vtkm::cont::testing::Testing::Run(TestCellSetExplicit, argc, argv);
 }

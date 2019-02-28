@@ -22,6 +22,7 @@
 
 #include <vtkm/Pair.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/internal/ArrayPortalHelpers.h>
 
 namespace vtkm
 {
@@ -37,6 +38,9 @@ class ArrayPortalZip
 {
 public:
   using ValueType = ValueType_;
+  using T = typename ValueType::FirstType;
+  using U = typename ValueType::SecondType;
+
   using IteratorType = ValueType_;
   using PortalTypeFirst = PortalTypeFirst_;
   using PortalTypeSecond = PortalTypeSecond_;
@@ -73,14 +77,20 @@ public:
   VTKM_EXEC
   ValueType Get(vtkm::Id index) const
   {
-    return vtkm::make_Pair(this->PortalFirst.Get(index), this->PortalSecond.Get(index));
+    using call_supported_t1 = typename vtkm::internal::PortalSupportsGets<PortalTypeFirst>::type;
+    using call_supported_t2 = typename vtkm::internal::PortalSupportsGets<PortalTypeSecond>::type;
+
+    return vtkm::make_Pair(this->GetFirst(call_supported_t1(), index),
+                           this->GetSecond(call_supported_t2(), index));
   }
 
   VTKM_EXEC
   void Set(vtkm::Id index, const ValueType& value) const
   {
-    this->PortalFirst.Set(index, value.first);
-    this->PortalSecond.Set(index, value.second);
+    using call_supported_t1 = typename vtkm::internal::PortalSupportsSets<PortalTypeFirst>::type;
+    using call_supported_t2 = typename vtkm::internal::PortalSupportsSets<PortalTypeSecond>::type;
+    this->SetFirst(call_supported_t1(), index, value.first);
+    this->SetSecond(call_supported_t2(), index, value.second);
   }
 
   VTKM_EXEC_CONT
@@ -90,6 +100,28 @@ public:
   const PortalTypeSecond& GetSecondPortal() const { return this->PortalSecond; }
 
 private:
+  VTKM_EXEC inline T GetFirst(std::true_type, vtkm::Id index) const noexcept
+  {
+    return this->PortalFirst.Get(index);
+  }
+  VTKM_EXEC inline T GetFirst(std::false_type, vtkm::Id) const noexcept { return T{}; }
+  VTKM_EXEC inline U GetSecond(std::true_type, vtkm::Id index) const noexcept
+  {
+    return this->PortalSecond.Get(index);
+  }
+  VTKM_EXEC inline U GetSecond(std::false_type, vtkm::Id) const noexcept { return U{}; }
+
+  VTKM_EXEC inline void SetFirst(std::true_type, vtkm::Id index, const T& value) const noexcept
+  {
+    this->PortalFirst.Set(index, value);
+  }
+  VTKM_EXEC inline void SetFirst(std::false_type, vtkm::Id, const T&) const noexcept {}
+  VTKM_EXEC inline void SetSecond(std::true_type, vtkm::Id index, const U& value) const noexcept
+  {
+    this->PortalSecond.Set(index, value);
+  }
+  VTKM_EXEC inline void SetSecond(std::false_type, vtkm::Id, const U&) const noexcept {}
+
   PortalTypeFirst PortalFirst;
   PortalTypeSecond PortalSecond;
 };
@@ -380,7 +412,7 @@ struct TypeString<
 }
 } // namespace vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH1, typename AH2>
@@ -394,8 +426,8 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetFirstArray());
-    diy::save(bb, storage.GetSecondArray());
+    vtkmdiy::save(bb, storage.GetFirstArray());
+    vtkmdiy::save(bb, storage.GetSecondArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -403,8 +435,8 @@ public:
     AH1 a1;
     AH2 a2;
 
-    diy::load(bb, a1);
-    diy::load(bb, a2);
+    vtkmdiy::load(bb, a1);
+    vtkmdiy::load(bb, a2);
 
     obj = vtkm::cont::make_ArrayHandleZip(a1, a2);
   }

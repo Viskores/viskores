@@ -57,7 +57,7 @@ void TestWorkIndexFetch()
 
 } // anonymous namespace
 
-int UnitTestFetchWorkIndex(int, char* [])
+int UnitTestFetchWorkIndex(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestWorkIndexFetch);
+  return vtkm::testing::Testing::Run(TestWorkIndexFetch, argc, argv);
 }

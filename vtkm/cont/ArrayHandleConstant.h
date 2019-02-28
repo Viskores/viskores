@@ -110,7 +110,7 @@ struct TypeString<vtkm::cont::ArrayHandleConstant<T>>
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename T>

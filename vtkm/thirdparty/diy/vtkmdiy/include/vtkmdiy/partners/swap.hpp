@@ -1,5 +1,5 @@
-#ifndef DIY_PARTNERS_SWAP_HPP
-#define DIY_PARTNERS_SWAP_HPP
+#ifndef VTKMDIY_PARTNERS_SWAP_HPP
+#define VTKMDIY_PARTNERS_SWAP_HPP
 
 #include "common.hpp"
 

@@ -62,7 +62,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperPoints(int, char* [])
+int UnitTestMapperPoints(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

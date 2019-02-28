@@ -42,7 +42,6 @@ template <typename Derived>
 struct PolicyBase
 {
   using FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG;
-  using FieldStorageList = VTKM_DEFAULT_STORAGE_LIST_TAG;
 
   using StructuredCellSetList = vtkm::cont::CellSetListTagStructured;
   using UnstructuredCellSetList = vtkm::cont::CellSetListTagUnstructured;
@@ -51,29 +50,25 @@ struct PolicyBase
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::DynamicArrayHandleBase<typename DerivedPolicy::FieldTypeList,
-                                             typename DerivedPolicy::FieldStorageList>
-ApplyPolicy(const vtkm::cont::Field& field, const vtkm::filter::PolicyBase<DerivedPolicy>&)
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename DerivedPolicy::FieldTypeList> ApplyPolicy(
+  const vtkm::cont::Field& field,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   using TypeList = typename DerivedPolicy::FieldTypeList;
-  using StorageList = typename DerivedPolicy::FieldStorageList;
-  return field.GetData().ResetTypeAndStorageLists(TypeList(), StorageList());
+  return field.GetData().ResetTypes(TypeList());
 }
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename FilterType, typename FieldTag>
-VTKM_CONT vtkm::cont::DynamicArrayHandleBase<
-  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList,
-  typename DerivedPolicy::FieldStorageList>
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<
+  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList>
 ApplyPolicy(const vtkm::cont::Field& field,
             const vtkm::filter::PolicyBase<DerivedPolicy>&,
             const vtkm::filter::FilterTraits<FilterType, FieldTag>&)
 {
   using TypeList =
     typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList;
-
-  using StorageList = typename DerivedPolicy::FieldStorageList;
-  return field.GetData().ResetTypeAndStorageLists(TypeList(), StorageList());
+  return field.GetData().ResetTypes(TypeList());
 }
 
 //-----------------------------------------------------------------------------
@@ -108,26 +103,22 @@ ApplyPolicyUnstructured(const vtkm::cont::DynamicCellSet& cellset,
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList,
-                                        typename DerivedPolicy::FieldStorageList>
+VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList>
 MakeSerializableField(const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   return {};
 }
 
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList,
-                                        typename DerivedPolicy::FieldStorageList>
+VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList>
 MakeSerializableField(const vtkm::cont::Field& field,
                       const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  return vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList,
-                                       typename DerivedPolicy::FieldStorageList>{ field };
+  return vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList>{ field };
 }
 
 template <typename DerivedPolicy>
 VTKM_CONT vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
-                                          typename DerivedPolicy::FieldStorageList,
                                           typename DerivedPolicy::AllCellSetList>
 MakeSerializableDataSet(const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
@@ -136,13 +127,11 @@ MakeSerializableDataSet(const vtkm::filter::PolicyBase<DerivedPolicy>&)
 
 template <typename DerivedPolicy>
 VTKM_CONT vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
-                                          typename DerivedPolicy::FieldStorageList,
                                           typename DerivedPolicy::AllCellSetList>
 MakeSerializableDataSet(const vtkm::cont::DataSet& dataset,
                         const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   return vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
-                                         typename DerivedPolicy::FieldStorageList,
                                          typename DerivedPolicy::AllCellSetList>{ dataset };
 }
 }

@@ -42,7 +42,7 @@ namespace internal
 
 // Unary function object wrapper which can detect and handle calling the
 // wrapped operator with complex value types such as
-// PortalValue which happen when passed an input array that
+// ArrayPortalValueReference which happen when passed an input array that
 // is implicit.
 template <typename T_, typename Function>
 struct WrappedUnaryPredicate
@@ -70,9 +70,9 @@ struct WrappedUnaryPredicate
   VTKM_EXEC bool operator()(const T& x) const { return m_f(x); }
 
   template <typename U>
-  VTKM_EXEC bool operator()(const PortalValue<U>& x) const
+  VTKM_EXEC bool operator()(const vtkm::internal::ArrayPortalValueReference<U>& x) const
   {
-    return m_f((T)x);
+    return m_f(x.Get());
   }
 
   VTKM_EXEC bool operator()(const T* x) const { return m_f(*x); }
@@ -80,7 +80,7 @@ struct WrappedUnaryPredicate
 
 // Binary function object wrapper which can detect and handle calling the
 // wrapped operator with complex value types such as
-// PortalValue which happen when passed an input array that
+// ArrayPortalValueReference which happen when passed an input array that
 // is implicit.
 template <typename T_, typename Function>
 struct WrappedBinaryOperator
@@ -109,27 +109,24 @@ struct WrappedBinaryOperator
   VTKM_EXEC T operator()(const T& x, const T& y) const { return m_f(x, y); }
 
   template <typename U>
-  VTKM_EXEC T operator()(const T& x, const PortalValue<U>& y) const
+  VTKM_EXEC T operator()(const T& x, const vtkm::internal::ArrayPortalValueReference<U>& y) const
   {
     // to support proper implicit conversion, and avoid overload
     // ambiguities.
-    T conv_y = y;
-    return m_f(x, conv_y);
+    return m_f(x, y.Get());
   }
 
   template <typename U>
-  VTKM_EXEC T operator()(const PortalValue<U>& x, const T& y) const
+  VTKM_EXEC T operator()(const vtkm::internal::ArrayPortalValueReference<U>& x, const T& y) const
   {
-    T conv_x = x;
-    return m_f(conv_x, y);
+    return m_f(x.Get(), y);
   }
 
   template <typename U, typename V>
-  VTKM_EXEC T operator()(const PortalValue<U>& x, const PortalValue<V>& y) const
+  VTKM_EXEC T operator()(const vtkm::internal::ArrayPortalValueReference<U>& x,
+                         const vtkm::internal::ArrayPortalValueReference<V>& y) const
   {
-    T conv_x = x;
-    T conv_y = y;
-    return m_f(conv_x, conv_y);
+    return m_f(x.Get(), y.Get());
   }
 
   VTKM_EXEC T operator()(const T* const x, const T& y) const { return m_f(*x, y); }
@@ -166,21 +163,22 @@ struct WrappedBinaryPredicate
   VTKM_EXEC bool operator()(const T& x, const T& y) const { return m_f(x, y); }
 
   template <typename U>
-  VTKM_EXEC bool operator()(const T& x, const PortalValue<U>& y) const
+  VTKM_EXEC bool operator()(const T& x, const vtkm::internal::ArrayPortalValueReference<U>& y) const
   {
-    return m_f(x, (T)y);
+    return m_f(x, y.Get());
   }
 
   template <typename U>
-  VTKM_EXEC bool operator()(const PortalValue<U>& x, const T& y) const
+  VTKM_EXEC bool operator()(const vtkm::internal::ArrayPortalValueReference<U>& x, const T& y) const
   {
-    return m_f((T)x, y);
+    return m_f(x.Get(), y);
   }
 
   template <typename U, typename V>
-  VTKM_EXEC bool operator()(const PortalValue<U>& x, const PortalValue<V>& y) const
+  VTKM_EXEC bool operator()(const vtkm::internal::ArrayPortalValueReference<U>& x,
+                            const vtkm::internal::ArrayPortalValueReference<V>& y) const
   {
-    return m_f((T)x, (T)y);
+    return m_f(x.Get(), y.Get());
   }
 
   VTKM_EXEC bool operator()(const T* const x, const T& y) const { return m_f(*x, y); }

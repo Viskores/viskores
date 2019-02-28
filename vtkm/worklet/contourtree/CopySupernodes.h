@@ -80,15 +80,15 @@ namespace contourtree
 class CopySupernodes : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> isSupernode,   // (input) is this a supernode
-                                FieldIn<IdType> regularID,     // (input) candidate ID
-                                FieldIn<IdType> superID,       // (input) supernode ID
-                                FieldIn<IdType> upCandidate,   // (input)
-                                FieldIn<IdType> downCandidate, // (input)
-                                WholeArrayOut<IdType> regularToCritical, // (output)
-                                WholeArrayOut<IdType> supernodes,  // (output) compacted supernodes
-                                WholeArrayOut<IdType> updegree,    // (output) compacted updegree
-                                WholeArrayOut<IdType> downdegree); // (output) compacted downdegree
+  using ControlSignature = void(FieldIn isSupernode,             // (input) is this a supernode
+                                FieldIn regularID,               // (input) candidate ID
+                                FieldIn superID,                 // (input) supernode ID
+                                FieldIn upCandidate,             // (input)
+                                FieldIn downCandidate,           // (input)
+                                WholeArrayOut regularToCritical, // (output)
+                                WholeArrayOut supernodes,        // (output) compacted supernodes
+                                WholeArrayOut updegree,          // (output) compacted updegree
+                                WholeArrayOut downdegree);       // (output) compacted downdegree
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 

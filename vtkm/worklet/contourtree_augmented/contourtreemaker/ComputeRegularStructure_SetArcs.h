@@ -79,11 +79,11 @@ namespace contourtree_maker_inc
 class ComputeRegularStructure_SetArcs : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<IdType> arcSorter, // (input) arcSorter array
-                                WholeArrayIn<IdType> contourTreeSuperparents, // (input)
-                                WholeArrayIn<IdType> contourTreeSuperarcs,    // (input)
-                                WholeArrayIn<IdType> contourTreeSupernodes,   // (input)
-                                WholeArrayOut<IdType> contourTreeArcs);       // (output)
+  typedef void ControlSignature(WholeArrayIn arcSorter,               // (input) arcSorter array
+                                WholeArrayIn contourTreeSuperparents, // (input)
+                                WholeArrayIn contourTreeSuperarcs,    // (input)
+                                WholeArrayIn contourTreeSupernodes,   // (input)
+                                WholeArrayOut contourTreeArcs);       // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 

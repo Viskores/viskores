@@ -56,10 +56,10 @@ VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, C
 class NearestNeighborSearchBruteForce3DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<> qcIn,
-                                WholeArrayIn<> treeCoordiIn,
-                                FieldOut<> nnIdOut,
-                                FieldOut<> nnDisOut);
+  using ControlSignature = void(FieldIn qcIn,
+                                WholeArrayIn treeCoordiIn,
+                                FieldOut nnIdOut,
+                                FieldOut nnDisOut);
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   VTKM_CONT
@@ -80,10 +80,10 @@ public:
 class PointLocatorUniformGridWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<> qcIn,
+  typedef void ControlSignature(FieldIn qcIn,
                                 ExecObject locator,
-                                FieldOut<> nnIdOut,
-                                FieldOut<> nnDistOut);
+                                FieldOut nnIdOut,
+                                FieldOut nnDistOut);
 
   typedef void ExecutionSignature(_1, _2, _3, _4);
 
@@ -129,8 +129,8 @@ public:
     //  { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
     vtkm::cont::PointLocatorUniformGrid locator(
       { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    locator.SetCoords(coord);
-    locator.Build();
+    locator.SetCoordinates(coord);
+    locator.Update();
 
     ///// randomly generate testing points/////
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;

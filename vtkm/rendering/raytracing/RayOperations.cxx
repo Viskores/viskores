@@ -37,9 +37,7 @@ void RayOperations::MapCanvasToRays(Ray<vtkm::Float32>& rays,
     vtkm::MatrixMultiply(camera.CreateProjectionMatrix(width, height), camera.CreateViewMatrix());
   bool valid;
   vtkm::Matrix<vtkm::Float32, 4, 4> inverse = vtkm::MatrixInverse(projview, valid);
-  if (!valid)
-    throw vtkm::cont::ErrorBadValue("Inverse Invalid");
-
+  (void)valid; // this can be a false negative for really tiny spatial domains.
   vtkm::worklet::DispatcherMapField<detail::RayMapCanvas>(
     detail::RayMapCanvas(inverse, width, height, camera.GetPosition()))
     .Invoke(rays.PixelIdx, rays.MaxDistance, canvas.GetDepthBuffer());

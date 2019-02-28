@@ -23,12 +23,14 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -65,8 +67,7 @@ class BlackScholes : public vtkm::worklet::WorkletMapField
   T Volatility;
 
 public:
-  using ControlSignature =
-    void(FieldIn<Scalar>, FieldIn<Scalar>, FieldIn<Scalar>, FieldOut<Scalar>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldOut, FieldOut);
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
   BlackScholes(T risk, T volatility)
@@ -128,7 +129,7 @@ public:
 class Mag : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
@@ -141,7 +142,7 @@ public:
 class Square : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Scalar>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
@@ -154,7 +155,7 @@ public:
 class Sin : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Scalar>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
@@ -167,7 +168,7 @@ public:
 class Cos : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Scalar>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
@@ -180,7 +181,7 @@ public:
 class FusedMath : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T>
@@ -200,7 +201,7 @@ public:
 class GenerateEdges : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(CellSetIn cellset, WholeArrayOut<> edgeIds);
+  using ControlSignature = void(CellSetIn cellset, WholeArrayOut edgeIds);
   using ExecutionSignature = void(PointIndices, ThreadIndices, _2);
   using InputDomain = _1;
 
@@ -226,10 +227,10 @@ public:
 class InterpolateField : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Id2Type> interpolation_ids,
-                                FieldIn<Scalar> interpolation_weights,
-                                WholeArrayIn<> inputField,
-                                FieldOut<> output);
+  using ControlSignature = void(FieldIn interpolation_ids,
+                                FieldIn interpolation_weights,
+                                WholeArrayIn inputField,
+                                FieldOut output);
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
@@ -259,7 +260,7 @@ template <typename ImplicitFunction>
 class EvaluateImplicitFunction : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   EvaluateImplicitFunction(const ImplicitFunction* function)
@@ -281,7 +282,7 @@ template <typename T1, typename T2>
 class Evaluate2ImplicitFunctions : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   Evaluate2ImplicitFunctions(const T1* f1, const T2* f2)
@@ -305,32 +306,24 @@ struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>
 {
 };
 
-struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32,
-                                            vtkm::Float64,
-                                            vtkm::Vec<vtkm::Float32, 3>,
-                                            vtkm::Vec<vtkm::Float64, 3>>
+struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Vec<vtkm::Float32, 3>>
 {
 };
-using StorageListTag = ::vtkm::cont::StorageListTagBasic;
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of different field operations
-template <class DeviceAdapterTag>
 class BenchmarkFieldAlgorithms
 {
   using StorageTag = vtkm::cont::StorageTagBasic;
 
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
+  using Timer = vtkm::cont::Timer;
 
-  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
-
-  using ValueDynamicHandle = vtkm::cont::DynamicArrayHandleBase<ValueTypes, StorageListTag>;
-  using InterpDynamicHandle = vtkm::cont::DynamicArrayHandleBase<InterpValueTypes, StorageListTag>;
-  using IdDynamicHandle =
-    vtkm::cont::DynamicArrayHandleBase<vtkm::TypeListTagIndex, StorageListTag>;
+  using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
+  using InterpVariantHandle = vtkm::cont::VariantArrayHandleBase<InterpValueTypes>;
+  using EdgeIdVariantHandle = vtkm::cont::VariantArrayHandleBase<vtkm::TypeListTagId2>;
 
 private:
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchBlackScholes
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -373,7 +366,8 @@ private:
       const Value RISKFREE = 0.02f;
       const Value VOLATILITY = 0.30f;
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
       vtkm::worklet::DispatcherMapField<BlackScholes<Value>> dispatcher(worklet);
 
@@ -396,22 +390,23 @@ private:
     }
   };
 
-  template <typename Value>
-  struct BenchBlackScholesDynamic : public BenchBlackScholes<Value>
+  template <typename Value, typename DeviceAdapter>
+  struct BenchBlackScholesDynamic : public BenchBlackScholes<Value, DeviceAdapter>
   {
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      ValueDynamicHandle dstocks(this->StockPrice);
-      ValueDynamicHandle dstrikes(this->OptionStrike);
-      ValueDynamicHandle doptions(this->OptionYears);
+      ValueVariantHandle dstocks(this->StockPrice);
+      ValueVariantHandle dstrikes(this->OptionStrike);
+      ValueVariantHandle doptions(this->OptionYears);
 
       vtkm::cont::ArrayHandle<Value> callResultHandle, putResultHandle;
       const Value RISKFREE = 0.02f;
       const Value VOLATILITY = 0.30f;
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
       vtkm::worklet::DispatcherMapField<BlackScholes<Value>> dispatcher(worklet);
 
@@ -426,7 +421,7 @@ private:
   VTKM_MAKE_BENCHMARK(BlackScholes, BenchBlackScholes);
   VTKM_MAKE_BENCHMARK(BlackScholesDynamic, BenchBlackScholesDynamic);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchMath
   {
     std::vector<vtkm::Vec<Value, 3>> input;
@@ -453,12 +448,14 @@ private:
       vtkm::cont::ArrayHandle<Value> tempHandle1;
       vtkm::cont::ArrayHandle<Value> tempHandle2;
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
 
-      vtkm::worklet::DispatcherMapField<Mag>().Invoke(InputHandle, tempHandle1);
-      vtkm::worklet::DispatcherMapField<Sin>().Invoke(tempHandle1, tempHandle2);
-      vtkm::worklet::DispatcherMapField<Square>().Invoke(tempHandle2, tempHandle1);
-      vtkm::worklet::DispatcherMapField<Cos>().Invoke(tempHandle1, tempHandle2);
+      vtkm::worklet::Invoker invoke(DeviceAdapter{});
+      invoke(Mag{}, this->InputHandle, tempHandle1);
+      invoke(Sin{}, tempHandle1, tempHandle2);
+      invoke(Square{}, tempHandle2, tempHandle1);
+      invoke(Cos{}, tempHandle1, tempHandle2);
 
       return timer.GetElapsedTime();
     }
@@ -476,8 +473,8 @@ private:
     }
   };
 
-  template <typename Value>
-  struct BenchMathDynamic : public BenchMath<Value>
+  template <typename Value, typename DeviceAdapter>
+  struct BenchMathDynamic : public BenchMath<Value, DeviceAdapter>
   {
 
     VTKM_CONT
@@ -487,16 +484,18 @@ private:
 
       vtkm::cont::ArrayHandle<Value> temp1;
       vtkm::cont::ArrayHandle<Value> temp2;
-      vtkm::cont::DynamicArrayHandleBase<MathTypes, StorageListTag> dinput(this->InputHandle);
-      ValueDynamicHandle dtemp1(temp1);
-      ValueDynamicHandle dtemp2(temp2);
+      vtkm::cont::VariantArrayHandleBase<MathTypes> dinput(this->InputHandle);
+      ValueVariantHandle dtemp1(temp1);
+      ValueVariantHandle dtemp2(temp2);
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
 
-      vtkm::worklet::DispatcherMapField<Mag>().Invoke(dinput, dtemp1);
-      vtkm::worklet::DispatcherMapField<Sin>().Invoke(dtemp1, dtemp2);
-      vtkm::worklet::DispatcherMapField<Square>().Invoke(dtemp2, dtemp1);
-      vtkm::worklet::DispatcherMapField<Cos>().Invoke(dtemp1, dtemp2);
+      vtkm::worklet::Invoker invoke(DeviceAdapter{});
+      invoke(Mag{}, dinput, dtemp1);
+      invoke(Sin{}, dtemp1, dtemp2);
+      invoke(Square{}, dtemp2, dtemp1);
+      invoke(Cos{}, dtemp1, dtemp2);
 
       return timer.GetElapsedTime();
     }
@@ -507,7 +506,7 @@ private:
   VTKM_MAKE_BENCHMARK(Math, BenchMath);
   VTKM_MAKE_BENCHMARK(MathDynamic, BenchMathDynamic);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchFusedMath
   {
     std::vector<vtkm::Vec<Value, 3>> input;
@@ -533,8 +532,11 @@ private:
     {
       vtkm::cont::ArrayHandle<Value> result;
 
-      Timer timer;
-      vtkm::worklet::DispatcherMapField<FusedMath>().Invoke(this->InputHandle, result);
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      vtkm::worklet::DispatcherMapField<FusedMath> dispatcher;
+      dispatcher.Invoke(this->InputHandle, result);
+
       return timer.GetElapsedTime();
     }
 
@@ -551,8 +553,8 @@ private:
     }
   };
 
-  template <typename Value>
-  struct BenchFusedMathDynamic : public BenchFusedMath<Value>
+  template <typename Value, typename DeviceAdapter>
+  struct BenchFusedMathDynamic : public BenchFusedMath<Value, DeviceAdapter>
   {
 
     VTKM_CONT
@@ -560,12 +562,15 @@ private:
     {
       using MathTypes = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
 
-      vtkm::cont::DynamicArrayHandleBase<MathTypes, StorageListTag> dinput(this->InputHandle);
+      vtkm::cont::VariantArrayHandleBase<MathTypes> dinput(this->InputHandle);
 
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer;
-      vtkm::worklet::DispatcherMapField<FusedMath>().Invoke(dinput, result);
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      vtkm::worklet::DispatcherMapField<FusedMath> dispatcher;
+      dispatcher.Invoke(dinput, result);
+
       return timer.GetElapsedTime();
     }
 
@@ -575,7 +580,7 @@ private:
   VTKM_MAKE_BENCHMARK(FusedMath, BenchFusedMath);
   VTKM_MAKE_BENCHMARK(FusedMathDynamic, BenchFusedMathDynamic);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchEdgeInterp
   {
     std::vector<vtkm::Float32> weight;
@@ -607,7 +612,8 @@ private:
       const std::size_t psize = static_cast<std::size_t>(cellSet.GetNumberOfPoints());
 
       this->EdgePairHandle.Allocate(numberOfEdges);
-      vtkm::worklet::DispatcherMapTopology<GenerateEdges>().Invoke(cellSet, this->EdgePairHandle);
+      vtkm::worklet::DispatcherMapTopology<GenerateEdges> dispatcher;
+      dispatcher.Invoke(cellSet, this->EdgePairHandle);
 
       this->weight.resize(esize);
       for (std::size_t i = 0; i < esize; ++i)
@@ -630,10 +636,11 @@ private:
     {
       vtkm::cont::ArrayHandle<Value> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       vtkm::worklet::DispatcherMapField<InterpolateField> dispatcher;
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->EdgePairHandle, this->WeightHandle, this->FieldHandle, result);
+
       return timer.GetElapsedTime();
     }
 
@@ -651,22 +658,23 @@ private:
     }
   };
 
-  template <typename Value>
-  struct BenchEdgeInterpDynamic : public BenchEdgeInterp<Value>
+  template <typename Value, typename DeviceAdapter>
+  struct BenchEdgeInterpDynamic : public BenchEdgeInterp<Value, DeviceAdapter>
   {
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      InterpDynamicHandle dfield(this->FieldHandle);
-      InterpDynamicHandle dweight(this->WeightHandle);
-      IdDynamicHandle dedges(this->EdgePairHandle);
+      InterpVariantHandle dfield(this->FieldHandle);
+      ValueVariantHandle dweight(this->WeightHandle);
+      EdgeIdVariantHandle dedges(this->EdgePairHandle);
       vtkm::cont::ArrayHandle<Value> result;
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       vtkm::worklet::DispatcherMapField<InterpolateField> dispatcher;
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(dedges, dweight, dfield, result);
+
       return timer.GetElapsedTime();
     }
 
@@ -709,7 +717,7 @@ private:
     return data;
   }
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchImplicitFunction
   {
     BenchImplicitFunction()
@@ -724,14 +732,14 @@ private:
       using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet>;
 
       auto handle = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
-      auto function =
-        static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(DeviceAdapterTag()));
+      auto function = static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(DeviceAdapter()));
       EvalWorklet eval(function);
 
-      vtkm::cont::Timer<DeviceAdapterTag> timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       EvalDispatcher dispatcher(eval);
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
+
       return timer.GetElapsedTime();
     }
 
@@ -747,7 +755,7 @@ private:
     ImplicitFunctionBenchData Internal;
   };
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchVirtualImplicitFunction
   {
     BenchVirtualImplicitFunction()
@@ -762,12 +770,13 @@ private:
       using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet>;
 
       auto sphere = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
-      EvalWorklet eval(sphere.PrepareForExecution(DeviceAdapterTag()));
+      EvalWorklet eval(sphere.PrepareForExecution(DeviceAdapter()));
 
-      vtkm::cont::Timer<DeviceAdapterTag> timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       EvalDispatcher dispatcher(eval);
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
+
       return timer.GetElapsedTime();
     }
 
@@ -783,7 +792,7 @@ private:
     ImplicitFunctionBenchData Internal;
   };
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct Bench2ImplicitFunctions
   {
     Bench2ImplicitFunctions()
@@ -799,14 +808,15 @@ private:
 
       auto h1 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
       auto h2 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere2);
-      auto f1 = static_cast<const vtkm::Sphere*>(h1.PrepareForExecution(DeviceAdapterTag()));
-      auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(DeviceAdapterTag()));
+      auto f1 = static_cast<const vtkm::Sphere*>(h1.PrepareForExecution(DeviceAdapter()));
+      auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(DeviceAdapter()));
       EvalWorklet eval(f1, f2);
 
-      vtkm::cont::Timer<DeviceAdapterTag> timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       EvalDispatcher dispatcher(eval);
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
+
       return timer.GetElapsedTime();
     }
 
@@ -822,7 +832,7 @@ private:
     ImplicitFunctionBenchData Internal;
   };
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct Bench2VirtualImplicitFunctions
   {
     Bench2VirtualImplicitFunctions()
@@ -839,13 +849,14 @@ private:
 
       auto s1 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
       auto s2 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere2);
-      EvalWorklet eval(s1.PrepareForExecution(DeviceAdapterTag()),
-                       s2.PrepareForExecution(DeviceAdapterTag()));
+      EvalWorklet eval(s1.PrepareForExecution(DeviceAdapter()),
+                       s2.PrepareForExecution(DeviceAdapter()));
 
-      vtkm::cont::Timer<DeviceAdapterTag> timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       EvalDispatcher dispatcher(eval);
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->Internal.Points, this->Internal.Result);
+
       return timer.GetElapsedTime();
     }
 
@@ -867,36 +878,36 @@ private:
   VTKM_MAKE_BENCHMARK(ImplicitFunctionVirtual2, Bench2VirtualImplicitFunctions);
 
 public:
-  static VTKM_CONT int Run(int benchmarks)
+  static VTKM_CONT int Run(int benchmarks, vtkm::cont::DeviceAdapterId id)
   {
     std::cout << DIVIDER << "\nRunning Field Algorithm benchmarks\n";
 
     if (benchmarks & BLACK_SCHOLES)
     {
       std::cout << DIVIDER << "\nBenchmarking BlackScholes\n";
-      VTKM_RUN_BENCHMARK(BlackScholes, ValueTypes());
-      VTKM_RUN_BENCHMARK(BlackScholesDynamic, ValueTypes());
+      VTKM_RUN_BENCHMARK(BlackScholes, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(BlackScholesDynamic, ValueTypes(), id);
     }
 
     if (benchmarks & MATH)
     {
       std::cout << DIVIDER << "\nBenchmarking Multiple Math Worklets\n";
-      VTKM_RUN_BENCHMARK(Math, ValueTypes());
-      VTKM_RUN_BENCHMARK(MathDynamic, ValueTypes());
+      VTKM_RUN_BENCHMARK(Math, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(MathDynamic, ValueTypes(), id);
     }
 
     if (benchmarks & FUSED_MATH)
     {
       std::cout << DIVIDER << "\nBenchmarking Single Fused Math Worklet\n";
-      VTKM_RUN_BENCHMARK(FusedMath, ValueTypes());
-      VTKM_RUN_BENCHMARK(FusedMathDynamic, ValueTypes());
+      VTKM_RUN_BENCHMARK(FusedMath, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(FusedMathDynamic, ValueTypes(), id);
     }
 
     if (benchmarks & INTERPOLATE_FIELD)
     {
       std::cout << DIVIDER << "\nBenchmarking Edge Based Field InterpolationWorklet\n";
-      VTKM_RUN_BENCHMARK(EdgeInterp, InterpValueTypes());
-      VTKM_RUN_BENCHMARK(EdgeInterpDynamic, InterpValueTypes());
+      VTKM_RUN_BENCHMARK(EdgeInterp, InterpValueTypes(), id);
+      VTKM_RUN_BENCHMARK(EdgeInterpDynamic, InterpValueTypes(), id);
     }
 
     if (benchmarks & IMPLICIT_FUNCTION)
@@ -904,10 +915,10 @@ public:
       using FloatDefaultType = vtkm::ListTagBase<vtkm::FloatDefault>;
 
       std::cout << "\nBenchmarking Implicit Function\n";
-      VTKM_RUN_BENCHMARK(ImplicitFunction, FloatDefaultType());
-      VTKM_RUN_BENCHMARK(ImplicitFunctionVirtual, FloatDefaultType());
-      VTKM_RUN_BENCHMARK(ImplicitFunction2, FloatDefaultType());
-      VTKM_RUN_BENCHMARK(ImplicitFunctionVirtual2, FloatDefaultType());
+      VTKM_RUN_BENCHMARK(ImplicitFunction, FloatDefaultType(), id);
+      VTKM_RUN_BENCHMARK(ImplicitFunctionVirtual, FloatDefaultType(), id);
+      VTKM_RUN_BENCHMARK(ImplicitFunction2, FloatDefaultType(), id);
+      VTKM_RUN_BENCHMARK(ImplicitFunctionVirtual2, FloatDefaultType(), id);
     }
 
     return 0;
@@ -920,16 +931,19 @@ public:
 
 int main(int argc, char* argv[])
 {
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
+
   int benchmarks = 0;
-  if (argc < 2)
+  if (!config.Arguments.size())
   {
     benchmarks = vtkm::benchmarking::ALL;
   }
   else
   {
-    for (int i = 1; i < argc; ++i)
+    for (size_t i = 0; i < config.Arguments.size(); ++i)
     {
-      std::string arg = argv[i];
+      std::string arg = config.Arguments[i];
       std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
         return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
       });
@@ -955,13 +969,13 @@ int main(int argc, char* argv[])
       }
       else
       {
-        std::cout << "Unrecognized benchmark: " << argv[i] << std::endl;
+        std::cout << "Unrecognized benchmark: " << config.Arguments[i] << std::endl;
         return 1;
       }
     }
   }
 
   //now actually execute the benchmarks
-  return vtkm::benchmarking::BenchmarkFieldAlgorithms<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run(
-    benchmarks);
+
+  return vtkm::benchmarking::BenchmarkFieldAlgorithms::Run(benchmarks, config.Device);
 }

@@ -19,7 +19,8 @@
 //============================================================================
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
+
+#include <vtkm/cont/VariantArrayHandle.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -30,11 +31,11 @@
 class TestMapFieldWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<>, FieldOut<>, FieldInOut<>);
-  using ExecutionSignature = void(_1, _2, _3, WorkIndex);
+  using ControlSignature = void(FieldIn, FieldOut, FieldInOut);
+  using ExecutionSignature = _3(_1, _2, _3, WorkIndex);
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& in, T& out, T& inout, vtkm::Id workIndex) const
+  VTKM_EXEC T operator()(const T& in, T& out, T& inout, vtkm::Id workIndex) const
   {
     if (!test_equal(in, TestValue(workIndex, T()) + T(100)))
     {
@@ -45,37 +46,17 @@ public:
     {
       this->RaiseError("Got wrong in-out value.");
     }
-    inout = inout - T(100);
+
+    // We return the new value of inout. Since _3 is both an arg and return,
+    // this tests that the return value is set after updating the arg values.
+    return inout - T(100);
   }
 
   template <typename T1, typename T2, typename T3>
-  VTKM_EXEC void operator()(const T1&, const T2&, const T3&, vtkm::Id) const
+  VTKM_EXEC T3 operator()(const T1&, const T2&, const T3&, vtkm::Id) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
-  }
-};
-
-class TestMapFieldWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
-{
-public:
-  using ControlSignature = void(FieldIn<ScalarAll>, FieldOut<ScalarAll>, FieldInOut<ScalarAll>);
-  using ExecutionSignature = _2(_1, _3, WorkIndex);
-
-  template <typename T1, typename T3>
-  VTKM_EXEC T1 operator()(const T1& in, T3& inout, vtkm::Id workIndex) const
-  {
-    if (!test_equal(in, TestValue(workIndex, T1()) + T1(100)))
-    {
-      this->RaiseError("Got wrong input value.");
-    }
-
-    if (!test_equal(inout, TestValue(workIndex, T3()) + T3(100)))
-    {
-      this->RaiseError("Got wrong in-out value.");
-    }
-    inout = inout - T3(100);
-
-    return in - T1(100);
+    return vtkm::TypeTraits<T3>::ZeroInitialization();
   }
 };
 
@@ -132,7 +113,7 @@ struct DoStaticTestWorklet
 };
 
 template <typename WorkletType>
-struct DoDynamicTestWorklet
+struct DoVariantTestWorklet
 {
   template <typename T>
   VTKM_CONT void operator()(T) const
@@ -150,25 +131,38 @@ struct DoDynamicTestWorklet
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
 
-    std::cout << "Create and run dispatcher with dynamic arrays." << std::endl;
+    std::cout << "Create and run dispatcher with variant arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
 
-    vtkm::cont::DynamicArrayHandle inputDynamic(inputHandle);
+    vtkm::cont::VariantArrayHandle inputVariant(inputHandle);
 
     { //Verify we can pass by value
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
-      vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
-      vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
-      dispatcher.Invoke(inputDynamic, outputDynamic, inoutDynamic);
+      vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
+      vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
+      dispatcher.Invoke(inputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
+                        outputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
+                        inoutVariant.ResetTypes(vtkm::ListTagBase<T>{}));
       CheckPortal(outputHandle.GetPortalConstControl());
       CheckPortal(inoutHandle.GetPortalConstControl());
     }
 
     { //Verify we can pass by pointer
+      vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
+      vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
+
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
-      vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
-      vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
-      dispatcher.Invoke(&inputDynamic, &outputDynamic, &inoutDynamic);
+      dispatcher.Invoke(&inputVariant, outputHandle, inoutHandle);
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+      dispatcher.Invoke(inputHandle, &outputVariant, inoutHandle);
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+      dispatcher.Invoke(inputHandle, outputHandle, &inoutVariant);
       CheckPortal(outputHandle.GetPortalConstControl());
       CheckPortal(inoutHandle.GetPortalConstControl());
     }
@@ -183,7 +177,7 @@ struct DoTestWorklet
   {
     DoStaticTestWorklet<WorkletType> sw;
     sw(t);
-    DoDynamicTestWorklet<WorkletType> dw;
+    DoVariantTestWorklet<WorkletType> dw;
     dw(t);
   }
 };
@@ -192,26 +186,8 @@ void TestWorkletMapField(vtkm::cont::DeviceAdapterId id)
 {
   std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
-  std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorklet>(),
                                    vtkm::TypeListTagCommon());
-
-  std::cout << "--- Worklet accepting some types." << std::endl;
-  vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorkletLimitedTypes>(),
-                                   vtkm::TypeListTagFieldScalar());
-
-  std::cout << "--- Sending bad type to worklet." << std::endl;
-  try
-  {
-    //can only test with dynamic arrays, as static arrays will fail to compile
-    DoDynamicTestWorklet<TestMapFieldWorkletLimitedTypes> badWorkletTest;
-    badWorkletTest(vtkm::Vec<vtkm::Float32, 3>());
-    VTKM_TEST_FAIL("Did not throw expected error.");
-  }
-  catch (vtkm::cont::ErrorBadType& error)
-  {
-    std::cout << "Got expected error: " << error.GetMessage() << std::endl;
-  }
 }
 
 } // mapfield namespace

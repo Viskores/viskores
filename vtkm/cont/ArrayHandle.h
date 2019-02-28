@@ -696,14 +696,14 @@ namespace internal
 {
 
 template <typename T, typename S>
-void VTKM_CONT ArrayHandleDefaultSerialization(diy::BinaryBuffer& bb,
+void VTKM_CONT ArrayHandleDefaultSerialization(vtkmdiy::BinaryBuffer& bb,
                                                const vtkm::cont::ArrayHandle<T, S>& obj);
 
 } // internal
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename T>

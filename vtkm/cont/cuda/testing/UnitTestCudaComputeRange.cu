@@ -28,10 +28,11 @@
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
 #include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestCudaComputeRange(int, char* [])
+int UnitTestCudaComputeRange(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
-  int result = vtkm::cont::testing::TestingComputeRange<vtkm::cont::DeviceAdapterTagCuda>::Run();
+  int result =
+    vtkm::cont::testing::TestingComputeRange<vtkm::cont::DeviceAdapterTagCuda>::Run(argc, argv);
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

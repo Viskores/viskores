@@ -70,7 +70,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMultiMapper(int, char* [])
+int UnitTestMultiMapper(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

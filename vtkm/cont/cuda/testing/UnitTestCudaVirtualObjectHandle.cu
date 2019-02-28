@@ -44,7 +44,7 @@ void TestVirtualObjectHandle()
 
 } // anonymous namespace
 
-int UnitTestCudaVirtualObjectHandle(int, char* [])
+int UnitTestCudaVirtualObjectHandle(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVirtualObjectHandle);
+  return vtkm::cont::testing::Testing::Run(TestVirtualObjectHandle, argc, argv);
 }

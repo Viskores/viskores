@@ -24,7 +24,10 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
+
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
+
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm
@@ -155,7 +158,8 @@ protected:
                                      vtkm::Vec<ScalarType, 3>& outpos) const override
     {
       ScalarType stepLength = StepLength;
-      vtkm::Vec<ScalarType, 3> velocity, currentVelocity;
+      vtkm::Vec<ScalarType, 3> velocity = { 0.0f, 0.0f, 0.0f };
+      vtkm::Vec<ScalarType, 3> currentVelocity = { 0.0f, 0.0f, 0.0f };
       CheckStep(inpos, 0.0f, time, currentVelocity);
       numSteps = numSteps == 0 ? 1 : numSteps;
       if (MinimizeError)

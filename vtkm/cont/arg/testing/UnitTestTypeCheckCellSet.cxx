@@ -59,7 +59,7 @@ void TestCheckCellSet()
 
 } // anonymous namespace
 
-int UnitTestTypeCheckCellSet(int, char* [])
+int UnitTestTypeCheckCellSet(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCheckCellSet);
+  return vtkm::cont::testing::Testing::Run(TestCheckCellSet, argc, argv);
 }

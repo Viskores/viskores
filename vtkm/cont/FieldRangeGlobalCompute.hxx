@@ -32,27 +32,25 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
   const vtkm::cont::ArrayHandle<vtkm::Range>& range);
 
-template <typename TypeList, typename StorageList>
+template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalComputeImpl(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
   vtkm::cont::Field::Association assoc,
-  TypeList,
-  StorageList)
+  TypeList)
 {
-  auto lrange = vtkm::cont::FieldRangeCompute(dataset, name, assoc, TypeList(), StorageList());
+  auto lrange = vtkm::cont::FieldRangeCompute(dataset, name, assoc, TypeList());
   return vtkm::cont::detail::MergeRangesGlobal(lrange);
 }
 
-template <typename TypeList, typename StorageList>
+template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalComputeImpl(
   const vtkm::cont::MultiBlock& multiblock,
   const std::string& name,
   vtkm::cont::Field::Association assoc,
-  TypeList,
-  StorageList)
+  TypeList)
 {
-  auto lrange = vtkm::cont::FieldRangeCompute(multiblock, name, assoc, TypeList(), StorageList());
+  auto lrange = vtkm::cont::FieldRangeCompute(multiblock, name, assoc, TypeList());
   return vtkm::cont::detail::MergeRangesGlobal(lrange);
 }
 }

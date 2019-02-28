@@ -36,39 +36,14 @@ namespace arg
 /// The Array type check passes for any object that behaves like an \c
 /// ArrayHandle class and can be passed to the ArrayIn and ArrayOut transports.
 ///
-template <typename TypeList>
 struct TypeCheckTagArray
 {
-  VTKM_IS_LIST_TAG(TypeList);
 };
 
-namespace detail
+template <typename ArrayType>
+struct TypeCheck<TypeCheckTagArray, ArrayType>
 {
-
-template <typename TypeList, typename ArrayType, bool IsArray>
-struct TypeCheckArrayValueType;
-
-template <typename TypeList, typename ArrayType>
-struct TypeCheckArrayValueType<TypeList, ArrayType, true>
-{
-  static constexpr bool value = vtkm::ListContains<TypeList, typename ArrayType::ValueType>::value;
-};
-
-template <typename TypeList, typename ArrayType>
-struct TypeCheckArrayValueType<TypeList, ArrayType, false>
-{
-  static constexpr bool value = false;
-};
-
-} // namespace detail
-
-template <typename TypeList, typename ArrayType>
-struct TypeCheck<TypeCheckTagArray<TypeList>, ArrayType>
-{
-  static constexpr bool value = detail::TypeCheckArrayValueType<
-    TypeList,
-    ArrayType,
-    vtkm::cont::internal::ArrayHandleCheck<ArrayType>::type::value>::value;
+  static constexpr bool value = vtkm::cont::internal::ArrayHandleCheck<ArrayType>::type::value;
 };
 }
 }

@@ -89,7 +89,7 @@ void TestFieldMetadata()
 }
 }
 
-int UnitTestFieldMetadata(int, char* [])
+int UnitTestFieldMetadata(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldMetadata);
+  return vtkm::cont::testing::Testing::Run(TestFieldMetadata, argc, argv);
 }

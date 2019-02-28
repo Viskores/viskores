@@ -118,7 +118,9 @@ public:
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
     outCellSet = threshold.Run(
-      dataset.GetCellSet(0), dataset.GetField("pointvar").GetData(), ValuesBetween(40.0f, 71.0f));
+      dataset.GetCellSet(0),
+      dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+      ValuesBetween(40.0f, 71.0f));
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11),
@@ -148,7 +150,9 @@ public:
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
     outCellSet = threshold.Run(
-      dataset.GetCellSet(0), dataset.GetField("pointvar").GetData(), ValuesAbove(1.0f));
+      dataset.GetCellSet(0),
+      dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+      ValuesAbove(1.0f));
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -171,7 +175,9 @@ public:
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
     outCellSet = threshold.Run(
-      dataset.GetCellSet(0), dataset.GetField("pointvar").GetData(), ValuesBelow(50.0f));
+      dataset.GetCellSet(0),
+      dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+      ValuesBelow(50.0f));
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 6),

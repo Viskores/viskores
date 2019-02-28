@@ -112,7 +112,7 @@ void TestExecObjectTransport()
 
 } // Anonymous namespace
 
-int UnitTestTransportExecObject(int, char* [])
+int UnitTestTransportExecObject(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestExecObjectTransport);
+  return vtkm::cont::testing::Testing::Run(TestExecObjectTransport, argc, argv);
 }

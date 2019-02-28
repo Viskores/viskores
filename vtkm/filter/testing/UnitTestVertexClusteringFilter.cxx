@@ -109,7 +109,7 @@ void TestVertexClustering()
   }
 }
 
-int UnitTestVertexClusteringFilter(int, char* [])
+int UnitTestVertexClusteringFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVertexClustering);
+  return vtkm::cont::testing::Testing::Run(TestVertexClustering, argc, argv);
 }

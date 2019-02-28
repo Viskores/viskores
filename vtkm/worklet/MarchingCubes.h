@@ -37,7 +37,6 @@
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -116,11 +115,11 @@ public:
   {
   };
 
-  using ControlSignature = void(WholeArrayIn<ClassifyCellTagType> isoValues,
-                                FieldInPoint<ClassifyCellTagType> fieldIn,
+  using ControlSignature = void(WholeArrayIn isoValues,
+                                FieldInPoint fieldIn,
                                 CellSetIn cellset,
-                                FieldOutCell<IdComponentType> outNumTriangles,
-                                WholeArrayIn<IdComponentType> numTrianglesTable);
+                                FieldOutCell outNumTriangles,
+                                WholeArrayIn numTrianglesTable);
   using ExecutionSignature = void(CellShape, _1, _2, _4, _5);
   using InputDomain = _3;
 
@@ -287,12 +286,11 @@ public:
     return ScatterType(numOutputTrisPerCell);
   }
 
-  typedef void ControlSignature(
-    CellSetIn cellset, // Cell set
-    WholeArrayIn<ClassifyCellTagType> isoValues,
-    FieldInPoint<ClassifyCellTagType> fieldIn, // Input point field defining the contour
-    ExecObject metaData                        // Metadata for edge weight generation
-    );
+  typedef void ControlSignature(CellSetIn cellset, // Cell set
+                                WholeArrayIn isoValues,
+                                FieldInPoint fieldIn, // Input point field defining the contour
+                                ExecObject metaData   // Metadata for edge weight generation
+                                );
   using ExecutionSignature =
     void(CellShape, _2, _3, _4, InputIndex, WorkIndex, VisitIndex, FromIndices);
 
@@ -411,10 +409,10 @@ private:
 class MapPointField : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<Id2Type> interpolation_ids,
-                                FieldIn<Scalar> interpolation_weights,
-                                WholeArrayIn<> inputField,
-                                FieldOut<> output);
+  using ControlSignature = void(FieldIn interpolation_ids,
+                                FieldIn interpolation_weights,
+                                WholeArrayIn inputField,
+                                FieldOut output);
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
@@ -461,10 +459,10 @@ struct MultiContourLess
 struct MergeDuplicateValues : vtkm::worklet::WorkletReduceByKey
 {
   using ControlSignature = void(KeysIn keys,
-                                ValuesIn<> valuesIn1,
-                                ValuesIn<> valuesIn2,
-                                ReducedValuesOut<> valueOut1,
-                                ReducedValuesOut<> valueOut2);
+                                ValuesIn valuesIn1,
+                                ValuesIn valuesIn2,
+                                ReducedValuesOut valueOut1,
+                                ReducedValuesOut valueOut2);
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
@@ -487,7 +485,7 @@ struct MergeDuplicateValues : vtkm::worklet::WorkletReduceByKey
 // ---------------------------------------------------------------------------
 struct CopyEdgeIds : vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
@@ -549,9 +547,9 @@ private:
 public:
   using ControlSignature = void(CellSetIn,
                                 WholeCellSetIn<Point, Cell>,
-                                WholeArrayIn<Vec3> pointCoordinates,
-                                WholeArrayIn<Scalar> inputField,
-                                FieldOutPoint<Vec3> normals);
+                                WholeArrayIn pointCoordinates,
+                                WholeArrayIn inputField,
+                                FieldOutPoint normals);
 
   using ExecutionSignature = void(CellCount, CellIndices, InputIndex, _2, _3, _4, _5);
 
@@ -599,7 +597,7 @@ public:
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();
@@ -621,10 +619,10 @@ private:
 public:
   typedef void ControlSignature(CellSetIn,
                                 WholeCellSetIn<Point, Cell>,
-                                WholeArrayIn<Vec3> pointCoordinates,
-                                WholeArrayIn<Scalar> inputField,
-                                WholeArrayIn<Scalar> weights,
-                                FieldInOutPoint<Vec3> normals);
+                                WholeArrayIn pointCoordinates,
+                                WholeArrayIn inputField,
+                                WholeArrayIn weights,
+                                FieldInOutPoint normals);
 
   using ExecutionSignature =
     void(CellCount, CellIndices, InputIndex, _2, _3, _4, WorkIndex, _5, _6);
@@ -683,7 +681,7 @@ public:
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();

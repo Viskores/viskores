@@ -23,7 +23,7 @@ set(headers
   )
 
 #-----------------------------------------------------------------------------
-vtkm_declare_headers(CUDA ${headers} TESTABLE FALSE)
+vtkm_declare_headers(${headers})
 
 add_subdirectory(internal)
 

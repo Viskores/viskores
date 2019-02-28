@@ -65,7 +65,7 @@
 /// Fatal levels are printed to stderr by default.
 ///
 /// Additional logging features are enabled by calling vtkm::cont::InitLogging
-/// in an executable. This will:
+/// (or preferably, vtkm::cont::Initialize) in an executable. This will:
 /// - Set human-readable names for the log levels in the output.
 /// - Allow the stderr logging level to be set at runtime by passing a
 ///   '-v [level]' argument to the executable.
@@ -169,6 +169,10 @@
 /// \def VTKM_LOG_SCOPE_FUNCTION(level)
 /// Equivalent to VTKM_LOG_SCOPE(__func__);
 
+/// \def VTKM_LOG_ALWAYS_S(level, ...)
+/// This ostream-style log message is always emitted, even when logging is
+/// disabled at compile time.
+
 /// \def VTKM_LOG_CAST_SUCC(inObj, outObj)
 /// \brief Convenience macro for logging the successful cast of dynamic object.
 /// \param inObj The dynamic object.
@@ -207,8 +211,10 @@
 #define VTKM_LOG_SCOPE_FUNCTION(level)                                                             \
   VTKM_LOG_SCOPE(static_cast<loguru::Verbosity>(level), __func__)
 #define VTKM_LOG_ERROR_CONTEXT(desc, data) ERROR_CONTEXT(desc, data)
+#define VTKM_LOG_ALWAYS_S(level, ...) VTKM_LOG_S(level, __VA_ARGS__)
 
 // Convenience macros:
+
 // Cast success:
 #define VTKM_LOG_CAST_SUCC(inObj, outObj)                                                          \
   VTKM_LOG_F(vtkm::cont::LogLevel::Cast,                                                           \
@@ -250,6 +256,12 @@
 #define VTKM_LOG_ERROR_CONTEXT(desc, data)
 #define VTKM_LOG_CAST_SUCC(inObj, outObj)
 #define VTKM_LOG_CAST_FAIL(inObj, outType)
+
+// Always emitted. When logging is disabled, std::cerr is used.
+
+#define VTKM_LOG_ALWAYS_S(level, ...)                                                              \
+  (static_cast<int>(level) < 0 ? std::cerr : std::cout) << vtkm::cont::GetLogLevelName(level)      \
+                                                        << ": " << __VA_ARGS__ << "\n"
 
 // TryExecute failures are still important enough to log, but we just write to
 // std::cerr when logging is disabled.
@@ -318,6 +330,9 @@ enum class LogLevel
 };
 
 /**
+ * This shouldn't be called directly -- prefer calling vtkm::cont::Initialize,
+ * which takes care of logging as well as other initializations.
+ *
  * Initializes logging. Sets up custom log level and thread names. Parses any
  * "-v [LogLevel]" arguments to set the stderr log level. This argument may
  * be either numeric, or the 4-character string printed in the output.
@@ -357,6 +372,15 @@ void SetStderrLogLevel(vtkm::cont::LogLevel level);
 VTKM_CONT_EXPORT
 VTKM_CONT
 void SetLogLevelName(vtkm::cont::LogLevel level, const std::string& name);
+
+/**
+ * Get a human readable name for the log level. If a name has not been
+ * registered via InitLogging or SetLogLevelName, the returned string just
+ * contains the integer representation of the level.
+ */
+VTKM_CONT_EXPORT
+VTKM_CONT
+std::string GetLogLevelName(vtkm::cont::LogLevel level);
 
 /**
  * The name to identify the current thread in the log output.

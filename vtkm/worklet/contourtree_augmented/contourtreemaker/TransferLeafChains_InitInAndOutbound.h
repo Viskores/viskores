@@ -79,12 +79,12 @@ namespace contourtree_maker_inc
 class TransferLeafChains_InitInAndOutbound : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeSupernodes, // (input)
-                                WholeArrayIn<IdType> inwards,     // (input)
-                                WholeArrayIn<IdType> outdegree,   // (input)
-                                WholeArrayIn<IdType> indegree,    // (input)
-                                WholeArrayOut<IdType> outbound,   // (output)
-                                WholeArrayOut<IdType> inbound     // (output)
+  typedef void ControlSignature(FieldIn activeSupernodes, // (input)
+                                WholeArrayIn inwards,     // (input)
+                                WholeArrayIn outdegree,   // (input)
+                                WholeArrayIn indegree,    // (input)
+                                WholeArrayOut outbound,   // (output)
+                                WholeArrayOut inbound     // (output)
                                 );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   using InputDomain = _1;

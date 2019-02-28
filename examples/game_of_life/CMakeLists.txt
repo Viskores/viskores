@@ -19,7 +19,7 @@
 ##  this software.
 ##
 ##=============================================================================
-cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.13 FATAL_ERROR)
 project(GameOfLife CXX)
 
 #Find the VTK-m package
@@ -35,5 +35,5 @@ if(TARGET OpenGL::GL AND
     add_executable(GameOfLife GameOfLife.cxx LoadShaders.h)
   endif()
 
-  target_link_libraries(GameOfLife PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+  target_link_libraries(GameOfLife PRIVATE vtkm_filter OpenGL::GL GLEW::GLEW GLUT::GLUT)
 endif()

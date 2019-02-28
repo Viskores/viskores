@@ -43,17 +43,21 @@ public:
   // 1D uniform datasets.
   vtkm::cont::DataSet Make1DUniformDataSet0();
   vtkm::cont::DataSet Make1DUniformDataSet1();
+  vtkm::cont::DataSet Make1DUniformDataSet2();
+
   // 1D explicit datasets.
   vtkm::cont::DataSet Make1DExplicitDataSet0();
 
   // 2D uniform datasets.
   vtkm::cont::DataSet Make2DUniformDataSet0();
   vtkm::cont::DataSet Make2DUniformDataSet1();
+  vtkm::cont::DataSet Make2DUniformDataSet2();
 
   // 3D uniform datasets.
   vtkm::cont::DataSet Make3DUniformDataSet0();
   vtkm::cont::DataSet Make3DUniformDataSet1();
   vtkm::cont::DataSet Make3DUniformDataSet2();
+  vtkm::cont::DataSet Make3DUniformDataSet3(const vtkm::Id3 dims);
   vtkm::cont::DataSet Make3DRegularDataSet0();
   vtkm::cont::DataSet Make3DRegularDataSet1();
 
@@ -107,6 +111,33 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet1()
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::Float32 var[nVerts] = { 1.0e3f, 5.e5f, 2.e8f, 1.e10f, 2e12f, 3e15f };
   dsf.AddPointField(dataSet, "pointvar", var, nVerts);
+
+  return dataSet;
+}
+
+
+//Make a simple 1D, 16 cell uniform dataset.
+inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet2()
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  constexpr vtkm::Id dims = 256;
+  vtkm::cont::DataSet dataSet = dsb.Create(dims);
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  vtkm::Float64 pointvar[dims];
+  vtkm::Float64 dx = vtkm::Float64(4.0 * vtkm::Pi()) / vtkm::Float64(dims - 1);
+
+  vtkm::Id idx = 0;
+  for (vtkm::Id x = 0; x < dims; ++x)
+  {
+    vtkm::Float64 cx = vtkm::Float64(x) * dx - 2.0 * vtkm::Pi();
+    vtkm::Float64 cv = vtkm::Sin(cx);
+
+    pointvar[idx] = cv;
+    idx++;
+  }
+
+  dsf.AddPointField(dataSet, "pointvar", pointvar, dims);
 
   return dataSet;
 }
@@ -183,6 +214,39 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make2DUniformDataSet1()
   return dataSet;
 }
 
+//Make a simple 2D, 16 cell uniform dataset.
+inline vtkm::cont::DataSet MakeTestDataSet::Make2DUniformDataSet2()
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  vtkm::Id2 dims(16, 16);
+  vtkm::cont::DataSet dataSet = dsb.Create(dims);
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  constexpr vtkm::Id nVerts = 256;
+  vtkm::Float64 pointvar[nVerts];
+  vtkm::Float64 dx = vtkm::Float64(4.0 * vtkm::Pi()) / vtkm::Float64(dims[0] - 1);
+  vtkm::Float64 dy = vtkm::Float64(2.0 * vtkm::Pi()) / vtkm::Float64(dims[1] - 1);
+
+  vtkm::Id idx = 0;
+  for (vtkm::Id y = 0; y < dims[1]; ++y)
+  {
+    vtkm::Float64 cy = vtkm::Float64(y) * dy - vtkm::Pi();
+    for (vtkm::Id x = 0; x < dims[0]; ++x)
+    {
+      vtkm::Float64 cx = vtkm::Float64(x) * dx - 2.0 * vtkm::Pi();
+      vtkm::Float64 cv = vtkm::Sin(cx) + vtkm::Sin(cy) +
+        2.0 * vtkm::Cos(vtkm::Sqrt((cx * cx) / 2.0 + cy * cy) / 0.75) +
+        4.0 * vtkm::Cos(cx * cy / 4.0);
+
+      pointvar[idx] = cv;
+      idx++;
+    }
+  } // y
+
+  dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
+
+  return dataSet;
+}
 //Make a simple 3D, 4 cell uniform dataset.
 inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet0()
 {
@@ -272,6 +336,48 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
 
   delete[] pointvar;
 
+  return dataSet;
+}
+
+inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(const vtkm::Id3 dims)
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  vtkm::cont::DataSet dataSet = dsb.Create(dims);
+
+  // add point scalar field
+  vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
+  std::vector<vtkm::Float64> pointvar(static_cast<size_t>(numPoints));
+
+  vtkm::Float64 dx = vtkm::Float64(4.0 * vtkm::Pi()) / vtkm::Float64(dims[0] - 1);
+  vtkm::Float64 dy = vtkm::Float64(2.0 * vtkm::Pi()) / vtkm::Float64(dims[1] - 1);
+  vtkm::Float64 dz = vtkm::Float64(3.0 * vtkm::Pi()) / vtkm::Float64(dims[2] - 1);
+
+  vtkm::Id idx = 0;
+  for (vtkm::Id z = 0; z < dims[2]; ++z)
+  {
+    vtkm::Float64 cz = vtkm::Float64(z) * dz - 1.5 * vtkm::Pi();
+    for (vtkm::Id y = 0; y < dims[1]; ++y)
+    {
+      vtkm::Float64 cy = vtkm::Float64(y) * dy - vtkm::Pi();
+      for (vtkm::Id x = 0; x < dims[0]; ++x)
+      {
+        vtkm::Float64 cx = vtkm::Float64(x) * dx - 2.0 * vtkm::Pi();
+        vtkm::Float64 cv = vtkm::Sin(cx) + vtkm::Sin(cy) +
+          2.0 * vtkm::Cos(vtkm::Sqrt((cx * cx) / 2.0 + cy * cy) / 0.75) +
+          4.0 * vtkm::Cos(cx * cy / 4.0);
+
+        if (dims[2] > 1)
+        {
+          cv += vtkm::Sin(cz) + 1.5 * vtkm::Cos(vtkm::Sqrt(cx * cx + cy * cy + cz * cz) / 0.75);
+        }
+        pointvar[static_cast<size_t>(idx)] = cv;
+        idx++;
+      }
+    } // y
+  }   // z
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  dsf.AddPointField(dataSet, "pointvar", pointvar);
   return dataSet;
 }
 

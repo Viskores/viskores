@@ -241,7 +241,7 @@ void TestAllShapes()
 
 } // anonymous namespace
 
-int UnitTestCellEdgeFace(int, char* [])
+int UnitTestCellEdgeFace(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestAllShapes);
+  return vtkm::testing::Testing::Run(TestAllShapes, argc, argv);
 }

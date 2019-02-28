@@ -21,7 +21,6 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -30,29 +29,6 @@ namespace vtkm
 {
 namespace filter
 {
-
-namespace clipwithfield
-{
-
-struct PointMapHelper
-{
-  PointMapHelper(const vtkm::worklet::Clip& worklet, vtkm::cont::DynamicArrayHandle& output)
-    : Worklet(worklet)
-    , Output(output)
-  {
-  }
-
-  template <typename ArrayType>
-  void operator()(const ArrayType& array) const
-  {
-    this->Output = this->Worklet.ProcessPointField(array);
-  }
-
-  const vtkm::worklet::Clip& Worklet;
-  vtkm::cont::DynamicArrayHandle& Output;
-};
-
-} // end namespace clipwithfield
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT ClipWithField::ClipWithField()
@@ -71,8 +47,6 @@ inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::filter::FieldMetadata& fieldMeta,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  using namespace clipwithfield;
-
   if (fieldMeta.IsPointField() == false)
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");

@@ -28,7 +28,6 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 
@@ -50,7 +49,7 @@ namespace tetrahedralize
 class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(CellSetIn cellset, FieldOutCell<> connectivityOut);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell connectivityOut);
   using ExecutionSignature = void(PointIndices, _2, ThreadIndices);
   using InputDomain = _1;
 

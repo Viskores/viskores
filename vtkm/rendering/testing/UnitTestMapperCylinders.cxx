@@ -77,7 +77,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperCylinders(int, char* [])
+int UnitTestMapperCylinders(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

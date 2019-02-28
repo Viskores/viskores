@@ -51,7 +51,7 @@ public:
     : NumChannels(numChannels)
   {
   }
-  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, FieldIn<>, WholeArrayOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayIn, FieldIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   template <typename InBufferPortalType, typename OutBufferPortalType>
   VTKM_EXEC void operator()(const vtkm::UInt8& mask,
@@ -86,7 +86,7 @@ public:
     : NumChannels(numChannels)
   {
   }
-  using ControlSignature = void(FieldOut<>, WholeArrayIn<>);
+  using ControlSignature = void(FieldOut, WholeArrayIn);
   using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename ValueType, typename PortalType>
   VTKM_EXEC void operator()(ValueType& outValue,

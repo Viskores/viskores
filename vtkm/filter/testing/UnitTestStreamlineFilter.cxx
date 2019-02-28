@@ -74,7 +74,7 @@ void TestStreamline()
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
 }
 
-int UnitTestStreamlineFilter(int, char* [])
+int UnitTestStreamlineFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestStreamline);
+  return vtkm::cont::testing::Testing::Run(TestStreamline, argc, argv);
 }

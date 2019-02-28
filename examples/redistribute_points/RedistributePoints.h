@@ -22,20 +22,12 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/AssignerMultiBlock.h>
 #include <vtkm/cont/BoundsGlobalCompute.h>
+#include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/filter/ExtractPoints.h>
 #include <vtkm/filter/Filter.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/decomposition.hpp)
-#include VTKM_DIY(diy/link.hpp)
-#include VTKM_DIY(diy/master.hpp)
-#include VTKM_DIY(diy/proxy.hpp)
-#include VTKM_DIY(diy/reduce.hpp)
-#include VTKM_DIY(diy/reduce-operations.hpp)
-#include VTKM_DIY(diy/types.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
 
 namespace example
 {
@@ -43,9 +35,9 @@ namespace example
 namespace internal
 {
 
-static diy::ContinuousBounds convert(const vtkm::Bounds& bds)
+static vtkmdiy::ContinuousBounds convert(const vtkm::Bounds& bds)
 {
-  diy::ContinuousBounds result;
+  vtkmdiy::ContinuousBounds result;
   result.min[0] = static_cast<float>(bds.X.Min);
   result.min[1] = static_cast<float>(bds.Y.Min);
   result.min[2] = static_cast<float>(bds.Z.Min);
@@ -59,10 +51,11 @@ static diy::ContinuousBounds convert(const vtkm::Bounds& bds)
 template <typename DerivedPolicy>
 class Redistributor
 {
-  const diy::RegularDecomposer<diy::ContinuousBounds>& Decomposer;
+  const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& Decomposer;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
 
-  vtkm::cont::DataSet Extract(const vtkm::cont::DataSet& input, const diy::ContinuousBounds& bds) const
+  vtkm::cont::DataSet Extract(const vtkm::cont::DataSet& input,
+                              const vtkmdiy::ContinuousBounds& bds) const
   {
     // extract points
     vtkm::Box box(bds.min[0], bds.max[0], bds.min[1], bds.max[1], bds.min[2], bds.max[2]);
@@ -76,7 +69,11 @@ class Redistributor
   class ConcatenateFields
   {
   public:
-    explicit ConcatenateFields(vtkm::Id totalSize) : TotalSize(totalSize), CurrentIdx(0) {}
+    explicit ConcatenateFields(vtkm::Id totalSize)
+      : TotalSize(totalSize)
+      , CurrentIdx(0)
+    {
+    }
 
     void Append(const vtkm::cont::Field& field)
     {
@@ -97,10 +94,7 @@ class Redistributor
       this->CurrentIdx += field.GetData().GetNumberOfValues();
     }
 
-    const vtkm::cont::Field& GetResult() const
-    {
-      return this->Field;
-    }
+    const vtkm::cont::Field& GetResult() const { return this->Field; }
 
   private:
     struct Allocator
@@ -135,13 +129,14 @@ class Redistributor
   };
 
 public:
-  Redistributor(const diy::RegularDecomposer<diy::ContinuousBounds>& decomposer,
-      const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
-    : Decomposer(decomposer), Policy(policy)
+  Redistributor(const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& decomposer,
+                const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+    : Decomposer(decomposer)
+    , Policy(policy)
   {
   }
 
-  void operator()(vtkm::cont::DataSet* block, const diy::ReduceProxy& rp) const
+  void operator()(vtkm::cont::DataSet* block, const vtkmdiy::ReduceProxy& rp) const
   {
     if (rp.in_link().size() == 0)
     {
@@ -151,7 +146,7 @@ public:
         {
           auto target = rp.out_link().target(cc);
           // let's get the bounding box for the target block.
-          diy::ContinuousBounds bds;
+          vtkmdiy::ContinuousBounds bds;
           this->Decomposer.fill_bounds(bds, target.gid);
 
           auto extractedDS = this->Extract(*block, bds);
@@ -185,7 +180,7 @@ public:
       else if (receives.size() > 1)
       {
         ConcatenateFields concatCoords(numValues);
-        for (const auto& ds: receives)
+        for (const auto& ds : receives)
         {
           concatCoords.Append(ds.GetCoordinateSystem(0));
         }
@@ -195,7 +190,7 @@ public:
         for (vtkm::IdComponent i = 0; i < receives[0].GetNumberOfFields(); ++i)
         {
           ConcatenateFields concatField(numValues);
-          for (const auto& ds: receives)
+          for (const auto& ds : receives)
           {
             concatField.Append(ds.GetField(i));
           }
@@ -220,13 +215,12 @@ public:
 
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::MultiBlock PrepareForExecution(
-        const vtkm::cont::MultiBlock& input,
-        const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+    const vtkm::cont::MultiBlock& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 };
 
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::MultiBlock
-RedistributePoints::PrepareForExecution(
+inline VTKM_CONT vtkm::cont::MultiBlock RedistributePoints::PrepareForExecution(
   const vtkm::cont::MultiBlock& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
@@ -236,31 +230,30 @@ RedistributePoints::PrepareForExecution(
   vtkm::Bounds gbounds = vtkm::cont::BoundsGlobalCompute(input);
 
   vtkm::cont::AssignerMultiBlock assigner(input.GetNumberOfBlocks());
-  diy::RegularDecomposer<diy::ContinuousBounds> decomposer(/*dim*/3, internal::convert(gbounds), assigner.nblocks());
+  vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds> decomposer(
+    /*dim*/ 3, internal::convert(gbounds), assigner.nblocks());
 
-  diy::Master master(comm,
-      /*threads*/ 1,
-      /*limit*/ -1,
-      []() -> void* { return new vtkm::cont::DataSet(); },
-      [](void*ptr) { delete static_cast<vtkm::cont::DataSet*>(ptr); });
+  vtkmdiy::Master master(comm,
+                         /*threads*/ 1,
+                         /*limit*/ -1,
+                         []() -> void* { return new vtkm::cont::DataSet(); },
+                         [](void* ptr) { delete static_cast<vtkm::cont::DataSet*>(ptr); });
   decomposer.decompose(comm.rank(), assigner, master);
 
   assert(static_cast<vtkm::Id>(master.size()) == input.GetNumberOfBlocks());
   // let's populate local blocks
-  master.foreach(
-      [&input](vtkm::cont::DataSet* ds, const diy::Master::ProxyWithLink& proxy) {
-      auto lid = proxy.master()->lid(proxy.gid());
-      *ds = input.GetBlock(lid);
-      });
+  master.foreach ([&input](vtkm::cont::DataSet* ds, const vtkmdiy::Master::ProxyWithLink& proxy) {
+    auto lid = proxy.master()->lid(proxy.gid());
+    *ds = input.GetBlock(lid);
+  });
 
   internal::Redistributor<DerivedPolicy> redistributor(decomposer, policy);
-  diy::all_to_all(master, assigner, redistributor, /*k=*/2);
+  vtkmdiy::all_to_all(master, assigner, redistributor, /*k=*/2);
 
   vtkm::cont::MultiBlock result;
-  master.foreach(
-      [&result](vtkm::cont::DataSet* ds, const diy::Master::ProxyWithLink&) {
-      result.AddBlock(*ds);
-      });
+  master.foreach ([&result](vtkm::cont::DataSet* ds, const vtkmdiy::Master::ProxyWithLink&) {
+    result.AddBlock(*ds);
+  });
 
   return result;
 }

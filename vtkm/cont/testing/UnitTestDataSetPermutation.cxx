@@ -230,7 +230,7 @@ void TestDataSet_Permutation()
 }
 }
 
-int UnitTestDataSetPermutation(int, char* [])
+int UnitTestDataSetPermutation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDataSet_Permutation);
+  return vtkm::cont::testing::Testing::Run(TestDataSet_Permutation, argc, argv);
 }

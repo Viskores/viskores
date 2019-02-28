@@ -22,6 +22,7 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
@@ -539,6 +540,11 @@ template <class DeviceAdapterTag>
 class DeviceAdapterTimerImplementation
 {
 public:
+  struct TimeStamp
+  {
+    vtkm::Int64 Seconds;
+    vtkm::Int64 Microseconds;
+  };
   /// When a timer is constructed, all threads are synchronized and the
   /// current time is marked so that GetElapsedTime returns the number of
   /// seconds elapsed since the construction.
@@ -548,7 +554,30 @@ public:
   /// number of seconds elapsed since the call to this. This method
   /// synchronizes all asynchronous operations.
   ///
-  VTKM_CONT void Reset() { this->StartTime = this->GetCurrentTime(); }
+  VTKM_CONT void Reset()
+  {
+    this->StartReady = false;
+    this->StopReady = false;
+  }
+
+  VTKM_CONT void Start()
+  {
+    this->Reset();
+    this->StartTime = this->GetCurrentTime();
+    this->StartReady = true;
+  }
+
+  VTKM_CONT void Stop()
+  {
+    this->StopTime = this->GetCurrentTime();
+    this->StopReady = true;
+  }
+
+  VTKM_CONT bool Started() { return this->StartReady; }
+
+  VTKM_CONT bool Stopped() { return this->StopReady; }
+
+  VTKM_CONT bool Ready() { return true; }
 
   /// Returns the elapsed time in seconds between the construction of this
   /// class or the last call to Reset and the time this function is called. The
@@ -558,21 +587,29 @@ public:
   ///
   VTKM_CONT vtkm::Float64 GetElapsedTime()
   {
-    TimeStamp currentTime = this->GetCurrentTime();
+    assert(this->StartReady);
+    if (!this->StartReady)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Start() function should be called first then trying to call GetElapsedTime().");
+      return 0;
+    }
 
+    bool manualStop = true;
+    if (!this->StopReady)
+    {
+      manualStop = false;
+      this->Stop();
+    }
     vtkm::Float64 elapsedTime;
-    elapsedTime = vtkm::Float64(currentTime.Seconds - this->StartTime.Seconds);
-    elapsedTime += (vtkm::Float64(currentTime.Microseconds - this->StartTime.Microseconds) /
+    elapsedTime = vtkm::Float64(this->StopTime.Seconds - this->StartTime.Seconds);
+    elapsedTime += (vtkm::Float64(this->StopTime.Microseconds - this->StartTime.Microseconds) /
                     vtkm::Float64(1000000));
+    // Reset StopReady flag to its original state
+    this->StopReady = manualStop;
 
     return elapsedTime;
   }
-  struct TimeStamp
-  {
-    vtkm::Int64 Seconds;
-    vtkm::Int64 Microseconds;
-  };
-  TimeStamp StartTime;
 
   VTKM_CONT TimeStamp GetCurrentTime()
   {
@@ -592,6 +629,11 @@ public:
 #endif
     return retval;
   }
+
+  bool StartReady;
+  bool StopReady;
+  TimeStamp StartTime;
+  TimeStamp StopTime;
 };
 
 /// \brief Class providing a device-specific runtime support detector.

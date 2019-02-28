@@ -44,7 +44,7 @@ namespace internal
 
 struct ClearBuffers : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   VTKM_CONT
@@ -73,7 +73,7 @@ struct BlendBackground : public vtkm::worklet::WorkletMapField
   {
   }
 
-  using ControlSignature = void(FieldInOut<>);
+  using ControlSignature = void(FieldInOut);
   using ExecutionSignature = void(_1);
 
   VTKM_EXEC void operator()(vtkm::Vec<vtkm::Float32, 4>& color) const
@@ -91,7 +91,7 @@ struct BlendBackground : public vtkm::worklet::WorkletMapField
 
 struct DrawColorSwatch : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<>, WholeArrayInOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayInOut);
   using ExecutionSignature = void(_1, _2);
 
   VTKM_CONT
@@ -134,7 +134,7 @@ struct DrawColorSwatch : public vtkm::worklet::WorkletMapField
 
 struct DrawColorBar : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
+  using ControlSignature = void(FieldIn, WholeArrayInOut, WholeArrayIn);
   using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_CONT

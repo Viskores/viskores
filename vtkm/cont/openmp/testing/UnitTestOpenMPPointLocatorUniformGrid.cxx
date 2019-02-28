@@ -23,10 +23,10 @@
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/testing/TestingPointLocatorUniformGrid.h>
 
-int UnitTestOpenMPPointLocatorUniformGrid(int, char* [])
+int UnitTestOpenMPPointLocatorUniformGrid(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
   return vtkm::cont::testing::Testing::Run(
-    TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagOpenMP>());
+    TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagOpenMP>(), argc, argv);
 }

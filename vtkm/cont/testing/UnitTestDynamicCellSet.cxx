@@ -129,7 +129,7 @@ void TestDynamicCellSet()
 
 } // anonymous namespace
 
-int UnitTestDynamicCellSet(int, char* [])
+int UnitTestDynamicCellSet(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDynamicCellSet);
+  return vtkm::cont::testing::Testing::Run(TestDynamicCellSet, argc, argv);
 }

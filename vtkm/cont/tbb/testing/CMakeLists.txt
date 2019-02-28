@@ -22,7 +22,9 @@ set(unit_tests
   UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx
   UnitTestTBBArrayHandleVirtualCoordinates.cxx
+  UnitTestTBBCellLocatorRectilinearGrid.cxx
   UnitTestTBBCellLocatorTwoLevelUniformGrid.cxx
+  UnitTestTBBCellLocatorUniformGrid.cxx
   UnitTestTBBColorTable.cxx
   UnitTestTBBComputeRange.cxx
   UnitTestTBBDataSetExplicit.cxx

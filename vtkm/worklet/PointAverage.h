@@ -36,8 +36,8 @@ class PointAverage : public vtkm::worklet::WorkletMapCellToPoint
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
-                                FieldInCell<> inCellField,
-                                FieldOutPoint<> outPointField);
+                                FieldInCell inCellField,
+                                FieldOutPoint outPointField);
   using ExecutionSignature = void(CellCount, _2, _3);
   using InputDomain = _1;
 

@@ -108,7 +108,7 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(
   return clone;
 }
 
-/// Use this function if you have a DynamicArrayHandle that holds the data
+/// Use this function if you have a VariantArrayHandle that holds the data
 /// for the field. You also need to specify a name and an association for the
 /// field. If the field is associated with a particular element set (for
 /// example, a cell association is associated with a cell set), the name of
@@ -116,7 +116,7 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(
 /// for \c Association::WHOLE_MESH and \c Association::POINTS associations.
 ///
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
-                                                  const vtkm::cont::DynamicArrayHandle& fieldArray,
+                                                  const vtkm::cont::VariantArrayHandle& fieldArray,
                                                   const std::string& fieldName,
                                                   vtkm::cont::Field::Association fieldAssociation,
                                                   const std::string& elementSetName = "")

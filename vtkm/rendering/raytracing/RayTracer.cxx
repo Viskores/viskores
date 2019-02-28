@@ -78,7 +78,7 @@ public:
     }
 
     using ControlSignature =
-      void(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
+      void(FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
     template <typename ColorPortalType, typename Precision, typename ColorMapPortalType>
@@ -148,7 +148,7 @@ public:
     VTKM_CONT
     MapScalarToColor() {}
 
-    using ControlSignature = void(FieldIn<>, FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
+    using ControlSignature = void(FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
     using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
 
     template <typename ColorPortalType, typename Precision, typename ColorMapPortalType>
@@ -230,7 +230,7 @@ Camera& RayTracer::GetCamera()
 }
 
 
-void RayTracer::AddShapeIntersector(ShapeIntersector* intersector)
+void RayTracer::AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersector)
 {
   NumberOfShapes += intersector->GetNumberOfShapes();
   Intersectors.push_back(intersector);
@@ -238,7 +238,7 @@ void RayTracer::AddShapeIntersector(ShapeIntersector* intersector)
 
 void RayTracer::SetField(const vtkm::cont::Field& scalarField, const vtkm::Range& scalarRange)
 {
-  ScalarField = &scalarField;
+  ScalarField = scalarField;
   ScalarRange = scalarRange;
 }
 
@@ -269,22 +269,17 @@ vtkm::Id RayTracer::GetNumberOfShapes() const
 
 void RayTracer::Clear()
 {
-  size_t numShapes = Intersectors.size();
-  for (size_t i = 0; i < numShapes; ++i)
-  {
-    delete Intersectors[i];
-  }
-
   Intersectors.clear();
 }
 
 template <typename Precision>
 void RayTracer::RenderOnDevice(Ray<Precision>& rays)
 {
-  using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
+  using Timer = vtkm::cont::Timer;
 
   Logger* logger = Logger::GetInstance();
-  Timer renderTimer;
+  Timer renderTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+  renderTimer.Start();
   vtkm::Float64 time = 0.;
   logger->OpenLogEntry("ray_tracer");
   logger->AddLogData("device", GetDeviceString());
@@ -295,6 +290,7 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
   if (NumberOfShapes > 0)
   {
     Timer timer;
+    timer.Start();
 
     for (size_t i = 0; i < numShapes; ++i)
     {
@@ -302,11 +298,11 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
       time = timer.GetElapsedTime();
       logger->AddLogData("intersect", time);
 
-      timer.Reset();
+      timer.Start();
       Intersectors[i]->IntersectionData(rays, ScalarField, ScalarRange);
       time = timer.GetElapsedTime();
       logger->AddLogData("intersection_data", time);
-      timer.Reset();
+      timer.Start();
 
       // Calculate the color at the intersection  point
       detail::SurfaceColor surfaceColor;
@@ -314,7 +310,6 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
 
       time = timer.GetElapsedTime();
       logger->AddLogData("shade", time);
-      timer.Reset();
     }
   }
 

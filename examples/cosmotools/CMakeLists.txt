@@ -19,7 +19,7 @@
 ##  this software.
 ##
 ##=============================================================================
-cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.13 FATAL_ERROR)
 project(CosmoTools CXX)
 
 #Find the VTK-m package
@@ -36,5 +36,5 @@ else()
   add_executable(CosmoHaloFinder CosmoHaloFinder.cxx)
 endif()
 
-target_link_libraries(CosmoCenterFinder PRIVATE vtkm_cont)
-target_link_libraries(CosmoHaloFinder PRIVATE vtkm_cont)
+target_link_libraries(CosmoCenterFinder PRIVATE vtkm_filter)
+target_link_libraries(CosmoHaloFinder PRIVATE vtkm_filter)

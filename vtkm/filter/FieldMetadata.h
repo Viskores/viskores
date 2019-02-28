@@ -74,29 +74,26 @@ public:
   template <typename T, typename StorageTag>
   VTKM_CONT vtkm::cont::Field AsField(const vtkm::cont::ArrayHandle<T, StorageTag>& handle) const
   {
-    //Field only handles arrayHandles with default storage tag, so use
-    //dynamic array handles
-    vtkm::cont::DynamicArrayHandle dhandle(handle);
     if (this->IsCellField())
     {
-      return vtkm::cont::Field(this->Name, this->Association, this->CellSetName, dhandle);
+      return vtkm::cont::Field(this->Name, this->Association, this->CellSetName, handle);
     }
     else
     {
-      return vtkm::cont::Field(this->Name, this->Association, dhandle);
+      return vtkm::cont::Field(this->Name, this->Association, handle);
     }
   }
 
   VTKM_CONT
-  vtkm::cont::Field AsField(const vtkm::cont::DynamicArrayHandle& dhandle) const
+  vtkm::cont::Field AsField(const vtkm::cont::VariantArrayHandle& handle) const
   {
     if (this->IsCellField())
     {
-      return vtkm::cont::Field(this->Name, this->Association, this->CellSetName, dhandle);
+      return vtkm::cont::Field(this->Name, this->Association, this->CellSetName, handle);
     }
     else
     {
-      return vtkm::cont::Field(this->Name, this->Association, dhandle);
+      return vtkm::cont::Field(this->Name, this->Association, handle);
     }
   }
 

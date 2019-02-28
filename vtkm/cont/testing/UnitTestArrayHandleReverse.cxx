@@ -106,8 +106,8 @@ void TestArrayHandleReverse()
 
 }; // namespace UnitTestArrayHandleReverseNamespace
 
-int UnitTestArrayHandleReverse(int, char* [])
+int UnitTestArrayHandleReverse(int argc, char* argv[])
 {
   using namespace UnitTestArrayHandleReverseNamespace;
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleReverse);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleReverse, argc, argv);
 }

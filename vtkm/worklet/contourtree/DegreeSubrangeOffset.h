@@ -81,9 +81,9 @@ namespace contourtree
 class DegreeSubrangeOffset : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> sortID,          // (input) index into sort vector
-                                WholeArrayIn<IdType> sortVector, // (input)
-                                WholeArrayOut<IdType> degree);   // (output)
+  using ControlSignature = void(FieldIn sortID,          // (input) index into sort vector
+                                WholeArrayIn sortVector, // (input)
+                                WholeArrayOut degree);   // (output)
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 

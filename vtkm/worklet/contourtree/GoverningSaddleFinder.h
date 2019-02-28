@@ -96,13 +96,12 @@ namespace contourtree
 class GoverningSaddleFinder : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature =
-    void(FieldIn<IdType> edgeNo,           // (input) index into sorted edges
-         WholeArrayIn<IdType> edgeSorter,  // (input) sorted edge index
-         WholeArrayIn<IdType> edgeFar,     // (input) high ends of edges
-         WholeArrayIn<IdType> edgeNear,    // (input) low ends of edges
-         WholeArrayOut<IdType> prunesTo,   // (output) where vertex is pruned to
-         WholeArrayOut<IdType> outdegree); // (output) updegree of vertex
+  using ControlSignature = void(FieldIn edgeNo,           // (input) index into sorted edges
+                                WholeArrayIn edgeSorter,  // (input) sorted edge index
+                                WholeArrayIn edgeFar,     // (input) high ends of edges
+                                WholeArrayIn edgeNear,    // (input) low ends of edges
+                                WholeArrayOut prunesTo,   // (output) where vertex is pruned to
+                                WholeArrayOut outdegree); // (output) updegree of vertex
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

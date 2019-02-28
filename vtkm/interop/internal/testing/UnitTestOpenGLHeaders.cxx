@@ -38,7 +38,7 @@ void TestOpenGLHeaders()
 }
 }
 
-int UnitTestOpenGLHeaders(int, char* [])
+int UnitTestOpenGLHeaders(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestOpenGLHeaders);
+  return vtkm::cont::testing::Testing::Run(TestOpenGLHeaders, argc, argv);
 }

@@ -39,9 +39,7 @@ namespace test_pointneighborhood
 struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood
 {
 
-  using ControlSignature = void(FieldInNeighborhood<Scalar> neighbors,
-                                CellSetIn,
-                                FieldOut<Scalar> maxV);
+  using ControlSignature = void(FieldInNeighborhood neighbors, CellSetIn, FieldOut maxV);
 
   using ExecutionSignature = void(Boundary, _1, _3);
   //verify input domain can be something other than first parameter
@@ -97,7 +95,7 @@ struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood
 
 struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood
 {
-  using ControlSignature = void(CellSetIn topology, FieldIn<Vec3> pointCoords);
+  using ControlSignature = void(CellSetIn topology, FieldIn pointCoords);
   using ExecutionSignature =
     void(_2, WorkIndex, InputIndex, OutputIndex, ThreadIndices, VisitIndex);
 
@@ -133,7 +131,7 @@ struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood
 
 struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood
 {
-  using ControlSignature = void(CellSetIn topology, FieldIn<Vec3> pointCoords);
+  using ControlSignature = void(CellSetIn topology, FieldIn pointCoords);
   using ExecutionSignature =
     void(_2, WorkIndex, InputIndex, OutputIndex, ThreadIndices, VisitIndex);
 
@@ -197,7 +195,10 @@ static void TestMaxNeighborValue()
   vtkm::cont::ArrayHandle<vtkm::Float32> output;
 
   vtkm::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
-  dispatcher.Invoke(dataSet3D.GetField("pointvar"), dataSet3D.GetCellSet(), output);
+  dispatcher.Invoke(
+    dataSet3D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    dataSet3D.GetCellSet(),
+    output);
 
   vtkm::Float32 expected3D[18] = { 110.3f, 120.3f, 120.3f, 110.3f, 120.3f, 120.3f,
                                    170.5f, 180.5f, 180.5f, 170.5f, 180.5f, 180.5f,
@@ -209,7 +210,10 @@ static void TestMaxNeighborValue()
   }
 
   vtkm::cont::DataSet dataSet2D = testDataSet.Make2DUniformDataSet1();
-  dispatcher.Invoke(dataSet2D.GetField("pointvar"), dataSet2D.GetCellSet(), output);
+  dispatcher.Invoke(
+    dataSet2D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    dataSet2D.GetCellSet(),
+    output);
 
   vtkm::Float32 expected2D[25] = { 100.0f, 100.0f, 78.0f, 49.0f, 33.0f, 100.0f, 100.0f,
                                    78.0f,  50.0f,  48.0f, 94.0f, 94.0f, 91.0f,  91.0f,

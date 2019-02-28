@@ -86,7 +86,7 @@ public:
 };
 }
 
-int UnitTestMaskPointsFilter(int, char* [])
+int UnitTestMaskPointsFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingMaskPoints());
+  return vtkm::cont::testing::Testing::Run(TestingMaskPoints(), argc, argv);
 }

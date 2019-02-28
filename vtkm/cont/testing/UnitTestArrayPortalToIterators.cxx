@@ -180,7 +180,7 @@ void TestArrayPortalToIterators()
 
 } // Anonymous namespace
 
-int UnitTestArrayPortalToIterators(int, char* [])
+int UnitTestArrayPortalToIterators(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayPortalToIterators);
+  return vtkm::cont::testing::Testing::Run(TestArrayPortalToIterators, argc, argv);
 }

@@ -45,14 +45,6 @@ struct TestPortal
   }
 };
 
-struct TestIndexPortal
-{
-  using ValueType = vtkm::Id;
-
-  VTKM_EXEC_CONT
-  ValueType Get(vtkm::Id index) const { return index; }
-};
-
 template <typename NeighborhoodType, typename T>
 void verify_neighbors(NeighborhoodType neighbors, vtkm::Id index, vtkm::Id3 index3d, T)
 {
@@ -127,8 +119,7 @@ struct FetchArrayNeighborhoodInTests
           for (vtkm::Id i = 0; i < POINT_DIMS[0]; i++, index++)
           {
             index3d[0] = i;
-            vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(
-              index3d, vtkm::internal::NullType(), vtkm::internal::NullType(), connectivity);
+            vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(index3d, connectivity);
 
             auto neighbors = fetch.Load(indices, execObject);
 
@@ -149,8 +140,7 @@ struct FetchArrayNeighborhoodInTests
     //Verify that 1D scheduling works with neighborhoods
     for (vtkm::Id index = 0; index < (POINT_DIMS[0] * POINT_DIMS[1] * POINT_DIMS[2]); index++)
     {
-      vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(
-        index, TestIndexPortal(), TestIndexPortal(), connectivity);
+      vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(index, index, 0, index, connectivity);
 
       auto neighbors = fetch.Load(indices, execObject);
 
@@ -187,7 +177,7 @@ void TestExecNeighborhoodFetch()
 
 } // anonymous namespace
 
-int UnitTestFetchArrayNeighborhoodIn(int, char* [])
+int UnitTestFetchArrayNeighborhoodIn(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestExecNeighborhoodFetch);
+  return vtkm::testing::Testing::Run(TestExecNeighborhoodFetch, argc, argv);
 }

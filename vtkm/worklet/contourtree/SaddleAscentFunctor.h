@@ -94,14 +94,13 @@ namespace contourtree
 class SaddleAscentFunctor : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature =
-    void(FieldIn<IdType> vertexID,          // (input) index into active vertices
-         WholeArrayIn<IdType> firstEdge,    // (input) first edge for each active vertex
-         WholeArrayIn<IdType> outdegree,    // (input) updegree of vertex
-         WholeArrayIn<IdType> activeEdges,  // (input) active edges
-         WholeArrayIn<IdType> chainExtemum, // (input) chain extemum for vertices
-         WholeArrayInOut<IdType> edgeFar,   // (input) high ends of edges
-         FieldOut<IdType> newOutdegree);    // (output) new updegree of vertex
+  using ControlSignature = void(FieldIn vertexID,       // (input) index into active vertices
+                                WholeArrayIn firstEdge, // (input) first edge for each active vertex
+                                WholeArrayIn outdegree, // (input) updegree of vertex
+                                WholeArrayIn activeEdges,  // (input) active edges
+                                WholeArrayIn chainExtemum, // (input) chain extemum for vertices
+                                WholeArrayInOut edgeFar,   // (input) high ends of edges
+                                FieldOut newOutdegree);    // (output) new updegree of vertex
   using ExecutionSignature = _7(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

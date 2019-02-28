@@ -76,7 +76,7 @@ void TestLists()
 
 } // anonymous namespace
 
-int UnitTestStorageListTag(int, char* [])
+int UnitTestStorageListTag(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestLists);
+  return vtkm::cont::testing::Testing::Run(TestLists, argc, argv);
 }

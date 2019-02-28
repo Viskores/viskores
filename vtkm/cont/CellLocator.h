@@ -25,6 +25,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/CellLocator.h>
 
 namespace vtkm
@@ -34,8 +35,6 @@ namespace cont
 
 class CellLocator : public vtkm::cont::ExecutionObjectBase
 {
-private:
-  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
 
 public:
   CellLocator()
@@ -71,6 +70,8 @@ public:
   {
     return PrepareForExecutionImpl(device).PrepareForExecution(device);
   }
+
+  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
 
 protected:
   void SetDirty() { Dirty = true; }

@@ -1,1 +1,4 @@
 leak:libX11*
+leak:loguru.hpp
+leak:/usr/lib/x86_64-linux-gnu/openmp*
+leak:/usr/lib/x86_64-linux-gnu/libopen-pal*

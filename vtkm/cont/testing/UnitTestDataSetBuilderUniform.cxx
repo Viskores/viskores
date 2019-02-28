@@ -367,8 +367,8 @@ void TestDataSetBuilderUniform()
 
 } // namespace DataSetBuilderUniformNamespace
 
-int UnitTestDataSetBuilderUniform(int, char* [])
+int UnitTestDataSetBuilderUniform(int argc, char* argv[])
 {
   using namespace DataSetBuilderUniformNamespace;
-  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderUniform);
+  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderUniform, argc, argv);
 }

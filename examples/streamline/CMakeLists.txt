@@ -19,7 +19,7 @@
 ##  this software.
 ##
 ##=============================================================================
-cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.13 FATAL_ERROR)
 project(Streamline CXX)
 
 #Find the VTK-m package
@@ -33,16 +33,16 @@ if(TARGET OpenGL::GL AND
   set(gl_libs OpenGL::GL OpenGL::GLU GLEW::GLEW GLUT::GLUT)
 
   add_executable(StreamLineUniformGrid_SERIAL StreamLineUniformGrid.cxx)
-  target_link_libraries(StreamLineUniformGrid_SERIAL PRIVATE vtkm_cont ${gl_libs})
+  target_link_libraries(StreamLineUniformGrid_SERIAL PRIVATE vtkm_filter ${gl_libs})
 
   if(TARGET vtkm::cont)
     add_executable(StreamLineUniformGrid_CUDA StreamLineUniformGrid.cu)
-    target_link_libraries(StreamLineUniformGrid_CUDA PRIVATE vtkm_cont ${gl_libs})
+    target_link_libraries(StreamLineUniformGrid_CUDA PRIVATE vtkm_filter ${gl_libs})
   endif()
 
   if(TARGET vtkm::tbb)
     add_executable(StreamLineUniformGrid_TBB StreamLineUniformGridTBB.cxx)
-    target_link_libraries(StreamLineUniformGrid_TBB PRIVATE vtkm_cont ${gl_libs})
+    target_link_libraries(StreamLineUniformGrid_TBB PRIVATE vtkm_filter ${gl_libs})
   endif()
 
 endif()

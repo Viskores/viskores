@@ -45,7 +45,7 @@
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 // VTKM_ASSUME_IMPL is compiler-specific:
-#if defined(__CUDA_ARCH__)
+#if defined(VTKM_CUDA_DEVICE_PASS)
 //For all versions of CUDA this is a no-op while we look
 //for a CUDA asm snippet that replicates this kind of behavior
 #define VTKM_ASSUME_IMPL(cond) (void)0 /* no-op */

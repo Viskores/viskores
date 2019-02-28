@@ -21,16 +21,10 @@
 #define vtk_m_cont_testing_TestingSerialization_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/Configure.h>
-#include VTKM_DIY(diy/master.hpp)
-#include VTKM_DIY(diy/mpi.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/serialization.h>
 
 #include <random>
 
@@ -174,10 +168,10 @@ template <typename T, typename TestEqualFunctor>
 void TestSerialization(const T& obj, const TestEqualFunctor& test)
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  diy::Master master(comm);
+  vtkmdiy::Master master(comm);
 
   auto nblocks = comm.size();
-  diy::RoundRobinAssigner assigner(comm.size(), nblocks);
+  vtkmdiy::RoundRobinAssigner assigner(comm.size(), nblocks);
 
   std::vector<int> gids;
   assigner.local_gids(comm.rank(), gids);
@@ -187,8 +181,8 @@ void TestSerialization(const T& obj, const TestEqualFunctor& test)
   Block<T> block;
   block.send = obj;
 
-  diy::Link* link = new diy::Link;
-  diy::BlockID neighbor;
+  vtkmdiy::Link* link = new vtkmdiy::Link;
+  vtkmdiy::BlockID neighbor;
 
   // send neighbor
   neighbor.gid = (gid < (nblocks - 1)) ? (gid + 1) : 0;
@@ -203,11 +197,11 @@ void TestSerialization(const T& obj, const TestEqualFunctor& test)
   master.add(gid, &block, link);
 
   // compute, exchange, compute
-  master.foreach ([](Block<T>* b, const diy::Master::ProxyWithLink& cp) {
+  master.foreach ([](Block<T>* b, const vtkmdiy::Master::ProxyWithLink& cp) {
     cp.enqueue(cp.link()->target(0), b->send);
   });
   master.exchange();
-  master.foreach ([](Block<T>* b, const diy::Master::ProxyWithLink& cp) {
+  master.foreach ([](Block<T>* b, const vtkmdiy::Master::ProxyWithLink& cp) {
     cp.dequeue(cp.link()->target(1).gid, b->received);
   });
 

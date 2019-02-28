@@ -40,7 +40,7 @@ public:
     : Value(value)
   {
   }
-  using ControlSignature = void(FieldOut<>);
+  using ControlSignature = void(FieldOut);
   using ExecutionSignature = void(_1);
   VTKM_EXEC
   void operator()(T& outValue) const { outValue = Value; }
@@ -57,7 +57,7 @@ public:
     : Offset(offset)
   {
   }
-  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   VTKM_EXEC inline void operator()(const FloatType& inValue, FloatType& outValue) const
@@ -79,7 +79,7 @@ public:
     , MaskValue(mask)
   {
   }
-  using ControlSignature = void(FieldIn<>, FieldInOut<>, FieldIn<>);
+  using ControlSignature = void(FieldIn, FieldInOut, FieldIn);
   using ExecutionSignature = void(_1, _2, _3);
 
   template <typename MaskType>
@@ -103,7 +103,7 @@ public:
     : Value(value)
   {
   }
-  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename O>
@@ -127,7 +127,7 @@ public:
     : Values(values)
   {
   }
-  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename O>

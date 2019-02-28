@@ -24,6 +24,7 @@
 #include <vtkm/cont/AtomicArray.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/exec/FunctorBase.h>
 
@@ -48,25 +49,24 @@ static constexpr vtkm::Id NumWrites = 33554432; // 2^25
   VTKM_MAKE_BENCHMARK(Name##32768, Class, 32768);                                                  \
   VTKM_MAKE_BENCHMARK(Name##1048576, Class, 1048576)
 
-#define RUN_ATOMIC_BENCHMARKS(Name)                                                                \
-  VTKM_RUN_BENCHMARK(Name##1, vtkm::cont::AtomicArrayTypeListTag{});                               \
-  VTKM_RUN_BENCHMARK(Name##8, vtkm::cont::AtomicArrayTypeListTag{});                               \
-  VTKM_RUN_BENCHMARK(Name##32, vtkm::cont::AtomicArrayTypeListTag{});                              \
-  VTKM_RUN_BENCHMARK(Name##512, vtkm::cont::AtomicArrayTypeListTag{});                             \
-  VTKM_RUN_BENCHMARK(Name##2048, vtkm::cont::AtomicArrayTypeListTag{});                            \
-  VTKM_RUN_BENCHMARK(Name##32768, vtkm::cont::AtomicArrayTypeListTag{});                           \
-  VTKM_RUN_BENCHMARK(Name##1048576, vtkm::cont::AtomicArrayTypeListTag{})
+#define RUN_ATOMIC_BENCHMARKS(Name, id)                                                            \
+  VTKM_RUN_BENCHMARK(Name##1, vtkm::cont::AtomicArrayTypeListTag{}, id);                           \
+  VTKM_RUN_BENCHMARK(Name##8, vtkm::cont::AtomicArrayTypeListTag{}, id);                           \
+  VTKM_RUN_BENCHMARK(Name##32, vtkm::cont::AtomicArrayTypeListTag{}, id);                          \
+  VTKM_RUN_BENCHMARK(Name##512, vtkm::cont::AtomicArrayTypeListTag{}, id);                         \
+  VTKM_RUN_BENCHMARK(Name##2048, vtkm::cont::AtomicArrayTypeListTag{}, id);                        \
+  VTKM_RUN_BENCHMARK(Name##32768, vtkm::cont::AtomicArrayTypeListTag{}, id);                       \
+  VTKM_RUN_BENCHMARK(Name##1048576, vtkm::cont::AtomicArrayTypeListTag{}, id)
 
-template <class Device>
 class BenchmarkAtomicArray
 {
 public:
-  using Algo = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-  using Timer = vtkm::cont::Timer<Device>;
+  using Algo = vtkm::cont::Algorithm;
+  using Timer = vtkm::cont::Timer;
 
   // Benchmarks AtomicArray::Add such that each work index writes to adjacent
   // indices.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchAddSeq
   {
     vtkm::Id ArraySize;
@@ -92,18 +92,20 @@ public:
     BenchAddSeq(vtkm::Id arraySize)
       : ArraySize(arraySize)
     {
-      this->Data.PrepareForOutput(this->ArraySize, Device{});
+      this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::AtomicArray<ValueType> array(this->Data);
-      auto portal = array.PrepareForExecution(Device{});
+      auto portal = array.PrepareForExecution(DeviceAdapter());
       Worker<decltype(portal)> worker{ this->ArraySize, portal };
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -118,7 +120,7 @@ public:
   MAKE_ATOMIC_BENCHMARKS(AddSeq, BenchAddSeq);
 
   // Provides a non-atomic baseline for BenchAddSeq
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchAddSeqBaseline
   {
     vtkm::Id ArraySize;
@@ -153,11 +155,13 @@ public:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      auto portal = this->Data.PrepareForOutput(this->ArraySize, Device{});
+      auto portal = this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
       Worker<decltype(portal)> worker{ this->ArraySize, portal };
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -173,7 +177,7 @@ public:
 
   // Benchmarks AtomicArray::Add such that each work index writes to a strided
   // index ( floor(i / stride) + stride * (i % stride)
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchAddStride
   {
     vtkm::Id ArraySize;
@@ -207,18 +211,20 @@ public:
       : ArraySize(arraySize)
       , Stride(stride)
     {
-      this->Data.PrepareForOutput(this->ArraySize, Device{});
+      this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::AtomicArray<ValueType> array(this->Data);
-      auto portal = array.PrepareForExecution(Device{});
+      auto portal = array.PrepareForExecution(DeviceAdapter());
       Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -234,7 +240,7 @@ public:
   MAKE_ATOMIC_BENCHMARKS(AddStride, BenchAddStride);
 
   // Non-atomic baseline for AddStride
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchAddStrideBaseline
   {
     vtkm::Id ArraySize;
@@ -273,11 +279,13 @@ public:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      auto portal = this->Data.PrepareForOutput(this->ArraySize, Device{});
+      auto portal = this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
       Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -294,7 +302,7 @@ public:
 
   // Benchmarks AtomicArray::CompareAndSwap such that each work index writes to adjacent
   // indices.
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchCASSeq
   {
     vtkm::Id ArraySize;
@@ -332,18 +340,20 @@ public:
     BenchCASSeq(vtkm::Id arraySize)
       : ArraySize(arraySize)
     {
-      this->Data.PrepareForOutput(this->ArraySize, Device{});
+      this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::AtomicArray<ValueType> array(this->Data);
-      auto portal = array.PrepareForExecution(Device{});
+      auto portal = array.PrepareForExecution(DeviceAdapter());
       Worker<decltype(portal)> worker{ this->ArraySize, portal };
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -358,7 +368,7 @@ public:
   MAKE_ATOMIC_BENCHMARKS(CASSeq, BenchCASSeq);
 
   // Provides a non-atomic baseline for BenchCASSeq
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchCASSeqBaseline
   {
     vtkm::Id ArraySize;
@@ -395,10 +405,11 @@ public:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      auto portal = this->Data.PrepareForOutput(this->ArraySize, Device{});
+      auto portal = this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
       Worker<decltype(portal)> worker{ this->ArraySize, portal };
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
       return timer.GetElapsedTime();
     }
@@ -416,7 +427,7 @@ public:
   // Benchmarks AtomicArray::CompareAndSwap such that each work index writes to
   // a strided index:
   // ( floor(i / stride) + stride * (i % stride)
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchCASStride
   {
     vtkm::Id ArraySize;
@@ -458,18 +469,20 @@ public:
       : ArraySize(arraySize)
       , Stride(stride)
     {
-      this->Data.PrepareForOutput(this->ArraySize, Device{});
+      this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::AtomicArray<ValueType> array(this->Data);
-      auto portal = array.PrepareForExecution(Device{});
+      auto portal = array.PrepareForExecution(DeviceAdapter());
       Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -485,7 +498,7 @@ public:
   MAKE_ATOMIC_BENCHMARKS(CASStride, BenchCASStride);
 
   // Non-atomic baseline for CASStride
-  template <typename ValueType>
+  template <typename ValueType, typename DeviceAdapter>
   struct BenchCASStrideBaseline
   {
     vtkm::Id ArraySize;
@@ -526,11 +539,13 @@ public:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      auto portal = this->Data.PrepareForOutput(this->ArraySize, Device{});
+      auto portal = this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
       Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algo::Schedule(worker, NumWrites);
+
       return timer.GetElapsedTime();
     }
 
@@ -545,31 +560,30 @@ public:
   };
   MAKE_ATOMIC_BENCHMARKS(CASStrideBase, BenchCASStrideBaseline);
 
-  static void Run()
+  static void Run(vtkm::cont::DeviceAdapterId id)
   {
-    RUN_ATOMIC_BENCHMARKS(AddSeq);
-    RUN_ATOMIC_BENCHMARKS(AddSeqBase);
-    RUN_ATOMIC_BENCHMARKS(AddStride);
-    RUN_ATOMIC_BENCHMARKS(AddStrideBase);
+    RUN_ATOMIC_BENCHMARKS(AddSeq, id);
+    RUN_ATOMIC_BENCHMARKS(AddSeqBase, id);
+    RUN_ATOMIC_BENCHMARKS(AddStride, id);
+    RUN_ATOMIC_BENCHMARKS(AddStrideBase, id);
 
-    RUN_ATOMIC_BENCHMARKS(CASSeq);
-    RUN_ATOMIC_BENCHMARKS(CASSeqBase);
-    RUN_ATOMIC_BENCHMARKS(CASStride);
-    RUN_ATOMIC_BENCHMARKS(CASStrideBase);
+    RUN_ATOMIC_BENCHMARKS(CASSeq, id);
+    RUN_ATOMIC_BENCHMARKS(CASSeqBase, id);
+    RUN_ATOMIC_BENCHMARKS(CASStride, id);
+    RUN_ATOMIC_BENCHMARKS(CASStrideBase, id);
   }
 };
 }
 } // end namespace vtkm::benchmarking
 
-int main(int, char* [])
+int main(int argc, char* argv[])
 {
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(Device{});
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
 
   try
   {
-    vtkm::benchmarking::BenchmarkAtomicArray<Device>::Run();
+    vtkm::benchmarking::BenchmarkAtomicArray::Run(config.Device);
   }
   catch (std::exception& e)
   {

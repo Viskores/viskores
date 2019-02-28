@@ -24,7 +24,6 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 
 #include <vtkm/cont/MultiBlock.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -131,7 +130,7 @@ void TestMultiBlockFilters()
   Result_Verify(result, cellAverage, Blocks, std::string("pointvar"));
 }
 
-int UnitTestMultiBlockFilters(int, char* [])
+int UnitTestMultiBlockFilters(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestMultiBlockFilters);
+  return vtkm::cont::testing::Testing::Run(TestMultiBlockFilters, argc, argv);
 }

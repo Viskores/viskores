@@ -80,8 +80,8 @@ namespace active_graph_inc
 class BuildTrunkWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeVertices,     // (input) activeVertices
-                                WholeArrayInOut<IdType> hyperacrs); // (input/output) hyperarcs
+  typedef void ControlSignature(FieldIn activeVertices,     // (input) activeVertices
+                                WholeArrayInOut hyperacrs); // (input/output) hyperarcs
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 

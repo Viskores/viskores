@@ -298,7 +298,7 @@ static void Run()
 
 } // anonymous namespace
 
-int UnitTestTryExecute(int, char* [])
+int UnitTestTryExecute(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Run);
+  return vtkm::cont::testing::Testing::Run(Run, argc, argv);
 }

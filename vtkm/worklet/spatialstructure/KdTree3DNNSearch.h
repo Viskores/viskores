@@ -47,12 +47,12 @@ public:
   class NearestNeighborSearch3DWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> qcIn,
-                                  WholeArrayIn<> treeIdIn,
-                                  WholeArrayIn<> treeSplitIdIn,
-                                  WholeArrayIn<> treeCoordiIn,
-                                  FieldOut<> nnIdOut,
-                                  FieldInOut<> nnDisOut);
+    using ControlSignature = void(FieldIn qcIn,
+                                  WholeArrayIn treeIdIn,
+                                  WholeArrayIn treeSplitIdIn,
+                                  WholeArrayIn treeCoordiIn,
+                                  FieldOut nnIdOut,
+                                  FieldInOut nnDisOut);
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
     VTKM_CONT
@@ -214,7 +214,7 @@ public:
 
 //set up stack size for cuda environment
 #ifdef VTKM_CUDA
-    std::size_t stackSizeBackup;
+    std::size_t stackSizeBackup(0);
     (void)stackSizeBackup;
     if (id.GetValue() == VTKM_DEVICE_ADAPTER_CUDA)
     {

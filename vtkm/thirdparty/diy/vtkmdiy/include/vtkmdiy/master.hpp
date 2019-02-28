@@ -1,5 +1,5 @@
-#ifndef DIY_MASTER_HPP
-#define DIY_MASTER_HPP
+#ifndef VTKMDIY_MASTER_HPP
+#define VTKMDIY_MASTER_HPP
 
 #include <vector>
 #include <map>
@@ -7,6 +7,8 @@
 #include <deque>
 #include <algorithm>
 #include <functional>
+#include <numeric>
+#include <memory>
 
 #include "link.hpp"
 #include "collection.hpp"
@@ -14,7 +16,6 @@
 // Communicator functionality
 #include "mpi.hpp"
 #include "serialization.hpp"
-#include "detail/collectives.hpp"
 #include "time.hpp"
 
 #include "thread.hpp"
@@ -37,16 +38,13 @@ namespace diy
     public:
       struct ProcessBlock;
 
-      template<class Block>
-      struct Binder;
-
-      // Commands
+      // Commands; forward declarations, defined in detail/master/commands.hpp
       struct BaseCommand;
 
       template<class Block>
       struct Command;
 
-      typedef std::vector<BaseCommand*>     Commands;
+      using Commands = std::vector<std::unique_ptr<BaseCommand>>;
 
       // Skip
       using Skip = std::function<bool(int, const Master&)>;
@@ -61,13 +59,17 @@ namespace diy
       typedef Collection::Load              LoadBlock;
 
     public:
-      // Communicator types
+      // Communicator types, defined in proxy.hpp
       struct Proxy;
       struct ProxyWithLink;
 
       // foreach callback
       template<class Block>
       using Callback = std::function<void(Block*, const ProxyWithLink&)>;
+
+      // iexchange callback
+      template<class Block>
+      using ICallback = std::function<bool(Block*, const ProxyWithLink&)>;
 
       struct QueuePolicy
       {
@@ -86,35 +88,22 @@ namespace diy
         size_t  size;
       };
 
-      struct MessageInfo
-      {
-        int from, to;
-        int round;
-      };
+      // forward declarations, defined in detail/master/communication.hpp
+      struct MessageInfo;
+      struct InFlightSend;
+      struct InFlightRecv;
+      struct tags;
 
-      struct InFlightSend
-      {
-        std::shared_ptr<MemoryBuffer> message;
-        mpi::request                  request;
+      struct GidSendOrder;
+      struct IExchangeInfo;
 
-        // for debug purposes:
-        MessageInfo info;
-      };
-
-      struct InFlightRecv
-      {
-        MemoryBuffer message;
-        MessageInfo info{ -1, -1, -1 };
-      };
-
+      // forward declarations, defined in detail/master/collectives.hpp
       struct Collective;
-      struct tags       { enum { queue, piece }; };
 
-      typedef           std::list<InFlightSend>             InFlightSendsList;
-      typedef           std::map<int, InFlightRecv>         InFlightRecvsMap;
-      typedef           std::list<int>                      ToSendList;         // [gid]
-      typedef           std::list<Collective>               CollectivesList;
-      typedef           std::map<int, CollectivesList>      CollectivesMap;     // gid          -> [collectives]
+      struct InFlightSendsList;     // std::list<InFlightSend>
+      struct InFlightRecvsMap;      // std::map<int, InFlightRecv>          //
+      struct CollectivesList;       // std::list<Collective>
+      struct CollectivesMap;        // std::map<int, CollectivesList>       // gid -> [collectives]
 
 
       struct QueueRecord
@@ -161,7 +150,7 @@ namespace diy
            * destroy a block (a function that's expected to upcast and delete),
            * serialize a block
       */
-                    Master(mpi::communicator    comm,          //!< communicator
+      inline        Master(mpi::communicator    comm,          //!< communicator
                            int                  threads__ = 1,  //!< number of threads DIY can use
                            int                  limit__   = -1, //!< number of blocks to store in memory
                            CreateBlock          create_   = 0,  //!< block create function; master manages creation if create != 0
@@ -169,19 +158,9 @@ namespace diy
                            ExternalStorage*     storage   = 0,  //!< storage object (path, method, etc.) for storing temporary blocks being shuffled in/out of core
                            SaveBlock            save      = 0,  //!< block save function; master manages saving if save != 0
                            LoadBlock            load_     = 0,  //!< block load function; master manages loading if load != 0
-                           QueuePolicy*         q_policy  = new QueueSizePolicy(4096)): //!< policy for managing message queues specifies maximum size of message queues to keep in memory
-                      blocks_(create_, destroy_, storage, save, load_),
-                      queue_policy_(q_policy),
-                      limit_(limit__),
-                      threads_(threads__ == -1 ? static_cast<int>(thread::hardware_concurrency()) : threads__),
-                      storage_(storage),
-                      // Communicator functionality
-                      comm_(comm),
-                      expected_(0),
-                      exchange_round_(-1),
-                      immediate_(true)
-                                                        {}
-                    ~Master()                           { set_immediate(true); clear(); delete queue_policy_; }
+                           QueuePolicy*         q_policy  = new QueueSizePolicy(4096)); //!< policy for managing message queues specifies maximum size of message queues to keep in memory
+      inline        ~Master();
+
       inline void   clear();
       inline void   destroy(int i)                      { if (blocks_.own()) blocks_.destroy(i); }
 
@@ -192,6 +171,11 @@ namespace diy
       inline void*  block(int i) const                  { return blocks_.find(i); }
       template<class Block>
       Block*        block(int i) const                  { return static_cast<Block*>(block(i)); }
+      //! return the `i`-th block, loading it if necessary
+      void*         get(int i)                          { return blocks_.get(i); }
+      template<class Block>
+      Block*        get(int i)                          { return static_cast<Block*>(get(i)); }
+
       inline Link*  link(int i) const                   { return links_[i]; }
       inline int    loaded_block() const                { return blocks_.available(); }
 
@@ -213,8 +197,6 @@ namespace diy
       //! return the MPI communicator
       mpi::communicator&        communicator()          { return comm_; }
 
-      //! return the `i`-th block, loading it if necessary
-      void*         get(int i)                          { return blocks_.get(i); }
       //! return gid of the `i`-th block
       int           gid(int i) const                    { return gids_[i]; }
       //! return the local id of the local block with global id gid, or -1 if not local
@@ -224,10 +206,25 @@ namespace diy
 
       //! exchange the queues between all the blocks (collective operation)
       inline void   exchange(bool remote = false);
+
+      //! nonblocking exchange of the queues between all the blocks
+      template<class Block>
+      void          iexchange_(const ICallback<Block>&   f);
+
+      template<class F>
+      void          iexchange(const F& f)
+      {
+          using Block = typename detail::block_traits<F>::type;
+          iexchange_<Block>(f);
+      }
+
       inline void   process_collectives();
 
       inline
       ProxyWithLink proxy(int i) const;
+
+      inline
+      ProxyWithLink proxy(int i, IExchangeInfo* iexchange) const;
 
       //! return the number of local blocks
       unsigned int  size() const                        { return static_cast<unsigned int>(blocks_.size()); }
@@ -265,18 +262,9 @@ namespace diy
       // Communicator functionality
       IncomingQueues&   incoming(int gid__)             { return incoming_[exchange_round_].map[gid__].queues; }
       OutgoingQueues&   outgoing(int gid__)             { return outgoing_[gid__].queues; }
-      CollectivesList&  collectives(int gid__)          { return collectives_[gid__]; }
-      size_t            incoming_count(int gid__) const
-      {
-        IncomingRoundMap::const_iterator round_it = incoming_.find(exchange_round_);
-        if (round_it == incoming_.end())
-          return 0;
-        IncomingQueuesMap::const_iterator queue_it = round_it->second.map.find(gid__);
-        if (queue_it == round_it->second.map.end())
-          return 0;
-        return queue_it->second.queues.size();
-      }
       size_t            outgoing_count(int gid__) const { OutgoingQueuesMap::const_iterator it = outgoing_.find(gid__); if (it == outgoing_.end()) return 0; return it->second.queues.size(); }
+      inline CollectivesList&  collectives(int gid__);
+      inline CollectivesMap&   collectives();
 
       void              set_expected(int expected)      { expected_ = expected; }
       void              add_expected(int i)             { expected_ += i; }
@@ -289,16 +277,25 @@ namespace diy
 
     private:
       // Communicator functionality
-      inline void       comm_exchange(ToSendList& to_send, int out_queues_limit);     // possibly called in between block computations
-      inline void       rcomm_exchange(ToSendList& to_send, int out_queues_limit);    // possibly called in between block computations
+      inline void       comm_exchange(GidSendOrder& gid_order, IExchangeInfo*    iexchange = 0);
+      inline void       rcomm_exchange();    // possibly called in between block computations
       inline bool       nudge();
-      inline void       send_outgoing_queues(ToSendList& to_send,
-                                             int out_queues_limit,
-                                             IncomingRound& current_incoming,
-                                             bool remote);
-      inline void       check_incoming_queues();
+      inline void       send_outgoing_queues(GidSendOrder&   gid_order,
+                                             bool            remote,
+                                             IExchangeInfo*  iexchange = 0);
+      inline void       check_incoming_queues(IExchangeInfo* iexchange = 0);
+      inline GidSendOrder
+                        order_gids();
+      inline void       touch_queues();
+      inline void       move_external_local(int from);
+      inline void       send_same_rank(int from, int to, MemoryBuffer& bb, IExchangeInfo* iexchange);
+      inline void       send_different_rank(int from, int to, int proc, MemoryBuffer& bb, bool remote, IExchangeInfo* iexchange);
 
-      void              cancel_requests();              // TODO
+      inline InFlightRecv&         inflight_recv(int proc);
+      inline InFlightSendsList&    inflight_sends();
+
+      // iexchange commmunication
+      inline void       icommunicate(IExchangeInfo* iexchange);     // async communication
 
       // debug
       inline void       show_incoming_records() const;
@@ -320,12 +317,14 @@ namespace diy
       mpi::communicator     comm_;
       IncomingRoundMap      incoming_;
       OutgoingQueuesMap     outgoing_;
-      InFlightSendsList     inflight_sends_;
-      InFlightRecvsMap      inflight_recvs_;
-      CollectivesMap        collectives_;
-      int                   expected_;
-      int                   exchange_round_;
-      bool                  immediate_;
+
+      std::unique_ptr<InFlightSendsList> inflight_sends_;
+      std::unique_ptr<InFlightRecvsMap>  inflight_recvs_;
+      std::unique_ptr<CollectivesMap>    collectives_;
+
+      int                   expected_           = 0;
+      int                   exchange_round_     = -1;
+      bool                  immediate_          = true;
       Commands              commands_;
 
     private:
@@ -336,153 +335,46 @@ namespace diy
       stats::Profiler               prof;
   };
 
-  struct Master::BaseCommand
-  {
-      virtual       ~BaseCommand()                                                  {}      // to delete derived classes
-      virtual void  execute(void* b, const ProxyWithLink& cp) const                 =0;
-      virtual bool  skip(int i, const Master& master) const                         =0;
-  };
-
-  template<class Block>
-  struct Master::Command: public BaseCommand
-  {
-            Command(Callback<Block> f_, const Skip& s_):
-                f(f_), s(s_)                                                        {}
-
-      void  execute(void* b, const ProxyWithLink& cp) const override                { f(static_cast<Block*>(b), cp); }
-      bool  skip(int i, const Master& m) const override                             { return s(i,m); }
-
-      Callback<Block>   f;
-      Skip              s;
-  };
-
   struct Master::SkipNoIncoming
   { bool operator()(int i, const Master& master) const   { return !master.has_incoming(i); } };
-
-  struct Master::Collective
-  {
-            Collective():
-              cop_(0)                           {}
-            Collective(detail::CollectiveOp* cop):
-              cop_(cop)                         {}
-            // this copy constructor is very ugly, but need it to insert Collectives into a list
-            Collective(const Collective& other):
-              cop_(0)                           { swap(const_cast<Collective&>(other)); }
-            ~Collective()                       { delete cop_; }
-
-    void    init()                              { cop_->init(); }
-    void    swap(Collective& other)             { std::swap(cop_, other.cop_); }
-    void    update(const Collective& other)     { cop_->update(*other.cop_); }
-    void    global(const mpi::communicator& c)  { cop_->global(c); }
-    void    copy_from(Collective& other) const  { cop_->copy_from(*other.cop_); }
-    void    result_out(void* x) const           { cop_->result_out(x); }
-
-    detail::CollectiveOp*                       cop_;
-
-    private:
-    Collective& operator=(const Collective& other);
-  };
 }
 
+#include "detail/master/communication.hpp"
+#include "detail/master/collectives.hpp"
+#include "detail/master/commands.hpp"
 #include "proxy.hpp"
+#include "detail/master/execution.hpp"
 
-// --- ProcessBlock ---
-struct diy::Master::ProcessBlock
+diy::Master::
+Master(mpi::communicator    comm,
+       int                  threads__,
+       int                  limit__,
+       CreateBlock          create_,
+       DestroyBlock         destroy_,
+       ExternalStorage*     storage,
+       SaveBlock            save,
+       LoadBlock            load_,
+       QueuePolicy*         q_policy):
+  blocks_(create_, destroy_, storage, save, load_),
+  queue_policy_(q_policy),
+  limit_(limit__),
+  threads_(threads__ == -1 ? static_cast<int>(thread::hardware_concurrency()) : threads__),
+  storage_(storage),
+  // Communicator functionality
+  inflight_sends_(new InFlightSendsList),
+  inflight_recvs_(new InFlightRecvsMap),
+  collectives_(new CollectivesMap)
 {
-          ProcessBlock(Master&                    master_,
-                       const std::deque<int>&     blocks__,
-                       int                        local_limit_,
-                       critical_resource<int>&    idx_):
-              master(master_),
-              blocks(blocks__),
-              local_limit(local_limit_),
-              idx(idx_)
-          {}
+    comm_.duplicate(comm);
+}
 
-  void    process()
-  {
-    master.log->debug("Processing with thread: {}",  this_thread::get_id());
-
-    std::vector<int>      local;
-    do
-    {
-      int cur = (*idx.access())++;
-
-      if ((size_t)cur >= blocks.size())
-          return;
-
-      int i = blocks[cur];
-      if (master.block(i))
-      {
-          if (local.size() == (size_t)local_limit)
-              master.unload(local);
-          local.push_back(i);
-      }
-
-      master.log->debug("Processing block: {}", master.gid(i));
-
-      bool skip_block = true;
-      for (size_t cmd = 0; cmd < master.commands_.size(); ++cmd)
-      {
-          if (!master.commands_[cmd]->skip(i, master))
-          {
-              skip_block = false;
-              break;
-          }
-      }
-
-      IncomingQueuesMap &current_incoming = master.incoming_[master.exchange_round_].map;
-      if (skip_block)
-      {
-          if (master.block(i) == 0)
-              master.load_queues(i);      // even though we are skipping the block, the queues might be necessary
-
-          for (size_t cmd = 0; cmd < master.commands_.size(); ++cmd)
-          {
-              master.commands_[cmd]->execute(0, master.proxy(i));  // 0 signals that we are skipping the block (even if it's loaded)
-
-              // no longer need them, so get rid of them, rather than risk reloading
-              current_incoming[master.gid(i)].queues.clear();
-              current_incoming[master.gid(i)].records.clear();
-          }
-
-          if (master.block(i) == 0)
-              master.unload_queues(i);    // even though we are skipping the block, the queues might be necessary
-      }
-      else
-      {
-          if (master.block(i) == 0)                             // block unloaded
-          {
-              if (local.size() == (size_t)local_limit)                    // reached the local limit
-                  master.unload(local);
-
-              master.load(i);
-              local.push_back(i);
-          }
-
-          for (size_t cmd = 0; cmd < master.commands_.size(); ++cmd)
-          {
-              master.commands_[cmd]->execute(master.block(i), master.proxy(i));
-
-              // no longer need them, so get rid of them
-              current_incoming[master.gid(i)].queues.clear();
-              current_incoming[master.gid(i)].records.clear();
-          }
-      }
-    } while(true);
-
-    // TODO: invoke opportunistic communication
-    //       don't forget to adjust Master::exchange()
-  }
-
-  static void run(void* bf)                   { static_cast<ProcessBlock*>(bf)->process(); }
-
-  Master&                 master;
-  const std::deque<int>&  blocks;
-  int                     local_limit;
-  critical_resource<int>& idx;
-};
-// --------------------
+diy::Master::
+~Master()
+{
+    set_immediate(true);
+    clear();
+    delete queue_policy_;
+}
 
 void
 diy::Master::
@@ -547,14 +439,13 @@ unload_outgoing(int gid__)
 
   size_t out_queues_size = sizeof(size_t);   // map size
   size_t count = 0;
-  for (OutgoingQueues::iterator it = out_qr.queues.begin(); it != out_qr.queues.end(); ++it)
+  // count the size of the queues we need to pack
+  for (auto& rec : out_qr.queues)
   {
-    if (it->first.proc == comm_.rank()) continue;
+    if (rec.first.proc == comm_.rank()) continue;
 
-    out_queues_size += sizeof(BlockID);     // target
-    out_queues_size += sizeof(size_t);      // buffer.position
-    out_queues_size += sizeof(size_t);      // buffer.size
-    out_queues_size += it->second.size();   // buffer contents
+    out_queues_size += sizeof(BlockID);                                 // target
+    out_queues_size += Serialization<MemoryBuffer>::size(rec.second);   // buffer contents
     ++count;
   }
   if (queue_policy_->unload_outgoing(*this, gid__, out_queues_size - sizeof(size_t)))
@@ -563,29 +454,30 @@ unload_outgoing(int gid__)
       MemoryBuffer  bb;     bb.reserve(out_queues_size);
       diy::save(bb, count);
 
-      for (OutgoingQueues::iterator it = out_qr.queues.begin(); it != out_qr.queues.end();)
+      // pack queues going to a remote proc into bb; queues going to a
+      // different block on our rank, stay separated, recorded in external_local
+      for (auto it = out_qr.queues.begin(); it != out_qr.queues.end();)
       {
-        if (it->first.proc == comm_.rank())
+        auto  bid    = it->first;
+        auto& buffer = it->second;
+        if (bid.proc == comm_.rank())
         {
           // treat as incoming
-          if (queue_policy_->unload_incoming(*this, gid__, it->first.gid, it->second.size()))
+          if (queue_policy_->unload_incoming(*this, gid__, bid.gid, buffer.size()))
           {
-            QueueRecord& qr = out_qr.external_local[it->first];
-            qr.size = it->second.size();
-            qr.external = storage_->put(it->second);
+            QueueRecord& qr = out_qr.external_local[bid];
+            qr.size     = buffer.size();
+            qr.external = storage_->put(buffer);
 
             out_qr.queues.erase(it++);
-            continue;
-          } // else keep in memory
+          } ++it; // else keep in memory
         } else
         {
-          diy::save(bb, it->first);
-          diy::save(bb, it->second);
+          diy::save(bb, bid);
+          diy::save(bb, buffer);
 
           out_qr.queues.erase(it++);
-          continue;
         }
-        ++it;
       }
 
       // TODO: this mechanism could be adjusted for direct saving to disk
@@ -658,6 +550,10 @@ diy::Master::
 proxy(int i) const
 { return ProxyWithLink(Proxy(const_cast<Master*>(this), gid(i)), block(i), link(i)); }
 
+diy::Master::ProxyWithLink
+diy::Master::
+proxy(int i, IExchangeInfo* iexchange) const
+{ return ProxyWithLink(Proxy(const_cast<Master*>(this), gid(i)), block(i), link(i), iexchange); }
 
 int
 diy::Master::
@@ -711,95 +607,10 @@ foreach_(const Callback<Block>& f, const Skip& skip)
     auto scoped = prof.scoped("foreach");
     DIY_UNUSED(scoped);
 
-    commands_.push_back(new Command<Block>(f, skip));
+    commands_.emplace_back(new Command<Block>(f, skip));
 
     if (immediate())
         execute();
-}
-
-void
-diy::Master::
-execute()
-{
-  log->debug("Entered execute()");
-  auto scoped = prof.scoped("execute");
-  DIY_UNUSED(scoped);
-  //show_incoming_records();
-
-  // touch the outgoing and incoming queues as well as collectives to make sure they exist
-  for (unsigned i = 0; i < size(); ++i)
-  {
-    outgoing(gid(i));
-    incoming(gid(i));           // implicitly touches queue records
-    collectives(gid(i));
-  }
-
-  if (commands_.empty())
-      return;
-
-  // Order the blocks, so the loaded ones come first
-  std::deque<int>   blocks;
-  for (unsigned i = 0; i < size(); ++i)
-    if (block(i) == 0)
-        blocks.push_back(i);
-    else
-        blocks.push_front(i);
-
-  // don't use more threads than we can have blocks in memory
-  int num_threads;
-  int blocks_per_thread;
-  if (limit_ == -1)
-  {
-    num_threads = threads_;
-    blocks_per_thread = size();
-  }
-  else
-  {
-    num_threads = std::min(threads_, limit_);
-    blocks_per_thread = limit_/num_threads;
-  }
-
-  // idx is shared
-  critical_resource<int> idx(0);
-
-  typedef                 ProcessBlock                                   BlockFunctor;
-  if (num_threads > 1)
-  {
-    // launch the threads
-    typedef               std::pair<thread*, BlockFunctor*>               ThreadFunctorPair;
-    typedef               std::list<ThreadFunctorPair>                    ThreadFunctorList;
-    ThreadFunctorList     threads;
-    for (unsigned i = 0; i < (unsigned)num_threads; ++i)
-    {
-        BlockFunctor* bf = new BlockFunctor(*this, blocks, blocks_per_thread, idx);
-        threads.push_back(ThreadFunctorPair(new thread(&BlockFunctor::run, bf), bf));
-    }
-
-    // join the threads
-    for(ThreadFunctorList::iterator it = threads.begin(); it != threads.end(); ++it)
-    {
-        thread*           t  = it->first;
-        BlockFunctor*     bf = it->second;
-        t->join();
-        delete t;
-        delete bf;
-    }
-  } else
-  {
-      BlockFunctor bf(*this, blocks, blocks_per_thread, idx);
-      BlockFunctor::run(&bf);
-  }
-
-  // clear incoming queues
-  incoming_[exchange_round_].map.clear();
-
-  if (limit() != -1 && in_memory() > limit())
-      throw std::runtime_error(fmt::format("Fatal: {} blocks in memory, with limit {}", in_memory(), limit()));
-
-  // clear commands
-  for (size_t i = 0; i < commands_.size(); ++i)
-      delete commands_[i];
-  commands_.clear();
 }
 
 void
@@ -813,7 +624,7 @@ exchange(bool remote)
 
   log->debug("Starting exchange");
 
-#ifdef DIY_NO_MPI
+#ifdef VTKM_DIY_NO_MPI
   // remote doesn't need to do anything special if there is no mpi, but we also
   // can't just use it because of the ibarrier
   remote = false;
@@ -821,69 +632,116 @@ exchange(bool remote)
 
   // make sure there is a queue for each neighbor
   if (!remote)
-  {
-      for (int i = 0; i < (int)size(); ++i)
-      {
-          OutgoingQueues&  outgoing_queues  = outgoing_[gid(i)].queues;
-          OutQueueRecords& external_local   = outgoing_[gid(i)].external_local;
-          if (outgoing_queues.size() < (size_t)link(i)->size())
-              for (unsigned j = 0; j < (unsigned)link(i)->size(); ++j)
-              {
-                  if (external_local.find(link(i)->target(j)) == external_local.end())
-                      outgoing_queues[link(i)->target(j)];        // touch the outgoing queue, creating it if necessary
-              }
-      }
-  }
+      touch_queues();
 
   flush(remote);
   log->debug("Finished exchange");
 }
 
-namespace diy
+void
+diy::Master::
+touch_queues()
 {
-namespace detail
-{
-  template <typename T>
-  struct VectorWindow
+  for (int i = 0; i < (int)size(); ++i)
   {
-    T *begin;
-    size_t count;
-  };
-} // namespace detail
-
-namespace mpi
-{
-namespace detail
-{
-  template<typename T>  struct is_mpi_datatype< diy::detail::VectorWindow<T> > { typedef true_type type; };
-
-  template <typename T>
-  struct mpi_datatype< diy::detail::VectorWindow<T> >
-  {
-    typedef diy::detail::VectorWindow<T> VecWin;
-    static MPI_Datatype         datatype()                { return get_mpi_datatype<T>(); }
-    static const void*          address(const VecWin& x)  { return x.begin; }
-    static void*                address(VecWin& x)        { return x.begin; }
-    static int                  count(const VecWin& x)    { return static_cast<int>(x.count); }
-  };
+      OutgoingQueues&  outgoing_queues  = outgoing_[gid(i)].queues;
+      OutQueueRecords& external_local   = outgoing_[gid(i)].external_local;
+      if (outgoing_queues.size() < (size_t)link(i)->size())
+          for (unsigned j = 0; j < (unsigned)link(i)->size(); ++j)
+          {
+              if (external_local.find(link(i)->target(j)) == external_local.end())
+                  outgoing_queues[link(i)->target(j)];        // touch the outgoing queue, creating it if necessary
+          }
+  }
 }
-} // namespace mpi::detail
 
-} // namespace diy
+// iexchange()
+// {
+//     while !all_done
+//         for all blocks
+//             icommunicate
+//             iproxywithlink
+//             f
+//             icommunicate()
+// }
+
+template<class Block>
+void
+diy::Master::
+iexchange_(const ICallback<Block>& f)
+{
+    auto scoped = prof.scoped("iexchange");
+    DIY_UNUSED(scoped);
+
+    // prepare for next round
+    incoming_.erase(exchange_round_);
+    ++exchange_round_;
+
+    IExchangeInfo iexchange(size(), comm_);
+    iexchange.add_work(size());                 // start with one work unit for each block
+    comm_.barrier();                            // make sure that everyone's original work is accounted for
+
+    int global_work_ = -1;
+
+    do
+    {
+        for (size_t i = 0; i < size(); i++)     // for all blocks
+        {
+
+            icommunicate(&iexchange);            // TODO: separate comm thread std::thread t(icommunicate);
+            ProxyWithLink cp = proxy(i, &iexchange);
+
+            prof << "callback";
+            bool done = f(block<Block>(i), cp);
+            prof >> "callback";
+
+            int nundeq_after = 0;
+            int nunenq_after = 0;
+            for (size_t j = 0; j < static_cast<size_t>(cp.link()->size()); j++)
+            {
+                if (cp.incoming(cp.link()->target(j).gid))
+                    ++nundeq_after;
+                if (cp.outgoing(cp.link()->target(j)).size())
+                    ++nunenq_after;
+            }
+
+            done &= (nundeq_after == 0);
+            done &= (nunenq_after == 0);
+
+            int gid = cp.gid();
+            if (iexchange.done[gid] != done)
+            {
+                iexchange.done[gid] = done;
+                if (done)
+                {
+                    int work = iexchange.dec_work();
+                    log->debug("[{}] Decrementing work when switching done after callback, for {}: work = {}\n", comm_.rank(), gid, work);
+                }
+                else
+                {
+                    int work = iexchange.inc_work();
+                    log->debug("[{}] Incrementing work when switching done after callback, for {}: work = {}\n", comm_.rank(), gid, work);
+                }
+            }
+        }
+
+        global_work_ = iexchange.global_work();
+    } while (global_work_ > 0);
+    log->debug("[{}] ==== Leaving iexchange ====\n", iexchange.comm.rank());
+
+    outgoing_.clear();
+}
 
 /* Communicator */
 void
 diy::Master::
-comm_exchange(ToSendList& to_send, int out_queues_limit)
+comm_exchange(GidSendOrder& gid_order, IExchangeInfo* iexchange)
 {
-  IncomingRound &current_incoming = incoming_[exchange_round_];
-
-  send_outgoing_queues(to_send, out_queues_limit, current_incoming, false);
-
-  // kick requests
-  while(nudge());
-
-  check_incoming_queues();
+    auto scoped = prof.scoped("comm-exchange");
+    DIY_UNUSED(scoped);
+    send_outgoing_queues(gid_order, false, iexchange);
+    while(nudge());                   // kick requests
+    check_incoming_queues(iexchange);
 }
 
 /* Remote communicator */
@@ -914,16 +772,18 @@ comm_exchange(ToSendList& to_send, int out_queues_limit)
 //
 void
 diy::Master::
-rcomm_exchange(ToSendList& to_send, int out_queues_limit)
+rcomm_exchange()
 {
-    IncomingRound   &current_incoming   = incoming_[exchange_round_];
     bool            done                = false;
     bool            ibarr_act           = false;
     mpi::request    ibarr_req;                      // mpi request associated with ibarrier
 
+    // make a list of outgoing queues to send (the ones in memory come first)
+    auto gid_order = order_gids();
+
     while (!done)
     {
-        send_outgoing_queues(to_send, out_queues_limit, current_incoming, true);
+        send_outgoing_queues(gid_order, true, 0);
 
         // kick requests
         nudge();
@@ -936,9 +796,9 @@ rcomm_exchange(ToSendList& to_send, int out_queues_limit)
         }
         else
         {
-            if (to_send.empty() && inflight_sends_.empty())
+            if (gid_order.empty() && inflight_sends().empty())
             {
-            #ifndef DIY_NO_MPI
+            #ifndef VTKM_DIY_NO_MPI
                 ibarr_req = comm_.ibarrier();
                 ibarr_act = true;
             #else
@@ -952,50 +812,85 @@ rcomm_exchange(ToSendList& to_send, int out_queues_limit)
     }                                                 // while !done
 }
 
+// fill list of outgoing queues to send (the ones in memory come first)
+// for iexchange
+diy::Master::GidSendOrder
+diy::Master::
+order_gids()
+{
+    GidSendOrder order;
+
+    for (OutgoingQueuesMap::iterator it = outgoing_.begin(); it != outgoing_.end(); ++it)
+    {
+        OutgoingQueuesRecord& out = it->second;
+        if (out.external == -1)
+            order.list.push_front(it->first);
+        else
+            order.list.push_back(it->first);
+    }
+    log->debug("order.size(): {}", order.size());
+
+    // compute maximum number of queues to keep in memory
+    // first version just average number of queues per block * num_blocks in memory
+    // for iexchange
+    if (limit_ == -1 || size() == 0)
+        order.limit = order.size();
+    else
+        // average number of queues per block * in-memory block limit
+        order.limit = std::max((size_t) 1, order.size() / size() * limit_);
+
+    return order;
+}
+
+// iexchange communicator
 void
 diy::Master::
-send_outgoing_queues(
-        ToSendList& to_send,
-        int out_queues_limit,
-        IncomingRound& current_incoming,
-        bool remote)
+icommunicate(IExchangeInfo* iexchange)
 {
-    static const size_t MAX_MPI_MESSAGE_COUNT = INT_MAX;
+    auto scoped = prof.scoped("icommunicate");
+    DIY_UNUSED(scoped);
 
-    while (inflight_sends_.size() < (size_t)out_queues_limit && !to_send.empty())
+    log->debug("Entering icommunicate()");
+
+    // lock out other threads
+    // TODO: not threaded yet
+    // if (!CAS(comm_flag, 0, 1))
+    //     return;
+
+    // debug
+//     log->info("out_queues_limit: {}", out_queues_limit);
+
+    // exchange
+    auto gid_order = order_gids();
+    comm_exchange(gid_order, iexchange);
+
+    // cleanup
+
+    // NB: not doing outgoing_.clear() as in Master::flush() so that outgoing queues remain in place
+    // TODO: consider having a flush function for a final cleanup if the user plans to move to
+    // another part of the DIY program
+
+    log->debug("Exiting icommunicate()");
+}
+
+void
+diy::Master::
+send_outgoing_queues(GidSendOrder&   gid_order,
+                     bool            remote,                     // TODO: are remote and iexchange mutually exclusive? If so, use single enum?
+                     IExchangeInfo*  iexchange)
+{
+    auto scoped = prof.scoped("send-outgoing-queues");
+    DIY_UNUSED(scoped);
+
+    while (inflight_sends().size() < gid_order.limit && !gid_order.empty())
     {
-        int from = to_send.front();
+        int from = gid_order.pop();
 
-        // deal with external_local queues
-        for (OutQueueRecords::iterator it = outgoing_[from].external_local.begin(); it != outgoing_[from].external_local.end(); ++it)
-        {
-            int to = it->first.gid;
-
-            log->debug("Processing local queue: {} <- {} of size {}", to, from, it->second.size);
-
-            QueueRecord& in_qr  = current_incoming.map[to].records[from];
-            bool in_external  = block(lid(to)) == 0;
-
-            if (in_external)
-                in_qr = it->second;
-            else
-            {
-                // load the queue
-                in_qr.size     = it->second.size;
-                in_qr.external = -1;
-
-                MemoryBuffer bb;
-                storage_->get(it->second.external, bb);
-
-                current_incoming.map[to].queues[from].swap(bb);
-            }
-            ++current_incoming.received;
-        }
-        outgoing_[from].external_local.clear();
+        // move external queues going to our rank
+        move_external_local(from);
 
         if (outgoing_[from].external != -1)
             load_outgoing(from);
-        to_send.pop_front();
 
         OutgoingQueues& outgoing = outgoing_[from].queues;
         for (OutgoingQueues::iterator it = outgoing.begin(); it != outgoing.end(); ++it)
@@ -1003,173 +898,224 @@ send_outgoing_queues(
             BlockID to_proc = it->first;
             int     to      = to_proc.gid;
             int     proc    = to_proc.proc;
-
             log->debug("Processing queue:      {} <- {} of size {}", to, from, outgoing_[from].queues[to_proc].size());
 
-            // There may be local outgoing queues that remained in memory
-            if (proc == comm_.rank())     // sending to ourselves: simply swap buffers
+            // skip empty queues
+            if (iexchange && !it->second.size())
             {
-                log->debug("Moving queue in-place: {} <- {}", to, from);
-
-                QueueRecord& in_qr  = current_incoming.map[to].records[from];
-                bool in_external  = block(lid(to)) == 0;
-                if (in_external)
-                {
-                    log->debug("Unloading outgoing directly as incoming: {} <- {}", to, from);
-                    MemoryBuffer& bb = it->second;
-                    in_qr.size = bb.size();
-                    if (queue_policy_->unload_incoming(*this, from, to, in_qr.size))
-                        in_qr.external = storage_->put(bb);
-                    else
-                    {
-                        MemoryBuffer& in_bb = current_incoming.map[to].queues[from];
-                        in_bb.swap(bb);
-                        in_bb.reset();
-                        in_qr.external = -1;
-                    }
-                } else        // !in_external
-                {
-                    log->debug("Swapping in memory:    {} <- {}", to, from);
-                    MemoryBuffer& bb = current_incoming.map[to].queues[from];
-                    bb.swap(it->second);
-                    bb.reset();
-                    in_qr.size = bb.size();
-                    in_qr.external = -1;
-                }
-
-                ++current_incoming.received;
+                log->debug("Skipping empty queue: {} <- {}", to, from);
                 continue;
             }
 
-            std::shared_ptr<MemoryBuffer> buffer = std::make_shared<MemoryBuffer>();
-            buffer->swap(it->second);
-
-            MessageInfo info{from, to, exchange_round_};
-            if (buffer->size() <= (MAX_MPI_MESSAGE_COUNT - sizeof(info)))
-            {
-                diy::save(*buffer, info);
-
-                inflight_sends_.emplace_back();
-                inflight_sends_.back().info = info;
-                if (remote)
-                    inflight_sends_.back().request = comm_.issend(proc, tags::queue, buffer->buffer);
-                else
-                    inflight_sends_.back().request = comm_.isend(proc, tags::queue, buffer->buffer);
-                inflight_sends_.back().message = buffer;
-            }
+            // sending to same rank: simply swap buffers
+            if (proc == comm_.rank())
+                send_same_rank(from, to, it->second, iexchange);
             else
-            {
-                int npieces = static_cast<int>((buffer->size() + MAX_MPI_MESSAGE_COUNT - 1)/MAX_MPI_MESSAGE_COUNT);
+                send_different_rank(from, to, proc, it->second, remote, iexchange);
 
-                // first send the head
-                std::shared_ptr<MemoryBuffer> hb = std::make_shared<MemoryBuffer>();
-                diy::save(*hb, buffer->size());
-                diy::save(*hb, info);
-
-                inflight_sends_.emplace_back();
-                inflight_sends_.back().info = info;
-                if (remote)
-                    inflight_sends_.back().request = comm_.issend(proc, tags::piece, hb->buffer);
-                else
-                    inflight_sends_.back().request = comm_.isend(proc, tags::piece, hb->buffer);
-                inflight_sends_.back().message = hb;
-
-                // send the message pieces
-                size_t msg_buff_idx = 0;
-                for (int i = 0; i < npieces; ++i, msg_buff_idx += MAX_MPI_MESSAGE_COUNT)
-                {
-                    int tag = (i == (npieces - 1)) ? tags::queue : tags::piece;
-
-                    detail::VectorWindow<char> window;
-                    window.begin = &buffer->buffer[msg_buff_idx];
-                    window.count = std::min(MAX_MPI_MESSAGE_COUNT, buffer->size() - msg_buff_idx);
-
-                    inflight_sends_.emplace_back();
-                    inflight_sends_.back().info = info;
-                    if (remote)
-                        inflight_sends_.back().request = comm_.issend(proc, tag, window);
-                    else
-                        inflight_sends_.back().request = comm_.isend(proc, tag, window);
-                    inflight_sends_.back().message = buffer;
-                }
-            }
         }                                       // for (OutgoingQueues::iterator it ...
-    }                                           // while (inflight_sends_.size() ...
+    }                                           // while (inflight_sends().size() ...
 }
 
 void
 diy::Master::
-check_incoming_queues()
+move_external_local(int from)
 {
-    mpi::optional<mpi::status> ostatus = comm_.iprobe(mpi::any_source, mpi::any_tag);
-    while (ostatus)
+    IncomingRound& current_incoming = incoming_[exchange_round_];
+
+    // deal with external_local queues
+    for (auto& x : outgoing_[from].external_local)
     {
-        InFlightRecv &ir = inflight_recvs_[ostatus->source()];
+        int to = x.first.gid;
 
-        if (ir.info.from == -1) // uninitialized
-        {
-            MemoryBuffer bb;
-            comm_.recv(ostatus->source(), ostatus->tag(), bb.buffer);
+        log->debug("Processing local queue: {} <- {} of size {}", to, from, x.second.size);
 
-            if (ostatus->tag() == tags::piece)
-            {
-                size_t msg_size;
-                diy::load(bb, msg_size);
-                diy::load(bb, ir.info);
+        QueueRecord& in_qr        = current_incoming.map[to].records[from];
+        bool         to_external  = block(lid(to)) == 0;
 
-                ir.message.buffer.reserve(msg_size);
-            }
-            else // tags::queue
-            {
-                diy::load_back(bb, ir.info);
-                ir.message.swap(bb);
-            }
-        }
+        if (to_external)
+            in_qr = x.second;
         else
         {
-            size_t start_idx = ir.message.buffer.size();
-            size_t count = ostatus->count<char>();
-            ir.message.buffer.resize(start_idx + count);
+            // load the queue
+            in_qr.size     = x.second.size;
+            in_qr.external = -1;
 
-            detail::VectorWindow<char> window;
-            window.begin = &ir.message.buffer[start_idx];
-            window.count = count;
+            MemoryBuffer bb;
+            storage_->get(x.second.external, bb);
 
-            comm_.recv(ostatus->source(), ostatus->tag(), window);
+            current_incoming.map[to].queues[from].swap(bb);
         }
+        current_incoming.received++;
+    }
+    outgoing_[from].external_local.clear();
+}
 
-        // unload message
+void
+diy::Master::
+send_same_rank(int from, int to, MemoryBuffer& bb, IExchangeInfo* iexchange)
+{
+    log->debug("Moving queue in-place: {} <- {}", to, from);
 
-        if (ostatus->tag() == tags::queue)
+    IncomingRound& current_incoming = incoming_[exchange_round_];
+
+    QueueRecord& in_qr       = current_incoming.map[to].records[from];
+    bool         to_external = block(lid(to)) == 0;
+    if (to_external)
+    {
+        log->debug("Unloading outgoing directly as incoming: {} <- {}", to, from);
+        in_qr.size = bb.size();
+        if (queue_policy_->unload_incoming(*this, from, to, in_qr.size))
+            in_qr.external = storage_->put(bb);
+        else
         {
-            size_t size  = ir.message.size();
-            int from = ir.info.from;
-            int to = ir.info.to;
-            int external = -1;
-
-            assert(ir.info.round >= exchange_round_);
-            IncomingRound *in = &incoming_[ir.info.round];
-
-            bool unload_queue = ((ir.info.round == exchange_round_) ? (block(lid(to)) == 0) : (limit_ != -1)) &&
-                queue_policy_->unload_incoming(*this, from, to, size);
-            if (unload_queue)
+            MemoryBuffer& in_bb = current_incoming.map[to].queues[from];
+            if (!iexchange)
             {
-                log->debug("Directly unloading queue {} <- {}", to, from);
-                external = storage_->put(ir.message); // unload directly
+                in_bb.swap(bb);
+                in_bb.reset();
             }
             else
             {
-                in->map[to].queues[from].swap(ir.message);
-                in->map[to].queues[from].reset();     // buffer position = 0
+                iexchange->not_done(to);
+                in_bb.append_binary(&bb.buffer[0], bb.size());
+                bb.clear();
             }
-            in->map[to].records[from] = QueueRecord(size, external);
+            in_qr.external = -1;
+        }
+    } else        // !to_external
+    {
+        log->debug("Swapping in memory:    {} <- {}", to, from);
+        MemoryBuffer& in_bb = current_incoming.map[to].queues[from];
+        if (!iexchange)
+        {
+            in_bb.swap(bb);
+            in_bb.reset();
+        }
+        else
+        {
+            iexchange->not_done(to);
+            in_bb.append_binary(&bb.buffer[0], bb.size());
+            bb.wipe();
+        }
+        in_qr.size = bb.size();
+        in_qr.external = -1;
+    }
 
-            ++(in->received);
-            ir = InFlightRecv(); // reset
+    ++current_incoming.received;
+}
+
+void
+diy::Master::
+send_different_rank(int from, int to, int proc, MemoryBuffer& bb, bool remote, IExchangeInfo* iexchange)
+{
+    static const size_t MAX_MPI_MESSAGE_COUNT = INT_MAX;
+
+    // sending to a different rank
+    std::shared_ptr<MemoryBuffer> buffer = std::make_shared<MemoryBuffer>();
+    buffer->swap(bb);
+
+    MessageInfo info{from, to, exchange_round_};
+    // size fits in one message
+    if (Serialization<MemoryBuffer>::size(*buffer) + Serialization<MessageInfo>::size(info) <= MAX_MPI_MESSAGE_COUNT)
+    {
+        diy::save(*buffer, info);
+
+        inflight_sends().emplace_back();
+        auto& inflight_send = inflight_sends().back();
+
+        inflight_send.info = info;
+        if (remote || iexchange)
+        {
+            if (iexchange)
+            {
+                int work = iexchange->inc_work();
+                log->debug("[{}] Incrementing work when sending queue: work = {}\n", comm_.rank(), work);
+            }
+            inflight_send.request = comm_.issend(proc, tags::queue, buffer->buffer);
+        }
+        else
+            inflight_send.request = comm_.isend(proc, tags::queue, buffer->buffer);
+        inflight_send.message = buffer;
+    }
+    else // large message gets broken into chunks
+    {
+        int npieces = static_cast<int>((buffer->size() + MAX_MPI_MESSAGE_COUNT - 1)/MAX_MPI_MESSAGE_COUNT);
+
+        // first send the head
+        std::shared_ptr<MemoryBuffer> hb = std::make_shared<MemoryBuffer>();
+        diy::save(*hb, buffer->size());
+        diy::save(*hb, info);
+
+        inflight_sends().emplace_back();
+        auto& inflight_send = inflight_sends().back();
+
+        inflight_send.info = info;
+        if (remote || iexchange)
+        {
+            // add one unit of work for the entire large message (upon sending the head, not the individual pieces below)
+            if (iexchange)
+            {
+                int work = iexchange->inc_work();
+                log->debug("[{}] Incrementing work when sending the first piece: work = {}\n", comm_.rank(), work);
+            }
+            inflight_send.request = comm_.issend(proc, tags::piece, hb->buffer);
+        }
+        else
+            inflight_send.request = comm_.isend(proc, tags::piece, hb->buffer);
+        inflight_send.message = hb;
+
+        // send the message pieces
+        size_t msg_buff_idx = 0;
+        for (int i = 0; i < npieces; ++i, msg_buff_idx += MAX_MPI_MESSAGE_COUNT)
+        {
+            int tag = (i == (npieces - 1)) ? tags::queue : tags::piece;     // last piece is marked as queue, to indicate that we are done
+
+            detail::VectorWindow<char> window;
+            window.begin = &buffer->buffer[msg_buff_idx];
+            window.count = std::min(MAX_MPI_MESSAGE_COUNT, buffer->size() - msg_buff_idx);
+
+            inflight_sends().emplace_back();
+            auto& inflight_send = inflight_sends().back();
+
+            inflight_send.info = info;
+            if (remote || iexchange)
+                inflight_send.request = comm_.issend(proc, tag, window);
+            else
+                inflight_send.request = comm_.isend(proc, tag, window);
+            inflight_send.message = buffer;
+        }
+    }   // large message broken into pieces
+}
+
+void
+diy::Master::
+check_incoming_queues(IExchangeInfo* iexchange)
+{
+    auto scoped = prof.scoped("check-incoming-queues");
+    DIY_UNUSED(scoped);
+
+    mpi::optional<mpi::status> ostatus = comm_.iprobe(mpi::any_source, mpi::any_tag);
+    while (ostatus)
+    {
+        InFlightRecv& ir = inflight_recv(ostatus->source());
+
+        ir.recv(comm_, *ostatus);     // possibly partial recv, in case of a multi-piece message
+
+        if (ir.done)                 // all pieces assembled
+        {
+            assert(ir.info.round >= exchange_round_);
+            IncomingRound* in = &incoming_[ir.info.round];
+
+            bool unload = ((ir.info.round == exchange_round_) ? (block(lid(ir.info.to)) == 0) : (limit_ != -1))
+                          && queue_policy_->unload_incoming(*this, ir.info.from, ir.info.to, ir.message.size());
+
+            ir.place(in, unload, storage_, iexchange);
+            ir.reset();
         }
 
         ostatus = comm_.iprobe(mpi::any_source, mpi::any_tag);
-    }                                             // while ostatus
+    }
 }
 
 void
@@ -1185,44 +1131,25 @@ flush(bool remote)
   incoming_.erase(exchange_round_);
   ++exchange_round_;
 
-  // make a list of outgoing queues to send (the ones in memory come first)
-  ToSendList    to_send;
-  for (OutgoingQueuesMap::iterator it = outgoing_.begin(); it != outgoing_.end(); ++it)
-  {
-    OutgoingQueuesRecord& out = it->second;
-    if (out.external == -1)
-        to_send.push_front(it->first);
-    else
-        to_send.push_back(it->first);
-  }
-  log->debug("to_send.size(): {}", to_send.size());
-
-  // XXX: we probably want a cleverer limit than block limit times average number of queues per block
-  // XXX: with queues we could easily maintain a specific space limit
-  int out_queues_limit;
-  if (limit_ == -1 || size() == 0)
-    out_queues_limit = static_cast<int>(to_send.size());
-  else
-    out_queues_limit = static_cast<int>(std::max((size_t) 1, to_send.size()/size()*limit_));      // average number of queues per block * in-memory block limit
-
   if (remote)
-      rcomm_exchange(to_send, out_queues_limit);
+      rcomm_exchange();
   else
   {
+      auto gid_order = order_gids();
       do
       {
-          comm_exchange(to_send, out_queues_limit);
+          comm_exchange(gid_order);
 
 #ifdef DEBUG
           time_type cur = get_time();
           if (cur - start > wait*1000)
           {
               log->warn("Waiting in flush [{}]: {} - {} out of {}",
-                      comm_.rank(), inflight_sends_.size(), incoming_[exchange_round_].received, expected_);
+                      comm_.rank(), inflight_sends().size(), incoming_[exchange_round_].received, expected_);
               wait *= 2;
           }
 #endif
-      } while (!inflight_sends_.empty() || incoming_[exchange_round_].received < expected_ || !to_send.empty());
+      } while (!inflight_sends().empty() || incoming_[exchange_round_].received < expected_ || !gid_order.empty());
   }
 
   outgoing_.clear();
@@ -1233,57 +1160,18 @@ flush(bool remote)
   process_collectives();
 }
 
-void
-diy::Master::
-process_collectives()
-{
-  auto scoped = prof.scoped("collectives");
-  DIY_UNUSED(scoped);
-
-  if (collectives_.empty())
-      return;
-
-  typedef       CollectivesList::iterator       CollectivesIterator;
-  std::vector<CollectivesIterator>  iters;
-  std::vector<int>                  gids;
-  for (CollectivesMap::iterator cur = collectives_.begin(); cur != collectives_.end(); ++cur)
-  {
-    gids.push_back(cur->first);
-    iters.push_back(cur->second.begin());
-  }
-
-  while (iters[0] != collectives_.begin()->second.end())
-  {
-    iters[0]->init();
-    for (unsigned j = 1; j < iters.size(); ++j)
-    {
-      // NB: this assumes that the operations are commutative
-      iters[0]->update(*iters[j]);
-    }
-    iters[0]->global(comm_);        // do the mpi collective
-
-    for (unsigned j = 1; j < iters.size(); ++j)
-    {
-      iters[j]->copy_from(*iters[0]);
-      ++iters[j];
-    }
-
-    ++iters[0];
-  }
-}
-
 bool
 diy::Master::
 nudge()
 {
   bool success = false;
-  for (InFlightSendsList::iterator it = inflight_sends_.begin(); it != inflight_sends_.end();)
+  for (InFlightSendsList::iterator it = inflight_sends().begin(); it != inflight_sends().end();)
   {
     mpi::optional<mpi::status> ostatus = it->request.test();
     if (ostatus)
     {
       success = true;
-      it = inflight_sends_.erase(it);
+      it = inflight_sends().erase(it);
     }
     else
     {
@@ -1320,6 +1208,48 @@ show_incoming_records() const
       }
     }
   }
+}
+
+// return global work status (for debugging)
+int
+diy::Master::IExchangeInfo::
+global_work()
+{
+    int global_work;
+    global_work_->fetch(global_work, 0, 0);
+    global_work_->flush_local(0);
+    return global_work;
+}
+
+// get global all done status
+bool
+diy::Master::IExchangeInfo::
+all_done()
+{
+    return global_work() == 0;
+}
+
+// reset global work counter
+void
+diy::Master::IExchangeInfo::
+reset_work()
+{
+    int val = 0;
+    global_work_->replace(val, 0, 0);
+    global_work_->flush(0);
+}
+
+// add arbitrary units of work to global work counter
+int
+diy::Master::IExchangeInfo::
+add_work(int work)
+{
+    int global_work;                                               // unused
+    global_work_->fetch_and_op(&work, &global_work, 0, 0, MPI_SUM);
+    global_work_->flush(0);
+    if (global_work + work < 0)
+        throw std::runtime_error(fmt::format("error: attempting to subtract {} units of work when global_work prior to subtraction = {}", work, global_work));
+    return global_work + work;
 }
 
 #endif

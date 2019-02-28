@@ -46,17 +46,17 @@ namespace
     }                                                                                              \
   } while (false)
 
-static constexpr vtkm::Id ARRAY_SIZE = 1033;
-static constexpr vtkm::IdComponent GROUP_SIZE = 10;
-static constexpr vtkm::Id NUM_UNIQUE = ARRAY_SIZE / GROUP_SIZE;
+#define ARRAY_SIZE 1033
+#define GROUP_SIZE 10
+#define NUM_UNIQUE (vtkm::Id)(ARRAY_SIZE / GROUP_SIZE)
 
 struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
   using ControlSignature = void(KeysIn keys,
-                                ValuesIn<> keyMirror,
-                                ValuesIn<> indexValues,
-                                ValuesInOut<> valuesToModify,
-                                ValuesOut<> writeKey);
+                                ValuesIn keyMirror,
+                                ValuesIn indexValues,
+                                ValuesInOut valuesToModify,
+                                ValuesOut writeKey);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, WorkIndex, ValueCount);
   using InputDomain = _1;
 
@@ -100,9 +100,9 @@ struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 struct CheckReducedValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
   using ControlSignature = void(KeysIn,
-                                ReducedValuesOut<> extractKeys,
-                                ReducedValuesIn<> indexReference,
-                                ReducedValuesInOut<> copyKeyPair);
+                                ReducedValuesOut extractKeys,
+                                ReducedValuesIn indexReference,
+                                ReducedValuesInOut copyKeyPair);
   using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
 
   template <typename T>

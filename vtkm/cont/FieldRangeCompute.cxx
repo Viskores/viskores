@@ -34,7 +34,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(const vtkm::cont::DataSet
                                                        vtkm::cont::Field::Association assoc)
 {
   return vtkm::cont::detail::FieldRangeComputeImpl(
-    dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
+    dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
 }
 
 //-----------------------------------------------------------------------------
@@ -44,7 +44,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(const vtkm::cont::MultiBl
                                                        vtkm::cont::Field::Association assoc)
 {
   return vtkm::cont::detail::FieldRangeComputeImpl(
-    multiblock, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
+    multiblock, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
 }
 }
 } // namespace vtkm::cont

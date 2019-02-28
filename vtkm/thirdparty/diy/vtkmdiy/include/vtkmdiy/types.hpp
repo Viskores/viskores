@@ -1,5 +1,5 @@
-#ifndef DIY_TYPES_HPP
-#define DIY_TYPES_HPP
+#ifndef VTKMDIY_TYPES_HPP
+#define VTKMDIY_TYPES_HPP
 
 #include <iostream>
 #include "constants.h"
@@ -10,14 +10,21 @@ namespace diy
     struct BlockID
     {
         int gid, proc;
+
+        BlockID() = default;
+        BlockID(int _gid, int _proc) : gid(_gid), proc(_proc) {}
     };
 
     template<class Coordinate_>
     struct Bounds
     {
         using Coordinate = Coordinate_;
+        using Point      = diy::Point<Coordinate, DIY_MAX_DIM>;
 
-        Point<Coordinate, DIY_MAX_DIM>    min, max;
+        Point min, max;
+
+        Bounds() = default;
+        Bounds(const Point& _min, const Point& _max) : min(_min), max(_max) {}
     };
     using DiscreteBounds   = Bounds<int>;
     using ContinuousBounds = Bounds<float>;
@@ -30,6 +37,8 @@ namespace diy
     struct Direction: public Point<int,DIY_MAX_DIM>
     {
               Direction()                 { for (size_t i = 0; i < DIY_MAX_DIM; ++i) (*this)[i] = 0; }
+              Direction(std::initializer_list<int> lst):
+                Direction()               { size_t i = 0; for(int x : lst) (*this)[i++] = x; }
               Direction(int dir)
       {
           for (size_t i = 0; i < DIY_MAX_DIM; ++i) (*this)[i] = 0;

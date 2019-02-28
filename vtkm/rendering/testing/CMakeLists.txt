@@ -28,7 +28,7 @@ set(unit_tests
   UnitTestCanvas.cxx
   UnitTestMapperConnectivity.cxx
   UnitTestMultiMapper.cxx
-  UnitTestMapperCylinders.cxx
+  #UnitTestMapperCylinders.cxx
   UnitTestMapperPoints.cxx
   UnitTestMapperQuads.cxx
   UnitTestMapperRayTracer.cxx
@@ -36,17 +36,7 @@ set(unit_tests
   UnitTestMapperVolume.cxx
 )
 
-vtkm_unit_tests(NAME Rendering BACKEND SERIAL SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
-if (TARGET vtkm::tbb)
-  vtkm_unit_tests(NAME Rendering BACKEND TBB SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
-endif()
-if (TARGET vtkm::openmp)
-  vtkm_unit_tests(NAME Rendering BACKEND OPENMP SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
-endif()
-if (TARGET vtkm::cuda)
-  vtkm_unit_tests(NAME Rendering BACKEND CUDA SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
-endif()
-
+vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES vtkm_rendering)
 
 if(VTKm_ENABLE_GL_CONTEXT)
   # message(STATUS "rendering testing/glfw needs a FindGLFW")

@@ -27,7 +27,6 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 
@@ -48,7 +47,7 @@ namespace triangulate
 class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(CellSetIn cellset, FieldOutCell<> connectivityOut);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell connectivityOut);
   using ExecutionSignature = void(PointIndices, _2, VisitIndex);
   using InputDomain = _1;
 

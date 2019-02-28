@@ -53,7 +53,8 @@ namespace internal
 {
 
 template <class ArrayPortalType>
-class Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>
+class VTKM_ALWAYS_EXPORT
+  Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>
 {
   using ClassType =
     Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>;
@@ -112,11 +113,10 @@ private:
 template <typename T, class ArrayPortalType, class DeviceAdapterTag>
 class ArrayTransfer<T, StorageTagImplicit<ArrayPortalType>, DeviceAdapterTag>
 {
-private:
+public:
   using StorageTag = StorageTagImplicit<ArrayPortalType>;
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
 
-public:
   using ValueType = T;
 
   using PortalControl = typename StorageType::PortalType;

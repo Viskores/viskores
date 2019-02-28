@@ -32,7 +32,6 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Logging.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -62,7 +61,7 @@ namespace internal
 /// in a cluster.
 struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
 {
-  using ControlSignature = void(KeysIn clusterIds, ValuesIn<> points, ReducedValuesOut<> repPoints);
+  using ControlSignature = void(KeysIn clusterIds, ValuesIn points, ReducedValuesOut repPoints);
   using ExecutionSignature = _3(_2);
   using InputDomain = _1;
 
@@ -84,7 +83,7 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
     template <typename InputPointsArrayType, typename KeyType>
     VTKM_CONT void operator()(const InputPointsArrayType& points,
                               const vtkm::worklet::Keys<KeyType>& keys,
-                              vtkm::cont::DynamicArrayHandle& output) const
+                              vtkm::cont::VariantArrayHandle& output) const
     {
 
       vtkm::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
@@ -96,11 +95,11 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
   };
 
   template <typename KeyType, typename InputDynamicPointsArrayType>
-  VTKM_CONT static vtkm::cont::DynamicArrayHandle Run(
+  VTKM_CONT static vtkm::cont::VariantArrayHandle Run(
     const vtkm::worklet::Keys<KeyType>& keys,
     const InputDynamicPointsArrayType& inputPoints)
   {
-    vtkm::cont::DynamicArrayHandle output;
+    vtkm::cont::VariantArrayHandle output;
     RunTrampoline trampoline;
     vtkm::cont::CastAndCall(inputPoints, trampoline, keys, output);
     return output;
@@ -151,7 +150,7 @@ struct VertexClustering
     GridInfo Grid;
 
   public:
-    using ControlSignature = void(FieldIn<Vec3>, FieldOut<IdType>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
@@ -190,8 +189,8 @@ struct VertexClustering
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldInPoint<IdType> pointClusterIds,
-                                  FieldOutCell<Id3Type> cellClusterIds);
+                                  FieldInPoint pointClusterIds,
+                                  FieldOutCell cellClusterIds);
     using ExecutionSignature = void(_2, _3);
 
     VTKM_CONT
@@ -212,7 +211,7 @@ struct VertexClustering
   class IndexingWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<IdType>, WholeArrayOut<IdType>);
+    using ControlSignature = void(FieldIn, WholeArrayOut);
     using ExecutionSignature = void(WorkIndex, _1, _2); // WorkIndex: use vtkm indexing
 
     template <typename OutPortalType>
@@ -238,7 +237,7 @@ struct VertexClustering
     }
 
   public:
-    using ControlSignature = void(FieldIn<Id3Type>, FieldOut<Id3Type>, WholeArrayIn<IdType>);
+    using ControlSignature = void(FieldIn, FieldOut, WholeArrayIn);
     using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
@@ -286,7 +285,7 @@ struct VertexClustering
     vtkm::Int64 NPoints;
 
   public:
-    using ControlSignature = void(FieldIn<Id3Type>, FieldOut<TypeInt64>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
@@ -309,7 +308,7 @@ struct VertexClustering
     vtkm::Int64 NPoints;
 
   public:
-    using ControlSignature = void(FieldIn<TypeInt64>, FieldOut<Id3Type>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
@@ -358,8 +357,10 @@ public:
     }
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    vtkm::cont::Timer<> totalTimer;
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer totalTimer;
+    totalTimer.Start();
+    vtkm::cont::Timer timer;
+    timer.Start();
 #endif
 
     //////////////////////////////////////////////
@@ -375,15 +376,16 @@ public:
     mapPointsDispatcher.Invoke(coordinates, pointCidArray);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+    timer.stop();
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// pass 2 : Choose a representative point from each cluster for the output:
-    vtkm::cont::DynamicArrayHandle repPointArray;
+    vtkm::cont::VariantArrayHandle repPointArray;
     {
       vtkm::worklet::Keys<vtkm::Id> keys;
-      keys.BuildArrays(pointCidArray, vtkm::worklet::Keys<vtkm::Id>::SortType::Stable);
+      keys.BuildArrays(pointCidArray, vtkm::worklet::KeysSortType::Stable);
 
       // For mapping properties, this map will select an arbitrary point from
       // the cluster:
@@ -400,7 +402,7 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after reducing points (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// Pass 3 : Decimated mesh generation
@@ -416,7 +418,7 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after clustering cells (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
@@ -461,7 +463,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       this->CellIdMap = vtkm::worklet::StableSortIndices::Sort(pointId3HashArray);
@@ -470,7 +472,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       // Create a temporary permutation array and use that for unhashing.
@@ -486,7 +488,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       this->CellIdMap = vtkm::worklet::StableSortIndices::Sort(pointId3Array);
@@ -495,7 +497,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       // Permute the connectivity array into a basic array handle. Use a

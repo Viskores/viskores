@@ -48,7 +48,9 @@ set(unit_tests
   UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
+  UnitTestMaskIndices.cxx
   UnitTestMaskPoints.cxx
+  UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
   UnitTestNDimsEntropy.cxx
   UnitTestNDimsHistogram.cxx
@@ -60,6 +62,7 @@ set(unit_tests
   UnitTestProbe.cxx
   UnitTestRemoveUnusedPoints.cxx
   UnitTestScalarsToColors.cxx
+  UnitTestScatterAndMask.cxx
   UnitTestScatterCounting.cxx
   UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
@@ -75,6 +78,7 @@ set(unit_tests
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldWholeArray.cxx
+  UnitTestWorkletMapFieldWholeArrayAtomic.cxx
   UnitTestWorkletMapPointNeighborhood.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyUniform.cxx
@@ -84,10 +88,15 @@ set(unit_tests
   UnitTestWarpVector.cxx
   UnitTestWaveletCompressor.cxx
   UnitTestWaveletGenerator.cxx
+  UnitTestZFPCompressor.cxx
  )
 
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS)
+vtkm_unit_tests(
+  SOURCES ${unit_tests}
+  LIBRARIES vtkm_worklet
+  ALL_BACKENDS
+  )
 if (TARGET vtkm::cuda)
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
     set(problematic_cuda_srcs

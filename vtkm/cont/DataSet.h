@@ -25,10 +25,10 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {
@@ -193,7 +193,6 @@ namespace cont
 {
 
 template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG,
-          typename FieldStorageList = VTKM_DEFAULT_STORAGE_LIST_TAG,
           typename CellSetTypesList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
 struct SerializableDataSet
 {
@@ -209,15 +208,14 @@ struct SerializableDataSet
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
-template <typename FieldTypeList, typename FieldStorageList, typename CellSetTypesList>
-struct Serialization<
-  vtkm::cont::SerializableDataSet<FieldTypeList, FieldStorageList, CellSetTypesList>>
+template <typename FieldTypeList, typename CellSetTypesList>
+struct Serialization<vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypesList>>
 {
 private:
-  using Type = vtkm::cont::SerializableDataSet<FieldTypeList, FieldStorageList, CellSetTypesList>;
+  using Type = vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypesList>;
 
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& serializable)
@@ -225,25 +223,24 @@ public:
     const auto& dataset = serializable.DataSet;
 
     vtkm::IdComponent numberOfCoordinateSystems = dataset.GetNumberOfCoordinateSystems();
-    diy::save(bb, numberOfCoordinateSystems);
+    vtkmdiy::save(bb, numberOfCoordinateSystems);
     for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
     {
-      diy::save(bb, dataset.GetCoordinateSystem(i));
+      vtkmdiy::save(bb, dataset.GetCoordinateSystem(i));
     }
 
     vtkm::IdComponent numberOfCellSets = dataset.GetNumberOfCellSets();
-    diy::save(bb, numberOfCellSets);
+    vtkmdiy::save(bb, numberOfCellSets);
     for (vtkm::IdComponent i = 0; i < numberOfCellSets; ++i)
     {
-      diy::save(bb, dataset.GetCellSet(i).ResetCellSetList(CellSetTypesList{}));
+      vtkmdiy::save(bb, dataset.GetCellSet(i).ResetCellSetList(CellSetTypesList{}));
     }
 
     vtkm::IdComponent numberOfFields = dataset.GetNumberOfFields();
-    diy::save(bb, numberOfFields);
+    vtkmdiy::save(bb, numberOfFields);
     for (vtkm::IdComponent i = 0; i < numberOfFields; ++i)
     {
-      diy::save(
-        bb, vtkm::cont::SerializableField<FieldTypeList, FieldStorageList>(dataset.GetField(i)));
+      vtkmdiy::save(bb, vtkm::cont::SerializableField<FieldTypeList>(dataset.GetField(i)));
     }
   }
 
@@ -253,29 +250,29 @@ public:
     dataset = {}; // clear
 
     vtkm::IdComponent numberOfCoordinateSystems = 0;
-    diy::load(bb, numberOfCoordinateSystems);
+    vtkmdiy::load(bb, numberOfCoordinateSystems);
     for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
     {
       vtkm::cont::CoordinateSystem coords;
-      diy::load(bb, coords);
+      vtkmdiy::load(bb, coords);
       dataset.AddCoordinateSystem(coords);
     }
 
     vtkm::IdComponent numberOfCellSets = 0;
-    diy::load(bb, numberOfCellSets);
+    vtkmdiy::load(bb, numberOfCellSets);
     for (vtkm::IdComponent i = 0; i < numberOfCellSets; ++i)
     {
       vtkm::cont::DynamicCellSetBase<CellSetTypesList> cells;
-      diy::load(bb, cells);
+      vtkmdiy::load(bb, cells);
       dataset.AddCellSet(vtkm::cont::DynamicCellSet(cells));
     }
 
     vtkm::IdComponent numberOfFields = 0;
-    diy::load(bb, numberOfFields);
+    vtkmdiy::load(bb, numberOfFields);
     for (vtkm::IdComponent i = 0; i < numberOfFields; ++i)
     {
-      vtkm::cont::SerializableField<FieldTypeList, FieldStorageList> field;
-      diy::load(bb, field);
+      vtkm::cont::SerializableField<FieldTypeList> field;
+      vtkmdiy::load(bb, field);
       dataset.AddField(field.Field);
     }
   }

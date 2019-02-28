@@ -101,7 +101,7 @@ void TestBinaryPredicates()
 
 } // anonymous namespace
 
-int UnitTestBinaryPredicates(int, char* [])
+int UnitTestBinaryPredicates(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestBinaryPredicates);
+  return vtkm::testing::Testing::Run(TestBinaryPredicates, argc, argv);
 }

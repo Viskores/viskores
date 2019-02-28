@@ -15,7 +15,7 @@ namespace detail
   {
     void operator()(MPI_Comm comm, int dest, int tag, const T& x) const
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       typedef       mpi_datatype<T>     Datatype;
       MPI_Send((void*) Datatype::address(x),
                Datatype::count(x),
@@ -37,7 +37,7 @@ namespace detail
   {
     status operator()(MPI_Comm comm, int source, int tag, T& x) const
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       typedef       mpi_datatype<T>     Datatype;
       status s;
       MPI_Recv((void*) Datatype::address(x),
@@ -57,7 +57,7 @@ namespace detail
   {
     status operator()(MPI_Comm comm, int source, int tag, std::vector<U>& x) const
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       status s;
 
       MPI_Probe(source, tag, comm, &s.s);
@@ -80,7 +80,7 @@ namespace detail
   {
     request operator()(MPI_Comm comm, int dest, int tag, const T& x) const
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       request r;
       typedef       mpi_datatype<T>     Datatype;
       MPI_Isend((void*) Datatype::address(x),
@@ -104,7 +104,7 @@ namespace detail
   {
     request operator()(MPI_Comm comm, int dest, int tag, const T& x) const
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       request r;
       typedef       mpi_datatype<T>     Datatype;
       MPI_Issend((void*) Datatype::address(x),
@@ -128,7 +128,7 @@ namespace detail
   {
     request operator()(MPI_Comm comm, int source, int tag, T& x) const
     {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
       request r;
       typedef       mpi_datatype<T>     Datatype;
       MPI_Irecv(Datatype::address(x),

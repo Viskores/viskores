@@ -778,7 +778,7 @@ struct TypeString<vtkm::cont::ArrayHandle<
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH, typename Functor>
@@ -792,16 +792,16 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetArray());
-    diy::save(bb, storage.GetFunctor());
+    vtkmdiy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, storage.GetFunctor());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     AH array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
     Functor functor;
-    diy::load(bb, functor);
+    vtkmdiy::load(bb, functor);
     obj = vtkm::cont::make_ArrayHandleTransform(array, functor);
   }
 };
@@ -817,19 +817,19 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetArray());
-    diy::save(bb, storage.GetFunctor());
-    diy::save(bb, storage.GetInverseFunctor());
+    vtkmdiy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, storage.GetFunctor());
+    vtkmdiy::save(bb, storage.GetInverseFunctor());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     AH array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
     Functor functor;
-    diy::load(bb, functor);
+    vtkmdiy::load(bb, functor);
     InvFunctor invFunctor;
-    diy::load(bb, invFunctor);
+    vtkmdiy::load(bb, invFunctor);
     obj = vtkm::cont::make_ArrayHandleTransform(array, functor, invFunctor);
   }
 };

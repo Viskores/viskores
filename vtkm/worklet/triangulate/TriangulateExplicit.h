@@ -25,7 +25,6 @@
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -53,10 +52,10 @@ public:
   class TrianglesPerCell : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> shapes,
-                                  FieldIn<> numPoints,
+    using ControlSignature = void(FieldIn shapes,
+                                  FieldIn numPoints,
                                   ExecObject tables,
-                                  FieldOut<> triangleCount);
+                                  FieldOut triangleCount);
     using ExecutionSignature = _4(_1, _2, _3);
     using InputDomain = _1;
 
@@ -82,7 +81,7 @@ public:
   public:
     using ControlSignature = void(CellSetIn cellset,
                                   ExecObject tables,
-                                  FieldOutCell<> connectivityOut);
+                                  FieldOutCell connectivityOut);
     using ExecutionSignature = void(CellShape, PointIndices, _2, _3, VisitIndex);
     using InputDomain = _1;
 

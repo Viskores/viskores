@@ -81,11 +81,11 @@ namespace contourtree
 class CopyJoinSplit : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> superID,         // (input) index into super nodes
-                                WholeArrayIn<IdType> inbound,    // (input) join or split arcs
-                                WholeArrayIn<IdType> indegree,   // (input)
-                                WholeArrayIn<IdType> outdegree,  // (input)
-                                WholeArrayOut<IdType> outbound); // (output) join or split arcs
+  using ControlSignature = void(FieldIn superID,         // (input) index into super nodes
+                                WholeArrayIn inbound,    // (input) join or split arcs
+                                WholeArrayIn indegree,   // (input)
+                                WholeArrayIn outdegree,  // (input)
+                                WholeArrayOut outbound); // (output) join or split arcs
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 

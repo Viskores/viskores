@@ -80,14 +80,14 @@ namespace contourtree_maker_inc
 class ComputeRegularStructure_LocateSuperarcs : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayInOut<IdType> contourTreeSuperparents, // (input/output)
-                                WholeArrayIn<IdType> contourTreeWhenTransferred, // (input)
-                                WholeArrayIn<IdType> contourTreeHyperparents,    // (input)
-                                WholeArrayIn<IdType> contourTreeHyperarcs,       // (input)
-                                WholeArrayIn<IdType> contourTreeHypernodes,      // (input)
-                                WholeArrayIn<IdType> contourTreeSupernodes,      // (input)
-                                WholeArrayIn<IdType> meshExtremaPeaks,           // (input)
-                                WholeArrayIn<IdType> meshExtremaPits);           // (input)
+  typedef void ControlSignature(WholeArrayInOut contourTreeSuperparents, // (input/output)
+                                WholeArrayIn contourTreeWhenTransferred, // (input)
+                                WholeArrayIn contourTreeHyperparents,    // (input)
+                                WholeArrayIn contourTreeHyperarcs,       // (input)
+                                WholeArrayIn contourTreeHypernodes,      // (input)
+                                WholeArrayIn contourTreeSupernodes,      // (input)
+                                WholeArrayIn meshExtremaPeaks,           // (input)
+                                WholeArrayIn meshExtremaPits);           // (input)
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;

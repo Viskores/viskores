@@ -280,10 +280,10 @@ void Launch()
 
 } // end anon namespace
 
-int UnitTestCudaShareUserProvidedManagedMemory(int, char* [])
+int UnitTestCudaShareUserProvidedManagedMemory(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
-  int ret = vtkm::cont::testing::Testing::Run(Launch);
+  int ret = vtkm::cont::testing::Testing::Run(Launch, argc, argv);
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(ret);
 }

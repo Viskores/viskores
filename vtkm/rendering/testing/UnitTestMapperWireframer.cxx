@@ -139,7 +139,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperWireframer(int, char* [])
+int UnitTestMapperWireframer(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

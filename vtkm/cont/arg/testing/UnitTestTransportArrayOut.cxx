@@ -87,7 +87,7 @@ void TestArrayOutTransport()
 
 } // Anonymous namespace
 
-int UnitTestTransportArrayOut(int, char* [])
+int UnitTestTransportArrayOut(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayOutTransport);
+  return vtkm::cont::testing::Testing::Run(TestArrayOutTransport, argc, argv);
 }

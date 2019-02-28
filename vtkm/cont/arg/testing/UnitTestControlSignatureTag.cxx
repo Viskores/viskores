@@ -27,14 +27,14 @@ namespace
 
 void TestControlSignatures()
 {
-  VTKM_IS_CONTROL_SIGNATURE_TAG(vtkm::worklet::WorkletMapField::FieldIn<vtkm::Float32>);
+  VTKM_IS_CONTROL_SIGNATURE_TAG(vtkm::worklet::WorkletMapField::FieldIn);
 
   VTKM_TEST_ASSERT(vtkm::cont::arg::internal::ControlSignatureTagCheck<
-                     vtkm::worklet::WorkletMapField::FieldIn<vtkm::Id>>::Valid,
+                     vtkm::worklet::WorkletMapField::FieldIn>::Valid,
                    "Bad check for FieldIn");
 
   VTKM_TEST_ASSERT(vtkm::cont::arg::internal::ControlSignatureTagCheck<
-                     vtkm::worklet::WorkletMapField::FieldOut<vtkm::Id>>::Valid,
+                     vtkm::worklet::WorkletMapField::FieldOut>::Valid,
                    "Bad check for FieldOut");
 
   VTKM_TEST_ASSERT(
@@ -47,7 +47,7 @@ void TestControlSignatures()
 
 } // anonymous namespace
 
-int UnitTestControlSignatureTag(int, char* [])
+int UnitTestControlSignatureTag(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestControlSignatures);
+  return vtkm::cont::testing::Testing::Run(TestControlSignatures, argc, argv);
 }

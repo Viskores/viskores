@@ -63,7 +63,7 @@ void TestArrayCopy()
 
 } // anonymous namespace
 
-int UnitTestArrayCopy(int, char* [])
+int UnitTestArrayCopy(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayCopy);
+  return vtkm::cont::testing::Testing::Run(TestArrayCopy, argc, argv);
 }

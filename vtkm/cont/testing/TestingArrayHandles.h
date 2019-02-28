@@ -90,7 +90,7 @@ struct TestingArrayHandles
 
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ControlSignature = void(FieldIn, FieldOut);
     using ExecutionSignature = _2(_1);
 
     template <class ValueType>
@@ -456,10 +456,10 @@ private:
   };
 
 public:
-  static VTKM_CONT int Run()
+  static VTKM_CONT int Run(int argc, char* argv[])
   {
     vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
-    return vtkm::cont::testing::Testing::Run(TryArrayHandleType());
+    return vtkm::cont::testing::Testing::Run(TryArrayHandleType(), argc, argv);
   }
 };
 }

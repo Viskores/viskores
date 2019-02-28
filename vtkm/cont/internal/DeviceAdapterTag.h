@@ -64,7 +64,6 @@ struct DeviceAdapterId
 
 protected:
   friend DeviceAdapterId make_DeviceAdapterId(vtkm::Int8 id);
-  friend DeviceAdapterId make_DeviceAdapterIdFromName(const std::string& name);
 
   constexpr explicit DeviceAdapterId(vtkm::Int8 id)
     : Value(id)
@@ -75,28 +74,19 @@ private:
   vtkm::Int8 Value;
 };
 
-inline DeviceAdapterId make_DeviceAdapterIdFromName(const std::string& name)
-{
-  vtkm::Int8 deviceId(VTKM_DEVICE_ADAPTER_ERROR);
-  if (name == "SERIAL")
-  {
-    deviceId = VTKM_DEVICE_ADAPTER_SERIAL;
-  }
-  else if (name == "CUDA")
-  {
-    deviceId = VTKM_DEVICE_ADAPTER_CUDA;
-  }
-  else if (name == "TBB")
-  {
-    deviceId = VTKM_DEVICE_ADAPTER_TBB;
-  }
-  else if (name == "OPENMP")
-  {
-    deviceId = VTKM_DEVICE_ADAPTER_OPENMP;
-  }
-  return DeviceAdapterId(deviceId);
-}
+/// Construct a device adapter id from a runtime string
+/// The string is case-insensitive. So CUDA will be selected with 'cuda', 'Cuda', or 'CUDA'.
+VTKM_CONT_EXPORT
+DeviceAdapterId make_DeviceAdapterId(const DeviceAdapterNameType& name);
 
+/// Construct a device adapter id a vtkm::Int8.
+/// The mapping of integer value to devices are:
+///
+/// DeviceAdapterTagSerial == 1
+/// DeviceAdapterTagCuda == 2
+/// DeviceAdapterTagTBB == 3
+/// DeviceAdapterTagOpenMP == 4
+///
 inline DeviceAdapterId make_DeviceAdapterId(vtkm::Int8 id)
 {
   return DeviceAdapterId(id);

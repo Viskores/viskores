@@ -76,16 +76,16 @@ template <typename T>
 class GraftParticles : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(
-    FieldIn<IdType> index,             // (input) index into particles
-    FieldIn<IdType> partId,            // (input) particle id sorted by bin
-    FieldIn<IdType> binId,             // (input) bin id sorted by bin
-    FieldIn<UInt32TagType> activeFlag, // (input) flag indicates which of neighbor ranges are used
-    WholeArrayIn<IdType> partIdArray,  // (input) particle id sorted by bin entire array
-    WholeArrayIn<Vec3TagType<T>> location, // (input) location of particles
-    WholeArrayIn<IdType> firstParticleId,  // (input) first particle index vector
-    WholeArrayIn<IdType> lastParticleId,   // (input) last particle index vector
-    WholeArrayOut<IdType> haloId);
+  using ControlSignature =
+    void(FieldIn index,                // (input) index into particles
+         FieldIn partId,               // (input) particle id sorted by bin
+         FieldIn binId,                // (input) bin id sorted by bin
+         FieldIn activeFlag,           // (input) flag indicates which of neighbor ranges are used
+         WholeArrayIn partIdArray,     // (input) particle id sorted by bin entire array
+         WholeArrayIn location,        // (input) location of particles
+         WholeArrayIn firstParticleId, // (input) first particle index vector
+         WholeArrayIn lastParticleId,  // (input) last particle index vector
+         WholeArrayOut haloId);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 

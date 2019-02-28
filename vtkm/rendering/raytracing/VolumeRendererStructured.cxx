@@ -59,7 +59,6 @@ protected:
   using DefaultConstHandle = typename DefaultHandle::ExecutionTypes<Device>::PortalConst;
   using CartesianConstPortal = typename CartesianArrayHandle::ExecutionTypes<Device>::PortalConst;
 
-  vtkm::Float32 InverseDeltaScalar;
   DefaultConstHandle CoordPortals[3];
   CartesianConstPortal Coordinates;
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
@@ -331,20 +330,17 @@ public:
     : ColorMap(colorMap.PrepareForInput(Device()))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
+    , InverseDeltaScalar(minScalar)
     , Locator(locator)
   {
     ColorMapSize = colorMap.GetNumberOfValues() - 1;
     if ((maxScalar - minScalar) != 0.f)
+    {
       InverseDeltaScalar = 1.f / (maxScalar - minScalar);
-    else
-      InverseDeltaScalar = minScalar;
+    }
   }
-  using ControlSignature = void(FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                WholeArrayInOut<>,
-                                WholeArrayIn<ScalarRenderingTypes>);
+
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
@@ -527,20 +523,16 @@ public:
     : ColorMap(colorMap.PrepareForInput(Device()))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
+    , InverseDeltaScalar(minScalar)
     , Locator(locator)
   {
     ColorMapSize = colorMap.GetNumberOfValues() - 1;
     if ((maxScalar - minScalar) != 0.f)
+    {
       InverseDeltaScalar = 1.f / (maxScalar - minScalar);
-    else
-      InverseDeltaScalar = minScalar;
+    }
   }
-  using ControlSignature = void(FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                WholeArrayInOut<>,
-                                WholeArrayIn<ScalarRenderingTypes>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
@@ -682,7 +674,7 @@ public:
   VTKM_EXEC
   vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
 
-  using ControlSignature = void(FieldIn<>, FieldOut<>, FieldInOut<>, FieldInOut<>, FieldIn<>);
+  using ControlSignature = void(FieldIn, FieldOut, FieldInOut, FieldInOut, FieldIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   template <typename Precision>
   VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& rayDir,
@@ -749,8 +741,7 @@ void VolumeRendererStructured::SetData(const vtkm::cont::CoordinateSystem& coord
                                        const vtkm::cont::CellSetStructured<3>& cellset,
                                        const vtkm::Range& scalarRange)
 {
-  if (coords.GetData().IsSameType(CartesianArrayHandle()))
-    IsUniformDataSet = false;
+  IsUniformDataSet = !coords.GetData().IsType<CartesianArrayHandle>();
   IsSceneDirty = true;
   SpatialExtent = coords.GetBounds();
   Coordinates = coords.GetData();
@@ -802,7 +793,8 @@ template <typename Precision, typename Device>
 void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<Precision>& rays,
                                               Device)
 {
-  vtkm::cont::Timer<Device> renderTimer;
+  vtkm::cont::Timer renderTimer{ Device() };
+  renderTimer.Start();
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("volume_render_structured");
   logger->AddLogData("device", GetDeviceString(Device()));
@@ -817,7 +809,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     SampleDistance = vtkm::Magnitude(extent) / defaultNumberOfSamples;
   }
 
-  vtkm::cont::Timer<Device> timer;
+  vtkm::cont::Timer timer{ Device() };
+  timer.Start();
   vtkm::worklet::DispatcherMapField<CalcRayStart> calcRayStartDispatcher(
     CalcRayStart(this->SpatialExtent));
   calcRayStartDispatcher.SetDevice(Device());
@@ -826,7 +819,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("calc_ray_start", time);
-  timer.Reset();
+  timer.Start();
 
   bool isSupportedField =
     (ScalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
@@ -855,7 +848,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                rays.MinDistance,
                                rays.MaxDistance,
                                rays.Buffers.at(0).Buffer,
-                               *ScalarField);
+                               ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
     }
     else
     {
@@ -870,7 +863,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                 rays.MinDistance,
                 rays.MaxDistance,
                 rays.Buffers.at(0).Buffer,
-                *ScalarField);
+                ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
     }
   }
   else
@@ -893,7 +886,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                rays.MinDistance,
                                rays.MaxDistance,
                                rays.Buffers.at(0).Buffer,
-                               *ScalarField);
+                               ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
     }
     else
     {
@@ -905,18 +898,18 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                                SampleDistance,
                                                                locator));
       rectilinearLocatorDispatcher.SetDevice(Device());
-      rectilinearLocatorDispatcher.Invoke(rays.Dir,
-                                          rays.Origin,
-                                          rays.MinDistance,
-                                          rays.MaxDistance,
-                                          rays.Buffers.at(0).Buffer,
-                                          *ScalarField);
+      rectilinearLocatorDispatcher.Invoke(
+        rays.Dir,
+        rays.Origin,
+        rays.MinDistance,
+        rays.MaxDistance,
+        rays.Buffers.at(0).Buffer,
+        ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
     }
   }
 
   time = timer.GetElapsedTime();
   logger->AddLogData("sample", time);
-  timer.Reset();
 
   time = renderTimer.GetElapsedTime();
   logger->CloseLogEntry(time);

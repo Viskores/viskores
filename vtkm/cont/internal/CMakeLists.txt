@@ -39,11 +39,14 @@ set(headers
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
   KXSort.h
+  OptionParser.h
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
   ReverseConnectivityBuilder.h
   SimplePolymorphicContainer.h
   StorageError.h
+  TransferInfo.h
+  VariantArrayHandleContainer.h
   VirtualObjectTransfer.h
   VirtualObjectTransferShareWithControl.h
   )

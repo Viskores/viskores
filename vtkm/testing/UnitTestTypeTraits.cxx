@@ -84,7 +84,7 @@ static void TestTypeTraits()
 } // anonymous namespace
 
 //-----------------------------------------------------------------------------
-int UnitTestTypeTraits(int, char* [])
+int UnitTestTypeTraits(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestTypeTraits);
+  return vtkm::testing::Testing::Run(TestTypeTraits, argc, argv);
 }

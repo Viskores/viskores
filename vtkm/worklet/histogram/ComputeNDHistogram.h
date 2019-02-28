@@ -56,7 +56,7 @@ template <typename FieldType>
 class SetHistogramBin : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<> value, FieldIn<> binIndexIn, FieldOut<> binIndexOut);
+  using ControlSignature = void(FieldIn value, FieldIn binIndexIn, FieldOut binIndexOut);
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
@@ -127,9 +127,9 @@ private:
 class ConvertHistBinToND : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<> bin1DIndexIn,
-                                FieldOut<> bin1DIndexOut,
-                                FieldOut<> oneVariableIndexOut);
+  using ControlSignature = void(FieldIn bin1DIndexIn,
+                                FieldOut bin1DIndexOut,
+                                FieldOut oneVariableIndexOut);
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 

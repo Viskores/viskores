@@ -66,11 +66,11 @@ public:
   class CalculatePowers : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> value,
-                                  FieldOut<> pow1Array,
-                                  FieldOut<> pow2Array,
-                                  FieldOut<> pow3Array,
-                                  FieldOut<> pow4Array);
+    using ControlSignature = void(FieldIn value,
+                                  FieldOut pow1Array,
+                                  FieldOut pow2Array,
+                                  FieldOut pow3Array,
+                                  FieldOut pow4Array);
     using ExecutionSignature = void(_1, _2, _3, _4, _5);
     using InputDomain = _1;
 
@@ -99,7 +99,7 @@ public:
   class SubtractConst : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn<> value, FieldOut<> diff);
+    using ControlSignature = void(FieldIn value, FieldOut diff);
     using ExecutionSignature = _2(_1);
     using InputDomain = _1;
 

@@ -34,9 +34,7 @@ namespace worklet
 class CellAverage : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  using ControlSignature = void(CellSetIn cellset,
-                                FieldInPoint<> inPoints,
-                                FieldOutCell<> outCells);
+  using ControlSignature = void(CellSetIn cellset, FieldInPoint inPoints, FieldOutCell outCells);
   using ExecutionSignature = void(PointCount, _2, _3);
   using InputDomain = _1;
 

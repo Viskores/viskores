@@ -1,5 +1,5 @@
-#ifndef DIY_PROXY_HPP
-#define DIY_PROXY_HPP
+#ifndef VTKMDIY_PROXY_HPP
+#define VTKMDIY_PROXY_HPP
 
 
 namespace diy
@@ -53,6 +53,24 @@ namespace diy
                                 size_t          n,                                      //!< size in data elements (eg. ints)
                                 void (*load)(BinaryBuffer&, T&) = &::diy::load<T>       //!< optional serialization function
                                ) const;
+
+    //! Dequeue data whose size can be determined automatically (e.g., STL vector) and that was
+    //! previously enqueued so that diy knows its size when it is received.
+    //! In this case, diy will allocate the receive buffer; the user does not need to do so.
+    template<class T>
+    void                dequeue(const BlockID&  from,                                   //!< target block (gid,proc)
+                                T&              x,                                      //!< data (eg. STL vector)
+                                void (*load)(BinaryBuffer&, T&) = &::diy::load<T>       //!< optional serialization function
+                               ) const                                  { dequeue(from.gid, x, load); }
+
+    //! Dequeue an array of data whose size is given explicitly by the user.
+    //! In this case, the user needs to allocate the receive buffer prior to calling dequeue.
+    template<class T>
+    void                dequeue(const BlockID&  from,                                   //!< target block (gid,proc)
+                                T*              x,                                      //!< pointer to the data (eg. address of start of vector)
+                                size_t          n,                                      //!< size in data elements (eg. ints)
+                                void (*load)(BinaryBuffer&, T&) = &::diy::load<T>       //!< optional serialization function
+                               ) const                                  { dequeue(from.gid, x, n, load); }
 
     template<class T>
     EnqueueIterator<T>  enqueuer(const T& x,
@@ -135,20 +153,67 @@ namespace diy
   {
             ProxyWithLink(const Proxy&    proxy,
                           void*           block__,
-                          Link*           link__):
+                          Link*           link__,
+                          IExchangeInfo*  iexchange__ = 0):
               Proxy(proxy),
               block_(block__),
-              link_(link__)                                         {}
+              link_(link__),
+              iexchange_(iexchange__)                               {}
 
       Link*   link() const                                          { return link_; }
       void*   block() const                                         { return block_; }
 
     private:
-      void*   block_;
-      Link*   link_;
-  };
-}
+      void*             block_;
+      Link*             link_;
+      IExchangeInfo*    iexchange_;         // not used for iexchange presently, but later could trigger some special behavior
 
+    public:
+      template<class T>
+      void enqueue(const BlockID&     to,
+              const T&                x,
+              void (*save)(BinaryBuffer&, const T&) = &::diy::save<T>) const
+      {
+          diy::Master::Proxy::enqueue(to, x, save);
+          if (iexchange_)
+              master()->icommunicate(iexchange_);
+      }
+
+      template<class T>
+      void enqueue(const BlockID&     to,
+              const T*                x,
+              size_t                  n,
+              void (*save)(BinaryBuffer&, const T&) = &::diy::save<T>) const
+      {
+          diy::Master::Proxy::enqueue(to, x, n, save);
+          if (iexchange_)
+              master()->icommunicate(iexchange_);
+      }
+
+      template<class T>
+      void dequeue(int                from,
+              T&                      x,
+              void (*load)(BinaryBuffer&, T&) = &::diy::load<T>) const
+      {
+          // TODO: uncomment if necessary, try first without icommunicating on dequeue
+//           if (iexchange_)
+//               master()->icommunicate(iexchange_);
+          diy::Master::Proxy::dequeue(from, x, load);
+      }
+
+      template<class T>
+      void dequeue(int                from,
+              T*                      x,
+              size_t                  n,
+              void (*load)(BinaryBuffer&, T&) = &::diy::load<T>) const
+      {
+          // TODO: uncomment if necessary, try first without icommunicating on dequeue
+//           if (iexchange_)
+//               master()->icommunicate(iexchange_);
+          diy::Master::Proxy::dequeue(from, x, n, load);
+      }
+  };
+}                                           // diy namespace
 
 void
 diy::Master::Proxy::

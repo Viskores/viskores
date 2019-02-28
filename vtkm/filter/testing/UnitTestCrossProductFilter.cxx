@@ -221,7 +221,7 @@ void TestCrossProduct()
 }
 } // anonymous namespace
 
-int UnitTestCrossProductFilter(int, char* [])
+int UnitTestCrossProductFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCrossProduct);
+  return vtkm::cont::testing::Testing::Run(TestCrossProduct, argc, argv);
 }

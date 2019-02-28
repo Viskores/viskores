@@ -75,8 +75,8 @@ namespace cosmotools
 class ComputeBinRange : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> leftNeighbor,    // (input) left neighbor id
-                                FieldOut<IdType> rightNeighbor); // (output) right neighbor id
+  using ControlSignature = void(FieldIn leftNeighbor,    // (input) left neighbor id
+                                FieldOut rightNeighbor); // (output) right neighbor id
   using ExecutionSignature = _2(_1);
   using InputDomain = _1;
 

@@ -148,7 +148,7 @@ namespace cosmotools
 template <typename T>
 struct ScatterWorklet : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<> inIndices, FieldOut<> outIndices);
+  using ControlSignature = void(FieldIn inIndices, FieldOut outIndices);
   using ExecutionSignature = void(_1, _2);
   using ScatterType = vtkm::worklet::ScatterCounting;
 

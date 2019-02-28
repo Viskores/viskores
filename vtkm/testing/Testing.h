@@ -20,6 +20,7 @@
 #ifndef vtk_m_testing_Testing_h
 #define vtk_m_testing_Testing_h
 
+#include <vtkm/Bitset.h>
 #include <vtkm/Bounds.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
@@ -31,8 +32,9 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/cont/Logging.h>
+
 #include <exception>
-#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -109,6 +111,9 @@ VTK_M_BASIC_TYPE(vtkm::UInt32);
 VTK_M_BASIC_TYPE(vtkm::Int64);
 VTK_M_BASIC_TYPE(vtkm::UInt64);
 
+VTK_M_BASIC_TYPE(vtkm::Bounds);
+VTK_M_BASIC_TYPE(vtkm::Range);
+
 #undef VTK_M_BASIC_TYPE
 
 template <typename T, vtkm::IdComponent Size>
@@ -129,6 +134,17 @@ struct TypeName<vtkm::Pair<T, U>>
   {
     std::stringstream stream;
     stream << "vtkm::Pair< " << TypeName<T>::Name() << ", " << TypeName<U>::Name() << " >";
+    return stream.str();
+  }
+};
+
+template <typename T>
+struct TypeName<vtkm::Bitset<T>>
+{
+  static std::string Name()
+  {
+    std::stringstream stream;
+    stream << "vtkm::Bitset< " << TypeName<T>::Name() << " >";
     return stream.str();
   }
 };
@@ -296,8 +312,11 @@ public:
   /// \endcode
   ///
   template <class Func>
-  static VTKM_CONT int Run(Func function)
+  static VTKM_CONT int Run(Func function, int argc, char* argv[])
   {
+
+    vtkm::cont::InitLogging(argc, argv);
+
     try
     {
       function();
@@ -680,52 +699,6 @@ static inline VTKM_CONT bool test_equal_portals(const PortalType1& portal1,
   }
 
   return true;
-}
-
-/// Convert a size in bytes to a human readable string (e.g. "64 bytes",
-/// "1.44 MiB", "128 GiB", etc). @a prec controls the fixed point precision
-/// of the stringified number.
-static inline VTKM_CONT std::string HumanSize(vtkm::UInt64 bytes, int prec = 2)
-{
-  std::string suffix = "bytes";
-
-  // Might truncate, but it really doesn't matter unless the precision arg
-  // is obscenely huge.
-  vtkm::Float64 bytesf = static_cast<vtkm::Float64>(bytes);
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "KiB";
-  }
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "MiB";
-  }
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "GiB";
-  }
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "TiB";
-  }
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "PiB"; // Dream big...
-  }
-
-  std::ostringstream out;
-  out << std::fixed << std::setprecision(prec) << bytesf << " " << suffix;
-  return out.str();
 }
 
 #endif //vtk_m_testing_Testing_h

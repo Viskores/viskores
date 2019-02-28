@@ -112,7 +112,7 @@ void TestNewtonsMethod()
 
 } // anonymous namespace
 
-int UnitTestNewtonsMethod(int, char* [])
+int UnitTestNewtonsMethod(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestNewtonsMethod);
+  return vtkm::testing::Testing::Run(TestNewtonsMethod, argc, argv);
 }

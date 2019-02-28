@@ -55,7 +55,7 @@ void TestCheckKeys()
 
 } // anonymous namespace
 
-int UnitTestTypeCheckKeys(int, char* [])
+int UnitTestTypeCheckKeys(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCheckKeys);
+  return vtkm::cont::testing::Testing::Run(TestCheckKeys, argc, argv);
 }

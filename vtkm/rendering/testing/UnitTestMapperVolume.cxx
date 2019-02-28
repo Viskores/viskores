@@ -51,7 +51,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperVolume(int, char* [])
+int UnitTestMapperVolume(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

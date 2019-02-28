@@ -108,7 +108,7 @@ void TestLagrangian()
   TestLagrangianFilterMultiStepInterval();
 }
 
-int UnitTestLagrangianFilter(int, char* [])
+int UnitTestLagrangianFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestLagrangian);
+  return vtkm::cont::testing::Testing::Run(TestLagrangian, argc, argv);
 }

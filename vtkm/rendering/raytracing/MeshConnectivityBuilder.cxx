@@ -51,7 +51,7 @@ class CountFaces : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CountFaces() {}
-  using ControlSignature = void(WholeArrayIn<>, FieldOut<>);
+  using ControlSignature = void(WholeArrayIn, FieldOut);
   using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename ShapePortalType>
   VTKM_EXEC inline void operator()(const ShapePortalType& shapes,
@@ -88,13 +88,13 @@ class MortonNeighbor : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   MortonNeighbor() {}
-  using ControlSignature = void(WholeArrayIn<>,
-                                WholeArrayInOut<Id3Type>,
-                                WholeArrayIn<>,
-                                WholeArrayIn<>,
-                                WholeArrayIn<>,
-                                WholeArrayOut<>,
-                                WholeArrayInOut<>);
+  using ControlSignature = void(WholeArrayIn,
+                                WholeArrayInOut,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayOut,
+                                WholeArrayInOut);
   using ExecutionSignature = void(_1, _2, WorkIndex, _3, _4, _5, _6, _7);
 
   VTKM_EXEC
@@ -269,7 +269,7 @@ public:
   VTKM_CONT
   ExternalTriangles() {}
   using ControlSignature =
-    void(FieldIn<>, WholeArrayIn<>, WholeArrayIn<>, WholeArrayIn<>, WholeArrayOut<>, FieldIn<>);
+    void(FieldIn, WholeArrayIn, WholeArrayIn, WholeArrayIn, WholeArrayOut, FieldIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   template <typename ShapePortalType,
             typename InIndicesPortalType,
@@ -331,7 +331,7 @@ public:
 class WriteFaceConn : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, WholeArrayOut<IdType>);
+  using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_CONT
@@ -383,7 +383,7 @@ public:
     Segments[5] = Segments[4] + cellDims[1] * cellDims[0];
     Segments[6] = Segments[5] + cellDims[1] * cellDims[0];
   }
-  using ControlSignature = void(FieldIn<>, WholeArrayOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2);
   template <typename TrianglePortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& index, TrianglePortalType& triangles) const
@@ -489,7 +489,7 @@ class CountExternalTriangles : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CountExternalTriangles() {}
-  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayIn, FieldOut);
   using ExecutionSignature = void(_1, _2, _3);
   template <typename ShapePortalType>
   VTKM_EXEC inline void operator()(const vtkm::Vec<vtkm::Id, 3>& faceIdPair,
@@ -533,7 +533,8 @@ VTKM_CONT void GenerateFaceConnnectivity(
   vtkm::cont::ArrayHandle<vtkm::Int32>& uniqueFaces)
 {
 
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
 
   vtkm::Id numCells = shapes.GetNumberOfValues();
 
@@ -622,7 +623,8 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractFaces(
   const OffsetsHandleType& shapeOffsets)
 {
 
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>> externalFacePairs;
   vtkm::cont::Algorithm::CopyIf(cellFaceId, uniqueFaces, externalFacePairs, IsUnique());
 
@@ -678,7 +680,8 @@ void MeshConnectivityBuilder::BuildConnectivity(
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("mesh_conn");
   //logger->AddLogData("device", GetDeviceString(DeviceAdapter()));
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
 
   vtkm::Float32 BoundingBox[6];
   BoundingBox[0] = vtkm::Float32(coordsBounds.X.Min);
@@ -738,7 +741,8 @@ void MeshConnectivityBuilder::BuildConnectivity(
 {
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("meah_conn");
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
 
   vtkm::Float32 BoundingBox[6];
   BoundingBox[0] = vtkm::Float32(coordsBounds.X.Min);
@@ -813,7 +817,8 @@ vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>
   MeshConnectivityBuilder::ExternalTrianglesStructured(
     vtkm::cont::CellSetStructured<3>& cellSetStructured)
 {
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
 
   vtkm::Id3 cellDims = cellSetStructured.GetCellDimensions();
   vtkm::Id numFaces =
@@ -900,7 +905,8 @@ MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
   logger->OpenLogEntry("mesh_conn_construction");
 
   MeshConnContainer* meshConn = nullptr;
-  vtkm::cont::Timer<cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ cont::DeviceAdapterTagSerial() };
+  timer.Start();
 
   if (type == Unstructured)
   {

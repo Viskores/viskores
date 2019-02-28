@@ -79,9 +79,9 @@ namespace contourtree_maker_inc
 class ComputeHyperAndSuperStructure_PermuteArcs : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> permutedSHArcs,   // (input) active super/hyperarcs
-                                WholeArrayIn<IdType> shSortIndex, // (input)
-                                WholeArrayOut<IdType> contourTreeSHArcs); // (output)
+  typedef void ControlSignature(FieldIn permutedSHArcs,           // (input) active super/hyperarcs
+                                WholeArrayIn shSortIndex,         // (input)
+                                WholeArrayOut contourTreeSHArcs); // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;
 

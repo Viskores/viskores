@@ -45,11 +45,11 @@ class ImageGraft : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
   using ControlSignature = void(CellSetIn,
-                                FieldIn<> index,
-                                FieldInNeighborhood<> compIn,
-                                FieldInNeighborhood<> color,
-                                WholeArrayInOut<> compOut,
-                                FieldOut<> changed);
+                                FieldIn index,
+                                FieldInNeighborhood compIn,
+                                FieldInNeighborhood color,
+                                WholeArrayInOut compOut,
+                                FieldOut changed);
 
   using ExecutionSignature = _6(_2, _3, _4, _5);
 
@@ -159,13 +159,13 @@ public:
   };
 
   // TODO: Do we really need the CellSet as input parameter?
-  template <int Dimension, typename T, typename S, typename OutputPortalType>
+  template <int Dimension, typename T, typename OutputPortalType>
   void Run(const vtkm::cont::CellSetStructured<Dimension>& input,
-           const vtkm::cont::DynamicArrayHandleBase<T, S>& pixels,
+           const vtkm::cont::VariantArrayHandleBase<T>& pixels,
            OutputPortalType& componentsOut) const
   {
     using Types = vtkm::TypeListTagScalarAll;
-    vtkm::cont::CastAndCall(pixels.ResetTypeList(Types{}), RunImpl(), input, componentsOut);
+    vtkm::cont::CastAndCall(pixels.ResetTypes(Types{}), RunImpl(), input, componentsOut);
   }
 
   template <int Dimension, typename T, typename S, typename OutputPortalType>

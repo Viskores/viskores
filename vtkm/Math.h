@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #endif // !VTKM_CUDA
 
-#if !defined(__CUDA_ARCH__)
+#if !defined(VTKM_CUDA_DEVICE_PASS)
 #define VTKM_USE_STL
 #include <algorithm>
 #endif
@@ -2551,6 +2551,45 @@ static inline VTKM_EXEC_CONT vtkm::Vec<T, N> CopySign(const vtkm::Vec<T, N>& x,
     result[index] = vtkm::CopySign(x[index], y[index]);
   }
   return result;
+}
+
+/// Decompose floating poing value
+///
+
+inline VTKM_EXEC_CONT vtkm::Float32 Frexp(vtkm::Float32 x, vtkm::Int32 *exponent)
+{
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_32(frexp)(x, exponent);
+#else
+  return std::frexp(x, exponent);
+#endif
+}
+
+inline VTKM_EXEC_CONT vtkm::Float64 Frexp(vtkm::Float64 x, vtkm::Int32 *exponent)
+{
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_64(frexp)(x, exponent);
+#else
+  return std::frexp(x, exponent);
+#endif
+}
+
+inline VTKM_EXEC_CONT vtkm::Float32 Ldexp(vtkm::Float32 x, vtkm::Int32 exponent)
+{
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_32(ldexp)(x, exponent);
+#else
+  return std::ldexp(x, exponent);
+#endif
+}
+
+inline VTKM_EXEC_CONT vtkm::Float64 Ldexp(vtkm::Float64 x, vtkm::Int32 exponent)
+{
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_64(ldexp)(x, exponent);
+#else
+  return std::ldexp(x, exponent);
+#endif
 }
 
 } // namespace vtkm

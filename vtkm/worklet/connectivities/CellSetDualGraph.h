@@ -38,7 +38,7 @@ namespace detail
 {
 struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
 {
-  using ControlSignature = void(CellSetIn, FieldOutCell<> numEdgesInCell);
+  using ControlSignature = void(CellSetIn, FieldOutCell numEdgesInCell);
 
   using ExecutionSignature = _2(CellShape, PointCount);
 
@@ -53,7 +53,7 @@ struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
 
 struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
 {
-  using ControlSignature = void(CellSetIn, FieldOutCell<> cellIndices, FieldOutCell<> edgeIndices);
+  using ControlSignature = void(CellSetIn, FieldOutCell cellIndices, FieldOutCell edgeIndices);
 
   using ExecutionSignature = void(CellShape, InputIndex, PointIndices, VisitIndex, _2, _3);
 
@@ -80,10 +80,10 @@ struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
 
 struct CellToCellConnectivity : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<> index,
-                                WholeArrayIn<> cells,
-                                WholeArrayOut<> from,
-                                WholeArrayOut<> to);
+  using ControlSignature = void(FieldIn index,
+                                WholeArrayIn cells,
+                                WholeArrayOut from,
+                                WholeArrayOut to);
 
   using ExecutionSignature = void(_1, InputIndex, _2, _3, _4);
 

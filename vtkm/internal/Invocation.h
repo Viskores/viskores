@@ -38,7 +38,8 @@ template <typename _ParameterInterface,
           typename _ExecutionInterface,
           vtkm::IdComponent _InputDomainIndex,
           typename _OutputToInputMapType = vtkm::internal::NullType,
-          typename _VisitArrayType = vtkm::internal::NullType>
+          typename _VisitArrayType = vtkm::internal::NullType,
+          typename _ThreadToOutputMapType = vtkm::internal::NullType>
 struct Invocation
 {
   /// \brief The types of the parameters
@@ -90,15 +91,25 @@ struct Invocation
   ///
   using VisitArrayType = _VisitArrayType;
 
+  /// \brief An array representing the thread to output map.
+  ///
+  /// When a worklet is invoked, there is an optional mask operation that will
+  /// prevent the worklet to be run on masked-out elements of the output. This
+  /// is represented with a map where each thread points to an output it creates.
+  ///
+  using ThreadToOutputMapType = _ThreadToOutputMapType;
+
   /// \brief Default Invocation constructors that holds the given parameters
   /// by reference.
   VTKM_CONT
   Invocation(const ParameterInterface& parameters,
              OutputToInputMapType outputToInputMap = OutputToInputMapType(),
-             VisitArrayType visitArray = VisitArrayType())
+             VisitArrayType visitArray = VisitArrayType(),
+             ThreadToOutputMapType threadToOutputMap = ThreadToOutputMapType())
     : Parameters(parameters)
     , OutputToInputMap(outputToInputMap)
     , VisitArray(visitArray)
+    , ThreadToOutputMap(threadToOutputMap)
   {
   }
 
@@ -113,7 +124,8 @@ struct Invocation
                             ExecutionInterface,
                             InputDomainIndex,
                             OutputToInputMapType,
-                            VisitArrayType>;
+                            VisitArrayType,
+                            ThreadToOutputMapType>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -124,7 +136,7 @@ struct Invocation
     const NewParameterInterface& newParameters) const
   {
     return typename ChangeParametersType<NewParameterInterface>::type(
-      newParameters, this->OutputToInputMap, this->VisitArray);
+      newParameters, this->OutputToInputMap, this->VisitArray, this->ThreadToOutputMap);
   }
 
   /// Defines a new \c Invocation type that is the same as this type except
@@ -133,8 +145,13 @@ struct Invocation
   template <typename NewControlInterface>
   struct ChangeControlInterfaceType
   {
-    using type =
-      Invocation<ParameterInterface, NewControlInterface, ExecutionInterface, InputDomainIndex>;
+    using type = Invocation<ParameterInterface,
+                            NewControlInterface,
+                            ExecutionInterface,
+                            InputDomainIndex,
+                            OutputToInputMapType,
+                            VisitArrayType,
+                            ThreadToOutputMapType>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -145,7 +162,7 @@ struct Invocation
     NewControlInterface) const
   {
     return typename ChangeControlInterfaceType<NewControlInterface>::type(
-      this->Parameters, this->OutputToInputMap, this->VisitArray);
+      this->Parameters, this->OutputToInputMap, this->VisitArray, this->ThreadToOutputMap);
   }
 
   /// Defines a new \c Invocation type that is the same as this type except
@@ -154,8 +171,13 @@ struct Invocation
   template <typename NewExecutionInterface>
   struct ChangeExecutionInterfaceType
   {
-    using type =
-      Invocation<ParameterInterface, NewExecutionInterface, ExecutionInterface, InputDomainIndex>;
+    using type = Invocation<ParameterInterface,
+                            NewExecutionInterface,
+                            ExecutionInterface,
+                            InputDomainIndex,
+                            OutputToInputMapType,
+                            VisitArrayType,
+                            ThreadToOutputMapType>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -166,7 +188,7 @@ struct Invocation
     NewExecutionInterface) const
   {
     return typename ChangeExecutionInterfaceType<NewExecutionInterface>::type(
-      this->Parameters, this->OutputToInputMap, this->VisitArray);
+      this->Parameters, this->OutputToInputMap, this->VisitArray, this->ThreadToOutputMap);
   }
 
   /// Defines a new \c Invocation type that is the same as this type except
@@ -175,8 +197,13 @@ struct Invocation
   template <vtkm::IdComponent NewInputDomainIndex>
   struct ChangeInputDomainIndexType
   {
-    using type =
-      Invocation<ParameterInterface, ControlInterface, ExecutionInterface, NewInputDomainIndex>;
+    using type = Invocation<ParameterInterface,
+                            ControlInterface,
+                            ExecutionInterface,
+                            NewInputDomainIndex,
+                            OutputToInputMapType,
+                            VisitArrayType,
+                            ThreadToOutputMapType>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -187,7 +214,7 @@ struct Invocation
   ChangeInputDomainIndex() const
   {
     return typename ChangeInputDomainIndexType<NewInputDomainIndex>::type(
-      this->Parameters, this->OutputToInputMap, this->VisitArray);
+      this->Parameters, this->OutputToInputMap, this->VisitArray, this->ThreadToOutputMap);
   }
 
   /// Defines a new \c Invocation type that is the same as this type except
@@ -201,7 +228,8 @@ struct Invocation
                             ExecutionInterface,
                             InputDomainIndex,
                             NewOutputToInputMapType,
-                            VisitArrayType>;
+                            VisitArrayType,
+                            ThreadToOutputMapType>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -212,7 +240,7 @@ struct Invocation
   ChangeOutputToInputMap(NewOutputToInputMapType newOutputToInputMap) const
   {
     return typename ChangeOutputToInputMapType<NewOutputToInputMapType>::type(
-      this->Parameters, newOutputToInputMap, this->VisitArray);
+      this->Parameters, newOutputToInputMap, this->VisitArray, this->ThreadToOutputMap);
   }
 
   /// Defines a new \c Invocation type that is the same as this type except
@@ -226,7 +254,8 @@ struct Invocation
                             ExecutionInterface,
                             InputDomainIndex,
                             OutputToInputMapType,
-                            NewVisitArrayType>;
+                            NewVisitArrayType,
+                            ThreadToOutputMapType>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -237,7 +266,33 @@ struct Invocation
     NewVisitArrayType newVisitArray) const
   {
     return typename ChangeVisitArrayType<NewVisitArrayType>::type(
-      this->Parameters, this->OutputToInputMap, newVisitArray);
+      this->Parameters, this->OutputToInputMap, newVisitArray, this->ThreadToOutputMap);
+  }
+
+  /// Defines a new \c Invocation type that is the same as this type except
+  /// with the \c ThreadToOutputMapType replaced.
+  ///
+  template <typename NewThreadToOutputMapType>
+  struct ChangeThreadToOutputMapType
+  {
+    using type = Invocation<ParameterInterface,
+                            ControlInterface,
+                            ExecutionInterface,
+                            InputDomainIndex,
+                            OutputToInputMapType,
+                            VisitArrayType,
+                            NewThreadToOutputMapType>;
+  };
+
+  /// Returns a new \c Invocation that is the same as this one except that the
+  /// \c OutputToInputMap is replaced with that provided.
+  ///
+  template <typename NewThreadToOutputMapType>
+  VTKM_CONT typename ChangeThreadToOutputMapType<NewThreadToOutputMapType>::type
+  ChangeThreadToOutputMap(NewThreadToOutputMapType newThreadToOutputMap) const
+  {
+    return typename ChangeThreadToOutputMapType<NewThreadToOutputMapType>::type(
+      this->Parameters, this->OutputToInputMap, this->VisitArray, newThreadToOutputMap);
   }
 
   /// A convenience alias for the input domain type.
@@ -268,6 +323,7 @@ struct Invocation
   ParameterInterface Parameters;
   OutputToInputMapType OutputToInputMap;
   VisitArrayType VisitArray;
+  ThreadToOutputMapType ThreadToOutputMap;
 
 private:
   // Do not allow assignment of one Invocation to another. It is too expensive.
@@ -276,7 +332,8 @@ private:
                                   ExecutionInterface,
                                   InputDomainIndex,
                                   OutputToInputMapType,
-                                  VisitArrayType>&) = delete;
+                                  VisitArrayType,
+                                  ThreadToOutputMapType>&) = delete;
 };
 
 /// Convenience function for creating an Invocation object.
@@ -286,25 +343,30 @@ template <vtkm::IdComponent InputDomainIndex,
           typename ExecutionInterface,
           typename ParameterInterface,
           typename OutputToInputMapType,
-          typename VisitArrayType>
+          typename VisitArrayType,
+          typename ThreadToOutputMapType>
 VTKM_CONT vtkm::internal::Invocation<ParameterInterface,
                                      ControlInterface,
                                      ExecutionInterface,
                                      InputDomainIndex,
                                      OutputToInputMapType,
-                                     VisitArrayType>
+                                     VisitArrayType,
+                                     ThreadToOutputMapType>
 make_Invocation(const ParameterInterface& params,
                 ControlInterface,
                 ExecutionInterface,
                 OutputToInputMapType outputToInputMap,
-                VisitArrayType visitArray)
+                VisitArrayType visitArray,
+                ThreadToOutputMapType threadToOutputMap)
 {
   return vtkm::internal::Invocation<ParameterInterface,
                                     ControlInterface,
                                     ExecutionInterface,
                                     InputDomainIndex,
                                     OutputToInputMapType,
-                                    VisitArrayType>(params, outputToInputMap, visitArray);
+                                    VisitArrayType,
+                                    ThreadToOutputMapType>(
+    params, outputToInputMap, visitArray, threadToOutputMap);
 }
 template <vtkm::IdComponent InputDomainIndex,
           typename ControlInterface,
@@ -319,6 +381,7 @@ VTKM_CONT vtkm::internal::
   return vtkm::internal::make_Invocation<InputDomainIndex>(params,
                                                            ControlInterface(),
                                                            ExecutionInterface(),
+                                                           vtkm::internal::NullType(),
                                                            vtkm::internal::NullType(),
                                                            vtkm::internal::NullType());
 }

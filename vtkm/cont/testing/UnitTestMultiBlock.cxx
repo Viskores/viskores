@@ -27,8 +27,6 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/Field.h>
 #include <vtkm/cont/FieldRangeCompute.h>
 #include <vtkm/cont/MultiBlock.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -37,11 +35,7 @@
 #include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/thirdparty/diy/Configure.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/master.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/diy.h>
 
 void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet);
 static void MultiBlockTest()
@@ -152,7 +146,7 @@ void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& Righ
   return;
 }
 
-int UnitTestMultiBlock(int, char* [])
+int UnitTestMultiBlock(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(MultiBlockTest);
+  return vtkm::cont::testing::Testing::Run(MultiBlockTest, argc, argv);
 }

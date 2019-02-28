@@ -70,7 +70,7 @@ void TestVecTraits()
 
 } // anonymous namespace
 
-int UnitTestVecTraits(int, char* [])
+int UnitTestVecTraits(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestVecTraits);
+  return vtkm::testing::Testing::Run(TestVecTraits, argc, argv);
 }

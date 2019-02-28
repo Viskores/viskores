@@ -44,7 +44,7 @@ class BufferAddition : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   BufferAddition() {}
-  using ControlSignature = void(FieldIn<>, FieldInOut<>);
+  using ControlSignature = void(FieldIn, FieldInOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename ValueType>
@@ -59,7 +59,7 @@ class BufferMultiply : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   BufferMultiply() {}
-  using ControlSignature = void(FieldIn<>, FieldInOut<>);
+  using ControlSignature = void(FieldIn, FieldInOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename ValueType>
@@ -166,7 +166,7 @@ public:
     , ChannelNum(channel)
   {
   }
-  using ControlSignature = void(FieldOut<>, WholeArrayIn<>);
+  using ControlSignature = void(FieldOut, WholeArrayIn);
   using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename T, typename BufferPortalType>
   VTKM_EXEC void operator()(T& outValue,
@@ -236,7 +236,7 @@ public:
     : NumChannels(numChannels)
   {
   }
-  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, WholeArrayOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, _3, WorkIndex);
   template <typename T, typename IndexPortalType, typename BufferPortalType>
   VTKM_EXEC void operator()(const T& inValue,
@@ -358,7 +358,7 @@ public:
       InvDeltaScalar = 1.f / (maxScalar - minScalar);
     }
   }
-  using ControlSignature = void(FieldInOut<>);
+  using ControlSignature = void(FieldInOut);
   using ExecutionSignature = void(_1);
 
   VTKM_EXEC

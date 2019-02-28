@@ -28,7 +28,6 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/AtomicArray.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/rendering/MatrixHelpers.h>
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -136,7 +135,7 @@ union PackedValue {
 
 struct CopyIntoFrameBuffer : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_CONT
@@ -162,7 +161,7 @@ public:
     vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64, DeviceTag>;
   using AtomicPackedFrameBuffer = vtkm::cont::AtomicArray<vtkm::Int64>;
 
-  using ControlSignature = void(FieldIn<Id2Type>, WholeArrayIn<Vec3>, WholeArrayIn<Scalar>);
+  using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayIn);
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
@@ -398,9 +397,7 @@ public:
   VTKM_CONT
   BufferConverter() {}
 
-  using ControlSignature = void(FieldIn<>,
-                                WholeArrayOut<vtkm::ListTagBase<vtkm::Float32>>,
-                                WholeArrayOut<vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 4>>>);
+  using ControlSignature = void(FieldIn, WholeArrayOut, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, _3, WorkIndex);
 
   template <typename DepthBufferPortalType, typename ColorBufferPortalType>
@@ -554,7 +551,8 @@ private:
                                    Camera.GetClippingRange());
     vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
     plotterDispatcher.SetDevice(DeviceTag());
-    plotterDispatcher.Invoke(PointIndices, Coordinates, ScalarField.GetData());
+    plotterDispatcher.Invoke(
+      PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
 
     BufferConverter converter;
     vtkm::worklet::DispatcherMapField<BufferConverter> converterDispatcher(converter);

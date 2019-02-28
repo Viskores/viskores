@@ -29,10 +29,10 @@
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/testing/TestingGeometry.h>
 
-int UnitTestCudaGeometry(int, char* [])
+int UnitTestCudaGeometry(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   return vtkm::cont::testing::Testing::Run(
-    UnitTestGeometryNamespace::RunGeometryTests<vtkm::cont::DeviceAdapterTagCuda>);
+    UnitTestGeometryNamespace::RunGeometryTests<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 }

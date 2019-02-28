@@ -75,9 +75,9 @@ void TestConcatenateEmptyArray()
 
 } // namespace UnitTestArrayHandleIndexNamespace
 
-int UnitTestArrayHandleConcatenate(int, char* [])
+int UnitTestArrayHandleConcatenate(int argc, char* argv[])
 {
   using namespace UnitTestArrayHandleConcatenateNamespace;
   //TestConcatenateEmptyArray();
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleConcatenate);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleConcatenate, argc, argv);
 }

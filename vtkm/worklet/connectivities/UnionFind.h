@@ -35,7 +35,7 @@ namespace connectivity
 class PointerJumping : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> index, WholeArrayInOut<IdType> comp);
+  using ControlSignature = void(FieldIn index, WholeArrayInOut comp);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
@@ -59,7 +59,7 @@ public:
 class IsStar : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> index, WholeArrayIn<IdType> comp, FieldOut<>);
+  using ControlSignature = void(FieldIn index, WholeArrayIn comp, FieldOut);
   using ExecutionSignature = _3(_1, _2);
   using InputDomain = _1;
 

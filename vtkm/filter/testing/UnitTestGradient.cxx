@@ -248,7 +248,7 @@ void TestGradient()
 }
 }
 
-int UnitTestGradient(int, char* [])
+int UnitTestGradient(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestGradient);
+  return vtkm::cont::testing::Testing::Run(TestGradient, argc, argv);
 }

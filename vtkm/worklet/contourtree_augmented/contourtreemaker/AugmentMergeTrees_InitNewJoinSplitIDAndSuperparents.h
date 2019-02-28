@@ -81,15 +81,15 @@ class AugmentMergeTrees_InitNewJoinSplitIDAndSuperparents : public vtkm::worklet
 {
 public:
   typedef void ControlSignature(
-    FieldIn<IdType> contourTreeSupernodes,      // (input) supernodes from the contour tree
-    WholeArrayIn<IdType> joinTreeSuperparents,  // (input)
-    WholeArrayIn<IdType> splitTreeSuperparents, // (input)
-    WholeArrayIn<IdType> joinTreeSupernodes,    // (input)
-    WholeArrayIn<IdType> splitTreeSupernodes,   // (input)
-    WholeArrayOut<IdType> joinSuperparent,      // (output)
-    WholeArrayOut<IdType> splitSuperparent,     // (output)
-    WholeArrayOut<IdType> newJoinID,            // (output)
-    WholeArrayOut<IdType> newSplitID);          // (output)
+    FieldIn contourTreeSupernodes,      // (input) supernodes from the contour tree
+    WholeArrayIn joinTreeSuperparents,  // (input)
+    WholeArrayIn splitTreeSuperparents, // (input)
+    WholeArrayIn joinTreeSupernodes,    // (input)
+    WholeArrayIn splitTreeSupernodes,   // (input)
+    WholeArrayOut joinSuperparent,      // (output)
+    WholeArrayOut splitSuperparent,     // (output)
+    WholeArrayOut newJoinID,            // (output)
+    WholeArrayOut newSplitID);          // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 

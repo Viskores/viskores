@@ -74,10 +74,10 @@ namespace cosmotools
 class ValidHalo : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<IdType> index,
-                                FieldIn<IdType> partPerHalo,
-                                WholeArrayIn<IdType> haloId,
-                                FieldOut<IdType> isValidHalo);
+  using ControlSignature = void(FieldIn index,
+                                FieldIn partPerHalo,
+                                WholeArrayIn haloId,
+                                FieldOut isValidHalo);
   using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 

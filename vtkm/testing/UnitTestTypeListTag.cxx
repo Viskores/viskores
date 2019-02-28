@@ -278,7 +278,7 @@ void TestLists()
 
 } // anonymous namespace
 
-int UnitTestTypeListTag(int, char* [])
+int UnitTestTypeListTag(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestLists);
+  return vtkm::testing::Testing::Run(TestLists, argc, argv);
 }

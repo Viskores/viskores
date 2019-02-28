@@ -54,7 +54,7 @@ void CheckPostDefinedDeviceAdapter()
 
 } // anonymous namespace
 
-int UnitTestDeviceAdapterAlgorithmDependency(int, char* [])
+int UnitTestDeviceAdapterAlgorithmDependency(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(CheckPostDefinedDeviceAdapter);
+  return vtkm::cont::testing::Testing::Run(CheckPostDefinedDeviceAdapter, argc, argv);
 }

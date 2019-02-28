@@ -96,7 +96,7 @@ endif()
 
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
-  cmake_minimum_required(VERSION 3.9...3.12 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.9...3.13 FATAL_ERROR)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
   add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
@@ -117,7 +117,7 @@ if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
 endif()
 
 if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
-  cmake_minimum_required(VERSION 3.9...3.12 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.9...3.13 FATAL_ERROR)
   enable_language(CUDA)
 
   #To work around https://gitlab.kitware.com/cmake/cmake/issues/17512
@@ -132,6 +132,17 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     add_library(vtkm::cuda STATIC IMPORTED GLOBAL)
   else()
     add_library(vtkm::cuda UNKNOWN IMPORTED GLOBAL)
+  endif()
+
+  # Workaround issue with CUDA 8.X where virtual don't work when building
+  # VTK-m as shared. We don't want to force BUILD_SHARED_LIBS to a specific
+  # value as that could impact other projects that embed VTK-m. Instead what
+  # we do is make sure that libraries built by vtkm_library() are static
+  # if they use cuda
+  if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 9.0)
+    set_target_properties(vtkm::cuda PROPERTIES REQUIRES_STATIC_BUILDS TRUE)
+  else()
+    set_target_properties(vtkm::cuda PROPERTIES REQUIRES_STATIC_BUILDS FALSE)
   endif()
 
   set_target_properties(vtkm::cuda PROPERTIES
@@ -282,4 +293,9 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
 
   set_target_properties(vtkm::cuda PROPERTIES VTKm_CUDA_Architecture_Flags "${arch_flags}")
 
+endif()
+
+if(NOT TARGET Threads::Threads)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
 endif()

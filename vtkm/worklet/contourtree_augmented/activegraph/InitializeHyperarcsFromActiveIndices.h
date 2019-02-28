@@ -81,8 +81,8 @@ namespace active_graph_inc
 class InitializeHyperarcsFromActiveIndices : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayInOut<IdType> hyperarcs,   // (input/output) hyperacrs
-                                WholeArrayIn<IdType> activeIndices); // (input) activeIndices
+  typedef void ControlSignature(WholeArrayInOut hyperarcs,   // (input/output) hyperacrs
+                                WholeArrayIn activeIndices); // (input) activeIndices
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 

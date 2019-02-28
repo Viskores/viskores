@@ -48,7 +48,7 @@ static vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
 class ValidityCheck : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn<> end_point, FieldIn<> steps, FieldInOut<> output);
+  using ControlSignature = void(FieldIn end_point, FieldIn steps, FieldInOut output);
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 

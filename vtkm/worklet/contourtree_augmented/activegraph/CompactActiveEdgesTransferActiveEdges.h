@@ -80,15 +80,15 @@ namespace active_graph_inc
 class CompactActiveEdgesTransferActiveEdges : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeVertices,
-                                WholeArrayIn<IdType> newPosition,
-                                WholeArrayIn<IdType> newOutdegree,
-                                WholeArrayIn<IdType> activeEdges,
-                                WholeArrayOut<IdType> newActiveEdges,
-                                WholeArrayInOut<IdType> edgeFar,
-                                WholeArrayInOut<IdType> firstEdge,
-                                WholeArrayInOut<IdType> outdegree,
-                                WholeArrayInOut<IdType> hyperarcs);
+  typedef void ControlSignature(FieldIn activeVertices,
+                                WholeArrayIn newPosition,
+                                WholeArrayIn newOutdegree,
+                                WholeArrayIn activeEdges,
+                                WholeArrayOut newActiveEdges,
+                                WholeArrayInOut edgeFar,
+                                WholeArrayInOut firstEdge,
+                                WholeArrayInOut outdegree,
+                                WholeArrayInOut hyperarcs);
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 

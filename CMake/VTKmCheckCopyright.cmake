@@ -25,8 +25,6 @@
 ## cmake -DVTKm_SOURCE_DIR=<VTKm_SOURCE_DIR> -P <VTKm_SOURCE_DIR>/CMake/VTKMCheckCopyright.cmake
 ##
 
-cmake_minimum_required(VERSION 2.8)
-
 set(FILES_TO_CHECK
   *.txt
   *.cmake
@@ -236,7 +234,6 @@ foreach (glob_expression ${FILES_TO_CHECK})
     endforeach(exception)
 
     if (NOT skip)
-      message("Checking ${file}")
       check_copyright("${VTKm_SOURCE_DIR}/${file}")
     endif (NOT skip)
   endforeach (file)

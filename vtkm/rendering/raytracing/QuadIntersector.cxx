@@ -40,14 +40,14 @@ class FindQuadAABBs : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   FindQuadAABBs() {}
-  typedef void ControlSignature(FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                WholeArrayIn<Vec3RenderingTypes>);
+  typedef void ControlSignature(FieldIn,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                FieldOut,
+                                WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   template <typename PointPortalType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 5> quadId,
@@ -327,13 +327,8 @@ class CalculateNormals : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CalculateNormals() {}
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                WholeArrayIn<Vec3RenderingTypes>,
-                                WholeArrayIn<>);
+  typedef void
+    ControlSignature(FieldIn, FieldIn, FieldOut, FieldOut, FieldOut, WholeArrayIn, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   template <typename Precision, typename PointPortalType, typename IndicesPortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& hitIndex,
@@ -386,10 +381,7 @@ public:
     else
       invDeltaScalar = 1.f / minScalar;
   }
-  typedef void ControlSignature(FieldIn<>,
-                                FieldInOut<>,
-                                WholeArrayIn<ScalarRenderingTypes>,
-                                WholeArrayIn<>);
+  typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4);
   template <typename ScalarPortalType, typename IndicesPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
@@ -445,15 +437,15 @@ void QuadIntersector::IntersectRaysImp(Ray<Precision>& rays, bool vtkmNotUsed(re
 
 template <typename Precision>
 void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
-                                          const vtkm::cont::Field* scalarField,
+                                          const vtkm::cont::Field scalarField,
                                           const vtkm::Range& scalarRange)
 {
   ShapeIntersector::IntersectionPoint(rays);
 
   // TODO: if this is nodes of a mesh, support points
   bool isSupportedField =
-    (scalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-     scalarField->GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+    (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+     scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
   if (!isSupportedField)
     throw vtkm::cont::ErrorBadValue("Field not accociated with a cell set");
 
@@ -462,18 +454,21 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
 
   vtkm::worklet::DispatcherMapField<detail::GetScalar<Precision>>(
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-    .Invoke(rays.HitIdx, rays.Scalar, *scalarField, QuadIds);
+    .Invoke(rays.HitIdx,
+            rays.Scalar,
+            scalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+            QuadIds);
 }
 
 void QuadIntersector::IntersectionData(Ray<vtkm::Float32>& rays,
-                                       const vtkm::cont::Field* scalarField,
+                                       const vtkm::cont::Field scalarField,
                                        const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);
 }
 
 void QuadIntersector::IntersectionData(Ray<vtkm::Float64>& rays,
-                                       const vtkm::cont::Field* scalarField,
+                                       const vtkm::cont::Field scalarField,
                                        const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);

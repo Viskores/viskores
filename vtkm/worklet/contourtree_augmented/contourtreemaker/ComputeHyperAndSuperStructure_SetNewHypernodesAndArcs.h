@@ -79,15 +79,14 @@ namespace contourtree_maker_inc
 class ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    FieldIn<IdType> contourTreeSupernodes,           // (input) active super/hyperarcs
-    WholeArrayIn<IdType> contourTreeWhenTransferred, // (input)
-    WholeArrayIn<IdType> contourTreeHypernodes,      // (input)
-    WholeArrayIn<IdType> contourTreeHyperarcs,       // (input)
-    WholeArrayIn<IdType> newHypernodePosition,       // (input)
-    WholeArrayOut<IdType> newHypernodes,             // (output)
-    WholeArrayOut<IdType> newHyperarcs               // (output)
-    );                                               // (output)
+  typedef void ControlSignature(FieldIn contourTreeSupernodes, // (input) active super/hyperarcs
+                                WholeArrayIn contourTreeWhenTransferred, // (input)
+                                WholeArrayIn contourTreeHypernodes,      // (input)
+                                WholeArrayIn contourTreeHyperarcs,       // (input)
+                                WholeArrayIn newHypernodePosition,       // (input)
+                                WholeArrayOut newHypernodes,             // (output)
+                                WholeArrayOut newHyperarcs               // (output)
+                                );                                       // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 
