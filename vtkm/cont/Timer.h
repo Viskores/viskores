@@ -26,15 +26,16 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <memory>
+
 namespace vtkm
 {
 namespace cont
 {
 namespace detail
 {
-struct TimerFunctor;
-}
 class EnabledDeviceTimerImpls;
+}
 
 /// A class that can be used to time operations in VTK-m that might be occuring
 /// in parallel. Users are recommended to provide a device adapter at construction
@@ -53,8 +54,6 @@ class EnabledDeviceTimerImpls;
 ///
 class VTKM_CONT_EXPORT Timer
 {
-  friend struct detail::TimerFunctor;
-
 public:
   VTKM_CONT
   Timer();
@@ -74,17 +73,22 @@ public:
 
   VTKM_CONT void Stop();
 
-  VTKM_CONT bool Started();
+  VTKM_CONT bool Started() const;
 
-  VTKM_CONT bool Stopped();
+  VTKM_CONT bool Stopped() const;
 
   /// Used to check if Timer has finished the synchronization to get the result from the device.
-  VTKM_CONT bool Ready();
+  VTKM_CONT bool Ready() const;
 
   /// Get the elapsed time measured by the given device adapter. If no device is
   /// specified, the max time of all device measurements will be returned.
   VTKM_CONT
-  vtkm::Float64 GetElapsedTime(DeviceAdapterId id = DeviceAdapterTagAny());
+  vtkm::Float64 GetElapsedTime(
+    vtkm::cont::DeviceAdapterId id = vtkm::cont::DeviceAdapterTagAny()) const;
+
+  /// Returns the device for which this timer is synchronized. If the device adapter has the same
+  /// id as DeviceAdapterTagAny, then the timer will synchronize all devices.
+  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const { return this->Device; }
 
 private:
   VTKM_CONT void Init();
@@ -93,8 +97,7 @@ private:
   VTKM_CONT void operator=(const Timer&) = delete;
 
   DeviceAdapterId Device;
-  DeviceAdapterId DeviceForQuery;
-  EnabledDeviceTimerImpls* Internal;
+  std::unique_ptr<detail::EnabledDeviceTimerImpls> Internal;
 };
 }
 } // namespace vtkm::cont

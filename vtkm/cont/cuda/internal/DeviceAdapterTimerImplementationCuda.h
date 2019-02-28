@@ -54,13 +54,13 @@ public:
 
   VTKM_CONT void Stop();
 
-  VTKM_CONT bool Started();
+  VTKM_CONT bool Started() const;
 
-  VTKM_CONT bool Stopped();
+  VTKM_CONT bool Stopped() const;
 
-  VTKM_CONT bool Ready();
+  VTKM_CONT bool Ready() const;
 
-  VTKM_CONT vtkm::Float64 GetElapsedTime();
+  VTKM_CONT vtkm::Float64 GetElapsedTime() const;
 
 private:
   // Copying CUDA events is problematic.
