@@ -86,16 +86,17 @@ struct Index<T, Container<U, Types...>>
 };
 
 template <typename Device>
-VTKM_CONT inline auto GetTimerImpl(Device, vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
-  -> decltype(std::get<Index<Device, EnabledDeviceList>::value>(timerImpls->timerImplTuple))
+VTKM_CONT inline
+  typename std::tuple_element<Index<Device, EnabledDeviceList>::value, EnabledTimerImplTuple>::type&
+  GetTimerImpl(Device, vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
 {
   return std::get<Index<Device, EnabledDeviceList>::value>(timerImpls->timerImplTuple);
 }
 
 template <typename Device>
-VTKM_CONT inline auto GetTimerImpl(Device,
-                                   const vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
-  -> decltype(std::get<Index<Device, EnabledDeviceList>::value>(timerImpls->timerImplTuple))
+VTKM_CONT inline const typename std::tuple_element<Index<Device, EnabledDeviceList>::value,
+                                                   EnabledTimerImplTuple>::type&
+GetTimerImpl(Device, const vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
 {
   return std::get<Index<Device, EnabledDeviceList>::value>(timerImpls->timerImplTuple);
 }
