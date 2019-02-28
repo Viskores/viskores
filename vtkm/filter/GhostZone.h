@@ -44,6 +44,8 @@ public:
   GhostZone();
 
   VTKM_CONT
+  void RemoveGhostField() { this->RemoveField = true; }
+  VTKM_CONT
   void RemoveAllGhost() { this->RemoveAll = true; }
   VTKM_CONT
   void RemoveByType(const vtkm::UInt8& vals)
@@ -51,6 +53,8 @@ public:
     this->RemoveAll = false;
     this->RemoveVals = vals;
   }
+  VTKM_CONT
+  bool GetRemoveGhostField() { return this->RemoveField; }
   VTKM_CONT
   bool GetRemoveAllGhost() const { return this->RemoveAll; }
 
@@ -80,6 +84,7 @@ public:
 
 private:
   bool RemoveAll;
+  bool RemoveField;
   bool ConvertToUnstructured;
   vtkm::UInt8 RemoveVals;
   vtkm::worklet::Threshold Worklet;
