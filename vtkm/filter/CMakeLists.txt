@@ -21,6 +21,7 @@
 set(headers
   CellAverage.h
   CellMeasures.h
+  CellSetConnectivity.h
   CleanGrid.h
   ClipWithField.h
   ClipWithImplicitFunction.h
@@ -76,6 +77,7 @@ set(headers
 set(header_template_sources
   CellAverage.hxx
   CellMeasures.hxx
+  CellSetConnectivity.hxx
   CleanGrid.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
