@@ -76,11 +76,11 @@ enum class KeysSortType
 /// Keys structure is reused for all the \c Invoke. This is more efficient than
 /// creating a different \c Keys structure for each \c Invoke.
 ///
-template <typename _KeyType>
+template <typename T>
 class VTKM_ALWAYS_EXPORT Keys
 {
 public:
-  using KeyType = _KeyType;
+  using KeyType = T;
   using KeyArrayHandleType = vtkm::cont::ArrayHandle<KeyType>;
 
   VTKM_CONT
@@ -272,8 +272,8 @@ private:
   }
 };
 
-template <typename _KeyType>
-VTKM_CONT Keys<_KeyType>::Keys() = default;
+template <typename T>
+VTKM_CONT Keys<T>::Keys() = default;
 }
 } // namespace vtkm::worklet
 

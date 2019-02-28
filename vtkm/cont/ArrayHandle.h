@@ -730,7 +730,7 @@ namespace vtkm
 namespace cont
 {
 
-#define _VTKM_ARRAYHANDLE_EXPORT(Type)                                                             \
+#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>;              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
     ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                              \
@@ -738,19 +738,19 @@ namespace cont
     ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
-_VTKM_ARRAYHANDLE_EXPORT(char)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt8)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int16)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt16)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int32)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt32)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int64)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt64)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Float32)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Float64)
+VTKM_ARRAYHANDLE_EXPORT(char)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt8)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int16)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt16)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int32)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt32)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int64)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt64)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Float32)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Float64)
 
-#undef _VTKM_ARRAYHANDLE_EXPORT
+#undef VTKM_ARRAYHANDLE_EXPORT
 }
 } // end vtkm::cont
 
