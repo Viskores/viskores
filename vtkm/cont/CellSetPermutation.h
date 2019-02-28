@@ -402,12 +402,12 @@ namespace cont
 {
 
 template <typename CSType, typename AHValidCellIds>
-struct TypeString<vtkm::cont::CellSetPermutation<CSType, AHValidCellIds>>
+struct SerializableTypeString<vtkm::cont::CellSetPermutation<CSType, AHValidCellIds>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "CS_Permutation<" + TypeString<CSType>::Get() + "," + TypeString<AHValidCellIds>::Get() + ">";
+    static std::string name = "CS_Permutation<" + SerializableTypeString<CSType>::Get() + "," +
+      SerializableTypeString<AHValidCellIds>::Get() + ">";
     return name;
   }
 };

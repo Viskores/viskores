@@ -747,32 +747,33 @@ namespace cont
 {
 
 template <typename AH, typename Functor, typename InvFunctor>
-struct TypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Transform<" + TypeString<AH>::Get() + "," +
-      TypeString<Functor>::Get() + "," + TypeString<InvFunctor>::Get() + ">";
+    static std::string name = "AH_Transform<" + SerializableTypeString<AH>::Get() + "," +
+      SerializableTypeString<Functor>::Get() + "," + SerializableTypeString<InvFunctor>::Get() +
+      ">";
     return name;
   }
 };
 
 template <typename AH, typename Functor>
-struct TypeString<vtkm::cont::ArrayHandleTransform<AH, Functor>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleTransform<AH, Functor>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_Transform<" + TypeString<AH>::Get() + "," + TypeString<Functor>::Get() + ">";
+    static std::string name = "AH_Transform<" + SerializableTypeString<AH>::Get() + "," +
+      SerializableTypeString<Functor>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH, typename Functor, typename InvFunctor>
-struct TypeString<vtkm::cont::ArrayHandle<
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
   typename vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>::ValueType,
   vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>>>
-  : TypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
 {
 };
 }

@@ -156,19 +156,19 @@ namespace cont
 {
 
 template <typename T>
-struct TypeString<vtkm::cont::ArrayHandleCounting<T>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Counting<" + TypeString<T>::Get() + ">";
+    static std::string name = "AH_Counting<" + SerializableTypeString<T>::Get() + ">";
     return name;
   }
 };
 
 template <typename T>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
-  : TypeString<vtkm::cont::ArrayHandleCounting<T>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
 {
 };
 }

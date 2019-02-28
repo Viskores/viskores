@@ -318,20 +318,20 @@ namespace cont
 {
 
 template <typename AH>
-struct TypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_ExtractComponent<" + TypeString<AH>::Get() + ">";
+    static std::string name = "AH_ExtractComponent<" + SerializableTypeString<AH>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<typename vtkm::VecTraits<typename AH::ValueType>::ComponentType,
                           vtkm::cont::StorageTagExtractComponent<AH>>>
-  : TypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
 {
 };
 }

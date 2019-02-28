@@ -38,7 +38,7 @@ ArrayHandleType inline ArrayHandle<T, StorageTagVirtual>::CastToType(
   if (!this->Storage)
   {
     VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
-    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeName<ArrayHandleType>());
+    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeToString<ArrayHandleType>());
   }
   using S = typename ArrayHandleType::StorageTag;
   const auto* any = this->Storage->template Cast<vtkm::cont::StorageAny<T, S>>();
@@ -86,7 +86,7 @@ struct IntAnySerializer
   {
     if (obj.template IsType<CountingType>())
     {
-      vtkmdiy::save(bb, vtkm::cont::TypeString<CountingType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<CountingType>::Get());
 
       using S = typename CountingType::StorageTag;
       const vtkm::cont::StorageVirtual* storage = obj.GetStorage();
@@ -95,7 +95,7 @@ struct IntAnySerializer
     }
     else if (obj.template IsType<ConstantType>())
     {
-      vtkmdiy::save(bb, vtkm::cont::TypeString<ConstantType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<ConstantType>::Get());
 
       using S = typename ConstantType::StorageTag;
       const vtkm::cont::StorageVirtual* storage = obj.GetStorage();
@@ -104,7 +104,7 @@ struct IntAnySerializer
     }
     else
     {
-      vtkmdiy::save(bb, vtkm::cont::TypeString<BasicType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<BasicType>::Get());
       vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
     }
   }
@@ -114,13 +114,13 @@ struct IntAnySerializer
     std::string typeString;
     vtkmdiy::load(bb, typeString);
 
-    if (typeString == vtkm::cont::TypeString<CountingType>::Get())
+    if (typeString == vtkm::cont::SerializableTypeString<CountingType>::Get())
     {
       CountingType array;
       vtkmdiy::load(bb, array);
       obj = std::move(vtkm::cont::ArrayHandleVirtual<T>{ array });
     }
-    else if (typeString == vtkm::cont::TypeString<ConstantType>::Get())
+    else if (typeString == vtkm::cont::SerializableTypeString<ConstantType>::Get())
     {
       ConstantType array;
       vtkmdiy::load(bb, array);

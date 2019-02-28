@@ -120,7 +120,7 @@ public:
     if (!derived)
     {
       VTKM_LOG_CAST_FAIL(*this, DerivedStorage);
-      throwFailedDynamicCast("StorageVirtual", vtkm::cont::TypeName<DerivedStorage>());
+      throwFailedDynamicCast("StorageVirtual", vtkm::cont::TypeToString<DerivedStorage>());
     }
     VTKM_LOG_CAST_SUCC(*this, derived);
     return derived;

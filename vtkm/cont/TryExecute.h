@@ -53,7 +53,7 @@ inline bool TryExecuteIfValid(std::true_type,
     }
     catch (...)
     {
-      detail::HandleTryExecuteException(tag, tracker, vtkm::cont::TypeName<Functor>());
+      detail::HandleTryExecuteException(tag, tracker, vtkm::cont::TypeToString<Functor>());
     }
   }
 
