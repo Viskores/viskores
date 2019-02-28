@@ -64,6 +64,7 @@ void DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Start()
 void DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Stop()
 {
   VTKM_CUDA_CALL(cudaEventRecord(this->StopEvent, cudaStreamPerThread));
+  VTKM_CUDA_CALL(cudaEventSynchronize(this->StopEvent));
   this->StopReady = true;
 }
 
@@ -104,9 +105,9 @@ vtkm::Float64 DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>
   {
     // Stop was not called, so we have to insert a new event into the stream
     VTKM_CUDA_CALL(cudaEventRecord(this->StopEvent, cudaStreamPerThread));
+    VTKM_CUDA_CALL(cudaEventSynchronize(this->StopEvent));
   }
 
-  VTKM_CUDA_CALL(cudaEventSynchronize(this->StopEvent));
   float elapsedTimeMilliseconds;
   VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, this->StartEvent, this->StopEvent));
   // Reset Stop flag to its original state
