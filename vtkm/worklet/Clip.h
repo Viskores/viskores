@@ -827,7 +827,7 @@ public:
         for (vtkm::IdComponent i = 1; i < numValues; i++)
         {
           MappedValueType value = toReduce[i];
-          sum = static_cast<MappedValueType>(sum + value);
+          sum = sum + value;
         }
         centroid = internal::Scale(sum, 1. / static_cast<vtkm::Float64>(numValues));
       }

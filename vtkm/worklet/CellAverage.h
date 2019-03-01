@@ -65,10 +65,10 @@ private:
     OutType sum = OutType(pointValues[0]);
     for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
     {
-      sum = static_cast<OutType>(sum + OutType(pointValues[pointIndex]));
+      sum = sum + OutType(pointValues[pointIndex]);
     }
 
-    average = static_cast<OutType>(sum / OutType(static_cast<OutComponentType>(numPoints)));
+    average = sum / OutType(static_cast<OutComponentType>(numPoints));
   }
 
   template <typename PointValueVecType, typename OutType>
