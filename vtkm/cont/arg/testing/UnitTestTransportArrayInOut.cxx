@@ -42,7 +42,7 @@ struct TestKernelInOut : public vtkm::exec::FunctorBase
   {
     using ValueType = typename PortalType::ValueType;
     ValueType inValue = this->Portal.Get(index);
-    this->Portal.Set(index, inValue + inValue);
+    this->Portal.Set(index, static_cast<ValueType>(inValue + inValue));
   }
 };
 
@@ -76,7 +76,7 @@ struct TryArrayInOutType
                      "Portal has wrong number of values.");
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      T expectedValue = TestValue(index, T()) + TestValue(index, T());
+      T expectedValue = static_cast<T>(TestValue(index, T()) + TestValue(index, T()));
       T retrievedValue = portal.Get(index);
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Functor did not modify in place.");

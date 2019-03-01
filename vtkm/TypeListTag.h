@@ -211,7 +211,8 @@ struct VTKM_ALWAYS_EXPORT TypeListTagAll
 /// integers, floating points, and 3 dimensional vectors of floating points.
 ///
 struct VTKM_ALWAYS_EXPORT TypeListTagCommon
-  : vtkm::ListTagBase<vtkm::Int32,
+  : vtkm::ListTagBase<vtkm::UInt8,
+                      vtkm::Int32,
                       vtkm::Int64,
                       vtkm::Float32,
                       vtkm::Float64,

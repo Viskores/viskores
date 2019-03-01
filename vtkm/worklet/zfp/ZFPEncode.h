@@ -350,6 +350,20 @@ struct ZFPBlockEncoder<BlockSize, vtkm::Float64, PortalType>
 };
 
 template <vtkm::Int32 BlockSize, typename PortalType>
+struct ZFPBlockEncoder<BlockSize, vtkm::UInt8, PortalType>
+{
+  VTKM_EXEC void encode(vtkm::UInt8* fblock,
+                        vtkm::Int32 maxbits,
+                        vtkm::UInt32 blockIdx,
+                        PortalType& stream)
+  {
+    using Int = typename zfp::zfp_traits<vtkm::UInt8>::Int;
+    zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, vtkm::Id(blockIdx));
+    encode_block<BlockSize>(blockWriter, maxbits, get_precision<vtkm::Int32>(), (Int*)fblock);
+  }
+};
+
+template <vtkm::Int32 BlockSize, typename PortalType>
 struct ZFPBlockEncoder<BlockSize, vtkm::Int32, PortalType>
 {
   VTKM_EXEC void encode(vtkm::Int32* fblock,
