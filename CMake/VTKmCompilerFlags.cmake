@@ -119,8 +119,12 @@ elseif(VTKM_COMPILER_IS_ICC)
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd1478 -wd13379>)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
-  set(cxx_flags -Wall -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
-
+  set(cxx_flags -Wall -Wcast-align -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
+  if (VTKM_COMPILER_IS_GNU)
+    list(APPEND cxx_flags -Wfloat-conversion)
+  elseif (VTKM_COMPILER_IS_CLANG)
+    list(APPEND cxx_flags -Wconversion)
+  endif()
   set(cuda_flags -Xcompiler=-Wall,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-local-typedefs,-Wno-unused-function,-Wcast-align,-Wconversion,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-Wunused-parameter,-fno-common)
 
   #GCC 5, 6 don't properly handle strict-overflow suppression through pragma's.

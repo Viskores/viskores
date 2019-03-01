@@ -90,7 +90,7 @@ struct InPlacePermutationFunctor : vtkm::exec::FunctorBase
     using T = typename PermutedPortalType::ValueType;
     T value = this->PermutedPortal.Get(index);
 
-    value = static_cast<T>(value + T(1000));
+    value = value + T(1000);
 
     this->PermutedPortal.Set(index, value);
   }
@@ -117,7 +117,7 @@ VTKM_CONT void CheckInPlaceResult(PortalType portal)
     if (permutedIndex % 2 == 0)
     {
       // This index was part of the permuted array; has a value changed
-      T expectedValue = static_cast<T>(TestValue(permutedIndex, T()) + T(1000));
+      T expectedValue = TestValue(permutedIndex, T()) + T(1000);
       T retrievedValue = portal.Get(permutedIndex);
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue), "Permuted set unexpected value.");
     }

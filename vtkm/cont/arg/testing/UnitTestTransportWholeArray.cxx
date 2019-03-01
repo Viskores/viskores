@@ -88,7 +88,7 @@ struct TestInOutKernel : public vtkm::exec::FunctorBase
       this->RaiseError("In/Out whole array has wrong size.");
     }
     using ValueType = typename PortalType::ValueType;
-    this->Portal.Set(index, static_cast<ValueType>(this->Portal.Get(index) + ValueType(OFFSET)));
+    this->Portal.Set(index, this->Portal.Get(index) + ValueType(OFFSET));
   }
 };
 
@@ -156,7 +156,7 @@ struct TryWholeArrayType
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Array size wrong?");
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      T expectedValue = static_cast<T>(TestValue(index, T()) + T(OFFSET));
+      T expectedValue = TestValue(index, T()) + T(OFFSET);
       T retrievedValue = array.GetPortalConstControl().Get(index);
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "In/Out array not set correctly.");

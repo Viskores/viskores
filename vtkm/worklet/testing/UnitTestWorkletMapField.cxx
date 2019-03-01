@@ -41,7 +41,7 @@ public:
     {
       this->RaiseError("Got wrong input value.");
     }
-    out = static_cast<T>(in - T(100));
+    out = in - T(100);
     if (!test_equal(inout, TestValue(workIndex, T()) + T(100)))
     {
       this->RaiseError("Got wrong in-out value.");
@@ -49,7 +49,7 @@ public:
 
     // We return the new value of inout. Since _3 is both an arg and return,
     // this tests that the return value is set after updating the arg values.
-    return static_cast<T>(inout - T(100));
+    return inout - T(100);
   }
 
   template <typename T1, typename T2, typename T3>
@@ -75,7 +75,7 @@ struct DoStaticTestWorklet
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
+      inputArray[index] = TestValue(index, T()) + T(100);
     }
 
     vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
@@ -123,7 +123,7 @@ struct DoVariantTestWorklet
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
+      inputArray[index] = TestValue(index, T()) + T(100);
     }
 
     vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
