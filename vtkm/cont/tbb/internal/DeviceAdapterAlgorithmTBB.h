@@ -255,8 +255,9 @@ public:
   template <class FunctorType>
   VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id numInstances)
   {
-    VTKM_LOG_SCOPE(
-      vtkm::cont::LogLevel::Perf, "Schedule TBB 1D: '%s'", vtkm::cont::TypeName(functor).c_str());
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
+                   "Schedule TBB 1D: '%s'",
+                   vtkm::cont::TypeToString(functor).c_str());
 
     vtkm::exec::tbb::internal::TaskTiling1D kernel(functor);
     ScheduleTask(kernel, numInstances);
@@ -265,8 +266,9 @@ public:
   template <class FunctorType>
   VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id3 rangeMax)
   {
-    VTKM_LOG_SCOPE(
-      vtkm::cont::LogLevel::Perf, "Schedule TBB 3D: '%s'", vtkm::cont::TypeName(functor).c_str());
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
+                   "Schedule TBB 3D: '%s'",
+                   vtkm::cont::TypeToString(functor).c_str());
 
     vtkm::exec::tbb::internal::TaskTiling3D kernel(functor);
     ScheduleTask(kernel, rangeMax);

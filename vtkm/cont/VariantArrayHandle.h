@@ -445,7 +445,7 @@ struct VariantArrayHandleSerializeFunctor
   template <typename ArrayHandleType>
   void operator()(const ArrayHandleType& ah, BinaryBuffer& bb) const
   {
-    vtkmdiy::save(bb, vtkm::cont::TypeString<ArrayHandleType>::Get());
+    vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<ArrayHandleType>::Get());
     vtkmdiy::save(bb, ah);
   }
 };
@@ -461,7 +461,7 @@ struct VariantArrayHandleDeserializeFunctor
   {
     using ArrayHandleType = vtkm::cont::ArrayHandleVirtual<T>;
 
-    if (!success && (typeString == vtkm::cont::TypeString<ArrayHandleType>::Get()))
+    if (!success && (typeString == vtkm::cont::SerializableTypeString<ArrayHandleType>::Get()))
     {
       ArrayHandleType ah;
       vtkmdiy::load(bb, ah);

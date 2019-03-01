@@ -393,7 +393,7 @@ private:
                                     std::true_type vtkmNotUsed(notFromArrayHandleVirtual)) const
   {
     VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
-    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeName<ArrayHandleType>());
+    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeToString<ArrayHandleType>());
     return ArrayHandleType{};
   }
 
@@ -402,7 +402,7 @@ private:
                                     std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const
   {
     VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
-    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeName<ArrayHandleType>());
+    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeToString<ArrayHandleType>());
     return ArrayHandleType{};
   }
 
@@ -417,7 +417,7 @@ private:
     if (!derived)
     {
       VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
-      throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeName<ArrayHandleType>());
+      throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeToString<ArrayHandleType>());
     }
     VTKM_LOG_CAST_SUCC(*this, derived);
     return *derived;
@@ -492,11 +492,11 @@ void CastAndCall(vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>
 //=============================================================================
 // Specializations of serialization related classes
 template <typename T>
-struct TypeString<vtkm::cont::ArrayHandleVirtual<T>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleVirtual<T>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Virtual<" + TypeString<T>::Get() + ">";
+    static std::string name = "AH_Virtual<" + SerializableTypeString<T>::Get() + ">";
     return name;
   }
 };

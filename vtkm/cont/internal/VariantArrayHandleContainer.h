@@ -164,8 +164,8 @@ struct VTKM_ALWAYS_EXPORT Caster
     if (!IsValueType<T>(container))
     {
       VTKM_LOG_CAST_FAIL(container, ArrayHandleType);
-      throwFailedDynamicCast(vtkm::cont::TypeName(container),
-                             vtkm::cont::TypeName<ArrayHandleType>());
+      throwFailedDynamicCast(vtkm::cont::TypeToString(container),
+                             vtkm::cont::TypeToString<ArrayHandleType>());
     }
 
     const auto* derived = static_cast<const VariantArrayHandleContainer<T>*>(container);
@@ -182,8 +182,8 @@ struct VTKM_ALWAYS_EXPORT Caster<T, vtkm::cont::StorageTagVirtual>
     if (!IsValueType<T>(container))
     {
       VTKM_LOG_CAST_FAIL(container, vtkm::cont::ArrayHandleVirtual<T>);
-      throwFailedDynamicCast(vtkm::cont::TypeName(container),
-                             vtkm::cont::TypeName<vtkm::cont::ArrayHandleVirtual<T>>());
+      throwFailedDynamicCast(vtkm::cont::TypeToString(container),
+                             vtkm::cont::TypeToString<vtkm::cont::ArrayHandleVirtual<T>>());
     }
 
     // Technically, this method returns a copy of the \c ArrayHandle. But

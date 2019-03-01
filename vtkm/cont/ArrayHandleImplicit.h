@@ -154,20 +154,20 @@ namespace cont
 {
 
 template <typename Functor>
-struct TypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Implicit<" + TypeString<Functor>::Get() + ">";
+    static std::string name = "AH_Implicit<" + SerializableTypeString<Functor>::Get() + ">";
     return name;
   }
 };
 
 template <typename Functor>
-struct TypeString<vtkm::cont::ArrayHandle<
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
   typename vtkm::cont::detail::ArrayHandleImplicitTraits<Functor>::ValueType,
   vtkm::cont::StorageTagImplicit<vtkm::cont::detail::ArrayPortalImplicit<Functor>>>>
-  : TypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
 {
 };
 }

@@ -96,7 +96,7 @@ void CastAndCall(const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
 
 
 template <>
-struct TypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
+struct SerializableTypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
 {
   static VTKM_CONT const std::string Get() { return "AH_VirtualCoordinates"; }
 };
@@ -132,7 +132,7 @@ public:
       using T = typename HandleType::ValueType;
       using S = typename HandleType::StorageTag;
       auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
-      vtkmdiy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<HandleType>::Get());
       vtkmdiy::save(bb, array->GetHandle());
     }
     else if (obj.IsType<RectilinearCoordsArrayType>())
@@ -141,12 +141,12 @@ public:
       using T = typename HandleType::ValueType;
       using S = typename HandleType::StorageTag;
       auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
-      vtkmdiy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<HandleType>::Get());
       vtkmdiy::save(bb, array->GetHandle());
     }
     else
     {
-      vtkmdiy::save(bb, vtkm::cont::TypeString<BasicCoordsType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<BasicCoordsType>::Get());
       vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
     }
   }
@@ -156,19 +156,20 @@ public:
     std::string typeString;
     vtkmdiy::load(bb, typeString);
 
-    if (typeString == vtkm::cont::TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>::Get())
+    if (typeString ==
+        vtkm::cont::SerializableTypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>::Get())
     {
       vtkm::cont::ArrayHandleUniformPointCoordinates array;
       vtkmdiy::load(bb, array);
       obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
     }
-    else if (typeString == vtkm::cont::TypeString<RectilinearCoordsArrayType>::Get())
+    else if (typeString == vtkm::cont::SerializableTypeString<RectilinearCoordsArrayType>::Get())
     {
       RectilinearCoordsArrayType array;
       vtkmdiy::load(bb, array);
       obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
     }
-    else if (typeString == vtkm::cont::TypeString<BasicCoordsType>::Get())
+    else if (typeString == vtkm::cont::SerializableTypeString<BasicCoordsType>::Get())
     {
       BasicCoordsType array;
       vtkmdiy::load(bb, array);

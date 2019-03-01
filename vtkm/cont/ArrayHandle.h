@@ -29,6 +29,7 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/ErrorInternal.h>
+#include <vtkm/cont/SerializableTypeString.h>
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -683,11 +684,11 @@ namespace cont
 {
 
 template <typename T>
-struct TypeString<ArrayHandle<T>>
+struct SerializableTypeString<ArrayHandle<T>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH<" + TypeString<T>::Get() + ">";
+    static std::string name = "AH<" + SerializableTypeString<T>::Get() + ">";
     return name;
   }
 };

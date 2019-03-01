@@ -70,16 +70,16 @@ namespace cont
 {
 
 template <>
-struct TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
+struct SerializableTypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
 {
   static VTKM_CONT const std::string Get() { return "AH_UniformPointCoordinates"; }
 };
 
 template <>
-struct TypeString<vtkm::cont::ArrayHandle<
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
   vtkm::Vec<vtkm::FloatDefault, 3>,
   vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>>
-  : TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
+  : SerializableTypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
 {
 };
 }

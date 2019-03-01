@@ -70,14 +70,14 @@ namespace cont
 {
 
 template <>
-struct TypeString<vtkm::cont::detail::IndexFunctor>
+struct SerializableTypeString<vtkm::cont::detail::IndexFunctor>
 {
   static VTKM_CONT const std::string Get() { return "AH_IndexFunctor"; }
 };
 
 template <>
-struct TypeString<vtkm::cont::ArrayHandleIndex>
-  : TypeString<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::IndexFunctor>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleIndex>
+  : SerializableTypeString<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::IndexFunctor>>
 {
 };
 }

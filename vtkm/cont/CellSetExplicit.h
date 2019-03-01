@@ -350,15 +350,16 @@ namespace cont
 {
 
 template <typename ShapeST, typename CountST, typename ConnectivityST, typename OffsetST>
-struct TypeString<vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>>
+struct SerializableTypeString<
+  vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>>
 {
   static VTKM_CONT const std::string& Get()
   {
     static std::string name = "CS_Explicit<" +
-      TypeString<vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST>>::Get() + "_ST," +
-      TypeString<vtkm::cont::ArrayHandle<vtkm::IdComponent, CountST>>::Get() + "_ST," +
-      TypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST," +
-      TypeString<vtkm::cont::ArrayHandle<vtkm::Id, OffsetST>>::Get() + "_ST>";
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST>>::Get() + "_ST," +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::IdComponent, CountST>>::Get() + "_ST," +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST," +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, OffsetST>>::Get() + "_ST>";
 
     return name;
   }

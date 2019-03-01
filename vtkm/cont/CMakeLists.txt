@@ -107,7 +107,7 @@ set(headers
   StorageVirtual.h
   Timer.h
   TryExecute.h
-  TypeString.h
+  SerializableTypeString.h
   VariantArrayHandle.h
   VirtualObjectHandle.h
   )

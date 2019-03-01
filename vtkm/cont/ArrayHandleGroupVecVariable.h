@@ -514,21 +514,21 @@ namespace cont
 {
 
 template <typename SAH, typename OAH>
-struct TypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_GroupVecVariable<" + TypeString<SAH>::Get() + "," + TypeString<OAH>::Get() + ">";
+    static std::string name = "AH_GroupVecVariable<" + SerializableTypeString<SAH>::Get() + "," +
+      SerializableTypeString<OAH>::Get() + ">";
     return name;
   }
 };
 
 template <typename SAH, typename OAH>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<vtkm::VecFromPortal<typename SAH::PortalControl>,
                           vtkm::cont::internal::StorageTagGroupVecVariable<SAH, OAH>>>
-  : TypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
 {
 };
 }

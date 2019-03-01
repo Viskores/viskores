@@ -732,21 +732,21 @@ namespace cont
 {
 
 template <typename... AHs>
-struct TypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
 {
   static VTKM_CONT const std::string& Get()
   {
     static std::string name =
-      "AH_CompositeVector<" + internal::GetVariadicTypeString(AHs{}...) + ">";
+      "AH_CompositeVector<" + internal::GetVariadicSerializableTypeString(AHs{}...) + ">";
     return name;
   }
 };
 
 template <typename... AHs>
-struct TypeString<vtkm::cont::ArrayHandle<
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
   typename vtkm::cont::internal::compvec::GetValueType<vtkmstd::tuple<AHs...>>::ValueType,
   vtkm::cont::internal::StorageTagCompositeVector<vtkmstd::tuple<AHs...>>>>
-  : TypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
 {
 };
 }

@@ -438,21 +438,21 @@ namespace cont
 {
 
 template <typename AH1, typename AH2, typename AH3>
-struct TypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_CartesianProduct<" + TypeString<AH1>::Get() + "," +
-      TypeString<AH2>::Get() + "," + TypeString<AH3>::Get() + ">";
+    static std::string name = "AH_CartesianProduct<" + SerializableTypeString<AH1>::Get() + "," +
+      SerializableTypeString<AH2>::Get() + "," + SerializableTypeString<AH3>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH1, typename AH2, typename AH3>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<vtkm::Vec<typename AH1::ValueType, 3>,
                           vtkm::cont::internal::StorageTagCartesianProduct<AH1, AH2, AH3>>>
-  : TypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
 {
 };
 }

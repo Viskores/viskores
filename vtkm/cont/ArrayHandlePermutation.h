@@ -380,21 +380,21 @@ namespace cont
 {
 
 template <typename IdxAH, typename ValAH>
-struct TypeString<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
+struct SerializableTypeString<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_Permutation<" + TypeString<IdxAH>::Get() + "," + TypeString<ValAH>::Get() + ">";
+    static std::string name = "AH_Permutation<" + SerializableTypeString<IdxAH>::Get() + "," +
+      SerializableTypeString<ValAH>::Get() + ">";
     return name;
   }
 };
 
 template <typename IdxAH, typename ValAH>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<typename ValAH::ValueType,
                           vtkm::cont::internal::StorageTagPermutation<IdxAH, ValAH>>>
-  : TypeString<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
+  : SerializableTypeString<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
 {
 };
 }
