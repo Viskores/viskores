@@ -341,7 +341,6 @@ public:
 
   VTKM_CONT void Reset()
   {
-    vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::Synchronize();
     this->StartReady = false;
     this->StopReady = false;
   }
@@ -349,23 +348,23 @@ public:
   VTKM_CONT void Start()
   {
     this->Reset();
-    this->StartTime = ::tbb::tick_count::now();
+    this->StartTime = this->GetCurrentTime();
     this->StartReady = true;
   }
 
   VTKM_CONT void Stop()
   {
-    this->StopTime = ::tbb::tick_count::now();
+    this->StopTime = this->GetCurrentTime();
     this->StopReady = true;
   }
 
-  VTKM_CONT bool Started() { return this->StartReady; }
+  VTKM_CONT bool Started() const { return this->StartReady; }
 
-  VTKM_CONT bool Stopped() { return this->StopReady; }
+  VTKM_CONT bool Stopped() const { return this->StopReady; }
 
-  VTKM_CONT bool Ready() { return true; }
+  VTKM_CONT bool Ready() const { return true; }
 
-  VTKM_CONT vtkm::Float64 GetElapsedTime()
+  VTKM_CONT vtkm::Float64 GetElapsedTime() const
   {
     assert(this->StartReady);
     if (!this->StartReady)
@@ -375,19 +374,19 @@ public:
                  " GetElapsedTime().");
       return 0;
     }
-    bool manualStop = true;
-    if (!this->StopReady)
-    {
-      manualStop = false;
-      this->Stop();
-    }
-    vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::Synchronize();
-    ::tbb::tick_count::interval_t elapsedTime = this->StopTime - this->StartTime;
 
-    // Reset StopReady flag to its original state
-    this->StopReady = manualStop;
+    ::tbb::tick_count startTime = this->StartTime;
+    ::tbb::tick_count stopTime = this->StopReady ? this->StopTime : this->GetCurrentTime();
+
+    ::tbb::tick_count::interval_t elapsedTime = stopTime - startTime;
 
     return static_cast<vtkm::Float64>(elapsedTime.seconds());
+  }
+
+  VTKM_CONT::tbb::tick_count GetCurrentTime() const
+  {
+    vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::Synchronize();
+    return ::tbb::tick_count::now();
   }
 
 private:
