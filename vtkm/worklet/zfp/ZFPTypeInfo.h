@@ -199,13 +199,6 @@ struct zfp_traits<int>
   typedef int Int;
 };
 
-template <>
-struct zfp_traits<char>
-{
-  typedef unsigned char UInt;
-  typedef char Int;
-};
-
 template <typename T>
 inline VTKM_EXEC bool is_int()
 {
