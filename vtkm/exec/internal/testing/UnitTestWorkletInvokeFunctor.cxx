@@ -64,6 +64,13 @@ struct MyVisitArrayPortal
   vtkm::IdComponent Get(vtkm::Id) const { return 1; }
 };
 
+struct MyThreadToOutputMapPortal
+{
+  using ValueType = vtkm::Id;
+  VTKM_EXEC_CONT
+  vtkm::Id Get(vtkm::Id index) const { return index; }
+};
+
 struct TestFetchTagInput
 {
 };
@@ -163,28 +170,34 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
   template <typename T,
             typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             typename InputDomainType,
             typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType&,
     const G& globalThreadIndexOffset) const
   {
+    const vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
   }
 };
 
 template <typename Invocation>
 void CallDoWorkletInvokeFunctor(const Invocation& invocation, vtkm::Id index)
 {
+  const vtkm::Id outputIndex = invocation.ThreadToOutputMap.Get(index);
   vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
     TestWorkletProxy(),
     invocation,
-    vtkm::exec::arg::ThreadIndicesBasic(
-      index, invocation.OutputToInputMap.Get(index), invocation.VisitArray.Get(index)));
+    vtkm::exec::arg::ThreadIndicesBasic(index,
+                                        invocation.OutputToInputMap.Get(outputIndex),
+                                        invocation.VisitArray.Get(outputIndex),
+                                        outputIndex));
 }
 
 void TestDoWorkletInvoke()
@@ -204,7 +217,8 @@ void TestDoWorkletInvoke()
                                                                 TestControlInterface(),
                                                                 TestExecutionInterface1(),
                                                                 MyOutputToInputMapPortal(),
-                                                                MyVisitArrayPortal()),
+                                                                MyVisitArrayPortal(),
+                                                                MyThreadToOutputMapPortal()),
                              1);
   VTKM_TEST_ASSERT(inputTestValue == 5, "Input value changed.");
   VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 100 + 30, "Output value not set right.");
@@ -216,7 +230,8 @@ void TestDoWorkletInvoke()
                                                                 TestControlInterface(),
                                                                 TestExecutionInterface2(),
                                                                 MyOutputToInputMapPortal(),
-                                                                MyVisitArrayPortal()),
+                                                                MyVisitArrayPortal(),
+                                                                MyThreadToOutputMapPortal()),
                              2);
   VTKM_TEST_ASSERT(inputTestValue == 6, "Input value changed.");
   VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 200 + 30 * 2, "Output value not set right.");

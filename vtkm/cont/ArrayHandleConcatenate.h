@@ -332,20 +332,20 @@ namespace cont
 {
 
 template <typename AH1, typename AH2>
-struct TypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_Concatenate<" + TypeString<AH1>::Get() + "," + TypeString<AH2>::Get() + ">";
+    static std::string name = "AH_Concatenate<" + SerializableTypeString<AH1>::Get() + "," +
+      SerializableTypeString<AH2>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH1, typename AH2>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<typename AH1::ValueType, vtkm::cont::StorageTagConcatenate<AH1, AH2>>>
-  : TypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
 {
 };
 }

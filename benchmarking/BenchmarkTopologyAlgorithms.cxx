@@ -135,7 +135,6 @@ struct ValueTypes
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of different field operations
-template <class DeviceAdapterTag>
 class BenchmarkTopologyAlgorithms
 {
   using StorageTag = vtkm::cont::StorageTagBasic;
@@ -177,7 +176,7 @@ private:
     T next() { return distribution(rng); }
   };
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchCellToPointAvg
   {
     std::vector<Value> input;
@@ -205,11 +204,10 @@ private:
       cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
 
       vtkm::worklet::DispatcherMapTopology<AverageCellToPoint> dispatcher;
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->InputHandle, cellSet, result);
 
       return timer.GetElapsedTime();
@@ -229,8 +227,8 @@ private:
     }
   };
 
-  template <typename Value>
-  struct BenchCellToPointAvgDynamic : public BenchCellToPointAvg<Value>
+  template <typename Value, typename DeviceAdapter>
+  struct BenchCellToPointAvgDynamic : public BenchCellToPointAvg<Value, DeviceAdapter>
   {
 
     VTKM_CONT
@@ -242,11 +240,10 @@ private:
       ValueVariantHandle dinput(this->InputHandle);
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
 
       vtkm::worklet::DispatcherMapTopology<AverageCellToPoint> dispatcher;
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(dinput, cellSet, result);
 
       return timer.GetElapsedTime();
@@ -258,7 +255,7 @@ private:
   VTKM_MAKE_BENCHMARK(CellToPointAvg, BenchCellToPointAvg);
   VTKM_MAKE_BENCHMARK(CellToPointAvgDynamic, BenchCellToPointAvgDynamic);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchPointToCellAvg
   {
     std::vector<Value> input;
@@ -286,11 +283,10 @@ private:
       cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
 
       vtkm::worklet::DispatcherMapTopology<AveragePointToCell> dispatcher;
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->InputHandle, cellSet, result);
 
       return timer.GetElapsedTime();
@@ -310,8 +306,8 @@ private:
     }
   };
 
-  template <typename Value>
-  struct BenchPointToCellAvgDynamic : public BenchPointToCellAvg<Value>
+  template <typename Value, typename DeviceAdapter>
+  struct BenchPointToCellAvgDynamic : public BenchPointToCellAvg<Value, DeviceAdapter>
   {
 
     VTKM_CONT
@@ -323,11 +319,10 @@ private:
       ValueVariantHandle dinput(this->InputHandle);
       vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
 
       vtkm::worklet::DispatcherMapTopology<AveragePointToCell> dispatcher;
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(dinput, cellSet, result);
 
       return timer.GetElapsedTime();
@@ -339,7 +334,7 @@ private:
   VTKM_MAKE_BENCHMARK(PointToCellAvg, BenchPointToCellAvg);
   VTKM_MAKE_BENCHMARK(PointToCellAvgDynamic, BenchPointToCellAvgDynamic);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchClassification
   {
     std::vector<Value> input;
@@ -371,12 +366,11 @@ private:
 
       ValueVariantHandle dinput(this->InputHandle);
 
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
 
       Classification<Value> worklet(this->IsoValue);
       vtkm::worklet::DispatcherMapTopology<Classification<Value>> dispatcher(worklet);
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(dinput, cellSet, result);
 
       return timer.GetElapsedTime();
@@ -396,8 +390,8 @@ private:
     }
   };
 
-  template <typename Value>
-  struct BenchClassificationDynamic : public BenchClassification<Value>
+  template <typename Value, typename DeviceAdapter>
+  struct BenchClassificationDynamic : public BenchClassification<Value, DeviceAdapter>
   {
     VTKM_CONT
     vtkm::Float64 operator()()
@@ -406,12 +400,11 @@ private:
       cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
       vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageTag> result;
 
-      Timer timer{ DeviceAdapterTag() };
+      Timer timer{ DeviceAdapter() };
       timer.Start();
 
       Classification<Value> worklet(this->IsoValue);
       vtkm::worklet::DispatcherMapTopology<Classification<Value>> dispatcher(worklet);
-      dispatcher.SetDevice(DeviceAdapterTag());
       dispatcher.Invoke(this->InputHandle, cellSet, result);
 
       timer.Stop();
@@ -425,29 +418,29 @@ private:
   VTKM_MAKE_BENCHMARK(ClassificationDynamic, BenchClassificationDynamic);
 
 public:
-  static VTKM_CONT int Run(int benchmarks)
+  static VTKM_CONT int Run(int benchmarks, vtkm::cont::DeviceAdapterId id)
   {
     std::cout << DIVIDER << "\nRunning Topology Algorithm benchmarks\n";
 
     if (benchmarks & CELL_TO_POINT)
     {
       std::cout << DIVIDER << "\nBenchmarking Cell To Point Average\n";
-      VTKM_RUN_BENCHMARK(CellToPointAvg, ValueTypes());
-      VTKM_RUN_BENCHMARK(CellToPointAvgDynamic, ValueTypes());
+      VTKM_RUN_BENCHMARK(CellToPointAvg, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(CellToPointAvgDynamic, ValueTypes(), id);
     }
 
     if (benchmarks & POINT_TO_CELL)
     {
       std::cout << DIVIDER << "\nBenchmarking Point to Cell Average\n";
-      VTKM_RUN_BENCHMARK(PointToCellAvg, ValueTypes());
-      VTKM_RUN_BENCHMARK(PointToCellAvgDynamic, ValueTypes());
+      VTKM_RUN_BENCHMARK(PointToCellAvg, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(PointToCellAvgDynamic, ValueTypes(), id);
     }
 
     if (benchmarks & MC_CLASSIFY)
     {
       std::cout << DIVIDER << "\nBenchmarking Hex/Voxel MC Classification\n";
-      VTKM_RUN_BENCHMARK(Classification, ValueTypes());
-      VTKM_RUN_BENCHMARK(ClassificationDynamic, ValueTypes());
+      VTKM_RUN_BENCHMARK(Classification, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(ClassificationDynamic, ValueTypes(), id);
     }
 
     return 0;
@@ -460,18 +453,19 @@ public:
 
 int main(int argc, char* argv[])
 {
-  vtkm::cont::InitLogging(argc, argv);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
 
   int benchmarks = 0;
-  if (argc < 2)
+  if (!config.Arguments.size())
   {
     benchmarks = vtkm::benchmarking::ALL;
   }
   else
   {
-    for (int i = 1; i < argc; ++i)
+    for (size_t i = 0; i < config.Arguments.size(); ++i)
     {
-      std::string arg = argv[i];
+      std::string arg = config.Arguments[i];
       std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
         return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
       });
@@ -489,16 +483,13 @@ int main(int argc, char* argv[])
       }
       else
       {
-        std::cout << "Unrecognized benchmark: " << argv[i] << std::endl;
+        std::cout << "Unrecognized benchmark: " << config.Arguments[i] << std::endl;
         return 1;
       }
     }
   }
 
   //now actually execute the benchmarks
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(Device{});
 
-  return vtkm::benchmarking::BenchmarkTopologyAlgorithms<Device>::Run(benchmarks);
+  return vtkm::benchmarking::BenchmarkTopologyAlgorithms::Run(benchmarks, config.Device);
 }

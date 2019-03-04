@@ -374,20 +374,21 @@ namespace cont
 {
 
 template <typename AH, vtkm::IdComponent NUM_COMPS>
-struct TypeString<vtkm::cont::ArrayHandleGroupVec<AH, NUM_COMPS>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleGroupVec<AH, NUM_COMPS>>
 {
   static VTKM_CONT const std::string& Get()
   {
     static std::string name =
-      "AH_GroupVec<" + TypeString<AH>::Get() + "," + std::to_string(NUM_COMPS) + ">";
+      "AH_GroupVec<" + SerializableTypeString<AH>::Get() + "," + std::to_string(NUM_COMPS) + ">";
     return name;
   }
 };
 
 template <typename AH, vtkm::IdComponent NUM_COMPS>
-struct TypeString<vtkm::cont::ArrayHandle<vtkm::Vec<typename AH::ValueType, NUM_COMPS>,
-                                          vtkm::cont::internal::StorageTagGroupVec<AH, NUM_COMPS>>>
-  : TypeString<vtkm::cont::ArrayHandleGroupVec<AH, NUM_COMPS>>
+struct SerializableTypeString<
+  vtkm::cont::ArrayHandle<vtkm::Vec<typename AH::ValueType, NUM_COMPS>,
+                          vtkm::cont::internal::StorageTagGroupVec<AH, NUM_COMPS>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleGroupVec<AH, NUM_COMPS>>
 {
 };
 }

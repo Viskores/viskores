@@ -49,13 +49,24 @@ public:
   ThreadIndicesBasic(vtkm::Id threadIndex,
                      vtkm::Id inIndex,
                      vtkm::IdComponent visitIndex,
+                     vtkm::Id outIndex,
                      vtkm::Id globalThreadIndexOffset = 0)
-    : InputIndex(inIndex)
-    , OutputIndex(threadIndex)
+    : ThreadIndex(threadIndex)
+    , InputIndex(inIndex)
+    , OutputIndex(outIndex)
     , VisitIndex(visitIndex)
     , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
   }
+
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The index into the input domain.
   ///
@@ -98,9 +109,10 @@ public:
   ///
   /// Global index (for streaming)
   VTKM_EXEC
-  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
+  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->ThreadIndex); }
 
 private:
+  vtkm::Id ThreadIndex;
   vtkm::Id InputIndex;
   vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;

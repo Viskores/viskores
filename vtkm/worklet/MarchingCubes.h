@@ -597,7 +597,7 @@ public:
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();
@@ -681,7 +681,7 @@ public:
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();

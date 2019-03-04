@@ -18,117 +18,161 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
-#include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
-#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
-#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
+#include <vtkm/cont/internal/DeviceAdapterError.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/internal/Windows.h>
+#include <chrono>
+#include <thread>
+
 namespace
 {
 
-void Time()
+struct TimerTestDevices
+  : vtkm::ListTagAppend<VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG, vtkm::cont::DeviceAdapterTagAny>
 {
-  vtkm::cont::Timer timer;
+};
+
+constexpr int waitTimeMilliseconds = 250;
+constexpr vtkm::Float64 waitTimeSeconds = vtkm::Float64(waitTimeMilliseconds) / 1000;
+
+void Wait()
+{
+  std::cout << "  Sleeping for " << waitTimeSeconds << "s" << std::endl;
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(waitTimeMilliseconds));
+}
+
+bool CanTimeOnDevice(const vtkm::cont::Timer& timer, vtkm::cont::DeviceAdapterId device)
+{
+  if (device == vtkm::cont::DeviceAdapterTagAny())
+  {
+    // The timer can run on any device. It should pick up something (unless perhaps there are no
+    // devices, which would only happen if you explicitly disable serial, which we don't).
+    return true;
+  }
+  else if ((timer.GetDevice() == vtkm::cont::DeviceAdapterTagAny()) ||
+           (timer.GetDevice() == device))
+  {
+    // Device is specified and it is a match for the timer's device.
+    return vtkm::cont::GetGlobalRuntimeDeviceTracker().CanRunOn(device);
+  }
+  else
+  {
+    // The requested device does not match the device of the timer.
+    return false;
+  }
+}
+
+struct CheckTimeForDeviceFunctor
+{
+  void operator()(vtkm::cont::DeviceAdapterId device,
+                  const vtkm::cont::Timer& timer,
+                  vtkm::Float64 expectedTime) const
+  {
+    std::cout << "    Checking time for device " << device.GetName() << std::endl;
+    if (CanTimeOnDevice(timer, device))
+    {
+      vtkm::Float64 elapsedTime = timer.GetElapsedTime(device);
+      VTKM_TEST_ASSERT(
+        elapsedTime > (expectedTime - 0.001), "Timer did not capture full wait. ", elapsedTime);
+      VTKM_TEST_ASSERT(elapsedTime < (expectedTime + waitTimeSeconds),
+                       "Timer counted too far or system really busy. ",
+                       elapsedTime);
+    }
+    else
+    {
+      std::cout << "      Device not supported. Expect 0 back and possible error in log."
+                << std::endl;
+      VTKM_TEST_ASSERT(timer.GetElapsedTime(device) == 0.0,
+                       "Disabled timer should return nothing.");
+    }
+  }
+};
+
+void CheckTime(const vtkm::cont::Timer& timer, vtkm::Float64 expectedTime)
+{
+  std::cout << "  Check time for " << expectedTime << "s" << std::endl;
+  vtkm::ListForEach(CheckTimeForDeviceFunctor(), TimerTestDevices(), timer, expectedTime);
+}
+
+void DoTimerCheck(vtkm::cont::Timer& timer)
+{
+  std::cout << "  Starting timer" << std::endl;
   timer.Start();
   VTKM_TEST_ASSERT(timer.Started(), "Timer fails to track started status");
   VTKM_TEST_ASSERT(!timer.Stopped(), "Timer fails to track non stopped status");
 
-#ifdef VTKM_WINDOWS
-  Sleep(1000);
-#else
-  sleep(1);
-#endif
+  vtkm::Float64 expectedTime = 0.0;
+  CheckTime(timer, expectedTime);
 
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+  Wait();
+  expectedTime += waitTimeSeconds;
+
+  CheckTime(timer, expectedTime);
+
+  std::cout << "  Make sure timer is still running" << std::endl;
   VTKM_TEST_ASSERT(!timer.Stopped(), "Timer fails to track stopped status");
 
-  std::cout << "Elapsed time measured by any Tag: " << elapsedTime << std::endl;
-  VTKM_TEST_ASSERT(elapsedTime > 0.999, "General Timer did not capture full second wait.");
-  VTKM_TEST_ASSERT(elapsedTime < 2.0, "General Timer counted too far or system really busy.");
+  Wait();
+  expectedTime += waitTimeSeconds;
 
-  vtkm::cont::RuntimeDeviceTracker tracker;
+  CheckTime(timer, expectedTime);
 
-  vtkm::Float64 elapsedTimeCuda = timer.GetElapsedTime(vtkm::cont::DeviceAdapterTagCuda());
-  if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda()))
-  {
-    std::cout << " can on run cuda?: true" << std::endl;
-    std::cout << "Elapsed time measured by cuda Tag: " << elapsedTime << std::endl;
-    VTKM_TEST_ASSERT(elapsedTimeCuda > 0.999, "Cuda Timer did not capture full second wait.");
-    VTKM_TEST_ASSERT(elapsedTimeCuda < 2.0, "Cuda Timer counted too far or system really busy.");
-  }
-  else
-  {
-    VTKM_TEST_ASSERT(elapsedTimeCuda == 0.0, "Disabled Cuda Timer should return nothing.");
-  }
-
-  vtkm::Float64 elapsedTimeSerial = timer.GetElapsedTime(vtkm::cont::DeviceAdapterTagSerial());
-  std::cout << "Elapsed time measured by serial Tag: " << elapsedTime << std::endl;
-  VTKM_TEST_ASSERT(elapsedTimeSerial > 0.999, "Serial Timer did not capture full second wait.");
-  VTKM_TEST_ASSERT(elapsedTimeSerial < 2.0, "Serial Timer counted too far or system really busy.");
-
-  vtkm::Float64 elapsedTimeOpenMP = timer.GetElapsedTime(vtkm::cont::DeviceAdapterTagOpenMP());
-  if (vtkm::cont::DeviceAdapterTagOpenMP::IsEnabled)
-  {
-    std::cout << "Elapsed time measured by openmp Tag: " << elapsedTime << std::endl;
-    VTKM_TEST_ASSERT(elapsedTimeOpenMP > 0.999, "OpenMP Timer did not capture full second wait.");
-    VTKM_TEST_ASSERT(elapsedTimeOpenMP < 2.0,
-                     "OpenMP Timer counted too far or system really busy.");
-  }
-  else
-  {
-    VTKM_TEST_ASSERT(elapsedTimeOpenMP == 0.0, "Disabled OpenMP Timer should return nothing.");
-  }
-
-  vtkm::Float64 elapsedTimeTBB = timer.GetElapsedTime(vtkm::cont::DeviceAdapterTagTBB());
-  if (vtkm::cont::DeviceAdapterTagTBB::IsEnabled)
-  {
-    std::cout << "Elapsed time measured by tbb Tag: " << elapsedTime << std::endl;
-    VTKM_TEST_ASSERT(elapsedTimeTBB > 0.999, "TBB Timer did not capture full second wait.");
-    VTKM_TEST_ASSERT(elapsedTimeTBB < 2.0, "TBB Timer counted too far or system really busy.");
-  }
-  else
-  {
-    VTKM_TEST_ASSERT(elapsedTimeOpenMP == 0.0, "Disabled TBB Timer should return nothing.");
-  }
-
-  std::cout << "Reuse the timer to test continuous timing." << std::endl;
-#ifdef VTKM_WINDOWS
-  Sleep(1000);
-#else
-  sleep(1);
-#endif
-
-  elapsedTime = timer.GetElapsedTime();
-
-  std::cout << "Elapsed time measured by any Tag: " << elapsedTime << std::endl;
-  VTKM_TEST_ASSERT(elapsedTime > 1.999,
-                   "General Timer did not capture two full seconds wait in second launch.");
-  VTKM_TEST_ASSERT(elapsedTime < 3.0,
-                   "General Timer counted too far or system really busy in second launch.");
-
+  std::cout << "  Stop the timer" << std::endl;
   timer.Stop();
   VTKM_TEST_ASSERT(timer.Stopped(), "Timer fails to track stopped status");
-#ifdef VTKM_WINDOWS
-  Sleep(1000);
-#else
-  sleep(1);
-#endif
 
-  std::cout << "Elapsed time measured by any Tag with an early stop: " << elapsedTime << std::endl;
-  VTKM_TEST_ASSERT(elapsedTime > 1.999,
-                   "General Timer did not capture two full seconds wait in second launch.");
-  VTKM_TEST_ASSERT(elapsedTime < 3.0,
-                   "General Timer counted too far or system really busy in second launch.");
+  CheckTime(timer, expectedTime);
+
+  Wait();
+
+  std::cout << "  Check that timer legitimately stopped" << std::endl;
+  CheckTime(timer, expectedTime);
+}
+
+struct TimerCheckFunctor
+{
+  void operator()(vtkm::cont::DeviceAdapterId device) const
+  {
+    if ((device != vtkm::cont::DeviceAdapterTagAny()) &&
+        !vtkm::cont::GetGlobalRuntimeDeviceTracker().CanRunOn(device))
+    {
+      // A timer will not work if set on a device that is not supported. Just skip this test.
+      return;
+    }
+
+    {
+      std::cout << "Checking Timer on device " << device.GetName() << " set with constructor"
+                << std::endl;
+      vtkm::cont::Timer timer(device);
+      DoTimerCheck(timer);
+    }
+    {
+      std::cout << "Checking Timer on device " << device.GetName() << " reset" << std::endl;
+      vtkm::cont::Timer timer;
+      timer.Reset(device);
+      DoTimerCheck(timer);
+    }
+  }
+};
+
+void DoTimerTest()
+{
+  std::cout << "Check default timer" << std::endl;
+  vtkm::cont::Timer timer;
+  DoTimerCheck(timer);
+
+  vtkm::ListForEach(TimerCheckFunctor(), TimerTestDevices());
 }
 
 } // anonymous namespace
 
 int UnitTestTimer(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Time, argc, argv);
+  return vtkm::cont::testing::Testing::Run(DoTimerTest, argc, argv);
 }

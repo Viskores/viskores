@@ -375,7 +375,7 @@ struct DynamicCellSetSerializeFunctor
   template <typename CellSetType>
   void operator()(const CellSetType& cs, BinaryBuffer& bb) const
   {
-    vtkmdiy::save(bb, vtkm::cont::TypeString<CellSetType>::Get());
+    vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<CellSetType>::Get());
     vtkmdiy::save(bb, cs);
   }
 };
@@ -390,7 +390,7 @@ struct DynamicCellSetDeserializeFunctor
                   bool& success,
                   BinaryBuffer& bb) const
   {
-    if (!success && (typeString == vtkm::cont::TypeString<CellSetType>::Get()))
+    if (!success && (typeString == vtkm::cont::SerializableTypeString<CellSetType>::Get()))
     {
       CellSetType cs;
       vtkmdiy::load(bb, cs);

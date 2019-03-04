@@ -392,21 +392,21 @@ namespace cont
 {
 
 template <typename AH1, typename AH2>
-struct TypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_Zip<" + TypeString<AH1>::Get() + "," + TypeString<AH2>::Get() + ">";
+    static std::string name = "AH_Zip<" + SerializableTypeString<AH1>::Get() + "," +
+      SerializableTypeString<AH2>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH1, typename AH2>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<vtkm::Pair<typename AH1::ValueType, typename AH2::ValueType>,
                           vtkm::cont::internal::StorageTagZip<AH1, AH2>>>
-  : TypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
 {
 };
 }

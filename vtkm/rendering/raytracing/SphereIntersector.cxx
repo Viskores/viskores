@@ -345,14 +345,14 @@ void SphereIntersector::IntersectRaysImp(Ray<Precision>& rays, bool vtkmNotUsed(
 
 template <typename Precision>
 void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
-                                            const vtkm::cont::Field* scalarField,
+                                            const vtkm::cont::Field scalarField,
                                             const vtkm::Range& scalarRange)
 {
   ShapeIntersector::IntersectionPoint(rays);
 
   bool isSupportedField =
-    (scalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-     scalarField->GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+    (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+     scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
   if (!isSupportedField)
     throw vtkm::cont::ErrorBadValue(
       "SphereIntersector: Field not accociated with a cell set or field");
@@ -370,19 +370,19 @@ void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
     .Invoke(rays.HitIdx,
             rays.Scalar,
-            scalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+            scalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
             PointIds);
 }
 
 void SphereIntersector::IntersectionData(Ray<vtkm::Float32>& rays,
-                                         const vtkm::cont::Field* scalarField,
+                                         const vtkm::cont::Field scalarField,
                                          const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);
 }
 
 void SphereIntersector::IntersectionData(Ray<vtkm::Float64>& rays,
-                                         const vtkm::cont::Field* scalarField,
+                                         const vtkm::cont::Field scalarField,
                                          const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);

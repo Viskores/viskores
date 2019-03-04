@@ -46,6 +46,7 @@
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
+#include <vtkm/worklet/MaskNone.h>
 #include <vtkm/worklet/ScatterIdentity.h>
 
 namespace vtkm
@@ -128,6 +129,11 @@ public:
   /// what output each input contributes to. The default scatter is the
   /// identity scatter (1-to-1 input to output).
   using ScatterType = vtkm::worklet::ScatterIdentity;
+
+  /// All worklets must define their mask operation. The mask defines which
+  /// outputs are generated. The default mask is the none mask, which generates
+  /// everything in the output domain.
+  using MaskType = vtkm::worklet::MaskNone;
 
   /// \c ControlSignature tag for whole input arrays.
   ///
@@ -229,16 +235,19 @@ public:
   template <typename T,
             typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType&,
     const T& globalThreadIndexOffset = 0) const
   {
+    vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
   }
 };
 }

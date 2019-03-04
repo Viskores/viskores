@@ -182,7 +182,7 @@ void MapperPoint::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 
   if (sphereExtractor.GetNumberOfSpheres() > 0)
   {
-    raytracing::SphereIntersector* sphereIntersector = new raytracing::SphereIntersector();
+    auto sphereIntersector = std::make_shared<raytracing::SphereIntersector>();
     sphereIntersector->SetData(coords, sphereExtractor.GetPointIds(), sphereExtractor.GetRadii());
     this->Internals->Tracer.AddShapeIntersector(sphereIntersector);
     shapeBounds.Include(sphereIntersector->GetShapeBounds());

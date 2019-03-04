@@ -64,15 +64,16 @@ void DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Start()
 void DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Stop()
 {
   VTKM_CUDA_CALL(cudaEventRecord(this->StopEvent, cudaStreamPerThread));
+  VTKM_CUDA_CALL(cudaEventSynchronize(this->StopEvent));
   this->StopReady = true;
 }
 
-bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Started()
+bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Started() const
 {
   return this->StartReady;
 }
 
-bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Stopped()
+bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Stopped() const
 {
   return this->StopReady;
 }
@@ -80,7 +81,7 @@ bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Stopped
 // Callbacks without a mandated order(in independent streams) execute in undefined
 // order and maybe serialized. So Instead CudaEventQuery is used here.
 // Ref link: https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__STREAM.html
-bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Ready()
+bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Ready() const
 {
   if (cudaEventQuery(this->StopEvent) == cudaSuccess)
   {
@@ -91,6 +92,7 @@ bool DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Ready()
 
 
 vtkm::Float64 DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::GetElapsedTime()
+  const
 {
   assert(this->StartReady);
   if (!this->StartReady)
@@ -99,18 +101,16 @@ vtkm::Float64 DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>
                "Start() function should be called first then trying to call GetElapsedTime().");
     return 0;
   }
-  bool manualStop = true;
   if (!this->StopReady)
   {
-    manualStop = false;
-    this->Stop();
+    // Stop was not called, so we have to insert a new event into the stream
+    VTKM_CUDA_CALL(cudaEventRecord(this->StopEvent, cudaStreamPerThread));
+    VTKM_CUDA_CALL(cudaEventSynchronize(this->StopEvent));
   }
 
-  VTKM_CUDA_CALL(cudaEventSynchronize(this->StopEvent));
   float elapsedTimeMilliseconds;
   VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, this->StartEvent, this->StopEvent));
   // Reset Stop flag to its original state
-  this->StopReady = manualStop;
   return static_cast<vtkm::Float64>(0.001f * elapsedTimeMilliseconds);
 }
 }

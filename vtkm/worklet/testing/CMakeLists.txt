@@ -47,7 +47,9 @@ set(unit_tests
   UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
+  UnitTestMaskIndices.cxx
   UnitTestMaskPoints.cxx
+  UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
   UnitTestNDimsEntropy.cxx
   UnitTestNDimsHistogram.cxx
@@ -59,6 +61,7 @@ set(unit_tests
   UnitTestProbe.cxx
   UnitTestRemoveUnusedPoints.cxx
   UnitTestScalarsToColors.cxx
+  UnitTestScatterAndMask.cxx
   UnitTestScatterCounting.cxx
   UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx

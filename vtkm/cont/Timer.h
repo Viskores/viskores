@@ -26,15 +26,16 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <memory>
+
 namespace vtkm
 {
 namespace cont
 {
 namespace detail
 {
-struct TimerFunctor;
-}
 class EnabledDeviceTimerImpls;
+}
 
 /// A class that can be used to time operations in VTK-m that might be occuring
 /// in parallel. Users are recommended to provide a device adapter at construction
@@ -45,50 +46,49 @@ class EnabledDeviceTimerImpls;
 /// have the longest execution time if enabled.
 /// Per device adapter time query is also supported. It's useful when users want to reuse
 /// the same timer to measure the cuda kernal call as well as the cuda device execution.
+/// It is also possible to change the device adapter after construction by calling the form
+/// of the Reset method with a new DeviceAdapterId.
 ///
 /// The there is no guaranteed resolution of the time but should generally be
 /// good to about a millisecond.
 ///
 class VTKM_CONT_EXPORT Timer
 {
-  friend struct detail::TimerFunctor;
-
 public:
   VTKM_CONT
   Timer();
 
-  template <typename DeviceAdapter>
-  VTKM_CONT Timer(DeviceAdapter id)
-    : Device(id)
-    , DeviceForQuery(DeviceAdapterTagAny())
-    , Internal(nullptr)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-    static_assert(DeviceAdapter::IsEnabled, "A disabled device is passed to the Timer");
-    this->Init();
-  }
+  VTKM_CONT Timer(vtkm::cont::DeviceAdapterId device);
 
   VTKM_CONT ~Timer();
 
   /// Resets the timer.
   VTKM_CONT void Reset();
 
+  /// Resets the timer and changes the device to time on.
+  VTKM_CONT void Reset(vtkm::cont::DeviceAdapterId device);
+
   /// Start would call Reset function before starting the timer for convenience
   VTKM_CONT void Start();
 
   VTKM_CONT void Stop();
 
-  VTKM_CONT bool Started();
+  VTKM_CONT bool Started() const;
 
-  VTKM_CONT bool Stopped();
+  VTKM_CONT bool Stopped() const;
 
   /// Used to check if Timer has finished the synchronization to get the result from the device.
-  VTKM_CONT bool Ready();
+  VTKM_CONT bool Ready() const;
 
   /// Get the elapsed time measured by the given device adapter. If no device is
   /// specified, the max time of all device measurements will be returned.
   VTKM_CONT
-  vtkm::Float64 GetElapsedTime(DeviceAdapterId id = DeviceAdapterTagAny());
+  vtkm::Float64 GetElapsedTime(
+    vtkm::cont::DeviceAdapterId id = vtkm::cont::DeviceAdapterTagAny()) const;
+
+  /// Returns the device for which this timer is synchronized. If the device adapter has the same
+  /// id as DeviceAdapterTagAny, then the timer will synchronize all devices.
+  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const { return this->Device; }
 
 private:
   VTKM_CONT void Init();
@@ -97,8 +97,7 @@ private:
   VTKM_CONT void operator=(const Timer&) = delete;
 
   DeviceAdapterId Device;
-  DeviceAdapterId DeviceForQuery;
-  EnabledDeviceTimerImpls* Internal;
+  std::unique_ptr<detail::EnabledDeviceTimerImpls> Internal;
 };
 }
 } // namespace vtkm::cont

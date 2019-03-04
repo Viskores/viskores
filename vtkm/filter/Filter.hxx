@@ -281,7 +281,7 @@ inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   VTKM_LOG_SCOPE(
-    vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeName<Derived>().c_str());
+    vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeToString<Derived>().c_str());
 
   Derived* self = static_cast<Derived*>(this);
   vtkm::cont::MultiBlock output = self->Execute(vtkm::cont::MultiBlock(input), policy);
@@ -301,7 +301,7 @@ inline VTKM_CONT vtkm::cont::MultiBlock Filter<Derived>::Execute(
 {
   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
                  "Filter (MultiBlock): '%s'",
-                 vtkm::cont::TypeName<Derived>().c_str());
+                 vtkm::cont::TypeToString<Derived>().c_str());
 
   Derived* self = static_cast<Derived*>(this);
 

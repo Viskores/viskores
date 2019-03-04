@@ -251,19 +251,19 @@ namespace cont
 {
 
 template <typename AH>
-struct TypeString<vtkm::cont::ArrayHandleReverse<AH>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleReverse<AH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Reverse<" + TypeString<AH>::Get() + ">";
+    static std::string name = "AH_Reverse<" + SerializableTypeString<AH>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<typename AH::ValueType, vtkm::cont::StorageTagReverse<AH>>>
-  : TypeString<vtkm::cont::ArrayHandleReverse<AH>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleReverse<AH>>
 {
 };
 }

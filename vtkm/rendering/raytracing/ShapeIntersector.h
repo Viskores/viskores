@@ -63,11 +63,11 @@ public:
   // becomes the new max distance.
   //
   virtual void IntersectionData(Ray<vtkm::Float32>& rays,
-                                const vtkm::cont::Field* scalarField,
+                                const vtkm::cont::Field scalarField,
                                 const vtkm::Range& scalarRange) = 0;
 
   virtual void IntersectionData(Ray<vtkm::Float64>& rays,
-                                const vtkm::cont::Field* scalarField,
+                                const vtkm::cont::Field scalarField,
                                 const vtkm::Range& scalarRange) = 0;
 
 

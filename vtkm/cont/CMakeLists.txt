@@ -100,14 +100,13 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageAny.h
   StorageBasic.h
   StorageImplicit.h
   StorageListTag.h
   StorageVirtual.h
   Timer.h
   TryExecute.h
-  TypeString.h
+  SerializableTypeString.h
   VariantArrayHandle.h
   VirtualObjectHandle.h
   )
@@ -122,7 +121,6 @@ set(template_sources
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
-  StorageAny.hxx
   StorageBasic.hxx
   StorageVirtual.hxx
   VirtualObjectHandle.hxx
@@ -130,6 +128,7 @@ set(template_sources
 
 set(sources
   ArrayHandle.cxx
+  ArrayHandleVirtual.cxx
   AssignerMultiBlock.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
@@ -159,7 +158,6 @@ set(sources
   RuntimeDeviceInformation.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
-  StorageVirtual.cxx
   TryExecute.cxx
   VariantArrayHandle.cxx
   )
@@ -171,6 +169,7 @@ set(device_sources
   BoundingIntervalHierarchy.cxx
   CellSetExplicit.cxx
   CoordinateSystem.cxx
+  StorageVirtual.cxx
   Timer.cxx
   )
 
@@ -201,8 +200,6 @@ if(TARGET vtkm::openmp)
   list(APPEND backends vtkm::openmp)
 endif()
 if (VTKm_ENABLE_LOGGING)
-  set(THREADS_PREFER_PTHREAD_FLAG ON)
-  find_package(Threads REQUIRED)
   list(APPEND DL_LIBS ${CMAKE_DL_LIBS} Threads::Threads) # dladdr function
 endif()
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends} ${DL_LIBS})
