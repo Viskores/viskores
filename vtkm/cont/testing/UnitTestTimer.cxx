@@ -26,7 +26,9 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/internal/Windows.h>
+#include <chrono>
+#include <thread>
+
 namespace
 {
 
@@ -35,14 +37,14 @@ struct TimerTestDevices
 {
 };
 
-void WaitASec()
+constexpr int waitTimeMilliseconds = 250;
+constexpr vtkm::Float64 waitTimeSeconds = vtkm::Float64(waitTimeMilliseconds) / 1000;
+
+void Wait()
 {
-  std::cout << "  Sleeping for 1 second" << std::endl;
-#ifdef VTKM_WINDOWS
-  Sleep(1000);
-#else
-  sleep(1);
-#endif
+  std::cout << "  Sleeping for " << waitTimeSeconds << "s" << std::endl;
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(waitTimeMilliseconds));
 }
 
 bool CanTimeOnDevice(const vtkm::cont::Timer& timer, vtkm::cont::DeviceAdapterId device)
@@ -78,7 +80,7 @@ struct CheckTimeForDeviceFunctor
       vtkm::Float64 elapsedTime = timer.GetElapsedTime(device);
       VTKM_TEST_ASSERT(
         elapsedTime > (expectedTime - 0.001), "Timer did not capture full wait. ", elapsedTime);
-      VTKM_TEST_ASSERT(elapsedTime < (expectedTime + 1.0),
+      VTKM_TEST_ASSERT(elapsedTime < (expectedTime + waitTimeSeconds),
                        "Timer counted too far or system really busy. ",
                        elapsedTime);
     }
@@ -94,6 +96,7 @@ struct CheckTimeForDeviceFunctor
 
 void CheckTime(const vtkm::cont::Timer& timer, vtkm::Float64 expectedTime)
 {
+  std::cout << "  Check time for " << expectedTime << "s" << std::endl;
   vtkm::ListForEach(CheckTimeForDeviceFunctor(), TimerTestDevices(), timer, expectedTime);
 }
 
@@ -104,30 +107,32 @@ void DoTimerCheck(vtkm::cont::Timer& timer)
   VTKM_TEST_ASSERT(timer.Started(), "Timer fails to track started status");
   VTKM_TEST_ASSERT(!timer.Stopped(), "Timer fails to track non stopped status");
 
-  WaitASec();
+  vtkm::Float64 expectedTime = 0.0;
+  CheckTime(timer, expectedTime);
 
-  std::cout << "  Check time for 1sec" << std::endl;
-  CheckTime(timer, 1.0);
+  Wait();
+  expectedTime += waitTimeSeconds;
+
+  CheckTime(timer, expectedTime);
 
   std::cout << "  Make sure timer is still running" << std::endl;
   VTKM_TEST_ASSERT(!timer.Stopped(), "Timer fails to track stopped status");
 
-  WaitASec();
+  Wait();
+  expectedTime += waitTimeSeconds;
 
-  std::cout << "  Check time for 2sec" << std::endl;
-  CheckTime(timer, 2.0);
+  CheckTime(timer, expectedTime);
 
   std::cout << "  Stop the timer" << std::endl;
   timer.Stop();
   VTKM_TEST_ASSERT(timer.Stopped(), "Timer fails to track stopped status");
 
-  std::cout << "  Check time for 2sec" << std::endl;
-  CheckTime(timer, 2.0);
+  CheckTime(timer, expectedTime);
 
-  WaitASec();
+  Wait();
 
-  std::cout << "  Check that timer legitimately stopped at 2sec" << std::endl;
-  CheckTime(timer, 2.0);
+  std::cout << "  Check that timer legitimately stopped" << std::endl;
+  CheckTime(timer, expectedTime);
 }
 
 struct TimerCheckFunctor
