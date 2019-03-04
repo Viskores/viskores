@@ -350,18 +350,6 @@ struct ZFPBlockEncoder<BlockSize, vtkm::Float64, PortalType>
 };
 
 template <vtkm::Int32 BlockSize, typename PortalType>
-struct ZFPBlockEncoder<BlockSize, vtkm::UInt8, PortalType>
-{
-  VTKM_EXEC void encode(vtkm::UInt8* vtkmNotUsed(fblock),
-                        vtkm::Int32 vtkmNotUsed(maxbits),
-                        vtkm::UInt32 vtkmNotUsed(blockIdx),
-                        PortalType& vtkmNotUsed(stream))
-  {
-    std::cerr << "Unsupported type for ZFP worklet: vtkm::UInt8" << std::endl;
-  }
-};
-
-template <vtkm::Int32 BlockSize, typename PortalType>
 struct ZFPBlockEncoder<BlockSize, vtkm::Int32, PortalType>
 {
   VTKM_EXEC void encode(vtkm::Int32* fblock,
