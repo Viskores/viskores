@@ -120,7 +120,7 @@ elseif(VTKM_COMPILER_IS_ICC)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   set(cxx_flags -Wall -Wcast-align -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
-  if (VTKM_COMPILER_IS_GNU)
+  if (VTKM_COMPILER_IS_GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.99)
     list(APPEND cxx_flags -Wfloat-conversion)
   elseif (VTKM_COMPILER_IS_CLANG)
     list(APPEND cxx_flags -Wconversion)
