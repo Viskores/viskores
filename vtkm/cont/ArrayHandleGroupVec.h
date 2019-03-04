@@ -32,12 +32,12 @@ namespace exec
 namespace internal
 {
 
-template <typename _SourcePortalType, vtkm::IdComponent _NUM_COMPONENTS>
+template <typename PortalType, vtkm::IdComponent N_COMPONENTS>
 class VTKM_ALWAYS_EXPORT ArrayPortalGroupVec
 {
 public:
-  static constexpr vtkm::IdComponent NUM_COMPONENTS = _NUM_COMPONENTS;
-  using SourcePortalType = _SourcePortalType;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = N_COMPONENTS;
+  using SourcePortalType = PortalType;
 
   using ComponentType = typename std::remove_const<typename SourcePortalType::ValueType>::type;
   using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
