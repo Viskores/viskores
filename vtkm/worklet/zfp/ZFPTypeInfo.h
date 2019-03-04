@@ -97,12 +97,6 @@ inline VTKM_EXEC int get_precision<int>()
   return 32;
 }
 
-template <>
-inline VTKM_EXEC int get_precision<unsigned char>()
-{
-  return 8;
-}
-
 template <typename T>
 inline VTKM_EXEC int get_min_exp();
 template <>
@@ -206,10 +200,10 @@ struct zfp_traits<int>
 };
 
 template <>
-struct zfp_traits<unsigned char>
+struct zfp_traits<char>
 {
   typedef unsigned char UInt;
-  typedef int Int;
+  typedef char Int;
 };
 
 template <typename T>

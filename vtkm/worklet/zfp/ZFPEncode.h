@@ -352,14 +352,12 @@ struct ZFPBlockEncoder<BlockSize, vtkm::Float64, PortalType>
 template <vtkm::Int32 BlockSize, typename PortalType>
 struct ZFPBlockEncoder<BlockSize, vtkm::UInt8, PortalType>
 {
-  VTKM_EXEC void encode(vtkm::UInt8* fblock,
-                        vtkm::Int32 maxbits,
-                        vtkm::UInt32 blockIdx,
-                        PortalType& stream)
+  VTKM_EXEC void encode(vtkm::UInt8* vtkmNotUsed(fblock),
+                        vtkm::Int32 vtkmNotUsed(maxbits),
+                        vtkm::UInt32 vtkmNotUsed(blockIdx),
+                        PortalType& vtkmNotUsed(stream))
   {
-    using Int = typename zfp::zfp_traits<vtkm::UInt8>::Int;
-    zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, vtkm::Id(blockIdx));
-    encode_block<BlockSize>(blockWriter, maxbits, get_precision<vtkm::UInt8>(), (Int*)fblock);
+    throw vtkm::cont::ErrorBadType("Unsupported type for ZFP worklet: vtkm::UInt8");
   }
 };
 
