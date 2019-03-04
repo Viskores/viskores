@@ -359,7 +359,7 @@ struct ZFPBlockEncoder<BlockSize, vtkm::UInt8, PortalType>
   {
     using Int = typename zfp::zfp_traits<vtkm::UInt8>::Int;
     zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, vtkm::Id(blockIdx));
-    encode_block<BlockSize>(blockWriter, maxbits, get_precision<vtkm::Int32>(), (Int*)fblock);
+    encode_block<BlockSize>(blockWriter, maxbits, get_precision<vtkm::UInt8>(), (Int*)fblock);
   }
 };
 

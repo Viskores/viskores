@@ -97,6 +97,12 @@ inline VTKM_EXEC int get_precision<int>()
   return 32;
 }
 
+template <>
+inline VTKM_EXEC int get_precision<unsigned char>()
+{
+  return 8;
+}
+
 template <typename T>
 inline VTKM_EXEC int get_min_exp();
 template <>
