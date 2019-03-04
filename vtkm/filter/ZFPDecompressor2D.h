@@ -74,7 +74,7 @@ class FilterTraits<ZFPDecompressor2D>
 {
 public:
   struct TypeListTagZFP1DScalars
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Int64, vtkm::Float32, vtkm::Float64>
+    : vtkm::ListTagBase<vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>
   {
   };
   using InputFieldTypeList = TypeListTagZFP1DScalars;
