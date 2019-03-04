@@ -357,7 +357,7 @@ struct ZFPBlockEncoder<BlockSize, vtkm::UInt8, PortalType>
                         vtkm::UInt32 vtkmNotUsed(blockIdx),
                         PortalType& vtkmNotUsed(stream))
   {
-    throw vtkm::cont::ErrorBadType("Unsupported type for ZFP worklet: vtkm::UInt8");
+    std::cerr << "Unsupported type for ZFP worklet: vtkm::UInt8" << std::endl;
   }
 };
 
