@@ -49,6 +49,7 @@ set(headers
   ArrayRangeCompute.h
   AssignerMultiBlock.h
   AtomicArray.h
+  BitField.h
   BoundsCompute.h
   BoundsGlobalCompute.h
   CastAndCall.h

@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
+//  Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2019 UT-Battelle, LLC.
+//  Copyright 2019 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -17,18 +17,29 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#ifndef vtk_m_cont_openmp_internal_AtomicInterfaceExecutionOpenMP_h
+#define vtk_m_cont_openmp_internal_AtomicInterfaceExecutionOpenMP_h
 
-#ifndef vtk_m_cont_openmp_DeviceAdapterOpenMP_h
-#define vtk_m_cont_openmp_DeviceAdapterOpenMP_h
-
-#include <vtkm/cont/openmp/internal/DeviceAdapterRuntimeDetectorOpenMP.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
 
-#ifdef VTKM_ENABLE_OPENMP
-#include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
-#include <vtkm/cont/openmp/internal/AtomicInterfaceExecutionOpenMP.h>
-#include <vtkm/cont/openmp/internal/DeviceAdapterAlgorithmOpenMP.h>
-#include <vtkm/cont/openmp/internal/VirtualObjectTransferOpenMP.h>
-#endif
+#include <vtkm/cont/internal/AtomicInterfaceControl.h>
+#include <vtkm/cont/internal/AtomicInterfaceExecution.h>
 
-#endif //vtk_m_cont_openmp_DeviceAdapterOpenMP_h
+#include <vtkm/Types.h>
+
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
+
+template <>
+class AtomicInterfaceExecution<DeviceAdapterTagOpenMP> : public AtomicInterfaceControl
+{
+};
+}
+}
+} // end namespace vtkm::cont::internal
+
+#endif // vtk_m_cont_openmp_internal_AtomicInterfaceExecutionOpenMP_h

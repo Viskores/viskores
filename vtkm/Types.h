@@ -159,6 +159,10 @@ using UInt32 = unsigned int;
 /// than smaller widths.
 using IdComponent = vtkm::Int32;
 
+/// The default word size used for atomic bitwise operations. Universally
+/// supported on all devices.
+using WordTypeDefault = vtkm::UInt32;
+
 //In this order so that we exactly match the logic that exists in VTK
 #if VTKM_SIZE_LONG_LONG == 8
 using Int64 = long long;

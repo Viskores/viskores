@@ -23,6 +23,7 @@ set(headers
   DeviceAdapterAlgorithmOpenMP.h
   DeviceAdapterRuntimeDetectorOpenMP.h
   DeviceAdapterTagOpenMP.h
+  AtomicInterfaceExecutionOpenMP.h
   ExecutionArrayInterfaceBasicOpenMP.h
   FunctorsOpenMP.h
   ParallelQuickSortOpenMP.h

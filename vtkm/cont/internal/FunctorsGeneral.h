@@ -24,10 +24,12 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/internal/AtomicInterfaceExecution.h>
 
 #include <vtkm/exec/FunctorBase.h>
 
 #include <algorithm>
+#include <atomic>
 
 namespace vtkm
 {
@@ -330,6 +332,142 @@ struct ShiftCopyAndInit : vtkm::exec::FunctorBase
       Output.Set(index, Input.Get(index - 1));
     }
   }
+};
+
+template <class BitsPortal, class IndicesPortal>
+struct BitFieldToUnorderedSetFunctor : public vtkm::exec::FunctorBase
+{
+  using WordType = typename BitsPortal::WordTypePreferred;
+
+  // This functor executes a number of instances, where each instance handles
+  // two cachelines worth of data. Figure out how many words that is:
+  static constexpr vtkm::Id CacheLineSize = VTKM_ALLOCATION_ALIGNMENT;
+  static constexpr vtkm::Id WordsPerCacheLine =
+    CacheLineSize / static_cast<vtkm::Id>(sizeof(WordType));
+  static constexpr vtkm::Id CacheLinesPerInstance = 2;
+  static constexpr vtkm::Id WordsPerInstance = CacheLinesPerInstance * WordsPerCacheLine;
+
+  VTKM_STATIC_ASSERT(
+    VTKM_PASS_COMMAS(std::is_same<typename IndicesPortal::ValueType, vtkm::Id>::value));
+
+  VTKM_CONT
+  BitFieldToUnorderedSetFunctor(const BitsPortal& input,
+                                IndicesPortal& output,
+                                std::atomic<vtkm::UInt64>& popCount)
+    : Input{ input }
+    , Output{ output }
+    , PopCount(popCount)
+    , FinalWordIndex{ input.GetNumberOfWords() - 1 }
+    , FinalWordMask(input.GetFinalWordMask())
+  {
+  }
+
+  VTKM_CONT vtkm::Id GetNumberOfInstances() const
+  {
+    const auto numWords = this->Input.GetNumberOfWords();
+    return (numWords + WordsPerInstance - 1) / WordsPerInstance;
+  }
+
+  VTKM_EXEC void operator()(vtkm::Id instanceIdx) const
+  {
+    const vtkm::Id numWords = this->Input.GetNumberOfWords();
+    const vtkm::Id wordStart = vtkm::Min(instanceIdx * WordsPerInstance, numWords);
+    const vtkm::Id wordEnd = vtkm::Min(wordStart + WordsPerInstance, numWords);
+
+    if (wordStart != wordEnd) // range is valid
+    {
+      this->ExecuteRange(wordStart, wordEnd);
+    }
+  }
+
+  VTKM_EXEC void ExecuteRange(vtkm::Id wordStart, vtkm::Id wordEnd) const
+  {
+#ifndef VTKM_CUDA_DEVICE_PASS // for std::atomic call from VTKM_EXEC function:
+    // Count bits and allocate space for output:
+    vtkm::UInt64 chunkBits = this->CountChunkBits(wordStart, wordEnd);
+    if (chunkBits > 0)
+    {
+      vtkm::UInt64 outIdx = this->PopCount.fetch_add(chunkBits, std::memory_order_relaxed);
+
+      this->ProcessWords(wordStart, wordEnd, static_cast<vtkm::Id>(outIdx));
+    }
+#else
+    (void)wordStart;
+    (void)wordEnd;
+#endif
+  }
+
+  VTKM_CONT vtkm::UInt64 GetPopCount() const { return PopCount.load(std::memory_order_relaxed); }
+
+private:
+  VTKM_EXEC vtkm::UInt64 CountChunkBits(vtkm::Id wordStart, vtkm::Id wordEnd) const
+  {
+    // Need to mask out trailing bits from the final word:
+    const bool isFinalChunk = wordEnd == (this->FinalWordIndex + 1);
+
+    if (isFinalChunk)
+    {
+      wordEnd = this->FinalWordIndex;
+    }
+
+    vtkm::Int32 tmp = 0;
+    for (vtkm::Id i = wordStart; i < wordEnd; ++i)
+    {
+      tmp += vtkm::CountSetBits(this->Input.GetWord(i));
+    }
+
+    if (isFinalChunk)
+    {
+      tmp += vtkm::CountSetBits(this->Input.GetWord(this->FinalWordIndex) & this->FinalWordMask);
+    }
+
+    return static_cast<vtkm::UInt64>(tmp);
+  }
+
+  VTKM_EXEC void ProcessWords(vtkm::Id wordStart, vtkm::Id wordEnd, vtkm::Id outputStartIdx) const
+  {
+    // Need to mask out trailing bits from the final word:
+    const bool isFinalChunk = wordEnd == (this->FinalWordIndex + 1);
+
+    if (isFinalChunk)
+    {
+      wordEnd = this->FinalWordIndex;
+    }
+
+    for (vtkm::Id i = wordStart; i < wordEnd; ++i)
+    {
+      const vtkm::Id firstBitIdx = i * static_cast<vtkm::Id>(sizeof(WordType)) * CHAR_BIT;
+      WordType word = this->Input.GetWord(i);
+      while (word != 0) // have bits
+      {
+        // Find next bit. FindFirstSetBit starts counting at 1.
+        vtkm::Int32 bit = vtkm::FindFirstSetBit(word) - 1;
+        this->Output.Set(outputStartIdx++, firstBitIdx + bit); // Write index of bit
+        word ^= (1 << bit);                                    // clear bit
+      }
+    }
+
+    if (isFinalChunk)
+    {
+      const vtkm::Id i = this->FinalWordIndex;
+      const vtkm::Id firstBitIdx = i * static_cast<vtkm::Id>(sizeof(WordType)) * CHAR_BIT;
+      WordType word = this->Input.GetWord(i) & this->FinalWordMask;
+      while (word != 0) // have bits
+      {
+        // Find next bit. FindFirstSetBit starts counting at 1.
+        vtkm::Int32 bit = vtkm::FindFirstSetBit(word) - 1;
+        this->Output.Set(outputStartIdx++, firstBitIdx + bit); // Write index of bit
+        word ^= (1 << bit);                                    // clear bit
+      }
+    }
+  }
+
+  BitsPortal Input;
+  IndicesPortal Output;
+  std::atomic<vtkm::UInt64>& PopCount;
+  // Used to mask trailing bits the in last word.
+  vtkm::Id FinalWordIndex{ 0 };
+  WordType FinalWordMask{ 0 };
 };
 
 template <class InputPortalType, class OutputPortalType>

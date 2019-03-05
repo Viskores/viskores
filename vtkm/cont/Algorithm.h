@@ -60,6 +60,20 @@ auto PrepareArgForExec(T&& object)
                                      vtkm::cont::internal::IsExecutionObjectBase<T>{});
 }
 
+struct BitFieldToUnorderedSetFunctor
+{
+  vtkm::Id Result{ 0 };
+
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    this->Result = vtkm::cont::DeviceAdapterAlgorithm<Device>::BitFieldToUnorderedSet(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+    return true;
+  }
+};
+
 struct CopyFunctor
 {
   template <typename Device, typename... Args>
@@ -373,6 +387,27 @@ struct UpperBoundsFunctor
 
 struct Algorithm
 {
+
+  template <typename IndicesStorage>
+  VTKM_CONT static vtkm::Id BitFieldToUnorderedSet(
+    vtkm::cont::DeviceAdapterId devId,
+    const vtkm::cont::BitField& bits,
+    vtkm::cont::ArrayHandle<Id, IndicesStorage>& indices)
+  {
+    detail::BitFieldToUnorderedSetFunctor functor;
+    vtkm::cont::TryExecuteOnDevice(devId, functor, bits, indices);
+    return functor.Result;
+  }
+
+  template <typename IndicesStorage>
+  VTKM_CONT static vtkm::Id BitFieldToUnorderedSet(
+    const vtkm::cont::BitField& bits,
+    vtkm::cont::ArrayHandle<Id, IndicesStorage>& indices)
+  {
+    detail::BitFieldToUnorderedSetFunctor functor;
+    vtkm::cont::TryExecute(functor, bits, indices);
+    return functor.Result;
+  }
 
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static bool Copy(vtkm::cont::DeviceAdapterId devId,

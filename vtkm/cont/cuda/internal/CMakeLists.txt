@@ -20,6 +20,7 @@
 
 set(headers
   ArrayManagerExecutionCuda.h
+  AtomicInterfaceExecutionCuda.h
   CudaAllocator.h
   DeviceAdapterAlgorithmCuda.h
   DeviceAdapterAtomicArrayImplementationCuda.h

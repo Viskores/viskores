@@ -27,6 +27,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/DeviceAdapterAtomicArrayImplementation.h>
 #include <vtkm/cont/internal/FunctorsGeneral.h>
@@ -123,6 +124,35 @@ private:
   }
 
 public:
+  //--------------------------------------------------------------------------
+  // BitFieldToUnorderedSet
+  template <typename IndicesStorage>
+  VTKM_CONT static vtkm::Id BitFieldToUnorderedSet(
+    const vtkm::cont::BitField& bits,
+    vtkm::cont::ArrayHandle<Id, IndicesStorage>& indices)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    vtkm::Id numBits = bits.GetNumberOfBits();
+
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTag{});
+    auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    std::atomic<vtkm::UInt64> popCount;
+    popCount.store(0, std::memory_order_seq_cst);
+
+    using Functor = BitFieldToUnorderedSetFunctor<decltype(bitsPortal), decltype(indicesPortal)>;
+    Functor functor{ bitsPortal, indicesPortal, popCount };
+
+    DerivedAlgorithm::Schedule(functor, functor.GetNumberOfInstances());
+    DerivedAlgorithm::Synchronize();
+
+    numBits = static_cast<vtkm::Id>(popCount.load(std::memory_order_seq_cst));
+
+    indices.Shrink(numBits);
+    return numBits;
+  }
+
   //--------------------------------------------------------------------------
   // Copy
   template <typename T, typename U, class CIn, class COut>
