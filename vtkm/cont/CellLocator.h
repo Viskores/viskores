@@ -28,6 +28,8 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
+
+#include <vtkm/exec/BoundingIntervalHierarchyExec.h>
 #include <vtkm/exec/CellLocator.h>
 
 namespace vtkm
@@ -35,7 +37,7 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_CONT_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
+class VTKM_ALWAYS_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
 {
 
 public:
