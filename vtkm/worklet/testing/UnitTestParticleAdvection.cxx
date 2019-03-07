@@ -22,10 +22,10 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
@@ -158,6 +158,87 @@ vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds, const v
 
   vtkm::cont::DataSet ds = dataSetBuilder.Create(xvals, yvals, zvals);
   return ds;
+}
+
+template <class CellSetType, vtkm::IdComponent NDIM>
+static void MakeExplicitCells(const CellSetType& cellSet,
+                              vtkm::Vec<vtkm::Id, NDIM>& dims,
+                              vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
+                              vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
+                              vtkm::cont::ArrayHandle<vtkm::Id>& conn)
+{
+  using Connectivity = vtkm::internal::ConnectivityStructuredInternals<NDIM>;
+
+  vtkm::Id nCells = cellSet.GetNumberOfCells();
+  vtkm::IdComponent nVerts = (NDIM == 2 ? 4 : 8);
+  vtkm::Id connLen = (NDIM == 2 ? nCells * 4 : nCells * 8);
+
+  conn.Allocate(connLen);
+  shapes.Allocate(nCells);
+  numIndices.Allocate(nCells);
+
+  Connectivity structured;
+  structured.SetPointDimensions(dims);
+
+  vtkm::Id idx = 0;
+  for (vtkm::Id i = 0; i < nCells; i++)
+  {
+    auto ptIds = structured.GetPointsOfCell(i);
+    for (vtkm::IdComponent j = 0; j < nVerts; j++, idx++)
+      conn.GetPortalControl().Set(idx, ptIds[j]);
+
+    shapes.GetPortalControl().Set(
+      i, (NDIM == 2 ? vtkm::CELL_SHAPE_QUAD : vtkm::CELL_SHAPE_HEXAHEDRON));
+    numIndices.GetPortalControl().Set(i, nVerts);
+  }
+}
+
+template <typename ScalarType>
+vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::cont::DataSet& input,
+                                                        bool createSingleType = false)
+{
+  using CoordType = vtkm::Vec<ScalarType, 3>;
+
+  auto inputCoords = input.GetCoordinateSystem(0).GetData();
+  vtkm::Id numPts = inputCoords.GetNumberOfValues();
+  vtkm::cont::ArrayHandle<CoordType> explCoords;
+
+  explCoords.Allocate(numPts);
+  auto explPortal = explCoords.GetPortalControl();
+  auto cp = inputCoords.GetPortalConstControl();
+  for (vtkm::Id i = 0; i < numPts; i++)
+    explPortal.Set(i, cp.Get(i));
+
+  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet(0);
+  vtkm::cont::ArrayHandle<vtkm::Id> conn;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
+  vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
+  vtkm::cont::DataSet output;
+  vtkm::cont::DataSetBuilderExplicit dsb;
+
+  if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
+  {
+    vtkm::cont::CellSetStructured<2> cells2D = cellSet.Cast<vtkm::cont::CellSetStructured<2>>();
+    vtkm::Id2 dims = cells2D.GetCellDimensions();
+    MakeExplicitCells(cells2D, dims, numIndices, shapes, conn);
+    if (createSingleType)
+      output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates", "cells");
+    else
+      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates", "cells");
+  }
+  else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
+  {
+    vtkm::cont::CellSetStructured<3> cells3D = cellSet.Cast<vtkm::cont::CellSetStructured<3>>();
+    vtkm::Id3 dims = cells3D.GetCellDimensions();
+    MakeExplicitCells(cells3D, dims, numIndices, shapes, conn);
+    if (createSingleType)
+      output =
+        dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates", "cells");
+    else
+      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates", "cells");
+  }
+
+  return output;
 }
 
 template <typename ScalarType>
@@ -312,9 +393,9 @@ void TestEvaluators()
         std::vector<vtkm::cont::DataSet> dataSets;
         dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dim));
         dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dim));
-        //create an explicit cellset.
-        vtkm::filter::CleanGrid cleanGrid;
-        dataSets.push_back(cleanGrid.Execute(dataSets[0]));
+        //Create an explicit dataset.
+        auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0]);
+        dataSets.push_back(expDS);
 
         vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
@@ -412,9 +493,9 @@ void TestParticleWorklets()
     std::vector<vtkm::cont::DataSet> dataSets;
     dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dims));
     dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dims));
-    //create an explicit cellset.
-    vtkm::filter::CleanGrid cleanGrid;
-    dataSets.push_back(cleanGrid.Execute(dataSets[0]));
+    //Create an explicit dataset.
+    auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0]);
+    dataSets.push_back(expDS);
 
     //Generate three random points.
     std::vector<vtkm::Vec<ScalarType, 3>> pts;

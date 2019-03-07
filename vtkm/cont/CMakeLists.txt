@@ -115,6 +115,7 @@ set(template_sources
   ArrayHandle.hxx
   ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
+  BoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
   ColorTable.hxx
