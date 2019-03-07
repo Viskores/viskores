@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_testing_TestingBitFields_h
 #define vtk_m_cont_testing_TestingBitFields_h
 
+#include <vtkm/cont/ArrayHandleBitField.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
@@ -27,6 +29,8 @@
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/exec/FunctorBase.h>
+
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <cstdio>
 
@@ -66,6 +70,19 @@ namespace cont
 {
 namespace testing
 {
+
+class ConditionalMergeWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn cond, FieldIn trueVals, FieldIn falseVals, FieldOut result);
+  using ExecutionSignature = _4(_1, _2, _3);
+
+  template <typename T>
+  VTKM_EXEC T operator()(bool cond, const T& trueVal, const T& falseVal) const
+  {
+    return cond ? trueVal : falseVal;
+  }
+};
 
 /// This class has a single static member, Run, that runs all tests with the
 /// given DeviceAdapter.
@@ -514,6 +531,81 @@ struct TestingBitField
     testMask64(129, 0x0000000000000001);
   }
 
+  struct ArrayHandleBitFieldChecker : vtkm::exec::FunctorBase
+  {
+    using PortalType = typename ArrayHandleBitField::ExecutionTypes<DeviceAdapterTag>::Portal;
+
+    PortalType Portal;
+    bool InvertReference;
+
+    VTKM_EXEC_CONT
+    ArrayHandleBitFieldChecker(PortalType portal, bool invert)
+      : Portal(portal)
+      , InvertReference(invert)
+    {
+    }
+
+    VTKM_EXEC
+    void operator()(vtkm::Id i) const
+    {
+      const bool ref = this->InvertReference ? !RandomBitFromIndex(i) : RandomBitFromIndex(i);
+      if (this->Portal.Get(i) != ref)
+      {
+        this->RaiseError("Unexpected value from ArrayHandleBitField portal.");
+        return;
+      }
+
+      // Flip the bit for the next kernel launch, which tests that the bitfield
+      // is inverted.
+      this->Portal.Set(i, !ref);
+    }
+  };
+
+  VTKM_CONT
+  static void TestArrayHandleBitField()
+  {
+    auto handle = vtkm::cont::make_ArrayHandleBitField(RandomBitField());
+    const vtkm::Id numBits = handle.GetNumberOfValues();
+
+    VTKM_TEST_ASSERT(numBits == NUM_BITS,
+                     "ArrayHandleBitField returned the wrong number of values. "
+                     "Expected: ",
+                     NUM_BITS,
+                     " got: ",
+                     numBits);
+
+    Algo::Schedule(
+      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}), false }, numBits);
+    Algo::Schedule(ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}), true },
+                   numBits);
+  }
+
+  VTKM_CONT
+  static void TestArrayInvokeWorklet()
+  {
+    auto condArray = vtkm::cont::make_ArrayHandleBitField(RandomBitField());
+    auto trueArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(20, 2, NUM_BITS);
+    auto falseArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(13, 2, NUM_BITS);
+    vtkm::cont::ArrayHandle<vtkm::Id> output;
+
+    vtkm::worklet::DispatcherMapField<ConditionalMergeWorklet> dispatcher;
+    dispatcher.Invoke(condArray, trueArray, falseArray, output);
+
+    auto condVals = condArray.GetPortalConstControl();
+    auto trueVals = trueArray.GetPortalConstControl();
+    auto falseVals = falseArray.GetPortalConstControl();
+    auto outVals = output.GetPortalConstControl();
+
+    VTKM_TEST_ASSERT(condVals.GetNumberOfValues() == trueVals.GetNumberOfValues());
+    VTKM_TEST_ASSERT(condVals.GetNumberOfValues() == falseVals.GetNumberOfValues());
+    VTKM_TEST_ASSERT(condVals.GetNumberOfValues() == outVals.GetNumberOfValues());
+
+    for (vtkm::Id i = 0; i < condVals.GetNumberOfValues(); ++i)
+    {
+      VTKM_TEST_ASSERT(outVals.Get(i) == (condVals.Get(i) ? trueVals.Get(i) : falseVals.Get(i)));
+    }
+  }
+
   struct TestRunner
   {
     VTKM_CONT
@@ -523,13 +615,15 @@ struct TestingBitField
       TestingBitField::TestControlPortals();
       TestingBitField::TestExecutionPortals();
       TestingBitField::TestFinalWordMask();
+      TestingBitField::TestArrayHandleBitField();
+      TestingBitField::TestArrayInvokeWorklet();
     }
   };
 
 public:
   static VTKM_CONT int Run(int argc, char* argv[])
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
     return vtkm::cont::testing::Testing::Run(TestRunner{}, argc, argv);
   }
 };

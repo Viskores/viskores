@@ -22,6 +22,7 @@ set(headers
   Algorithm.h
   ArrayCopy.h
   ArrayHandle.h
+  ArrayHandleBitField.h
   ArrayHandleCartesianProduct.h
   ArrayHandleCast.h
   ArrayHandleCompositeVector.h
