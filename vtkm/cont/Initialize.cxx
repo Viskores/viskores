@@ -199,7 +199,7 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
 
     for (int i = 0; i < parse.nonOptionsCount(); i++)
     {
-      config.Arguments.push_back(std::string(parse.nonOption(i)));
+      config.Arguments.emplace_back(parse.nonOption(i));
     }
   }
 
