@@ -162,7 +162,7 @@ vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds, const v
 
 template <class CellSetType, vtkm::IdComponent NDIM>
 static void MakeExplicitCells(const CellSetType& cellSet,
-                              vtkm::Vec<vtkm::Id, NDIM>& dims,
+                              vtkm::Vec<vtkm::Id, NDIM>& cellDims,
                               vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
                               vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
                               vtkm::cont::ArrayHandle<vtkm::Id>& conn)
@@ -178,7 +178,7 @@ static void MakeExplicitCells(const CellSetType& cellSet,
   numIndices.Allocate(nCells);
 
   Connectivity structured;
-  structured.SetPointDimensions(dims);
+  structured.SetPointDimensions(cellDims + vtkm::Vec<vtkm::Id, NDIM>(1));
 
   vtkm::Id idx = 0;
   for (vtkm::Id i = 0; i < nCells; i++)
@@ -219,8 +219,8 @@ vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::cont::DataSe
   if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
   {
     vtkm::cont::CellSetStructured<2> cells2D = cellSet.Cast<vtkm::cont::CellSetStructured<2>>();
-    vtkm::Id2 dims = cells2D.GetCellDimensions();
-    MakeExplicitCells(cells2D, dims, numIndices, shapes, conn);
+    vtkm::Id2 cellDims = cells2D.GetCellDimensions();
+    MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
     if (createSingleType)
       output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates", "cells");
     else
@@ -229,8 +229,8 @@ vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::cont::DataSe
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
   {
     vtkm::cont::CellSetStructured<3> cells3D = cellSet.Cast<vtkm::cont::CellSetStructured<3>>();
-    vtkm::Id3 dims = cells3D.GetCellDimensions();
-    MakeExplicitCells(cells3D, dims, numIndices, shapes, conn);
+    vtkm::Id3 cellDims = cells3D.GetCellDimensions();
+    MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
     if (createSingleType)
       output =
         dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates", "cells");
