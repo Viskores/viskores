@@ -20,6 +20,7 @@
 
 #define vtkm_cont_internal_ArrayHandleImpl_cxx
 
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/internal/ArrayHandleBasicImpl.h>
 
 namespace vtkm

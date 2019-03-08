@@ -39,7 +39,8 @@ template <typename ParameterInterface_,
           vtkm::IdComponent InputDomainIndex_,
           typename OutputToInputMapType_ = vtkm::internal::NullType,
           typename VisitArrayType_ = vtkm::internal::NullType,
-          typename ThreadToOutputMapType_ = vtkm::internal::NullType>
+          typename ThreadToOutputMapType_ = vtkm::internal::NullType,
+          typename DeviceAdapterTag_ = vtkm::internal::NullType>
 struct Invocation
 {
   /// \brief The types of the parameters
@@ -99,6 +100,13 @@ struct Invocation
   ///
   using ThreadToOutputMapType = ThreadToOutputMapType_;
 
+  /// \brief The tag for the device adapter on which the worklet is run.
+  ///
+  /// When the worklet is dispatched on a particular device, this type in the
+  /// Invocation is set to the tag associated with that device.
+  ///
+  using DeviceAdapterTag = DeviceAdapterTag_;
+
   /// \brief Default Invocation constructors that holds the given parameters
   /// by reference.
   VTKM_CONT
@@ -125,7 +133,8 @@ struct Invocation
                             InputDomainIndex,
                             OutputToInputMapType,
                             VisitArrayType,
-                            ThreadToOutputMapType>;
+                            ThreadToOutputMapType,
+                            DeviceAdapterTag>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -151,7 +160,8 @@ struct Invocation
                             InputDomainIndex,
                             OutputToInputMapType,
                             VisitArrayType,
-                            ThreadToOutputMapType>;
+                            ThreadToOutputMapType,
+                            DeviceAdapterTag>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -177,7 +187,8 @@ struct Invocation
                             InputDomainIndex,
                             OutputToInputMapType,
                             VisitArrayType,
-                            ThreadToOutputMapType>;
+                            ThreadToOutputMapType,
+                            DeviceAdapterTag>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -203,7 +214,8 @@ struct Invocation
                             NewInputDomainIndex,
                             OutputToInputMapType,
                             VisitArrayType,
-                            ThreadToOutputMapType>;
+                            ThreadToOutputMapType,
+                            DeviceAdapterTag>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -229,7 +241,8 @@ struct Invocation
                             InputDomainIndex,
                             NewOutputToInputMapType,
                             VisitArrayType,
-                            ThreadToOutputMapType>;
+                            ThreadToOutputMapType,
+                            DeviceAdapterTag>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -255,7 +268,8 @@ struct Invocation
                             InputDomainIndex,
                             OutputToInputMapType,
                             NewVisitArrayType,
-                            ThreadToOutputMapType>;
+                            ThreadToOutputMapType,
+                            DeviceAdapterTag>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -281,7 +295,8 @@ struct Invocation
                             InputDomainIndex,
                             OutputToInputMapType,
                             VisitArrayType,
-                            NewThreadToOutputMapType>;
+                            NewThreadToOutputMapType,
+                            DeviceAdapterTag>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -293,6 +308,33 @@ struct Invocation
   {
     return typename ChangeThreadToOutputMapType<NewThreadToOutputMapType>::type(
       this->Parameters, this->OutputToInputMap, this->VisitArray, newThreadToOutputMap);
+  }
+
+  /// Defines a new \c Invocation type that is the same as this type except
+  /// with the \c DeviceAdapterTag replaced.
+  ///
+  template <typename NewDeviceAdapterTag>
+  struct ChangeDeviceAdapterTagType
+  {
+    using type = Invocation<ParameterInterface,
+                            ControlInterface,
+                            ExecutionInterface,
+                            InputDomainIndex,
+                            OutputToInputMapType,
+                            VisitArrayType,
+                            ThreadToOutputMapType,
+                            NewDeviceAdapterTag>;
+  };
+
+  /// Returns a new \c Invocation that is the same as this one except that the
+  /// \c DeviceAdapterTag is replaced with that provided.
+  ///
+  template <typename NewDeviceAdapterTag>
+  VTKM_CONT typename ChangeDeviceAdapterTagType<NewDeviceAdapterTag>::type ChangeDeviceAdapterTag(
+    NewDeviceAdapterTag) const
+  {
+    return typename ChangeDeviceAdapterTagType<NewDeviceAdapterTag>::type(
+      this->Parameters, this->OutputToInputMap, this->VisitArray, this->ThreadToOutputMap);
   }
 
   /// A convenience alias for the input domain type.
@@ -333,7 +375,8 @@ private:
                                   InputDomainIndex,
                                   OutputToInputMapType,
                                   VisitArrayType,
-                                  ThreadToOutputMapType>&) = delete;
+                                  ThreadToOutputMapType,
+                                  DeviceAdapterTag>&) = delete;
 };
 
 /// Convenience function for creating an Invocation object.

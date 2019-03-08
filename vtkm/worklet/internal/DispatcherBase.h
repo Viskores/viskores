@@ -832,10 +832,14 @@ private:
   }
 
   template <typename Invocation, typename RangeType, typename DeviceAdapter>
-  VTKM_CONT void InvokeSchedule(const Invocation& invocation, RangeType range, DeviceAdapter) const
+  VTKM_CONT void InvokeSchedule(const Invocation& invocation,
+                                RangeType range,
+                                DeviceAdapter device) const
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
+
+    auto invocationForDevice = invocation.ChangeDeviceAdapterTag(device);
 
     // The TaskType class handles the magic of fetching values
     // for each instance and calling the worklet's function.
@@ -844,7 +848,7 @@ private:
     // vtkm::exec::internal::TaskSingular
     // vtkm::exec::internal::TaskTiling1D
     // vtkm::exec::internal::TaskTiling3D
-    auto task = TaskTypes::MakeTask(this->Worklet, invocation, range);
+    auto task = TaskTypes::MakeTask(this->Worklet, invocationForDevice, range);
     Algorithm::ScheduleTask(task, range);
   }
 };

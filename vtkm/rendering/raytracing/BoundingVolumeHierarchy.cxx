@@ -128,14 +128,14 @@ public:
   }
 }; //class createLeafs
 
-template <typename Device>
+template <typename DeviceAdapterTag>
 class LinearBVHBuilder::GatherVecCast : public vtkm::worklet::WorkletMapField
 {
 private:
   using Vec4IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
   using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
-  using PortalConst = typename Vec4IdArrayHandle::ExecutionTypes<Device>::PortalConst;
-  using Portal = typename Vec4IntArrayHandle::ExecutionTypes<Device>::Portal;
+  using PortalConst = typename Vec4IdArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using Portal = typename Vec4IntArrayHandle::ExecutionTypes<DeviceAdapterTag>::Portal;
 
 private:
   PortalConst InputPortal;
@@ -146,9 +146,9 @@ public:
   GatherVecCast(const Vec4IdArrayHandle& inputPortal,
                 Vec4IntArrayHandle& outputPortal,
                 const vtkm::Id& size)
-    : InputPortal(inputPortal.PrepareForInput(Device()))
+    : InputPortal(inputPortal.PrepareForInput(DeviceAdapterTag()))
   {
-    this->OutputPortal = outputPortal.PrepareForOutput(size, Device());
+    this->OutputPortal = outputPortal.PrepareForOutput(size, DeviceAdapterTag());
   }
   using ControlSignature = void(FieldIn);
   using ExecutionSignature = void(WorkIndex, _1);

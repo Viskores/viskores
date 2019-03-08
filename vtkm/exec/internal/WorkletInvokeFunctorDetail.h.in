@@ -51,6 +51,7 @@ $# Ignore the following comment. It is meant for the generated file.
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/exec/arg/Fetch.h>
+#include <vtkm/exec/arg/FetchTagExecObject.h>
 
 $# This needs to match the max_parameters in FunctionInterfaceDetailPre.h.in
 $py(max_parameters=20)\
@@ -115,6 +116,11 @@ namespace internal
 namespace detail
 {
 
+struct DummyDeviceControlSignatureTag
+{
+  using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+};
+
 /// A helper class that takes an \c Invocation object and an index to a
 /// parameter in the ExecutionSignature and finds the \c Fetch type valid for
 /// that parameter.
@@ -133,15 +139,38 @@ struct InvocationToFetch
   using AspectTag = typename ExecutionSignatureTag::AspectTag;
 
   // Find the fetch tag from the control signature tag pointed to by
-  // ParameterIndex.
+  // ParameterIndex. Note that ControlParameterIndex of 0 is reserved
+  // for getting the device adapter tag.
   using ControlInterface = typename Invocation::ControlInterface;
-  using ControlSignatureTag = typename ControlInterface::template ParameterType<ControlParameterIndex>::type;
+  using ControlSignatureTag =
+    typename std::conditional<
+      ControlParameterIndex == 0,
+      DummyDeviceControlSignatureTag,
+      typename ControlInterface::template ParameterType<ControlParameterIndex>::type>::type;
   using FetchTag = typename ControlSignatureTag::FetchTag;
 
   using ExecObjectType =
-    typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type;
+    typename std::conditional<
+      ControlParameterIndex == 0,
+      typename Invocation::DeviceAdapterTag,
+      typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type>::type;
 
   using type = vtkm::exec::arg::Fetch<FetchTag, AspectTag, ThreadIndicesType, ExecObjectType>;
+
+  VTKM_EXEC static ExecObjectType GetParameterImpl(const Invocation&, std::true_type)
+  {
+    return typename Invocation::DeviceAdapterTag();
+  }
+
+  VTKM_EXEC static ExecObjectType GetParameterImpl(const Invocation& invocation, std::false_type)
+  {
+    return invocation.Parameters.template GetParameter<ControlParameterIndex>();
+  }
+
+  VTKM_EXEC static ExecObjectType GetParameter(const Invocation& invocation)
+  {
+    return GetParameterImpl(invocation, std::integral_constant<bool, ControlParameterIndex == 0>());
+  }
 };
 
 // clang-format off
@@ -154,6 +183,7 @@ template <typename WorkletType,
           typename OutputToInputMapType,
           typename VisitArrayType,
           typename ThreadToOutputMapType,
+          typename DeviceAdapterTag,
           typename ThreadIndicesType,
           $template_params(num_params)>
 VTKM_EXEC void DoWorkletInvokeFunctor(
@@ -163,7 +193,9 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    vtkm::internal::FunctionInterface<$signature(num_params)>,
                                    InputDomainIndex,
                                    OutputToInputMapType,
-                                   VisitArrayType, ThreadToOutputMapType>& invocation,
+                                   VisitArrayType,
+                                   ThreadToOutputMapType,
+                                   DeviceAdapterTag>& invocation,
   const ThreadIndicesType& threadIndices)
 {
   using Invocation =  vtkm::internal::Invocation<ParameterInterface,
@@ -171,15 +203,16 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                                  vtkm::internal::FunctionInterface<$signature(num_params)>,
                                                  InputDomainIndex,
                                                  OutputToInputMapType,
-                                                 VisitArrayType>;
+                                                 VisitArrayType,
+                                                 ThreadToOutputMapType,
+                                                 DeviceAdapterTag>;
 $for(param_index in range(1, num_params+1))\
 
   using FetchInfo$(param_index) = InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)>;
   using FetchType$(param_index) = typename FetchInfo$(param_index)::type;
   FetchType$(param_index) fetch$(param_index);
   typename FetchType$(param_index)::ValueType $pname(param_index) =
-    fetch$(param_index).Load(threadIndices,
-                invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>());
+    fetch$(param_index).Load(threadIndices, FetchInfo$(param_index)::GetParameter(invocation));
 $endfor\
 
   using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
@@ -197,15 +230,10 @@ $endfor\
   auto $pname(0) = typename ReturnFetchType::ValueType(worklet($arg_list(num_params)));
 
 $for(param_index in range(1, num_params+1))\
-  fetch$(param_index).Store(threadIndices,
-               invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>(),
-               $pname(param_index));
+  fetch$(param_index).Store(threadIndices, FetchInfo$(param_index)::GetParameter(invocation), $pname(param_index));
 $endfor\
 
-  returnFetch.Store(
-    threadIndices,
-    invocation.Parameters.template GetParameter<FetchInfo0::ControlParameterIndex>(),
-    $pname(0));
+  returnFetch.Store(threadIndices, FetchInfo0::GetParameter(invocation), $pname(0));
 }
 
 template <typename WorkletType,
@@ -213,7 +241,9 @@ template <typename WorkletType,
           typename ControlInterface,
           vtkm::IdComponent InputDomainIndex,
           typename OutputToInputMapType,
-          typename VisitArrayType, typename ThreadToOutputMapType,
+          typename VisitArrayType,
+          typename ThreadToOutputMapType,
+          typename DeviceAdapterTag,
           typename ThreadIndicesType,
           $template_params(num_params, start=1)>
 VTKM_EXEC void DoWorkletInvokeFunctor(
@@ -223,7 +253,9 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
                                    InputDomainIndex,
                                    OutputToInputMapType,
-                                   VisitArrayType, ThreadToOutputMapType>& invocation,
+                                   VisitArrayType,
+                                   ThreadToOutputMapType,
+                                   DeviceAdapterTag>& invocation,
   const ThreadIndicesType& threadIndices)
 {
   using Invocation =
@@ -232,15 +264,16 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
                                InputDomainIndex,
                                OutputToInputMapType,
-                               VisitArrayType>;
+                               VisitArrayType,
+                               ThreadToOutputMapType,
+                               DeviceAdapterTag>;
 $for(param_index in range(1, num_params+1))\
 
   using FetchInfo$(param_index) = InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)>;
   using FetchType$(param_index) = typename FetchInfo$(param_index)::type;
   FetchType$(param_index) fetch$(param_index);
   typename FetchType$(param_index)::ValueType $pname(param_index) =
-    fetch$(param_index).Load(threadIndices,
-                invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>());
+    fetch$(param_index).Load(threadIndices, FetchInfo$(param_index)::GetParameter(invocation));
 $endfor\
 
   // If you got a compile error on the following line, it probably means that
@@ -255,9 +288,7 @@ $endfor\
   worklet($arg_list(num_params));
 
 $for(param_index in range(1, num_params+1))\
-  fetch$(param_index).Store(threadIndices,
-               invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>(),
-               $pname(param_index));
+  fetch$(param_index).Store(threadIndices, FetchInfo$(param_index)::GetParameter(invocation), $pname(param_index));
 $endfor\
 }
 
