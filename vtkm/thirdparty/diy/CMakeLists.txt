@@ -24,7 +24,7 @@ add_library(vtkm_diy INTERFACE)
 vtkm_get_kit_name(kit_name kit_dir)
 
 # diy needs C++11
-target_compile_features(vtkm_diy INTERFACE cxx_auto_type)
+target_compile_features(vtkm_diy INTERFACE cxx_std_11)
 
 # placeholder to support external DIY
 set(VTKM_USE_EXTERNAL_DIY OFF)
