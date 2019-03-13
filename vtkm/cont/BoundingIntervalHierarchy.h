@@ -83,11 +83,6 @@ private:
                                                        const IdArrayHandle&,
                                                        DeviceAdapter);
 
-  template <typename DeviceAdapter>
-  VTKM_CONT void Init()
-  {
-  }
-
 public:
   VTKM_CONT
   BoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4, vtkm::IdComponent maxLeafSize = 5)
@@ -96,11 +91,27 @@ public:
     , Nodes()
     , ProcessedCellIds()
   {
-    //    Init<DeviceAdapter>();
+#ifdef VTKM_CUDA
+    CudaStackSizeBackup = 0;
+    cudaDeviceGetLimit(&CudaStackSizeBackup, cudaLimitStackSize);
+//std::cout<<"Initial stack size: "<<CudaStackSizeBackup<<std::endl;
+//    std::cout<<"Increase stack size"<<std::endl;
+//    cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 64);
+#endif
   }
 
   VTKM_CONT
-  ~BoundingIntervalHierarchy() {}
+  ~BoundingIntervalHierarchy()
+  {
+#ifdef VTKM_CUDA
+    if (CudaStackSizeBackup > 0)
+    {
+      //std::cout<<"DE-Increase stack size "<<CudaStackSizeBackup<<std::endl;
+      cudaDeviceSetLimit(cudaLimitStackSize, CudaStackSizeBackup);
+      CudaStackSizeBackup = 0;
+    }
+#endif
+  }
 
   VTKM_CONT
   void SetNumberOfSplittingPlanes(vtkm::IdComponent numPlanes)
@@ -136,6 +147,11 @@ private:
   vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> Nodes;
   IdArrayHandle ProcessedCellIds;
   mutable HandleType ExecHandle;
+
+
+#ifdef VTKM_CUDA
+  std::size_t CudaStackSizeBackup;
+#endif
 };
 
 } // namespace cont

@@ -480,18 +480,6 @@ public:
                             const vtkm::cont::BoundingIntervalHierarchy& bih,
                             HandleType& bihExec) const
   {
-#if 0
-    std::cout<<"BIH:"<<std::endl;
-    vtkm::Id N = bih.Nodes.GetNumberOfValues();
-    auto portal = bih.Nodes.GetPortalConstControl();
-    for (vtkm::Id i = 0; i < N; i++)
-    {
-      auto n = portal.Get(i);
-      //printf("%d: {%d %d %f %f}\n", i, n.ChildIndex, n.Dimension, n.Node.LMax0,0);
-      std::cout<<i<<": {"<<n.ChildIndex<<" "<<n.Dimension<<" "<<n.Node.LMax<<" "<<n.Node.RMin<<"}"<<std::endl;
-    }
-#endif
-
     vtkm::cont::DynamicCellSet cellSet = bih.GetCellSet();
     if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
     {
@@ -556,20 +544,8 @@ VTKM_CONT
 const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(
   const vtkm::cont::DeviceAdapterId deviceId) const
 {
-#if 0
-  //set up stack size for cuda environment
-#ifdef VTKM_CUDA
-  std::size_t stackSizeBackup(0);
-  (void)stackSizeBackup;
-  if (deviceId.GetValue() == VTKM_DEVICE_ADAPTER_CUDA)
-  {
-    cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
-    cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 16);
-  }
-#else
-  (void)deviceId;
-#endif
-#endif
+  //std::cout<<"Increase stack size"<<std::endl;
+  cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 64);
 
   const bool success =
     vtkm::cont::TryExecuteOnDevice(deviceId, PrepareForExecutionFunctor(), *this, this->ExecHandle);
