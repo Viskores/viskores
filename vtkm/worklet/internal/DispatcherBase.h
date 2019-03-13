@@ -489,6 +489,8 @@ inline void deduce(Trampoline&& trampoline, ContParams&& sig, Args&&... args)
 
 #if (__CUDACC_VER_MAJOR__ >= 10)
 #pragma diag_suppress 2905
+#pragma diag_suppress 2912
+#pragma diag_suppress 2915
 #endif
 
 #endif
