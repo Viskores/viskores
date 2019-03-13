@@ -36,6 +36,7 @@ namespace vtkm
 {
 namespace cont
 {
+
 class VTKM_ALWAYS_EXPORT BoundingIntervalHierarchy : public vtkm::cont::CellLocator
 {
 private:
@@ -82,6 +83,11 @@ private:
                                                        const IdArrayHandle&,
                                                        DeviceAdapter);
 
+  template <typename DeviceAdapter>
+  VTKM_CONT void Init()
+  {
+  }
+
 public:
   VTKM_CONT
   BoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4, vtkm::IdComponent maxLeafSize = 5)
@@ -90,7 +96,11 @@ public:
     , Nodes()
     , ProcessedCellIds()
   {
+    //    Init<DeviceAdapter>();
   }
+
+  VTKM_CONT
+  ~BoundingIntervalHierarchy() {}
 
   VTKM_CONT
   void SetNumberOfSplittingPlanes(vtkm::IdComponent numPlanes)

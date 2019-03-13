@@ -556,7 +556,8 @@ VTKM_CONT
 const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(
   const vtkm::cont::DeviceAdapterId deviceId) const
 {
-//set up stack size for cuda environment
+#if 0
+  //set up stack size for cuda environment
 #ifdef VTKM_CUDA
   std::size_t stackSizeBackup(0);
   (void)stackSizeBackup;
@@ -568,7 +569,7 @@ const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(
 #else
   (void)deviceId;
 #endif
-
+#endif
 
   const bool success =
     vtkm::cont::TryExecuteOnDevice(deviceId, PrepareForExecutionFunctor(), *this, this->ExecHandle);

@@ -552,8 +552,18 @@ void TestParticleWorklets()
 
 void TestParticleAdvection()
 {
+#ifdef VTKM_CUDA
+  size_t stackSizeBackup(0);
+  cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
+  cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 50);
+#endif
+
   TestEvaluators();
   TestParticleWorklets();
+
+#ifdef VTKM_CUDA
+  cudaDeviceSetLimit(cudaLimitStackSize, stackSizeBackup);
+#endif
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])
