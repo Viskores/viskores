@@ -31,6 +31,8 @@
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
+#include <vtkm/io/writer/VTKDataSetWriter.h>
+
 namespace
 {
 
@@ -394,7 +396,7 @@ void TestEvaluators()
         dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dim));
         dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dim));
         //Create an explicit dataset.
-        auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0]);
+        auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0], false);
         dataSets.push_back(expDS);
 
         vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> vecField;
@@ -423,6 +425,10 @@ void TestEvaluators()
 
         for (auto& ds : dataSets)
         {
+          //          ds.PrintSummary(std::cout);
+          //          vtkm::io::writer::VTKDataSetWriter writer1("ds.vtk");
+          //          writer1.WriteDataSet(ds);
+
           GridEvalType gridEval(ds.GetCoordinateSystem(), ds.GetCellSet(), vecField);
           ValidateEvaluator(gridEval, pointIns, vec, "grid evaluator");
 
@@ -494,7 +500,7 @@ void TestParticleWorklets()
     dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dims));
     dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dims));
     //Create an explicit dataset.
-    auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0]);
+    auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0], false);
     dataSets.push_back(expDS);
 
     //Generate three random points.
@@ -547,7 +553,7 @@ void TestParticleWorklets()
 void TestParticleAdvection()
 {
   TestEvaluators();
-  //TestParticleWorklets();
+  TestParticleWorklets();
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])

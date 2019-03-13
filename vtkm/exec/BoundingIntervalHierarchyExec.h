@@ -75,7 +75,9 @@ private:
                           vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
                           const vtkm::exec::FunctorBase& worklet) const
   {
+    //printf("Find %lld pt= <%f %f %f> (%f %f %f)\n", index, point[0],point[1],point[2], parametric[0],parametric[1],parametric[2]);
     const vtkm::cont::BoundingIntervalHierarchyNode& node = Nodes.Get(index);
+    //printf("  node {%lld %d %f %f}\n", node.ChildIndex, (int)node.Dimension,node.Node.LMax, node.Node.RMin);
     if (node.ChildIndex < 0)
     {
       return FindInLeaf(point, parametric, node, worklet);
@@ -83,26 +85,37 @@ private:
     else
     {
       const vtkm::FloatDefault& c = point[node.Dimension];
+      //printf("  c= %f\n", c);
+
       vtkm::Id id1 = -1;
       vtkm::Id id2 = -1;
       if (c <= node.Node.LMax)
       {
+        //printf("       %f<=LMax...\n", c);
+        //printf("       call: Find(%lld, pt, par, wo);\n", node.ChildIndex);
         id1 = Find(node.ChildIndex, point, parametric, worklet);
+        //printf("       id1= %lld\n", id1);
       }
       if (id1 == -1 && c >= node.Node.RMin)
       {
+        //printf("       %f>=Rmin ...\n", c);
+        //printf("       call: Find(%lld, pt, par, wo);\n", node.ChildIndex+1);
         id2 = Find(node.ChildIndex + 1, point, parametric, worklet);
+        //printf("       id2= %lld\n", id2);
       }
       if (id1 == -1 && id2 == -1)
       {
+        //printf("DONE Find %lld pt= <%f %f %f> id= -1\n", index, point[0],point[1],point[2]);
         return -1;
       }
       else if (id1 == -1)
       {
+        //printf("DONE Find %lld pt= <%f %f %f> id= %lld\n", index, point[0],point[1],point[2], id2);
         return id2;
       }
       else
       {
+        //printf("DONE Find %lld pt= <%f %f %f> id= %lld\n", index, point[0],point[1],point[2], id1);
         return id1;
       }
     }
@@ -116,9 +129,12 @@ private:
     using IndicesType = typename CellSetPortal::IndicesType;
     for (vtkm::Id i = node.Leaf.Start; i < node.Leaf.Start + node.Leaf.Size; ++i)
     {
+      //printf("       FindInLeaf i= %lld\n", i);
       vtkm::Id cellId = CellIds.Get(i);
+      //printf("       FindInLeaf cellId= %lld\n", cellId);
       IndicesType cellPointIndices = CellSet.GetIndices(cellId);
       vtkm::VecFromPortalPermute<IndicesType, CoordsPortal> cellPoints(&cellPointIndices, Coords);
+      //printf("       Call IsPointInCell\n");
       if (IsPointInCell(point, parametric, CellSet.GetCellShape(cellId), cellPoints, worklet))
       {
         return cellId;
