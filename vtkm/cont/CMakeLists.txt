@@ -128,24 +128,11 @@ set(template_sources
 set(sources
   ArrayHandle.cxx
   ArrayHandleVirtual.cxx
-  AssignerMultiBlock.cxx
-  BoundsCompute.cxx
-  BoundsGlobalCompute.cxx
   CellLocator.cxx
-  CellSet.cxx
-  CellSetStructured.cxx
-  ColorTable.cxx
   ColorTablePresets.cxx
-  DataSet.cxx
-  DataSetBuilderExplicit.cxx
-  DataSetBuilderRectilinear.cxx
-  DataSetBuilderUniform.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
-  Field.cxx
-  FieldRangeCompute.cxx
-  FieldRangeGlobalCompute.cxx
   internal/ArrayHandleBasicImpl.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
   internal/DeviceAdapterTag.cxx
@@ -154,7 +141,6 @@ set(sources
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
-  MultiBlock.cxx
   RuntimeDeviceInformation.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
@@ -166,11 +152,25 @@ set(sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   ArrayRangeCompute.cxx
+  AssignerMultiBlock.cxx
+  BoundsCompute.cxx
+  BoundsGlobalCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorRectilinearGrid.cxx
   CellLocatorUniformGrid.cxx
+  CellSet.cxx
   CellSetExplicit.cxx
+  CellSetStructured.cxx
+  ColorTable.cxx
   CoordinateSystem.cxx
+  DataSet.cxx
+  DataSetBuilderExplicit.cxx
+  DataSetBuilderRectilinear.cxx
+  DataSetBuilderUniform.cxx
+  Field.cxx
+  FieldRangeCompute.cxx
+  FieldRangeGlobalCompute.cxx
+  MultiBlock.cxx
   StorageVirtual.cxx
   Timer.cxx
   )
