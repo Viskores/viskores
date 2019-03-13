@@ -110,7 +110,7 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks
   int deviceId;
   VTKM_CUDA_CALL(cudaGetDevice(&deviceId)); //get deviceid from cuda
   grids = 32 * cuda::internal::getNumSMs(deviceId);
-  blocks = 128;
+  blocks = 512;
 }
 
 void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(
@@ -126,17 +126,17 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks
   { //grids that have no x dimension
     blocks.x = 1;
     blocks.y = 16;
-    blocks.z = 8;
+    blocks.z = 16;
   }
   else if (size.x > 128)
   {
-    blocks.x = 64;
-    blocks.y = 2;
-    blocks.z = 1;
+    blocks.x = 8;
+    blocks.y = 8;
+    blocks.z = 8;
   }
   else
   { //for really small grids
-    blocks.x = 8;
+    blocks.x = 4;
     blocks.y = 4;
     blocks.z = 4;
   }
