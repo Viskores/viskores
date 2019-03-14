@@ -545,8 +545,8 @@ const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(
   const vtkm::cont::DeviceAdapterId deviceId) const
 {
 #ifdef VTKM_CUDA
-  //std::cout<<"Increase stack size"<<std::endl;
-  cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 64);
+  static constexpr std::size_t stackSize = 1024 * 64;
+  cudaDeviceSetLimit(cudaLimitStackSize, stackSize);
 #endif
 
   const bool success =

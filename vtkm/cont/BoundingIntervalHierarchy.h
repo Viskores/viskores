@@ -94,9 +94,6 @@ public:
 #ifdef VTKM_CUDA
     CudaStackSizeBackup = 0;
     cudaDeviceGetLimit(&CudaStackSizeBackup, cudaLimitStackSize);
-//std::cout<<"Initial stack size: "<<CudaStackSizeBackup<<std::endl;
-//    std::cout<<"Increase stack size"<<std::endl;
-//    cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 64);
 #endif
   }
 
@@ -106,7 +103,6 @@ public:
 #ifdef VTKM_CUDA
     if (CudaStackSizeBackup > 0)
     {
-      //std::cout<<"DE-Increase stack size "<<CudaStackSizeBackup<<std::endl;
       cudaDeviceSetLimit(cudaLimitStackSize, CudaStackSizeBackup);
       CudaStackSizeBackup = 0;
     }

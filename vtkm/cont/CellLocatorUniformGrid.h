@@ -42,18 +42,15 @@ public:
 #ifdef VTKM_CUDA
     CudaStackSizeBackup = 0;
     cudaDeviceGetLimit(&CudaStackSizeBackup, cudaLimitStackSize);
-//std::cout<<"Initial stack size: "<<CudaStackSizeBackup<<std::endl;
-//    std::cout<<"Increase stack size"<<std::endl;
-//    cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 64);
 #endif
   }
+
   VTKM_CONT
   ~CellLocatorUniformGrid()
   {
 #ifdef VTKM_CUDA
     if (CudaStackSizeBackup > 0)
     {
-      //std::cout<<"DE-Increase stack size "<<CudaStackSizeBackup<<std::endl;
       cudaDeviceSetLimit(cudaLimitStackSize, CudaStackSizeBackup);
       CudaStackSizeBackup = 0;
     }
@@ -107,8 +104,8 @@ public:
     const vtkm::cont::DeviceAdapterId deviceId) const override
   {
 #ifdef VTKM_CUDA
-    //std::cout<<"Increase stack size"<<std::endl;
-    cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 64);
+    static constexpr std::size_t stackSize = 1024 * 64;
+    cudaDeviceSetLimit(cudaLimitStackSize, stackSize);
 #endif
     const bool success = vtkm::cont::TryExecuteOnDevice(
       deviceId, PrepareForExecutionFunctor(), *this, this->ExecHandle);
