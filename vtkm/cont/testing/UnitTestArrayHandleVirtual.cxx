@@ -51,23 +51,23 @@ struct Test
   void TestConstructors()
   {
     VirtHandle nullStorage;
-    VTKM_TEST_ASSERT(nullStorage.GetStorage() == nullptr,
+    VTKM_TEST_ASSERT(nullStorage.GetStorage().GetStorageVirtual() == nullptr,
                      "storage should be empty when using ArrayHandleVirtual().");
 
     VirtHandle fromArrayHandle{ ArrayHandle{} };
-    VTKM_TEST_ASSERT(fromArrayHandle.GetStorage() != nullptr,
+    VTKM_TEST_ASSERT(fromArrayHandle.GetStorage().GetStorageVirtual() != nullptr,
                      "storage should be empty when using ArrayHandleVirtual().");
     VTKM_TEST_ASSERT(vtkm::cont::IsType<ArrayHandle>(fromArrayHandle),
                      "ArrayHandleVirtual should contain a ArrayHandle<ValueType>.");
 
     VirtHandle fromVirtHandle(fromArrayHandle);
-    VTKM_TEST_ASSERT(fromVirtHandle.GetStorage() != nullptr,
+    VTKM_TEST_ASSERT(fromVirtHandle.GetStorage().GetStorageVirtual() != nullptr,
                      "storage should be empty when using ArrayHandleVirtual().");
     VTKM_TEST_ASSERT(vtkm::cont::IsType<ArrayHandle>(fromVirtHandle),
                      "ArrayHandleVirtual should contain a ArrayHandle<ValueType>.");
 
     VirtHandle fromNullPtrHandle(nullStorage);
-    VTKM_TEST_ASSERT(fromNullPtrHandle.GetStorage() == nullptr,
+    VTKM_TEST_ASSERT(fromNullPtrHandle.GetStorage().GetStorageVirtual() == nullptr,
                      "storage should be empty when constructing from a ArrayHandleVirtual that has "
                      "nullptr storage.");
     VTKM_TEST_ASSERT((vtkm::cont::IsType<ArrayHandle>(fromNullPtrHandle) == false),
@@ -77,31 +77,6 @@ struct Test
 
   void TestMoveConstructors()
   {
-    //test shared_ptr move constructor
-    {
-      vtkm::cont::ArrayHandleCounting<ValueType> countingHandle;
-      using ST = typename decltype(countingHandle)::StorageTag;
-      auto sharedPtr = std::make_shared<vtkm::cont::StorageAny<ValueType, ST>>(countingHandle);
-
-      VirtHandle virt(std::move(sharedPtr));
-      VTKM_TEST_ASSERT(
-        vtkm::cont::IsType<decltype(countingHandle)>(virt),
-        "ArrayHandleVirtual should be valid after move constructor shared_ptr<Storage>.");
-    }
-
-    //test unique_ptr move constructor
-    {
-      vtkm::cont::ArrayHandleCounting<ValueType> countingHandle;
-      using ST = typename decltype(countingHandle)::StorageTag;
-      auto uniquePtr = std::unique_ptr<vtkm::cont::StorageAny<ValueType, ST>>(
-        new vtkm::cont::StorageAny<ValueType, ST>(countingHandle));
-
-      VirtHandle virt(std::move(uniquePtr));
-      VTKM_TEST_ASSERT(
-        vtkm::cont::IsType<decltype(countingHandle)>(virt),
-        "ArrayHandleVirtual should be valid after move constructor unique_ptr<Storage>.");
-    }
-
     //test ArrayHandle move constructor
     {
       ArrayHandle handle;

@@ -73,6 +73,7 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
+    this->Compactor.SetMergePoints(false);
     return this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy));
   }
   else

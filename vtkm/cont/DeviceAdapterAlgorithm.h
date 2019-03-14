@@ -573,11 +573,11 @@ public:
     this->StopReady = true;
   }
 
-  VTKM_CONT bool Started() { return this->StartReady; }
+  VTKM_CONT bool Started() const { return this->StartReady; }
 
-  VTKM_CONT bool Stopped() { return this->StopReady; }
+  VTKM_CONT bool Stopped() const { return this->StopReady; }
 
-  VTKM_CONT bool Ready() { return true; }
+  VTKM_CONT bool Ready() const { return true; }
 
   /// Returns the elapsed time in seconds between the construction of this
   /// class or the last call to Reset and the time this function is called. The
@@ -585,7 +585,7 @@ public:
   /// number of times to get the progressive time. This method synchronizes all
   /// asynchronous operations.
   ///
-  VTKM_CONT vtkm::Float64 GetElapsedTime()
+  VTKM_CONT vtkm::Float64 GetElapsedTime() const
   {
     assert(this->StartReady);
     if (!this->StartReady)
@@ -595,23 +595,18 @@ public:
       return 0;
     }
 
-    bool manualStop = true;
-    if (!this->StopReady)
-    {
-      manualStop = false;
-      this->Stop();
-    }
+    TimeStamp startTime = this->StartTime;
+    TimeStamp stopTime = this->StopReady ? this->StopTime : this->GetCurrentTime();
+
     vtkm::Float64 elapsedTime;
-    elapsedTime = vtkm::Float64(this->StopTime.Seconds - this->StartTime.Seconds);
-    elapsedTime += (vtkm::Float64(this->StopTime.Microseconds - this->StartTime.Microseconds) /
-                    vtkm::Float64(1000000));
-    // Reset StopReady flag to its original state
-    this->StopReady = manualStop;
+    elapsedTime = vtkm::Float64(stopTime.Seconds - startTime.Seconds);
+    elapsedTime +=
+      (vtkm::Float64(stopTime.Microseconds - startTime.Microseconds) / vtkm::Float64(1000000));
 
     return elapsedTime;
   }
 
-  VTKM_CONT TimeStamp GetCurrentTime()
+  VTKM_CONT TimeStamp GetCurrentTime() const
   {
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Synchronize();
 

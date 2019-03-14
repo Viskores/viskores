@@ -132,7 +132,7 @@ namespace cont
 {
 
 template <vtkm::IdComponent DIMENSION>
-struct TypeString<vtkm::cont::CellSetStructured<DIMENSION>>
+struct SerializableTypeString<vtkm::cont::CellSetStructured<DIMENSION>>
 {
   static VTKM_CONT const std::string& Get()
   {

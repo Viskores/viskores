@@ -93,18 +93,18 @@ namespace cont
 {
 
 template <typename T>
-struct TypeString<vtkm::cont::detail::ConstantFunctor<T>>
+struct SerializableTypeString<vtkm::cont::detail::ConstantFunctor<T>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_ConstantFunctor<" + TypeString<T>::Get() + ">";
+    static std::string name = "AH_ConstantFunctor<" + SerializableTypeString<T>::Get() + ">";
     return name;
   }
 };
 
 template <typename T>
-struct TypeString<vtkm::cont::ArrayHandleConstant<T>>
-  : TypeString<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::ConstantFunctor<T>>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleConstant<T>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::ConstantFunctor<T>>>
 {
 };
 }

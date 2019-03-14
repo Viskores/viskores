@@ -43,37 +43,13 @@ class VTKM_ALWAYS_EXPORT ArrayHandleVirtualCoordinates final
   : public vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>
 {
 public:
-  using ValueType = vtkm::Vec<vtkm::FloatDefault, 3>;
-  using StorageTag = vtkm::cont::StorageTagVirtual;
+  VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleVirtualCoordinates,
+                                (vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>));
 
-  using NonDefaultCoord = typename std::conditional<std::is_same<vtkm::FloatDefault, float>::value,
-                                                    vtkm::Vec<double, 3>,
-                                                    vtkm::Vec<float, 3>>::type;
-
-  ArrayHandleVirtualCoordinates()
-    : vtkm::cont::ArrayHandleVirtual<ValueType>()
+  template <typename T, typename S>
+  explicit ArrayHandleVirtualCoordinates(const vtkm::cont::ArrayHandle<T, S>& ah)
+    : Superclass(vtkm::cont::make_ArrayHandleCast<ValueType>(ah))
   {
-  }
-
-  explicit ArrayHandleVirtualCoordinates(
-    const vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagVirtual>& ah)
-    : vtkm::cont::ArrayHandleVirtual<ValueType>(ah)
-  {
-  }
-
-  template <typename S>
-  explicit ArrayHandleVirtualCoordinates(const vtkm::cont::ArrayHandle<ValueType, S>& ah)
-    : vtkm::cont::ArrayHandleVirtual<ValueType>(ah)
-  {
-  }
-
-  template <typename S>
-  explicit ArrayHandleVirtualCoordinates(const vtkm::cont::ArrayHandle<NonDefaultCoord, S>& ah)
-    : vtkm::cont::ArrayHandleVirtual<ValueType>()
-  {
-    auto castedHandle = vtkm::cont::make_ArrayHandleCast<ValueType>(ah);
-    using ST = typename decltype(castedHandle)::StorageTag;
-    this->Storage = std::make_shared<vtkm::cont::StorageAny<ValueType, ST>>(castedHandle);
   }
 };
 
@@ -96,7 +72,7 @@ void CastAndCall(const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
 
 
 template <>
-struct TypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
+struct SerializableTypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
 {
   static VTKM_CONT const std::string Get() { return "AH_VirtualCoordinates"; }
 };
@@ -123,16 +99,18 @@ private:
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
 
 public:
-  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& baseObj)
   {
-    const vtkm::cont::StorageVirtual* storage = obj.GetStorage();
+    Type obj(baseObj);
+    const vtkm::cont::internal::detail::StorageVirtual* storage =
+      obj.GetStorage().GetStorageVirtual();
     if (obj.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
     {
       using HandleType = vtkm::cont::ArrayHandleUniformPointCoordinates;
       using T = typename HandleType::ValueType;
       using S = typename HandleType::StorageTag;
-      auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
-      vtkmdiy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
+      auto array = storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<HandleType>::Get());
       vtkmdiy::save(bb, array->GetHandle());
     }
     else if (obj.IsType<RectilinearCoordsArrayType>())
@@ -140,13 +118,13 @@ public:
       using HandleType = RectilinearCoordsArrayType;
       using T = typename HandleType::ValueType;
       using S = typename HandleType::StorageTag;
-      auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
-      vtkmdiy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
+      auto array = storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<HandleType>::Get());
       vtkmdiy::save(bb, array->GetHandle());
     }
     else
     {
-      vtkmdiy::save(bb, vtkm::cont::TypeString<BasicCoordsType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<BasicCoordsType>::Get());
       vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
     }
   }
@@ -156,19 +134,20 @@ public:
     std::string typeString;
     vtkmdiy::load(bb, typeString);
 
-    if (typeString == vtkm::cont::TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>::Get())
+    if (typeString ==
+        vtkm::cont::SerializableTypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>::Get())
     {
       vtkm::cont::ArrayHandleUniformPointCoordinates array;
       vtkmdiy::load(bb, array);
       obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
     }
-    else if (typeString == vtkm::cont::TypeString<RectilinearCoordsArrayType>::Get())
+    else if (typeString == vtkm::cont::SerializableTypeString<RectilinearCoordsArrayType>::Get())
     {
       RectilinearCoordsArrayType array;
       vtkmdiy::load(bb, array);
       obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
     }
-    else if (typeString == vtkm::cont::TypeString<BasicCoordsType>::Get())
+    else if (typeString == vtkm::cont::SerializableTypeString<BasicCoordsType>::Get())
     {
       BasicCoordsType array;
       vtkmdiy::load(bb, array);

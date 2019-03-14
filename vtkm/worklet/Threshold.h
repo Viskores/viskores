@@ -26,7 +26,7 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -150,14 +150,13 @@ public:
         throw vtkm::cont::ErrorBadValue("Expecting point or cell field.");
     }
 
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
-      vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
-    vtkm::cont::Algorithm::CopyIf(indices, passFlags, this->ValidCellIds);
+    vtkm::cont::Algorithm::CopyIf(
+      vtkm::cont::ArrayHandleIndex(passFlags.GetNumberOfValues()), passFlags, this->ValidCellIds);
 
     return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
   }
 
-  template <typename CellSetList, typename FieldArrayType, typename UnaryPredicate>
+  template <typename FieldArrayType, typename UnaryPredicate>
   struct CallWorklet
   {
     vtkm::cont::DynamicCellSet& Output;
@@ -192,8 +191,7 @@ public:
                                  const vtkm::cont::Field::Association fieldType,
                                  const UnaryPredicate& predicate)
   {
-    using Worker =
-      CallWorklet<CellSetList, vtkm::cont::ArrayHandle<ValueType, StorageType>, UnaryPredicate>;
+    using Worker = CallWorklet<vtkm::cont::ArrayHandle<ValueType, StorageType>, UnaryPredicate>;
 
     vtkm::cont::DynamicCellSet output;
     Worker worker(output, *this, field, fieldType, predicate);

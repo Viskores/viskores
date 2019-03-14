@@ -25,7 +25,6 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CleanGrid.h>
 
 #include <vtkm/filter/ZFPCompressor1D.h>
 #include <vtkm/filter/ZFPCompressor2D.h>

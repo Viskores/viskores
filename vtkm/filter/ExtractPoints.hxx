@@ -80,6 +80,7 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
+    this->Compactor.SetMergePoints(false);
     return this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy));
   }
   else

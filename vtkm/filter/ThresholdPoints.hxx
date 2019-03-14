@@ -198,6 +198,7 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
+    this->Compactor.SetMergePoints(true);
     return this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy));
   }
   else

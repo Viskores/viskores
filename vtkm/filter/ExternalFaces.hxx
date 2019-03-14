@@ -100,6 +100,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
+    this->Compactor.SetMergePoints(false);
     return this->Compactor.DoExecute(output, GetCellSetExplicitPolicy(policy));
   }
   else

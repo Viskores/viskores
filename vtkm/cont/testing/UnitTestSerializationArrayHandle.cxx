@@ -535,24 +535,24 @@ namespace cont
 {
 
 template <typename T>
-struct TypeString<TestArrayHandleImplicit::ImplicitFunctor<T>>
+struct SerializableTypeString<TestArrayHandleImplicit::ImplicitFunctor<T>>
 {
   static VTKM_CONT const std::string& Get()
   {
     static std::string name =
-      "TestArrayHandleImplicit::ImplicitFunctor<" + TypeString<T>::Get() + ">";
+      "TestArrayHandleImplicit::ImplicitFunctor<" + SerializableTypeString<T>::Get() + ">";
     return name;
   }
 };
 
 template <>
-struct TypeString<TestArrayHandleTransform::TransformFunctor>
+struct SerializableTypeString<TestArrayHandleTransform::TransformFunctor>
 {
   static VTKM_CONT const std::string Get() { return "TestArrayHandleTransform::TransformFunctor"; }
 };
 
 template <>
-struct TypeString<TestArrayHandleTransform::InverseTransformFunctor>
+struct SerializableTypeString<TestArrayHandleTransform::InverseTransformFunctor>
 {
   static VTKM_CONT const std::string Get()
   {

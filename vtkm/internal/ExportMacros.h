@@ -84,10 +84,10 @@
 // just constexpr
 #if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR < 8)
 #define VTKM_STATIC_CONSTEXPR_ARRAY constexpr
-// cuda 8+ doesn't support static constexpr pointers/fixed size arrays
+// cuda 8-9 doesn't support static constexpr pointers/fixed size arrays
 // that exist inside methods or classes, so in those cases we gracefully
 // fall back to static const
-#elif defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR >= 8)
+#elif defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR < 10)
 #define VTKM_STATIC_CONSTEXPR_ARRAY static const
 #else
 #define VTKM_STATIC_CONSTEXPR_ARRAY static constexpr

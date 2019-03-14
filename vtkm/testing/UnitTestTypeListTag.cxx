@@ -158,6 +158,7 @@ void TestLists()
   TypeSet common;
   common.AddExpected(vtkm::Float32());
   common.AddExpected(vtkm::Float64());
+  common.AddExpected(vtkm::UInt8());
   common.AddExpected(vtkm::Int32());
   common.AddExpected(vtkm::Int64());
   common.AddExpected(vtkm::Vec<vtkm::Float32, 3>());

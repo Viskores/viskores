@@ -212,14 +212,14 @@ namespace cont
 /// ArrayPortalFromIterators. Returns the original array rather than
 /// the portal wrapped in an \c IteratorFromArrayPortal.
 ///
-template <typename _IteratorType>
-class ArrayPortalToIterators<vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType>>
+template <typename IterType>
+class ArrayPortalToIterators<vtkm::cont::internal::ArrayPortalFromIterators<IterType>>
 {
-  using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType>;
+  using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<IterType>;
 
 public:
 #if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
-  using IteratorType = _IteratorType;
+  using IteratorType = IterType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_CONT
@@ -233,7 +233,7 @@ public:
   // The MSVC compiler issues warnings when using raw pointer math when in
   // debug mode. To keep the compiler happy (and add some safety checks),
   // wrap the iterator in checked_array_iterator.
-  using IteratorType = stdext::checked_array_iterator<_IteratorType>;
+  using IteratorType = stdext::checked_array_iterator<IterType>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_CONT

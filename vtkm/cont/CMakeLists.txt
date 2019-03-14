@@ -100,14 +100,13 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageAny.h
   StorageBasic.h
   StorageImplicit.h
   StorageListTag.h
   StorageVirtual.h
   Timer.h
   TryExecute.h
-  TypeString.h
+  SerializableTypeString.h
   VariantArrayHandle.h
   VirtualObjectHandle.h
   )
@@ -123,7 +122,6 @@ set(template_sources
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
-  StorageAny.hxx
   StorageBasic.hxx
   StorageVirtual.hxx
   VirtualObjectHandle.hxx
@@ -131,6 +129,7 @@ set(template_sources
 
 set(sources
   ArrayHandle.cxx
+  ArrayHandleVirtual.cxx
   AssignerMultiBlock.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
@@ -160,7 +159,6 @@ set(sources
   RuntimeDeviceInformation.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
-  StorageVirtual.cxx
   TryExecute.cxx
   VariantArrayHandle.cxx
   )
@@ -171,6 +169,7 @@ set(device_sources
   ArrayRangeCompute.cxx
   CellSetExplicit.cxx
   CoordinateSystem.cxx
+  StorageVirtual.cxx
   Timer.cxx
   )
 
