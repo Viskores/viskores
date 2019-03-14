@@ -191,7 +191,7 @@ public:
 
   using PortalType = vtkm::exec::internal::ArrayPortalGroupVecVariable<
     typename SourceArrayHandleType::PortalControl,
-    typename OffsetsArrayHandleType::PortalControl>;
+    typename OffsetsArrayHandleType::PortalConstControl>;
   using PortalConstType = vtkm::exec::internal::ArrayPortalGroupVecVariable<
     typename SourceArrayHandleType::PortalConstControl,
     typename OffsetsArrayHandleType::PortalConstControl>;
@@ -213,7 +213,8 @@ public:
   VTKM_CONT
   PortalType GetPortal()
   {
-    return PortalType(this->SourceArray.GetPortalControl(), this->OffsetsArray.GetPortalControl());
+    return PortalType(this->SourceArray.GetPortalControl(),
+                      this->OffsetsArray.GetPortalConstControl());
   }
 
   VTKM_CONT
