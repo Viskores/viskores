@@ -228,7 +228,7 @@ void TestNDimsHistMarginalization()
   vtkm::worklet::NDimsHistogram ndHistogram;
 
   // Set the number of data points
-  ndHistogram.SetNumOfDataPoints(ds.GetField(0).GetData().GetNumberOfValues());
+  ndHistogram.SetNumOfDataPoints(ds.GetField(0).GetNumberOfValues());
 
   // Add field one by one
   vtkm::Range rangeFieldA;

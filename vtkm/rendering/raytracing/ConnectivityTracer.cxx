@@ -257,7 +257,7 @@ void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
   // Do some basic range checking
   if (numBins < 1)
     throw vtkm::cont::ErrorBadValue("Number of energy bins is less than 1");
-  vtkm::Id binCount = ScalarField.GetData().GetNumberOfValues();
+  vtkm::Id binCount = ScalarField.GetNumberOfValues();
   vtkm::Id cellCount = this->GetNumberOfMeshCells();
   if (cellCount != (binCount / vtkm::Id(numBins)))
   {
@@ -270,7 +270,7 @@ void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
   }
   if (HasEmission)
   {
-    binCount = EmissionField.GetData().GetNumberOfValues();
+    binCount = EmissionField.GetNumberOfValues();
     if (cellCount != (binCount / vtkm::Id(numBins)))
     {
       std::stringstream message;

@@ -42,7 +42,7 @@ public:
     vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 20),
                      "Wrong result for Tetrahedralize");
-    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 18),
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 18),
                      "Wrong number of points for Tetrahedralize");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =
@@ -66,7 +66,7 @@ public:
     vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11),
                      "Wrong result for Tetrahedralize");
-    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 11),
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 11),
                      "Wrong number of points for Tetrahedralize");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =

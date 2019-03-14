@@ -97,7 +97,7 @@ private:
     internal::parseAssert(tag == "POINTS");
     this->ReadPoints();
 
-    vtkm::Id numPoints = this->DataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
+    vtkm::Id numPoints = this->DataSet.GetCoordinateSystem().GetNumberOfPoints();
 
     // Read the cellset
     std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> connectivityArrays;
