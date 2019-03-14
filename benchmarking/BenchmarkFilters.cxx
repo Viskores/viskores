@@ -239,7 +239,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -327,7 +328,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -366,7 +368,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -392,7 +395,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -417,7 +421,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -445,7 +450,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -472,7 +478,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -515,7 +522,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -560,7 +568,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -595,7 +604,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -621,7 +631,8 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 

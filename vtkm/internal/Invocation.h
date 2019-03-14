@@ -33,13 +33,13 @@ namespace internal
 /// track of the types of all parameters and the associated features of the
 /// worklet. \c Invocation is a class that manages all these types.
 ///
-template <typename _ParameterInterface,
-          typename _ControlInterface,
-          typename _ExecutionInterface,
-          vtkm::IdComponent _InputDomainIndex,
-          typename _OutputToInputMapType = vtkm::internal::NullType,
-          typename _VisitArrayType = vtkm::internal::NullType,
-          typename _ThreadToOutputMapType = vtkm::internal::NullType>
+template <typename ParameterInterface_,
+          typename ControlInterface_,
+          typename ExecutionInterface_,
+          vtkm::IdComponent InputDomainIndex_,
+          typename OutputToInputMapType_ = vtkm::internal::NullType,
+          typename VisitArrayType_ = vtkm::internal::NullType,
+          typename ThreadToOutputMapType_ = vtkm::internal::NullType>
 struct Invocation
 {
   /// \brief The types of the parameters
@@ -47,7 +47,7 @@ struct Invocation
   /// \c ParameterInterface is (expected to be) a \c FunctionInterface class
   /// that lists the types of the parameters for the invocation.
   ///
-  using ParameterInterface = _ParameterInterface;
+  using ParameterInterface = ParameterInterface_;
 
   /// \brief The tags of the \c ControlSignature.
   ///
@@ -55,7 +55,7 @@ struct Invocation
   /// represents the \c ControlSignature of a worklet (although dispatchers
   /// might modify the control signature to provide auxiliary information).
   ///
-  using ControlInterface = _ControlInterface;
+  using ControlInterface = ControlInterface_;
 
   /// \brief The tags of the \c ExecutionSignature.
   ///
@@ -63,7 +63,7 @@ struct Invocation
   /// represents the \c ExecutionSignature of a worklet (although dispatchers
   /// might modify the execution signature to provide auxiliary information).
   ///
-  using ExecutionInterface = _ExecutionInterface;
+  using ExecutionInterface = ExecutionInterface_;
 
   /// \brief The index of the input domain.
   ///
@@ -71,7 +71,7 @@ struct Invocation
   /// constituent element of the input (such as the points or cells). This
   /// index points to the parameter that defines this input domain.
   ///
-  static constexpr vtkm::IdComponent InputDomainIndex = _InputDomainIndex;
+  static constexpr vtkm::IdComponent InputDomainIndex = InputDomainIndex_;
 
   /// \brief An array representing the output to input map.
   ///
@@ -80,7 +80,7 @@ struct Invocation
   /// represented with a map where each output points to an input that creates
   /// it.
   ///
-  using OutputToInputMapType = _OutputToInputMapType;
+  using OutputToInputMapType = OutputToInputMapType_;
 
   /// \brief An array containing visit indices.
   ///
@@ -89,7 +89,7 @@ struct Invocation
   /// multiple outputs may point to the same input. The visit index uniquely
   /// identifies which instance each is.
   ///
-  using VisitArrayType = _VisitArrayType;
+  using VisitArrayType = VisitArrayType_;
 
   /// \brief An array representing the thread to output map.
   ///
@@ -97,7 +97,7 @@ struct Invocation
   /// prevent the worklet to be run on masked-out elements of the output. This
   /// is represented with a map where each thread points to an output it creates.
   ///
-  using ThreadToOutputMapType = _ThreadToOutputMapType;
+  using ThreadToOutputMapType = ThreadToOutputMapType_;
 
   /// \brief Default Invocation constructors that holds the given parameters
   /// by reference.

@@ -503,6 +503,7 @@ void TestMarchingCubesNormals()
   std::cout << "\tUnstructured dataset\n";
   vtkm::filter::CleanGrid makeUnstructured;
   makeUnstructured.SetCompactPointFields(false);
+  makeUnstructured.SetMergePoints(false);
   makeUnstructured.SetFieldsToPass("pointvar");
   auto result = makeUnstructured.Execute(dataset);
   TestNormals(result, false);
