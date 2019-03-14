@@ -37,7 +37,28 @@ class CellLocatorUniformGrid : public vtkm::cont::CellLocator
 {
 public:
   VTKM_CONT
-  CellLocatorUniformGrid() = default;
+  CellLocatorUniformGrid()
+  {
+#ifdef VTKM_CUDA
+    CudaStackSizeBackup = 0;
+    cudaDeviceGetLimit(&CudaStackSizeBackup, cudaLimitStackSize);
+//std::cout<<"Initial stack size: "<<CudaStackSizeBackup<<std::endl;
+//    std::cout<<"Increase stack size"<<std::endl;
+//    cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 64);
+#endif
+  }
+  VTKM_CONT
+  ~CellLocatorUniformGrid()
+  {
+#ifdef VTKM_CUDA
+    if (CudaStackSizeBackup > 0)
+    {
+      //std::cout<<"DE-Increase stack size "<<CudaStackSizeBackup<<std::endl;
+      cudaDeviceSetLimit(cudaLimitStackSize, CudaStackSizeBackup);
+      CudaStackSizeBackup = 0;
+    }
+#endif
+  }
 
   VTKM_CONT
   void Build() override
@@ -85,6 +106,10 @@ public:
   const HandleType PrepareForExecutionImpl(
     const vtkm::cont::DeviceAdapterId deviceId) const override
   {
+#ifdef VTKM_CUDA
+    //std::cout<<"Increase stack size"<<std::endl;
+    cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 64);
+#endif
     const bool success = vtkm::cont::TryExecuteOnDevice(
       deviceId, PrepareForExecutionFunctor(), *this, this->ExecHandle);
     if (!success)
@@ -102,6 +127,9 @@ private:
   vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
   vtkm::Vec<vtkm::Id, 3> CellDims;
   mutable HandleType ExecHandle;
+#ifdef VTKM_CUDA
+  std::size_t CudaStackSizeBackup;
+#endif
 };
 }
 }

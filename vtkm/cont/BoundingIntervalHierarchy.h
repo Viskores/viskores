@@ -148,7 +148,6 @@ private:
   IdArrayHandle ProcessedCellIds;
   mutable HandleType ExecHandle;
 
-
 #ifdef VTKM_CUDA
   std::size_t CudaStackSizeBackup;
 #endif
