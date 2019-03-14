@@ -396,8 +396,8 @@ void TestEvaluators()
         dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dim));
         dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dim));
         //Create an explicit dataset.
-        auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0], false);
-        dataSets.push_back(expDS);
+        //        auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0], false);
+        //        dataSets.push_back(expDS);
 
         vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
@@ -500,8 +500,8 @@ void TestParticleWorklets()
     dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dims));
     dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dims));
     //Create an explicit dataset.
-    auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0], false);
-    dataSets.push_back(expDS);
+    //    auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0], false);
+    //    dataSets.push_back(expDS);
 
     //Generate three random points.
     std::vector<vtkm::Vec<ScalarType, 3>> pts;
