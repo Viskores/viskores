@@ -90,7 +90,7 @@ struct VtkmArg : public opt::Arg
       return false;
     }
 
-    auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
     bool result = false;
     try
     {
@@ -180,7 +180,7 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     if (options[DEVICE])
     {
       auto id = vtkm::cont::make_DeviceAdapterId(options[DEVICE].arg);
-      auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+      auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
       tracker.ForceDevice(id);
       config.Device = id;
     }
