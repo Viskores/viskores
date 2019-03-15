@@ -55,7 +55,9 @@ struct AverageByKey
       for (vtkm::IdComponent index = 1; index < valuesIn.GetNumberOfComponents(); ++index)
       {
         FieldType component = valuesIn[index];
-        sum = sum + component;
+        // FieldType constructor is for when OutType is a Vec.
+        // static_cast is for when FieldType is a small int that gets promoted to int32.
+        sum = static_cast<FieldType>(sum + component);
       }
 
       // To get the average, we (of course) divide the sum by the amount of values, which is
@@ -68,7 +70,10 @@ struct AverageByKey
       // We use the VecTraits class to make this work regardless of whether FieldType is a real Vec
       // or just a scalar.
       using ComponentType = typename vtkm::VecTraits<FieldType>::ComponentType;
-      return sum / FieldType(static_cast<ComponentType>(valuesIn.GetNumberOfComponents()));
+      // FieldType constructor is for when OutType is a Vec.
+      // static_cast is for when FieldType is a small int that gets promoted to int32.
+      return static_cast<FieldType>(
+        sum / FieldType(static_cast<ComponentType>(valuesIn.GetNumberOfComponents())));
     }
   };
 

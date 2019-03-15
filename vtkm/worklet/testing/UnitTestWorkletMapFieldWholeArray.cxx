@@ -76,7 +76,7 @@ struct DoTestWholeArrayWorklet
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
       inArray[index] = TestValue(index, T());
-      inOutArray[index] = TestValue(index, T()) + T(100);
+      inOutArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
     vtkm::cont::ArrayHandle<T> inHandle = vtkm::cont::make_ArrayHandle(inArray, ARRAY_SIZE);

@@ -72,10 +72,14 @@ private:
     OutType sum = OutType(cellValues[0]);
     for (vtkm::IdComponent cellIndex = 1; cellIndex < numCells; ++cellIndex)
     {
-      sum = sum + OutType(cellValues[cellIndex]);
+      // OutType constructor is for when OutType is a Vec.
+      // static_cast is for when OutType is a small int that gets promoted to int32.
+      sum = static_cast<OutType>(sum + OutType(cellValues[cellIndex]));
     }
 
-    average = sum / OutType(static_cast<OutComponentType>(numCells));
+    // OutType constructor is for when OutType is a Vec.
+    // static_cast is for when OutType is a small int that gets promoted to int32.
+    average = static_cast<OutType>(sum / OutType(static_cast<OutComponentType>(numCells)));
   }
 
   template <typename CellValueVecType, typename OutType>

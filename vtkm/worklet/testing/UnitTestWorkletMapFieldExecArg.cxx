@@ -46,7 +46,7 @@ struct TestExecObjectWorklet
       {
         this->RaiseError("Got wrong input value.");
       }
-      out = execIn.Get(index) - T(100);
+      out = static_cast<T>(execIn.Get(index) - T(100));
       execOut.Set(index, out);
     }
   };
@@ -68,7 +68,7 @@ struct DoTestWorklet
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      inputArray[index] = TestValue(index, T()) + T(100);
+      inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
     vtkm::cont::ArrayHandleIndex counting(ARRAY_SIZE);
