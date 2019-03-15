@@ -84,7 +84,7 @@ template <typename InValueType, typename InStorage, typename OutValueType, typen
 VTKM_CONT void ArrayCopy(
   const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
   vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetRuntimeDeviceTracker())
 {
   detail::ArrayCopyFunctor functor;
 

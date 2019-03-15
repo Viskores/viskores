@@ -202,7 +202,7 @@ void TestExternalFaces3()
 void TestExternalFaces()
 {
   // Ignore the device passed in.
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(MyDeviceAdapter());
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(MyDeviceAdapter());
   TestExternalFaces1();
   TestExternalFaces2();
   TestExternalFaces3();

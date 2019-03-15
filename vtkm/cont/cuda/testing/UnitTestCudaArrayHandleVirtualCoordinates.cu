@@ -28,7 +28,7 @@
 
 int UnitTestCudaArrayHandleVirtualCoordinates(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   return vtkm::cont::testing::TestingArrayHandleVirtualCoordinates<
     vtkm::cont::DeviceAdapterTagCuda>::Run(argc, argv);

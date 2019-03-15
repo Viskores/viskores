@@ -85,7 +85,7 @@ bool CanTimeOnDevice(const vtkm::cont::Timer& timer, vtkm::cont::DeviceAdapterId
            (timer.GetDevice() == device))
   {
     // Device is specified and it is a match for the timer's device.
-    return vtkm::cont::GetGlobalRuntimeDeviceTracker().CanRunOn(device);
+    return vtkm::cont::GetRuntimeDeviceTracker().CanRunOn(device);
   }
   else
   {
@@ -166,7 +166,7 @@ struct TimerCheckFunctor
   void operator()(vtkm::cont::DeviceAdapterId device) const
   {
     if ((device != vtkm::cont::DeviceAdapterTagAny()) &&
-        !vtkm::cont::GetGlobalRuntimeDeviceTracker().CanRunOn(device))
+        !vtkm::cont::GetRuntimeDeviceTracker().CanRunOn(device))
     {
       // A timer will not work if set on a device that is not supported. Just skip this test.
       return;

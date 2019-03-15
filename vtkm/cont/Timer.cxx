@@ -225,7 +225,7 @@ Timer::Timer(vtkm::cont::DeviceAdapterId device)
   : Device(device)
   , Internal(nullptr)
 {
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetRuntimeDeviceTracker();
   if (device != DeviceAdapterTagAny() && !tracker.CanRunOn(device))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
@@ -254,7 +254,7 @@ void Timer::Reset()
 
 void Timer::Reset(vtkm::cont::DeviceAdapterId device)
 {
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetRuntimeDeviceTracker();
   if (device != DeviceAdapterTagAny() && !tracker.CanRunOn(device))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
@@ -327,7 +327,7 @@ vtkm::Float64 Timer::GetElapsedTime(vtkm::cont::DeviceAdapterId device) const
   }
 
   // If we have specified a specific device, make sure we can run on it.
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetRuntimeDeviceTracker();
   if ((deviceToTime != vtkm::cont::DeviceAdapterTagAny()) && !tracker.CanRunOn(deviceToTime))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,

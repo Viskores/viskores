@@ -32,7 +32,7 @@ namespace detail
 {
 
 void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
-                               vtkm::cont::RuntimeDeviceTracker& tracker,
+                               vtkm::cont::RuntimeDeviceTracker tracker,
                                const std::string& functorName)
 {
   try

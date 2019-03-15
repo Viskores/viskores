@@ -132,7 +132,7 @@ void TryExecuteWithDevice(DeviceList, bool expectSuccess)
 template <typename DeviceList>
 void TryExecuteAllExplicit(DeviceList, bool expectSuccess)
 {
-  vtkm::cont::RuntimeDeviceTracker tracker;
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> inArray;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
 
@@ -170,7 +170,7 @@ void TryExecuteAllEdgeCases()
 {
   using ValidDevice = vtkm::cont::DeviceAdapterTagSerial;
   using SingleValidList = vtkm::ListTagBase<ValidDevice>;
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
   std::cout << "TryExecute no Runtime, no Device, no parameters." << std::endl;
   vtkm::cont::TryExecute(EdgeCaseFunctor());
@@ -217,7 +217,7 @@ void RunErrorTest(bool shouldFail, bool shouldThrow, bool shouldDisable)
   bool threw = false;
   bool disabled = false;
 
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(Device{});
 
   try

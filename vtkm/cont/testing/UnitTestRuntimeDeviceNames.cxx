@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
@@ -46,7 +47,7 @@ struct VTKM_ALWAYS_EXPORT DeviceAdapterTagInvalidDeviceId : vtkm::cont::DeviceAd
 template <typename Tag>
 void TestName(const std::string& name, Tag tag, vtkm::cont::DeviceAdapterId id)
 {
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
 #if 0
   std::cerr << "Expected: " << name << "\n"
@@ -59,9 +60,9 @@ void TestName(const std::string& name, Tag tag, vtkm::cont::DeviceAdapterId id)
   VTKM_TEST_ASSERT(tag.GetName() == name, "Tag::GetName() failed.");
   VTKM_TEST_ASSERT(vtkm::cont::make_DeviceAdapterId(id.GetValue()) == id,
                    "make_DeviceAdapterId(int8) failed");
-  VTKM_TEST_ASSERT(tracker.GetDeviceName(id) == name, "RTDeviceTracker::GetDeviceName(Id) failed.");
-  VTKM_TEST_ASSERT(tracker.GetDeviceName(tag) == name,
-                   "RTDeviceTracker::GetDeviceName(Tag) failed.");
+
+  VTKM_TEST_ASSERT(tracker.GetDeviceName(id) == name, "RTDeviceTracker::GetName(Id) failed.");
+  VTKM_TEST_ASSERT(tracker.GetDeviceName(tag) == name, "RTDeviceTracker::GetName(Tag) failed.");
 
   //check going from name to device id
   auto lowerCaseFunc = [](char c) {
