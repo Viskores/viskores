@@ -431,7 +431,7 @@ void Canvas::AddColorBar(const vtkm::Bounds& bounds,
 
   {
     vtkm::cont::ScopedGlobalRuntimeDeviceTracker tracker;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().DisableDevice(vtkm::cont::DeviceAdapterTagCuda());
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     colorTable.Sample(static_cast<vtkm::Int32>(numSamples), colorMap);
   }
 

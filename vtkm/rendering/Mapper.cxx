@@ -40,7 +40,7 @@ void Mapper::SetActiveColorTable(const vtkm::cont::ColorTable& colorTable)
 
   {
     vtkm::cont::ScopedGlobalRuntimeDeviceTracker tracker;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().DisableDevice(vtkm::cont::DeviceAdapterTagCuda());
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     colorTable.Sample(1024, temp);
   }
 
