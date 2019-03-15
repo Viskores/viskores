@@ -136,13 +136,22 @@ public:
     return internal::variant::Cast<ArrayHandleType>(this->ArrayContainer.get());
   }
 
-  /// Returns this array cast to a \c ArrayHandleVirtual of the given type. Throws \c
-  /// ErrorBadType if the cast does not work.
+  /// Returns this array cast to a \c ArrayHandleVirtual of the given type.
+  /// This will perform type conversions as necessary, and will log warnings
+  /// if the conversion is lossy.
   ///
-  template <typename T>
+  /// This method internally uses CastAndCall. A custom storage tag list may
+  /// be specified in the second template parameter, which will be passed to
+  /// the CastAndCall.
+  ///
+  template <typename T, typename StorageTagList = VTKM_DEFAULT_STORAGE_LIST_TAG>
   VTKM_CONT vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
   {
-    return internal::variant::Cast<vtkm::cont::ArrayHandleVirtual<T>>(this->ArrayContainer.get());
+    VTKM_IS_LIST_TAG(StorageTagList);
+    vtkm::cont::internal::variant::ForceCastToVirtual caster;
+    vtkm::cont::ArrayHandleVirtual<T> output;
+    this->CastAndCall(StorageTagList{}, caster, output);
+    return output;
   }
 
   /// Given a references to an ArrayHandle object, casts this array to the

@@ -41,6 +41,7 @@
 
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <typeinfo>
 
 namespace vtkm
@@ -266,11 +267,85 @@ void CheckCastToArrayHandle(const ArrayHandleType& array)
 
   ArrayHandleType castArray2 = arrayVariant.Cast<ArrayHandleType>();
   VTKM_TEST_ASSERT(array == castArray2, "Did not get back same array.");
+}
 
-  using T = typename ArrayHandleType::ValueType;
-  vtkm::cont::ArrayHandleVirtual<T> castArray3 = arrayVariant.AsVirtual<T>();
-  VTKM_TEST_ASSERT(castArray3.GetNumberOfValues() == castArray2.GetNumberOfValues(),
-                   "Did not get back virtual array handle representation.");
+// A vtkm::Vec if NumComps > 1, otherwise a scalar
+template <typename T, vtkm::IdComponent NumComps>
+using VecOrScalar = typename std::conditional<(NumComps > 1), vtkm::Vec<T, NumComps>, T>::type;
+
+template <typename ArrayType>
+void CheckCastToVirtualArrayHandle(const ArrayType& array)
+{
+  VTKM_IS_ARRAY_HANDLE(ArrayType);
+
+  using ValueType = typename ArrayType::ValueType;
+  using VTraits = vtkm::VecTraits<ValueType>;
+  using ComponentType = typename VTraits::ComponentType;
+  static constexpr vtkm::IdComponent NumComps = VTraits::NUM_COMPONENTS;
+
+  using Storage = typename ArrayType::StorageTag;
+  using StorageList = vtkm::ListTagAppendUnique<VTKM_DEFAULT_STORAGE_LIST_TAG, Storage>;
+
+  using TypeList = vtkm::ListTagAppendUnique<VTKM_DEFAULT_TYPE_LIST_TAG, ValueType>;
+  using VariantArrayType = vtkm::cont::VariantArrayHandleBase<TypeList>;
+
+  VariantArrayType arrayVariant = array;
+
+  {
+    auto testArray = arrayVariant.template AsVirtual<ValueType, StorageList>();
+    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
+                     "Did not get back virtual array handle representation.");
+  }
+
+  {
+    auto testArray =
+      arrayVariant.template AsVirtual<VecOrScalar<vtkm::Int8, NumComps>, StorageList>();
+    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
+                     "Did not get back virtual array handle representation.");
+  }
+
+  {
+    auto testArray =
+      arrayVariant.template AsVirtual<VecOrScalar<vtkm::Int64, NumComps>, StorageList>();
+    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
+                     "Did not get back virtual array handle representation.");
+  }
+
+  {
+    auto testArray =
+      arrayVariant.template AsVirtual<VecOrScalar<vtkm::UInt64, NumComps>, StorageList>();
+    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
+                     "Did not get back virtual array handle representation.");
+  }
+
+  {
+    auto testArray =
+      arrayVariant.template AsVirtual<VecOrScalar<vtkm::Float32, NumComps>, StorageList>();
+    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
+                     "Did not get back virtual array handle representation.");
+  }
+
+  {
+    auto testArray =
+      arrayVariant.template AsVirtual<VecOrScalar<vtkm::Float64, NumComps>, StorageList>();
+    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
+                     "Did not get back virtual array handle representation.");
+  }
+
+  bool threw = false;
+  try
+  {
+    arrayVariant.template AsVirtual<vtkm::Vec<ComponentType, NumComps + 1>, StorageList>();
+  }
+  catch (vtkm::cont::ErrorBadType&)
+  {
+    // caught expected exception
+    threw = true;
+  }
+
+  VTKM_TEST_ASSERT(threw,
+                   "Casting to different vector width did not throw expected "
+                   "ErrorBadType exception.");
 }
 
 template <typename T, typename ArrayVariantType>
@@ -385,6 +460,13 @@ void TryUnusualTypeAndStorage()
   }
 }
 
+template <typename ArrayHandleType>
+void TryCastToArrayHandle(const ArrayHandleType& array)
+{
+  CheckCastToArrayHandle(array);
+  CheckCastToVirtualArrayHandle(array);
+}
+
 void TryCastToArrayHandle()
 {
   std::cout << "  Normal array handle." << std::endl;
@@ -393,42 +475,43 @@ void TryCastToArrayHandle()
   {
     buffer[index] = TestValue(index, vtkm::Id());
   }
+
   vtkm::cont::ArrayHandle<vtkm::Id> array = vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE);
-  CheckCastToArrayHandle(array);
+  TryCastToArrayHandle(array);
 
   std::cout << "  Cast array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleCast(array, vtkm::FloatDefault()));
+  TryCastToArrayHandle(vtkm::cont::make_ArrayHandleCast(array, vtkm::FloatDefault()));
 
   std::cout << "  Composite vector array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleCompositeVector(array, array));
+  TryCastToArrayHandle(vtkm::cont::make_ArrayHandleCompositeVector(array, array));
 
   std::cout << "  Constant array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleConstant(5, ARRAY_SIZE));
+  TryCastToArrayHandle(vtkm::cont::make_ArrayHandleConstant(5, ARRAY_SIZE));
 
   std::cout << "  Counting array handle." << std::endl;
   vtkm::cont::ArrayHandleCounting<vtkm::Id> countingArray(ARRAY_SIZE - 1, -1, ARRAY_SIZE);
-  CheckCastToArrayHandle(countingArray);
+  TryCastToArrayHandle(countingArray);
 
   std::cout << "  Group vec array handle" << std::endl;
   vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::Id>, 2> groupVecArray(array);
-  CheckCastToArrayHandle(groupVecArray);
+  TryCastToArrayHandle(groupVecArray);
 
   std::cout << "  Implicit array handle." << std::endl;
-  CheckCastToArrayHandle(
+  TryCastToArrayHandle(
     vtkm::cont::make_ArrayHandleImplicit(TestValueFunctor<vtkm::FloatDefault>(), ARRAY_SIZE));
 
   std::cout << "  Index array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE));
+  TryCastToArrayHandle(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE));
 
   std::cout << "  Permutation array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandlePermutation(countingArray, array));
+  TryCastToArrayHandle(vtkm::cont::make_ArrayHandlePermutation(countingArray, array));
 
   std::cout << "  Transform array handle." << std::endl;
-  CheckCastToArrayHandle(
+  TryCastToArrayHandle(
     vtkm::cont::make_ArrayHandleTransform(countingArray, TestValueFunctor<vtkm::FloatDefault>()));
 
   std::cout << "  Uniform point coordinates array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(ARRAY_SIZE)));
+  TryCastToArrayHandle(vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(ARRAY_SIZE)));
 
   // std::cout << "  Zip array handle." << std::endl;
   // CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleZip(countingArray, array));
