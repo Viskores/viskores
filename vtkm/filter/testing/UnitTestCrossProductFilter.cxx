@@ -138,7 +138,7 @@ void TestCrossProduct()
     std::cout << "Case " << i << std::endl;
 
     vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
-    vtkm::Id nVerts = dataSet.GetCoordinateSystem(0).GetData().GetNumberOfValues();
+    vtkm::Id nVerts = dataSet.GetCoordinateSystem(0).GetNumberOfPoints();
 
     std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> vecs1, vecs2;
     createVectors(static_cast<std::size_t>(nVerts), i, vecs1, vecs2);

@@ -320,7 +320,7 @@ void TestMarchingCubesUniformGrid()
 
     //verify that the number of points is correct (72)
     //verify that the number of cells is correct (160)
-    VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 72,
+    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 72,
                      "Should have less coordinates than the unmerged version");
     VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
   }
@@ -332,7 +332,7 @@ void TestMarchingCubesUniformGrid()
   {
     vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
 
-    VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 480,
+    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 480,
                      "Should have less coordinates than the unmerged version");
 
     //verify that the number of cells is correct (160)
@@ -376,8 +376,7 @@ void TestMarchingCubesCustomPolicy()
                    "Wrong number of fields in the output dataset");
 
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == (414 * 4),
-                   "Should have some coordinates");
+  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == (414 * 4), "Should have some coordinates");
 }
 
 

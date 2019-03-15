@@ -40,7 +40,7 @@ public:
     vtkm::cont::DataSet output = triangulate.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 32),
                      "Wrong result for Triangulate");
-    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 25),
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 25),
                      "Wrong number of points for Triangulate");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =
@@ -61,7 +61,7 @@ public:
     vtkm::cont::DataSet output = triangulate.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 14),
                      "Wrong result for Triangulate");
-    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 16),
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 16),
                      "Wrong number of points for Triangulate");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =

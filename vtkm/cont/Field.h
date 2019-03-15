@@ -128,6 +128,7 @@ public:
   const vtkm::cont::VariantArrayHandle& GetData() const;
   vtkm::cont::VariantArrayHandle& GetData();
 
+  VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
 
   template <typename TypeList>
   VTKM_CONT void GetRange(vtkm::Range* range, TypeList) const

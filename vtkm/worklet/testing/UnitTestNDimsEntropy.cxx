@@ -194,7 +194,7 @@ void TestNDimsEntropy()
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
   vtkm::worklet::NDimsEntropy ndEntropy;
-  ndEntropy.SetNumOfDataPoints(ds.GetField(0).GetData().GetNumberOfValues());
+  ndEntropy.SetNumOfDataPoints(ds.GetField(0).GetNumberOfValues());
 
   // Add field one by one
   ndEntropy.AddField(ds.GetField("fieldA").GetData(), 10);

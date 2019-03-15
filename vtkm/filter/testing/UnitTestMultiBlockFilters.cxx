@@ -95,8 +95,8 @@ void Result_Verify(const vtkm::cont::MultiBlock& Result,
     Filter.SetActiveField(FieldName);
     vtkm::cont::DataSet BlockResult = Filter.Execute(Blocks.GetBlock(j));
 
-    VTKM_TEST_ASSERT(Result.GetBlock(j).GetField(outputFieldName).GetData().GetNumberOfValues() ==
-                       BlockResult.GetField(outputFieldName).GetData().GetNumberOfValues(),
+    VTKM_TEST_ASSERT(Result.GetBlock(j).GetField(outputFieldName).GetNumberOfValues() ==
+                       BlockResult.GetField(outputFieldName).GetNumberOfValues(),
                      "result vectors' size incorrect");
 
     vtkm::cont::ArrayHandle<vtkm::Id> MBlockArray;
@@ -104,9 +104,7 @@ void Result_Verify(const vtkm::cont::MultiBlock& Result,
     vtkm::cont::ArrayHandle<vtkm::Id> SDataSetArray;
     BlockResult.GetField(outputFieldName).GetData().CopyTo(SDataSetArray);
 
-    for (vtkm::Id i = 0;
-         i < Result.GetBlock(j).GetField(outputFieldName).GetData().GetNumberOfValues();
-         i++)
+    for (vtkm::Id i = 0; i < Result.GetBlock(j).GetField(outputFieldName).GetNumberOfValues(); i++)
     {
       VTKM_TEST_ASSERT(MBlockArray.GetPortalConstControl().Get(i) ==
                          SDataSetArray.GetPortalConstControl().Get(i),

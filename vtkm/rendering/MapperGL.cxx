@@ -457,7 +457,7 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   vtkm::cont::ArrayHandle<vtkm::Float32> sf;
   sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
   auto dcoords = coords.GetData();
-  vtkm::Id numVerts = coords.GetData().GetNumberOfValues();
+  vtkm::Id numVerts = coords.GetNumberOfPoints();
 
   //Handle 1D cases.
   if (cellset.IsSameType(vtkm::cont::CellSetStructured<1>()))

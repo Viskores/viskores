@@ -101,11 +101,9 @@ void TestPointMerging()
   vtkm::cont::DataSet noMerging = cleanGrid.Execute(inData);
   VTKM_TEST_ASSERT(noMerging.GetCellSet().GetNumberOfCells() == originalNumCells);
   VTKM_TEST_ASSERT(noMerging.GetCellSet().GetNumberOfPoints() == originalNumPoints);
-  VTKM_TEST_ASSERT(noMerging.GetCoordinateSystem().GetData().GetNumberOfValues() ==
-                   originalNumPoints);
-  VTKM_TEST_ASSERT(noMerging.GetField("pointvar").GetData().GetNumberOfValues() ==
-                   originalNumPoints);
-  VTKM_TEST_ASSERT(noMerging.GetField("cellvar").GetData().GetNumberOfValues() == originalNumCells);
+  VTKM_TEST_ASSERT(noMerging.GetCoordinateSystem().GetNumberOfPoints() == originalNumPoints);
+  VTKM_TEST_ASSERT(noMerging.GetField("pointvar").GetNumberOfValues() == originalNumPoints);
+  VTKM_TEST_ASSERT(noMerging.GetField("cellvar").GetNumberOfValues() == originalNumCells);
 
   std::cout << "Clean grid by merging very close points" << std::endl;
   cleanGrid.SetMergePoints(true);
@@ -114,24 +112,18 @@ void TestPointMerging()
   constexpr vtkm::Id closeMergeNumPoints = 62;
   VTKM_TEST_ASSERT(closeMerge.GetCellSet().GetNumberOfCells() == originalNumCells);
   VTKM_TEST_ASSERT(closeMerge.GetCellSet().GetNumberOfPoints() == closeMergeNumPoints);
-  VTKM_TEST_ASSERT(closeMerge.GetCoordinateSystem().GetData().GetNumberOfValues() ==
-                   closeMergeNumPoints);
-  VTKM_TEST_ASSERT(closeMerge.GetField("pointvar").GetData().GetNumberOfValues() ==
-                   closeMergeNumPoints);
-  VTKM_TEST_ASSERT(closeMerge.GetField("cellvar").GetData().GetNumberOfValues() ==
-                   originalNumCells);
+  VTKM_TEST_ASSERT(closeMerge.GetCoordinateSystem().GetNumberOfPoints() == closeMergeNumPoints);
+  VTKM_TEST_ASSERT(closeMerge.GetField("pointvar").GetNumberOfValues() == closeMergeNumPoints);
+  VTKM_TEST_ASSERT(closeMerge.GetField("cellvar").GetNumberOfValues() == originalNumCells);
 
   std::cout << "Clean grid by merging very close points with fast merge" << std::endl;
   cleanGrid.SetFastMerge(true);
   vtkm::cont::DataSet closeFastMerge = cleanGrid.Execute(inData);
   VTKM_TEST_ASSERT(closeFastMerge.GetCellSet().GetNumberOfCells() == originalNumCells);
   VTKM_TEST_ASSERT(closeFastMerge.GetCellSet().GetNumberOfPoints() == closeMergeNumPoints);
-  VTKM_TEST_ASSERT(closeFastMerge.GetCoordinateSystem().GetData().GetNumberOfValues() ==
-                   closeMergeNumPoints);
-  VTKM_TEST_ASSERT(closeFastMerge.GetField("pointvar").GetData().GetNumberOfValues() ==
-                   closeMergeNumPoints);
-  VTKM_TEST_ASSERT(closeFastMerge.GetField("cellvar").GetData().GetNumberOfValues() ==
-                   originalNumCells);
+  VTKM_TEST_ASSERT(closeFastMerge.GetCoordinateSystem().GetNumberOfPoints() == closeMergeNumPoints);
+  VTKM_TEST_ASSERT(closeFastMerge.GetField("pointvar").GetNumberOfValues() == closeMergeNumPoints);
+  VTKM_TEST_ASSERT(closeFastMerge.GetField("cellvar").GetNumberOfValues() == originalNumCells);
 
   std::cout << "Clean grid with largely separated points" << std::endl;
   cleanGrid.SetFastMerge(false);
@@ -140,11 +132,9 @@ void TestPointMerging()
   constexpr vtkm::Id farMergeNumPoints = 36;
   VTKM_TEST_ASSERT(farMerge.GetCellSet().GetNumberOfCells() == originalNumCells);
   VTKM_TEST_ASSERT(farMerge.GetCellSet().GetNumberOfPoints() == farMergeNumPoints);
-  VTKM_TEST_ASSERT(farMerge.GetCoordinateSystem().GetData().GetNumberOfValues() ==
-                   farMergeNumPoints);
-  VTKM_TEST_ASSERT(farMerge.GetField("pointvar").GetData().GetNumberOfValues() ==
-                   farMergeNumPoints);
-  VTKM_TEST_ASSERT(farMerge.GetField("cellvar").GetData().GetNumberOfValues() == originalNumCells);
+  VTKM_TEST_ASSERT(farMerge.GetCoordinateSystem().GetNumberOfPoints() == farMergeNumPoints);
+  VTKM_TEST_ASSERT(farMerge.GetField("pointvar").GetNumberOfValues() == farMergeNumPoints);
+  VTKM_TEST_ASSERT(farMerge.GetField("cellvar").GetNumberOfValues() == originalNumCells);
 
   std::cout << "Clean grid with largely separated points quickly" << std::endl;
   cleanGrid.SetFastMerge(true);
@@ -152,12 +142,9 @@ void TestPointMerging()
   constexpr vtkm::Id farFastMergeNumPoints = 19;
   VTKM_TEST_ASSERT(farFastMerge.GetCellSet().GetNumberOfCells() == originalNumCells);
   VTKM_TEST_ASSERT(farFastMerge.GetCellSet().GetNumberOfPoints() == farFastMergeNumPoints);
-  VTKM_TEST_ASSERT(farFastMerge.GetCoordinateSystem().GetData().GetNumberOfValues() ==
-                   farFastMergeNumPoints);
-  VTKM_TEST_ASSERT(farFastMerge.GetField("pointvar").GetData().GetNumberOfValues() ==
-                   farFastMergeNumPoints);
-  VTKM_TEST_ASSERT(farFastMerge.GetField("cellvar").GetData().GetNumberOfValues() ==
-                   originalNumCells);
+  VTKM_TEST_ASSERT(farFastMerge.GetCoordinateSystem().GetNumberOfPoints() == farFastMergeNumPoints);
+  VTKM_TEST_ASSERT(farFastMerge.GetField("pointvar").GetNumberOfValues() == farFastMergeNumPoints);
+  VTKM_TEST_ASSERT(farFastMerge.GetField("cellvar").GetNumberOfValues() == originalNumCells);
 
   std::cout << "Clean grid with largely separated points quickly with degenerate cells"
             << std::endl;
@@ -166,11 +153,11 @@ void TestPointMerging()
   constexpr vtkm::Id numNonDegenerateCells = 33;
   VTKM_TEST_ASSERT(noDegenerateCells.GetCellSet().GetNumberOfCells() == numNonDegenerateCells);
   VTKM_TEST_ASSERT(noDegenerateCells.GetCellSet().GetNumberOfPoints() == farFastMergeNumPoints);
-  VTKM_TEST_ASSERT(noDegenerateCells.GetCoordinateSystem().GetData().GetNumberOfValues() ==
+  VTKM_TEST_ASSERT(noDegenerateCells.GetCoordinateSystem().GetNumberOfPoints() ==
                    farFastMergeNumPoints);
-  VTKM_TEST_ASSERT(noDegenerateCells.GetField("pointvar").GetData().GetNumberOfValues() ==
+  VTKM_TEST_ASSERT(noDegenerateCells.GetField("pointvar").GetNumberOfValues() ==
                    farFastMergeNumPoints);
-  VTKM_TEST_ASSERT(noDegenerateCells.GetField("cellvar").GetData().GetNumberOfValues() ==
+  VTKM_TEST_ASSERT(noDegenerateCells.GetField("cellvar").GetNumberOfValues() ==
                    numNonDegenerateCells);
 }
 

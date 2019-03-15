@@ -38,7 +38,7 @@ vtkm::cont::DataSet Make3DUniformDataSet(vtkm::Id size = 64)
                                                vtkm::Vec<vtkm::Float32, 3>(center, center, center),
                                                vtkm::Vec<vtkm::Float32, 3>(1.0f, 1.0f, 1.0f));
   const char* fieldName = "pointvar";
-  vtkm::Id numValues = dataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
+  vtkm::Id numValues = dataSet.GetCoordinateSystem().GetNumberOfPoints();
   vtkm::cont::ArrayHandleCounting<vtkm::Float32> fieldValues(
     0.0f, 10.0f / static_cast<vtkm::Float32>(numValues), numValues);
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarField;

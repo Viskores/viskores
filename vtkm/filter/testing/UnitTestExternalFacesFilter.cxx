@@ -85,7 +85,7 @@ void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
   // verify CompactPoints
   if (compactPoints)
   {
-    vtkm::Id numOutputPoints = resultds.GetCoordinateSystem(0).GetData().GetNumberOfValues();
+    vtkm::Id numOutputPoints = resultds.GetCoordinateSystem(0).GetNumberOfPoints();
     VTKM_TEST_ASSERT(numOutputPoints == numExpectedPoints,
                      "Incorrect number of points after compacting");
   }

@@ -203,7 +203,7 @@ void SphereExtractor::SetUniformRadius(const vtkm::Float32 radius)
 
 void SphereExtractor::SetPointIdsFromCoords(const vtkm::cont::CoordinateSystem& coords)
 {
-  vtkm::Id size = coords.GetData().GetNumberOfValues();
+  vtkm::Id size = coords.GetNumberOfPoints();
   this->PointIds.Allocate(size);
   vtkm::worklet::DispatcherMapField<detail::Iterator>(detail::Iterator()).Invoke(this->PointIds);
 }
