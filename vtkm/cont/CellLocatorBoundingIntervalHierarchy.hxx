@@ -559,11 +559,6 @@ VTKM_CONT
 const HandleType CellLocatorBoundingIntervalHierarchy::PrepareForExecutionImpl(
   const vtkm::cont::DeviceAdapterId deviceId) const
 {
-#ifdef VTKM_CUDA_DRP
-  static constexpr std::size_t stackSize = 1024 * 64;
-  cudaDeviceSetLimit(cudaLimitStackSize, stackSize);
-#endif
-
   const bool success =
     vtkm::cont::TryExecuteOnDevice(deviceId, PrepareForExecutionFunctor(), *this, this->ExecHandle);
   if (!success)

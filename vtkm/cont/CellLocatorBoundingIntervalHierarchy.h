@@ -90,24 +90,8 @@ public:
     , Nodes()
     , ProcessedCellIds()
   {
-#ifdef VTKM_CUDA_DRP
-    CudaStackSizeBackup = 0;
-    cudaDeviceGetLimit(&CudaStackSizeBackup, cudaLimitStackSize);
-#endif
   }
-  /*
-  VTKM_CONT
-  ~CellLocatorBoundingIntervalHierarchy()
-  {
-#ifdef VTKM_CUDA_DRP
-    if (CudaStackSizeBackup > 0)
-    {
-      cudaDeviceSetLimit(cudaLimitStackSize, CudaStackSizeBackup);
-      CudaStackSizeBackup = 0;
-    }
-#endif
-  }
-*/
+
   VTKM_CONT
   void SetNumberOfSplittingPlanes(vtkm::IdComponent numPlanes)
   {
@@ -142,10 +126,6 @@ private:
   vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode> Nodes;
   IdArrayHandle ProcessedCellIds;
   mutable HandleType ExecHandle;
-
-#ifdef VTKM_CUDA_DRP
-  std::size_t CudaStackSizeBackup;
-#endif
 };
 
 } // namespace cont
