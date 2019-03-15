@@ -827,7 +827,8 @@ public:
         for (vtkm::IdComponent i = 1; i < numValues; i++)
         {
           MappedValueType value = toReduce[i];
-          sum = sum + value;
+          // static_cast is for when MappedValueType is a small int that gets promoted to int32.
+          sum = static_cast<MappedValueType>(sum + value);
         }
         centroid = internal::Scale(sum, 1. / static_cast<vtkm::Float64>(numValues));
       }
