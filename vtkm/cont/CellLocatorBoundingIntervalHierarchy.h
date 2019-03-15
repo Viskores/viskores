@@ -95,7 +95,7 @@ public:
     cudaDeviceGetLimit(&CudaStackSizeBackup, cudaLimitStackSize);
 #endif
   }
-
+  /*
   VTKM_CONT
   ~CellLocatorBoundingIntervalHierarchy()
   {
@@ -107,7 +107,7 @@ public:
     }
 #endif
   }
-
+*/
   VTKM_CONT
   void SetNumberOfSplittingPlanes(vtkm::IdComponent numPlanes)
   {

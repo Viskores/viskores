@@ -20,6 +20,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
+#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.hxx>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Timer.h>

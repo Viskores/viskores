@@ -29,6 +29,7 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/CellLocator.h>
+#include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
 
 namespace vtkm
 {

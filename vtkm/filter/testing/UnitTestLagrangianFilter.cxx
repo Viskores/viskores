@@ -19,6 +19,8 @@
 //============================================================================
 
 #include <iostream>
+#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
+#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.hxx>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
