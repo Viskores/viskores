@@ -39,7 +39,7 @@ public:
   VTKM_CONT
   CellLocatorUniformGrid()
   {
-#ifdef VTKM_CUDA
+#ifdef VTKM_CUDA_DRP
     CudaStackSizeBackup = 0;
     cudaDeviceGetLimit(&CudaStackSizeBackup, cudaLimitStackSize);
 #endif
@@ -48,7 +48,7 @@ public:
   VTKM_CONT
   ~CellLocatorUniformGrid()
   {
-#ifdef VTKM_CUDA
+#ifdef VTKM_CUDA_DRP
     if (CudaStackSizeBackup > 0)
     {
       cudaDeviceSetLimit(cudaLimitStackSize, CudaStackSizeBackup);
@@ -103,7 +103,7 @@ public:
   const HandleType PrepareForExecutionImpl(
     const vtkm::cont::DeviceAdapterId deviceId) const override
   {
-#ifdef VTKM_CUDA
+#ifdef VTKM_CUDA_DRP
     static constexpr std::size_t stackSize = 1024 * 64;
     cudaDeviceSetLimit(cudaLimitStackSize, stackSize);
 #endif
@@ -124,7 +124,7 @@ private:
   vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
   vtkm::Vec<vtkm::Id, 3> CellDims;
   mutable HandleType ExecHandle;
-#ifdef VTKM_CUDA
+#ifdef VTKM_CUDA_DRP
   std::size_t CudaStackSizeBackup;
 #endif
 };

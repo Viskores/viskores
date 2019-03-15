@@ -19,8 +19,6 @@
 //============================================================================
 
 #include <iostream>
-#include <vtkm/cont/BoundingIntervalHierarchy.h>
-#include <vtkm/cont/BoundingIntervalHierarchy.hxx>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>

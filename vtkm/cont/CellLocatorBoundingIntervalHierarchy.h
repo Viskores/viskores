@@ -90,16 +90,16 @@ public:
     , Nodes()
     , ProcessedCellIds()
   {
-#ifdef VTKM_CUDA
+#ifdef VTKM_CUDA_DRP
     CudaStackSizeBackup = 0;
     cudaDeviceGetLimit(&CudaStackSizeBackup, cudaLimitStackSize);
 #endif
   }
 
   VTKM_CONT
-  ~BoundingIntervalHierarchy()
+  ~CellLocatorBoundingIntervalHierarchy()
   {
-#ifdef VTKM_CUDA
+#ifdef VTKM_CUDA_DRP
     if (CudaStackSizeBackup > 0)
     {
       cudaDeviceSetLimit(cudaLimitStackSize, CudaStackSizeBackup);
@@ -143,7 +143,7 @@ private:
   IdArrayHandle ProcessedCellIds;
   mutable HandleType ExecHandle;
 
-#ifdef VTKM_CUDA
+#ifdef VTKM_CUDA_DRP
   std::size_t CudaStackSizeBackup;
 #endif
 };
