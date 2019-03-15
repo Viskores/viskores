@@ -54,6 +54,7 @@ namespace vtkm
 template <>
 struct VecTraits<std::string>
 {
+  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
   static constexpr vtkm::IdComponent NUM_COMPONENTS = 1;
   using HasMultipleComponents = vtkm::VecTraitsTagSingleComponent;
 };
@@ -156,6 +157,8 @@ void BasicArrayVariantChecks(const vtkm::cont::VariantArrayHandleBase<TypeList>&
 {
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
                    "Dynamic array reports unexpected size.");
+  std::cout << "array.GetNumberOfComponents() = " << array.GetNumberOfComponents() << ", "
+            << "numComponents = " << numComponents << "\n";
   VTKM_TEST_ASSERT(array.GetNumberOfComponents() == numComponents,
                    "Dynamic array reports unexpected number of components.");
 }
