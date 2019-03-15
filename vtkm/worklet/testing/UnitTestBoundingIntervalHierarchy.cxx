@@ -20,8 +20,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
-#include <vtkm/cont/BoundingIntervalHierarchy.h>
-#include <vtkm/cont/BoundingIntervalHierarchy.hxx>
+#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.hxx>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
@@ -81,7 +80,8 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
 
   std::cout << "Using numPlanes: " << numPlanes << "\n";
   std::cout << "Building Bounding Interval Hierarchy Tree" << std::endl;
-  vtkm::cont::BoundingIntervalHierarchy bih = vtkm::cont::BoundingIntervalHierarchy(numPlanes, 5);
+  vtkm::cont::CellLocatorBoundingIntervalHierarchy bih =
+    vtkm::cont::CellLocatorBoundingIntervalHierarchy(numPlanes, 5);
   bih.SetCellSet(cellSet);
   bih.SetCoordinates(dataSet.GetCoordinateSystem());
   bih.Update();
