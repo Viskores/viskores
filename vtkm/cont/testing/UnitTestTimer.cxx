@@ -37,15 +37,41 @@ struct TimerTestDevices
 {
 };
 
-constexpr int waitTimeMilliseconds = 250;
+constexpr long long waitTimeMilliseconds = 250;
 constexpr vtkm::Float64 waitTimeSeconds = vtkm::Float64(waitTimeMilliseconds) / 1000;
 
-void Wait()
+struct Waiter
 {
-  std::cout << "  Sleeping for " << waitTimeSeconds << "s" << std::endl;
+  std::chrono::high_resolution_clock::time_point Start = std::chrono::high_resolution_clock::now();
+  long long ExpectedTimeMilliseconds = 0;
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(waitTimeMilliseconds));
-}
+  vtkm::Float64 Wait()
+  {
+    // Update when we want to wait to.
+    this->ExpectedTimeMilliseconds += waitTimeMilliseconds;
+    vtkm::Float64 expectedTimeSeconds = vtkm::Float64(this->ExpectedTimeMilliseconds) / 1000;
+
+    long long elapsedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      std::chrono::high_resolution_clock::now() - this->Start)
+                                      .count();
+
+    long long millisecondsToSleep = this->ExpectedTimeMilliseconds - elapsedMilliseconds;
+
+    std::cout << "  Sleeping for " << millisecondsToSleep << "ms (to " << expectedTimeSeconds
+              << "s)" << std::endl;
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(millisecondsToSleep));
+
+    VTKM_TEST_ASSERT(std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::high_resolution_clock::now() - this->Start)
+                         .count() <
+                       (this->ExpectedTimeMilliseconds + ((3 * waitTimeMilliseconds) / 4)),
+                     "Internal test error: Sleep lasted longer than expected. System must be busy. "
+                     "Might need to increase waitTimeMilliseconds.");
+
+    return expectedTimeSeconds;
+  }
+};
 
 bool CanTimeOnDevice(const vtkm::cont::Timer& timer, vtkm::cont::DeviceAdapterId device)
 {
@@ -107,19 +133,19 @@ void DoTimerCheck(vtkm::cont::Timer& timer)
   VTKM_TEST_ASSERT(timer.Started(), "Timer fails to track started status");
   VTKM_TEST_ASSERT(!timer.Stopped(), "Timer fails to track non stopped status");
 
+  Waiter waiter;
+
   vtkm::Float64 expectedTime = 0.0;
   CheckTime(timer, expectedTime);
 
-  Wait();
-  expectedTime += waitTimeSeconds;
+  expectedTime = waiter.Wait();
 
   CheckTime(timer, expectedTime);
 
   std::cout << "  Make sure timer is still running" << std::endl;
   VTKM_TEST_ASSERT(!timer.Stopped(), "Timer fails to track stopped status");
 
-  Wait();
-  expectedTime += waitTimeSeconds;
+  expectedTime = waiter.Wait();
 
   CheckTime(timer, expectedTime);
 
@@ -129,7 +155,7 @@ void DoTimerCheck(vtkm::cont::Timer& timer)
 
   CheckTime(timer, expectedTime);
 
-  Wait();
+  waiter.Wait(); // Do not advanced expected time
 
   std::cout << "  Check that timer legitimately stopped" << std::endl;
   CheckTime(timer, expectedTime);
