@@ -98,7 +98,6 @@ private:
   vtkm::Bounds Bounds;
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;
-
   mutable HandleType ExecHandle;
 };
 

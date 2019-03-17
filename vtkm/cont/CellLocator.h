@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_CellLocator_h
 #define vtk_m_cont_CellLocator_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -27,13 +29,14 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/CellLocator.h>
+#include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
 
 namespace vtkm
 {
 namespace cont
 {
 
-class CellLocator : public vtkm::cont::ExecutionObjectBase
+class VTKM_ALWAYS_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
 {
 
 public:

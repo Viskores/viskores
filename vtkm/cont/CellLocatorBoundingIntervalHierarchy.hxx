@@ -17,6 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+
 #include <vtkm/Bounds.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
@@ -26,12 +27,12 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/BoundingIntervalHierarchy.h>
-#include <vtkm/cont/BoundingIntervalHierarchyNode.h>
+#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadDevice.h>
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/exec/BoundingIntervalHierarchyExec.h>
+#include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -62,7 +63,8 @@ using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
 
 template <typename DeviceAdapter>
 VTKM_CONT IdArrayHandle
-BoundingIntervalHierarchy::CalculateSegmentSizes(const IdArrayHandle& segmentIds, vtkm::Id numCells)
+CellLocatorBoundingIntervalHierarchy::CalculateSegmentSizes(const IdArrayHandle& segmentIds,
+                                                            vtkm::Id numCells)
 {
   using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   IdArrayHandle discardKeys;
@@ -77,7 +79,8 @@ BoundingIntervalHierarchy::CalculateSegmentSizes(const IdArrayHandle& segmentIds
 
 template <typename DeviceAdapter>
 VTKM_CONT IdArrayHandle
-BoundingIntervalHierarchy::GenerateSegmentIds(const IdArrayHandle& segmentSizes, vtkm::Id numCells)
+CellLocatorBoundingIntervalHierarchy::GenerateSegmentIds(const IdArrayHandle& segmentSizes,
+                                                         vtkm::Id numCells)
 {
   // Compact segment ids, removing non-contiguous values.
   using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
@@ -92,7 +95,7 @@ BoundingIntervalHierarchy::GenerateSegmentIds(const IdArrayHandle& segmentSizes,
 }
 
 template <typename DeviceAdapter>
-VTKM_CONT void BoundingIntervalHierarchy::CalculateSplitCosts(
+VTKM_CONT void CellLocatorBoundingIntervalHierarchy::CalculateSplitCosts(
   RangePermutationArrayHandle& segmentRanges,
   RangeArrayHandle& ranges,
   CoordsArrayHandle& coords,
@@ -118,7 +121,7 @@ VTKM_CONT void BoundingIntervalHierarchy::CalculateSplitCosts(
 }
 
 template <typename DeviceAdapter>
-VTKM_CONT void BoundingIntervalHierarchy::CalculatePlaneSplitCost(
+VTKM_CONT void CellLocatorBoundingIntervalHierarchy::CalculatePlaneSplitCost(
   vtkm::IdComponent planeIndex,
   vtkm::IdComponent numPlanes,
   RangePermutationArrayHandle& segmentRanges,
@@ -197,10 +200,10 @@ VTKM_CONT void BoundingIntervalHierarchy::CalculatePlaneSplitCost(
 
 template <typename DeviceAdapter>
 VTKM_CONT IdArrayHandle
-BoundingIntervalHierarchy::CalculateSplitScatterIndices(const IdArrayHandle& cellIds,
-                                                        const IdArrayHandle& leqFlags,
-                                                        const IdArrayHandle& segmentIds,
-                                                        DeviceAdapter)
+CellLocatorBoundingIntervalHierarchy::CalculateSplitScatterIndices(const IdArrayHandle& cellIds,
+                                                                   const IdArrayHandle& leqFlags,
+                                                                   const IdArrayHandle& segmentIds,
+                                                                   DeviceAdapter)
 {
   using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   vtkm::worklet::Invoker invoker(DeviceAdapter{});
@@ -242,14 +245,14 @@ BoundingIntervalHierarchy::CalculateSplitScatterIndices(const IdArrayHandle& cel
   return scatterIndices;
 }
 
-class BoundingIntervalHierarchy::BuildFunctor
+class CellLocatorBoundingIntervalHierarchy::BuildFunctor
 {
 protected:
-  BoundingIntervalHierarchy* Self;
+  CellLocatorBoundingIntervalHierarchy* Self;
 
 public:
   VTKM_CONT
-  BuildFunctor(BoundingIntervalHierarchy* self)
+  BuildFunctor(CellLocatorBoundingIntervalHierarchy* self)
     : Self(self)
   {
   }
@@ -296,12 +299,15 @@ public:
     vtkm::Id nodesIndexOffset = 0;
     vtkm::Id numSegments = 1;
     IdArrayHandle discardKeys;
-    IdArrayHandle segmentStarts;
     IdArrayHandle segmentSizes;
     segmentSizes.Allocate(1);
     segmentSizes.GetPortalControl().Set(0, numCells);
     Self->ProcessedCellIds.Allocate(numCells);
     vtkm::Id cellIdsOffset = 0;
+
+    IdArrayHandle parentIndices;
+    parentIndices.Allocate(1);
+    parentIndices.GetPortalControl().Set(0, -1);
 
     while (!done)
     {
@@ -411,7 +417,7 @@ public:
       IdArrayHandle nonSplitSegmentIndices;
       Algorithms::ScanExclusive(nonSplitSegmentSizes, nonSplitSegmentIndices);
       IdArrayHandle runningSplitSegmentCounts;
-      Algorithms::ScanExclusive(splitChoices, runningSplitSegmentCounts);
+      vtkm::Id numNewSegments = Algorithms::ScanExclusive(splitChoices, runningSplitSegmentCounts);
       //PRINT_TIMER("4.1", s41);
 
       //START_TIMER(s42);
@@ -434,9 +440,12 @@ public:
       //START_TIMER(s43);
       // Make a new nodes with enough nodes for the current level, copying over the old one
       vtkm::Id nodesSize = Self->Nodes.GetNumberOfValues() + numSegments;
-      vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> newTree;
+      vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode> newTree;
       newTree.Allocate(nodesSize);
       Algorithms::CopySubRange(Self->Nodes, 0, Self->Nodes.GetNumberOfValues(), newTree);
+
+      IdArrayHandle nextParentIndices;
+      nextParentIndices.Allocate(2 * numNewSegments);
 
       CountingIdArrayHandle nodesIndices(nodesIndexOffset, 1, numSegments);
       vtkm::worklet::spatialstructure::TreeLevelAdder nodesAdder(
@@ -447,7 +456,9 @@ public:
               nonSplitSegmentIndices,
               segmentSizes,
               runningSplitSegmentCounts,
-              newTree);
+              parentIndices,
+              newTree,
+              nextParentIndices);
       nodesIndexOffset = nodesSize;
       cellIdsOffset += doneCellIds.GetNumberOfValues();
       Self->Nodes = newTree;
@@ -463,6 +474,7 @@ public:
       Algorithms::Unique(uniqueSegmentIds);
       numSegments = uniqueSegmentIds.GetNumberOfValues();
       done = segmentIds.GetNumberOfValues() == 0;
+      parentIndices = nextParentIndices;
       //PRINT_TIMER("5.1", s51);
       //std::cout << "Iteration time: " << iterationTimer.GetElapsedTime() << "\n";
     }
@@ -471,19 +483,20 @@ public:
   }
 };
 
-class BoundingIntervalHierarchy::PrepareForExecutionFunctor
+class CellLocatorBoundingIntervalHierarchy::PrepareForExecutionFunctor
 {
 public:
   template <typename DeviceAdapter>
   VTKM_CONT bool operator()(DeviceAdapter,
-                            const vtkm::cont::BoundingIntervalHierarchy& bih,
+                            const vtkm::cont::CellLocatorBoundingIntervalHierarchy& bih,
                             HandleType& bihExec) const
   {
     vtkm::cont::DynamicCellSet cellSet = bih.GetCellSet();
     if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
     {
       using CellSetType = vtkm::cont::CellSetExplicit<>;
-      using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
+      using ExecutionType =
+        vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
       ExecutionType* execObject = new ExecutionType(bih.Nodes,
                                                     bih.ProcessedCellIds,
                                                     bih.GetCellSet().Cast<CellSetType>(),
@@ -494,7 +507,8 @@ public:
     else if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
     {
       using CellSetType = vtkm::cont::CellSetStructured<2>;
-      using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
+      using ExecutionType =
+        vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
       ExecutionType* execObject = new ExecutionType(bih.Nodes,
                                                     bih.ProcessedCellIds,
                                                     bih.GetCellSet().Cast<CellSetType>(),
@@ -505,7 +519,8 @@ public:
     else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
     {
       using CellSetType = vtkm::cont::CellSetStructured<3>;
-      using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
+      using ExecutionType =
+        vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
       ExecutionType* execObject = new ExecutionType(bih.Nodes,
                                                     bih.ProcessedCellIds,
                                                     bih.GetCellSet().Cast<CellSetType>(),
@@ -516,7 +531,8 @@ public:
     else if (cellSet.IsType<vtkm::cont::CellSetSingleType<>>())
     {
       using CellSetType = vtkm::cont::CellSetSingleType<>;
-      using ExecutionType = vtkm::exec::BoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
+      using ExecutionType =
+        vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
       ExecutionType* execObject = new ExecutionType(bih.Nodes,
                                                     bih.ProcessedCellIds,
                                                     bih.GetCellSet().Cast<CellSetType>(),
@@ -533,14 +549,14 @@ public:
 };
 
 VTKM_CONT
-void BoundingIntervalHierarchy::Build()
+void CellLocatorBoundingIntervalHierarchy::Build()
 {
   BuildFunctor functor(this);
   vtkm::cont::TryExecute(functor);
 }
 
 VTKM_CONT
-const HandleType BoundingIntervalHierarchy::PrepareForExecutionImpl(
+const HandleType CellLocatorBoundingIntervalHierarchy::PrepareForExecutionImpl(
   const vtkm::cont::DeviceAdapterId deviceId) const
 {
   const bool success =

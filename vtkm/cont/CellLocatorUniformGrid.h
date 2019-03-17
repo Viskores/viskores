@@ -51,18 +51,14 @@ public:
       throw vtkm::cont::ErrorBadType("Cell set is not 3D structured type");
 
     Bounds = coords.GetBounds();
-    vtkm::Vec<vtkm::Id, 3> celldims =
-      cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+    CellDims = cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
 
-    RangeTransform[0] = static_cast<vtkm::FloatDefault>(celldims[0]) /
+    RangeTransform[0] = static_cast<vtkm::FloatDefault>(CellDims[0]) /
       static_cast<vtkm::FloatDefault>(Bounds.X.Length());
-    RangeTransform[1] = static_cast<vtkm::FloatDefault>(celldims[1]) /
+    RangeTransform[1] = static_cast<vtkm::FloatDefault>(CellDims[1]) /
       static_cast<vtkm::FloatDefault>(Bounds.Y.Length());
-    RangeTransform[2] = static_cast<vtkm::FloatDefault>(celldims[2]) /
+    RangeTransform[2] = static_cast<vtkm::FloatDefault>(CellDims[2]) /
       static_cast<vtkm::FloatDefault>(Bounds.Z.Length());
-
-    PlaneSize = celldims[0] * celldims[1];
-    RowSize = celldims[0];
   }
 
   struct PrepareForExecutionFunctor
@@ -76,8 +72,7 @@ public:
       ExecutionType* execObject =
         new ExecutionType(contLocator.Bounds,
                           contLocator.RangeTransform,
-                          contLocator.PlaneSize,
-                          contLocator.RowSize,
+                          contLocator.CellDims,
                           contLocator.GetCellSet().template Cast<StructuredType>(),
                           contLocator.GetCoordinates().GetData(),
                           DeviceAdapter());
@@ -105,8 +100,7 @@ private:
 
   vtkm::Bounds Bounds;
   vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
-  vtkm::Id PlaneSize;
-  vtkm::Id RowSize;
+  vtkm::Vec<vtkm::Id, 3> CellDims;
   mutable HandleType ExecHandle;
 };
 }

@@ -34,7 +34,7 @@ namespace worklet
 namespace particleadvection
 {
 
-using ScalarType = vtkm::Float64;
+using ScalarType = vtkm::FloatDefault;
 
 enum ParticleStatus
 {
