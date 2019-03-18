@@ -30,14 +30,13 @@ namespace filter
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet CellSetConnectivity::DoExecute(
   const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::cont::ArrayHandle<T, StorageType>&,
   const vtkm::filter::FieldMetadata& fieldMetadata,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> component;
-  // TODO: is there such thing as Active CellSet?
-  vtkm::worklet::connectivity::CellSetConnectivity().Run(
-    input.GetCellSet(0).Cast<vtkm::cont::CellSetSingleType<>>(), component);
+  // TODO: is the Casting right?
+  vtkm::worklet::connectivity::CellSetConnectivity().Run(input.GetCellSet(0), component);
 
   auto result = internal::CreateResult(
     input, component, "component", fieldMetadata.GetAssociation(), fieldMetadata.GetCellSetName());

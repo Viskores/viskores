@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestAddGhostZone.cxx
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
+  UnitTestCellSetConnectivityFilter.cxx
   UnitTestCleanGrid.cxx
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
