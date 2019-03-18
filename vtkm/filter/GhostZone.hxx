@@ -126,7 +126,7 @@ public:
   template <typename Atomic>
   VTKM_EXEC void Min(Atomic& atom, const vtkm::Id& val, const vtkm::Id& index) const
   {
-    vtkm::Id old = std::numeric_limits<vtkm::Id>::max();
+    vtkm::Id old = 1000000000;
     do
     {
       old = atom.CompareAndSwap(index, val, old);
