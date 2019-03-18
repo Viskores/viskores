@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -21,7 +21,6 @@
 #define vtk_m_cont_ArrayHandleVirtual_hxx
 
 #include <vtkm/cont/ArrayHandleVirtual.h>
-#include <vtkm/cont/StorageAny.hxx>
 #include <vtkm/cont/TryExecute.h>
 
 namespace vtkm
@@ -31,21 +30,23 @@ namespace cont
 
 template <typename T>
 template <typename ArrayHandleType>
-ArrayHandleType inline ArrayHandle<T, StorageTagVirtual>::CastToType(
+ArrayHandleType inline ArrayHandleVirtual<T>::CastToType(
   std::true_type vtkmNotUsed(valueTypesMatch),
   std::false_type vtkmNotUsed(notFromArrayHandleVirtual)) const
 {
-  if (!this->Storage)
+  auto* storage = this->GetStorage().GetStorageVirtual();
+  if (!storage)
   {
     VTKM_LOG_CAST_FAIL(*this, ArrayHandleType);
-    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeName<ArrayHandleType>());
+    throwFailedDynamicCast("ArrayHandleVirtual", vtkm::cont::TypeToString<ArrayHandleType>());
   }
   using S = typename ArrayHandleType::StorageTag;
-  const auto* any = this->Storage->template Cast<vtkm::cont::StorageAny<T, S>>();
-  return any->GetHandle();
+  const auto* castStorage =
+    storage->template Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
+  return castStorage->GetHandle();
 }
 }
-} // namespace vtkm::const
+} // namespace vtkm::cont
 
 
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -86,25 +87,27 @@ struct IntAnySerializer
   {
     if (obj.template IsType<CountingType>())
     {
-      vtkmdiy::save(bb, vtkm::cont::TypeString<CountingType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<CountingType>::Get());
 
       using S = typename CountingType::StorageTag;
-      const vtkm::cont::StorageVirtual* storage = obj.GetStorage();
-      auto* any = storage->Cast<vtkm::cont::StorageAny<T, S>>();
-      vtkmdiy::save(bb, any->GetHandle());
+      const vtkm::cont::internal::detail::StorageVirtual* storage =
+        obj.GetStorage().GetStorageVirtual();
+      auto* castStorage = storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
+      vtkmdiy::save(bb, castStorage->GetHandle());
     }
     else if (obj.template IsType<ConstantType>())
     {
-      vtkmdiy::save(bb, vtkm::cont::TypeString<ConstantType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<ConstantType>::Get());
 
       using S = typename ConstantType::StorageTag;
-      const vtkm::cont::StorageVirtual* storage = obj.GetStorage();
-      auto* any = storage->Cast<vtkm::cont::StorageAny<T, S>>();
-      vtkmdiy::save(bb, any->GetHandle());
+      const vtkm::cont::internal::detail::StorageVirtual* storage =
+        obj.GetStorage().GetStorageVirtual();
+      auto* castStorage = storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
+      vtkmdiy::save(bb, castStorage->GetHandle());
     }
     else
     {
-      vtkmdiy::save(bb, vtkm::cont::TypeString<BasicType>::Get());
+      vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<BasicType>::Get());
       vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
     }
   }
@@ -114,13 +117,13 @@ struct IntAnySerializer
     std::string typeString;
     vtkmdiy::load(bb, typeString);
 
-    if (typeString == vtkm::cont::TypeString<CountingType>::Get())
+    if (typeString == vtkm::cont::SerializableTypeString<CountingType>::Get())
     {
       CountingType array;
       vtkmdiy::load(bb, array);
       obj = std::move(vtkm::cont::ArrayHandleVirtual<T>{ array });
     }
-    else if (typeString == vtkm::cont::TypeString<ConstantType>::Get())
+    else if (typeString == vtkm::cont::SerializableTypeString<ConstantType>::Get())
     {
       ConstantType array;
       vtkmdiy::load(bb, array);

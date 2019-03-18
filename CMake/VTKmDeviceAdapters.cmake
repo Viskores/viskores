@@ -294,3 +294,8 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   set_target_properties(vtkm::cuda PROPERTIES VTKm_CUDA_Architecture_Flags "${arch_flags}")
 
 endif()
+
+if(NOT TARGET Threads::Threads)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+endif()

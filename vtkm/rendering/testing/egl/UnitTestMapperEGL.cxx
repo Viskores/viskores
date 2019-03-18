@@ -61,7 +61,7 @@ void RenderTests()
     maker.Make1DExplicitDataSet0(), "pointvar", vtkm::rendering::Color::white, "expl1D.pnm");
 
   vtkm::cont::DataSet ds = maker.Make1DUniformDataSet0();
-  vtkm::Int32 nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  vtkm::Int32 nVerts = ds.GetField(0).GetNumberOfValues();
   vtkm::Float32 vars[nVerts];
   vtkm::Float32 smallVal = 1.000;
   for (vtkm::Int32 i = 0; i <= nVerts; i++)
@@ -75,7 +75,7 @@ void RenderTests()
 
   // Test to demonstrate that straight horizontal lines can be drawn
   ds = maker.Make1DUniformDataSet0();
-  nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  nVerts = ds.GetField(0).GetNumberOfValues();
   vtkm::Float32 largeVal = 1e-16;
   for (vtkm::Int32 i = 0; i <= nVerts; i++)
   {
@@ -87,7 +87,7 @@ void RenderTests()
 
 
   ds = maker.Make1DUniformDataSet0();
-  nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  nVerts = ds.GetField(0).GetNumberOfValues();
   largeVal = 1;
   for (vtkm::Int32 i = 0; i <= nVerts; i++)
   {

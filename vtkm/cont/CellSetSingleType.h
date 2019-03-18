@@ -269,12 +269,12 @@ namespace cont
 {
 
 template <typename ConnectivityST>
-struct TypeString<vtkm::cont::CellSetSingleType<ConnectivityST>>
+struct SerializableTypeString<vtkm::cont::CellSetSingleType<ConnectivityST>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "CS_Single<" + TypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST>";
+    static std::string name = "CS_Single<" +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST>";
 
     return name;
   }

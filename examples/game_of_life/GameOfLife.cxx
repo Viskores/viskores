@@ -220,7 +220,7 @@ struct RenderGameOfLife
   void render(vtkm::cont::DataSet& data)
   {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    vtkm::Int32 arraySize = (vtkm::Int32)data.GetCoordinateSystem().GetData().GetNumberOfValues();
+    vtkm::Int32 arraySize = (vtkm::Int32)data.GetCoordinateSystem().GetNumberOfPoints();
 
     UploadData task(&this->ColorState,
                     data.GetField("colors", vtkm::cont::Field::Association::POINTS));

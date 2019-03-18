@@ -24,7 +24,7 @@ add_library(vtkm_taotuple INTERFACE)
 vtkm_get_kit_name(kit_name kit_dir)
 
 # taotuple needs C++11
-target_compile_features(vtkm_taotuple INTERFACE cxx_auto_type)
+target_compile_features(vtkm_taotuple INTERFACE cxx_std_11)
 
 target_include_directories(vtkm_taotuple INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>

@@ -122,7 +122,7 @@ struct ReduceFunctor
   U result;
 
   ReduceFunctor()
-    : result(U(0))
+    : result(vtkm::TypeTraits<U>::ZeroInitialization())
   {
   }
 
@@ -148,12 +148,13 @@ struct ReduceByKeyFunctor
   }
 };
 
-template <typename T>
+template <typename U>
 struct ScanInclusiveResultFunctor
 {
-  T result;
+  U result;
+
   ScanInclusiveResultFunctor()
-    : result(T(0))
+    : result(vtkm::TypeTraits<U>::ZeroInitialization())
   {
   }
 

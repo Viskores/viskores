@@ -22,10 +22,14 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 
+#include <vtkm/TypeTraits.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
 {
+
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 template <typename ArrayPortalType>
 void SetReference(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref)
@@ -41,7 +45,204 @@ void CheckReference(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<Ar
   VTKM_TEST_ASSERT(test_equal(ref, TestValue(index, ValueType())), "Got bad value from reference.");
 }
 
-static constexpr vtkm::Id ARRAY_SIZE = 10;
+template <typename ArrayPortalType>
+void TryOperatorsNoVec(vtkm::Id index,
+                       vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref,
+                       vtkm::TypeTraitsScalarTag)
+{
+  using ValueType = typename ArrayPortalType::ValueType;
+
+  ValueType expected = TestValue(index, ValueType());
+  VTKM_TEST_ASSERT(ref.Get() == expected, "Reference did not start out as expected.");
+
+  VTKM_TEST_ASSERT(!(ref < ref));
+  VTKM_TEST_ASSERT(ref < ValueType(expected + ValueType(1)));
+  VTKM_TEST_ASSERT(ValueType(expected - ValueType(1)) < ref);
+
+  VTKM_TEST_ASSERT(!(ref > ref));
+  VTKM_TEST_ASSERT(ref > ValueType(expected - ValueType(1)));
+  VTKM_TEST_ASSERT(ValueType(expected + ValueType(1)) > ref);
+
+  VTKM_TEST_ASSERT(ref <= ref);
+  VTKM_TEST_ASSERT(ref <= ValueType(expected + ValueType(1)));
+  VTKM_TEST_ASSERT(ValueType(expected - ValueType(1)) <= ref);
+
+  VTKM_TEST_ASSERT(ref >= ref);
+  VTKM_TEST_ASSERT(ref >= ValueType(expected - ValueType(1)));
+  VTKM_TEST_ASSERT(ValueType(expected + ValueType(1)) >= ref);
+}
+
+template <typename ArrayPortalType>
+void TryOperatorsNoVec(vtkm::Id,
+                       vtkm::internal::ArrayPortalValueReference<ArrayPortalType>,
+                       vtkm::TypeTraitsVectorTag)
+{
+}
+
+template <typename ArrayPortalType>
+void TryOperatorsInt(vtkm::Id index,
+                     vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref,
+                     vtkm::TypeTraitsScalarTag,
+                     vtkm::TypeTraitsIntegerTag)
+{
+  using ValueType = typename ArrayPortalType::ValueType;
+
+  const ValueType operand = TestValue(ARRAY_SIZE, ValueType());
+  ValueType expected = TestValue(index, ValueType());
+  VTKM_TEST_ASSERT(ref.Get() == expected, "Reference did not start out as expected.");
+
+  VTKM_TEST_ASSERT((ref % ref) == (expected % expected));
+  VTKM_TEST_ASSERT((ref % expected) == (expected % expected));
+  VTKM_TEST_ASSERT((expected % ref) == (expected % expected));
+
+  VTKM_TEST_ASSERT((ref ^ ref) == (expected ^ expected));
+  VTKM_TEST_ASSERT((ref ^ expected) == (expected ^ expected));
+  VTKM_TEST_ASSERT((expected ^ ref) == (expected ^ expected));
+
+  VTKM_TEST_ASSERT((ref | ref) == (expected | expected));
+  VTKM_TEST_ASSERT((ref | expected) == (expected | expected));
+  VTKM_TEST_ASSERT((expected | ref) == (expected | expected));
+
+  VTKM_TEST_ASSERT((ref & ref) == (expected & expected));
+  VTKM_TEST_ASSERT((ref & expected) == (expected & expected));
+  VTKM_TEST_ASSERT((expected & ref) == (expected & expected));
+
+  VTKM_TEST_ASSERT((ref << ref) == (expected << expected));
+  VTKM_TEST_ASSERT((ref << expected) == (expected << expected));
+  VTKM_TEST_ASSERT((expected << ref) == (expected << expected));
+
+  VTKM_TEST_ASSERT((ref << ref) == (expected << expected));
+  VTKM_TEST_ASSERT((ref << expected) == (expected << expected));
+  VTKM_TEST_ASSERT((expected << ref) == (expected << expected));
+
+  VTKM_TEST_ASSERT(~ref == ~expected);
+
+  VTKM_TEST_ASSERT(!(!ref));
+
+  VTKM_TEST_ASSERT(ref && ref);
+  VTKM_TEST_ASSERT(ref && expected);
+  VTKM_TEST_ASSERT(expected && ref);
+
+  VTKM_TEST_ASSERT(ref || ref);
+  VTKM_TEST_ASSERT(ref || expected);
+  VTKM_TEST_ASSERT(expected || ref);
+
+  ref &= ref;
+  expected &= expected;
+  VTKM_TEST_ASSERT(ref == expected);
+  ref &= operand;
+  expected &= operand;
+  VTKM_TEST_ASSERT(ref == expected);
+
+  ref |= ref;
+  expected |= expected;
+  VTKM_TEST_ASSERT(ref == expected);
+  ref |= operand;
+  expected |= operand;
+  VTKM_TEST_ASSERT(ref == expected);
+
+  ref >>= ref;
+  expected >>= expected;
+  VTKM_TEST_ASSERT(ref == expected);
+  ref >>= operand;
+  expected >>= operand;
+  VTKM_TEST_ASSERT(ref == expected);
+
+  ref <<= ref;
+  expected <<= expected;
+  VTKM_TEST_ASSERT(ref == expected);
+  ref <<= operand;
+  expected <<= operand;
+  VTKM_TEST_ASSERT(ref == expected);
+
+  ref ^= ref;
+  expected ^= expected;
+  VTKM_TEST_ASSERT(ref == expected);
+  ref ^= operand;
+  expected ^= operand;
+  VTKM_TEST_ASSERT(ref == expected);
+}
+
+template <typename ArrayPortalType, typename DimTag, typename NumericTag>
+void TryOperatorsInt(vtkm::Id,
+                     vtkm::internal::ArrayPortalValueReference<ArrayPortalType>,
+                     DimTag,
+                     NumericTag)
+{
+}
+
+template <typename ArrayPortalType>
+void TryOperators(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref)
+{
+  using ValueType = typename ArrayPortalType::ValueType;
+
+  const ValueType operand = TestValue(ARRAY_SIZE, ValueType());
+  ValueType expected = TestValue(index, ValueType());
+  VTKM_TEST_ASSERT(ref.Get() == expected, "Reference did not start out as expected.");
+
+  // Test comparison operators.
+  VTKM_TEST_ASSERT(ref == ref);
+  VTKM_TEST_ASSERT(ref == expected);
+  VTKM_TEST_ASSERT(expected == ref);
+
+  VTKM_TEST_ASSERT(!(ref != ref));
+  VTKM_TEST_ASSERT(!(ref != expected));
+  VTKM_TEST_ASSERT(!(expected != ref));
+
+  TryOperatorsNoVec(index, ref, typename vtkm::TypeTraits<ValueType>::DimensionalityTag());
+
+  VTKM_TEST_ASSERT((ref + ref) == (expected + expected));
+  VTKM_TEST_ASSERT((ref + expected) == (expected + expected));
+  VTKM_TEST_ASSERT((expected + ref) == (expected + expected));
+
+  VTKM_TEST_ASSERT((ref - ref) == (expected - expected));
+  VTKM_TEST_ASSERT((ref - expected) == (expected - expected));
+  VTKM_TEST_ASSERT((expected - ref) == (expected - expected));
+
+  VTKM_TEST_ASSERT((ref * ref) == (expected * expected));
+  VTKM_TEST_ASSERT((ref * expected) == (expected * expected));
+  VTKM_TEST_ASSERT((expected * ref) == (expected * expected));
+
+  VTKM_TEST_ASSERT((ref / ref) == (expected / expected));
+  VTKM_TEST_ASSERT((ref / expected) == (expected / expected));
+  VTKM_TEST_ASSERT((expected / ref) == (expected / expected));
+
+  ref += ref;
+  expected += expected;
+  VTKM_TEST_ASSERT(ref == expected);
+  ref += operand;
+  expected += operand;
+  VTKM_TEST_ASSERT(ref == expected);
+
+  ref -= ref;
+  expected -= expected;
+  VTKM_TEST_ASSERT(ref == expected);
+  ref -= operand;
+  expected -= operand;
+  VTKM_TEST_ASSERT(ref == expected);
+
+  ref *= ref;
+  expected *= expected;
+  VTKM_TEST_ASSERT(ref == expected);
+  ref *= operand;
+  expected *= operand;
+  VTKM_TEST_ASSERT(ref == expected);
+
+  ref /= ref;
+  expected /= expected;
+  VTKM_TEST_ASSERT(ref == expected);
+  ref /= operand;
+  expected /= operand;
+  VTKM_TEST_ASSERT(ref == expected);
+
+  // Reset ref
+  ref = TestValue(index, ValueType());
+
+  TryOperatorsInt(index,
+                  ref,
+                  typename vtkm::TypeTraits<ValueType>::DimensionalityTag(),
+                  typename vtkm::TypeTraits<ValueType>::NumericTag());
+}
 
 struct DoTestForType
 {
@@ -54,7 +255,7 @@ struct DoTestForType
     std::cout << "Set array using reference" << std::endl;
     using PortalType = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
     PortalType portal = array.GetPortalControl();
-    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
     {
       SetReference(index, vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index));
     }
@@ -63,16 +264,29 @@ struct DoTestForType
     CheckPortal(portal);
 
     std::cout << "Check references in set array." << std::endl;
-    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
     {
       CheckReference(index, vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index));
+    }
+
+    std::cout << "Check that operators work." << std::endl;
+    // Start at 1 to avoid issues with 0.
+    for (vtkm::Id index = 1; index < ARRAY_SIZE; ++index)
+    {
+      TryOperators(index, vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index));
     }
   }
 };
 
 void DoTest()
 {
-  vtkm::testing::Testing::TryTypes(DoTestForType());
+  // We are not testing on the default (exemplar) types because they include unsigned bytes, and
+  // simply doing a += (or similar) operation on them automatically creates a conversion warning
+  // on some compilers. Since we want to test these operators, just remove the short types from
+  // the list to avoid the warning.
+  vtkm::testing::Testing::TryTypes(
+    DoTestForType(),
+    vtkm::ListTagBase<vtkm::Id, vtkm::FloatDefault, vtkm::Vec<vtkm::Float64, 3>>());
 }
 
 } // anonymous namespace

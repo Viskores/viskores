@@ -35,6 +35,8 @@ vtkm::cont::DataSet MakeDataTestSet1()
   vtkm::cont::DataSet ds = MakeTestDataSet().Make3DUniformDataSet1();
 
   vtkm::filter::CleanGrid clean;
+  clean.SetCompactPointFields(false);
+  clean.SetMergePoints(false);
   return clean.Execute(ds);
 }
 
@@ -83,7 +85,7 @@ void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
   // verify CompactPoints
   if (compactPoints)
   {
-    vtkm::Id numOutputPoints = resultds.GetCoordinateSystem(0).GetData().GetNumberOfValues();
+    vtkm::Id numOutputPoints = resultds.GetCoordinateSystem(0).GetNumberOfPoints();
     VTKM_TEST_ASSERT(numOutputPoints == numExpectedPoints,
                      "Incorrect number of points after compacting");
   }

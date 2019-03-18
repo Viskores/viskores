@@ -234,23 +234,25 @@ namespace internal
 
 /// \cond
 /// Make doxygen ignore this section
-#define _VTKM_STORAGE_EXPORT(Type)                                                                 \
+#define VTKM_STORAGE_EXPORT(Type)                                                                  \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<Type, StorageTagBasic>;                  \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>;    \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 3>, StorageTagBasic>;    \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
-_VTKM_STORAGE_EXPORT(char)
-_VTKM_STORAGE_EXPORT(vtkm::Int8)
-_VTKM_STORAGE_EXPORT(vtkm::UInt8)
-_VTKM_STORAGE_EXPORT(vtkm::Int16)
-_VTKM_STORAGE_EXPORT(vtkm::UInt16)
-_VTKM_STORAGE_EXPORT(vtkm::Int32)
-_VTKM_STORAGE_EXPORT(vtkm::UInt32)
-_VTKM_STORAGE_EXPORT(vtkm::Int64)
-_VTKM_STORAGE_EXPORT(vtkm::UInt64)
-_VTKM_STORAGE_EXPORT(vtkm::Float32)
-_VTKM_STORAGE_EXPORT(vtkm::Float64)
+VTKM_STORAGE_EXPORT(char)
+VTKM_STORAGE_EXPORT(vtkm::Int8)
+VTKM_STORAGE_EXPORT(vtkm::UInt8)
+VTKM_STORAGE_EXPORT(vtkm::Int16)
+VTKM_STORAGE_EXPORT(vtkm::UInt16)
+VTKM_STORAGE_EXPORT(vtkm::Int32)
+VTKM_STORAGE_EXPORT(vtkm::UInt32)
+VTKM_STORAGE_EXPORT(vtkm::Int64)
+VTKM_STORAGE_EXPORT(vtkm::UInt64)
+VTKM_STORAGE_EXPORT(vtkm::Float32)
+VTKM_STORAGE_EXPORT(vtkm::Float64)
+
+#undef VTKM_STORAGE_EXPORT
 /// \endcond
 }
 }

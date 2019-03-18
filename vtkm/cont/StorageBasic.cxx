@@ -309,23 +309,25 @@ void* StorageBasicBase::GetCapacityPointer() const
   return static_cast<void*>(v);
 }
 
-#define _VTKM_STORAGE_INSTANTIATE(Type)                                                            \
+#define VTKM_STORAGE_INSTANTIATE(Type)                                                             \
   template class VTKM_CONT_EXPORT Storage<Type, StorageTagBasic>;                                  \
   template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>;                    \
   template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 3>, StorageTagBasic>;                    \
   template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
-_VTKM_STORAGE_INSTANTIATE(char)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Int8)
-_VTKM_STORAGE_INSTANTIATE(vtkm::UInt8)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Int16)
-_VTKM_STORAGE_INSTANTIATE(vtkm::UInt16)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Int32)
-_VTKM_STORAGE_INSTANTIATE(vtkm::UInt32)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Int64)
-_VTKM_STORAGE_INSTANTIATE(vtkm::UInt64)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Float32)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Float64)
+VTKM_STORAGE_INSTANTIATE(char)
+VTKM_STORAGE_INSTANTIATE(vtkm::Int8)
+VTKM_STORAGE_INSTANTIATE(vtkm::UInt8)
+VTKM_STORAGE_INSTANTIATE(vtkm::Int16)
+VTKM_STORAGE_INSTANTIATE(vtkm::UInt16)
+VTKM_STORAGE_INSTANTIATE(vtkm::Int32)
+VTKM_STORAGE_INSTANTIATE(vtkm::UInt32)
+VTKM_STORAGE_INSTANTIATE(vtkm::Int64)
+VTKM_STORAGE_INSTANTIATE(vtkm::UInt64)
+VTKM_STORAGE_INSTANTIATE(vtkm::Float32)
+VTKM_STORAGE_INSTANTIATE(vtkm::Float64)
+
+#undef VTKM_STORAGE_INSTANTIATE
 }
 }
 } // namespace vtkm::cont::internal

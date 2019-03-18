@@ -61,6 +61,9 @@ public:
     vtkm::Vec<vtkm::FloatDefault, 3> spacing = vtkm::Vec<vtkm::FloatDefault, 3>(1.0f, 1.0f, 1.0f));
 
   VTKM_CONT
+  vtkm::Id GetNumberOfPoints() const { return this->GetNumberOfValues(); }
+
+  VTKM_CONT
   vtkm::cont::ArrayHandleVirtualCoordinates GetData() const;
 
   VTKM_CONT void SetData(
@@ -80,7 +83,15 @@ public:
   }
 
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const
+  vtkm::Vec<vtkm::Range, 3> GetRange() const
+  {
+    vtkm::Vec<vtkm::Range, 3> range;
+    this->GetRange(&range[0]);
+    return range;
+  }
+
+  VTKM_CONT
+  vtkm::cont::ArrayHandle<vtkm::Range> GetRangeAsArrayHandle() const
   {
     return this->Superclass::GetRange(CoordinatesTypeList());
   }

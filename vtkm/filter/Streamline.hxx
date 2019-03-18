@@ -87,12 +87,11 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
 
   //todo: add check for rectilinear.
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
-  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
-  //RGEvalType eval(input.GetCoordinateSystem(), input.GetCellSet(0), field);
-  RGEvalType eval(coords, cells, field);
-  RK4RGType rk4(eval, static_cast<T>(this->StepSize));
+  GridEvalType eval(coords, cells, field);
+  RK4Type rk4(eval, static_cast<vtkm::worklet::particleadvection::ScalarType>(this->StepSize));
 
   vtkm::worklet::Streamline streamline;
   vtkm::worklet::StreamlineResult res;

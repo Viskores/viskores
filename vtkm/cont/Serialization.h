@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_Serialization_h
 #define vtk_m_cont_Serialization_h
 
-#include <vtkm/cont/TypeString.h>
+#include <vtkm/cont/SerializableTypeString.h>
 
 #include <vtkm/thirdparty/diy/serialization.h>
 

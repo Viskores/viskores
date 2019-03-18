@@ -266,8 +266,9 @@ struct DispatcherBaseTryExecuteFunctor
                             Invocation& invocation,
                             const RangeType& dimensions)
   {
+    auto outputRange = self->Scatter.GetOutputRange(dimensions);
     self->InvokeTransportParameters(
-      invocation, dimensions, self->Scatter.GetOutputRange(dimensions), device);
+      invocation, dimensions, outputRange, self->Mask.GetThreadRange(outputRange), device);
     return true;
   }
 };
@@ -659,21 +660,70 @@ public:
   //@}
 
   using ScatterType = typename WorkletType::ScatterType;
+  using MaskType = typename WorkletType::MaskType;
 
   template <typename... Args>
   VTKM_CONT void Invoke(Args&&... args) const
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
                    "Invoking Worklet: '%s'",
-                   vtkm::cont::TypeName<WorkletType>().c_str());
+                   vtkm::cont::TypeToString<WorkletType>().c_str());
     this->StartInvoke(std::forward<Args>(args)...);
   }
 
 protected:
+  // If you get a compile error here about there being no appropriate constructor for ScatterType
+  // or MapType, then that probably means that the worklet you are trying to execute has defined a
+  // custom ScatterType or MaskType and that you need to create one (because there is no default
+  // way to construct the scatter or mask).
   VTKM_CONT
-  DispatcherBase(const WorkletType& worklet, const ScatterType& scatter)
+  DispatcherBase(const WorkletType& worklet = WorkletType(),
+                 const ScatterType& scatter = ScatterType(),
+                 const MaskType& mask = MaskType())
     : Worklet(worklet)
     , Scatter(scatter)
+    , Mask(mask)
+    , Device(vtkm::cont::DeviceAdapterTagAny())
+  {
+  }
+
+  // If you get a compile error here about there being no appropriate constructor for MaskType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // MaskType and that you need to create one (because there is no default way to construct the
+  // mask).
+  VTKM_CONT
+  DispatcherBase(const ScatterType& scatter, const MaskType& mask = MaskType())
+    : Worklet(WorkletType())
+    , Scatter(scatter)
+    , Mask(mask)
+    , Device(vtkm::cont::DeviceAdapterTagAny())
+  {
+  }
+
+  // If you get a compile error here about there being no appropriate constructor for ScatterType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // ScatterType and that you need to create one (because there is no default way to construct the
+  // scatter).
+  VTKM_CONT
+  DispatcherBase(const WorkletType& worklet,
+                 const MaskType& mask,
+                 const ScatterType& scatter = ScatterType())
+    : Worklet(worklet)
+    , Scatter(scatter)
+    , Mask(mask)
+    , Device(vtkm::cont::DeviceAdapterTagAny())
+  {
+  }
+
+  // If you get a compile error here about there being no appropriate constructor for ScatterType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // ScatterType and that you need to create one (because there is no default way to construct the
+  // scatter).
+  VTKM_CONT
+  DispatcherBase(const MaskType& mask, const ScatterType& scatter = ScatterType())
+    : Worklet(WorkletType())
+    , Scatter(scatter)
+    , Mask(mask)
     , Device(vtkm::cont::DeviceAdapterTagAny())
   {
   }
@@ -718,6 +768,7 @@ protected:
 
   WorkletType Worklet;
   ScatterType Scatter;
+  MaskType Mask;
 
 private:
   // Dispatchers cannot be copied
@@ -729,10 +780,12 @@ private:
   template <typename Invocation,
             typename InputRangeType,
             typename OutputRangeType,
+            typename ThreadRangeType,
             typename DeviceAdapter>
   VTKM_CONT void InvokeTransportParameters(Invocation& invocation,
                                            const InputRangeType& inputRange,
                                            OutputRangeType&& outputRange,
+                                           ThreadRangeType&& threadRange,
                                            DeviceAdapter device) const
   {
     // The first step in invoking a worklet is to transport the arguments to
@@ -758,17 +811,21 @@ private:
       TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
 
     // Get the arrays used for scattering input to output.
-    typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
+    typename ScatterType::OutputToInputMapType outputToInputMap =
       this->Scatter.GetOutputToInputMap(inputRange);
-    typename WorkletType::ScatterType::VisitArrayType visitArray =
-      this->Scatter.GetVisitArray(inputRange);
+    typename ScatterType::VisitArrayType visitArray = this->Scatter.GetVisitArray(inputRange);
+
+    // Get the arrays used for masking output elements.
+    typename MaskType::ThreadToOutputMapType threadToOutputMap =
+      this->Mask.GetThreadToOutputMap(inputRange);
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
     this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
                            .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
-                           .ChangeVisitArray(visitArray.PrepareForInput(device)),
-                         outputRange,
+                           .ChangeVisitArray(visitArray.PrepareForInput(device))
+                           .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device)),
+                         threadRange,
                          device);
   }
 

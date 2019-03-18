@@ -40,8 +40,8 @@
 // Wrap all '#pragma omp ...' calls in this macro so we can disable them in
 // non-omp builds and avoid a multitude of 'ignoring pragma..." warnings.
 #ifdef _OPENMP
-#define _VTKM_OPENMP_DIRECTIVE_IMPL(fullDir) _Pragma(#fullDir)
-#define VTKM_OPENMP_DIRECTIVE(dir) _VTKM_OPENMP_DIRECTIVE_IMPL(omp dir)
+#define VTKM_OPENMP_DIRECTIVE_IMPL(fullDir) _Pragma(#fullDir)
+#define VTKM_OPENMP_DIRECTIVE(dir) VTKM_OPENMP_DIRECTIVE_IMPL(omp dir)
 #else // _OPENMP
 #define VTKM_OPENMP_DIRECTIVE(directive)
 #endif // _OPENMP

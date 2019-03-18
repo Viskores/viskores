@@ -27,7 +27,7 @@ def debug(str):
   if (doDebug): print(str)
 
 # Parses "*** vtkm::Float64 ***************" --> vtkm::Float64
-typeParser = re.compile("\\*{3} ([^*]+) \\*{15}")
+typeParser = re.compile("\\*{3} ([^*]+) on device ([^*]+) \\*{15}")
 
 # Parses "Benchmark 'Benchmark name' results:" --> Benchmark name
 nameParser = re.compile("Benchmark '([^-]+)' results:")

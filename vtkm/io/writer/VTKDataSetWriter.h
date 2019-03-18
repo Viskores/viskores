@@ -205,7 +205,7 @@ private:
 
   static void WriteVertexCells(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   {
-    vtkm::Id nCells = dataSet.GetCoordinateSystem(0).GetData().GetNumberOfValues();
+    vtkm::Id nCells = dataSet.GetCoordinateSystem(0).GetNumberOfPoints();
 
     out << "CELLS " << nCells << " " << nCells * 2 << std::endl;
     for (int i = 0; i < nCells; i++)
@@ -231,7 +231,7 @@ private:
         continue;
       }
 
-      vtkm::Id npoints = field.GetData().GetNumberOfValues();
+      vtkm::Id npoints = field.GetNumberOfValues();
       int ncomps = field.GetData().GetNumberOfComponents();
       if (ncomps > 4)
       {
@@ -272,7 +272,7 @@ private:
         continue;
       }
 
-      vtkm::Id ncells = field.GetData().GetNumberOfValues();
+      vtkm::Id ncells = field.GetNumberOfValues();
       int ncomps = field.GetData().GetNumberOfComponents();
       if (ncomps > 4)
         continue;

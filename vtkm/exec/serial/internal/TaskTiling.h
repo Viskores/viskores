@@ -66,6 +66,7 @@ void VTKM_NEVER_EXPORT TaskTiling1DExecute(void* w,
       worklet->GetThreadIndices(index,
                                 invocation->OutputToInputMap,
                                 invocation->VisitArray,
+                                invocation->ThreadToOutputMap,
                                 invocation->GetInputDomain(),
                                 globalIndexOffset));
   }
@@ -110,6 +111,7 @@ void VTKM_NEVER_EXPORT TaskTiling3DExecute(void* w,
       worklet->GetThreadIndices(index,
                                 invocation->OutputToInputMap,
                                 invocation->VisitArray,
+                                invocation->ThreadToOutputMap,
                                 invocation->GetInputDomain(),
                                 globalIndexOffset));
   }

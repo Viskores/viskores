@@ -406,21 +406,21 @@ namespace cont
 {
 
 template <typename AH, vtkm::IdComponent NComps>
-struct TypeString<vtkm::cont::ArrayHandleSwizzle<AH, NComps>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleSwizzle<AH, NComps>>
 {
   static VTKM_CONT const std::string& Get()
   {
     static std::string name =
-      "AH_Swizzle<" + TypeString<AH>::Get() + "," + std::to_string(NComps) + ">";
+      "AH_Swizzle<" + SerializableTypeString<AH>::Get() + "," + std::to_string(NComps) + ">";
     return name;
   }
 };
 
 template <typename AH, vtkm::IdComponent NComps>
-struct TypeString<vtkm::cont::ArrayHandle<
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
   vtkm::Vec<typename vtkm::VecTraits<typename AH::ValueType>::ComponentType, NComps>,
   vtkm::cont::StorageTagSwizzle<AH, NComps>>>
-  : TypeString<vtkm::cont::ArrayHandleSwizzle<AH, NComps>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleSwizzle<AH, NComps>>
 {
 };
 }

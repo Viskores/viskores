@@ -66,8 +66,7 @@ template <>
 class FilterTraits<ZFPCompressor2D>
 {
 public:
-  struct TypeListTagMCScalars
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>
+  struct TypeListTagMCScalars : vtkm::ListTagBase<vtkm::Int32, vtkm::Float32, vtkm::Float64>
   {
   };
   using InputFieldTypeList = TypeListTagMCScalars;

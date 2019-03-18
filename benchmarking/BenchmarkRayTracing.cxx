@@ -47,24 +47,20 @@ namespace vtkm
 namespace benchmarking
 {
 
-template <typename Precision>
+template <typename Precision, typename DeviceAdapter>
 struct BenchRayTracing
 {
+  vtkm::rendering::raytracing::RayTracer Tracer;
+  vtkm::rendering::raytracing::Camera RayCamera;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
+  vtkm::rendering::raytracing::Ray<Precision> Rays;
+  vtkm::cont::CoordinateSystem Coords;
+  vtkm::cont::DataSet Data;
 
   VTKM_CONT ~BenchRayTracing() {}
 
-  VTKM_CONT BenchRayTracing() {}
-
-  VTKM_CONT
-  vtkm::Float64 operator()()
+  VTKM_CONT BenchRayTracing()
   {
-    vtkm::rendering::raytracing::RayTracer Tracer;
-    vtkm::rendering::raytracing::Camera RayCamera;
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
-    vtkm::rendering::raytracing::Ray<Precision> Rays;
-    vtkm::cont::CoordinateSystem Coords;
-    vtkm::cont::DataSet Data;
-
     vtkm::Id3 dims(128, 128, 128);
     vtkm::cont::testing::MakeTestDataSet maker;
     Data = maker.Make3DUniformDataSet3(dims);
@@ -79,8 +75,8 @@ struct BenchRayTracing
     vtkm::rendering::raytracing::TriangleExtractor triExtractor;
     triExtractor.ExtractCells(cellset);
 
-    vtkm::rendering::raytracing::TriangleIntersector* triIntersector =
-      new vtkm::rendering::raytracing::TriangleIntersector();
+    auto triIntersector = std::make_shared<vtkm::rendering::raytracing::TriangleIntersector>(
+      vtkm::rendering::raytracing::TriangleIntersector());
 
     triIntersector->SetData(Coords, triExtractor.GetTriangles());
     Tracer.AddShapeIntersector(triIntersector);
@@ -117,14 +113,17 @@ struct BenchRayTracing
 
     Tracer.SetColorMap(colors);
     Tracer.Render(Rays);
+  }
 
-    vtkm::cont::Timer timer;
+  VTKM_CONT
+  vtkm::Float64 operator()()
+  {
+    vtkm::cont::Timer timer{ DeviceAdapter() };
     timer.Start();
 
     RayCamera.CreateRays(Rays, Coords.GetBounds());
     try
     {
-      Tracer.Render(Rays);
       Tracer.Render(Rays);
     }
     catch (vtkm::cont::ErrorBadValue& e)
@@ -146,12 +145,9 @@ VTKM_MAKE_BENCHMARK(RayTracing, BenchRayTracing);
 
 int main(int argc, char* argv[])
 {
-  vtkm::cont::InitLogging(argc, argv);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
 
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(Device{});
-
-  VTKM_RUN_BENCHMARK(RayTracing, vtkm::ListTagBase<vtkm::Float32>());
+  VTKM_RUN_BENCHMARK(RayTracing, vtkm::ListTagBase<vtkm::Float32>(), config.Device);
   return 0;
 }

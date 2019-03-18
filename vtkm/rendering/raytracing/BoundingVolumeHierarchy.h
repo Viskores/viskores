@@ -53,7 +53,6 @@ public:
   InnerNodesHandle FlatBVH;
   LeafNodesHandle Leafs;
   vtkm::Bounds TotalBounds;
-  struct ConstructFunctor;
   vtkm::Id LeafCount;
 
 protected:
@@ -69,8 +68,7 @@ public:
   VTKM_CONT
   LinearBVH(const LinearBVH& other);
 
-  template <typename DeviceAdapter>
-  VTKM_CONT void Allocate(const vtkm::Id& leafCount, DeviceAdapter deviceAdapter);
+  VTKM_CONT void Allocate(const vtkm::Id& leafCount);
 
   VTKM_CONT
   void Construct();
@@ -80,9 +78,6 @@ public:
 
   VTKM_CONT
   AABBs& GetAABBs();
-
-  template <typename Device>
-  VTKM_CONT void ConstructOnDevice(Device device);
 
   VTKM_CONT
   bool GetIsConstructed() const;

@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_TypeString_h
-#define vtk_m_cont_TypeString_h
+#ifndef vtk_m_cont_SerializableTypeString_h
+#define vtk_m_cont_SerializableTypeString_h
 
 #include <vtkm/Types.h>
 
@@ -32,7 +32,7 @@ namespace cont
 /// \brief A traits class that gives a unique name for a type. This class
 /// should be specialized for every type that has to be serialized by diy.
 template <typename T>
-struct TypeString
+struct SerializableTypeString
 #ifdef VTKM_DOXYGEN_ONLY
 {
   static VTKM_CONT const std::string& Get()
@@ -48,21 +48,21 @@ namespace internal
 {
 
 template <typename T, typename... Ts>
-std::string GetVariadicTypeString(const T&, const Ts&... ts)
+std::string GetVariadicSerializableTypeString(const T&, const Ts&... ts)
 {
-  return TypeString<T>::Get() + "," + GetVariadicTypeString(ts...);
+  return SerializableTypeString<T>::Get() + "," + GetVariadicSerializableTypeString(ts...);
 }
 
 template <typename T>
-std::string GetVariadicTypeString(const T&)
+std::string GetVariadicSerializableTypeString(const T&)
 {
-  return TypeString<T>::Get();
+  return SerializableTypeString<T>::Get();
 }
 
 } // internal
 
 template <>
-struct TypeString<vtkm::Int8>
+struct SerializableTypeString<vtkm::Int8>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -72,7 +72,7 @@ struct TypeString<vtkm::Int8>
 };
 
 template <>
-struct TypeString<vtkm::UInt8>
+struct SerializableTypeString<vtkm::UInt8>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -82,7 +82,7 @@ struct TypeString<vtkm::UInt8>
 };
 
 template <>
-struct TypeString<vtkm::Int16>
+struct SerializableTypeString<vtkm::Int16>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -92,7 +92,7 @@ struct TypeString<vtkm::Int16>
 };
 
 template <>
-struct TypeString<vtkm::UInt16>
+struct SerializableTypeString<vtkm::UInt16>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -102,7 +102,7 @@ struct TypeString<vtkm::UInt16>
 };
 
 template <>
-struct TypeString<vtkm::Int32>
+struct SerializableTypeString<vtkm::Int32>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -112,7 +112,7 @@ struct TypeString<vtkm::Int32>
 };
 
 template <>
-struct TypeString<vtkm::UInt32>
+struct SerializableTypeString<vtkm::UInt32>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -122,7 +122,7 @@ struct TypeString<vtkm::UInt32>
 };
 
 template <>
-struct TypeString<vtkm::Int64>
+struct SerializableTypeString<vtkm::Int64>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -132,7 +132,7 @@ struct TypeString<vtkm::Int64>
 };
 
 template <>
-struct TypeString<vtkm::UInt64>
+struct SerializableTypeString<vtkm::UInt64>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -142,7 +142,7 @@ struct TypeString<vtkm::UInt64>
 };
 
 template <>
-struct TypeString<vtkm::Float32>
+struct SerializableTypeString<vtkm::Float32>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -152,7 +152,7 @@ struct TypeString<vtkm::Float32>
 };
 
 template <>
-struct TypeString<vtkm::Float64>
+struct SerializableTypeString<vtkm::Float64>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -162,27 +162,27 @@ struct TypeString<vtkm::Float64>
 };
 
 template <typename T, vtkm::IdComponent NumComponents>
-struct TypeString<vtkm::Vec<T, NumComponents>>
+struct SerializableTypeString<vtkm::Vec<T, NumComponents>>
 {
   static VTKM_CONT const std::string& Get()
   {
     static std::string name =
-      "V<" + TypeString<T>::Get() + "," + std::to_string(NumComponents) + ">";
+      "V<" + SerializableTypeString<T>::Get() + "," + std::to_string(NumComponents) + ">";
     return name;
   }
 };
 
 template <typename T1, typename T2>
-struct TypeString<vtkm::Pair<T1, T2>>
+struct SerializableTypeString<vtkm::Pair<T1, T2>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "vtkm::Pair<" + TypeString<T1>::Get() + "," + TypeString<T2>::Get() + ">";
+    static std::string name = "vtkm::Pair<" + SerializableTypeString<T1>::Get() + "," +
+      SerializableTypeString<T2>::Get() + ">";
     return name;
   }
 };
 }
 } // vtkm::cont
 
-#endif // vtk_m_cont_TypeString_h
+#endif // vtk_m_cont_SerializableTypeString_h
