@@ -47,17 +47,16 @@ namespace internal
 ///
 struct VTKM_CONT_EXPORT VariantArrayHandleContainerBase
 {
-  vtkm::IdComponent NumberOfComponents;
   std::type_index TypeIndex;
 
   VariantArrayHandleContainerBase();
-  VariantArrayHandleContainerBase(vtkm::IdComponent numComps, const std::type_info& hash);
+  explicit VariantArrayHandleContainerBase(const std::type_info& hash);
 
   // This must exist so that subclasses are destroyed correctly.
   virtual ~VariantArrayHandleContainerBase();
 
   virtual vtkm::Id GetNumberOfValues() const = 0;
-  inline vtkm::IdComponent GetNumberOfComponents() const { return NumberOfComponents; }
+  virtual vtkm::IdComponent GetNumberOfComponents() const = 0;
 
   virtual void ReleaseResourcesExecution() = 0;
   virtual void ReleaseResources() = 0;
@@ -79,15 +78,16 @@ template <typename T>
 struct VTKM_ALWAYS_EXPORT VariantArrayHandleContainer final : public VariantArrayHandleContainerBase
 {
   vtkm::cont::ArrayHandleVirtual<T> Array;
+  mutable vtkm::IdComponent NumberOfComponents = 0;
 
   VariantArrayHandleContainer()
-    : VariantArrayHandleContainerBase(vtkm::VecTraits<T>::NUM_COMPONENTS, typeid(T))
+    : VariantArrayHandleContainerBase(typeid(T))
     , Array()
   {
   }
 
   VariantArrayHandleContainer(const vtkm::cont::ArrayHandleVirtual<T>& array)
-    : VariantArrayHandleContainerBase(vtkm::VecTraits<T>::NUM_COMPONENTS, typeid(T))
+    : VariantArrayHandleContainerBase(typeid(T))
     , Array(array)
   {
   }
@@ -95,6 +95,19 @@ struct VTKM_ALWAYS_EXPORT VariantArrayHandleContainer final : public VariantArra
   ~VariantArrayHandleContainer<T>() = default;
 
   vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
+
+  vtkm::IdComponent GetNumberOfComponents() const override
+  {
+    // Cache number of components to avoid unnecessary device to host transfers of the array.
+    // Also assumes that the number of components is constant accross all elements and
+    // throughout the life of the array.
+    if (this->NumberOfComponents == 0)
+    {
+      this->NumberOfComponents =
+        this->GetNumberOfComponents(typename vtkm::VecTraits<T>::IsSizeStatic{});
+    }
+    return this->NumberOfComponents;
+  }
 
   void ReleaseResourcesExecution() { this->Array.ReleaseResourcesExecution(); }
   void ReleaseResources() { this->Array.ReleaseResources(); }
@@ -107,6 +120,19 @@ struct VTKM_ALWAYS_EXPORT VariantArrayHandleContainer final : public VariantArra
   std::shared_ptr<VariantArrayHandleContainerBase> NewInstance() const
   {
     return std::make_shared<VariantArrayHandleContainer<T>>(this->Array.NewInstance());
+  }
+
+private:
+  vtkm::IdComponent GetNumberOfComponents(VecTraitsTagSizeStatic) const
+  {
+    return vtkm::VecTraits<T>::NUM_COMPONENTS;
+  }
+
+  vtkm::IdComponent GetNumberOfComponents(VecTraitsTagSizeVariable) const
+  {
+    return (this->Array.GetNumberOfValues() == 0)
+      ? 0
+      : vtkm::VecTraits<T>::GetNumberOfComponents(this->Array.GetPortalConstControl().Get(0));
   }
 };
 
