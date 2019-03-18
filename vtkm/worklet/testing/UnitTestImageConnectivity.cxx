@@ -94,6 +94,12 @@ public:
                                                    0, 1, 1, 0, 0, 1, 1, 2, 0, 1, 0, 0, 0, 1, 1, 2,
                                                    0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
                                                    0, 1, 0, 1, 1, 1, 3, 3, 0, 1, 1, 1, 1, 1, 3, 3 };
+
+    for (vtkm::Id i = 0; i < component.GetNumberOfValues(); ++i)
+    {
+      VTKM_TEST_ASSERT(component.GetPortalConstControl().Get(i) == componentExpected[i],
+                       "Components has unexpected value.");
+    }
   }
 };
 

@@ -158,7 +158,18 @@ public:
     }
   };
 
-  // TODO: Do we really need the CellSet as input parameter?
+  class ResolveDynamicCellSet
+  {
+  public:
+    template <int Dimension, typename T, typename StorageT, typename OutputPortalType>
+    void operator()(const vtkm::cont::CellSetStructured<Dimension>& input,
+                    const vtkm::cont::ArrayHandle<T, StorageT>& pixels,
+                    OutputPortalType& components) const
+    {
+      vtkm::cont::CastAndCall(pixels, RunImpl(), input, components);
+    }
+  };
+
   template <int Dimension, typename T, typename OutputPortalType>
   void Run(const vtkm::cont::CellSetStructured<Dimension>& input,
            const vtkm::cont::VariantArrayHandleBase<T>& pixels,
@@ -174,6 +185,15 @@ public:
            OutputPortalType& componentsOut) const
   {
     vtkm::cont::CastAndCall(pixels, RunImpl(), input, componentsOut);
+  }
+
+  template <typename T, typename S, typename OutputPortalType>
+  void Run(const vtkm::cont::DynamicCellSet& input,
+           const vtkm::cont::ArrayHandle<T, S>& pixels,
+           OutputPortalType& componentsOut) const
+  {
+    input.ResetCellSetList(vtkm::cont::CellSetListTagStructured())
+      .CastAndCall(ResolveDynamicCellSet(), pixels, componentsOut);
   }
 };
 }
