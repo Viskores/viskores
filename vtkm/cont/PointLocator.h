@@ -34,41 +34,51 @@ class PointLocator : public vtkm::cont::ExecutionObjectBase
 {
 public:
   PointLocator()
-    : dirty(true)
+    : Modified(true)
   {
   }
 
-  vtkm::cont::CoordinateSystem GetCoordinates() const { return Coords; }
+  vtkm::cont::CoordinateSystem GetCoordinates() const { return this->Coords; }
 
   void SetCoordinates(const vtkm::cont::CoordinateSystem& coords)
   {
-    Coords = coords;
-    dirty = true;
+    this->Coords = coords;
+    this->SetModified();
   }
-
-  virtual void Build() = 0;
 
   void Update()
   {
-    if (dirty)
+    if (this->Modified)
+    {
       Build();
-    dirty = false;
+      this->Modified = false;
+    }
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(DeviceAdapter device) const
+  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device) const
   {
-    return PrepareForExecutionImpl(device).PrepareForExecution(device);
+    this->PrepareExecutionObject(this->ExecutionObjectHandle, device);
+    return this->ExecutionObjectHandle.PrepareForExecution(device);
   }
 
-  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;
-  VTKM_CONT virtual const HandleType PrepareForExecutionImpl(
-    vtkm::cont::DeviceAdapterId deviceId) const = 0;
+protected:
+  void SetModified() { this->Modified = true; }
+
+  bool GetModified() const { return this->Modified; }
+
+  virtual void Build() = 0;
+
+  using ExecutionObjectHandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;
+
+  VTKM_CONT virtual void PrepareExecutionObject(ExecutionObjectHandleType& execObjHandle,
+                                                vtkm::cont::DeviceAdapterId deviceId) const = 0;
 
 private:
   vtkm::cont::CoordinateSystem Coords;
+  bool Modified;
 
-  bool dirty;
+  mutable ExecutionObjectHandleType ExecutionObjectHandle;
 };
 }
 }
