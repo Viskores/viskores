@@ -94,7 +94,7 @@ struct VTKM_ALWAYS_EXPORT VariantArrayHandleContainer final : public VariantArra
 
   ~VariantArrayHandleContainer<T>() = default;
 
-  vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
+  vtkm::Id GetNumberOfValues() const override { return this->Array.GetNumberOfValues(); }
 
   vtkm::IdComponent GetNumberOfComponents() const override
   {
@@ -109,15 +109,15 @@ struct VTKM_ALWAYS_EXPORT VariantArrayHandleContainer final : public VariantArra
     return this->NumberOfComponents;
   }
 
-  void ReleaseResourcesExecution() { this->Array.ReleaseResourcesExecution(); }
-  void ReleaseResources() { this->Array.ReleaseResources(); }
+  void ReleaseResourcesExecution() override { this->Array.ReleaseResourcesExecution(); }
+  void ReleaseResources() override { this->Array.ReleaseResources(); }
 
-  void PrintSummary(std::ostream& out) const
+  void PrintSummary(std::ostream& out) const override
   {
     vtkm::cont::printSummary_ArrayHandle(this->Array, out);
   }
 
-  std::shared_ptr<VariantArrayHandleContainerBase> NewInstance() const
+  std::shared_ptr<VariantArrayHandleContainerBase> NewInstance() const override
   {
     return std::make_shared<VariantArrayHandleContainer<T>>(this->Array.NewInstance());
   }
