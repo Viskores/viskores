@@ -123,12 +123,16 @@ public:
   void PrintSummary(std::ostream& out) const override;
   void ReleaseResourcesExecution() override;
 
+  std::shared_ptr<CellSet> CreateNewInstance() const override;
+  void DeepCopy(const CellSet* src) override;
+
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const;
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagPoint) const;
 
-  VTKM_CONT vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const;
+  VTKM_CONT vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const override;
+  void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override;
 
-  VTKM_CONT vtkm::UInt8 GetCellShape(vtkm::Id cellIndex) const;
+  VTKM_CONT vtkm::UInt8 GetCellShape(vtkm::Id cellIndex) const override;
 
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id, ItemTupleLength>& ids) const;
