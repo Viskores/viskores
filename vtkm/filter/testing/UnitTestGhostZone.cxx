@@ -27,13 +27,17 @@
 
 #include <vtkm/filter/GhostZone.h>
 
+#include <vtkm/io/writer/VTKDataSetWriter.h>
+
+
 namespace
 {
 
 static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostZoneArray(vtkm::Id nx,
                                                                      vtkm::Id ny,
                                                                      vtkm::Id nz,
-                                                                     int numLayers)
+                                                                     int numLayers,
+                                                                     bool addMidGhost = false)
 {
   vtkm::Id numCells = nx * ny;
   if (nz > 0)
@@ -52,12 +56,12 @@ static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostZoneArray(vtkm::Id nx
     else
       portal.Set(i, duplicateCell);
   }
+
   if (numLayers > 0)
   {
     //2D case
     if (nz == 0)
     {
-      //std::cout<<"dims: "<<nx<<" "<<ny<<": "<<nx-numLayers<<" "<<ny-numLayers<<std::endl;
       for (vtkm::Id i = numLayers; i < nx - numLayers; i++)
         for (vtkm::Id j = numLayers; j < ny - numLayers; j++)
           portal.Set(j * nx + i, normalCell);
@@ -71,21 +75,39 @@ static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostZoneArray(vtkm::Id nx
     }
   }
 
+  if (addMidGhost)
+  {
+    if (nz == 0)
+    {
+      vtkm::Id mi = numLayers + (nx - numLayers) / 2;
+      vtkm::Id mj = numLayers + (ny - numLayers) / 2;
+      portal.Set(mj * nx + mi, duplicateCell);
+    }
+    else
+    {
+      vtkm::Id mi = numLayers + (nx - numLayers) / 2;
+      vtkm::Id mj = numLayers + (ny - numLayers) / 2;
+      vtkm::Id mk = numLayers + (nz - numLayers) / 2;
+      portal.Set(mk * nx * ny + mj * nx + mi, duplicateCell);
+    }
+  }
   return ghosts;
 }
 
-static vtkm::cont::DataSet MakeUniform(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK, int numLayers)
+static vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
+                                       vtkm::Id numJ,
+                                       vtkm::Id numK,
+                                       int numLayers,
+                                       bool addMidGhost = false)
 {
   vtkm::cont::DataSetBuilderUniform dsb;
-
   vtkm::cont::DataSet ds;
 
   if (numK == 0)
     ds = dsb.Create(vtkm::Id2(numI + 1, numJ + 1));
   else
     ds = dsb.Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
-
-  auto ghosts = StructuredGhostZoneArray(numI, numJ, numK, numLayers);
+  auto ghosts = StructuredGhostZoneArray(numI, numJ, numK, numLayers, addMidGhost);
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
@@ -96,7 +118,8 @@ static vtkm::cont::DataSet MakeUniform(vtkm::Id numI, vtkm::Id numJ, vtkm::Id nu
 static vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
                                            vtkm::Id numJ,
                                            vtkm::Id numK,
-                                           int numLayers)
+                                           int numLayers,
+                                           bool addMidGhost = false)
 {
   vtkm::cont::DataSetBuilderRectilinear dsb;
   vtkm::cont::DataSet ds;
@@ -120,7 +143,7 @@ static vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
     ds = dsb.Create(x, y, z);
   }
 
-  auto ghosts = StructuredGhostZoneArray(numI, numJ, numK, numLayers);
+  auto ghosts = StructuredGhostZoneArray(numI, numJ, numK, numLayers, addMidGhost);
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
@@ -206,15 +229,13 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
   return ds;
 }
 
-void TestStructured()
+void TestGhostZone()
 {
-  std::cout << "Testing ghost cells for uniform datasets." << std::endl;
-
   // specify some 2d tests: {numI, numJ, numK, numGhostLayers}.
-  std::vector<std::vector<vtkm::Id>> tests2D = { { 4, 4, 0, 2 },  { 5, 5, 0, 3 },  { 10, 10, 0, 3 },
+  std::vector<std::vector<vtkm::Id>> tests2D = { { 4, 4, 0, 2 },  { 5, 5, 0, 2 },  { 10, 10, 0, 3 },
                                                  { 10, 5, 0, 2 }, { 5, 10, 0, 2 }, { 20, 10, 0, 3 },
                                                  { 10, 20, 0, 3 } };
-  std::vector<std::vector<vtkm::Id>> tests3D = { { 4, 4, 4, 2 },    { 5, 5, 5, 3 },
+  std::vector<std::vector<vtkm::Id>> tests3D = { { 4, 4, 4, 2 },    { 5, 5, 5, 2 },
                                                  { 10, 10, 10, 3 }, { 10, 5, 10, 2 },
                                                  { 5, 10, 10, 2 },  { 20, 10, 10, 3 },
                                                  { 10, 20, 10, 3 } };
@@ -230,10 +251,10 @@ void TestStructured()
     int nghost = static_cast<int>(t[3]);
     for (int layer = 0; layer < nghost; layer++)
     {
-      vtkm::cont::DataSet ds;
       std::vector<std::string> dsTypes = { "uniform", "rectilinear", "explicit" };
       for (auto& dsType : dsTypes)
       {
+        vtkm::cont::DataSet ds;
         if (dsType == "uniform")
           ds = MakeUniform(nx, ny, nz, layer);
         else if (dsType == "rectilinear")
@@ -245,6 +266,8 @@ void TestStructured()
         for (auto& rt : removeType)
         {
           vtkm::filter::GhostZone ghostZoneRemoval;
+          ghostZoneRemoval.RemoveGhostField();
+
           if (rt == "all")
             ghostZoneRemoval.RemoveAllGhost();
           else if (rt == "byType")
@@ -268,24 +291,42 @@ void TestStructured()
               numCellsReq *= (nz - 2 * layer);
 
             VTKM_TEST_ASSERT(numCellsReq == numCells, "Wrong number of cells in output");
-            if (ot == "explicit")
+            if (dsType == "uniform" || dsType == "rectilinear")
+            {
+              if (nz == 0)
+                VTKM_TEST_ASSERT(
+                  output.GetCellSet(0).IsSameType(vtkm::cont::CellSetStructured<2>()),
+                  "Wrong cell type for explicit conversion");
+              else if (nz > 0)
+                VTKM_TEST_ASSERT(
+                  output.GetCellSet(0).IsSameType(vtkm::cont::CellSetStructured<3>()),
+                  "Wrong cell type for explicit conversion");
+            }
+            else if (ot == "explicit")
               VTKM_TEST_ASSERT(output.GetCellSet(0).IsType<vtkm::cont::CellSetExplicit<>>(),
                                "Wrong cell type for explicit conversion");
           }
         }
+
+        // For structured, test the case where we have a ghost in the 'middle' of the cells.
+        // This will produce an explicit cellset.
+        if (dsType == "uniform" || dsType == "rectilinear")
+        {
+          if (dsType == "uniform")
+            ds = MakeUniform(nx, ny, nz, layer, true);
+          else if (dsType == "rectilinear")
+            ds = MakeRectilinear(nx, ny, nz, layer, true);
+
+          vtkm::filter::GhostZone ghostZoneRemoval;
+          ghostZoneRemoval.RemoveGhostField();
+          ghostZoneRemoval.ConvertOutputToUnstructured();
+          auto output = ghostZoneRemoval.Execute(ds, vtkm::filter::GhostZonePolicy());
+          VTKM_TEST_ASSERT(output.GetCellSet(0).IsType<vtkm::cont::CellSetExplicit<>>(),
+                           "Wrong cell type for explicit conversion");
+        }
       }
     }
   }
-}
-
-void TestExplicit()
-{
-}
-
-void TestGhostZone()
-{
-  TestStructured();
-  TestExplicit();
 }
 }
 
