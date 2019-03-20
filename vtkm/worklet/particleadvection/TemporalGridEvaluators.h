@@ -118,7 +118,7 @@ private:
 };
 
 } // namespace particleadvection
-} // naemspace worklet
+} // namespace worklet
 } // namespace vtkm
 
 #endif
