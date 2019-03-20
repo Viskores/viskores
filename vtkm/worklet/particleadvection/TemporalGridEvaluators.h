@@ -48,8 +48,8 @@ public:
                                  const GridEvaluator& evaluatorTwo,
                                  const vtkm::FloatDefault timeTwo)
     : EvaluatorOne(evaluatorOne.PrepareForExecution(DeviceAdapter()))
-    , TimeOne(timeOne)
     , EvaluatorTwo(evaluatorTwo.PrepareForExecution(DeviceAdapter()))
+    , TimeOne(timeOne)
     , TimeTwo(timeTwo)
     , TimeDiff(timeTwo - timeOne)
   {
@@ -90,26 +90,27 @@ private:
   using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldArrayType>;
 
 public:
-  TemporalGridEvaluator() = default;
+  VTKM_CONT TemporalGridEvaluator() = default;
 
-  TemporalGridEvaluator(GridEvaluator& evaluatorOne,
-                        const vtkm::FloatDefault timeOne,
-                        GridEvaluator& evaluatorTwo,
-                        const vtkm::FloatDefault timeTwo)
+  VTKM_CONT TemporalGridEvaluator(GridEvaluator& evaluatorOne,
+                                  const vtkm::FloatDefault timeOne,
+                                  GridEvaluator& evaluatorTwo,
+                                  const vtkm::FloatDefault timeTwo)
     : EvaluatorOne(evaluatorOne)
-    , TimeOne(timeOne)
     , EvaluatorTwo(evaluatorTwo)
+    , TimeOne(timeOne)
     , TimeTwo(timeTwo)
   {
   }
-  TemporalGridEvaluator(const vtkm::cont::CoordinateSystem& coordinatesOne,
-                        const vtkm::cont::DynamicCellSet& cellsetOne,
-                        const FieldArrayType& fieldOne,
-                        const vtkm::FloatDefault timeOne,
-                        const vtkm::cont::CoordinateSystem& coordinatesTwo,
-                        const vtkm::cont::DynamicCellSet& cellsetTwo,
-                        const FieldArrayType& fieldTwo,
-                        const vtkm::FloatDefault timeTwo)
+
+  VTKM_CONT TemporalGridEvaluator(const vtkm::cont::CoordinateSystem& coordinatesOne,
+                                  const vtkm::cont::DynamicCellSet& cellsetOne,
+                                  const FieldArrayType& fieldOne,
+                                  const vtkm::FloatDefault timeOne,
+                                  const vtkm::cont::CoordinateSystem& coordinatesTwo,
+                                  const vtkm::cont::DynamicCellSet& cellsetTwo,
+                                  const FieldArrayType& fieldTwo,
+                                  const vtkm::FloatDefault timeTwo)
     : EvaluatorOne(GridEvaluator(coordinatesOne, cellsetOne, fieldOne))
     , EvaluatorTwo(GridEvaluator(coordinatesTwo, cellsetTwo, fieldTwo))
     , TimeOne(timeOne)
