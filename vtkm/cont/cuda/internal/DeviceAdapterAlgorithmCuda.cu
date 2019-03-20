@@ -125,18 +125,18 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks
   if (size.x == 0)
   { //grids that have no x dimension
     blocks.x = 1;
-    blocks.y = 16;
+    blocks.y = 8;
     blocks.z = 8;
   }
   else if (size.x > 128)
   {
-    blocks.x = 64;
-    blocks.y = 2;
-    blocks.z = 1;
+    blocks.x = 8;
+    blocks.y = 8;
+    blocks.z = 4;
   }
   else
   { //for really small grids
-    blocks.x = 8;
+    blocks.x = 4;
     blocks.y = 4;
     blocks.z = 4;
   }
