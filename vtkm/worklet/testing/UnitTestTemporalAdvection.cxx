@@ -184,7 +184,7 @@ void TestTemporalEvaluators()
   GenerateValidity(numValues, validity, X, Z);
 
   vtkm::FloatDefault timeOne(0.0f), timeTwo(1.0f);
-  TemporalEvalType gridEval(evalOne, evalTwo, timeOne, timeTwo);
+  TemporalEvalType gridEval(evalOne, timeOne, evalTwo, timeTwo);
   ValidateEvaluator(gridEval, pointIns, validity, "grid evaluator");
 }
 

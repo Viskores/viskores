@@ -44,13 +44,14 @@ public:
 
   VTKM_CONT
   ExecutionTemporalGridEvaluator(const GridEvaluator& evaluatorOne,
-                                 const GridEvaluator& evaluatorTwo,
                                  const vtkm::FloatDefault timeOne,
+                                 const GridEvaluator& evaluatorTwo,
                                  const vtkm::FloatDefault timeTwo)
     : EvaluatorOne(evaluatorOne.PrepareForExecution(DeviceAdapter()))
-    , EvaluatorTwo(evaluatorTwo.PrepareForExecution(DeviceAdapter()))
     , TimeOne(timeOne)
+    , EvaluatorTwo(evaluatorTwo.PrepareForExecution(DeviceAdapter()))
     , TimeTwo(timeTwo)
+    , TimeDiff(timeTwo - timeOne)
   {
   }
 
@@ -68,10 +69,9 @@ public:
     eval = this->EvaluatorTwo.Evaluate(pos, two);
     if (!eval)
       return false;
-    // LERP between the two values of calculated field
-    // to obtain the new value
-    ScalarType proportion = (time - this->TimeOne) / (this->TimeTwo - this->TimeOne);
-    out = (1.0f - proportion) * one + proportion * two;
+    // LERP between the two values of calculated fields to obtain the new value
+    ScalarType proportion = (time - this->TimeOne) / this->TimeDiff;
+    out = vtkm::Lerp(one, two, proportion);
     return true;
   }
 
@@ -80,6 +80,7 @@ private:
   ExecutionGridEvaluator EvaluatorTwo;
   vtkm::FloatDefault TimeOne;
   vtkm::FloatDefault TimeTwo;
+  vtkm::FloatDefault TimeDiff;
 };
 
 template <typename FieldArrayType>
@@ -92,11 +93,25 @@ public:
   TemporalGridEvaluator() = default;
 
   TemporalGridEvaluator(GridEvaluator& evaluatorOne,
-                        GridEvaluator& evaluatorTwo,
                         const vtkm::FloatDefault timeOne,
+                        GridEvaluator& evaluatorTwo,
                         const vtkm::FloatDefault timeTwo)
     : EvaluatorOne(evaluatorOne)
+    , TimeOne(timeOne)
     , EvaluatorTwo(evaluatorTwo)
+    , TimeTwo(timeTwo)
+  {
+  }
+  TemporalGridEvaluator(const vtkm::cont::CoordinateSystem& coordinatesOne,
+                        const vtkm::cont::DynamicCellSet& cellsetOne,
+                        const FieldArrayType& fieldOne,
+                        const vtkm::FloatDefault timeOne,
+                        const vtkm::cont::CoordinateSystem& coordinatesTwo,
+                        const vtkm::cont::DynamicCellSet& cellsetTwo,
+                        const FieldArrayType& fieldTwo,
+                        const vtkm::FloatDefault timeTwo)
+    : EvaluatorOne(GridEvaluator(coordinatesOne, cellsetOne, fieldOne))
+    , EvaluatorTwo(GridEvaluator(coordinatesTwo, cellsetTwo, fieldTwo))
     , TimeOne(timeOne)
     , TimeTwo(timeTwo)
   {
@@ -107,7 +122,7 @@ public:
     DeviceAdapter) const
   {
     return ExecutionTemporalGridEvaluator<DeviceAdapter, FieldArrayType>(
-      this->EvaluatorOne, this->EvaluatorTwo, this->TimeOne, this->TimeTwo);
+      this->EvaluatorOne, this->TimeOne, this->EvaluatorTwo, this->TimeTwo);
   }
 
 private:
