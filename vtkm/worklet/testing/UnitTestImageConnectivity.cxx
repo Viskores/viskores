@@ -97,7 +97,7 @@ public:
 
     for (vtkm::Id i = 0; i < component.GetNumberOfValues(); ++i)
     {
-      VTKM_TEST_ASSERT(component.GetPortalConstControl().Get(i) == componentExpected[i],
+      VTKM_TEST_ASSERT(component.GetPortalConstControl().Get(i) == componentExpected[size_t(i)],
                        "Components has unexpected value.");
     }
   }

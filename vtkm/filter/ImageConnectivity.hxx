@@ -31,12 +31,13 @@ inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> component;
 
   // TODO: is there such thing as Active CellSet?
-  vtkm::worklet::connectivity::ImageConnectivity().Run(input.GetCellSet(0), field, component);
+  vtkm::worklet::connectivity::ImageConnectivity().Run(
+    vtkm::filter::ApplyPolicy(input.GetCellSet(0), policy), field, component);
 
   auto result = internal::CreateResult(
     input, component, "component", fieldMetadata.GetAssociation(), fieldMetadata.GetCellSetName());

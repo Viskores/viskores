@@ -32,11 +32,12 @@ inline VTKM_CONT vtkm::cont::DataSet CellSetConnectivity::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>&,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> component;
   // TODO: is the Casting right?
-  vtkm::worklet::connectivity::CellSetConnectivity().Run(input.GetCellSet(0), component);
+  vtkm::worklet::connectivity::CellSetConnectivity().Run(
+    vtkm::filter::ApplyPolicy(input.GetCellSet(0), policy), component);
 
   auto result = internal::CreateResult(
     input, component, "component", fieldMetadata.GetAssociation(), fieldMetadata.GetCellSetName());
