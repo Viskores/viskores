@@ -131,6 +131,7 @@ set(sources
   AssignerMultiBlock.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
+  CellLocator.cxx
   CellSet.cxx
   CellSetStructured.cxx
   ColorTable.cxx
@@ -166,6 +167,8 @@ set(sources
 set(device_sources
   ArrayRangeCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
+  CellLocatorRectilinearGrid.cxx
+  CellLocatorUniformGrid.cxx
   CellSetExplicit.cxx
   CoordinateSystem.cxx
   StorageVirtual.cxx

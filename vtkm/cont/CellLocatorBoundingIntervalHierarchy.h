@@ -61,6 +61,8 @@ public:
   {
   }
 
+  VTKM_CONT ~CellLocatorBoundingIntervalHierarchy() override;
+
   VTKM_CONT
   void SetNumberOfSplittingPlanes(vtkm::IdComponent numPlanes)
   {

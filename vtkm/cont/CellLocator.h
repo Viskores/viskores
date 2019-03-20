@@ -45,6 +45,8 @@ public:
   {
   }
 
+  virtual ~CellLocator();
+
   vtkm::cont::DynamicCellSet GetCellSet() const { return CellSet; }
 
   void SetCellSet(const vtkm::cont::DynamicCellSet& cellSet)

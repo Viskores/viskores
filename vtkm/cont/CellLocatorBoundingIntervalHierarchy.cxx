@@ -238,6 +238,8 @@ VTKM_CONT IdArrayHandle CalculateSplitScatterIndices(const IdArrayHandle& cellId
 
 } // anonymous namespace
 
+VTKM_CONT CellLocatorBoundingIntervalHierarchy::~CellLocatorBoundingIntervalHierarchy() = default;
+
 VTKM_CONT
 void CellLocatorBoundingIntervalHierarchy::Build()
 {
