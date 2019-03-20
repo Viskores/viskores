@@ -25,6 +25,7 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -558,34 +559,28 @@ struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
   vtkm::IdComponent MaxLeafSize;
 }; // struct TreeLevelAdder
 
-template <typename T, class BinaryFunctor, typename DeviceAdapter>
+template <typename T, class BinaryFunctor>
 vtkm::cont::ArrayHandle<T> ReverseScanInclusiveByKey(const vtkm::cont::ArrayHandle<T>& keys,
                                                      const vtkm::cont::ArrayHandle<T>& values,
-                                                     BinaryFunctor binaryFunctor,
-                                                     DeviceAdapter)
+                                                     BinaryFunctor binaryFunctor)
 {
-  using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   vtkm::cont::ArrayHandle<T> result;
   auto reversedResult = vtkm::cont::make_ArrayHandleReverse(result);
 
-  Algorithms::ScanInclusiveByKey(vtkm::cont::make_ArrayHandleReverse(keys),
-                                 vtkm::cont::make_ArrayHandleReverse(values),
-                                 reversedResult,
-                                 binaryFunctor);
+  vtkm::cont::Algorithm::ScanInclusiveByKey(vtkm::cont::make_ArrayHandleReverse(keys),
+                                            vtkm::cont::make_ArrayHandleReverse(values),
+                                            reversedResult,
+                                            binaryFunctor);
 
   return result;
 }
 
-template <typename T, typename U, typename DeviceAdapter>
+template <typename T, typename U>
 vtkm::cont::ArrayHandle<T> CopyIfArray(const vtkm::cont::ArrayHandle<T>& input,
-                                       const vtkm::cont::ArrayHandle<U>& stencil,
-                                       DeviceAdapter)
+                                       const vtkm::cont::ArrayHandle<U>& stencil)
 {
-  using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   vtkm::cont::ArrayHandle<T> result;
-  Algorithms::CopyIf(input, stencil, result);
+  vtkm::cont::Algorithm::CopyIf(input, stencil, result);
 
   return result;
 }

@@ -36,7 +36,7 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_ALWAYS_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
+class VTKM_CONT_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
 {
 
 public:

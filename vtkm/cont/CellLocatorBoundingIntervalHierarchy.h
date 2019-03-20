@@ -35,7 +35,7 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchy : public vtkm::cont::CellLocator
+class VTKM_CONT_EXPORT CellLocatorBoundingIntervalHierarchy : public vtkm::cont::CellLocator
 {
 private:
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
@@ -49,37 +49,6 @@ private:
 
   class BuildFunctor;
   class PrepareForExecutionFunctor;
-
-  template <typename DeviceAdapter>
-  VTKM_CONT IdArrayHandle CalculateSegmentSizes(const IdArrayHandle&, vtkm::Id);
-
-  template <typename DeviceAdapter>
-  VTKM_CONT IdArrayHandle GenerateSegmentIds(const IdArrayHandle&, vtkm::Id);
-
-  template <typename DeviceAdapter>
-  VTKM_CONT void CalculateSplitCosts(RangePermutationArrayHandle&,
-                                     RangeArrayHandle&,
-                                     CoordsArrayHandle&,
-                                     IdArrayHandle&,
-                                     SplitPropertiesArrayHandle&,
-                                     DeviceAdapter);
-
-  template <typename DeviceAdapter>
-  VTKM_CONT void CalculatePlaneSplitCost(vtkm::IdComponent,
-                                         vtkm::IdComponent,
-                                         RangePermutationArrayHandle&,
-                                         RangeArrayHandle&,
-                                         CoordsArrayHandle&,
-                                         IdArrayHandle&,
-                                         SplitPropertiesArrayHandle&,
-                                         vtkm::IdComponent,
-                                         DeviceAdapter);
-
-  template <typename DeviceAdapter>
-  VTKM_CONT IdArrayHandle CalculateSplitScatterIndices(const IdArrayHandle&,
-                                                       const IdArrayHandle&,
-                                                       const IdArrayHandle&,
-                                                       DeviceAdapter);
 
 public:
   VTKM_CONT

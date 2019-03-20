@@ -114,7 +114,6 @@ set(template_sources
   ArrayHandle.hxx
   ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
-  CellLocatorBoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
   ColorTable.hxx
@@ -166,6 +165,7 @@ set(sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   ArrayRangeCompute.cxx
+  CellLocatorBoundingIntervalHierarchy.cxx
   CellSetExplicit.cxx
   CoordinateSystem.cxx
   StorageVirtual.cxx
