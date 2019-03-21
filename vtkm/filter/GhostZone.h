@@ -21,7 +21,7 @@
 #ifndef vtk_m_filter_GhostZone_h
 #define vtk_m_filter_GhostZone_h
 
-#include <vtkm/GhostCell.h>
+#include <vtkm/CellClassification.h>
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/filter/Threshold.h>
 

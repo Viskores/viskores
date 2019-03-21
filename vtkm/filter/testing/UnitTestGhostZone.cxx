@@ -44,7 +44,7 @@ static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostZoneArray(vtkm::Id nx
     numCells *= nz;
 
   vtkm::UInt8 normalCell = static_cast<vtkm::UInt8>(vtkm::CellClassification::NORMAL);
-  vtkm::UInt8 duplicateCell = static_cast<vtkm::UInt8>(vtkm::CellClassification::DUPLICATE);
+  vtkm::UInt8 duplicateCell = static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
   ghosts.Allocate(numCells);
@@ -272,7 +272,7 @@ void TestGhostZone()
             ghostZoneRemoval.RemoveAllGhost();
           else if (rt == "byType")
             ghostZoneRemoval.RemoveByType(
-              static_cast<vtkm::UInt8>(vtkm::CellClassification::DUPLICATE));
+              static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST));
 
           std::vector<std::string> outputType = { "permutation", "explicit" };
           for (auto& ot : outputType)
