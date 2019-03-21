@@ -36,7 +36,7 @@
 namespace
 {
 
-vtkm::Float32 vecData[125 * 3] = {
+vtkm::FloatDefault vecData[125 * 3] = {
   -0.00603248f, -0.0966396f,  -0.000732792f, 0.000530014f,  -0.0986189f,  -0.000806706f,
   0.00684929f,  -0.100098f,   -0.000876566f, 0.0129235f,    -0.101102f,   -0.000942341f,
   0.0187515f,   -0.101656f,   -0.00100401f,  0.0706091f,    -0.083023f,   -0.00144278f,
@@ -476,7 +476,7 @@ void TestParticleWorklets()
   const vtkm::Id3 dims(5, 5, 5);
   vtkm::Id nElements = dims[0] * dims[1] * dims[2] * 3;
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> field;
+  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> field;
   for (vtkm::Id i = 0; i < nElements; i++)
   {
     ScalarType x = vecData[i];
