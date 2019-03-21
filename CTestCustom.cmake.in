@@ -57,5 +57,8 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   "nvlink warning : Stack size for entry function.*ArrayPortalWrapper.*"
   "nvlink warning : .*ArrayPortalWrapper.* has address taken but no possible call to it"
   "nvlink warning : .*ArrayPortalVirtual.* has address taken but no possible call to it"
+  "nvlink warning : .*CellLocatorBoundingIntervalHierarchyExec.* has address taken but no possible call to it"
+  "nvlink warning : .*CellLocatorRectilinearGrid.* has address taken but no possible call to it"
+  "nvlink warning : .*CellLocatorUniformGrid.* has address taken but no possible call to it"
 
 )
