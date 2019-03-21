@@ -17,43 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_celllocatoruniformgrid_h
-#define vtkm_cont_celllocatoruniformgrid_h
 
 #include <vtkm/cont/CellLocator.h>
-#include <vtkm/cont/CellSetStructured.h>
 
-namespace vtkm
-{
-
-namespace cont
-{
-
-class VTKM_CONT_EXPORT CellLocatorUniformGrid : public vtkm::cont::CellLocator
-{
-public:
-  VTKM_CONT CellLocatorUniformGrid();
-
-  VTKM_CONT ~CellLocatorUniformGrid() override;
-
-  VTKM_CONT void Build() override;
-
-  VTKM_CONT
-  const HandleType PrepareForExecutionImpl(
-    const vtkm::cont::DeviceAdapterId deviceId) const override;
-
-private:
-  using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
-  using StructuredType = vtkm::cont::CellSetStructured<3>;
-
-  struct PrepareForExecutionFunctor;
-
-  vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
-  vtkm::Vec<vtkm::Id, 3> CellDims;
-  mutable HandleType ExecHandle;
-};
-}
-}
-
-#endif //vtkm_cont_celllocatoruniformgrid_h
+vtkm::cont::CellLocator::~CellLocator() = default;

@@ -36,7 +36,7 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_ALWAYS_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
+class VTKM_CONT_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
 {
 
 public:
@@ -44,6 +44,8 @@ public:
     : Dirty(true)
   {
   }
+
+  virtual ~CellLocator();
 
   vtkm::cont::DynamicCellSet GetCellSet() const { return CellSet; }
 

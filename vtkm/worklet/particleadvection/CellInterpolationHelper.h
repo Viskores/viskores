@@ -40,6 +40,8 @@ namespace exec
 class CellInterpolationHelper : public vtkm::VirtualObjectBase
 {
 public:
+  VTKM_EXEC_CONT virtual ~CellInterpolationHelper() = default;
+
   VTKM_EXEC
   virtual void GetCellInfo(const vtkm::Id& cellId,
                            vtkm::UInt8& cellShape,
@@ -193,6 +195,8 @@ class CellInterpolationHelper : public vtkm::cont::ExecutionObjectBase
 {
 public:
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellInterpolationHelper>;
+
+  VTKM_CONT virtual ~CellInterpolationHelper() = default;
 
   template <typename DeviceAdapter>
   VTKM_CONT const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
