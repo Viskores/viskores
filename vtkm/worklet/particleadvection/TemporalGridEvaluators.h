@@ -56,6 +56,35 @@ public:
   }
 
   template <typename Point>
+  VTKM_EXEC bool IsWithinSpatialBoundary(const Point point) const
+  {
+    return this->EvaluatorOne.IsWithinSpatialBoundary(point) &&
+      this->EvaluatorTwo.IsWithinSpatialBoundary(point);
+  }
+
+  VTKM_EXEC
+  bool IsWithinTemporalBoundary(const vtkm::FloatDefault time) const
+  {
+    return time >= TimeOne && time <= TimeTwo;
+  }
+
+  VTKM_EXEC
+  void GetSpatialBoundary(vtkm::Vec<vtkm::FloatDefault, 3>& dir,
+                          vtkm::Vec<ScalarType, 3>& boundary) const
+  {
+    // Based on the direction of the velocity we need to be able to tell where
+    // the particle will exit the domain from to actually push it out of domain.
+    return this->EvaluatorTwo.GetSpatialBoundary(dir, boundary);
+  }
+
+  VTKM_EXEC_CONT
+  void GetTemporalBoundary(vtkm::FloatDefault& boundary) const
+  {
+    // Return the time of the newest time slice
+    boundary = TimeTwo;
+  }
+
+  template <typename Point>
   VTKM_EXEC bool Evaluate(const Point& pos, vtkm::FloatDefault time, Point& out) const
   {
     // Validate time is in bounds for the current two slices.
