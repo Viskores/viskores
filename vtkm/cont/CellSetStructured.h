@@ -87,12 +87,40 @@ public:
     return this->Structure.GetGlobalPointIndexStart();
   }
 
-  vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex) = 0) const
+  vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex) = 0) const override
   {
     return this->Structure.GetNumberOfPointsInCell();
   }
 
-  vtkm::IdComponent GetCellShape() const { return this->Structure.GetCellShape(); }
+  vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex) = 0) const override
+  {
+    return static_cast<vtkm::UInt8>(this->Structure.GetCellShape());
+  }
+
+  void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override
+  {
+    auto asVec = this->Structure.GetPointsOfCell(id);
+    for (vtkm::IdComponent i = 0; i < InternalsType::NUM_POINTS_IN_CELL; ++i)
+    {
+      ptids[i] = asVec[i];
+    }
+  }
+
+  std::shared_ptr<CellSet> CreateNewInstance() const override
+  {
+    return std::make_shared<CellSetStructured>();
+  }
+
+  void DeepCopy(const CellSet* src) override
+  {
+    const auto* other = dynamic_cast<const CellSetStructured*>(src);
+    if (!other)
+    {
+      throw vtkm::cont::ErrorBadType("CellSetStructured::DeepCopy types don't match");
+    }
+
+    this->Structure = other->Structure;
+  }
 
   template <typename TopologyElement>
   SchedulingRangeType GetSchedulingRange(TopologyElement) const;

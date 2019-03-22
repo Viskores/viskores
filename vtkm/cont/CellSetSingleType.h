@@ -206,12 +206,32 @@ public:
   vtkm::Id GetCellShapeAsId() const { return this->CellShapeAsId; }
 
   VTKM_CONT
-  vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex)) const
+  vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex)) const override
   {
     return static_cast<vtkm::UInt8>(this->CellShapeAsId);
   }
 
-  virtual void PrintSummary(std::ostream& out) const
+  VTKM_CONT
+  std::shared_ptr<CellSet> CreateNewInstance() const override
+  {
+    return std::make_shared<CellSetSingleType>();
+  }
+
+  VTKM_CONT
+  void DeepCopy(const CellSet* src) override
+  {
+    const auto* other = dynamic_cast<const CellSetSingleType*>(src);
+    if (!other)
+    {
+      throw vtkm::cont::ErrorBadType("CellSetSingleType::DeepCopy types don't match");
+    }
+
+    this->Superclass::DeepCopy(other);
+    this->CellShapeAsId = other->CellShapeAsId;
+    this->NumberOfPointsPerCell = other->NumberOfPointsPerCell;
+  }
+
+  virtual void PrintSummary(std::ostream& out) const override
   {
     out << "   ExplicitSingleCellSet: " << this->Name << " Type " << this->CellShapeAsId
         << std::endl;
