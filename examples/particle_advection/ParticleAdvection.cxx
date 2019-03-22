@@ -68,7 +68,7 @@ void RunTest(const std::string& fname,
   vtkm::io::reader::BOVDataSetReader rdr(fname);
   vtkm::cont::DataSet ds = rdr.ReadDataSet();
 
-  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
+  using RGEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
   using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType>;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
