@@ -23,6 +23,7 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/CellTraits.h>
 #include <vtkm/cont/ArrayHandleCast.h>
+#include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
@@ -44,63 +45,145 @@ namespace cont
 namespace internal
 {
 
-struct WriteConnectivity : public vtkm::worklet::WorkletMapPointToCell
+class CellSetPermutationPointToCellHelpers
 {
-  using ControlSignature = void(CellSetIn cellset, FieldInCell offset, WholeArrayOut connectivity);
-  using ExecutionSignature = void(PointCount, PointIndices, _2, _3);
-  using InputDomain = _1;
-
-  template <typename PointIndicesType, typename OutPortalType>
-  VTKM_EXEC void operator()(vtkm::IdComponent pointcount,
-                            const PointIndicesType& pointIndices,
-                            vtkm::Id offset,
-                            OutPortalType& connectivity) const
+public:
+  struct WriteNumIndices : public vtkm::worklet::WorkletMapPointToCell
   {
-    for (vtkm::IdComponent i = 0; i < pointcount; ++i)
+    using ControlSignature = void(CellSetIn cellset, FieldOutCell numIndices);
+    using ExecutionSignature = void(PointCount, _2);
+    using InputDomain = _1;
+
+    VTKM_EXEC void operator()(vtkm::IdComponent pointCount, vtkm::IdComponent& numIndices) const
     {
-      connectivity.Set(offset++, pointIndices[i]);
+      numIndices = pointCount;
     }
+  };
+
+  struct WriteConnectivity : public vtkm::worklet::WorkletMapPointToCell
+  {
+    using ControlSignature = void(CellSetIn cellset, FieldOutCell connectivity);
+    using ExecutionSignature = void(PointCount, PointIndices, _2);
+    using InputDomain = _1;
+
+    template <typename PointIndicesType, typename OutConnectivityType>
+    VTKM_EXEC void operator()(vtkm::IdComponent pointCount,
+                              const PointIndicesType& pointIndices,
+                              OutConnectivityType& connectivity) const
+    {
+      for (vtkm::IdComponent i = 0; i < pointCount; ++i)
+      {
+        connectivity[i] = pointIndices[i];
+      }
+    }
+  };
+
+public:
+  template <typename CellSetPermutationType, typename Device>
+  static vtkm::cont::ArrayHandle<vtkm::IdComponent> GetNumIndicesArray(
+    const CellSetPermutationType& cs,
+    Device)
+  {
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
+
+    vtkm::worklet::DispatcherMapTopology<WriteNumIndices> dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(cs, numIndices);
+
+    return numIndices;
+  }
+
+  template <typename NumIndicesStorageType, typename Device>
+  static vtkm::cont::ArrayHandle<vtkm::Id> GetIndexOffsetsArray(
+    const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageType>& numIndices,
+    vtkm::Id& connectivityLength,
+    Device)
+  {
+    return vtkm::cont::ConvertNumComponentsToOffsets(numIndices, connectivityLength);
+  }
+
+  template <typename CellSetPermutationType, typename IndexOffsetsStorageType, typename Device>
+  static vtkm::cont::ArrayHandle<vtkm::Id> GetConnectivityArray(
+    const CellSetPermutationType& cs,
+    const vtkm::cont::ArrayHandle<vtkm::Id, IndexOffsetsStorageType>& indexOffsets,
+    vtkm::Id connectivityLength,
+    Device)
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+    connectivity.Allocate(connectivityLength);
+
+    vtkm::worklet::DispatcherMapTopology<WriteConnectivity> dispatcher;
+    dispatcher.SetDevice(Device());
+    dispatcher.Invoke(cs, vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, indexOffsets));
+
+    return connectivity;
   }
 };
 
-// default for CellSetExplicit and CellSetSingleType
+// default for CellSetPermutations of any cell type
 template <typename CellSetPermutationType>
-class PointToCell
+class CellSetPermutationPointToCell
+{
+public:
+  using ConnectivityArrays = vtkm::cont::internal::ConnectivityExplicitInternals<>;
+
+  template <typename Device>
+  static ConnectivityArrays Get(const CellSetPermutationType& cellset, Device)
+  {
+    ConnectivityArrays conn;
+    vtkm::Id connectivityLength = 0;
+
+    conn.NumIndices = CellSetPermutationPointToCellHelpers::GetNumIndicesArray(cellset, Device{});
+    conn.IndexOffsets = CellSetPermutationPointToCellHelpers::GetIndexOffsetsArray(
+      conn.NumIndices, connectivityLength, Device{});
+    conn.Connectivity = CellSetPermutationPointToCellHelpers::GetConnectivityArray(
+      cellset, conn.IndexOffsets, connectivityLength, Device{});
+
+    return conn;
+  }
+};
+
+// Specialization for CellSetExplicit/CellSetSingleType
+template <typename S1, typename S2, typename S3, typename S4, typename PermutationArrayHandleType>
+class CellSetPermutationPointToCell<
+  CellSetPermutation<CellSetExplicit<S1, S2, S3, S4>, PermutationArrayHandleType>>
 {
 private:
-  using NumIndicesArrayType = decltype(make_ArrayHandlePermutation(
-    std::declval<CellSetPermutationType>().GetValidCellIds(),
-    std::declval<CellSetPermutationType>().GetFullCellSet().GetNumIndicesArray(
-      vtkm::TopologyElementTagPoint(),
-      vtkm::TopologyElementTagCell())));
+  using CellSetPermutationType =
+    CellSetPermutation<CellSetExplicit<S1, S2, S3, S4>, PermutationArrayHandleType>;
+
+  using NumIndicesArrayType =
+    vtkm::cont::ArrayHandlePermutation<PermutationArrayHandleType,
+                                       vtkm::cont::ArrayHandle<vtkm::IdComponent, S2>>;
 
 public:
   using ConnectivityArrays = vtkm::cont::internal::ConnectivityExplicitInternals<
-    VTKM_DEFAULT_STORAGE_TAG, // dummy, shapes array is not used
+    VTKM_DEFAULT_STORAGE_TAG, // shapes array is not used
     typename NumIndicesArrayType::StorageTag>;
 
   template <typename Device>
   static ConnectivityArrays Get(const CellSetPermutationType& cellset, Device)
   {
     ConnectivityArrays conn;
+    vtkm::Id connectivityLength = 0;
+
     conn.NumIndices =
       NumIndicesArrayType(cellset.GetValidCellIds(),
                           cellset.GetFullCellSet().GetNumIndicesArray(
                             vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell()));
-    vtkm::Id connectivityLength = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
-      vtkm::cont::make_ArrayHandleCast(conn.NumIndices, vtkm::Id()), conn.IndexOffsets);
-    conn.Connectivity.Allocate(connectivityLength);
-    vtkm::worklet::DispatcherMapTopology<WriteConnectivity> dispatcher;
-    dispatcher.SetDevice(Device());
-    dispatcher.Invoke(cellset, conn.IndexOffsets, conn.Connectivity);
+    conn.IndexOffsets = CellSetPermutationPointToCellHelpers::GetIndexOffsetsArray(
+      conn.NumIndices, connectivityLength, Device{});
+    conn.Connectivity = CellSetPermutationPointToCellHelpers::GetConnectivityArray(
+      cellset, conn.IndexOffsets, connectivityLength, Device{});
 
     return conn;
   }
 };
 
-// specialization for CellSetStructured
+// Specialization for CellSetStructured
 template <vtkm::IdComponent DIMENSION, typename PermutationArrayHandleType>
-class PointToCell<CellSetPermutation<CellSetStructured<DIMENSION>, PermutationArrayHandleType>>
+class CellSetPermutationPointToCell<
+  CellSetPermutation<CellSetStructured<DIMENSION>, PermutationArrayHandleType>>
 {
 private:
   using CellSetPermutationType =
@@ -108,7 +191,7 @@ private:
 
 public:
   using ConnectivityArrays = vtkm::cont::internal::ConnectivityExplicitInternals<
-    VTKM_DEFAULT_STORAGE_TAG, // dummy, shapes array is not used
+    VTKM_DEFAULT_STORAGE_TAG, // shapes array is not used
     typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag,
     VTKM_DEFAULT_STORAGE_TAG,
     typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>;
@@ -124,10 +207,8 @@ public:
     ConnectivityArrays conn;
     conn.NumIndices = make_ArrayHandleConstant(numPointsInCell, numberOfCells);
     conn.IndexOffsets = ArrayHandleCounting<vtkm::Id>(0, numPointsInCell, numberOfCells);
-    conn.Connectivity.Allocate(connectivityLength);
-    vtkm::worklet::DispatcherMapTopology<WriteConnectivity> dispatcher;
-    dispatcher.SetDevice(Device());
-    dispatcher.Invoke(cellset, conn.IndexOffsets, conn.Connectivity);
+    conn.Connectivity = CellSetPermutationPointToCellHelpers::GetConnectivityArray(
+      cellset, conn.IndexOffsets, connectivityLength, Device{});
 
     return conn;
   }
@@ -325,7 +406,8 @@ public:
   {
     if (!this->CellToPoint.ElementsValid)
     {
-      auto pointToCell = internal::PointToCell<CellSetPermutation>::Get(*this, device);
+      auto pointToCell =
+        internal::CellSetPermutationPointToCell<CellSetPermutation>::Get(*this, device);
       internal::ComputeCellToPointConnectivity(
         this->CellToPoint, pointToCell, this->GetNumberOfPoints(), device);
       this->CellToPoint.BuildIndexOffsets(device);
