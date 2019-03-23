@@ -33,11 +33,11 @@ set(headers
   BinaryOperators.h
   Bitset.h
   Bounds.h
+  CellClassification.h
   CellShape.h
   CellTraits.h
   Flags.h
   Geometry.h
-  GhostCell.h
   Hash.h
   ImplicitFunction.h
   ListTag.h
