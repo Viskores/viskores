@@ -178,7 +178,7 @@ public:
 
   void operator()() const
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
     this->TestTest();
   }
 };

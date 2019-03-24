@@ -167,7 +167,7 @@ public:
   ///
   VTKM_CONT_EXPORT
   VTKM_CONT
-  void DeepCopy(const vtkm::cont::RuntimeDeviceTracker& src);
+  void DeepCopy(const vtkm::cont::RuntimeDeviceTracker src);
 
   /// \brief Disable the given device
   ///
@@ -251,29 +251,29 @@ private:
 /// Xcode's clang only supports thread_local from version 8
 VTKM_CONT_EXPORT
 VTKM_CONT
-vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker();
+vtkm::cont::RuntimeDeviceTracker GetRuntimeDeviceTracker();
 
-struct ScopedGlobalRuntimeDeviceTracker
+struct ScopedRuntimeDeviceTracker
 {
   vtkm::cont::RuntimeDeviceTracker SavedTracker;
 
-  VTKM_CONT ScopedGlobalRuntimeDeviceTracker()
-    : SavedTracker(vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy())
+  VTKM_CONT ScopedRuntimeDeviceTracker()
+    : SavedTracker(vtkm::cont::GetRuntimeDeviceTracker().DeepCopy())
   {
   }
 
-  VTKM_CONT ScopedGlobalRuntimeDeviceTracker(vtkm::cont::RuntimeDeviceTracker tracker)
-    : SavedTracker(vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy())
+  VTKM_CONT ScopedRuntimeDeviceTracker(vtkm::cont::RuntimeDeviceTracker tracker)
+    : SavedTracker(vtkm::cont::GetRuntimeDeviceTracker().DeepCopy())
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy(tracker);
+    vtkm::cont::GetRuntimeDeviceTracker().DeepCopy(tracker);
   }
 
-  VTKM_CONT ~ScopedGlobalRuntimeDeviceTracker()
+  VTKM_CONT ~ScopedRuntimeDeviceTracker()
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().DeepCopy(this->SavedTracker);
+    vtkm::cont::GetRuntimeDeviceTracker().DeepCopy(this->SavedTracker);
   }
 
-  ScopedGlobalRuntimeDeviceTracker(const ScopedGlobalRuntimeDeviceTracker&) = delete;
+  ScopedRuntimeDeviceTracker(const ScopedRuntimeDeviceTracker&) = delete;
 };
 }
 } // namespace vtkm::cont

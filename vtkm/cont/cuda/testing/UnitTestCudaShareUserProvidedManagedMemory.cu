@@ -282,7 +282,7 @@ void Launch()
 
 int UnitTestCudaShareUserProvidedManagedMemory(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   int ret = vtkm::cont::testing::Testing::Run(Launch, argc, argv);
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(ret);

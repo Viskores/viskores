@@ -227,7 +227,7 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
 template <typename DeviceAdapter>
 void TestingCellLocatorTwoLevelUniformGrid()
 {
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
 
   vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
   std::cout << "Seed: " << seed << std::endl;

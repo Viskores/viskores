@@ -28,7 +28,7 @@ namespace
 
 void TestImplicitFunctions()
 {
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
 
   vtkm::cont::testing::TestingImplicitFunction testing;

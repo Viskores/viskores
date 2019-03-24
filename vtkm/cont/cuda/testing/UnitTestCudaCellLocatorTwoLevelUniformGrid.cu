@@ -27,7 +27,7 @@
 
 int UnitTestCudaCellLocatorTwoLevelUniformGrid(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   return vtkm::cont::testing::Testing::Run(
     TestingCellLocatorTwoLevelUniformGrid<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);

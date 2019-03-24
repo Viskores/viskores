@@ -324,8 +324,8 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    vtkm::cont::ScopedGlobalRuntimeDeviceTracker trackerScope;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::cont::ScopedRuntimeDeviceTracker trackerScope;
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     return PortalConstType(this->Array.GetPortalConstControl(), this->Functor.PrepareForControl());
   }
 
@@ -416,8 +416,8 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    vtkm::cont::ScopedGlobalRuntimeDeviceTracker trackerScope;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::cont::ScopedRuntimeDeviceTracker trackerScope;
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     return PortalType(this->Array.GetPortalControl(),
                       this->Functor.PrepareForControl(),
                       this->InverseFunctor.PrepareForControl());
@@ -427,8 +427,8 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    vtkm::cont::ScopedGlobalRuntimeDeviceTracker trackerScope;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::cont::ScopedRuntimeDeviceTracker trackerScope;
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     return PortalConstType(this->Array.GetPortalConstControl(),
                            this->Functor.PrepareForControl(),
                            this->InverseFunctor.PrepareForControl());
