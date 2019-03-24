@@ -21,8 +21,6 @@
 #ifndef vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
 #define vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
 
-//#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-
 #include <random>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -124,13 +122,13 @@ public:
 
     vtkm::cont::CoordinateSystem coord("points", coordi_Handle);
 
-    // TODO: locator needs to be a pointer to have runtime polymorphism.
-    //vtkm::cont::PointLocator * locator = new vtkm::cont::PointLocatorUniformGrid(
-    //  { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    vtkm::cont::PointLocatorUniformGrid locator(
-      { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    locator.SetCoordinates(coord);
-    locator.Update();
+    vtkm::cont::PointLocatorUniformGrid pointLocatorUG;
+    pointLocatorUG.SetCoordinates(coord);
+    pointLocatorUG.SetRange({ { 0.0, 10.0 } });
+    pointLocatorUG.SetNumberOfBins({ 5, 5, 5 });
+
+    vtkm::cont::PointLocator* locator = &pointLocatorUG;
+    locator->Update();
 
     ///// randomly generate testing points/////
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
@@ -180,7 +178,7 @@ public:
 
   void operator()() const
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
     this->TestTest();
   }
 };

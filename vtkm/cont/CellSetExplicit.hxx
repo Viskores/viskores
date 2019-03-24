@@ -186,6 +186,21 @@ template <typename ShapeStorageTag,
           typename NumIndicesStorageTag,
           typename ConnectivityStorageTag,
           typename OffsetsStorageTag>
+void CellSetExplicit<ShapeStorageTag,
+                     NumIndicesStorageTag,
+                     ConnectivityStorageTag,
+                     OffsetsStorageTag>::GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const
+{
+  auto arrayWrapper = vtkm::cont::make_ArrayHandle(ptids, this->GetNumberOfPointsInCell(id));
+  this->GetIndices(id, arrayWrapper);
+}
+
+//----------------------------------------------------------------------------
+
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetsStorageTag>
 VTKM_CONT vtkm::Id
   CellSetExplicit<ShapeStorageTag,
                   NumIndicesStorageTag,
@@ -481,6 +496,45 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
 {
   this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).IndexOffsets;
+}
+
+//----------------------------------------------------------------------------
+
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetsStorageTag>
+std::shared_ptr<CellSet> CellSetExplicit<ShapeStorageTag,
+                                         NumIndicesStorageTag,
+                                         ConnectivityStorageTag,
+                                         OffsetsStorageTag>::CreateNewInstance() const
+{
+  return std::make_shared<CellSetExplicit>();
+}
+
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetsStorageTag>
+void CellSetExplicit<ShapeStorageTag,
+                     NumIndicesStorageTag,
+                     ConnectivityStorageTag,
+                     OffsetsStorageTag>::DeepCopy(const CellSet* src)
+{
+  const auto* other = dynamic_cast<const CellSetExplicit*>(src);
+  if (!other)
+  {
+    throw vtkm::cont::ErrorBadType("CellSetExplicit::DeepCopy types don't match");
+  }
+
+  // TODO: implement actual deep-copy of the arrays
+  auto pt = vtkm::TopologyElementTagPoint{};
+  auto ct = vtkm::TopologyElementTagCell{};
+  this->Fill(other->GetNumberOfPoints(),
+             other->GetShapesArray(pt, ct),
+             other->GetNumIndicesArray(pt, ct),
+             other->GetConnectivityArray(pt, ct),
+             other->GetIndexOffsetArray(pt, ct));
 }
 
 //----------------------------------------------------------------------------

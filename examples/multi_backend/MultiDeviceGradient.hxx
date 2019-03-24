@@ -48,7 +48,7 @@ void process_block_tbb(RuntimeTaskQueue& queue)
   //task operate only on TBB. The "global" thread tracker
   //is actually thread-local, so we can use that.
   //
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
 
   while (queue.hasTasks())
   {
@@ -76,7 +76,7 @@ void process_block_cuda(RuntimeTaskQueue& queue, int gpuId)
   //task operate only on cuda.  The "global" thread tracker
   //is actually thread-local, so we can use that.
   //
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   (void)gpuId;
 
   while (queue.hasTasks())
@@ -107,7 +107,7 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
   , Workers()
 {
   //Step 1. Determine the number of workers we want
-  vtkm::cont::RuntimeDeviceTracker tracker;
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
   const bool runOnTbb = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagTBB{});
   const bool runOnCuda = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{});
 

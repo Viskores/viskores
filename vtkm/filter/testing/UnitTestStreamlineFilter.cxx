@@ -53,7 +53,7 @@ void TestStreamline()
 
   vtkm::filter::Streamline streamline;
 
-  streamline.SetStepSize(0.1);
+  streamline.SetStepSize(0.1f);
   streamline.SetNumberOfSteps(20);
   streamline.SetSeeds(seedArray);
   vtkm::cont::Field vecField = ds.GetField("vector");
@@ -68,7 +68,7 @@ void TestStreamline()
                    "Wrong number of coordinate systems in the output dataset");
 
   vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 60, "Wrong number of coordinates");
+  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 60, "Wrong number of coordinates");
 
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");

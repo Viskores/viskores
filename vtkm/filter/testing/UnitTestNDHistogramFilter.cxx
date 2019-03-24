@@ -101,7 +101,7 @@ void RunTest()
                           1, 1, 4, 11, 4, 1, 1, 3, 3, 1, 1,  1, 1, 1, 2, 1 };
 
   // Check result
-  vtkm::Id nonSparseBins = outputData.GetField(0).GetData().GetNumberOfValues();
+  vtkm::Id nonSparseBins = outputData.GetField(0).GetNumberOfValues();
   VTKM_TEST_ASSERT(nonSparseBins == gtNonSparseBins, "Incorrect ND-histogram Filter results");
 
   vtkm::cont::ArrayHandle<vtkm::Id> binId0;

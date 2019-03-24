@@ -585,7 +585,7 @@ private:
   VTKM_CONT
   static void TestTimer()
   {
-    auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+    auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
     if (tracker.CanRunOn(DeviceAdapterTag()))
     {
       std::cout << "-------------------------------------------" << std::endl;

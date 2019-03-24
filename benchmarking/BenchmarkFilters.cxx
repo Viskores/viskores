@@ -248,7 +248,7 @@ class BenchmarkFilters
     std::string Description() const
     {
       std::ostringstream desc;
-      desc << "Gradient filter (options=";
+      desc << "Gradient (";
       if (this->Options & Gradient)
       {
         desc << "Gradient,";
@@ -279,11 +279,11 @@ class BenchmarkFilters
       }
       if (this->Options & ScalarInput)
       {
-        desc << "ScalarInput,";
+        desc << "ScalarInput";
       }
       else
       {
-        desc << "VectorInput,";
+        desc << "VectorInput";
       }
 
       desc << ")";
@@ -334,7 +334,7 @@ class BenchmarkFilters
     }
 
     VTKM_CONT
-    std::string Description() const { return "Threshold filter"; }
+    std::string Description() const { return "Threshold"; }
   };
   VTKM_MAKE_BENCHMARK(Threshold, BenchThreshold);
 
@@ -374,7 +374,7 @@ class BenchmarkFilters
     }
 
     VTKM_CONT
-    std::string Description() const { return "ThresholdPoints filter"; }
+    std::string Description() const { return "ThresholdPoints"; }
   };
   VTKM_MAKE_BENCHMARK(ThresholdPoints, BenchThresholdPoints, false);
   VTKM_MAKE_BENCHMARK(ThresholdPointsCompact, BenchThresholdPoints, true);
@@ -401,7 +401,7 @@ class BenchmarkFilters
     }
 
     VTKM_CONT
-    std::string Description() const { return "CellAverage filter"; }
+    std::string Description() const { return "CellAverage"; }
   };
   VTKM_MAKE_BENCHMARK(CellAverage, BenchCellAverage);
 
@@ -427,7 +427,7 @@ class BenchmarkFilters
     }
 
     VTKM_CONT
-    std::string Description() const { return "PointAverage filter"; }
+    std::string Description() const { return "PointAverage"; }
   };
   VTKM_MAKE_BENCHMARK(PointAverage, BenchPointAverage);
 
@@ -456,7 +456,7 @@ class BenchmarkFilters
     }
 
     VTKM_CONT
-    std::string Description() const { return "WarpScalar filter"; }
+    std::string Description() const { return "WarpScalar"; }
   };
   VTKM_MAKE_BENCHMARK(WarpScalar, BenchWarpScalar);
 
@@ -484,7 +484,7 @@ class BenchmarkFilters
     }
 
     VTKM_CONT
-    std::string Description() const { return "WarpVector filter"; }
+    std::string Description() const { return "WarpVector"; }
   };
   VTKM_MAKE_BENCHMARK(WarpVector, BenchWarpVector);
 
@@ -577,7 +577,7 @@ class BenchmarkFilters
     std::string Description() const
     {
       std::ostringstream desc;
-      desc << "ExternalFaces filter";
+      desc << "ExternalFaces";
       if (this->Filter.GetCompactPoints())
       {
         desc << " (compact points)";
@@ -610,7 +610,7 @@ class BenchmarkFilters
     }
 
     VTKM_CONT
-    std::string Description() const { return "Tetrahedralize filter"; }
+    std::string Description() const { return "Tetrahedralize"; }
   };
   VTKM_MAKE_BENCHMARK(Tetrahedralize, BenchTetrahedralize);
 

@@ -168,7 +168,7 @@ struct VTKM_NEVER_EXPORT RuntimeDeviceTrackerResetFunctor
   vtkm::cont::RuntimeDeviceTracker Tracker;
 
   VTKM_CONT
-  RuntimeDeviceTrackerResetFunctor(const vtkm::cont::RuntimeDeviceTracker& tracker)
+  RuntimeDeviceTrackerResetFunctor(const vtkm::cont::RuntimeDeviceTracker tracker)
     : Tracker(tracker)
   {
   }
@@ -197,7 +197,7 @@ vtkm::cont::RuntimeDeviceTracker RuntimeDeviceTracker::DeepCopy() const
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker& src)
+void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker src)
 {
   std::copy_n(
     src.Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->RuntimeValid);
@@ -314,7 +314,7 @@ DeviceAdapterId RuntimeDeviceTracker::GetDeviceAdapterId(DeviceAdapterNameType n
 }
 
 VTKM_CONT
-vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker()
+vtkm::cont::RuntimeDeviceTracker GetRuntimeDeviceTracker()
 {
 #if defined(VTKM_CLANG) && (__apple_build_version__ < 8000000)
   static std::mutex mtx;

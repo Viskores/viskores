@@ -77,9 +77,9 @@ class Redistributor
 
     void Append(const vtkm::cont::Field& field)
     {
-      VTKM_ASSERT(this->CurrentIdx + field.GetData().GetNumberOfValues() <= this->TotalSize);
+      VTKM_ASSERT(this->CurrentIdx + field.GetNumberOfValues() <= this->TotalSize);
 
-      if (this->Field.GetData().GetNumberOfValues() == 0)
+      if (this->Field.GetNumberOfValues() == 0)
       {
         this->Field = field;
         field.GetData().CastAndCall(Allocator{}, this->Field, this->TotalSize);
@@ -91,7 +91,7 @@ class Redistributor
       }
 
       field.GetData().CastAndCall(Appender{}, this->Field, this->CurrentIdx);
-      this->CurrentIdx += field.GetData().GetNumberOfValues();
+      this->CurrentIdx += field.GetNumberOfValues();
     }
 
     const vtkm::cont::Field& GetResult() const { return this->Field; }
@@ -168,7 +168,7 @@ public:
           auto sds = vtkm::filter::MakeSerializableDataSet(DerivedPolicy{});
           rp.dequeue(target.gid, sds);
           receives.push_back(sds.DataSet);
-          numValues += receives.back().GetCoordinateSystem(0).GetData().GetNumberOfValues();
+          numValues += receives.back().GetCoordinateSystem(0).GetNumberOfPoints();
         }
       }
 

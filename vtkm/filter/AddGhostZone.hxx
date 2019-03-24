@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/GhostCell.h>
+#include <vtkm/CellClassification.h>
 #include <vtkm/RangeId.h>
 #include <vtkm/RangeId2.h>
 #include <vtkm/RangeId3.h>
@@ -62,7 +62,7 @@ private:
   static constexpr vtkm::UInt8 NormalCell =
     static_cast<vtkm::UInt8>(vtkm::CellClassification::NORMAL);
   static constexpr vtkm::UInt8 DuplicateCell =
-    static_cast<vtkm::UInt8>(vtkm::CellClassification::DUPLICATE);
+    static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
 };
 
 class SetStructuredGhostZones2D : public vtkm::worklet::WorkletMapField
@@ -93,7 +93,7 @@ private:
   static constexpr vtkm::UInt8 NormalCell =
     static_cast<vtkm::UInt8>(vtkm::CellClassification::NORMAL);
   static constexpr vtkm::UInt8 DuplicateCell =
-    static_cast<vtkm::UInt8>(vtkm::CellClassification::DUPLICATE);
+    static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
 };
 
 class SetStructuredGhostZones3D : public vtkm::worklet::WorkletMapField
@@ -130,7 +130,7 @@ private:
   static constexpr vtkm::UInt8 NormalCell =
     static_cast<vtkm::UInt8>(vtkm::CellClassification::NORMAL);
   static constexpr vtkm::UInt8 DuplicateCell =
-    static_cast<vtkm::UInt8>(vtkm::CellClassification::DUPLICATE);
+    static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
 };
 };
 

@@ -29,12 +29,12 @@ namespace cont
 
 DeviceAdapterNameType DeviceAdapterId::GetName() const
 {
-  return vtkm::cont::GetGlobalRuntimeDeviceTracker().GetDeviceName(*this);
+  return vtkm::cont::GetRuntimeDeviceTracker().GetDeviceName(*this);
 }
 
 DeviceAdapterId make_DeviceAdapterId(const DeviceAdapterNameType& name)
 {
-  return vtkm::cont::GetGlobalRuntimeDeviceTracker().GetDeviceAdapterId(name);
+  return vtkm::cont::GetRuntimeDeviceTracker().GetDeviceAdapterId(name);
 }
 }
 } // end namespace vtkm::cont

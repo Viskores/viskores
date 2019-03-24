@@ -213,12 +213,39 @@ public:
     this->CellToPoint.ReleaseResourcesExecution();
   }
 
-
   VTKM_CONT
-  vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const
+  vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const override
   {
     return this->FullCellSet.GetNumberOfPointsInCell(
       this->ValidCellIds.GetPortalConstControl().Get(cellIndex));
+  }
+
+  vtkm::UInt8 GetCellShape(vtkm::Id id) const override
+  {
+    return this->FullCellSet.GetCellShape(this->ValidCellIds.GetPortalConstControl().Get(id));
+  }
+
+  void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override
+  {
+    return this->FullCellSet.GetCellPointIds(this->ValidCellIds.GetPortalConstControl().Get(id),
+                                             ptids);
+  }
+
+  std::shared_ptr<CellSet> CreateNewInstance() const override
+  {
+    return std::make_shared<CellSetPermutation>();
+  }
+
+  void DeepCopy(const CellSet* src) override
+  {
+    const auto* other = dynamic_cast<const CellSetPermutation*>(src);
+    if (!other)
+    {
+      throw vtkm::cont::ErrorBadType("CellSetPermutaion::DeepCopy types don't match");
+    }
+
+    this->FullCellSet.DeepCopy(&(other->GetFullCellSet()));
+    this->ValidCellIds = other->GetValidCellIds();
   }
 
   //This is the way you can fill the memory from another system without copying
@@ -365,6 +392,11 @@ public:
   {
     this->ValidCellIds = make_ArrayHandlePermutation(validCellIds, cellset.GetValidCellIds());
     this->FullCellSet = cellset.GetFullCellSet();
+  }
+
+  std::shared_ptr<CellSet> CreateNewInstance() const
+  {
+    return std::make_shared<CellSetPermutation>();
   }
 };
 

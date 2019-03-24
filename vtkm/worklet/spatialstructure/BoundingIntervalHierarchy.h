@@ -25,15 +25,16 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/BoundingIntervalHierarchyNode.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -504,8 +505,15 @@ struct NonSplitIndexCalculator : public vtkm::worklet::WorkletMapField
 
 struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  typedef void ControlSignature(FieldIn nodeIndices,
+                                FieldIn segmentSplits,
+                                FieldIn nonSplitSegmentIndices,
+                                FieldIn segmentSizes,
+                                FieldIn runningSplitSegmentCounts,
+                                FieldIn parentIndices,
+                                WholeArrayInOut newTree,
+                                WholeArrayOut nextParentIndices);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
 
   VTKM_CONT
@@ -516,26 +524,31 @@ struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
   {
   }
 
-  template <typename BoundingIntervalHierarchyPortal>
-  VTKM_EXEC void operator()(const vtkm::Id& index,
+  template <typename BoundingIntervalHierarchyPortal, typename NextParentPortal>
+  VTKM_EXEC void operator()(vtkm::Id index,
                             const TreeNode& split,
-                            const vtkm::Id& start,
-                            const vtkm::Id& count,
-                            const vtkm::Id& numPreviousSplits,
-                            BoundingIntervalHierarchyPortal& treePortal) const
+                            vtkm::Id start,
+                            vtkm::Id count,
+                            vtkm::Id numPreviousSplits,
+                            vtkm::Id parentIndex,
+                            BoundingIntervalHierarchyPortal& treePortal,
+                            NextParentPortal& nextParentPortal) const
   {
-    vtkm::cont::BoundingIntervalHierarchyNode node;
-    if (count > MaxLeafSize)
+    vtkm::exec::CellLocatorBoundingIntervalHierarchyNode node;
+    node.ParentIndex = parentIndex;
+    if (count > this->MaxLeafSize)
     {
       node.Dimension = split.Dimension;
-      node.ChildIndex = TreeOffset + 2 * numPreviousSplits;
+      node.ChildIndex = this->TreeOffset + 2 * numPreviousSplits;
       node.Node.LMax = split.LMax;
       node.Node.RMin = split.RMin;
+      nextParentPortal.Set(2 * numPreviousSplits, index);
+      nextParentPortal.Set(2 * numPreviousSplits + 1, index);
     }
     else
     {
       node.ChildIndex = -1;
-      node.Leaf.Start = CellIdsOffset + start;
+      node.Leaf.Start = this->CellIdsOffset + start;
       node.Leaf.Size = count;
     }
     treePortal.Set(index, node);
@@ -546,34 +559,28 @@ struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
   vtkm::IdComponent MaxLeafSize;
 }; // struct TreeLevelAdder
 
-template <typename T, class BinaryFunctor, typename DeviceAdapter>
+template <typename T, class BinaryFunctor>
 vtkm::cont::ArrayHandle<T> ReverseScanInclusiveByKey(const vtkm::cont::ArrayHandle<T>& keys,
                                                      const vtkm::cont::ArrayHandle<T>& values,
-                                                     BinaryFunctor binaryFunctor,
-                                                     DeviceAdapter)
+                                                     BinaryFunctor binaryFunctor)
 {
-  using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   vtkm::cont::ArrayHandle<T> result;
   auto reversedResult = vtkm::cont::make_ArrayHandleReverse(result);
 
-  Algorithms::ScanInclusiveByKey(vtkm::cont::make_ArrayHandleReverse(keys),
-                                 vtkm::cont::make_ArrayHandleReverse(values),
-                                 reversedResult,
-                                 binaryFunctor);
+  vtkm::cont::Algorithm::ScanInclusiveByKey(vtkm::cont::make_ArrayHandleReverse(keys),
+                                            vtkm::cont::make_ArrayHandleReverse(values),
+                                            reversedResult,
+                                            binaryFunctor);
 
   return result;
 }
 
-template <typename T, typename U, typename DeviceAdapter>
+template <typename T, typename U>
 vtkm::cont::ArrayHandle<T> CopyIfArray(const vtkm::cont::ArrayHandle<T>& input,
-                                       const vtkm::cont::ArrayHandle<U>& stencil,
-                                       DeviceAdapter)
+                                       const vtkm::cont::ArrayHandle<U>& stencil)
 {
-  using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   vtkm::cont::ArrayHandle<T> result;
-  Algorithms::CopyIf(input, stencil, result);
+  vtkm::cont::Algorithm::CopyIf(input, stencil, result);
 
   return result;
 }

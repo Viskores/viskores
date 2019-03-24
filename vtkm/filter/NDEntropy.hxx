@@ -42,7 +42,7 @@ inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
   vtkm::filter::PolicyBase<Policy> vtkmNotUsed(policy))
 {
   vtkm::worklet::NDimsEntropy ndEntropy;
-  ndEntropy.SetNumOfDataPoints(inData.GetField(0).GetData().GetNumberOfValues());
+  ndEntropy.SetNumOfDataPoints(inData.GetField(0).GetNumberOfValues());
 
   // Add field one by one
   // (By using AddFieldAndBin(), the length of FieldNames and NumOfBins must be the same)

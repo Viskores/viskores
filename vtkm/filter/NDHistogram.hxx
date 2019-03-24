@@ -54,7 +54,7 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::Da
   vtkm::worklet::NDimsHistogram ndHistogram;
 
   // Set the number of data points
-  ndHistogram.SetNumOfDataPoints(inData.GetField(0).GetData().GetNumberOfValues());
+  ndHistogram.SetNumOfDataPoints(inData.GetField(0).GetNumberOfValues());
 
   // Add field one by one
   // (By using AddFieldAndBin(), the length of FieldNames and NumOfBins must be the same)

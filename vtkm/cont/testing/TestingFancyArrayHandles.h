@@ -173,8 +173,8 @@ struct TransformExecObject : public vtkm::cont::ExecutionAndControlObjectBase
   {
     // Need to make sure the serial device is supported, since that is what is used on the
     // control side.
-    vtkm::cont::ScopedGlobalRuntimeDeviceTracker scopedTracker;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ResetDevice(vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::cont::ScopedRuntimeDeviceTracker scopedTracker;
+    vtkm::cont::GetRuntimeDeviceTracker().ResetDevice(vtkm::cont::DeviceAdapterTagSerial());
     this->VirtualFunctor.Reset(new VirtualTransformFunctor<ValueType, FunctorType>(functor));
   }
 
@@ -1377,7 +1377,7 @@ public:
   ///
   static VTKM_CONT int Run(int argc, char* argv[])
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
     return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
   }
 };

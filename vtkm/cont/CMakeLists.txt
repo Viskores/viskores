@@ -49,11 +49,10 @@ set(headers
   ArrayRangeCompute.h
   AssignerMultiBlock.h
   AtomicArray.h
-  BoundingIntervalHierarchy.h
-  BoundingIntervalHierarchyNode.h
   BoundsCompute.h
   BoundsGlobalCompute.h
   CellLocator.h
+  CellLocatorBoundingIntervalHierarchy.h
   CellLocatorHelper.h
   CellLocatorRectilinearGrid.h
   CellLocatorTwoLevelUniformGrid.h
@@ -115,7 +114,6 @@ set(template_sources
   ArrayHandle.hxx
   ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
-  BoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
   ColorTable.hxx
@@ -133,6 +131,7 @@ set(sources
   AssignerMultiBlock.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
+  CellLocator.cxx
   CellSet.cxx
   CellSetStructured.cxx
   ColorTable.cxx
@@ -167,6 +166,9 @@ set(sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   ArrayRangeCompute.cxx
+  CellLocatorBoundingIntervalHierarchy.cxx
+  CellLocatorRectilinearGrid.cxx
+  CellLocatorUniformGrid.cxx
   CellSetExplicit.cxx
   CoordinateSystem.cxx
   StorageVirtual.cxx

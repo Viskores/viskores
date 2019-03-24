@@ -34,7 +34,7 @@ namespace detail
 {
 
 VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::cont::DeviceAdapterId,
-                                                vtkm::cont::RuntimeDeviceTracker&,
+                                                vtkm::cont::RuntimeDeviceTracker,
                                                 const std::string& functorName);
 
 template <typename DeviceTag, typename Functor, typename... Args>
@@ -42,7 +42,7 @@ inline bool TryExecuteIfValid(std::true_type,
                               DeviceTag tag,
                               Functor&& f,
                               vtkm::cont::DeviceAdapterId devId,
-                              vtkm::cont::RuntimeDeviceTracker& tracker,
+                              vtkm::cont::RuntimeDeviceTracker tracker,
                               Args&&... args)
 {
   if ((tag == devId || devId == DeviceAdapterTagAny()) && tracker.CanRunOn(tag))
@@ -66,7 +66,7 @@ inline bool TryExecuteIfValid(std::false_type,
                               DeviceTag,
                               Functor&&,
                               vtkm::cont::DeviceAdapterId,
-                              vtkm::cont::RuntimeDeviceTracker&,
+                              vtkm::cont::RuntimeDeviceTracker,
                               Args&&...)
 {
   return false;
@@ -78,7 +78,7 @@ struct TryExecuteWrapper
   inline void operator()(DeviceTag tag,
                          Functor&& f,
                          vtkm::cont::DeviceAdapterId devId,
-                         vtkm::cont::RuntimeDeviceTracker& tracker,
+                         vtkm::cont::RuntimeDeviceTracker tracker,
                          bool& ran,
                          Args&&... args) const
   {
@@ -99,7 +99,7 @@ inline bool TryExecuteImpl(vtkm::cont::DeviceAdapterId devId,
                            Functor&& functor,
                            std::true_type,
                            std::true_type,
-                           vtkm::cont::RuntimeDeviceTracker& tracker,
+                           vtkm::cont::RuntimeDeviceTracker tracker,
                            DeviceList list,
                            Args&&... args)
 {
@@ -123,7 +123,7 @@ inline bool TryExecuteImpl(vtkm::cont::DeviceAdapterId devId,
                            Args&&... args)
 {
   bool success = false;
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
   TryExecuteWrapper task;
   vtkm::ListForEach(task,
                     VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(),
@@ -160,7 +160,7 @@ inline bool TryExecuteImpl(vtkm::cont::DeviceAdapterId devId,
                            Arg1&& arg1,
                            Args&&... args)
 {
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
   return TryExecuteImpl(devId,
                         std::forward<Functor>(functor),
                         t,
@@ -213,7 +213,7 @@ inline bool TryExecuteImpl(vtkm::cont::DeviceAdapterId devId,
 /// vtkm::cont::TryExecuteOnDevice(devId, TryCallExample(), int{42});
 ///
 /// // Executing on a specific deviceID with a runtime tracker
-/// auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+/// auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
 /// vtkm::cont::TryExecute(devId, TryCallExample(), tracker, int{42});
 ///
 /// \endcode
@@ -224,7 +224,7 @@ inline bool TryExecuteImpl(vtkm::cont::DeviceAdapterId devId,
 /// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
 /// is used.
 ///
-/// If no \c RuntimeDeviceTracker specified, then \c GetGlobalRuntimeDeviceTracker()
+/// If no \c RuntimeDeviceTracker specified, then \c GetRuntimeDeviceTracker()
 /// is used.
 template <typename Functor>
 VTKM_CONT bool TryExecuteOnDevice(vtkm::cont::DeviceAdapterId devId, Functor&& functor)
@@ -320,7 +320,7 @@ VTKM_CONT bool TryExecuteOnDevice(vtkm::cont::DeviceAdapterId devId,
 /// vtkm::cont::TryExecute(TryCallExample(), int{42});
 ///
 /// // Executing with a runtime tracker
-/// auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+/// auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
 /// vtkm::cont::TryExecute(TryCallExample(), tracker, int{42});
 ///
 /// // Executing with a device list
@@ -338,7 +338,7 @@ VTKM_CONT bool TryExecuteOnDevice(vtkm::cont::DeviceAdapterId devId,
 /// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
 /// is used.
 ///
-/// If no \c RuntimeDeviceTracker specified, then \c GetGlobalRuntimeDeviceTracker()
+/// If no \c RuntimeDeviceTracker specified, then \c GetRuntimeDeviceTracker()
 /// is used.
 template <typename Functor, typename... Args>
 VTKM_CONT bool TryExecute(Functor&& functor, Args&&... args)

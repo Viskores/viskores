@@ -21,7 +21,7 @@
 #ifndef vtk_m_filter_GhostZone_h
 #define vtk_m_filter_GhostZone_h
 
-#include <vtkm/GhostCell.h>
+#include <vtkm/CellClassification.h>
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/filter/Threshold.h>
 
@@ -44,6 +44,8 @@ public:
   GhostZone();
 
   VTKM_CONT
+  void RemoveGhostField() { this->RemoveField = true; }
+  VTKM_CONT
   void RemoveAllGhost() { this->RemoveAll = true; }
   VTKM_CONT
   void RemoveByType(const vtkm::UInt8& vals)
@@ -52,13 +54,15 @@ public:
     this->RemoveVals = vals;
   }
   VTKM_CONT
+  bool GetRemoveGhostField() { return this->RemoveField; }
+  VTKM_CONT
   bool GetRemoveAllGhost() const { return this->RemoveAll; }
 
   VTKM_CONT
   void ConvertOutputToUnstructured() { this->ConvertToUnstructured = true; }
 
   VTKM_CONT
-  vtkm::UInt8 GetRemoveByType() const { return !this->RemoveAll; }
+  bool GetRemoveByType() const { return !this->RemoveAll; }
   VTKM_CONT
   vtkm::UInt8 GetRemoveType() const { return this->RemoveVals; }
   VTKM_CONT
@@ -80,6 +84,7 @@ public:
 
 private:
   bool RemoveAll;
+  bool RemoveField;
   bool ConvertToUnstructured;
   vtkm::UInt8 RemoveVals;
   vtkm::worklet::Threshold Worklet;

@@ -593,7 +593,7 @@ public:
   {
     //We need to verify the color table runs on this specific device
     //so we need to force our single device
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
     return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
   }
 };

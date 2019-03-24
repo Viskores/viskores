@@ -46,7 +46,6 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # We explicitly only suppress specific worklets so we can see when new recursive
   # worklets are added
   "ptxas warning : Stack size for entry function.*NearestNeighborSearch3DWorklet.*"
-  "ptxas warning : Stack size for entry function.*BoundingIntervalHierarchy.*"
   "ptxas warning : Stack size for entry function.*CoordinatesPortal.*"
   "ptxas warning : Stack size for entry function.*CellRangesExtracter.*"
 
@@ -58,5 +57,8 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   "nvlink warning : Stack size for entry function.*ArrayPortalWrapper.*"
   "nvlink warning : .*ArrayPortalWrapper.* has address taken but no possible call to it"
   "nvlink warning : .*ArrayPortalVirtual.* has address taken but no possible call to it"
+  "nvlink warning : .*CellLocatorBoundingIntervalHierarchyExec.* has address taken but no possible call to it"
+  "nvlink warning : .*CellLocatorRectilinearGrid.* has address taken but no possible call to it"
+  "nvlink warning : .*CellLocatorUniformGrid.* has address taken but no possible call to it"
 
 )

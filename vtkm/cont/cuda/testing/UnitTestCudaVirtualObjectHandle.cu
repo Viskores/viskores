@@ -30,7 +30,7 @@ namespace
 
 void TestVirtualObjectHandle()
 {
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   using DeviceAdapterList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda>;

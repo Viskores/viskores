@@ -143,7 +143,7 @@ private:
 public:
   static int Run(int argc, char* argv[])
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
     return vtkm::cont::testing::Testing::Run(TestAll, argc, argv);
   }
 };

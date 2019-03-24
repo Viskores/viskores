@@ -33,7 +33,7 @@ void TestVirtualObjectHandle()
   using DeviceAdapterList2 =
     vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial, vtkm::cont::DeviceAdapterTagOpenMP>;
 
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
   vtkm::cont::testing::TestingVirtualObjectHandle<DeviceAdapterList>::Run();

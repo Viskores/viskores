@@ -20,12 +20,15 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
-#include <vtkm/cont/BoundingIntervalHierarchy.hxx>
+#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/exec/CellInterpolate.h>
+#include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/worklet/Invoker.h>
 
 namespace
 {
@@ -68,9 +71,7 @@ vtkm::cont::DataSet ConstructDataSet(vtkm::Id size)
   return vtkm::cont::DataSetBuilderUniform().Create(vtkm::Id3(size, size, size));
 }
 
-void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet,
-                                   vtkm::IdComponent numPlanes,
-                                   const vtkm::cont::DeviceAdapterId& id)
+void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponent numPlanes)
 {
   using Timer = vtkm::cont::Timer;
 
@@ -79,7 +80,8 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet,
 
   std::cout << "Using numPlanes: " << numPlanes << "\n";
   std::cout << "Building Bounding Interval Hierarchy Tree" << std::endl;
-  vtkm::cont::BoundingIntervalHierarchy bih = vtkm::cont::BoundingIntervalHierarchy(numPlanes, 5);
+  vtkm::cont::CellLocatorBoundingIntervalHierarchy bih =
+    vtkm::cont::CellLocatorBoundingIntervalHierarchy(numPlanes, 5);
   bih.SetCellSet(cellSet);
   bih.SetCoordinates(dataSet.GetCoordinateSystem());
   bih.Update();
@@ -98,28 +100,10 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet,
   Timer interpolationTimer;
   interpolationTimer.Start();
   vtkm::cont::ArrayHandle<vtkm::IdComponent> results;
-#ifdef VTKM_CUDA
-  //set up stack size for cuda envinroment
-  size_t stackSizeBackup(0);
-  (void)stackSizeBackup;
-  if (id.GetValue() == VTKM_DEVICE_ADAPTER_CUDA)
-  {
-    cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
-    cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 50);
-  }
-#else
-  (void)id;
-#endif
 
   vtkm::worklet::DispatcherMapField<BoundingIntervalHierarchyTester>().Invoke(
     centroids, bih, expectedCellIds, results);
 
-#ifdef VTKM_CUDA
-  if (id.GetValue() == VTKM_DEVICE_ADAPTER_CUDA)
-  {
-    cudaDeviceSetLimit(cudaLimitStackSize, stackSizeBackup);
-  }
-#endif
   vtkm::Id numDiffs = vtkm::cont::Algorithm::Reduce(results, 0, vtkm::Add());
   interpolationTimer.Stop();
   vtkm::Float64 timeDiff = interpolationTimer.GetElapsedTime();
@@ -131,17 +115,17 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet,
   VTKM_TEST_ASSERT(numDiffs == 0, "Calculated cell Ids not the same as expected cell Ids");
 }
 
-void RunTest(const vtkm::cont::DeviceAdapterId& id)
+void RunTest()
 {
-  TestBoundingIntervalHierarchy(ConstructDataSet(16), 3, id);
-  TestBoundingIntervalHierarchy(ConstructDataSet(16), 4, id);
-  TestBoundingIntervalHierarchy(ConstructDataSet(16), 6, id);
-  TestBoundingIntervalHierarchy(ConstructDataSet(16), 9, id);
+  TestBoundingIntervalHierarchy(ConstructDataSet(16), 3);
+  TestBoundingIntervalHierarchy(ConstructDataSet(16), 4);
+  TestBoundingIntervalHierarchy(ConstructDataSet(16), 6);
+  TestBoundingIntervalHierarchy(ConstructDataSet(16), 9);
 }
 
 } // anonymous namespace
 
 int UnitTestBoundingIntervalHierarchy(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::RunOnDevice(RunTest, argc, argv);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

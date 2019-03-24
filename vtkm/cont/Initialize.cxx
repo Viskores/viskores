@@ -90,7 +90,7 @@ struct VtkmArg : public opt::Arg
       return false;
     }
 
-    auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+    auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
     bool result = false;
     try
     {
@@ -108,13 +108,12 @@ struct VtkmArg : public opt::Arg
     std::ostringstream names;
     names << "\"Any\" ";
 
-    auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
     for (vtkm::Int8 i = 0; i < VTKM_MAX_DEVICE_ADAPTER_ID; ++i)
     {
       auto id = vtkm::cont::make_DeviceAdapterId(i);
       if (VtkmArg::DeviceIsAvailable(id))
       {
-        names << "\"" << tracker.GetDeviceName(id) << "\" ";
+        names << "\"" << id.GetName() << "\" ";
       }
     }
     return names.str();
@@ -181,7 +180,7 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     if (options[DEVICE])
     {
       auto id = vtkm::cont::make_DeviceAdapterId(options[DEVICE].arg);
-      auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+      auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
       tracker.ForceDevice(id);
       config.Device = id;
     }

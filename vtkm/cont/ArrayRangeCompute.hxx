@@ -55,7 +55,7 @@ struct ArrayRangeComputeFunctor
 template <typename T, typename S>
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
   const vtkm::cont::ArrayHandle<T, S>& input,
-  vtkm::cont::RuntimeDeviceTracker& tracker)
+  vtkm::cont::RuntimeDeviceTracker tracker)
 {
   using VecTraits = vtkm::VecTraits<T>;
   using CT = typename VecTraits::ComponentType;
@@ -103,16 +103,6 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
 
 } // namespace detail
 
-
-// VTKM_CONT
-// inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-//   const vtkm::cont::ArrayHandleVirtualCoordinates& input,
-//   vtkm::cont::RuntimeDeviceTracker tracker)
-// {
-//   auto array =
-//     static_cast<const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>&>(input);
-//   return ArrayRangeCompute(array, tracker);
-// }
 
 VTKM_CONT
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(

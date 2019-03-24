@@ -458,7 +458,7 @@ private:
 public:
   static VTKM_CONT int Run(int argc, char* argv[])
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
     return vtkm::cont::testing::Testing::Run(TryArrayHandleType(), argc, argv);
   }
 };
