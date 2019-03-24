@@ -17,17 +17,17 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_Ghost_Cell_h
-#define vtk_m_Ghost_Cell_h
+#ifndef vtk_m_CellClassification_h
+#define vtk_m_CellClassification_h
 
 namespace vtkm
 {
 
 enum struct CellClassification
 {
-  NORMAL = 0,         //Valid cell
-  DUPLICATE = 1 << 0, //Ghost cell
-  INVALID = 1 << 1,   //Cell is invalid
+  NORMAL = 0,       //Valid cell
+  GHOST = 1 << 0,   //Ghost cell
+  INVALID = 1 << 1, //Cell is invalid
   UNUSED0 = 1 << 2,
   UNUSED1 = 1 << 3,
   UNUSED3 = 1 << 4,
@@ -36,4 +36,4 @@ enum struct CellClassification
 };
 }
 
-#endif // vtk_m_Ghost_Cell_h
+#endif // vtk_m_CellClassification_h

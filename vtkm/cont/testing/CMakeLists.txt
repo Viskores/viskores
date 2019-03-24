@@ -61,6 +61,7 @@ set(unit_tests
   UnitTestVariantArrayHandle.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestCellLocator.cxx
+  UnitTestCellSet.cxx
   UnitTestCellSetExplicit.cxx
   UnitTestCellSetPermutation.cxx
   UnitTestContTesting.cxx
