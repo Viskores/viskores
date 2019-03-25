@@ -24,6 +24,13 @@
 
 #include <vtkm/cont/ArrayHandleTransform.h>
 
+#include <vtkm/cont/Logging.h>
+
+#include <vtkm/BaseComponent.h>
+#include <vtkm/Range.h>
+
+#include <limits>
+
 namespace vtkm
 {
 namespace cont
@@ -62,6 +69,60 @@ public:
   ArrayHandleCast(const ArrayHandleType& handle)
     : Superclass(handle)
   {
+    this->ValidateTypeCast<typename ArrayHandleType::ValueType>();
+  }
+
+private:
+  // Log warnings if type cast is valid but lossy:
+  template <typename SrcValueType>
+  VTKM_CONT static typename std::enable_if<!std::is_same<T, SrcValueType>::value>::type
+  ValidateTypeCast()
+  {
+#ifdef VTKM_ENABLE_LOGGING
+    using DstValueType = T;
+    using SrcComp = typename vtkm::BaseComponent<SrcValueType>::Type;
+    using DstComp = typename vtkm::BaseComponent<DstValueType>::Type;
+    using SrcLimits = std::numeric_limits<SrcComp>;
+    using DstLimits = std::numeric_limits<DstComp>;
+
+    const vtkm::Range SrcRange{ SrcLimits::min(), SrcLimits::max() };
+    const vtkm::Range DstRange{ DstLimits::min(), DstLimits::max() };
+
+    const bool RangeLoss = (SrcRange.Max > DstRange.Max || SrcRange.Min < DstRange.Min);
+    const bool PrecLoss = SrcLimits::digits > DstLimits::digits;
+
+    if (RangeLoss && PrecLoss)
+    {
+      VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
+                 "VariantArrayHandle::AsVirtual: Casting ComponentType of "
+                 "%s to %s reduces range and precision.",
+                 vtkm::cont::TypeToString<SrcValueType>().c_str(),
+                 vtkm::cont::TypeToString<DstValueType>().c_str());
+    }
+    else if (RangeLoss)
+    {
+      VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
+                 "VariantArrayHandle::AsVirtual: Casting ComponentType of "
+                 "%s to %s reduces range.",
+                 vtkm::cont::TypeToString<SrcValueType>().c_str(),
+                 vtkm::cont::TypeToString<DstValueType>().c_str());
+    }
+    else if (PrecLoss)
+    {
+      VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
+                 "VariantArrayHandle::AsVirtual: Casting ComponentType of "
+                 "%s to %s reduces precision.",
+                 vtkm::cont::TypeToString<SrcValueType>().c_str(),
+                 vtkm::cont::TypeToString<DstValueType>().c_str());
+    }
+#endif // Logging
+  }
+
+  template <typename SrcValueType>
+  VTKM_CONT static typename std::enable_if<std::is_same<T, SrcValueType>::value>::type
+  ValidateTypeCast()
+  {
+    //no-op if types match
   }
 };
 

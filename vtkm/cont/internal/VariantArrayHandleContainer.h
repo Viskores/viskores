@@ -22,14 +22,16 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/ArrayHandleVirtual.hxx>
+#include <vtkm/cont/ErrorBadType.h>
 
+#include <vtkm/VecTraits.h>
 
 #include <memory>
+#include <sstream>
 #include <typeindex>
-
-
 
 namespace vtkm
 {
@@ -221,7 +223,6 @@ struct VTKM_ALWAYS_EXPORT Caster<T, vtkm::cont::StorageTagVirtual>
   }
 };
 
-
 template <typename ArrayHandleType>
 VTKM_CONT ArrayHandleType Cast(const VariantArrayHandleContainerBase* container)
 { //container could be nullptr
@@ -231,6 +232,54 @@ VTKM_CONT ArrayHandleType Cast(const VariantArrayHandleContainerBase* container)
   auto ret = Caster<Type, Storage>{}(container);
   return ArrayHandleType(std::move(ret));
 }
+
+struct ForceCastToVirtual
+{
+  template <typename SrcValueType, typename Storage, typename DstValueType>
+  VTKM_CONT typename std::enable_if<std::is_same<SrcValueType, DstValueType>::value>::type
+  operator()(const vtkm::cont::ArrayHandle<SrcValueType, Storage>& input,
+             vtkm::cont::ArrayHandleVirtual<DstValueType>& output) const
+  { // ValueTypes match
+    output = vtkm::cont::make_ArrayHandleVirtual<DstValueType>(input);
+  }
+
+  template <typename SrcValueType, typename Storage, typename DstValueType>
+  VTKM_CONT typename std::enable_if<!std::is_same<SrcValueType, DstValueType>::value>::type
+  operator()(const vtkm::cont::ArrayHandle<SrcValueType, Storage>& input,
+             vtkm::cont::ArrayHandleVirtual<DstValueType>& output) const
+  { // ValueTypes do not match
+    this->ValidateWidthAndCast<SrcValueType, DstValueType>(input, output);
+  }
+
+private:
+  template <typename S,
+            typename D,
+            typename InputType,
+            vtkm::IdComponent SSize = vtkm::VecTraits<S>::NUM_COMPONENTS,
+            vtkm::IdComponent DSize = vtkm::VecTraits<D>::NUM_COMPONENTS>
+  VTKM_CONT typename std::enable_if<SSize == DSize>::type ValidateWidthAndCast(
+    const InputType& input,
+    vtkm::cont::ArrayHandleVirtual<D>& output) const
+  { // number of components match
+    auto casted = vtkm::cont::make_ArrayHandleCast<D>(input);
+    output = vtkm::cont::make_ArrayHandleVirtual<D>(casted);
+  }
+
+  template <typename S,
+            typename D,
+            vtkm::IdComponent SSize = vtkm::VecTraits<S>::NUM_COMPONENTS,
+            vtkm::IdComponent DSize = vtkm::VecTraits<D>::NUM_COMPONENTS>
+  VTKM_CONT typename std::enable_if<SSize != DSize>::type ValidateWidthAndCast(
+    const ArrayHandleBase&,
+    ArrayHandleBase&) const
+  { // number of components do not match
+    std::ostringstream str;
+    str << "VariantArrayHandle::AsVirtual: Cannot cast from " << vtkm::cont::TypeToString<S>()
+        << " to " << vtkm::cont::TypeToString<D>() << "; "
+                                                      "number of components must match exactly.";
+    throw vtkm::cont::ErrorBadType(str.str());
+  }
+};
 }
 }
 }
