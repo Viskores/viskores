@@ -25,7 +25,7 @@
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/GhostZone.h>
+#include <vtkm/filter/GhostCellRemove.h>
 
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
@@ -33,7 +33,7 @@
 namespace
 {
 
-static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostZoneArray(vtkm::Id nx,
+static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostCellArray(vtkm::Id nx,
                                                                      vtkm::Id ny,
                                                                      vtkm::Id nz,
                                                                      int numLayers,
@@ -107,7 +107,7 @@ static vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
     ds = dsb.Create(vtkm::Id2(numI + 1, numJ + 1));
   else
     ds = dsb.Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
-  auto ghosts = StructuredGhostZoneArray(numI, numJ, numK, numLayers, addMidGhost);
+  auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
@@ -143,7 +143,7 @@ static vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
     ds = dsb.Create(x, y, z);
   }
 
-  auto ghosts = StructuredGhostZoneArray(numI, numJ, numK, numLayers, addMidGhost);
+  auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
@@ -221,7 +221,7 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
     ds = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates", "cells");
   }
 
-  auto ghosts = StructuredGhostZoneArray(numI, numJ, numK, numLayers);
+  auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers);
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
@@ -229,7 +229,7 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
   return ds;
 }
 
-void TestGhostZone()
+void TestGhostCellRemove()
 {
   // specify some 2d tests: {numI, numJ, numK, numGhostLayers}.
   std::vector<std::vector<vtkm::Id>> tests2D = { { 4, 4, 0, 2 },  { 5, 5, 0, 2 },  { 10, 10, 0, 3 },
@@ -265,22 +265,22 @@ void TestGhostZone()
         std::vector<std::string> removeType = { "all", "byType" };
         for (auto& rt : removeType)
         {
-          vtkm::filter::GhostZone ghostZoneRemoval;
-          ghostZoneRemoval.RemoveGhostField();
+          vtkm::filter::GhostCellRemove ghostCellRemoval;
+          ghostCellRemoval.RemoveGhostField();
 
           if (rt == "all")
-            ghostZoneRemoval.RemoveAllGhost();
+            ghostCellRemoval.RemoveAllGhost();
           else if (rt == "byType")
-            ghostZoneRemoval.RemoveByType(
+            ghostCellRemoval.RemoveByType(
               static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST));
 
           std::vector<std::string> outputType = { "permutation", "explicit" };
           for (auto& ot : outputType)
           {
             if (ot == "explicit")
-              ghostZoneRemoval.ConvertOutputToUnstructured();
+              ghostCellRemoval.ConvertOutputToUnstructured();
 
-            auto output = ghostZoneRemoval.Execute(ds, vtkm::filter::GhostZonePolicy());
+            auto output = ghostCellRemoval.Execute(ds, vtkm::filter::GhostCellRemovePolicy());
             vtkm::Id numCells = output.GetCellSet(0).GetNumberOfCells();
 
             //Validate the output.
@@ -317,10 +317,10 @@ void TestGhostZone()
           else if (dsType == "rectilinear")
             ds = MakeRectilinear(nx, ny, nz, layer, true);
 
-          vtkm::filter::GhostZone ghostZoneRemoval;
-          ghostZoneRemoval.RemoveGhostField();
-          ghostZoneRemoval.ConvertOutputToUnstructured();
-          auto output = ghostZoneRemoval.Execute(ds, vtkm::filter::GhostZonePolicy());
+          vtkm::filter::GhostCellRemove ghostCellRemoval;
+          ghostCellRemoval.RemoveGhostField();
+          ghostCellRemoval.ConvertOutputToUnstructured();
+          auto output = ghostCellRemoval.Execute(ds, vtkm::filter::GhostCellRemovePolicy());
           VTKM_TEST_ASSERT(output.GetCellSet(0).IsType<vtkm::cont::CellSetExplicit<>>(),
                            "Wrong cell type for explicit conversion");
         }
@@ -330,7 +330,7 @@ void TestGhostZone()
 }
 }
 
-int UnitTestGhostZone(int argc, char* argv[])
+int UnitTestGhostCellRemove(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestGhostZone, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestGhostCellRemove, argc, argv);
 }

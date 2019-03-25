@@ -36,10 +36,10 @@ struct TypeUInt8 : vtkm::ListTagBase<vtkm::UInt8>
 {
 };
 
-class SetStructuredGhostZones1D : public vtkm::worklet::WorkletMapField
+class SetStructuredGhostCells1D : public vtkm::worklet::WorkletMapField
 {
 public:
-  SetStructuredGhostZones1D(const vtkm::Id& dim, const vtkm::Id& numLayers = 1)
+  SetStructuredGhostCells1D(const vtkm::Id& dim, const vtkm::Id& numLayers = 1)
     : Dim(dim)
     , NumLayers(numLayers)
     , Range(NumLayers, Dim - NumLayers)
@@ -65,10 +65,10 @@ private:
     static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
 };
 
-class SetStructuredGhostZones2D : public vtkm::worklet::WorkletMapField
+class SetStructuredGhostCells2D : public vtkm::worklet::WorkletMapField
 {
 public:
-  SetStructuredGhostZones2D(const vtkm::Id2& dims, const vtkm::Id& numLayers = 1)
+  SetStructuredGhostCells2D(const vtkm::Id2& dims, const vtkm::Id& numLayers = 1)
     : Dims(dims)
     , NumLayers(numLayers)
     , Range(NumLayers, Dims[0] - NumLayers, NumLayers, Dims[1] - NumLayers)
@@ -96,10 +96,10 @@ private:
     static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
 };
 
-class SetStructuredGhostZones3D : public vtkm::worklet::WorkletMapField
+class SetStructuredGhostCells3D : public vtkm::worklet::WorkletMapField
 {
 public:
-  SetStructuredGhostZones3D(const vtkm::Id3& dims, const vtkm::Id& numLayers = 1)
+  SetStructuredGhostCells3D(const vtkm::Id3& dims, const vtkm::Id& numLayers = 1)
     : Dims(dims)
     , NumLayers(numLayers)
     , Range(NumLayers,
@@ -139,13 +139,13 @@ namespace vtkm
 namespace filter
 {
 
-inline VTKM_CONT AddGhostZone::AddGhostZone()
+inline VTKM_CONT GhostCellClassify::GhostCellClassify()
 {
 }
 
 template <typename Policy>
-inline VTKM_CONT vtkm::cont::DataSet AddGhostZone::DoExecute(const vtkm::cont::DataSet& input,
-                                                             vtkm::filter::PolicyBase<Policy>)
+inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::DataSet& input,
+                                                                  vtkm::filter::PolicyBase<Policy>)
 {
   const vtkm::cont::DynamicCellSet& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
   vtkm::Id numCells = cellset.GetNumberOfCells();
@@ -158,35 +158,35 @@ inline VTKM_CONT vtkm::cont::DataSet AddGhostZone::DoExecute(const vtkm::cont::D
   if (cellset.template IsType<vtkm::cont::CellSetStructured<1>>())
   {
     if (numCells <= 2)
-      throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for AddGhostZone.");
+      throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
 
     vtkm::cont::CellSetStructured<1> cellset1d = cellset.Cast<vtkm::cont::CellSetStructured<1>>();
-    SetStructuredGhostZones1D structuredGhosts1D(cellset1d.GetCellDimensions());
-    vtkm::worklet::DispatcherMapField<SetStructuredGhostZones1D> dispatcher(structuredGhosts1D);
+    SetStructuredGhostCells1D structuredGhosts1D(cellset1d.GetCellDimensions());
+    vtkm::worklet::DispatcherMapField<SetStructuredGhostCells1D> dispatcher(structuredGhosts1D);
     dispatcher.Invoke(indexArray, ghosts);
   }
   else if (cellset.template IsType<vtkm::cont::CellSetStructured<2>>())
   {
     if (numCells <= 4)
-      throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for AddGhostZone.");
+      throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
 
     vtkm::cont::CellSetStructured<2> cellset2d = cellset.Cast<vtkm::cont::CellSetStructured<2>>();
-    SetStructuredGhostZones2D structuredGhosts2D(cellset2d.GetCellDimensions());
-    vtkm::worklet::DispatcherMapField<SetStructuredGhostZones2D> dispatcher(structuredGhosts2D);
+    SetStructuredGhostCells2D structuredGhosts2D(cellset2d.GetCellDimensions());
+    vtkm::worklet::DispatcherMapField<SetStructuredGhostCells2D> dispatcher(structuredGhosts2D);
     dispatcher.Invoke(indexArray, ghosts);
   }
   else if (cellset.template IsType<vtkm::cont::CellSetStructured<3>>())
   {
     if (numCells <= 8)
-      throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for AddGhostZone.");
+      throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
 
     vtkm::cont::CellSetStructured<3> cellset3d = cellset.Cast<vtkm::cont::CellSetStructured<3>>();
-    SetStructuredGhostZones3D structuredGhosts3D(cellset3d.GetCellDimensions());
-    vtkm::worklet::DispatcherMapField<SetStructuredGhostZones3D> dispatcher(structuredGhosts3D);
+    SetStructuredGhostCells3D structuredGhosts3D(cellset3d.GetCellDimensions());
+    vtkm::worklet::DispatcherMapField<SetStructuredGhostCells3D> dispatcher(structuredGhosts3D);
     dispatcher.Invoke(indexArray, ghosts);
   }
   else
-    throw vtkm::cont::ErrorFilterExecution("Unsupported cellset type for AddGhostZone.");
+    throw vtkm::cont::ErrorFilterExecution("Unsupported cellset type for GhostCellClassify.");
 
   vtkm::cont::DataSet output = internal::CreateResult(
     input, ghosts, "vtkmGhostCells", vtkm::cont::Field::Association::CELL_SET, cellset.GetName());
@@ -194,10 +194,11 @@ inline VTKM_CONT vtkm::cont::DataSet AddGhostZone::DoExecute(const vtkm::cont::D
 }
 
 template <typename ValueType, typename Storage, typename Policy>
-inline VTKM_CONT bool AddGhostZone::DoMapField(vtkm::cont::DataSet&,
-                                               const vtkm::cont::ArrayHandle<ValueType, Storage>&,
-                                               const vtkm::filter::FieldMetadata&,
-                                               vtkm::filter::PolicyBase<Policy>)
+inline VTKM_CONT bool GhostCellClassify::DoMapField(
+  vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<ValueType, Storage>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<Policy>)
 {
   return true;
 }

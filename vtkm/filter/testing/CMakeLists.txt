@@ -19,7 +19,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestAddGhostZone.cxx
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
   UnitTestCleanGrid.cxx
@@ -39,7 +38,8 @@ set(unit_tests
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
   UnitTestGradient.cxx
-  UnitTestGhostZone.cxx
+  UnitTestGhostCellClassify.cxx
+  UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestMarchingCubesFilter.cxx

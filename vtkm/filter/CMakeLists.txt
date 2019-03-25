@@ -19,7 +19,6 @@
 ##============================================================================
 
 set(headers
-  AddGhostZone.h
   CellAverage.h
   CellMeasures.h
   CleanGrid.h
@@ -44,7 +43,8 @@ set(headers
   FilterDataSetWithField.h
   FilterField.h
   FilterTraits.h
-  GhostZone.h
+  GhostCellClassify.h
+  GhostCellRemove.h
   Gradient.h
   Histogram.h
   Lagrangian.h
@@ -80,7 +80,6 @@ set(headers
 )
 
 set(header_template_sources
-  AddGhostZone.hxx
   CellAverage.hxx
   CellMeasures.hxx
   CleanGrid.hxx
@@ -102,7 +101,8 @@ set(header_template_sources
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
-  GhostZone.hxx
+  GhostCellClassify.hxx
+  GhostCellRemove.hxx
   Gradient.hxx
   Histogram.hxx
   Lagrangian.hxx
