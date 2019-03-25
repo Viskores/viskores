@@ -136,7 +136,7 @@ public:
   template <typename T, typename AtomicType>
   VTKM_EXEC void operator()(const T& value, const vtkm::Id& index, AtomicType& atom) const
   {
-    // we are finding the logical min max of valid zones
+    // we are finding the logical min max of valid cells
     if ((RemoveAllGhost && value != 0) || (!RemoveAllGhost && (value != 0 && value | RemoveType)))
       return;
 
@@ -302,8 +302,8 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT GhostZone::GhostZone()
-  : vtkm::filter::FilterDataSetWithField<GhostZone>()
+inline VTKM_CONT GhostCellRemove::GhostCellRemove()
+  : vtkm::filter::FilterDataSetWithField<GhostCellRemove>()
   , RemoveAll(false)
   , RemoveField(false)
   , ConvertToUnstructured(false)
@@ -315,7 +315,7 @@ inline VTKM_CONT GhostZone::GhostZone()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet GhostZone::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -344,7 +344,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostZone::DoExecute(
         extract.SetFieldsToPass(this->GetActiveFieldName(),
                                 vtkm::filter::FieldSelection::MODE_EXCLUDE);
 
-      auto output = extract.Execute(input, vtkm::filter::GhostZonePolicy());
+      auto output = extract.Execute(input, vtkm::filter::GhostCellRemovePolicy());
       return output;
     }
   }
@@ -379,10 +379,11 @@ inline VTKM_CONT vtkm::cont::DataSet GhostZone::DoExecute(
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool GhostZone::DoMapField(vtkm::cont::DataSet& result,
-                                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                            const vtkm::filter::FieldMetadata& fieldMeta,
-                                            vtkm::filter::PolicyBase<DerivedPolicy>)
+inline VTKM_CONT bool GhostCellRemove::DoMapField(
+  vtkm::cont::DataSet& result,
+  const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   if (fieldMeta.IsPointField())
   {
@@ -402,7 +403,7 @@ inline VTKM_CONT bool GhostZone::DoMapField(vtkm::cont::DataSet& result,
   }
 }
 
-inline VTKM_CONT vtkm::cont::CellSetExplicit<> GhostZone::ConvertOutputToUnstructured(
+inline VTKM_CONT vtkm::cont::CellSetExplicit<> GhostCellRemove::ConvertOutputToUnstructured(
   vtkm::cont::DynamicCellSet& inCells)
 {
   using PermStructured2d = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>>;

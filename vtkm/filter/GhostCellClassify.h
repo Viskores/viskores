@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_filter_AddGhostZone_h
-#define vtk_m_filter_AddGhostZone_h
+#ifndef vtk_m_filter_GhostCellClassify_h
+#define vtk_m_filter_GhostCellClassify_h
 
 #include <vtkm/filter/FilterDataSet.h>
 
@@ -27,16 +27,16 @@ namespace vtkm
 namespace filter
 {
 
-struct AddGhostZonePolicy : vtkm::filter::PolicyBase<AddGhostZonePolicy>
+struct GhostCellClassifyPolicy : vtkm::filter::PolicyBase<GhostCellClassifyPolicy>
 {
   using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8>;
 };
 
-class AddGhostZone : public vtkm::filter::FilterDataSet<AddGhostZone>
+class GhostCellClassify : public vtkm::filter::FilterDataSet<GhostCellClassify>
 {
 public:
   VTKM_CONT
-  AddGhostZone();
+  GhostCellClassify();
 
   template <typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData,
@@ -53,6 +53,6 @@ private:
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/AddGhostZone.hxx>
+#include <vtkm/filter/GhostCellClassify.hxx>
 
-#endif //vtk_m_filter_AddGhostZone_h
+#endif //vtk_m_filter_GhostCellClassify_h

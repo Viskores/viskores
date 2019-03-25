@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_GhostZone_h
-#define vtk_m_filter_GhostZone_h
+#ifndef vtk_m_filter_GhostCellRemove_h
+#define vtk_m_filter_GhostCellRemove_h
 
 #include <vtkm/CellClassification.h>
 #include <vtkm/filter/FilterDataSetWithField.h>
@@ -30,18 +30,18 @@ namespace vtkm
 namespace filter
 {
 
-struct GhostZonePolicy : vtkm::filter::PolicyBase<GhostZonePolicy>
+struct GhostCellRemovePolicy : vtkm::filter::PolicyBase<GhostCellRemovePolicy>
 {
   using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8>;
 };
 
-/// \brief Removes ghost zones
+/// \brief Removes ghost cells
 ///
-class GhostZone : public vtkm::filter::FilterDataSetWithField<GhostZone>
+class GhostCellRemove : public vtkm::filter::FilterDataSetWithField<GhostCellRemove>
 {
 public:
   VTKM_CONT
-  GhostZone();
+  GhostCellRemove();
 
   VTKM_CONT
   void RemoveGhostField() { this->RemoveField = true; }
@@ -94,14 +94,14 @@ private:
 };
 
 template <>
-class FilterTraits<GhostZone>
-{ //currently the ghostzone filter only works on uint8 data.
+class FilterTraits<GhostCellRemove>
+{ //currently the GhostCellRemove filter only works on uint8 data.
 public:
   using InputFieldTypeList = vtkm::ListTagBase<vtkm::UInt8>;
 };
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/GhostZone.hxx>
+#include <vtkm/filter/GhostCellRemove.hxx>
 
-#endif // vtk_m_filter_GhostZone_h
+#endif // vtk_m_filter_GhostCellRemove_h

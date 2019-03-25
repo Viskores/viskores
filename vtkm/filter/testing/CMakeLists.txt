@@ -19,7 +19,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestAddGhostZone.cxx
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
   UnitTestCellSetConnectivityFilter.cxx
@@ -40,7 +39,8 @@ set(unit_tests
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
   UnitTestGradient.cxx
-  UnitTestGhostZone.cxx
+  UnitTestGhostCellClassify.cxx
+  UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
   UnitTestLagrangianFilter.cxx

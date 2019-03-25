@@ -25,7 +25,7 @@
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/AddGhostZone.h>
+#include <vtkm/filter/GhostCellClassify.h>
 
 namespace
 {
@@ -111,9 +111,9 @@ void TestStructured()
         else if (dsType == "rectilinear")
           ds = MakeRectilinear(nx, ny, nz);
 
-        vtkm::filter::AddGhostZone addGhost;
+        vtkm::filter::GhostCellClassify addGhost;
 
-        auto output = addGhost.Execute(ds, vtkm::filter::AddGhostZonePolicy());
+        auto output = addGhost.Execute(ds, vtkm::filter::GhostCellClassifyPolicy());
 
         //Validate the output.
         VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1, "Wrong number of cell sets in output");
@@ -148,13 +148,13 @@ void TestStructured()
   }
 }
 
-void TestAddGhostZone()
+void TestGhostCellClassify()
 {
   TestStructured();
 }
 }
 
-int UnitTestAddGhostZone(int argc, char* argv[])
+int UnitTestGhostCellClassify(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestAddGhostZone, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestGhostCellClassify, argc, argv);
 }
