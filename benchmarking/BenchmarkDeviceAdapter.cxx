@@ -30,7 +30,7 @@
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
+#include <vtkm/cont/internal/OptionParser.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/worklet/StableSortIndices.h>
@@ -1217,33 +1217,220 @@ public:
 };
 
 #undef ARRAY_SIZE
+
+struct Arg : vtkm::cont::internal::option::Arg
+{
+  static vtkm::cont::internal::option::ArgStatus Number(
+    const vtkm::cont::internal::option::Option& option,
+    bool msg)
+  {
+    bool argIsNum = ((option.arg != nullptr) && (option.arg[0] != '\0'));
+    const char* c = option.arg;
+    while (argIsNum && (*c != '\0'))
+    {
+      argIsNum &= static_cast<bool>(std::isdigit(*c));
+      ++c;
+    }
+
+    if (argIsNum)
+    {
+      return vtkm::cont::internal::option::ARG_OK;
+    }
+    else
+    {
+      if (msg)
+      {
+        std::cerr << "Option " << option.name << " requires a numeric argument." << std::endl;
+      }
+
+      return vtkm::cont::internal::option::ARG_ILLEGAL;
+    }
+  }
+};
 }
 } // namespace vtkm::benchmarking
 
+enum optionIndex
+{
+  UNKNOWN,
+  HELP,
+  NUM_THREADS,
+  TYPELIST,
+  ARRAY_SIZE,
+  MORE_OUTPUT_RANGE
+};
+
+enum typelistType
+{
+  BASE,
+  EXTENED
+};
+
+enum arraySizeType
+{
+  BYTES,
+  VALUES
+};
+
 int main(int argc, char* argv[])
 {
-  auto opt = vtkm::cont::InitializeOptions::RequireDevice;
-  auto initConfig = vtkm::cont::Initialize(argc, argv, opt);
+  auto initConfig = vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::None);
 
-  int numThreads{ 0 };
-#ifdef VTKM_ENABLE_TBB
-  if (initConfig.Device == vtkm::cont::DeviceAdapterTagTBB())
+  if (initConfig.Device == vtkm::cont::DeviceAdapterTagUndefined())
   {
-    numThreads = tbb::task_scheduler_init::automatic;
+    initConfig.Device = vtkm::cont::DeviceAdapterTagAny();
   }
-#endif
-#ifdef VTKM_ENABLE_OPENMP
-  if (initConfig.Device == vtkm::cont::DeviceAdapterTagOpenMP())
+
+  namespace option = vtkm::cont::internal::option;
+  using Arg = vtkm::benchmarking::Arg;
+
+  std::vector<option::Descriptor> usage;
+  std::string usageHeader{ "Usage: " };
+  usageHeader.append(argv[0]);
+  usageHeader.append(" [options] [benchmarks]");
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, usageHeader.c_str() });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Options are:" });
+  usage.push_back({ HELP, 0, "h", "help", Arg::None, "  -h, --help\tDisplay this help." });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, initConfig.Usage.c_str() });
+  usage.push_back({ NUM_THREADS,
+                    0,
+                    "",
+                    "num-threads",
+                    Arg::Number,
+                    "  --num-threads <N> \tSpecify the number of threads to use." });
+  usage.push_back({ TYPELIST,
+                    BASE,
+                    "",
+                    "base-typelist",
+                    Arg::None,
+                    "  --base-typelist \tBenchmark using the base set of types. (default)" });
+  usage.push_back({ TYPELIST,
+                    EXTENED,
+                    "",
+                    "extended-typelist",
+                    Arg::None,
+                    "  --extended-tyupelist \tBenchmark using an extended set of types." });
+  usage.push_back({ ARRAY_SIZE,
+                    BYTES,
+                    "",
+                    "array-size-bytes",
+                    Arg::Number,
+                    "  --array-size-bytes <N> \tRun the benchmarks with arrays of the given "
+                    "number of bytes. (Default is 2097152 (i.e. 2MB)" });
+  usage.push_back({ ARRAY_SIZE,
+                    VALUES,
+                    "",
+                    "array-size-values",
+                    Arg::Number,
+                    "  --array-size-values <N> \tRun the benchmarks with arrays of the given "
+                    "number of values." });
+  usage.push_back({ MORE_OUTPUT_RANGE,
+                    0,
+                    "",
+                    "more-output-range",
+                    Arg::None,
+                    "  --more-output-range \tIf specified, operations like Unique will test with "
+                    "a wider range of unique values (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, "
+                    "50%, 75%, 100% unique). By default, the range is limited to 5%, 25%, 50%, "
+                    "75%, 100%." });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Benchmarks are one or more of:" });
+  usage.push_back({ UNKNOWN,
+                    0,
+                    "",
+                    "",
+                    Arg::None,
+                    "\tCopy, CopyIf, LowerBounds, Reduce, ReduceByKey, ScanExclusive, "
+                    "ScanInclusive, Sort, SortByKey, StableSortIndices, StableSortIndicesUnique, "
+                    "Unique, UpperBounds" });
+  usage.push_back(
+    { UNKNOWN, 0, "", "", Arg::None, "If no benchmarks are listed, all will be run." });
+  usage.push_back({ 0, 0, nullptr, nullptr, nullptr, nullptr });
+
+  vtkm::cont::internal::option::Stats stats(usage.data(), argc - 1, argv + 1);
+  std::unique_ptr<option::Option[]> options{ new option::Option[stats.options_max] };
+  std::unique_ptr<option::Option[]> buffer{ new option::Option[stats.buffer_max] };
+  option::Parser commandLineParse(usage.data(), argc - 1, argv + 1, options.get(), buffer.get());
+
+  if (options[UNKNOWN])
   {
-    numThreads = omp_get_max_threads();
+    std::cerr << "Unknown option: " << options[UNKNOWN].name << std::endl;
+    option::printUsage(std::cerr, usage.data());
+    exit(1);
   }
-#endif
+
+  if (options[HELP])
+  {
+    option::printUsage(std::cerr, usage.data());
+    exit(0);
+  }
 
   vtkm::benchmarking::BenchDevAlgoConfig& config = vtkm::benchmarking::Config;
 
-  for (size_t i = 0; i < initConfig.Arguments.size(); ++i)
+  int numThreads{ 0 };
+  if (options[NUM_THREADS])
   {
-    std::string arg = initConfig.Arguments[i];
+    std::istringstream parse(options[NUM_THREADS].arg);
+    parse >> numThreads;
+    if (initConfig.Device == vtkm::cont::DeviceAdapterTagTBB() ||
+        initConfig.Device == vtkm::cont::DeviceAdapterTagOpenMP())
+    {
+      std::cout << "Selected " << numThreads << " " << initConfig.Device.GetName() << " threads."
+                << std::endl;
+    }
+    else
+    {
+      std::cerr << options[NUM_THREADS].name << " not valid on this device. Ignoring." << std::endl;
+    }
+  }
+
+  if (options[TYPELIST])
+  {
+    switch (options[TYPELIST].last()->type())
+    {
+      case BASE:
+        config.ExtendedTypeList = false;
+        break;
+      case EXTENED:
+        config.ExtendedTypeList = true;
+        break;
+      default:
+        std::cerr << "Internal error. Unknown typelist." << std::endl;
+        break;
+    }
+  }
+
+  if (options[ARRAY_SIZE])
+  {
+    config.TestArraySizeBytes = false;
+    config.TestArraySizeValues = false;
+    for (const option::Option* opt = options[ARRAY_SIZE]; opt; opt = opt->next())
+    {
+      std::istringstream parse(opt->arg);
+      switch (opt->type())
+      {
+        case BYTES:
+          config.TestArraySizeBytes = true;
+          parse >> config.ArraySizeBytes;
+          break;
+        case VALUES:
+          config.TestArraySizeValues = true;
+          parse >> config.ArraySizeValues;
+          break;
+        default:
+          std::cerr << "Internal error. Unknown array size type." << std::endl;
+          break;
+      }
+    }
+  }
+
+  if (options[MORE_OUTPUT_RANGE])
+  {
+    config.DetailedOutputRangeScaling = true;
+  }
+
+  for (int i = 0; i < commandLineParse.nonOptionsCount(); ++i)
+  {
+    std::string arg = commandLineParse.nonOption(i);
     std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
       return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     });
@@ -1299,103 +1486,22 @@ int main(int argc, char* argv[])
     {
       config.BenchmarkFlags |= vtkm::benchmarking::UPPER_BOUNDS;
     }
-    else if (arg == "typelist")
-    {
-      ++i;
-      arg = initConfig.Arguments[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
-        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-      });
-      if (arg == "base")
-      {
-        config.ExtendedTypeList = false;
-      }
-      else if (arg == "extended")
-      {
-        config.ExtendedTypeList = true;
-      }
-      else
-      {
-        std::cerr << "Unrecognized TypeList: " << initConfig.Arguments[i] << std::endl;
-        return 1;
-      }
-    }
-    else if (arg == "fixbytes")
-    {
-      ++i;
-      arg = initConfig.Arguments[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
-        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-      });
-      if (arg == "off")
-      {
-        config.TestArraySizeBytes = false;
-      }
-      else
-      {
-        std::istringstream parse(arg);
-        config.TestArraySizeBytes = true;
-        parse >> config.ArraySizeBytes;
-      }
-    }
-    else if (arg == "fixsizes")
-    {
-      ++i;
-      arg = initConfig.Arguments[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
-        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-      });
-      if (arg == "off")
-      {
-        config.TestArraySizeValues = false;
-      }
-      else
-      {
-        std::istringstream parse(arg);
-        config.TestArraySizeValues = true;
-        parse >> config.ArraySizeValues;
-      }
-    }
-    else if (arg == "detailedoutputrange")
-    {
-      config.DetailedOutputRangeScaling = true;
-    }
-    else if (arg == "numthreads")
-    {
-      ++i;
-      if (initConfig.Device == vtkm::cont::DeviceAdapterTagTBB() ||
-          initConfig.Device == vtkm::cont::DeviceAdapterTagOpenMP())
-      {
-        std::istringstream parse(initConfig.Arguments[i]);
-        parse >> numThreads;
-        std::cout << "Selected " << numThreads << " " << initConfig.Device.GetName() << " threads."
-                  << std::endl;
-      }
-      else
-      {
-        std::cerr << "NumThreads not valid on this device. Ignoring." << std::endl;
-      }
-    }
     else
     {
-      std::cerr << "Unrecognized benchmark: " << initConfig.Arguments[i] << std::endl;
+      std::cerr << "Unrecognized benchmark: " << arg << std::endl;
+      option::printUsage(std::cerr, usage.data());
       return 1;
     }
   }
 
 #ifdef VTKM_ENABLE_TBB
   // Must not be destroyed as long as benchmarks are running:
-  if (initConfig.Device == vtkm::cont::DeviceAdapterTagTBB())
-  {
-    tbb::task_scheduler_init init(numThreads);
-  }
+  tbb::task_scheduler_init init((numThreads > 0) ? numThreads
+                                                 : tbb::task_scheduler_init::automatic);
 #endif
 #ifdef VTKM_ENABLE_OPENMP
-  if (initConfig.Device == vtkm::cont::DeviceAdapterTagOpenMP())
-  {
-    omp_set_num_threads(numThreads);
-  }
-#endif // TBB
+  omp_set_num_threads((numThreads > 0) ? numThreads : omp_get_max_threads());
+#endif
 
   if (config.BenchmarkFlags == 0)
   {

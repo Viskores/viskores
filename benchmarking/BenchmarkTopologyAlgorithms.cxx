@@ -453,19 +453,19 @@ public:
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
   auto config = vtkm::cont::Initialize(argc, argv, opts);
 
   int benchmarks = 0;
-  if (!config.Arguments.size())
+  if (argc <= 1)
   {
     benchmarks = vtkm::benchmarking::ALL;
   }
   else
   {
-    for (size_t i = 0; i < config.Arguments.size(); ++i)
+    for (int i = 1; i < argc; ++i)
     {
-      std::string arg = config.Arguments[i];
+      std::string arg = argv[i];
       std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
         return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
       });
@@ -483,7 +483,15 @@ int main(int argc, char* argv[])
       }
       else
       {
-        std::cout << "Unrecognized benchmark: " << config.Arguments[i] << std::endl;
+        std::cerr << "Unrecognized benchmark: " << argv[i] << std::endl;
+        std::cerr << "USAGE: " << argv[0] << " [options] [<benchmarks>]" << std::endl;
+        std::cerr << "Options are: " << std::endl;
+        std::cerr << config.Usage << std::endl;
+        std::cerr << "Benchmarks are one or more of the following:" << std::endl;
+        std::cerr << "  CellToPoint\tFind average of point data on each cell" << std::endl;
+        std::cerr << "  PointToCell\tFind average of cell data on each point" << std::endl;
+        std::cerr << "  Classify\tFind Marching Cube case of each cell" << std::endl;
+        std::cerr << "If no benchmarks are specified, all are run." << std::endl;
         return 1;
       }
     }

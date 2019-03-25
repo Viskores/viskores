@@ -178,7 +178,8 @@ struct BenchmarkValueTypeFunctor
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice |
+    vtkm::cont::InitializeOptions::ErrorOnBadOption | vtkm::cont::InitializeOptions::AddHelp;
   auto config = vtkm::cont::Initialize(argc, argv, opts);
 
 
@@ -186,12 +187,12 @@ int main(int argc, char* argv[])
   int numThreads = tbb::task_scheduler_init::automatic;
 #endif // TBB
 
-  if (config.Arguments.size() == 2)
+  if (argc == 3)
   {
-    if (std::string(config.Arguments[0]) == "NumThreads")
+    if (std::string(argv[1]) == "NumThreads")
     {
 #ifdef VTKM_ENABLE_TBB
-      std::istringstream parse(config.Arguments[1]);
+      std::istringstream parse(argv[2]);
       parse >> numThreads;
       std::cout << "Selected " << numThreads << " TBB threads." << std::endl;
 #else

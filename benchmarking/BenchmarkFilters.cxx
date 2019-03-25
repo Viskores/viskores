@@ -37,6 +37,8 @@
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
 
+#include <vtkm/cont/internal/OptionParser.h>
+
 #include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/filter/FieldSelection.h>
@@ -1068,22 +1070,71 @@ void AssertFields(bool needPointScalars, bool needCellScalars, bool needPointVec
   }
 }
 
-int BenchmarkBody(const std::vector<std::string>& argv, vtkm::cont::DeviceAdapterId id)
+struct Arg : vtkm::cont::internal::option::Arg
 {
-  int numThreads = 1;
-#ifdef VTKM_ENABLE_TBB
-  if (id == vtkm::cont::DeviceAdapterTagTBB())
+  static vtkm::cont::internal::option::ArgStatus Number(
+    const vtkm::cont::internal::option::Option& option,
+    bool msg)
   {
-    numThreads = tbb::task_scheduler_init::automatic;
-  }
-#endif
-#ifdef VTKM_ENABLE_OPENMP
-  if (id == vtkm::cont::DeviceAdapterTagOpenMP())
-  {
-    numThreads = omp_get_max_threads();
-  }
-#endif
+    bool argIsNum = ((option.arg != nullptr) && (option.arg[0] != '\0'));
+    const char* c = option.arg;
+    while (argIsNum && (*c != '\0'))
+    {
+      argIsNum &= static_cast<bool>(std::isdigit(*c));
+      ++c;
+    }
 
+    if (argIsNum)
+    {
+      return vtkm::cont::internal::option::ARG_OK;
+    }
+    else
+    {
+      if (msg)
+      {
+        std::cerr << "Option " << option.name << " requires a numeric argument." << std::endl;
+      }
+
+      return vtkm::cont::internal::option::ARG_ILLEGAL;
+    }
+  }
+
+  static vtkm::cont::internal::option::ArgStatus Required(
+    const vtkm::cont::internal::option::Option& option,
+    bool msg)
+  {
+    if ((option.arg != nullptr) && (option.arg[0] != '\0'))
+    {
+      if (msg)
+      {
+        std::cerr << "Option " << option.name << " requires an argument." << std::endl;
+      }
+      return vtkm::cont::internal::option::ARG_ILLEGAL;
+    }
+    else
+    {
+      return vtkm::cont::internal::option::ARG_OK;
+    }
+  }
+};
+
+enum optionIndex
+{
+  UNKNOWN,
+  HELP,
+  NUM_THREADS,
+  FILENAME,
+  POINT_SCALARS,
+  CELL_SCALARS,
+  POINT_VECTORS,
+  WAVELET_DIM,
+  TETRA,
+  REDUCED_OPTIONS
+};
+
+int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& config)
+{
+  int numThreads = 0;
   int benches = BenchmarkName::NONE;
   std::string filename;
   vtkm::Id waveletDim = 256;
@@ -1094,9 +1145,144 @@ int BenchmarkBody(const std::vector<std::string>& argv, vtkm::cont::DeviceAdapte
 
   ReducedOptions = false;
 
-  for (size_t i = 0; i < argv.size(); ++i)
+  namespace option = vtkm::cont::internal::option;
+
+  std::vector<option::Descriptor> usage;
+  std::string usageHeader{ "Usage: " };
+  usageHeader.append(argv[0]);
+  usageHeader.append(" [options] [benchmarks]");
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, usageHeader.c_str() });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Options are:" });
+  usage.push_back({ HELP, 0, "h", "help", Arg::None, "  -h, --help\tDisplay this help." });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, config.Usage.c_str() });
+  usage.push_back({ NUM_THREADS,
+                    0,
+                    "",
+                    "num-threads",
+                    Arg::Number,
+                    "  --num-threads <N> \tSpecify the number of threads to use." });
+  usage.push_back({ FILENAME,
+                    0,
+                    "",
+                    "file",
+                    Arg::Required,
+                    "  --file <filename> \tFile (in legacy vtk format) to read as input. "
+                    "If not specified, a wavelet source is generated." });
+  usage.push_back({ POINT_SCALARS,
+                    0,
+                    "",
+                    "point-scalars",
+                    Arg::Required,
+                    "  --point-scalars <name> \tName of the point scalar field to operate on." });
+  usage.push_back({ CELL_SCALARS,
+                    0,
+                    "",
+                    "cell-scalars",
+                    Arg::Required,
+                    "  --cell-scalars <name> \tName of the cell scalar field to operate on." });
+  usage.push_back({ POINT_VECTORS,
+                    0,
+                    "",
+                    "point-vectors",
+                    Arg::Required,
+                    "  --point-vectors <name> \tName of the point vector field to operate on." });
+  usage.push_back({ WAVELET_DIM,
+                    0,
+                    "",
+                    "wavelet-dim",
+                    Arg::Number,
+                    "  --wavelet-dim <N> \tThe size in each dimension of the wavelet grid "
+                    "(if generated)." });
+  usage.push_back({ TETRA,
+                    0,
+                    "",
+                    "tetra",
+                    Arg::None,
+                    "  --tetra \tTetrahedralize data set before running benchmark." });
+  usage.push_back({ REDUCED_OPTIONS,
+                    0,
+                    "",
+                    "reduced-options",
+                    Arg::None,
+                    "  --reduced-options \tRun fewer variants of each filter. " });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Benchmarks are one or more of:" });
+  usage.push_back({ UNKNOWN,
+                    0,
+                    "",
+                    "",
+                    Arg::None,
+                    "\tgradient, threshold, threshold_points, cell_average, point_average, "
+                    "warp_scalar, warp_vector, marching_cubes, external_faces, "
+                    "tetrahedralize, cell_to_point" });
+  usage.push_back(
+    { UNKNOWN, 0, "", "", Arg::None, "If no benchmarks are listed, all will be run." });
+  usage.push_back({ 0, 0, nullptr, nullptr, nullptr, nullptr });
+
+
+  vtkm::cont::internal::option::Stats stats(usage.data(), argc - 1, argv + 1);
+  std::unique_ptr<option::Option[]> options{ new option::Option[stats.options_max] };
+  std::unique_ptr<option::Option[]> buffer{ new option::Option[stats.buffer_max] };
+  option::Parser commandLineParse(usage.data(), argc - 1, argv + 1, options.get(), buffer.get());
+
+  if (options[UNKNOWN])
   {
-    std::string arg = argv[i];
+    std::cerr << "Unknown option: " << options[UNKNOWN].name << std::endl;
+    option::printUsage(std::cerr, usage.data());
+    exit(1);
+  }
+
+  if (options[HELP])
+  {
+    option::printUsage(std::cerr, usage.data());
+    exit(0);
+  }
+
+  if (options[NUM_THREADS])
+  {
+    std::istringstream parse(options[NUM_THREADS].arg);
+    parse >> numThreads;
+    if (config.Device == vtkm::cont::DeviceAdapterTagTBB() ||
+        config.Device == vtkm::cont::DeviceAdapterTagOpenMP())
+    {
+      std::cout << "Selected " << numThreads << " " << config.Device.GetName() << " threads."
+                << std::endl;
+    }
+    else
+    {
+      std::cerr << options[NUM_THREADS].name << " not valid on this device. Ignoring." << std::endl;
+    }
+  }
+
+  if (options[FILENAME])
+  {
+    filename = options[FILENAME].arg;
+  }
+
+  if (options[POINT_SCALARS])
+  {
+    PointScalarsName = options[POINT_SCALARS].arg;
+  }
+  if (options[CELL_SCALARS])
+  {
+    CellScalarsName = options[CELL_SCALARS].arg;
+  }
+  if (options[POINT_VECTORS])
+  {
+    PointVectorsName = options[POINT_VECTORS].arg;
+  }
+
+  if (options[WAVELET_DIM])
+  {
+    std::istringstream parse(options[WAVELET_DIM].arg);
+    parse >> waveletDim;
+  }
+
+  tetra = (options[TETRA] != nullptr);
+  ReducedOptions = (options[REDUCED_OPTIONS] != nullptr);
+
+  for (int i = 0; i < commandLineParse.nonOptionsCount(); ++i)
+  {
+    std::string arg = commandLineParse.nonOption(i);
     std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
       return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     });
@@ -1158,73 +1344,21 @@ int BenchmarkBody(const std::vector<std::string>& argv, vtkm::cont::DeviceAdapte
     {
       benches |= BenchmarkName::CELL_TO_POINT;
     }
-    else if (arg == "filename")
-    {
-      ++i;
-      filename = argv[i];
-    }
-    else if (arg == "pointscalars")
-    {
-      ++i;
-      PointScalarsName = argv[i];
-    }
-    else if (arg == "cellscalars")
-    {
-      ++i;
-      CellScalarsName = argv[i];
-    }
-    else if (arg == "pointvectors")
-    {
-      ++i;
-      PointVectorsName = argv[i];
-    }
-    else if (arg == "waveletdim")
-    {
-      ++i;
-      std::istringstream parse(argv[i]);
-      parse >> waveletDim;
-    }
-    else if (arg == "tetra")
-    {
-      tetra = true;
-    }
-    else if (arg == "reducedoptions")
-    {
-      ReducedOptions = true;
-    }
-    else if (arg == "numthreads")
-    {
-      ++i;
-      if (id == vtkm::cont::DeviceAdapterTagOpenMP() || id == vtkm::cont::DeviceAdapterTagTBB())
-      {
-        std::istringstream parse(argv[i]);
-        parse >> numThreads;
-        std::cout << "Selected " << numThreads << " " << id.GetName() << " threads." << std::endl;
-      }
-      else
-      {
-        std::cerr << "NumThreads not valid on this device. Ignoring." << std::endl;
-      }
-    }
     else
     {
-      std::cerr << "Unrecognized option: " << argv[i] << std::endl;
+      std::cerr << "Unrecognized benchmark: " << arg << std::endl;
+      option::printUsage(std::cerr, usage.data());
       return 1;
     }
   }
 
 #ifdef VTKM_ENABLE_TBB
   // Must not be destroyed as long as benchmarks are running:
-  if (id == vtkm::cont::DeviceAdapterTagTBB())
-  {
-    tbb::task_scheduler_init init(numThreads);
-  }
+  tbb::task_scheduler_init init((numThreads > 0) ? numThreads
+                                                 : tbb::task_scheduler_init::automatic);
 #endif
 #ifdef VTKM_ENABLE_OPENMP
-  if (id == vtkm::cont::DeviceAdapterTagOpenMP())
-  {
-    omp_set_num_threads(numThreads);
-  }
+  omp_set_num_threads((numThreads > 0) ? numThreads : omp_get_max_threads());
 #endif
 
   if (benches == BenchmarkName::NONE)
@@ -1251,7 +1385,7 @@ int BenchmarkBody(const std::vector<std::string>& argv, vtkm::cont::DeviceAdapte
 
     // WaveletGenerator needs a template device argument not a id to deduce the portal type.
     WaveletGeneratorDataFunctor genFunctor;
-    vtkm::cont::TryExecuteOnDevice(id, genFunctor, gen);
+    vtkm::cont::TryExecuteOnDevice(config.Device, genFunctor, gen);
   }
 
   if (tetra)
@@ -1300,7 +1434,7 @@ int BenchmarkBody(const std::vector<std::string>& argv, vtkm::cont::DeviceAdapte
   std::cout << "\n";
 
   //now actually execute the benchmarks
-  int result = BenchmarkFilters::Run(benches, id);
+  int result = BenchmarkFilters::Run(benches, config.Device);
 
   // Explicitly free resources before exit.
   InputDataSet.Clear();
@@ -1312,13 +1446,13 @@ int BenchmarkBody(const std::vector<std::string>& argv, vtkm::cont::DeviceAdapte
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
-  auto config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
 
   int retval = 1;
   try
   {
-    retval = BenchmarkBody(config.Arguments, config.Device);
+    retval = BenchmarkBody(argc, argv, config);
   }
   catch (std::exception& e)
   {
