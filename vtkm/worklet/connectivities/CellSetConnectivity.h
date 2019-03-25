@@ -39,13 +39,13 @@ public:
   void Run(const CellSetType& cellSet, vtkm::cont::ArrayHandle<vtkm::Id>& componentArray) const
   {
     vtkm::cont::ArrayHandle<vtkm::Id> numIndicesArray;
-    vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray;
+    vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetsArray;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivityArray;
 
     // create cell to cell connectivity graph (dual graph)
-    CellSetDualGraph().Run(cellSet, numIndicesArray, indexOffsetArray, connectivityArray);
+    CellSetDualGraph().Run(cellSet, numIndicesArray, indexOffsetsArray, connectivityArray);
     // find the connected component of the dual graph
-    GraphConnectivity().Run(numIndicesArray, indexOffsetArray, connectivityArray, componentArray);
+    GraphConnectivity().Run(numIndicesArray, indexOffsetsArray, connectivityArray, componentArray);
   }
 };
 }

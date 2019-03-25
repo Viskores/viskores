@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestAddGhostZone.cxx
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
+  UnitTestCellSetConnectivityFilter.cxx
   UnitTestCleanGrid.cxx
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
@@ -41,6 +42,7 @@ set(unit_tests
   UnitTestGradient.cxx
   UnitTestGhostZone.cxx
   UnitTestHistogramFilter.cxx
+  UnitTestImageConnectivityFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestMarchingCubesFilter.cxx
   UnitTestMaskFilter.cxx

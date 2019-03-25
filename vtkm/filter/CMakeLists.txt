@@ -22,6 +22,7 @@ set(headers
   AddGhostZone.h
   CellAverage.h
   CellMeasures.h
+  CellSetConnectivity.h
   CleanGrid.h
   ClipWithField.h
   ClipWithImplicitFunction.h
@@ -47,6 +48,7 @@ set(headers
   GhostZone.h
   Gradient.h
   Histogram.h
+  ImageConnectivity.h
   Lagrangian.h
   MarchingCubes.h
   Mask.h
@@ -83,6 +85,7 @@ set(header_template_sources
   AddGhostZone.hxx
   CellAverage.hxx
   CellMeasures.hxx
+  CellSetConnectivity.hxx
   CleanGrid.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
@@ -105,6 +108,7 @@ set(header_template_sources
   GhostZone.hxx
   Gradient.hxx
   Histogram.hxx
+  ImageConnectivity.hxx
   Lagrangian.hxx
   MarchingCubes.hxx
   Mask.hxx

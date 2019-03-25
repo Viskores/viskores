@@ -40,6 +40,7 @@ set(unit_tests
   UnitTestExtractStructured.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
+  UnitTestGraphConnectivity.cxx
   UnitTestInnerJoin.cxx
   UnitTestImageConnectivity.cxx
   UnitTestKdTreeBuildNNS.cxx
