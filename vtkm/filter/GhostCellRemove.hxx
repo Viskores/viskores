@@ -136,7 +136,7 @@ public:
   template <typename T, typename AtomicType>
   VTKM_EXEC void operator()(const T& value, const vtkm::Id& index, AtomicType& atom) const
   {
-    // we are finding the logical min max of valid zones
+    // we are finding the logical min max of valid cells
     if ((RemoveAllGhost && value != 0) || (!RemoveAllGhost && (value != 0 && value | RemoveType)))
       return;
 

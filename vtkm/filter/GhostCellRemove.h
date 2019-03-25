@@ -35,7 +35,7 @@ struct GhostCellRemovePolicy : vtkm::filter::PolicyBase<GhostCellRemovePolicy>
   using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8>;
 };
 
-/// \brief Removes ghost zones
+/// \brief Removes ghost cells
 ///
 class GhostCellRemove : public vtkm::filter::FilterDataSetWithField<GhostCellRemove>
 {
@@ -95,7 +95,7 @@ private:
 
 template <>
 class FilterTraits<GhostCellRemove>
-{ //currently the ghostzone filter only works on uint8 data.
+{ //currently the GhostCellRemove filter only works on uint8 data.
 public:
   using InputFieldTypeList = vtkm::ListTagBase<vtkm::UInt8>;
 };
