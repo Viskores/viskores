@@ -70,6 +70,7 @@ set(unit_tests
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestSurfaceNormals.cxx
+  UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
   UnitTestThresholdPoints.cxx
