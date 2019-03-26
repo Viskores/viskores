@@ -21,7 +21,7 @@
 ##=============================================================================
 
 #Find the VTK-m package
-cmake_minimum_required(VERSION 3.8...3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
 project(TemporalAdvection CXX)
 
 #Find the VTK-m package
