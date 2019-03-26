@@ -103,7 +103,7 @@ void TestPathline()
   pathline.SetTimeOne(0.0f);
   pathline.SetTimeTwo(1.0f);
   pathline.SetDataSetTwo(ds2);
-  pathline.SetStepSize(0.1f);
+  pathline.SetStepSize(0.05f);
   pathline.SetNumberOfSteps(20);
   pathline.SetSeeds(seedArray);
   vtkm::cont::Field vecField = ds1.GetField("vector");

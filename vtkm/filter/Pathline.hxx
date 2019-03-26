@@ -67,13 +67,8 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
   const vtkm::cont::CoordinateSystem& coords2 =
     this->DataSetTwo.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  auto f2 = this->DataSetTwo.GetField(this->GetActiveFieldName());
-  auto A2 = f2.GetData();
-  //  A2.Cast<vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>();
-  //  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field2 =
-  //  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType> field2 = f2.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>();
-
-  auto field2 = field;
+  auto field2 = vtkm::cont::Cast<vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>>(
+    this->DataSetTwo.GetField(this->GetActiveFieldName()).GetData());
 
   if (!fieldMeta.IsPointField())
   {
