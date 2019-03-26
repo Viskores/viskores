@@ -98,20 +98,14 @@ endfunction()
 function(do_install root_dir prefix)
   #Step 1. Setup up our new install prefix location
   set(CMAKE_INSTALL_PREFIX  ${root_dir}/${prefix})
+  set(CMAKE_INSTALL_COMPONENT FALSE)
 
-  #Step 2. Gather all the cmake_install.cmake files
-  file(GLOB_RECURSE install_files
-     LIST_DIRECTORIES False
-     RELATIVE "${root_dir}"
-     "${root_dir}/*/cmake_install.cmake")
-
-  #Step 3. Execute all the install files
+  #Step 2. Execute the install command  files
   if(EXISTS "${root_dir}/cmake_install.cmake")
     include(${root_dir}/cmake_install.cmake)
+  else()
+    message(FATAL_ERROR "VTK-m looks to have no install rules as we can't find any cmake_install.cmake files in the root of the build directory.")
   endif()
-  foreach(file ${install_files})
-    include("${file}")
-  endforeach()
 
 endfunction()
 
