@@ -56,6 +56,7 @@ set(headers
   NDEntropy.h
   NDHistogram.h
   OscillatorSource.h
+  Pathline.h
   PointAverage.h
   PointElevation.h
   PointTransform.h
@@ -116,6 +117,7 @@ set(header_template_sources
   NDEntropy.hxx
   NDHistogram.hxx
   OscillatorSource.hxx
+  Pathline.hxx
   PointAverage.hxx
   PointElevation.hxx
   PointTransform.hxx

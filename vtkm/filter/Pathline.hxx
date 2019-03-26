@@ -24,6 +24,7 @@
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
 
 namespace vtkm
 {
@@ -31,14 +32,14 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT Streamline::Streamline()
-  : vtkm::filter::FilterDataSetWithField<Streamline>()
+inline VTKM_CONT Pathline::Pathline()
+  : vtkm::filter::FilterDataSetWithField<Pathline>()
   , Worklet()
 {
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void Streamline::SetSeeds(
+inline VTKM_CONT void Pathline::SetSeeds(
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& seeds)
 {
   this->Seeds = seeds;
@@ -46,7 +47,7 @@ inline VTKM_CONT void Streamline::SetSeeds(
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -59,20 +60,27 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
   }
 
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells2 =
+    this->NextDataSet.GetCellSet(this->GetActiveCellSetIndex());
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+  const vtkm::cont::CoordinateSystem& coords2 =
+    this->NextDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+
+  auto field2 = vtkm::cont::Cast<vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>>(
+    this->NextDataSet.GetField(this->GetActiveFieldName()).GetData());
 
   if (!fieldMeta.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
-  //todo: add check for rectilinear.
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldHandle>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
-  GridEvalType eval(coords, cells, field);
+  GridEvalType eval(
+    coords, cells, field, this->PreviousTime, coords2, cells2, field2, this->NextTime);
   RK4Type rk4(eval, static_cast<vtkm::worklet::particleadvection::ScalarType>(this->StepSize));
 
   vtkm::worklet::Streamline streamline;
@@ -92,10 +100,10 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Streamline::DoMapField(vtkm::cont::DataSet&,
-                                             const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                             const vtkm::filter::FieldMetadata&,
-                                             vtkm::filter::PolicyBase<DerivedPolicy>)
+inline VTKM_CONT bool Pathline::DoMapField(vtkm::cont::DataSet&,
+                                           const vtkm::cont::ArrayHandle<T, StorageType>&,
+                                           const vtkm::filter::FieldMetadata&,
+                                           vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }
