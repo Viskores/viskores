@@ -41,12 +41,12 @@ public:
   Pathline();
 
   VTKM_CONT
-  void SetTimeOne(vtkm::worklet::particleadvection::ScalarType t) { this->TimeOne = t; }
+  void SetPreviousTime(vtkm::worklet::particleadvection::ScalarType t) { this->PreviousTime = t; }
   VTKM_CONT
-  void SetTimeTwo(vtkm::worklet::particleadvection::ScalarType t) { this->TimeTwo = t; }
+  void SetNextTime(vtkm::worklet::particleadvection::ScalarType t) { this->NextTime = t; }
 
   VTKM_CONT
-  void SetDataSetTwo(const vtkm::cont::DataSet& ds) { this->DataSetTwo = ds; }
+  void SetNextDataSet(const vtkm::cont::DataSet& ds) { this->NextDataSet = ds; }
 
   VTKM_CONT
   void SetStepSize(vtkm::worklet::particleadvection::ScalarType s) { this->StepSize = s; }
@@ -75,9 +75,9 @@ public:
 private:
   vtkm::worklet::Streamline Worklet;
   vtkm::worklet::particleadvection::ScalarType StepSize;
-  vtkm::worklet::particleadvection::ScalarType TimeOne;
-  vtkm::worklet::particleadvection::ScalarType TimeTwo;
-  vtkm::cont::DataSet DataSetTwo;
+  vtkm::worklet::particleadvection::ScalarType PreviousTime;
+  vtkm::worklet::particleadvection::ScalarType NextTime;
+  vtkm::cont::DataSet NextDataSet;
   vtkm::Id NumberOfSteps;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Seeds;
 };

@@ -61,14 +61,14 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
 
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
   const vtkm::cont::DynamicCellSet& cells2 =
-    this->DataSetTwo.GetCellSet(this->GetActiveCellSetIndex());
+    this->NextDataSet.GetCellSet(this->GetActiveCellSetIndex());
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   const vtkm::cont::CoordinateSystem& coords2 =
-    this->DataSetTwo.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+    this->NextDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   auto field2 = vtkm::cont::Cast<vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>>(
-    this->DataSetTwo.GetField(this->GetActiveFieldName()).GetData());
+    this->NextDataSet.GetField(this->GetActiveFieldName()).GetData());
 
   if (!fieldMeta.IsPointField())
   {
@@ -79,7 +79,8 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
   using GridEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldHandle>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
-  GridEvalType eval(coords, cells, field, this->TimeOne, coords2, cells2, field2, this->TimeTwo);
+  GridEvalType eval(
+    coords, cells, field, this->PreviousTime, coords2, cells2, field2, this->NextTime);
   RK4Type rk4(eval, static_cast<vtkm::worklet::particleadvection::ScalarType>(this->StepSize));
 
   vtkm::worklet::Streamline streamline;

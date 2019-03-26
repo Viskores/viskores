@@ -63,7 +63,6 @@ void TestStreamline()
   streamline.SetStepSize(0.1f);
   streamline.SetNumberOfSteps(20);
   streamline.SetSeeds(seedArray);
-  vtkm::cont::Field vecField = ds.GetField("vector");
 
   streamline.SetActiveField("vector");
   auto output = streamline.Execute(ds);
@@ -100,13 +99,12 @@ void TestPathline()
 
   vtkm::filter::Pathline pathline;
 
-  pathline.SetTimeOne(0.0f);
-  pathline.SetTimeTwo(1.0f);
-  pathline.SetDataSetTwo(ds2);
+  pathline.SetPreviousTime(0.0f);
+  pathline.SetNextTime(1.0f);
+  pathline.SetNextDataSet(ds2);
   pathline.SetStepSize(0.05f);
   pathline.SetNumberOfSteps(20);
   pathline.SetSeeds(seedArray);
-  vtkm::cont::Field vecField = ds1.GetField("vector");
 
   pathline.SetActiveField("vector");
   auto output = pathline.Execute(ds1);
