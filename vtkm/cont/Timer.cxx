@@ -225,7 +225,7 @@ Timer::Timer(vtkm::cont::DeviceAdapterId device)
   : Device(device)
   , Internal(nullptr)
 {
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  const vtkm::cont::RuntimeDeviceTracker& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   if (device != DeviceAdapterTagAny() && !tracker.CanRunOn(device))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
@@ -254,7 +254,7 @@ void Timer::Reset()
 
 void Timer::Reset(vtkm::cont::DeviceAdapterId device)
 {
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  const vtkm::cont::RuntimeDeviceTracker& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   if (device != DeviceAdapterTagAny() && !tracker.CanRunOn(device))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,

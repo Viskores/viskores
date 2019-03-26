@@ -38,54 +38,10 @@
 
 
 #include <algorithm>
-#include <cctype> //for tolower
 #include <map>
 #include <mutex>
 #include <sstream>
 #include <thread>
-
-namespace
-{
-
-struct VTKM_NEVER_EXPORT GetDeviceNameFunctor
-{
-  vtkm::cont::DeviceAdapterNameType* Names;
-  vtkm::cont::DeviceAdapterNameType* LowerCaseNames;
-
-  VTKM_CONT
-  GetDeviceNameFunctor(vtkm::cont::DeviceAdapterNameType* names,
-                       vtkm::cont::DeviceAdapterNameType* lower)
-    : Names(names)
-    , LowerCaseNames(lower)
-  {
-    std::fill_n(this->Names, VTKM_MAX_DEVICE_ADAPTER_ID, "InvalidDeviceId");
-    std::fill_n(this->LowerCaseNames, VTKM_MAX_DEVICE_ADAPTER_ID, "invaliddeviceid");
-  }
-
-  template <typename Device>
-  VTKM_CONT void operator()(Device device)
-  {
-    auto lowerCaseFunc = [](char c) {
-      return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    };
-
-    auto id = device.GetValue();
-
-    if (id > 0 && id < VTKM_MAX_DEVICE_ADAPTER_ID)
-    {
-      auto name = vtkm::cont::DeviceAdapterTraits<Device>::GetName();
-      this->Names[id] = name;
-      std::transform(name.begin(), name.end(), name.begin(), lowerCaseFunc);
-      this->LowerCaseNames[id] = name;
-    }
-  }
-};
-
-#if !(defined(VTKM_CLANG) && (__apple_build_version__ < 8000000))
-thread_local static vtkm::cont::RuntimeDeviceTracker runtimeDeviceTracker;
-#endif
-
-} // end anon namespace
 
 namespace vtkm
 {
@@ -97,15 +53,13 @@ namespace detail
 
 struct RuntimeDeviceTrackerInternals
 {
-  bool RuntimeValid[VTKM_MAX_DEVICE_ADAPTER_ID];
-  DeviceAdapterNameType DeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
-  DeviceAdapterNameType LowerCaseDeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
+  bool RuntimeAllowed[VTKM_MAX_DEVICE_ADAPTER_ID];
 };
 
 struct RuntimeDeviceTrackerFunctor
 {
   template <typename DeviceAdapter>
-  VTKM_CONT void operator()(DeviceAdapter, DeviceAdapterId id, RuntimeDeviceTracker* rdt)
+  VTKM_CONT void operator()(DeviceAdapter, DeviceAdapterId id, RuntimeDeviceTracker* rdt) const
   {
     vtkm::cont::RuntimeDeviceInformation runtimeDevice;
     if (DeviceAdapter() == id)
@@ -120,9 +74,6 @@ VTKM_CONT
 RuntimeDeviceTracker::RuntimeDeviceTracker()
   : Internals(std::make_shared<detail::RuntimeDeviceTrackerInternals>())
 {
-  GetDeviceNameFunctor functor(this->Internals->DeviceNames, this->Internals->LowerCaseDeviceNames);
-  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
-
   this->Reset();
 }
 
@@ -147,7 +98,7 @@ VTKM_CONT
 bool RuntimeDeviceTracker::CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId) const
 {
   this->CheckDevice(deviceId);
-  return this->Internals->RuntimeValid[deviceId.GetValue()];
+  return this->Internals->RuntimeAllowed[deviceId.GetValue()];
 }
 
 VTKM_CONT
@@ -157,7 +108,7 @@ void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, 
 
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              "Setting device '" << deviceId.GetName() << "' to " << state);
-  this->Internals->RuntimeValid[deviceId.GetValue()] = state;
+  this->Internals->RuntimeAllowed[deviceId.GetValue()] = state;
 }
 
 namespace
@@ -165,18 +116,16 @@ namespace
 
 struct VTKM_NEVER_EXPORT RuntimeDeviceTrackerResetFunctor
 {
-  vtkm::cont::RuntimeDeviceTracker Tracker;
-
-  VTKM_CONT
-  RuntimeDeviceTrackerResetFunctor(const vtkm::cont::RuntimeDeviceTracker tracker)
-    : Tracker(tracker)
-  {
-  }
-
   template <typename Device>
-  VTKM_CONT void operator()(Device device)
+  VTKM_CONT void operator()(Device device, bool runtimeAllowed[VTKM_MAX_DEVICE_ADAPTER_ID]) const
   {
-    this->Tracker.ResetDevice(device);
+    if (device.IsValueValid())
+    {
+      const bool state = vtkm::cont::DeviceAdapterRuntimeDetector<Device>().Exists();
+      runtimeAllowed[device.GetValue()] = state;
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                 "Reset device '" << device.GetName() << "' to " << state);
+    }
   }
 };
 }
@@ -184,10 +133,17 @@ struct VTKM_NEVER_EXPORT RuntimeDeviceTrackerResetFunctor
 VTKM_CONT
 void RuntimeDeviceTracker::Reset()
 {
-  std::fill_n(this->Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, false);
+  std::fill_n(this->Internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, false);
 
-  RuntimeDeviceTrackerResetFunctor functor(*this);
-  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+  // We use this instead of calling CheckDevice/SetDeviceState so that
+  // when we use logging we get better messages stating we are reseting
+  // the devices.
+  //
+  // 1. We can't log anything as this can be called during startup
+  // and
+  RuntimeDeviceTrackerResetFunctor functor;
+  vtkm::ListForEach(
+    functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(), std::ref(this->Internals->RuntimeAllowed));
 }
 
 VTKM_CONT
@@ -197,10 +153,10 @@ vtkm::cont::RuntimeDeviceTracker RuntimeDeviceTracker::DeepCopy() const
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker src)
+void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker& src)
 {
   std::copy_n(
-    src.Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->RuntimeValid);
+    src.Internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->RuntimeAllowed);
 }
 
 VTKM_CONT
@@ -208,11 +164,8 @@ RuntimeDeviceTracker::RuntimeDeviceTracker(
   const std::shared_ptr<detail::RuntimeDeviceTrackerInternals>& internals)
   : Internals(std::make_shared<detail::RuntimeDeviceTrackerInternals>())
 {
-  std::copy_n(internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->RuntimeValid);
-  std::copy_n(internals->DeviceNames, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->DeviceNames);
-  std::copy_n(internals->LowerCaseDeviceNames,
-              VTKM_MAX_DEVICE_ADAPTER_ID,
-              this->Internals->LowerCaseDeviceNames);
+  std::copy_n(
+    internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->RuntimeAllowed);
 }
 
 VTKM_CONT
@@ -230,110 +183,40 @@ void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              "Forcing execution to occur on device '" << deviceId.GetName() << "'");
 
-  std::fill_n(this->Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, false);
+  std::fill_n(this->Internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, false);
 
-  this->Internals->RuntimeValid[deviceId.GetValue()] = runtimeExists;
+  this->Internals->RuntimeAllowed[deviceId.GetValue()] = runtimeExists;
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId id)
+void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId deviceId)
 {
-  detail::RuntimeDeviceTrackerFunctor functor;
-  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(), id, this);
+  vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+  this->ForceDeviceImpl(deviceId, runtimeDevice.Exists(deviceId));
 }
 
 VTKM_CONT
-DeviceAdapterNameType RuntimeDeviceTracker::GetDeviceName(DeviceAdapterId device) const
+vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker()
 {
-  auto id = device.GetValue();
-
-  if (id < 0)
-  {
-    switch (id)
-    {
-      case VTKM_DEVICE_ADAPTER_ERROR:
-        return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>::GetName();
-      case VTKM_DEVICE_ADAPTER_UNDEFINED:
-        return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagUndefined>::GetName();
-      default:
-        break;
-    }
-  }
-  else if (id >= VTKM_MAX_DEVICE_ADAPTER_ID)
-  {
-    switch (id)
-    {
-      case VTKM_DEVICE_ADAPTER_ANY:
-        return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagAny>::GetName();
-      default:
-        break;
-    }
-  }
-  else // id is valid:
-  {
-    return this->Internals->DeviceNames[id];
-  }
-
-  // Device 0 is invalid:
-  return this->Internals->DeviceNames[0];
-}
-
-VTKM_CONT
-DeviceAdapterId RuntimeDeviceTracker::GetDeviceAdapterId(DeviceAdapterNameType name) const
-{
-  // The GetDeviceAdapterId call is case-insensitive so transform the name to be lower case
-  // as that is how we cache the case-insensitive version.
-  auto lowerCaseFunc = [](char c) {
-    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-  };
-  std::transform(name.begin(), name.end(), name.begin(), lowerCaseFunc);
-
-  //lower-case the name here
-  if (name == "any")
-  {
-    return vtkm::cont::DeviceAdapterTagAny{};
-  }
-  else if (name == "error")
-  {
-    return vtkm::cont::DeviceAdapterTagError{};
-  }
-  else if (name == "undefined")
-  {
-    return vtkm::cont::DeviceAdapterTagUndefined{};
-  }
-
-  for (vtkm::Int8 id = 0; id < VTKM_MAX_DEVICE_ADAPTER_ID; ++id)
-  {
-    if (name == this->Internals->LowerCaseDeviceNames[id])
-    {
-      return vtkm::cont::make_DeviceAdapterId(id);
-    }
-  }
-
-  return vtkm::cont::DeviceAdapterTagUndefined{};
-}
-
-VTKM_CONT
-vtkm::cont::RuntimeDeviceTracker GetRuntimeDeviceTracker()
-{
-#if defined(VTKM_CLANG) && (__apple_build_version__ < 8000000)
+#if defined(VTKM_CLANG) && defined(__apple_build_version__) && (__apple_build_version__ < 8000000)
   static std::mutex mtx;
-  static std::map<std::thread::id, vtkm::cont::RuntimeDeviceTracker> globalTrackers;
+  static std::map<std::thread::id, vtkm::cont::RuntimeDeviceTracker*> globalTrackers;
   std::thread::id this_id = std::this_thread::get_id();
 
   std::unique_lock<std::mutex> lock(mtx);
   auto iter = globalTrackers.find(this_id);
   if (iter != globalTrackers.end())
   {
-    return iter->second;
+    return *iter->second;
   }
   else
   {
-    vtkm::cont::RuntimeDeviceTracker tracker;
+    vtkm::cont::RuntimeDeviceTracker* tracker = new vtkm::cont::RuntimeDeviceTracker();
     globalTrackers[this_id] = tracker;
-    return tracker;
+    return *tracker;
   }
 #else
+  static thread_local vtkm::cont::RuntimeDeviceTracker runtimeDeviceTracker;
   return runtimeDeviceTracker;
 #endif
 }

@@ -30,16 +30,23 @@ namespace cont
 
 /// A class that can be used to determine if a given device adapter
 /// is supported on the current machine at runtime. This is very important
-/// for device adapters that a physical hardware requirements such as a GPU
-/// or a Accelerator Card.
+/// for device adapters where a physical hardware requirements such as a GPU
+/// or a Accelerator Card is needed for support to exist.
 ///
 ///
-
 class VTKM_CONT_EXPORT RuntimeDeviceInformation
 {
 public:
+  /// Returns the name corresponding to the device adapter id. If @a id is
+  /// not recognized, `InvalidDeviceId` is returned. Queries for a
+  /// name are all case-insensitive.
   VTKM_CONT
-  RuntimeDeviceInformation() {}
+  DeviceAdapterNameType GetName(DeviceAdapterId id) const;
+
+  /// Returns the id corresponding to the device adapter name. If @a name is
+  /// not recognized, DeviceAdapterTagUndefined is returned.
+  VTKM_CONT
+  DeviceAdapterId GetId(DeviceAdapterNameType name) const;
 
   /// Returns true if the given device adapter is supported on the current
   /// machine.

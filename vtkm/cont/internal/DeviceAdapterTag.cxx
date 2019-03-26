@@ -20,7 +20,7 @@
 
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-#include <vtkm/cont/RuntimeDeviceTracker.h>
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 
 namespace vtkm
 {
@@ -29,12 +29,14 @@ namespace cont
 
 DeviceAdapterNameType DeviceAdapterId::GetName() const
 {
-  return vtkm::cont::GetRuntimeDeviceTracker().GetDeviceName(*this);
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.GetName(*this);
 }
 
 DeviceAdapterId make_DeviceAdapterId(const DeviceAdapterNameType& name)
 {
-  return vtkm::cont::GetRuntimeDeviceTracker().GetDeviceAdapterId(name);
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.GetId(name);
 }
 }
 } // end namespace vtkm::cont
