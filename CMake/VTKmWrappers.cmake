@@ -187,7 +187,7 @@ function(vtkm_library)
     #if cuda requires static libaries force
     #them no matter what
     if(TARGET vtkm::cuda)
-      get_target_property(force_static vtkm::cuda REQUIRES_STATIC_BUILDS)
+      get_target_property(force_static vtkm::cuda INTERFACE_REQUIRES_STATIC_BUILDS)
       if(force_static)
         set(VTKm_LIB_type STATIC)
         message("Forcing ${lib_name} to be built statically as we are using CUDA 8.X, which doesn't support virtuals sufficiently in dynamic libraries.")
