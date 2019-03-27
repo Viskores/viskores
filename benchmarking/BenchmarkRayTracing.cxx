@@ -145,7 +145,8 @@ VTKM_MAKE_BENCHMARK(RayTracing, BenchRayTracing);
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
   auto config = vtkm::cont::Initialize(argc, argv, opts);
 
   VTKM_RUN_BENCHMARK(RayTracing, vtkm::ListTagBase<vtkm::Float32>(), config.Device);

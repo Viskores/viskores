@@ -75,6 +75,7 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDynamicCellSet.cxx
   UnitTestFieldRangeCompute.cxx
+  UnitTestInitialize.cxx
   UnitTestLogging.cxx
   UnitTestMoveConstructors.cxx
   UnitTestMultiBlock.cxx
