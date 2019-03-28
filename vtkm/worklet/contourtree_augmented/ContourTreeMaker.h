@@ -63,7 +63,6 @@
 #ifndef vtkm_worklet_contourtree_augmented_contourtreemaker_h
 #define vtkm_worklet_contourtree_augmented_contourtreemaker_h
 
-#include "Types.h"
 #include <iomanip>
 
 // local includes

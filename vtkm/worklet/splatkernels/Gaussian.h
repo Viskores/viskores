@@ -20,7 +20,7 @@
 #ifndef VTKM_KERNEL_GAUSSIAN_H
 #define VTKM_KERNEL_GAUSSIAN_H
 
-#include "KernelBase.h"
+#include <vtkm/worklet/splatkernels/KernelBase.h>
 
 //
 // Gaussian kernel.

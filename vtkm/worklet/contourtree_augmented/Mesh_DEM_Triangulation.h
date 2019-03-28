@@ -357,8 +357,8 @@ void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintValues(
 } // worklet
 } // vtkm
 
-#include "vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_2D_Triangulation.h" // include Mesh_DEM_Triangulation_2D_Freudenthal
-#include "vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_3D_Triangulation.h" // include Mesh_DEM_Triangulation_3D_Freudenthal
-#include "vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MarchingCubes_3D_Triangulation.h" // include Mesh_DEM_Triangulation_3D_MarchinCubes
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_2D_Triangulation.h> // include Mesh_DEM_Triangulation_2D_Freudenthal
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_3D_Triangulation.h> // include Mesh_DEM_Triangulation_3D_Freudenthal
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MarchingCubes_3D_Triangulation.h> // include Mesh_DEM_Triangulation_3D_MarchinCubes
 
 #endif

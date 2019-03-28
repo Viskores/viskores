@@ -24,7 +24,7 @@
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
 
-#include "iterator"
+#include <iterator>
 
 namespace vtkm
 {

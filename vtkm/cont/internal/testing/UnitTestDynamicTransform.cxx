@@ -18,15 +18,15 @@
 //  this software.
 //============================================================================
 
-#include "vtkm/cont/internal/DynamicTransform.h"
+#include <vtkm/cont/internal/DynamicTransform.h>
 
-#include "vtkm/cont/ArrayHandle.h"
-#include "vtkm/cont/DynamicCellSet.h"
-#include "vtkm/cont/VariantArrayHandle.h"
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
-#include "vtkm/internal/FunctionInterface.h"
+#include <vtkm/internal/FunctionInterface.h>
 
-#include "vtkm/cont/testing/Testing.h"
+#include <vtkm/cont/testing/Testing.h>
 
 namespace vtkm
 {

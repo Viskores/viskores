@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_internal_DynamicTransform_h
 #define vtk_m_cont_internal_DynamicTransform_h
 
-#include "vtkm/internal/IndexTag.h"
+#include <vtkm/internal/IndexTag.h>
 
 #include <utility>
 

@@ -18,11 +18,11 @@
 //  this software.
 //============================================================================
 
-#include "vtkm/worklet/CellMeasure.h"
-#include "vtkm/worklet/DispatcherMapTopology.h"
+#include <vtkm/worklet/CellMeasure.h>
+#include <vtkm/worklet/DispatcherMapTopology.h>
 
-#include "vtkm/cont/testing/MakeTestDataSet.h"
-#include "vtkm/cont/testing/Testing.h"
+#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 namespace
 {

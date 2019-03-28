@@ -23,13 +23,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/splatkernels/Gaussian.h>
 #include <vtkm/worklet/splatkernels/Spline3rdOrder.h>
-/*
-#include "KernelBox.h"
-#include "KernelCusp.h"
-#include "KernelQuadratic.h"
-#include "KernelSpline5thOrder.h"
-#include "KernelWendland.h"
-*/
+
 
 using Vector = vtkm::Vec<vtkm::Float64, 3>;
 

@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 #define vtk_m_cont_StorageVirtual_cxx
-#include "StorageVirtual.h"
+#include <vtkm/cont/StorageVirtual.h>
 
 #include <vtkm/cont/internal/DeviceAdapterError.h>
 

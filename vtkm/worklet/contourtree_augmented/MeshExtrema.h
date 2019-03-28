@@ -66,12 +66,12 @@
 #include <iomanip>
 
 // local includes
-#include "PrintVectors.h"
-#include "Types.h"
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/contourtree_augmented/PointerDoubling.h>
+#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshextrema/SetStarts.h>
 
 

@@ -67,8 +67,8 @@
 #ifndef vtkm_worklet_contourtree_regular_to_candidate_h
 #define vtkm_worklet_contourtree_regular_to_candidate_h
 
-#include "vtkm/worklet/contourtree/Types.h"
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree/Types.h>
 
 namespace vtkm
 {
