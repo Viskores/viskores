@@ -35,9 +35,10 @@ inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
 {
   vtkm::cont::ArrayHandle<vtkm::Id> component;
 
-  // TODO: is there such thing as Active CellSet?
   vtkm::worklet::connectivity::ImageConnectivity().Run(
-    vtkm::filter::ApplyPolicy(input.GetCellSet(0), policy), field, component);
+    vtkm::filter::ApplyPolicy(input.GetCellSet(this->GetActiveCoordinateSystemIndex()), policy),
+    field,
+    component);
 
   auto result = internal::CreateResult(
     input, component, "component", fieldMetadata.GetAssociation(), fieldMetadata.GetCellSetName());

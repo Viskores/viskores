@@ -80,7 +80,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor3D::DoExecute(
     }
   }
   vtkm::cont::CellSetStructured<3> cellSet;
-  input.GetCellSet(0).CopyTo(cellSet);
+  input.GetCellSet(this->GetActiveCoordinateSystemIndex()).CopyTo(cellSet);
   vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
 
