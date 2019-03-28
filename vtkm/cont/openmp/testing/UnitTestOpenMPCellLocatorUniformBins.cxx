@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
+//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -18,18 +18,15 @@
 //  this software.
 //============================================================================
 
-// Make sure that the tested code is using the device adapter specified. This
-// is important in the long run so we don't, for example, use the CUDA device
-// for a part of an operation where the TBB device was specified.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/testing/TestingCellLocatorTwoLevelUniformGrid.h>
+#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
+#include <vtkm/cont/testing/TestingCellLocatorUniformBins.h>
 
-int UnitTestSerialCellLocatorTwoLevelUniformGrid(int argc, char* argv[])
+int UnitTestOpenMPCellLocatorUniformBins(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorTwoLevelUniformGrid<vtkm::cont::DeviceAdapterTagSerial>, argc, argv);
+    TestingCellLocatorUniformBins<vtkm::cont::DeviceAdapterTagOpenMP>, argc, argv);
 }

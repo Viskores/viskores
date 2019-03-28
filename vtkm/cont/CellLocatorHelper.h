@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_CellLocatorHelper_h
 #define vtk_m_cont_CellLocatorHelper_h
 
-#include <vtkm/cont/CellLocatorTwoLevelUniformGrid.h>
+#include <vtkm/cont/CellLocatorUniformBins.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
 namespace vtkm
@@ -53,11 +53,8 @@ public:
 
   /// Builds the cell locator lookup structure
   ///
-  template <typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
-  void Build(CellSetList cellSetTypes = CellSetList())
+  void Build()
   {
-    VTKM_IS_LIST_TAG(CellSetList);
-
     if (IsUniformGrid(this->CellSet, this->Coordinates))
     {
       // nothing to build for uniform grid
@@ -66,11 +63,30 @@ public:
     {
       this->Locator.SetCellSet(this->CellSet);
       this->Locator.SetCoordinates(this->Coordinates);
-      this->Locator.Build(cellSetTypes);
+      this->Locator.Update();
     }
   }
 
   class FindCellWorklet : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    using ControlSignature = void(FieldIn points,
+                                  ExecObject locator,
+                                  FieldOut cellIds,
+                                  FieldOut pcoords);
+    using ExecutionSignature = void(_1, _2, _3, _4);
+
+    template <typename LocatorType>
+    VTKM_EXEC void operator()(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                              const LocatorType& locator,
+                              vtkm::Id& cellId,
+                              vtkm::Vec<vtkm::FloatDefault, 3>& pcoords) const
+    {
+      locator->FindCell(point, cellId, pcoords, *this);
+    }
+  };
+
+  class FindCellWorkletUG : public vtkm::worklet::WorkletMapField
   {
   private:
     template <vtkm::IdComponent DIM>
@@ -133,24 +149,27 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& parametricCoords,
     CellSetList cellSetTypes = CellSetList()) const
   {
+    (void)cellSetTypes; // unused for now
+
     if (IsUniformGrid(this->CellSet, this->Coordinates))
     {
       auto coordinates =
         this->Coordinates.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       auto cellset = this->CellSet.ResetCellSetList(StructuredCellSetList());
-      vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
+      vtkm::worklet::DispatcherMapField<FindCellWorkletUG> dispatcher;
       dispatcher.Invoke(points, cellset, coordinates, cellIds, parametricCoords);
     }
     else
     {
-      this->Locator.FindCells(points, cellIds, parametricCoords, cellSetTypes);
+      vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
+      dispatcher.Invoke(points, this->Locator, cellIds, parametricCoords);
     }
   }
 
 private:
   vtkm::cont::DynamicCellSet CellSet;
   vtkm::cont::CoordinateSystem Coordinates;
-  vtkm::cont::CellLocatorTwoLevelUniformGrid Locator;
+  vtkm::cont::CellLocatorUniformBins Locator;
 };
 }
 } // vtkm::cont

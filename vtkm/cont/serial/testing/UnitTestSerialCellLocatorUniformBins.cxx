@@ -23,12 +23,13 @@
 // for a part of an operation where the TBB device was specified.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
-#include <vtkm/cont/testing/TestingCellLocatorTwoLevelUniformGrid.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/testing/TestingCellLocatorUniformBins.h>
 
-int UnitTestCudaCellLocatorTwoLevelUniformGrid(int argc, char* argv[])
+int UnitTestSerialCellLocatorUniformBins(int argc, char* argv[])
 {
   auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorTwoLevelUniformGrid<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
+    TestingCellLocatorUniformBins<vtkm::cont::DeviceAdapterTagSerial>, argc, argv);
 }
