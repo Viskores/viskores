@@ -42,10 +42,11 @@ namespace vtkm
 class VTKM_ALWAYS_EXPORT VirtualObjectBase
 {
 public:
-  VTKM_EXEC_CONT virtual ~VirtualObjectBase(){
-    //we implement this as we need a destructor with cuda markup
-    //but using =default causes warnings with CUDA 9
-  };
+  VTKM_EXEC_CONT virtual ~VirtualObjectBase() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
+  }
 
   VTKM_EXEC_CONT void Modified() { this->ModifiedCount++; }
 

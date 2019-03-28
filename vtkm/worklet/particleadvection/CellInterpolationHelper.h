@@ -40,7 +40,11 @@ namespace exec
 class CellInterpolationHelper : public vtkm::VirtualObjectBase
 {
 public:
-  VTKM_EXEC_CONT virtual ~CellInterpolationHelper() = default;
+  VTKM_EXEC_CONT virtual ~CellInterpolationHelper() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
+  }
 
   VTKM_EXEC
   virtual void GetCellInfo(const vtkm::Id& cellId,
@@ -52,7 +56,6 @@ public:
 class StructuredCellInterpolationHelper : public vtkm::exec::CellInterpolationHelper
 {
 public:
-  VTKM_CONT
   StructuredCellInterpolationHelper() = default;
 
   VTKM_CONT
@@ -99,7 +102,6 @@ class SingleCellExplicitInterpolationHelper : public vtkm::exec::CellInterpolati
   using ConnPortalType = typename ConnType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
 public:
-  VTKM_CONT
   SingleCellExplicitInterpolationHelper() = default;
 
   VTKM_CONT
@@ -147,7 +149,6 @@ class CellExplicitInterpolationHelper : public vtkm::exec::CellInterpolationHelp
   using ConnPortalType = typename ConnType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
 public:
-  VTKM_CONT
   CellExplicitInterpolationHelper() = default;
 
   VTKM_CONT
@@ -196,7 +197,11 @@ class CellInterpolationHelper : public vtkm::cont::ExecutionObjectBase
 public:
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellInterpolationHelper>;
 
-  VTKM_CONT virtual ~CellInterpolationHelper() = default;
+  virtual VTKM_EXEC_CONT ~CellInterpolationHelper() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
+  }
 
   template <typename DeviceAdapter>
   VTKM_CONT const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
@@ -215,7 +220,6 @@ class StructuredCellInterpolationHelper : public vtkm::cont::CellInterpolationHe
 public:
   using StructuredType = vtkm::cont::CellSetStructured<3>;
 
-  VTKM_CONT
   StructuredCellInterpolationHelper() = default;
 
   VTKM_CONT
@@ -270,7 +274,6 @@ class SingleCellExplicitInterpolationHelper : public vtkm::cont::CellInterpolati
 public:
   using SingleExplicitType = vtkm::cont::CellSetSingleType<>;
 
-  VTKM_CONT
   SingleCellExplicitInterpolationHelper() = default;
 
   VTKM_CONT
@@ -333,7 +336,6 @@ private:
 class CellExplicitInterpolationHelper : public vtkm::cont::CellInterpolationHelper
 {
 public:
-  VTKM_CONT
   CellExplicitInterpolationHelper() = default;
 
   VTKM_CONT
