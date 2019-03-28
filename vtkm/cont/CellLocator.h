@@ -26,10 +26,8 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
 
 #include <vtkm/exec/CellLocator.h>
-#include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
 
 namespace vtkm
 {
@@ -47,7 +45,7 @@ public:
   void SetCellSet(const vtkm::cont::DynamicCellSet& cellSet)
   {
     this->CellSet = cellSet;
-    this->SetDirty();
+    this->SetModified();
   }
 
   vtkm::cont::CoordinateSystem GetCoordinates() const { return this->Coords; }
@@ -55,37 +53,32 @@ public:
   void SetCoordinates(const vtkm::cont::CoordinateSystem& coords)
   {
     this->Coords = coords;
-    this->SetDirty();
+    this->SetModified();
   }
 
   void Update()
   {
-    if (this->Dirty)
+    if (this->Modified)
+    {
       this->Build();
-    this->Dirty = false;
+      this->Modified = false;
+    }
   }
 
-  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(
-    const vtkm::cont::DeviceAdapterId device) const
-  {
-    return this->PrepareForExecutionImpl(device).PrepareForExecution(device);
-  }
-
-  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
+  VTKM_CONT virtual const vtkm::exec::CellLocator* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device) const = 0;
 
 protected:
-  void SetDirty() { this->Dirty = true; }
+  void SetModified() { this->Modified = true; }
+  bool GetModified() const { return this->Modified; }
 
   //This is going to need a TryExecute
   VTKM_CONT virtual void Build() = 0;
 
-  VTKM_CONT virtual const HandleType PrepareForExecutionImpl(
-    const vtkm::cont::DeviceAdapterId device) const = 0;
-
 private:
   vtkm::cont::DynamicCellSet CellSet;
   vtkm::cont::CoordinateSystem Coords;
-  bool Dirty = true;
+  bool Modified = true;
 };
 
 } // namespace cont
