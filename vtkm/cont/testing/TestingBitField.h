@@ -30,7 +30,7 @@
 
 #include <vtkm/exec/FunctorBase.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/Invoker.h>
 
 #include <cstdio>
 
@@ -71,6 +71,7 @@ namespace cont
 namespace testing
 {
 
+// Takes an ArrayHandleBitField as the boolean condition field
 class ConditionalMergeWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -81,6 +82,26 @@ public:
   VTKM_EXEC T operator()(bool cond, const T& trueVal, const T& falseVal) const
   {
     return cond ? trueVal : falseVal;
+  }
+};
+
+// Takes a BitFieldInOut as the condition information, and reverses
+// the bits in place after performing the merge.
+class ConditionalMergeWorklet2 : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(BitFieldInOut bits,
+                                FieldIn trueVals,
+                                FieldIn falseVal,
+                                FieldOut result);
+  using ExecutionSignature = _4(InputIndex, _1, _2, _3);
+  using InputDomain = _2;
+
+  template <typename BitPortal, typename T>
+  VTKM_EXEC T
+  operator()(const vtkm::Id i, BitPortal& bits, const T& trueVal, const T& falseVal) const
+  {
+    return bits.XorBitAtomic(i, true) ? trueVal : falseVal;
   }
 };
 
@@ -588,8 +609,8 @@ struct TestingBitField
     auto falseArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(13, 2, NUM_BITS);
     vtkm::cont::ArrayHandle<vtkm::Id> output;
 
-    vtkm::worklet::DispatcherMapField<ConditionalMergeWorklet> dispatcher;
-    dispatcher.Invoke(condArray, trueArray, falseArray, output);
+    vtkm::worklet::Invoker invoke;
+    invoke(ConditionalMergeWorklet{}, condArray, trueArray, falseArray, output);
 
     auto condVals = condArray.GetPortalConstControl();
     auto trueVals = trueArray.GetPortalConstControl();
@@ -606,6 +627,35 @@ struct TestingBitField
     }
   }
 
+  VTKM_CONT
+  static void TestArrayInvokeWorklet2()
+  {
+    auto condBits = RandomBitField();
+    auto trueArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(20, 2, NUM_BITS);
+    auto falseArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(13, 2, NUM_BITS);
+    vtkm::cont::ArrayHandle<vtkm::Id> output;
+
+    vtkm::worklet::Invoker invoke;
+    invoke(ConditionalMergeWorklet2{}, condBits, trueArray, falseArray, output);
+
+    auto condVals = condBits.GetPortalConstControl();
+    auto trueVals = trueArray.GetPortalConstControl();
+    auto falseVals = falseArray.GetPortalConstControl();
+    auto outVals = output.GetPortalConstControl();
+
+    VTKM_TEST_ASSERT(condVals.GetNumberOfBits() == trueVals.GetNumberOfValues());
+    VTKM_TEST_ASSERT(condVals.GetNumberOfBits() == falseVals.GetNumberOfValues());
+    VTKM_TEST_ASSERT(condVals.GetNumberOfBits() == outVals.GetNumberOfValues());
+
+    for (vtkm::Id i = 0; i < condVals.GetNumberOfBits(); ++i)
+    {
+      // The worklet flips the bitfield in place after choosing true/false paths
+      VTKM_TEST_ASSERT(condVals.GetBit(i) == !RandomBitFromIndex(i));
+      VTKM_TEST_ASSERT(outVals.Get(i) ==
+                       (!condVals.GetBit(i) ? trueVals.Get(i) : falseVals.Get(i)));
+    }
+  }
+
   struct TestRunner
   {
     VTKM_CONT
@@ -617,6 +667,7 @@ struct TestingBitField
       TestingBitField::TestFinalWordMask();
       TestingBitField::TestArrayHandleBitField();
       TestingBitField::TestArrayInvokeWorklet();
+      TestingBitField::TestArrayInvokeWorklet2();
     }
   };
 
