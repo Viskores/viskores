@@ -35,9 +35,10 @@ inline VTKM_CONT vtkm::cont::DataSet CellSetConnectivity::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> component;
-  // TODO: is the Casting right?
+
   vtkm::worklet::connectivity::CellSetConnectivity().Run(
-    vtkm::filter::ApplyPolicy(input.GetCellSet(0), policy), component);
+    vtkm::filter::ApplyPolicy(input.GetCellSet(this->GetActiveCoordinateSystemIndex()), policy),
+    component);
 
   auto result = internal::CreateResult(
     input, component, "component", fieldMetadata.GetAssociation(), fieldMetadata.GetCellSetName());

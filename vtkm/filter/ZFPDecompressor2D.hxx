@@ -79,7 +79,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor2D::DoExecute(
   }
 
   vtkm::cont::CellSetStructured<2> cellSet;
-  input.GetCellSet(0).CopyTo(cellSet);
+  input.GetCellSet(this->GetActiveCoordinateSystemIndex()).CopyTo(cellSet);
   vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
 
   vtkm::cont::ArrayHandle<vtkm::Float64> decompress;

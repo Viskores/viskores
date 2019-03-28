@@ -95,7 +95,7 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
 
   // Collect sizing information from the dataset
   vtkm::cont::CellSetStructured<2> cellSet;
-  input.GetCellSet(0).CopyTo(cellSet);
+  input.GetCellSet(this->GetActiveCoordinateSystemIndex()).CopyTo(cellSet);
 
   // How should policy be used?
   vtkm::filter::ApplyPolicy(cellSet, policy);
@@ -136,7 +136,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
 
   // Collect sizing information from the dataset
   vtkm::cont::CellSetStructured<3> cellSet;
-  input.GetCellSet(0).CopyTo(cellSet);
+  input.GetCellSet(this->GetActiveCoordinateSystemIndex()).CopyTo(cellSet);
 
   // How should policy be used?
   vtkm::filter::ApplyPolicy(cellSet, policy);
