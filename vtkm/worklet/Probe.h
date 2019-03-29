@@ -22,7 +22,10 @@
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellLocatorHelper.h>
+#include <vtkm/cont/CellLocatorGeneral.h>
+#include <vtkm/exec/CellInside.h>
+#include <vtkm/exec/CellInterpolate.h>
+#include <vtkm/exec/ParametricCoordinates.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -39,19 +42,27 @@ namespace worklet
 class Probe
 {
   //============================================================================
+public:
+  class FindCellWorklet : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    using ControlSignature = void(FieldIn points,
+                                  ExecObject locator,
+                                  FieldOut cellIds,
+                                  FieldOut pcoords);
+    using ExecutionSignature = void(_1, _2, _3, _4);
+
+    template <typename LocatorType>
+    VTKM_EXEC void operator()(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                              const LocatorType& locator,
+                              vtkm::Id& cellId,
+                              vtkm::Vec<vtkm::FloatDefault, 3>& pcoords) const
+    {
+      locator->FindCell(point, cellId, pcoords, *this);
+    }
+  };
+
 private:
-  template <typename CellSetType>
-  static vtkm::ListTagBase<CellSetType> GetCellSetListTag(const CellSetType&)
-  {
-    return {};
-  }
-
-  template <typename CellSetList>
-  static CellSetList GetCellSetListTag(const vtkm::cont::DynamicCellSetBase<CellSetList>&)
-  {
-    return {};
-  }
-
   template <typename CellSetType, typename PointsType, typename PointsStorage>
   void RunImpl(const CellSetType& cells,
                const vtkm::cont::CoordinateSystem& coords,
@@ -59,11 +70,14 @@ private:
   {
     this->InputCellSet = vtkm::cont::DynamicCellSet(cells);
 
-    vtkm::cont::CellLocatorHelper locator;
+    vtkm::cont::CellLocatorGeneral locator;
     locator.SetCellSet(this->InputCellSet);
     locator.SetCoordinates(coords);
-    locator.Build();
-    locator.FindCells(points, this->CellIds, this->ParametricCoordinates, GetCellSetListTag(cells));
+    locator.Update();
+
+    vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
+    // CellLocatorGeneral is non-copyable. Pass it via a pointer.
+    dispatcher.Invoke(points, &locator, this->CellIds, this->ParametricCoordinates);
   }
 
   //============================================================================

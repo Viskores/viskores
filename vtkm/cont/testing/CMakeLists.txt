@@ -60,7 +60,7 @@ set(unit_tests
   UnitTestArrayHandleVirtual.cxx
   UnitTestVariantArrayHandle.cxx
   UnitTestArrayPortalToIterators.cxx
-  UnitTestCellLocator.cxx
+  UnitTestCellLocatorGeneral.cxx
   UnitTestCellSet.cxx
   UnitTestCellSetExplicit.cxx
   UnitTestCellSetPermutation.cxx
