@@ -25,9 +25,6 @@
 #include <vtkm/filter/internal/ResolveFieldTypeAndExecute.h>
 #include <vtkm/filter/internal/ResolveFieldTypeAndMap.h>
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
-
 namespace vtkm
 {
 namespace filter

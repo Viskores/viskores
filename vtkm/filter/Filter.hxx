@@ -28,9 +28,6 @@
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Logging.h>
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
-
 namespace vtkm
 {
 namespace filter
