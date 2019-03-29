@@ -141,7 +141,6 @@ set(sources
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
-  RuntimeDeviceInformation.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
   TryExecute.cxx
@@ -171,6 +170,7 @@ set(device_sources
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
   MultiBlock.cxx
+  RuntimeDeviceInformation.cxx
   StorageVirtual.cxx
   Timer.cxx
   )

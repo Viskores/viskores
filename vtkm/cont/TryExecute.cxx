@@ -22,7 +22,7 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 namespace vtkm
 {
@@ -31,9 +31,9 @@ namespace cont
 namespace detail
 {
 
-void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
-                               vtkm::cont::RuntimeDeviceTracker tracker,
-                               const std::string& functorName)
+VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
+                                                vtkm::cont::RuntimeDeviceTracker tracker,
+                                                const std::string& functorName)
 {
   try
   {

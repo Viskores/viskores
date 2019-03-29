@@ -22,11 +22,10 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <memory>
 
@@ -38,7 +37,6 @@ namespace detail
 {
 
 struct RuntimeDeviceTrackerInternals;
-struct RuntimeDeviceTrackerFunctor;
 }
 
 /// A class that can be used to determine if a given device adapter
@@ -50,7 +48,6 @@ struct RuntimeDeviceTrackerFunctor;
 ///
 class VTKM_CONT_EXPORT RuntimeDeviceTracker
 {
-  friend struct detail::RuntimeDeviceTrackerFunctor;
   friend VTKM_CONT_EXPORT vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker();
 
 public:

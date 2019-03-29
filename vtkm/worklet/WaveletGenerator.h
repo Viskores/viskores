@@ -110,7 +110,7 @@ public:
     OutputHandleType Output;
     OutputPortalType Portal;
 
-    VTKM_EXEC_CONT
+    VTKM_CONT
     Worker(const Vec3F& center,
            const Vec3F& spacing,
            const Vec3F& frequency,
