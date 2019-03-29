@@ -24,16 +24,18 @@
 #define vtkm_m_filter_CellSetConnectivity_h
 
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/FilterCell.h>
 #include <vtkm/worklet/connectivities/CellSetConnectivity.h>
 
 namespace vtkm
 {
 namespace filter
 {
-class CellSetConnectivity : public vtkm::filter::FilterField<CellSetConnectivity>
+class CellSetConnectivity : public vtkm::filter::FilterCell<CellSetConnectivity>
 {
 public:
+  VTKM_CONT CellSetConnectivity();
+
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
@@ -52,6 +54,8 @@ public:
 }
 }
 
+#ifndef vtkm_m_filter_CellSetConnectivity_hxx
 #include <vtkm/filter/CellSetConnectivity.hxx>
+#endif
 
 #endif //vtkm_m_filter_CellSetConnectivity_h
