@@ -420,6 +420,6 @@ VTKM_EXEC_CONT vtkm::Sphere<CoordType, 3> make_SphereFrom4Points(
 
 } // namespace vtkm
 
-#include "vtkm/Geometry.hxx"
+#include <vtkm/Geometry.hxx>
 
 #endif // vtk_m_Geometry_h

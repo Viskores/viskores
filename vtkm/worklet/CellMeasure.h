@@ -21,9 +21,9 @@
 #ifndef vtk_m_worklet_CellMeasure_h
 #define vtk_m_worklet_CellMeasure_h
 
-#include "vtkm/worklet/WorkletMapTopology.h"
+#include <vtkm/worklet/WorkletMapTopology.h>
 
-#include "vtkm/exec/CellMeasure.h"
+#include <vtkm/exec/CellMeasure.h>
 
 namespace vtkm
 {

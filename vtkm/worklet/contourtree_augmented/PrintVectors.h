@@ -75,8 +75,8 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 // local includes
-#include "../../cont/arg/Transport.h"
-#include "Types.h"
+#include <vtkm/cont/arg/Transport.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 
 namespace vtkm

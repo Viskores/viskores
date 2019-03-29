@@ -18,10 +18,10 @@
 //  this software.
 //============================================================================
 
-#include "vtkm/filter/CellMeasures.h"
+#include <vtkm/filter/CellMeasures.h>
 
-#include "vtkm/cont/testing/MakeTestDataSet.h"
-#include "vtkm/cont/testing/Testing.h"
+#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
 

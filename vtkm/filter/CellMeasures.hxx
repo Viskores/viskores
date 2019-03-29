@@ -18,10 +18,10 @@
 //  this software.
 //============================================================================
 
-#include "vtkm/cont/DynamicCellSet.h"
-#include "vtkm/cont/ErrorFilterExecution.h"
-#include "vtkm/filter/internal/CreateResult.h"
-#include "vtkm/worklet/DispatcherMapTopology.h"
+#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/internal/CreateResult.h>
+#include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm
 {

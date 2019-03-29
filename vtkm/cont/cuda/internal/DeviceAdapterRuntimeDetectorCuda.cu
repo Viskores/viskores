@@ -17,4 +17,4 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include "DeviceAdapterRuntimeDetectorCuda.cxx"
+#include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.cxx>

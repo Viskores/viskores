@@ -20,7 +20,7 @@
 #ifndef VTKM_KERNEL_SPLINE_3RD_ORDER_H
 #define VTKM_KERNEL_SPLINE_3RD_ORDER_H
 
-#include "KernelBase.h"
+#include <vtkm/worklet/splatkernels/KernelBase.h>
 
 //
 // Spline 3rd Order kernel.

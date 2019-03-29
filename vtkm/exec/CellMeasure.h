@@ -23,11 +23,11 @@
  * Functions that provide integral measures over cells.
 */
 
-#include "vtkm/CellShape.h"
-#include "vtkm/CellTraits.h"
-#include "vtkm/VecTraits.h"
-#include "vtkm/VectorAnalysis.h"
-#include "vtkm/exec/FunctorBase.h"
+#include <vtkm/CellShape.h>
+#include <vtkm/CellTraits.h>
+#include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
+#include <vtkm/exec/FunctorBase.h>
 
 namespace vtkm
 {

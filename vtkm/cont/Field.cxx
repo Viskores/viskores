@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include "Field.h"
+#include <vtkm/cont/Field.h>
 
 namespace vtkm
 {

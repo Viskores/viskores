@@ -67,8 +67,8 @@
 #include <iomanip>
 
 // local includes
-#include "PrintVectors.h"
-#include "Types.h"
+#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 //VTKM includes
 #include <vtkm/Types.h>

@@ -21,8 +21,8 @@
 #ifndef vtk_m_filter_CellMeasures_h
 #define vtk_m_filter_CellMeasures_h
 
-#include "vtkm/filter/FilterCell.h"
-#include "vtkm/worklet/CellMeasure.h"
+#include <vtkm/filter/FilterCell.h>
+#include <vtkm/worklet/CellMeasure.h>
 
 namespace vtkm
 {

@@ -20,8 +20,8 @@
 #ifndef vtk_m_filter_OscillatorSource_h
 #define vtk_m_filter_OscillatorSource_h
 
-#include "vtkm/filter/FilterField.h"
-#include "vtkm/worklet/OscillatorSource.h"
+#include <vtkm/filter/FilterField.h>
+#include <vtkm/worklet/OscillatorSource.h>
 
 namespace vtkm
 {

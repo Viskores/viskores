@@ -72,7 +72,7 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 
 // local includes
-#include "Types.h"
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 
 namespace vtkm
