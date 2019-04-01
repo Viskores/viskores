@@ -73,23 +73,17 @@ public:
     AxisPortals[1] = Coords.GetSecondPortal();
     AxisPortals[2] = Coords.GetThirdPortal();
 
-    MinPoint[0] =
-      static_cast<vtkm::Float32>(coords.GetPortalConstControl().GetFirstPortal().Get(0));
-    MinPoint[1] =
-      static_cast<vtkm::Float32>(coords.GetPortalConstControl().GetSecondPortal().Get(0));
-    MinPoint[2] =
-      static_cast<vtkm::Float32>(coords.GetPortalConstControl().GetThirdPortal().Get(0));
+    MinPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(0);
+    MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
+    MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
 
-    MaxPoint[0] = static_cast<vtkm::Float32>(
-      coords.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1));
-    MaxPoint[1] = static_cast<vtkm::Float32>(
-      coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1));
-    MaxPoint[2] = static_cast<vtkm::Float32>(
-      coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1));
+    MaxPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1);
+    MaxPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
+    MaxPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
   }
 
   VTKM_EXEC
-  inline bool IsInside(const vtkm::Vec<vtkm::Float32, 3>& point) const
+  inline bool IsInside(const vtkm::Vec<vtkm::FloatDefault, 3>& point) const
   {
     bool inside = true;
     if (point[0] < MinPoint[0] || point[0] > MaxPoint[0])
@@ -128,9 +122,9 @@ public:
       }
 
       bool found = false;
-      vtkm::Float32 minVal = static_cast<vtkm::Float32>(AxisPortals[dim].Get(logicalCell[dim]));
+      vtkm::FloatDefault minVal = AxisPortals[dim].Get(logicalCell[dim]);
       const vtkm::Id searchDir = (point[dim] - minVal >= 0.f) ? 1 : -1;
-      vtkm::Float32 maxVal = static_cast<vtkm::Float32>(AxisPortals[dim].Get(logicalCell[dim] + 1));
+      vtkm::FloatDefault maxVal = AxisPortals[dim].Get(logicalCell[dim] + 1);
 
       while (!found)
       {
@@ -142,7 +136,7 @@ public:
 
         logicalCell[dim] += searchDir;
         vtkm::Id nextCellId = searchDir == 1 ? logicalCell[dim] + 1 : logicalCell[dim];
-        vtkm::Float32 next = static_cast<vtkm::Float32>(AxisPortals[dim].Get(nextCellId));
+        vtkm::FloatDefault next = AxisPortals[dim].Get(nextCellId);
         if (searchDir == 1)
         {
           minVal = maxVal;
@@ -178,8 +172,8 @@ private:
   RectilinearPortalType Coords;
   AxisPortalType AxisPortals[3];
   vtkm::Id3 PointDimensions;
-  vtkm::Vec<vtkm::Float32, 3> MinPoint;
-  vtkm::Vec<vtkm::Float32, 3> MaxPoint;
+  vtkm::Vec<vtkm::FloatDefault, 3> MinPoint;
+  vtkm::Vec<vtkm::FloatDefault, 3> MaxPoint;
 };
 } //namespace exec
 } //namespace vtkm
