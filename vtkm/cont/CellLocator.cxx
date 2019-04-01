@@ -24,7 +24,6 @@ namespace vtkm
 {
 namespace cont
 {
-
 CellLocator::~CellLocator() = default;
 }
 }

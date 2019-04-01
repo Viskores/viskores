@@ -55,31 +55,39 @@ void CellLocatorRectilinearGrid::Build()
   this->RowSize = celldims[0];
 }
 
-struct CellLocatorRectilinearGrid::PrepareForExecutionFunctor
+namespace
 {
-  template <typename DeviceAdapter>
-  VTKM_CONT bool operator()(DeviceAdapter, const CellLocatorRectilinearGrid& contLocator) const
+struct CellLocatorRectilinearGridPrepareForExecutionFunctor
+{
+  template <typename DeviceAdapter, typename... Args>
+  VTKM_CONT bool operator()(DeviceAdapter,
+                            vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& execLocator,
+                            Args&&... args) const
   {
-    auto* execObject = new vtkm::exec::CellLocatorRectilinearGrid<DeviceAdapter>(
-      contLocator.PlaneSize,
-      contLocator.RowSize,
-      contLocator.GetCellSet().template Cast<StructuredType>(),
-      contLocator.GetCoordinates().GetData().template Cast<RectilinearType>(),
-      DeviceAdapter());
-    contLocator.ExecutionObjectHandle.Reset(execObject);
-
+    using ExecutionType = vtkm::exec::CellLocatorRectilinearGrid<DeviceAdapter>;
+    ExecutionType* execObject = new ExecutionType(std::forward<Args>(args)..., DeviceAdapter());
+    execLocator.Reset(execObject);
     return true;
   }
 };
+}
 
 const vtkm::exec::CellLocator* CellLocatorRectilinearGrid::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device) const
 {
-  if (!vtkm::cont::TryExecuteOnDevice(device, PrepareForExecutionFunctor(), *this))
+  const bool success = vtkm::cont::TryExecuteOnDevice(
+    device,
+    CellLocatorRectilinearGridPrepareForExecutionFunctor(),
+    this->ExecutionObjectHandle,
+    this->PlaneSize,
+    this->RowSize,
+    this->GetCellSet().template Cast<StructuredType>(),
+    this->GetCoordinates().GetData().template Cast<RectilinearType>());
+  if (!success)
   {
     throwFailedRuntimeDeviceTransfer("CellLocatorRectilinearGrid", device);
   }
   return this->ExecutionObjectHandle.PrepareForExecution(device);
 }
-}
-} // vtkm::cont
+} //namespace cont
+} //namespace vtkm

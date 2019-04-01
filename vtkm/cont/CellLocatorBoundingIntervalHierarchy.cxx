@@ -17,6 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 
 #include <vtkm/Bounds.h>
 #include <vtkm/Types.h>
@@ -28,7 +29,6 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
@@ -455,44 +455,59 @@ void CellLocatorBoundingIntervalHierarchy::Build()
   //std::cout << "Total time: " << totalTimer.GetElapsedTime() << "\n";
 }
 
-struct CellLocatorBoundingIntervalHierarchy::MakeExecObject
+namespace
 {
-  using NodeArrayHandle =
-    vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode>;
 
-  template <typename CellSetType, typename DeviceAdapter>
-  void operator()(const CellSetType& cellset,
-                  const vtkm::cont::CellLocatorBoundingIntervalHierarchy& bih,
-                  DeviceAdapter device) const
+struct CellLocatorBIHPrepareForExecutionFunctor
+{
+  template <typename DeviceAdapter, typename CellSetType>
+  VTKM_CONT bool operator()(
+    DeviceAdapter,
+    const CellSetType& cellset,
+    vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& bihExec,
+    const vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode>& nodes,
+    const vtkm::cont::ArrayHandle<vtkm::Id>& processedCellIds,
+    const vtkm::cont::ArrayHandleVirtualCoordinates& coords) const
   {
-    using ExecObjectType =
+    using ExecutionType =
       vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
-    auto execObject = new ExecObjectType(
-      bih.Nodes, bih.ProcessedCellIds, cellset, bih.GetCoordinates().GetData(), device);
-    bih.ExecutionObjectHandle.Reset(execObject);
-  }
-};
-
-struct CellLocatorBoundingIntervalHierarchy::PrepareForExecutionFunctor
-{
-  template <typename DeviceAdapter>
-  VTKM_CONT bool operator()(DeviceAdapter device,
-                            const vtkm::cont::CellLocatorBoundingIntervalHierarchy& bih) const
-  {
-    bih.GetCellSet().CastAndCall(MakeExecObject{}, bih, device);
+    ExecutionType* execObject =
+      new ExecutionType(nodes, processedCellIds, cellset, coords, DeviceAdapter());
+    bihExec.Reset(execObject);
     return true;
   }
 };
+
+struct BIHCellSetCaster
+{
+  template <typename CellSet, typename... Args>
+  VTKM_CONT void operator()(CellSet&& cellset,
+                            vtkm::cont::DeviceAdapterId device,
+                            Args&&... args) const
+  {
+    //We need to go though CastAndCall first
+    const bool success = vtkm::cont::TryExecuteOnDevice(
+      device, CellLocatorBIHPrepareForExecutionFunctor(), cellset, std::forward<Args>(args)...);
+    if (!success)
+    {
+      throwFailedRuntimeDeviceTransfer("BoundingIntervalHierarchy", device);
+    }
+  }
+};
+}
 
 VTKM_CONT
 const vtkm::exec::CellLocator* CellLocatorBoundingIntervalHierarchy::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device) const
 {
-  if (!vtkm::cont::TryExecuteOnDevice(device, PrepareForExecutionFunctor(), *this))
-  {
-    throwFailedRuntimeDeviceTransfer("BoundingIntervalHierarchy", device);
-  }
+  this->GetCellSet().CastAndCall(BIHCellSetCaster{},
+                                 device,
+                                 this->ExecutionObjectHandle,
+                                 this->Nodes,
+                                 this->ProcessedCellIds,
+                                 this->GetCoordinates().GetData());
   return this->ExecutionObjectHandle.PrepareForExecution(device);
+  ;
 }
 
 } //namespace cont

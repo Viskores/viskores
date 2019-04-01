@@ -47,8 +47,6 @@ private:
   vtkm::Id RowSize;
 
   mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
-
-  struct PrepareForExecutionFunctor;
 };
 
 } //namespace cont
