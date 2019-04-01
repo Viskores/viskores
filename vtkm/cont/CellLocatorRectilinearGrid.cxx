@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
+#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/exec/CellLocatorRectilinearGrid.h>
 

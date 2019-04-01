@@ -39,12 +39,14 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/DispatcherPointNeighborhood.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/ScatterPermutation.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>

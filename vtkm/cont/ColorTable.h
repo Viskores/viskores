@@ -27,7 +27,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ColorTableSamples.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
 
 #include <set>
 
@@ -42,6 +41,10 @@ class ColorTableBase;
 
 namespace cont
 {
+
+template <typename T>
+class VirtualObjectHandle;
+
 
 namespace detail
 {

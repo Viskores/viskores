@@ -20,4 +20,11 @@
 
 #include <vtkm/cont/CellLocator.h>
 
-vtkm::cont::CellLocator::~CellLocator() = default;
+namespace vtkm
+{
+namespace cont
+{
+
+CellLocator::~CellLocator() = default;
+}
+}

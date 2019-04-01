@@ -24,6 +24,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 
 #include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/colorconversion/LookupTable.h>

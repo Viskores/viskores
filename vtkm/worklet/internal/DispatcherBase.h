@@ -329,18 +329,6 @@ struct DispatcherBaseTransportFunctor
     using type = typename TransportType::ExecObjectType;
   };
 
-  // template<typename ControlParameter, vtkm::IdComponent Index>
-  // VTKM_CONT typename ReturnType<ControlParameter, Index>::type operator()(
-  //   ControlParameter const& invokeData,
-  //   vtkm::internal::IndexTag<Index>) const
-  // {
-  //   using TransportTag =
-  //     typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-  //   using T = typename remove_pointer_and_decay<ControlParameter>::type;
-  //   vtkm::cont::arg::Transport<TransportTag, T, Device> transport;
-  //   return transport(invokeData, as_ref(this->InputDomain), this->InputRange, this->OutputRange);
-  // }
-
   template <typename ControlParameter, vtkm::IdComponent Index>
   VTKM_CONT typename ReturnType<ControlParameter, Index>::type operator()(
     ControlParameter&& invokeData,

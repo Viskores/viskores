@@ -20,22 +20,8 @@
 
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/internal/DeviceAdapterError.h>
-
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
-
-//Bring in each device adapters runtime class
-#include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
-#include <vtkm/cont/openmp/internal/DeviceAdapterRuntimeDetectorOpenMP.h>
-#include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
-#include <vtkm/cont/tbb/internal/DeviceAdapterRuntimeDetectorTBB.h>
-
 
 #include <algorithm>
 #include <map>
@@ -54,19 +40,6 @@ namespace detail
 struct RuntimeDeviceTrackerInternals
 {
   bool RuntimeAllowed[VTKM_MAX_DEVICE_ADAPTER_ID];
-};
-
-struct RuntimeDeviceTrackerFunctor
-{
-  template <typename DeviceAdapter>
-  VTKM_CONT void operator()(DeviceAdapter, DeviceAdapterId id, RuntimeDeviceTracker* rdt) const
-  {
-    vtkm::cont::RuntimeDeviceInformation runtimeDevice;
-    if (DeviceAdapter() == id)
-    {
-      rdt->ForceDeviceImpl(DeviceAdapter(), runtimeDevice.Exists(DeviceAdapter()));
-    }
-  }
 };
 }
 
@@ -111,25 +84,6 @@ void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, 
   this->Internals->RuntimeAllowed[deviceId.GetValue()] = state;
 }
 
-namespace
-{
-
-struct VTKM_NEVER_EXPORT RuntimeDeviceTrackerResetFunctor
-{
-  template <typename Device>
-  VTKM_CONT void operator()(Device device, bool runtimeAllowed[VTKM_MAX_DEVICE_ADAPTER_ID]) const
-  {
-    if (device.IsValueValid())
-    {
-      const bool state = vtkm::cont::DeviceAdapterRuntimeDetector<Device>().Exists();
-      runtimeAllowed[device.GetValue()] = state;
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Reset device '" << device.GetName() << "' to " << state);
-    }
-  }
-};
-}
-
 VTKM_CONT
 void RuntimeDeviceTracker::Reset()
 {
@@ -138,12 +92,18 @@ void RuntimeDeviceTracker::Reset()
   // We use this instead of calling CheckDevice/SetDeviceState so that
   // when we use logging we get better messages stating we are reseting
   // the devices.
-  //
-  // 1. We can't log anything as this can be called during startup
-  // and
-  RuntimeDeviceTrackerResetFunctor functor;
-  vtkm::ListForEach(
-    functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(), std::ref(this->Internals->RuntimeAllowed));
+  vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+  for (vtkm::Int8 i = 0; i < VTKM_MAX_DEVICE_ADAPTER_ID; ++i)
+  {
+    vtkm::cont::DeviceAdapterId device = vtkm::cont::make_DeviceAdapterId(i);
+    if (device.IsValueValid())
+    {
+      const bool state = runtimeDevice.Exists(device);
+      this->Internals->RuntimeAllowed[device.GetValue()] = state;
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                 "Reset device '" << device.GetName() << "' to " << state);
+    }
+  }
 }
 
 VTKM_CONT

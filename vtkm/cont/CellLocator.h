@@ -24,10 +24,10 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
+
 #include <vtkm/exec/CellLocator.h>
 #include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
 
@@ -40,46 +40,41 @@ class VTKM_CONT_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
 {
 
 public:
-  CellLocator()
-    : Dirty(true)
-  {
-  }
-
   virtual ~CellLocator();
 
-  vtkm::cont::DynamicCellSet GetCellSet() const { return CellSet; }
+  vtkm::cont::DynamicCellSet GetCellSet() const { return this->CellSet; }
 
   void SetCellSet(const vtkm::cont::DynamicCellSet& cellSet)
   {
-    CellSet = cellSet;
-    SetDirty();
+    this->CellSet = cellSet;
+    this->SetDirty();
   }
 
-  vtkm::cont::CoordinateSystem GetCoordinates() const { return Coords; }
+  vtkm::cont::CoordinateSystem GetCoordinates() const { return this->Coords; }
 
   void SetCoordinates(const vtkm::cont::CoordinateSystem& coords)
   {
-    Coords = coords;
-    SetDirty();
+    this->Coords = coords;
+    this->SetDirty();
   }
 
   void Update()
   {
-    if (Dirty)
-      Build();
-    Dirty = false;
+    if (this->Dirty)
+      this->Build();
+    this->Dirty = false;
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(DeviceAdapter device) const
+  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(
+    const vtkm::cont::DeviceAdapterId device) const
   {
-    return PrepareForExecutionImpl(device).PrepareForExecution(device);
+    return this->PrepareForExecutionImpl(device).PrepareForExecution(device);
   }
 
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
 
 protected:
-  void SetDirty() { Dirty = true; }
+  void SetDirty() { this->Dirty = true; }
 
   //This is going to need a TryExecute
   VTKM_CONT virtual void Build() = 0;
@@ -90,7 +85,7 @@ protected:
 private:
   vtkm::cont::DynamicCellSet CellSet;
   vtkm::cont::CoordinateSystem Coords;
-  bool Dirty;
+  bool Dirty = true;
 };
 
 } // namespace cont

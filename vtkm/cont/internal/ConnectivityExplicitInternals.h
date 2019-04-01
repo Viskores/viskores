@@ -29,8 +29,6 @@
 #include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/internal/ReverseConnectivityBuilder.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {

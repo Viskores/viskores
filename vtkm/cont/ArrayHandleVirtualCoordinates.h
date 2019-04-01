@@ -28,7 +28,6 @@
 
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/cont/TryExecute.h>
 
 #include <memory>
 #include <type_traits>
