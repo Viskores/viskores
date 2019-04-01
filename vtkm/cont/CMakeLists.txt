@@ -205,9 +205,10 @@ if (VTKm_ENABLE_LOGGING)
   list(APPEND DL_LIBS ${CMAKE_DL_LIBS} Threads::Threads) # dladdr function
 endif()
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends} ${DL_LIBS})
+target_link_libraries(vtkm_cont PUBLIC vtkm_taotuple vtkm_optionparser)
 if(TARGET vtkm_diy)
   # This will become a required dependency eventually.
-  target_link_libraries(vtkm_cont PUBLIC vtkm_diy vtkm_taotuple)
+  target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
 endif()
 
 #-----------------------------------------------------------------------------
