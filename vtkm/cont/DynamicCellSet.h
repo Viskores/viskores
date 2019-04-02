@@ -272,6 +272,27 @@ private:
   friend struct detail::DynamicCellSetCopyHelper;
 };
 
+//=============================================================================
+// Free function casting helpers
+
+/// Returns true if \c dynamicCellSet matches the type of CellSetType.
+///
+template <typename CellSetType, typename Ts>
+VTKM_CONT inline bool IsType(const vtkm::cont::DynamicCellSetBase<Ts>& dynamicCellSet)
+{
+  return dynamicCellSet.template IsType<CellSetType>();
+}
+
+/// Returns \c dynamicCellSet cast to the given \c CellSet type. Throws \c
+/// ErrorBadType if the cast does not work. Use \c IsType
+/// to check if the cast can happen.
+///
+template <typename CellSetType, typename Ts>
+VTKM_CONT inline CellSetType Cast(const vtkm::cont::DynamicCellSetBase<Ts>& dynamicCellSet)
+{
+  return dynamicCellSet.template Cast<CellSetType>();
+}
+
 namespace detail
 {
 
