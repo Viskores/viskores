@@ -374,11 +374,21 @@ struct Algorithm
 {
 
   template <typename T, typename U, class CIn, class COut>
-  VTKM_CONT static void Copy(vtkm::cont::DeviceAdapterId devId,
+  VTKM_CONT static bool Copy(vtkm::cont::DeviceAdapterId devId,
                              const vtkm::cont::ArrayHandle<T, CIn>& input,
                              vtkm::cont::ArrayHandle<U, COut>& output)
   {
-    vtkm::cont::TryExecuteOnDevice(devId, detail::CopyFunctor(), input, output);
+    // If we can use any device, prefer to use source's already loaded device.
+    if (devId == vtkm::cont::DeviceAdapterTagAny())
+    {
+      bool isCopied = vtkm::cont::TryExecuteOnDevice(
+        input.GetDeviceAdapterId(), detail::CopyFunctor(), input, output);
+      if (isCopied)
+      {
+        return true;
+      }
+    }
+    return vtkm::cont::TryExecuteOnDevice(devId, detail::CopyFunctor(), input, output);
   }
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,

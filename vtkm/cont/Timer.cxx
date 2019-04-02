@@ -327,7 +327,7 @@ vtkm::Float64 Timer::GetElapsedTime(vtkm::cont::DeviceAdapterId device) const
   }
 
   // If we have specified a specific device, make sure we can run on it.
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   if ((deviceToTime != vtkm::cont::DeviceAdapterTagAny()) && !tracker.CanRunOn(deviceToTime))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,

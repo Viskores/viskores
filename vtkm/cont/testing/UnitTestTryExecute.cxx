@@ -26,7 +26,6 @@
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
@@ -92,7 +91,7 @@ struct TryExecuteTestErrorFunctor
 };
 
 template <typename DeviceList>
-void TryExecuteWithDevice(DeviceList, bool expectSuccess)
+void TryExecuteTests(DeviceList, bool expectSuccess)
 {
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> inArray;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
@@ -129,29 +128,6 @@ void TryExecuteWithDevice(DeviceList, bool expectSuccess)
   }
 }
 
-template <typename DeviceList>
-void TryExecuteAllExplicit(DeviceList, bool expectSuccess)
-{
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> inArray;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
-
-  inArray.Allocate(ARRAY_SIZE);
-  SetPortal(inArray.GetPortalControl());
-
-  bool result =
-    vtkm::cont::TryExecute(TryExecuteTestFunctor(), tracker, DeviceList(), inArray, outArray);
-  if (expectSuccess)
-  {
-    VTKM_TEST_ASSERT(result, "Call returned failure when expected success.");
-    CheckPortal(outArray.GetPortalConstControl());
-  }
-  else
-  {
-    VTKM_TEST_ASSERT(!result, "Call returned true when expected failure.");
-  }
-}
-
 struct EdgeCaseFunctor
 {
   template <typename DeviceList>
@@ -178,32 +154,12 @@ void TryExecuteAllEdgeCases()
   std::cout << "TryExecute no Runtime, no Device, with parameters." << std::endl;
   vtkm::cont::TryExecute(EdgeCaseFunctor(), int{ 42 }, float{ 3.14f }, bool{ true });
 
-  std::cout << "TryExecute with Runtime, no Device, no parameters." << std::endl;
-  vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker);
-
-  std::cout << "TryExecute with Runtime, no Device, with parameters." << std::endl;
-  vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker, int{ 42 }, float{ 3.14f }, bool{ true });
-
-  std::cout << "TryExecute no Runtime, with Device, no parameters." << std::endl;
+  std::cout << "TryExecute with Device, no parameters." << std::endl;
   vtkm::cont::TryExecute(EdgeCaseFunctor(), SingleValidList());
 
-  std::cout << "TryExecute no Runtime, with Device, with parameters." << std::endl;
+  std::cout << "TryExecute with Device, with parameters." << std::endl;
   vtkm::cont::TryExecute(
     EdgeCaseFunctor(), SingleValidList(), int{ 42 }, float{ 3.14f }, bool{ true });
-
-  std::cout << "TryExecute with Runtime, with Device, no parameters." << std::endl;
-  vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker, SingleValidList());
-
-  std::cout << "TryExecute with Runtime, with Device, with parameters." << std::endl;
-  vtkm::cont::TryExecute(
-    EdgeCaseFunctor(), tracker, SingleValidList(), int{ 42 }, float{ 3.14f }, bool{ true });
-}
-
-template <typename DeviceList>
-void TryExecuteTests(DeviceList list, bool expectSuccess)
-{
-  TryExecuteAllExplicit(list, expectSuccess);
-  TryExecuteWithDevice(list, expectSuccess);
 }
 
 template <typename ExceptionType>
