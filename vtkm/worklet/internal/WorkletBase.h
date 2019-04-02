@@ -113,6 +113,15 @@ public:
   ///
   using VisitIndex = vtkm::exec::arg::VisitIndex;
 
+  /// \c ExecutionSignature tag for getting the device adapter tag.
+  ///
+  struct Device : vtkm::exec::arg::ExecutionSignatureTagBase
+  {
+    // INDEX 0 (which is an invalid parameter index) is reserved to mean the device adapter tag.
+    static constexpr vtkm::IdComponent INDEX = 0;
+    using AspectTag = vtkm::exec::arg::AspectTagDefault;
+  };
+
   /// \c ControlSignature tag for execution object inputs.
   struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase
   {

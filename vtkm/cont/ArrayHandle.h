@@ -737,8 +737,14 @@ struct Serialization<vtkm::cont::ArrayHandle<T>>
 
 } // diy
 
+#ifndef vtk_m_cont_ArrayHandle_hxx
 #include <vtkm/cont/ArrayHandle.hxx>
+#endif
+
+#ifndef vtk_m_cont_internal_ArrayHandleBasicImpl_h
 #include <vtkm/cont/internal/ArrayHandleBasicImpl.h>
+#endif
+
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 
 #ifndef vtkm_cont_ArrayHandle_cxx

@@ -17,6 +17,10 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#ifndef vtk_m_cont_ArrayHandle_hxx
+#define vtk_m_cont_ArrayHandle_hxx
+
+#include <vtkm/cont/ArrayHandle.h>
 
 namespace vtkm
 {
@@ -425,3 +429,5 @@ VTKM_CONT void Serialization<vtkm::cont::ArrayHandle<T>>::load(BinaryBuffer& bb,
   }
 }
 } // diy
+
+#endif //vtk_m_cont_ArrayHandle_hxx

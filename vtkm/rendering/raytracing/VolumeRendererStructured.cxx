@@ -307,12 +307,12 @@ public:
 } //namespace
 
 
-template <typename Device, typename LocatorType>
+template <typename DeviceAdapterTag, typename LocatorType>
 class Sampler : public vtkm::worklet::WorkletMapField
 {
 private:
   using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
-  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;
@@ -327,7 +327,7 @@ public:
           const vtkm::Float32& maxScalar,
           const vtkm::Float32& sampleDistance,
           const LocatorType& locator)
-    : ColorMap(colorMap.PrepareForInput(Device()))
+    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag()))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
@@ -500,12 +500,12 @@ public:
   }
 }; //Sampler
 
-template <typename Device, typename LocatorType>
+template <typename DeviceAdapterTag, typename LocatorType>
 class SamplerCellAssoc : public vtkm::worklet::WorkletMapField
 {
 private:
   using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
-  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;
@@ -520,7 +520,7 @@ public:
                    const vtkm::Float32& maxScalar,
                    const vtkm::Float32& sampleDistance,
                    const LocatorType& locator)
-    : ColorMap(colorMap.PrepareForInput(Device()))
+    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag()))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
