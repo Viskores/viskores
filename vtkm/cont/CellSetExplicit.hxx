@@ -507,7 +507,7 @@ template <typename ShapeStorageTag,
 std::shared_ptr<CellSet> CellSetExplicit<ShapeStorageTag,
                                          NumIndicesStorageTag,
                                          ConnectivityStorageTag,
-                                         OffsetsStorageTag>::CreateNewInstance() const
+                                         OffsetsStorageTag>::NewInstance() const
 {
   return std::make_shared<CellSetExplicit>();
 }

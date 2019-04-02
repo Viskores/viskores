@@ -212,7 +212,7 @@ public:
   }
 
   VTKM_CONT
-  std::shared_ptr<CellSet> CreateNewInstance() const override
+  std::shared_ptr<CellSet> NewInstance() const override
   {
     return std::make_shared<CellSetSingleType>();
   }

@@ -72,7 +72,7 @@ public:
   virtual vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id id) const = 0;
   virtual void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const = 0;
 
-  virtual std::shared_ptr<CellSet> CreateNewInstance() const = 0;
+  virtual std::shared_ptr<CellSet> NewInstance() const = 0;
   virtual void DeepCopy(const CellSet* src) = 0;
 
   virtual void PrintSummary(std::ostream&) const = 0;
