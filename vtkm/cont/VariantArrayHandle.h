@@ -290,19 +290,23 @@ using VariantArrayHandle = vtkm::cont::VariantArrayHandleBase<VTKM_DEFAULT_TYPE_
 //=============================================================================
 // Free function casting helpers
 
+/// Returns true if \c variant matches the type of ArrayHandleType.
+///
 template <typename ArrayHandleType, typename Ts>
 VTKM_CONT inline bool IsType(const vtkm::cont::VariantArrayHandleBase<Ts>& variant)
 {
   return variant.template IsType<ArrayHandleType>();
 }
 
+/// Returns \c variant cast to the given \c ArrayHandle type. Throws \c
+/// ErrorBadType if the cast does not work. Use \c IsType
+/// to check if the cast can happen.
+///
 template <typename ArrayHandleType, typename Ts>
 VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::VariantArrayHandleBase<Ts>& variant)
 {
   return variant.template Cast<ArrayHandleType>();
 }
-
-
 
 namespace detail
 {
