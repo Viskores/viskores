@@ -20,7 +20,17 @@
 #ifndef vtk_m_exec_cuda_internal_ThrustPatches_h
 #define vtk_m_exec_cuda_internal_ThrustPatches_h
 
-//Forward declare of WrappedBinaryOperator
+#include <vtkm/Types.h>
+
+#ifdef VTKM_ENABLE_CUDA
+
+//So for thrust 1.8.0 - 1.8.2 the inclusive_scan has a bug when accumulating
+//values when the binary operators states it is not commutative.
+//For more complex value types, we patch thrust/bulk with fix that is found
+//in issue: https://github.com/thrust/thrust/issues/692
+//
+//This specialization needs to be included before ANY thrust includes otherwise
+//other device code inside thrust that calls it will not see it
 namespace vtkm
 {
 namespace exec
@@ -29,7 +39,7 @@ namespace cuda
 {
 namespace internal
 {
-
+//Forward declare of WrappedBinaryOperator
 template <typename T, typename F>
 class WrappedBinaryOperator;
 }
@@ -51,13 +61,6 @@ namespace detail
 {
 namespace accumulate_detail
 {
-//So for thrust 1.8.0 - 1.8.2 the inclusive_scan has a bug when accumulating
-//values when the binary operators states it is not commutative.
-//For more complex value types, we patch thrust/bulk with fix that is found
-//in issue: https://github.com/thrust/thrust/issues/692
-//
-//This specialization needs to be included before ANY thrust includes otherwise
-//other device code inside thrust that calls it will not see it
 template <typename ConcurrentGroup,
           typename RandomAccessIterator,
           typename Size,
@@ -112,5 +115,93 @@ destructive_accumulate_n(ConcurrentGroup& g,
 }
 }
 } //namespace thrust::system::cuda::detail
+
+#endif
+
+//So for thrust 1.9.0+ the aligned_reinterpret_cast has a bug
+//where it is not marked as __host__device__. To fix this we add a new
+//overload for void* with the correct markup (which is what everyone calls).
+namespace thrust
+{
+namespace detail
+{
+
+//just in-case somebody has this fix also for primitive types
+template <typename T, typename U>
+T aligned_reinterpret_cast(U u);
+
+#define ALIGN_RE_T(RT)                                                                             \
+  template <>                                                                                      \
+  inline __host__ __device__ RT* aligned_reinterpret_cast(void* u)                                 \
+  {                                                                                                \
+    return reinterpret_cast<RT*>(reinterpret_cast<void*>(u));                                      \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ RT* aligned_reinterpret_cast(vtkm::UInt8* u)                          \
+  {                                                                                                \
+    return reinterpret_cast<RT*>(reinterpret_cast<void*>(u));                                      \
+  }                                                                                                \
+  struct SwallowSemicolon
+
+#define ALIGN_RE_VEC(RT, N)                                                                        \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<RT, N>* aligned_reinterpret_cast(void* u)                   \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<RT, N>*>(reinterpret_cast<void*>(u));                        \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<RT, N>* aligned_reinterpret_cast(vtkm::UInt8* u)            \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<RT, N>*>(reinterpret_cast<void*>(u));                        \
+  }                                                                                                \
+  struct SwallowSemicolon
+
+#define ALIGN_RE_PAIR(T, U)                                                                        \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Pair<T, U>* aligned_reinterpret_cast(void* u)                   \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Pair<T, U>*>(reinterpret_cast<void*>(u));                        \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Pair<T, U>* aligned_reinterpret_cast(vtkm::UInt8* u)            \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Pair<T, U>*>(reinterpret_cast<void*>(u));                        \
+  }                                                                                                \
+  struct SwallowSemicolon
+
+#ifndef VTKM_DONT_FIX_THRUST
+ALIGN_RE_T(char);
+ALIGN_RE_T(vtkm::Int8);
+ALIGN_RE_T(vtkm::UInt8);
+ALIGN_RE_T(vtkm::Int16);
+ALIGN_RE_T(vtkm::UInt16);
+ALIGN_RE_T(vtkm::Int32);
+ALIGN_RE_T(vtkm::UInt32);
+ALIGN_RE_T(vtkm::Int64);
+ALIGN_RE_T(vtkm::UInt64);
+ALIGN_RE_T(vtkm::Float32);
+ALIGN_RE_T(vtkm::Float64);
+#endif
+
+ALIGN_RE_VEC(vtkm::UInt8, 3);
+ALIGN_RE_VEC(vtkm::Int32, 3);
+ALIGN_RE_VEC(vtkm::Int64, 3);
+ALIGN_RE_VEC(vtkm::Float32, 3);
+ALIGN_RE_VEC(vtkm::Float64, 3);
+
+ALIGN_RE_VEC(vtkm::UInt8, 4);
+ALIGN_RE_VEC(vtkm::Float32, 4);
+ALIGN_RE_VEC(vtkm::Float64, 4);
+
+ALIGN_RE_PAIR(vtkm::Int32, vtkm::Float32);
+ALIGN_RE_PAIR(vtkm::Int32, vtkm::Float64);
+ALIGN_RE_PAIR(vtkm::Int64, vtkm::Float32);
+ALIGN_RE_PAIR(vtkm::Int64, vtkm::Float64);
+
+#undef ALIGN_RE_T
+#undef ALIGN_RE_VEC
+#undef ALIGN_RE_PAIR
+}
+}
 
 #endif //vtk_m_exec_cuda_internal_ThrustPatches_h
