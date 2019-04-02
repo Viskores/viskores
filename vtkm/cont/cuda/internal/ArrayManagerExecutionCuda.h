@@ -41,6 +41,7 @@
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/copy.h>
 #include <thrust/device_ptr.h>
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <limits>

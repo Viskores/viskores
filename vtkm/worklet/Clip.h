@@ -49,6 +49,7 @@
 // wrong results
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/detail/type_traits.h>
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 #define THRUST_SCAN_WORKAROUND
 #endif

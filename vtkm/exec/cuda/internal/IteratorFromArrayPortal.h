@@ -30,6 +30,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/functional.h>
 #include <thrust/iterator/iterator_facade.h>
 #include <thrust/system/cuda/execution_policy.h>
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
