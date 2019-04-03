@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_internal_ArrayManagerExecution_h
 #define vtk_m_cont_internal_ArrayManagerExecution_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 namespace vtkm
 {

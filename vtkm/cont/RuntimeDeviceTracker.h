@@ -22,10 +22,10 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <memory>
 

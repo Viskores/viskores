@@ -26,7 +26,7 @@
 #include <vtkm/worklet/Keys.h>
 
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/Testing.h>
 

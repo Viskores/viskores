@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_DeviceAdapterTag_h
-#define vtk_m_cont_internal_DeviceAdapterTag_h
+#ifndef vtk_m_cont_DeviceAdapterTag_h
+#define vtk_m_cont_DeviceAdapterTag_h
 
 #include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
@@ -162,4 +162,4 @@ VTKM_INVALID_DEVICE_ADAPTER(Undefined, VTKM_DEVICE_ADAPTER_UNDEFINED)
                   !std::is_same<vtkm::cont::DeviceAdapterId, tag>::value,                          \
                 "Provided type is not a valid VTK-m device adapter tag.")
 
-#endif //vtk_m_cont_internal_DeviceAdapterTag_h
+#endif //vtk_m_cont_DeviceAdapterTag_h

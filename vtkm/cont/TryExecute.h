@@ -21,9 +21,10 @@
 #define vtk_m_cont_TryExecute_h
 
 #include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+
 
 namespace vtkm
 {

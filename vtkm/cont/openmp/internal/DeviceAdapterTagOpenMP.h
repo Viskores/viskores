@@ -21,7 +21,7 @@
 #ifndef vtk_m_cont_openmp_internal_DeviceAdapterTagOpenMP_h
 #define vtk_m_cont_openmp_internal_DeviceAdapterTagOpenMP_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #ifdef VTKM_ENABLE_OPENMP
 VTKM_VALID_DEVICE_ADAPTER(OpenMP, VTKM_DEVICE_ADAPTER_OPENMP)

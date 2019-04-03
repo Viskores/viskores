@@ -22,9 +22,9 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/AtomicArray.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/exec/FunctorBase.h>
 

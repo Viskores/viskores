@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_Initialize_h
 #define vtk_m_cont_Initialize_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/vtkm_cont_export.h>
 #include <vtkm/internal/ExportMacros.h>
 

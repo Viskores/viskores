@@ -21,7 +21,6 @@
 #include <vtkm/worklet/WaveletGenerator.h>
 
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace detail

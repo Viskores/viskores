@@ -22,10 +22,11 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+
 
 namespace vtkm
 {

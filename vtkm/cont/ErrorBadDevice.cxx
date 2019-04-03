@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/ErrorBadDevice.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <string>
 
