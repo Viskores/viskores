@@ -34,7 +34,6 @@ if(TARGET vtkm_rendering)
     set(srcs ${cuda_srcs})
   endif()
 
-  message(STATUS "srcs: ${srcs}")
   add_executable(Demo ${srcs})
   target_link_libraries(Demo PRIVATE vtkm_rendering)
 endif()

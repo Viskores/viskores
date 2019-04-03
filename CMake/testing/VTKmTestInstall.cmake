@@ -18,6 +18,7 @@
 ##  this software.
 ##============================================================================
 
+# -----------------------------------------------------------------------------
 function(vtkm_test_install )
   if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     set(command_args
@@ -59,14 +60,39 @@ function(vtkm_test_install )
   endif()
 endfunction()
 
+# -----------------------------------------------------------------------------
+function(vtkm_generate_install_build_options file_loc_var)
+#This generated file ensures that the adaptor's CMakeCache ends up with
+#the same CMAKE_PREFIX_PATH that VTK-m's does, even if that has multiple
+#paths in it. It is necessary because ctest's argument parsing in the
+#custom command below destroys path separators.
+#Note: the generated file will become stale if these variables change.
+#In that case it will need manual intervention (remove it) to fix.
+file(GENERATE
+  OUTPUT "${${file_loc_var}}"
+  CONTENT
+"
+set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING \"\")
+set(CMAKE_PREFIX_PATH ${install_prefix} CACHE STRING \"\")
+set(CMAKE_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE FILEPATH \"\")
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING \"\")
+set(CMAKE_CUDA_COMPILER ${CMAKE_CUDA_COMPILER} CACHE FILEPATH \"\")
+set(CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} CACHE STRING \"\")
+set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CUDA_HOST_COMPILER} CACHE FILEPATH \"\")
+"
+)
+
+endfunction()
 
 # -----------------------------------------------------------------------------
-function(test_against_installed_vtkm dir)
+function(vtkm_test_against_install dir)
   set(name ${dir})
   set(install_prefix "${VTKm_BINARY_DIR}/CMakeFiles/_tmp_install")
   set(src_dir "${CMAKE_CURRENT_SOURCE_DIR}/${name}/")
   set(build_dir "${VTKm_BINARY_DIR}/CMakeFiles/_tmp_build/test_${name}/")
 
+  set(build_config "${build_dir}/build_options.cmake")
+  vtkm_generate_install_build_options(build_config)
 
   #determine if the test is expected to compile or fail to build. We use
   #this information to built the test name to make it clear to the user
@@ -80,11 +106,7 @@ function(test_against_installed_vtkm dir)
            --build-and-test ${src_dir} ${build_dir}
            --build-generator ${CMAKE_GENERATOR}
            --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-           --build-options
-              -DCMAKE_PREFIX_PATH:STRING=${install_prefix}
-              -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
-              -DCMAKE_CUDA_COMPILER:FILEPATH=${CMAKE_CUDA_COMPILER}
-              -DCMAKE_CUDA_HOST_COMPILER:FILEPATH=${CMAKE_CUDA_HOST_COMPILER}
+           --build-options -C "${build_config}"
            )
 
   set_tests_properties(${build_name} PROPERTIES LABELS ${test_label} )

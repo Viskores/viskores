@@ -116,7 +116,7 @@ if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
   endif()
 endif()
 
-if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
+if(VTKm_ENABLE_CUDA)
   cmake_minimum_required(VERSION 3.9...3.14 FATAL_ERROR)
   enable_language(CUDA)
 
@@ -126,7 +126,7 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     list(APPEND CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
   endif()
 
-  if (NOT TARGET vtkm_cuda)
+  if (NOT TARGET vtkm_cuda OR NOT TARGET vtkm::cuda)
     add_library(vtkm_cuda INTERFACE)
     set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME vtkm::cuda)
 
@@ -261,10 +261,12 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     set_target_properties(vtkm_cuda PROPERTIES INTERFACE_CUDA_Architecture_Flags "${arch_flags}")
   endif()
 
-  add_library(vtkm::cuda ALIAS vtkm_cuda)
+  if (NOT TARGET vtkm::cuda)
+    add_library(vtkm::cuda ALIAS vtkm_cuda)
 
-  if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
-    install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
+    if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+      install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
+    endif()
   endif()
 
 endif()
