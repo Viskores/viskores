@@ -227,45 +227,6 @@ VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::ArrayHandleVirtual<T>& v
 {
   return virtHandle.template Cast<ArrayHandleType>();
 }
-
-#if 0
-
-// The following specialization of CastAndCall has been disabled. The problem with it is that it
-// causes some common versions of GCC to give the warning "type attributes ignored after type is
-// already defined." GCC seems to have a problem with declaring an instance of a template twice
-// even when the type attributes match. (In some cases it is OK, in others it is not.) The easiest
-// solution is to just disable this CastAndCall that instantiates a specific version of
-// ArrayHandleVirtual. This specialization might be better handled elsewhere where the uniform
-// point coordinates are coupled with a structured cell set (and thus can derive several fast
-// paths) rather than generally for any field or array containing vec3s.
-
-//=============================================================================
-// Specializations of CastAndCall to help make sure ArrayHandleVirtual
-// holding a ArrayHandleUniformPointCoordinates works properly
-template <typename Functor, typename... Args>
-void CastAndCall(vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>> coords,
-                 Functor&& f,
-                 Args&&... args)
-{
-  using HandleType = ArrayHandleUniformPointCoordinates;
-  using T = typename HandleType::ValueType;
-  using S = typename HandleType::StorageTag;
-  if (coords.IsType<HandleType>())
-  {
-    const vtkm::cont::internal::detail::StorageVirtual* storage =
-      coords.GetStorage().GetStorageVirtual();
-    auto* virtualImpl = storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
-    f(virtualImpl->GetHandle(), std::forward<Args>(args)...);
-  }
-  else
-  {
-    f(coords, std::forward<Args>(args)...);
-  }
-}
-#endif
-
-
-
 //=============================================================================
 // Specializations of serialization related classes
 template <typename T>
