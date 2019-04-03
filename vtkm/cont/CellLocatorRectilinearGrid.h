@@ -17,47 +17,41 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_celllocatorrectilineargrid_h
-#define vtkm_cont_celllocatorrectilineargrid_h
+#ifndef vtkm_cont_CellLocatorRectilinearGrid_h
+#define vtkm_cont_CellLocatorRectilinearGrid_h
 
 #include <vtkm/cont/CellLocator.h>
-#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 
 namespace vtkm
 {
-
 namespace cont
 {
 
 class VTKM_CONT_EXPORT CellLocatorRectilinearGrid : public vtkm::cont::CellLocator
 {
 public:
-  using StructuredType = vtkm::cont::CellSetStructured<3>;
-  using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using RectilinearType =
-    vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-
   VTKM_CONT CellLocatorRectilinearGrid();
 
   VTKM_CONT ~CellLocatorRectilinearGrid() override;
 
-  VTKM_CONT void Build() override;
+  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device) const override;
 
-  VTKM_CONT
-  const HandleType PrepareForExecutionImpl(
-    const vtkm::cont::DeviceAdapterId deviceId) const override;
+protected:
+  VTKM_CONT void Build() override;
 
 private:
   vtkm::Bounds Bounds;
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;
-  mutable HandleType ExecHandle;
+
+  mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
 
   struct PrepareForExecutionFunctor;
 };
 
 } //namespace cont
-
 } //namespace vtkm
 
-#endif //vtkm_cont_celllocatorrectilineargrid_h
+#endif //vtkm_cont_CellLocatorRectilinearGrid_h

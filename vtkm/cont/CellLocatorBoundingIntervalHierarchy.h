@@ -27,6 +27,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/CellLocator.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 
 #include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchy.h>
 
@@ -37,19 +38,6 @@ namespace cont
 
 class VTKM_CONT_EXPORT CellLocatorBoundingIntervalHierarchy : public vtkm::cont::CellLocator
 {
-private:
-  using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using CoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using RangeArrayHandle = vtkm::cont::ArrayHandle<vtkm::Range>;
-  using RangePermutationArrayHandle =
-    vtkm::cont::ArrayHandlePermutation<IdArrayHandle, RangeArrayHandle>;
-  using SplitPropertiesArrayHandle =
-    vtkm::cont::ArrayHandle<vtkm::worklet::spatialstructure::SplitProperties>;
-  using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>;
-
-  class BuildFunctor;
-  class PrepareForExecutionFunctor;
-
 public:
   VTKM_CONT
   CellLocatorBoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4,
@@ -66,37 +54,41 @@ public:
   VTKM_CONT
   void SetNumberOfSplittingPlanes(vtkm::IdComponent numPlanes)
   {
-    NumPlanes = numPlanes;
-    SetDirty();
+    this->NumPlanes = numPlanes;
+    this->SetModified();
   }
 
   VTKM_CONT
-  vtkm::IdComponent GetNumberOfSplittingPlanes() { return NumPlanes; }
+  vtkm::IdComponent GetNumberOfSplittingPlanes() { return this->NumPlanes; }
 
   VTKM_CONT
   void SetMaxLeafSize(vtkm::IdComponent maxLeafSize)
   {
-    MaxLeafSize = maxLeafSize;
-    SetDirty();
+    this->MaxLeafSize = maxLeafSize;
+    this->SetModified();
   }
 
   VTKM_CONT
-  vtkm::Id GetMaxLeafSize() { return MaxLeafSize; }
+  vtkm::Id GetMaxLeafSize() { return this->MaxLeafSize; }
+
+  VTKM_CONT
+  const vtkm::exec::CellLocator* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device) const override;
 
 protected:
   VTKM_CONT
   void Build() override;
 
-  VTKM_CONT
-  virtual const HandleType PrepareForExecutionImpl(
-    const vtkm::cont::DeviceAdapterId device) const override;
-
 private:
   vtkm::IdComponent NumPlanes;
   vtkm::IdComponent MaxLeafSize;
   vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode> Nodes;
-  IdArrayHandle ProcessedCellIds;
-  mutable HandleType ExecHandle;
+  vtkm::cont::ArrayHandle<vtkm::Id> ProcessedCellIds;
+
+  mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
+
+  struct MakeExecObject;
+  struct PrepareForExecutionFunctor;
 };
 
 } // namespace cont

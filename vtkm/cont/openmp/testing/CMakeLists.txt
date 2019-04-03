@@ -23,7 +23,7 @@ set(unit_tests
   UnitTestOpenMPArrayHandleFancy.cxx
   UnitTestOpenMPArrayHandleVirtualCoordinates.cxx
   UnitTestOpenMPCellLocatorRectilinearGrid.cxx
-  UnitTestOpenMPCellLocatorTwoLevelUniformGrid.cxx
+  UnitTestOpenMPCellLocatorUniformBins.cxx
   UnitTestOpenMPCellLocatorUniformGrid.cxx
   UnitTestOpenMPColorTable.cxx
   UnitTestOpenMPComputeRange.cxx

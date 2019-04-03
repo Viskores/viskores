@@ -17,20 +17,22 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_testing_TestingCellLocatorTwoLevelUniformGrid_h
-#define vtk_m_cont_testing_TestingCellLocatorTwoLevelUniformGrid_h
+#ifndef vtk_m_cont_testing_TestingCellLocatorUniformBins_h
+#define vtk_m_cont_testing_TestingCellLocatorUniformBins_h
 
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/CellLocatorTwoLevelUniformGrid.h>
+#include <vtkm/cont/CellLocatorUniformBins.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/exec/CellInterpolate.h>
 
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterPermutation.h>
 #include <vtkm/worklet/Tetrahedralize.h>
 #include <vtkm/worklet/Triangulate.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/CellShape.h>
@@ -185,6 +187,25 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
   dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
 }
 
+class FindCellWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn points,
+                                ExecObject locator,
+                                FieldOut cellIds,
+                                FieldOut pcoords);
+  using ExecutionSignature = void(_1, _2, _3, _4);
+
+  template <typename LocatorType>
+  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+                            const LocatorType& locator,
+                            vtkm::Id& cellId,
+                            vtkm::Vec<vtkm::FloatDefault, 3>& pcoords) const
+  {
+    locator->FindCell(point, cellId, pcoords, *this);
+  }
+};
+
 template <vtkm::IdComponent DIMENSIONS>
 void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id numberOfPoints)
 {
@@ -193,12 +214,12 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
   std::cout << "Testing " << DIMENSIONS << "D dataset with " << ds.GetCellSet().GetNumberOfCells()
             << " cells\n";
 
-  vtkm::cont::CellLocatorTwoLevelUniformGrid locator;
+  vtkm::cont::CellLocatorUniformBins locator;
   locator.SetDensityL1(64.0f);
   locator.SetDensityL2(1.0f);
   locator.SetCellSet(ds.GetCellSet());
   locator.SetCoordinates(ds.GetCoordinateSystem());
-  locator.Build();
+  locator.Update();
 
   vtkm::cont::ArrayHandle<vtkm::Id> expCellIds;
   vtkm::cont::ArrayHandle<PointType> expPCoords;
@@ -208,7 +229,9 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
   std::cout << "Finding cells for " << numberOfPoints << " points\n";
   vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
   vtkm::cont::ArrayHandle<PointType> pcoords;
-  locator.FindCells(points, cellIds, pcoords);
+
+  vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
+  dispatcher.Invoke(points, locator, cellIds, pcoords);
 
   for (vtkm::Id i = 0; i < numberOfPoints; ++i)
   {
@@ -225,7 +248,7 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
 } // anonymous
 
 template <typename DeviceAdapter>
-void TestingCellLocatorTwoLevelUniformGrid()
+void TestingCellLocatorUniformBins()
 {
   vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
 
@@ -237,4 +260,4 @@ void TestingCellLocatorTwoLevelUniformGrid()
   TestCellLocator(vtkm::Id2(18), 512); // 2D dataset
 }
 
-#endif // vtk_m_cont_testing_TestingCellLocatorTwoLevelUniformGrid_h
+#endif // vtk_m_cont_testing_TestingCellLocatorUniformBins_h

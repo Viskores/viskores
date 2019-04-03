@@ -17,15 +17,14 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_celllocatoruniformgrid_h
-#define vtkm_cont_celllocatoruniformgrid_h
+#ifndef vtkm_cont_CellLocatorUniformGrid_h
+#define vtkm_cont_CellLocatorUniformGrid_h
 
 #include <vtkm/cont/CellLocator.h>
-#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 
 namespace vtkm
 {
-
 namespace cont
 {
 
@@ -36,24 +35,22 @@ public:
 
   VTKM_CONT ~CellLocatorUniformGrid() override;
 
+  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device) const override;
+
+protected:
   VTKM_CONT void Build() override;
 
-  VTKM_CONT
-  const HandleType PrepareForExecutionImpl(
-    const vtkm::cont::DeviceAdapterId deviceId) const override;
-
 private:
-  using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
-  using StructuredType = vtkm::cont::CellSetStructured<3>;
-
-  struct PrepareForExecutionFunctor;
-
   vtkm::Bounds Bounds;
   vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
   vtkm::Vec<vtkm::Id, 3> CellDims;
-  mutable HandleType ExecHandle;
+
+  mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
+
+  struct PrepareForExecutionFunctor;
 };
 }
-}
+} // vtkm::cont
 
-#endif //vtkm_cont_celllocatoruniformgrid_h
+#endif //vtkm_cont_CellLocatorUniformGrid_h

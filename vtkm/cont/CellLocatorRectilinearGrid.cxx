@@ -18,16 +18,27 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
-#include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/CellSetStructured.h>
 
 #include <vtkm/exec/CellLocatorRectilinearGrid.h>
 
-vtkm::cont::CellLocatorRectilinearGrid::CellLocatorRectilinearGrid() = default;
+namespace vtkm
+{
+namespace cont
+{
 
-vtkm::cont::CellLocatorRectilinearGrid::~CellLocatorRectilinearGrid() = default;
+CellLocatorRectilinearGrid::CellLocatorRectilinearGrid() = default;
 
-void vtkm::cont::CellLocatorRectilinearGrid::Build()
+CellLocatorRectilinearGrid::~CellLocatorRectilinearGrid() = default;
+
+using StructuredType = vtkm::cont::CellSetStructured<3>;
+using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+using RectilinearType = vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
+
+void CellLocatorRectilinearGrid::Build()
 {
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
   vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
@@ -44,34 +55,31 @@ void vtkm::cont::CellLocatorRectilinearGrid::Build()
   this->RowSize = celldims[0];
 }
 
-struct vtkm::cont::CellLocatorRectilinearGrid::PrepareForExecutionFunctor
+struct CellLocatorRectilinearGrid::PrepareForExecutionFunctor
 {
   template <typename DeviceAdapter>
-  VTKM_CONT bool operator()(DeviceAdapter,
-                            const vtkm::cont::CellLocatorRectilinearGrid& contLocator,
-                            HandleType& execLocator) const
+  VTKM_CONT bool operator()(DeviceAdapter, const CellLocatorRectilinearGrid& contLocator) const
   {
-    using ExecutionType = vtkm::exec::CellLocatorRectilinearGrid<DeviceAdapter>;
-    ExecutionType* execObject =
-      new ExecutionType(contLocator.PlaneSize,
-                        contLocator.RowSize,
-                        contLocator.GetCellSet().template Cast<StructuredType>(),
-                        contLocator.GetCoordinates().GetData().template Cast<RectilinearType>(),
-                        DeviceAdapter());
-    execLocator.Reset(execObject);
+    auto* execObject = new vtkm::exec::CellLocatorRectilinearGrid<DeviceAdapter>(
+      contLocator.PlaneSize,
+      contLocator.RowSize,
+      contLocator.GetCellSet().template Cast<StructuredType>(),
+      contLocator.GetCoordinates().GetData().template Cast<RectilinearType>(),
+      DeviceAdapter());
+    contLocator.ExecutionObjectHandle.Reset(execObject);
+
     return true;
   }
 };
 
-const vtkm::cont::CellLocator::HandleType
-vtkm::cont::CellLocatorRectilinearGrid::PrepareForExecutionImpl(
-  const vtkm::cont::DeviceAdapterId deviceId) const
+const vtkm::exec::CellLocator* CellLocatorRectilinearGrid::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId device) const
 {
-  const bool success =
-    vtkm::cont::TryExecuteOnDevice(deviceId, PrepareForExecutionFunctor(), *this, this->ExecHandle);
-  if (!success)
+  if (!vtkm::cont::TryExecuteOnDevice(device, PrepareForExecutionFunctor(), *this))
   {
-    throwFailedRuntimeDeviceTransfer("CellLocatorRectilinearGrid", deviceId);
+    throwFailedRuntimeDeviceTransfer("CellLocatorRectilinearGrid", device);
   }
-  return this->ExecHandle;
+  return this->ExecutionObjectHandle.PrepareForExecution(device);
 }
+}
+} // vtkm::cont
