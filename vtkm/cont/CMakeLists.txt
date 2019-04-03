@@ -51,6 +51,7 @@ set(headers
   AtomicArray.h
   BoundsCompute.h
   BoundsGlobalCompute.h
+  CastAndCall.h
   CellLocator.h
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorHelper.h

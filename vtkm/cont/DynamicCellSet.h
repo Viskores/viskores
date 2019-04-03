@@ -20,12 +20,12 @@
 #ifndef vtk_m_cont_DynamicCellSet_h
 #define vtk_m_cont_DynamicCellSet_h
 
+#include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetListTag.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Logging.h>
 
-#include <vtkm/cont/internal/DynamicTransform.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 namespace vtkm
