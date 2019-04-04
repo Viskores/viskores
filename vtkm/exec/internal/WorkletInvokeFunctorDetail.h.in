@@ -83,7 +83,7 @@ def template_params(num_params, start=0, name=''):
   if num_params < start:
     return ''
   result = 'typename %s' % ptype(start, name)
-  for param in xrange(start+1, num_params+1):
+  for param in range(start+1, num_params+1):
     result += ',\n          typename %s' % ptype(param, name)
   return result
 
@@ -91,7 +91,7 @@ def signature(num_params, return_type=ptype(0), name=''):
   result = '%s(' % return_type
   if num_params > 0:
     result += ptype(1, name)
-  for param in xrange(2, num_params+1):
+  for param in range(2, num_params+1):
     result += ', %s' % ptype(param, name)
   result += ')'
   return result
@@ -100,7 +100,7 @@ def arg_list(num_params, name='', start=1):
   if num_params < start:
     return ''
   result = pname(start, name)
-  for param in xrange(start+1, num_params+1):
+  for param in range(start+1, num_params+1):
     result += ', %s' % pname(param, name)
   return result
 )\
