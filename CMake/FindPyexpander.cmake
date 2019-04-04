@@ -34,7 +34,7 @@
 # in finding the Python interpreter.
 #
 
-find_program(PYEXPANDER_COMMAND expander.py)
+find_program(PYEXPANDER_COMMAND NAMES expander.py expander3.py)
 
 mark_as_advanced(PYEXPANDER_COMMAND)
 
