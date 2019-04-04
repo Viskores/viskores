@@ -28,7 +28,7 @@
 #        -DVTKm_INSTALL_INCLUDE_DIR=<VTKm_INSTALL_INCLUDE_DIR>
 #        -DVTKm_ENABLE_RENDERING=<VTKm_ENABLE_RENDERING>
 #        -DVTKm_ENABLE_LOGGING=<VTKm_ENABLE_LOGGING>
-#        -P <VTKm_SOURCE_DIR>/CMake/VTKMCheckSourceInInstall.cmake
+#        -P <VTKm_SOURCE_DIR>/CMake/testing/VTKMCheckSourceInInstall.cmake
 ##
 
 if (NOT DEFINED MODE)

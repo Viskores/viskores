@@ -42,3 +42,11 @@ add_subdirectory(streamline)
 add_subdirectory(temporal_advection)
 add_subdirectory(tetrahedra)
 add_subdirectory(unified_memory)
+
+
+if (VTKm_ENABLE_TESTING)
+  # These need to be fast to build as they will
+  # be built each time we run the test
+  vtkm_test_against_install(rendering)
+  vtkm_test_against_install(histogram)
+endif()
