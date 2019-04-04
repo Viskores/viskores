@@ -67,7 +67,7 @@ def template_params(num_params, start=0, name=''):
   if num_params < start:
     return ''
   result = 'typename %s' % ptype(start, name)
-  for param in xrange(start+1, num_params+1):
+  for param in range(start+1, num_params+1):
     result += ',\n          typename %s' % ptype(param, name)
   return result
 
@@ -75,7 +75,7 @@ def signature(num_params, return_type=ptype(0), name=''):
   result = '%s(' % return_type
   if num_params > 0:
     result += ptype(1, name)
-  for param in xrange(2, num_params+1):
+  for param in range(2, num_params+1):
     result += ', %s' % ptype(param, name)
   result += ')'
   return result
@@ -278,7 +278,7 @@ $if(num_params < 1)\
   result.Value = transform(f());
 $else\
   result.Value = transform(f(
-$for(param_index in xrange(1, num_params))\
+$for(param_index in range(1, num_params))\
                              transform(parameters.Parameter$(param_index)),
 $endfor\
                              transform(parameters.Parameter$(num_params))));
@@ -300,7 +300,7 @@ $if(num_params < 1)\
   f();
 $else\
   f(
-$for(param_index in xrange(1, num_params))\
+$for(param_index in range(1, num_params))\
     transform(parameters.Parameter$(param_index)),
 $endfor\
     transform(parameters.Parameter$(num_params)));
@@ -320,7 +320,7 @@ struct FunctionInterfaceStaticTransformType;
 
 // clang-format off
 
-$for(num_params in xrange(0, max_parameters))\
+$for(num_params in range(0, max_parameters))\
 $# Transform functions need both control and execution versions
 $for(environment in ['Cont', 'Exec'])\
 VTKM_SUPPRESS_EXEC_WARNINGS
@@ -337,7 +337,7 @@ $if(num_params < 1)\
   (void)originalParameters;
   (void)transformedParameters;
 $else\
-$for(param_index in xrange(1, num_params+1))\
+$for(param_index in range(1, num_params+1))\
   transformedParameters.Parameter$(param_index) =
     transform(originalParameters.Parameter$(param_index), vtkm::internal::IndexTag<$(param_index)>());
 $endfor\
@@ -352,7 +352,7 @@ $endfor\
 
 // clang-format off
 
-$for(num_params in xrange(0, max_parameters))\
+$for(num_params in range(0, max_parameters))\
 $# ForEach functions need both control and execution versions
 $for(environment in ['Cont', 'Exec'])\
 $# ForEach functions also need to accept const and non-const versions of the FunctionInterface
@@ -368,7 +368,7 @@ $if(num_params < 1)\
   (void)f;
   (void)parameters;
 $else\
-$for(param_index in xrange(1, num_params+1))\
+$for(param_index in range(1, num_params+1))\
   f(parameters.Parameter$(param_index), vtkm::internal::IndexTag<$(param_index)>());
 $endfor\
 $endif\
