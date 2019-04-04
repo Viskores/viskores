@@ -123,7 +123,7 @@ public:
   void PrintSummary(std::ostream& out) const override;
   void ReleaseResourcesExecution() override;
 
-  std::shared_ptr<CellSet> CreateNewInstance() const override;
+  std::shared_ptr<CellSet> NewInstance() const override;
   void DeepCopy(const CellSet* src) override;
 
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const;

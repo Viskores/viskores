@@ -312,7 +312,7 @@ public:
                                              ptids);
   }
 
-  std::shared_ptr<CellSet> CreateNewInstance() const override
+  std::shared_ptr<CellSet> NewInstance() const override
   {
     return std::make_shared<CellSetPermutation>();
   }
@@ -476,10 +476,7 @@ public:
     this->FullCellSet = cellset.GetFullCellSet();
   }
 
-  std::shared_ptr<CellSet> CreateNewInstance() const
-  {
-    return std::make_shared<CellSetPermutation>();
-  }
+  std::shared_ptr<CellSet> NewInstance() const { return std::make_shared<CellSetPermutation>(); }
 };
 
 template <typename OriginalCellSet, typename PermutationArrayHandleType>

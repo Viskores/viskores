@@ -147,7 +147,7 @@ void RunTests(const vtkm::cont::CellSet& cellset,
               IsPermutationCellSet flag = IsPermutationCellSet::NO)
 {
   TestAgainstBaseLine(cellset, flag);
-  auto deepcopy = cellset.CreateNewInstance();
+  auto deepcopy = cellset.NewInstance();
   deepcopy->DeepCopy(&cellset);
   TestAgainstBaseLine(*deepcopy, flag);
 }
