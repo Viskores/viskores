@@ -24,6 +24,7 @@
 
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
+#include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/Field.h>
 
 namespace vtkm
