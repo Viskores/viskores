@@ -43,12 +43,8 @@
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
-#include <vtkm/exec/internal/ErrorMessageBuffer.h>
-
-
 #include <vtkm/exec/cuda/internal/TaskStrided.h>
-
-#include <cuda.h>
+#include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
 // #define PARAMETER_SWEEP_VTKM_SCHEDULER_1D
 // #define PARAMETER_SWEEP_VTKM_SCHEDULER_3D
@@ -58,7 +54,9 @@
 
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
-//our own custom thrust execution policy
+//This is required to be first so that we get patches for thrust included
+//in the correct order
+#include <cuda.h>
 #include <thrust/advance.h>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
@@ -70,6 +68,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/vector.h>
 #include <thrust/unique.h>
 #include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm

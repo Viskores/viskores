@@ -112,7 +112,6 @@ public:
 
 
   // Default Constructor
-  VTKM_EXEC_CONT
   TransferLeafChains_TransferToContourTree(const vtkm::Id NIterations,
                                            const bool IsJoin,
                                            const IdArrayType& outdegree,

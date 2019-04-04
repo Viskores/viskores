@@ -73,7 +73,6 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
   ParticleExecutionObject(vtkm::cont::ArrayHandle<VectorType> posArray,
                           vtkm::cont::ArrayHandle<vtkm::Id> stepsArray,
                           vtkm::cont::ArrayHandle<vtkm::Id> statusArray,
@@ -270,7 +269,6 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
   StateRecordingParticleExecutionObject(vtkm::cont::ArrayHandle<VectorType> posArray,
                                         vtkm::cont::ArrayHandle<VectorType> historyArray,
                                         vtkm::cont::ArrayHandle<vtkm::Id> stepsArray,

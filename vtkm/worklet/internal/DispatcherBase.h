@@ -446,58 +446,6 @@ inline void deduce(Trampoline&& trampoline, ContParams&& sig, Args&&... args)
   for_each_dynamic_arg<sizeof...(Args)>()(std::forward<Trampoline>(trampoline), sig, args...);
 }
 
-
-#if defined(VTKM_MSVC)
-#pragma warning(push)
-#pragma warning(disable : 4068) //unknown pragma
-#endif
-#if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)
-// Disable warning "calling a __host__ function from a __host__ __device__"
-// In some cases nv_exec_check_disable doesn't work and therefore you need
-// to use the following suppressions
-#pragma push
-
-#if (__CUDACC_VER_MAJOR__ < 8)
-#pragma diag_suppress 2670
-#pragma diag_suppress 2668
-#endif
-
-#if (__CUDACC_VER_MAJOR__ >= 8)
-#pragma diag_suppress 2735
-#pragma diag_suppress 2737
-#pragma diag_suppress 2739
-#endif
-
-#if (__CUDACC_VER_MAJOR__ >= 9)
-#pragma diag_suppress 2828
-#pragma diag_suppress 2864
-#pragma diag_suppress 2867
-#pragma diag_suppress 2885
-#endif
-
-#if (__CUDACC_VER_MAJOR__ >= 10)
-#pragma diag_suppress 2905
-#pragma diag_suppress 2912
-#pragma diag_suppress 2915
-#endif
-
-#endif
-//This is a separate function as the pragma guards can cause nvcc
-//to have an internal compiler error (codegen #3028)
-template <typename... Args>
-inline auto make_funcIFace(Args&&... args) -> decltype(
-  vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...))
-{
-  return vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
-}
-#if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)
-#pragma pop
-#endif
-#if defined(VTKM_MSVC)
-#pragma warning(pop)
-#endif
-
-
 } // namespace detail
 
 /// This is a help struct to detect out of bound placeholders defined in the
@@ -623,10 +571,8 @@ private:
     static_assert(isAllValid::value == expectedLen::value,
                   "All arguments failed the TypeCheck pass");
 
-    //This is a separate function as the pragma guards can cause nvcc
-    //to have an internal compiler error (codegen #3028)
-    auto fi = detail::make_funcIFace(std::forward<Args>(args)...);
-
+    auto fi =
+      vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
     auto ivc = vtkm::internal::Invocation<ParameterInterface,
                                           ControlInterface,
                                           ExecutionInterface,

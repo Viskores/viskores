@@ -154,8 +154,6 @@ template <typename IntegratorType>
 class StreamlineWorklet
 {
 public:
-  VTKM_EXEC_CONT StreamlineWorklet() {}
-
   template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
            const vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>, PointStorage>& pts,
@@ -171,8 +169,6 @@ public:
     maxSteps = nSteps;
     run(positions, polyLines, statusArray, stepsTaken, timeArray);
   }
-
-  ~StreamlineWorklet() {}
 
   struct IsOne
   {

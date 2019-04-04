@@ -188,6 +188,7 @@ namespace tao
          tuple_value( const tuple_value& ) = default;
          tuple_value( tuple_value&& ) = default;
 
+         TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
          template< typename U >
          TAO_TUPLE_CUDA_ANNOTATE_COMMON tuple_value& operator=( U&& v ) noexcept( std::is_nothrow_assignable< T&, U >::value )
          {
@@ -374,6 +375,7 @@ namespace tao
             return *this;
          }
 
+         TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
          template< typename... Us >
          TAO_TUPLE_CUDA_ANNOTATE_COMMON tuple_base& operator=( tuple< Us... >&& v ) noexcept( seq::is_all< std::is_nothrow_assignable< Ts&, Us&& >::value... >::value )
          {

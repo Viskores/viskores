@@ -44,11 +44,7 @@ public:
 
 protected:
   VTKM_CONT
-  Integrator()
-    : StepLength(0)
-    , MinimizeError(false)
-  {
-  }
+  Integrator() = default;
 
   VTKM_CONT
   Integrator(ScalarType stepLength, bool minimizeError = false)
@@ -83,9 +79,9 @@ public:
                                              vtkm::Vec<ScalarType, 3>& outpos) const = 0;
 
   protected:
-    ScalarType StepLength;
-    ScalarType Tolerance;
-    bool MinimizeError;
+    ScalarType StepLength = 1.0f;
+    ScalarType Tolerance = 0.001f;
+    bool MinimizeError = false;
   };
 
   template <typename Device>
@@ -353,7 +349,7 @@ public:
 
   EulerIntegrator() = default;
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   EulerIntegrator(const FieldEvaluateType& evaluator,
                   const ScalarType stepLength,
                   bool minimizeError = false)

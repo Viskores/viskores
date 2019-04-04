@@ -107,8 +107,6 @@ public:
     typename m3d_marchingcubes::inCubeConnectionsType::template ExecutionTypes<
       DeviceAdapter>::PortalConst;
 
-
-
   // Default constructor needed to make the CUDA build work
   VTKM_EXEC_CONT
   MeshStructureMarchingCubes()
@@ -118,7 +116,6 @@ public:
   }
 
   // Main constructore used in the code
-  VTKM_EXEC_CONT
   MeshStructureMarchingCubes(
     vtkm::Id nrows,
     vtkm::Id ncols,
@@ -214,8 +211,7 @@ public:
       case 25:
         return vertex + (this->nRows * this->nCols) + this->nCols + 1; // {  1,  1,  1 }
       default:
-        std::
-          abort(); // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
+        abort(); // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
         //default: std::cerr << "Internal error!"; abort();
     }
   } // GetNeighbourIndex
