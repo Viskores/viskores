@@ -127,6 +127,11 @@ void TryOperatorsInt(vtkm::Id index,
   VTKM_TEST_ASSERT(ref || expected);
   VTKM_TEST_ASSERT(expected || ref);
 
+#if defined(VTKM_CLANG) && __clang_major__ >= 7
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+#endif
+
   ref &= ref;
   expected &= expected;
   VTKM_TEST_ASSERT(ref == expected);
@@ -161,6 +166,10 @@ void TryOperatorsInt(vtkm::Id index,
   ref ^= operand;
   expected ^= operand;
   VTKM_TEST_ASSERT(ref == expected);
+
+#if defined(VTKM_CLANG) && __clang_major__ >= 7
+#pragma clang diagnostic pop
+#endif
 }
 
 template <typename ArrayPortalType, typename DimTag, typename NumericTag>
