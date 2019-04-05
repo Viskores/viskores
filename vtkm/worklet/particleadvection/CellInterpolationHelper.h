@@ -199,16 +199,8 @@ public:
 
   virtual ~CellInterpolationHelper() = default;
 
-  template <typename DeviceAdapter>
-  VTKM_CONT const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
-    DeviceAdapter device) const
-  {
-    return PrepareForExecutionImpl(device).PrepareForExecution(device);
-  }
-
-protected:
-  VTKM_CONT virtual const HandleType& PrepareForExecutionImpl(
-    const vtkm::cont::DeviceAdapterId device) const = 0;
+  VTKM_CONT virtual const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device) const = 0;
 };
 
 class StructuredCellInterpolationHelper : public vtkm::cont::CellInterpolationHelper
@@ -232,7 +224,8 @@ public:
   }
 
   VTKM_CONT
-  const HandleType& PrepareForExecutionImpl(vtkm::cont::DeviceAdapterId deviceId) const override
+  const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId deviceId) const override
   {
     auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
     const bool valid = tracker.CanRunOn(deviceId);
@@ -245,7 +238,7 @@ public:
     ExecutionType* execObject = new ExecutionType(this->CellDims, this->PointDims);
     this->ExecHandle.Reset(execObject);
 
-    return this->ExecHandle;
+    return this->ExecHandle.PrepareForExecution(deviceId);
   }
 
 private:
@@ -299,8 +292,8 @@ public:
   };
 
   VTKM_CONT
-  const HandleType& PrepareForExecutionImpl(
-    const vtkm::cont::DeviceAdapterId deviceId) const override
+  const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId deviceId) const override
   {
     const bool success = vtkm::cont::TryExecuteOnDevice(
       deviceId, SingleCellExplicitFunctor(), *this, this->ExecHandle);
@@ -308,7 +301,7 @@ public:
     {
       throwFailedRuntimeDeviceTransfer("SingleCellExplicitInterpolationHelper", deviceId);
     }
-    return this->ExecHandle;
+    return this->ExecHandle.PrepareForExecution(deviceId);
   }
 
 private:
@@ -360,8 +353,8 @@ public:
   };
 
   VTKM_CONT
-  const HandleType& PrepareForExecutionImpl(
-    const vtkm::cont::DeviceAdapterId deviceId) const override
+  const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId deviceId) const override
   {
     const bool success = vtkm::cont::TryExecuteOnDevice(
       deviceId, SingleCellExplicitFunctor(), *this, this->ExecHandle);
@@ -369,7 +362,7 @@ public:
     {
       throwFailedRuntimeDeviceTransfer("SingleCellExplicitInterpolationHelper", deviceId);
     }
-    return this->ExecHandle;
+    return this->ExecHandle.PrepareForExecution(deviceId);
   }
 
 private:
