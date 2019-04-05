@@ -86,9 +86,6 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> ProcessedCellIds;
 
   mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
-
-  struct MakeExecObject;
-  struct PrepareForExecutionFunctor;
 };
 
 } // namespace cont

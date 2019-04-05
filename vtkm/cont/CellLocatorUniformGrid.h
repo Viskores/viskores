@@ -47,8 +47,6 @@ private:
   vtkm::Vec<vtkm::Id, 3> CellDims;
 
   mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
-
-  struct PrepareForExecutionFunctor;
 };
 }
 } // vtkm::cont

@@ -40,7 +40,7 @@ class VTKM_CONT_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
 public:
   virtual ~CellLocator();
 
-  vtkm::cont::DynamicCellSet GetCellSet() const { return this->CellSet; }
+  const vtkm::cont::DynamicCellSet& GetCellSet() const { return this->CellSet; }
 
   void SetCellSet(const vtkm::cont::DynamicCellSet& cellSet)
   {
@@ -48,7 +48,7 @@ public:
     this->SetModified();
   }
 
-  vtkm::cont::CoordinateSystem GetCoordinates() const { return this->Coords; }
+  const vtkm::cont::CoordinateSystem& GetCoordinates() const { return this->Coords; }
 
   void SetCoordinates(const vtkm::cont::CoordinateSystem& coords)
   {

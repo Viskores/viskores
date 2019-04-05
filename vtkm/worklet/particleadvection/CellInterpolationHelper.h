@@ -207,7 +207,7 @@ public:
   }
 
 protected:
-  VTKM_CONT virtual const HandleType PrepareForExecutionImpl(
+  VTKM_CONT virtual const HandleType& PrepareForExecutionImpl(
     const vtkm::cont::DeviceAdapterId device) const = 0;
 };
 
@@ -231,31 +231,20 @@ public:
       throw vtkm::cont::ErrorBadType("Cell set is not 3D structured type");
   }
 
-  struct StructuredCellFunctor
-  {
-    template <typename DeviceAdapter>
-    VTKM_CONT bool operator()(DeviceAdapter,
-                              const vtkm::cont::StructuredCellInterpolationHelper& contInterpolator,
-                              HandleType& execInterpolator) const
-    {
-      using ExecutionType = vtkm::exec::StructuredCellInterpolationHelper;
-      ExecutionType* execObject =
-        new ExecutionType(contInterpolator.CellDims, contInterpolator.PointDims);
-      execInterpolator.Reset(execObject);
-      return true;
-    }
-  };
-
   VTKM_CONT
-  const HandleType PrepareForExecutionImpl(
-    const vtkm::cont::DeviceAdapterId deviceId) const override
+  const HandleType& PrepareForExecutionImpl(vtkm::cont::DeviceAdapterId deviceId) const override
   {
-    const bool success =
-      vtkm::cont::TryExecuteOnDevice(deviceId, StructuredCellFunctor(), *this, this->ExecHandle);
-    if (!success)
+    auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    const bool valid = tracker.CanRunOn(deviceId);
+    if (!valid)
     {
       throwFailedRuntimeDeviceTransfer("StructuredCellInterpolationHelper", deviceId);
     }
+
+    using ExecutionType = vtkm::exec::StructuredCellInterpolationHelper;
+    ExecutionType* execObject = new ExecutionType(this->CellDims, this->PointDims);
+    this->ExecHandle.Reset(execObject);
+
     return this->ExecHandle;
   }
 
@@ -310,7 +299,7 @@ public:
   };
 
   VTKM_CONT
-  const HandleType PrepareForExecutionImpl(
+  const HandleType& PrepareForExecutionImpl(
     const vtkm::cont::DeviceAdapterId deviceId) const override
   {
     const bool success = vtkm::cont::TryExecuteOnDevice(
@@ -371,7 +360,7 @@ public:
   };
 
   VTKM_CONT
-  const HandleType PrepareForExecutionImpl(
+  const HandleType& PrepareForExecutionImpl(
     const vtkm::cont::DeviceAdapterId deviceId) const override
   {
     const bool success = vtkm::cont::TryExecuteOnDevice(

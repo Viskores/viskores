@@ -58,32 +58,41 @@ void CellLocatorUniformGrid::Build()
     static_cast<vtkm::FloatDefault>(this->Bounds.Z.Length());
 }
 
-struct CellLocatorUniformGrid::PrepareForExecutionFunctor
+namespace
 {
-  template <typename DeviceAdapter>
-  VTKM_CONT bool operator()(DeviceAdapter, const CellLocatorUniformGrid& contLocator) const
+struct CellLocatorUniformGridPrepareForExecutionFunctor
+{
+  template <typename DeviceAdapter, typename... Args>
+  VTKM_CONT bool operator()(DeviceAdapter,
+                            vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& execLocator,
+                            Args&&... args) const
   {
-    auto* execObject = new vtkm::exec::CellLocatorUniformGrid<DeviceAdapter>(
-      contLocator.Bounds,
-      contLocator.RangeTransform,
-      contLocator.CellDims,
-      contLocator.GetCellSet().template Cast<StructuredType>(),
-      contLocator.GetCoordinates().GetData(),
-      DeviceAdapter());
-    contLocator.ExecutionObjectHandle.Reset(execObject);
-
+    using ExecutionType = vtkm::exec::CellLocatorUniformGrid<DeviceAdapter>;
+    ExecutionType* execObject = new ExecutionType(std::forward<Args>(args)..., DeviceAdapter());
+    execLocator.Reset(execObject);
     return true;
   }
 };
+}
 
 const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device) const
 {
-  if (!vtkm::cont::TryExecuteOnDevice(device, PrepareForExecutionFunctor(), *this))
+  const bool success =
+    vtkm::cont::TryExecuteOnDevice(device,
+                                   CellLocatorUniformGridPrepareForExecutionFunctor(),
+                                   this->ExecutionObjectHandle,
+                                   this->Bounds,
+                                   this->RangeTransform,
+                                   this->CellDims,
+                                   this->GetCellSet().template Cast<StructuredType>(),
+                                   this->GetCoordinates().GetData());
+  if (!success)
   {
     throwFailedRuntimeDeviceTransfer("CellLocatorUniformGrid", device);
   }
   return this->ExecutionObjectHandle.PrepareForExecution(device);
 }
-}
-} // vtkm::cont
+
+} //namespace cont
+} //namespace vtkm
