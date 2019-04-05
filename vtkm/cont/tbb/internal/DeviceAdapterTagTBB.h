@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_tbb_internal_DeviceAdapterTagTBB_h
 #define vtk_m_cont_tbb_internal_DeviceAdapterTagTBB_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 //We always create the tbb tag when included, but we only mark it as
 //a valid tag when VTKM_ENABLE_TBB is true. This is for easier development

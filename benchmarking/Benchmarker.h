@@ -23,8 +23,8 @@
 
 #include <vtkm/ListTag.h>
 #include <vtkm/Math.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <algorithm>

@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_serial_internal_DeviceAdapterTagSerial_h
 #define vtk_m_cont_serial_internal_DeviceAdapterTagSerial_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 VTKM_VALID_DEVICE_ADAPTER(Serial, VTKM_DEVICE_ADAPTER_SERIAL);
 

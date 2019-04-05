@@ -23,8 +23,8 @@
 #include <vtkm/cont/VirtualObjectHandle.h>
 
 #include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.hxx>

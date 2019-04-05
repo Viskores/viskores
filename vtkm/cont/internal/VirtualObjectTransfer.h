@@ -23,7 +23,7 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/VirtualObjectBase.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <array>
 #include <memory>

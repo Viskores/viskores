@@ -34,7 +34,6 @@ set(headers
   DeviceAdapterDefaultSelection.h
   DeviceAdapterError.h
   DeviceAdapterListHelpers.h
-  DeviceAdapterTag.h
   DynamicTransform.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h

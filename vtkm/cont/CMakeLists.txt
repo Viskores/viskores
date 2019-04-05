@@ -75,6 +75,7 @@ set(headers
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
   DeviceAdapterListTag.h
+  DeviceAdapterTag.h
   DynamicCellSet.h
   EnvironmentTracker.h
   Error.h

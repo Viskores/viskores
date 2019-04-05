@@ -22,8 +22,8 @@
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 

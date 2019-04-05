@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_internal_DeviceAdapterError_h
 #define vtk_m_cont_internal_DeviceAdapterError_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 /// This is an invalid DeviceAdapter. The point of this class is to include the
 /// header file to make this invalid class the default DeviceAdapter. From that

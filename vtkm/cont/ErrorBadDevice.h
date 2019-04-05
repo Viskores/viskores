@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/Error.h>
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/vtkm_cont_export.h>
 
 namespace vtkm

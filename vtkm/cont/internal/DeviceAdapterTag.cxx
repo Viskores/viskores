@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 

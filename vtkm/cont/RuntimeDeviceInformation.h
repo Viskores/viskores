@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_RuntimeDeviceInformation_h
 #define vtk_m_cont_RuntimeDeviceInformation_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm

@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_cuda_internal_DeviceAdapterTagCuda_h
 #define vtk_m_cont_cuda_internal_DeviceAdapterTagCuda_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 //We always create the cuda tag when included, but we only mark it as
 //a valid tag when VTKM_CUDA is true. This is for easier development

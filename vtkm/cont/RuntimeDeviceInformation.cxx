@@ -22,7 +22,7 @@
 #include <vtkm/ListTag.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 //Bring in each device adapters runtime class
 #include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>

@@ -22,9 +22,10 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+
 
 #ifdef _WIN32
 #include <sys/timeb.h>

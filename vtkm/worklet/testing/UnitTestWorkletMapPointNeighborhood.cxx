@@ -28,7 +28,7 @@
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
