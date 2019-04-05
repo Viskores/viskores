@@ -143,16 +143,70 @@ T aligned_reinterpret_cast(U u);
   }                                                                                                \
   struct SwallowSemicolon
 
-#define ALIGN_RE_VEC(RT, N)                                                                        \
+#define ALIGN_RE_VEC(RT)                                                                           \
   template <>                                                                                      \
-  inline __host__ __device__ vtkm::Vec<RT, N>* aligned_reinterpret_cast(void* u)                   \
+  inline __host__ __device__ vtkm::Vec<RT, 2>* aligned_reinterpret_cast(void* u)                   \
   {                                                                                                \
-    return reinterpret_cast<vtkm::Vec<RT, N>*>(reinterpret_cast<void*>(u));                        \
+    return reinterpret_cast<vtkm::Vec<RT, 2>*>(reinterpret_cast<void*>(u));                        \
   }                                                                                                \
   template <>                                                                                      \
-  inline __host__ __device__ vtkm::Vec<RT, N>* aligned_reinterpret_cast(vtkm::UInt8* u)            \
+  inline __host__ __device__ vtkm::Vec<RT, 3>* aligned_reinterpret_cast(void* u)                   \
   {                                                                                                \
-    return reinterpret_cast<vtkm::Vec<RT, N>*>(reinterpret_cast<void*>(u));                        \
+    return reinterpret_cast<vtkm::Vec<RT, 3>*>(reinterpret_cast<void*>(u));                        \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<RT, 4>* aligned_reinterpret_cast(void* u)                   \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<RT, 4>*>(reinterpret_cast<void*>(u));                        \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<vtkm::Vec<RT, 3>, 2>* aligned_reinterpret_cast(void* u)     \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<vtkm::Vec<RT, 3>, 2>*>(reinterpret_cast<void*>(u));          \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<vtkm::Vec<RT, 9>, 2>* aligned_reinterpret_cast(void* u)     \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<vtkm::Vec<RT, 9>, 2>*>(reinterpret_cast<void*>(u));          \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<RT, 2>* aligned_reinterpret_cast(vtkm::UInt8* u)            \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<RT, 2>*>(reinterpret_cast<void*>(u));                        \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<RT, 3>* aligned_reinterpret_cast(vtkm::UInt8* u)            \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<RT, 3>*>(reinterpret_cast<void*>(u));                        \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<RT, 4>* aligned_reinterpret_cast(vtkm::UInt8* u)            \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<RT, 4>*>(reinterpret_cast<void*>(u));                        \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<vtkm::Vec<RT, 2>, 2>* aligned_reinterpret_cast(             \
+    vtkm::UInt8* u)                                                                                \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<vtkm::Vec<RT, 2>, 2>*>(reinterpret_cast<void*>(u));          \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<vtkm::Vec<RT, 3>, 2>* aligned_reinterpret_cast(             \
+    vtkm::UInt8* u)                                                                                \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<vtkm::Vec<RT, 3>, 2>*>(reinterpret_cast<void*>(u));          \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<vtkm::Vec<RT, 4>, 2>* aligned_reinterpret_cast(             \
+    vtkm::UInt8* u)                                                                                \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<vtkm::Vec<RT, 4>, 2>*>(reinterpret_cast<void*>(u));          \
+  }                                                                                                \
+  template <>                                                                                      \
+  inline __host__ __device__ vtkm::Vec<vtkm::Vec<RT, 9>, 2>* aligned_reinterpret_cast(             \
+    vtkm::UInt8* u)                                                                                \
+  {                                                                                                \
+    return reinterpret_cast<vtkm::Vec<vtkm::Vec<RT, 9>, 2>*>(reinterpret_cast<void*>(u));          \
   }                                                                                                \
   struct SwallowSemicolon
 
@@ -170,6 +224,7 @@ T aligned_reinterpret_cast(U u);
   struct SwallowSemicolon
 
 #ifndef VTKM_DONT_FIX_THRUST
+ALIGN_RE_T(bool);
 ALIGN_RE_T(char);
 ALIGN_RE_T(vtkm::Int8);
 ALIGN_RE_T(vtkm::UInt8);
@@ -183,18 +238,25 @@ ALIGN_RE_T(vtkm::Float32);
 ALIGN_RE_T(vtkm::Float64);
 #endif
 
-ALIGN_RE_VEC(vtkm::UInt8, 3);
-ALIGN_RE_VEC(vtkm::Int32, 3);
-ALIGN_RE_VEC(vtkm::Int64, 3);
-ALIGN_RE_VEC(vtkm::Float32, 3);
-ALIGN_RE_VEC(vtkm::Float64, 3);
+ALIGN_RE_VEC(char);
+ALIGN_RE_VEC(vtkm::Int8);
+ALIGN_RE_VEC(vtkm::UInt8);
+ALIGN_RE_VEC(vtkm::Int16);
+ALIGN_RE_VEC(vtkm::UInt16);
+ALIGN_RE_VEC(vtkm::Int32);
+ALIGN_RE_VEC(vtkm::UInt32);
+ALIGN_RE_VEC(vtkm::Int64);
+ALIGN_RE_VEC(vtkm::UInt64);
+ALIGN_RE_VEC(vtkm::Float32);
+ALIGN_RE_VEC(vtkm::Float64);
 
-ALIGN_RE_VEC(vtkm::UInt8, 4);
-ALIGN_RE_VEC(vtkm::Float32, 4);
-ALIGN_RE_VEC(vtkm::Float64, 4);
-
+ALIGN_RE_PAIR(vtkm::Int32, vtkm::Int32);
+ALIGN_RE_PAIR(vtkm::Int32, vtkm::Int64);
 ALIGN_RE_PAIR(vtkm::Int32, vtkm::Float32);
 ALIGN_RE_PAIR(vtkm::Int32, vtkm::Float64);
+
+ALIGN_RE_PAIR(vtkm::Int64, vtkm::Int32);
+ALIGN_RE_PAIR(vtkm::Int64, vtkm::Int64);
 ALIGN_RE_PAIR(vtkm::Int64, vtkm::Float32);
 ALIGN_RE_PAIR(vtkm::Int64, vtkm::Float64);
 
