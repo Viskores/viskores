@@ -47,6 +47,10 @@ struct CheckFunctor
   }
 };
 
+class DummyCellSet : public vtkm::cont::CellSet
+{
+};
+
 template <typename CellSetType, typename CellSetList>
 void CheckDynamicCellSet(const CellSetType& cellSet,
                          vtkm::cont::DynamicCellSetBase<CellSetList> dynamicCellSet)
@@ -54,7 +58,7 @@ void CheckDynamicCellSet(const CellSetType& cellSet,
   VTKM_TEST_ASSERT(dynamicCellSet.template IsType<CellSetType>(),
                    "DynamicCellSet reports wrong type.");
   VTKM_TEST_ASSERT(dynamicCellSet.IsSameType(cellSet), "DynamicCellSet reports wrong type.");
-  VTKM_TEST_ASSERT(!dynamicCellSet.template IsType<vtkm::Id>(),
+  VTKM_TEST_ASSERT(!dynamicCellSet.template IsType<DummyCellSet>(),
                    "DynamicCellSet reports wrong type.");
 
   dynamicCellSet.template Cast<CellSetType>();
@@ -79,7 +83,7 @@ void TryNewInstance(CellSetType, vtkm::cont::DynamicCellSetBase<CellSetList>& or
 
   VTKM_TEST_ASSERT(newCellSet.template IsType<CellSetType>(), "New cell set wrong type.");
 
-  VTKM_TEST_ASSERT(&originalCellSet.CastToBase() != &newCellSet.CastToBase(),
+  VTKM_TEST_ASSERT(originalCellSet.GetCellSetBase() != newCellSet.GetCellSetBase(),
                    "NewInstance did not make a copy.");
 }
 
