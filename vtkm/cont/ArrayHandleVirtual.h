@@ -213,9 +213,11 @@ VTKM_CONT vtkm::cont::ArrayHandleVirtual<T> make_ArrayHandleVirtual(
 /// Returns true if \c virtHandle matches the type of ArrayHandleType.
 ///
 template <typename ArrayHandleType, typename T>
-VTKM_CONT inline bool IsType(const vtkm::cont::ArrayHandleVirtual<T>& virtHandle)
+VTKM_CONT inline bool IsType(
+  const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>& virtHandle)
 {
-  return virtHandle.template IsType<ArrayHandleType>();
+  return static_cast<vtkm::cont::ArrayHandleVirtual<T>>(virtHandle)
+    .template IsType<ArrayHandleType>();
 }
 
 /// Returns \c virtHandle cast to the given \c ArrayHandle type. Throws \c
@@ -223,9 +225,11 @@ VTKM_CONT inline bool IsType(const vtkm::cont::ArrayHandleVirtual<T>& virtHandle
 /// to check if the cast can happen.
 ///
 template <typename ArrayHandleType, typename T>
-VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::ArrayHandleVirtual<T>& virtHandle)
+VTKM_CONT inline ArrayHandleType Cast(
+  const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>& virtHandle)
 {
-  return virtHandle.template Cast<ArrayHandleType>();
+  return static_cast<vtkm::cont::ArrayHandleVirtual<T>>(virtHandle)
+    .template Cast<ArrayHandleType>();
 }
 //=============================================================================
 // Specializations of serialization related classes
@@ -237,6 +241,12 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleVirtual<T>>
     static std::string name = "AH_Virtual<" + SerializableTypeString<T>::Get() + ">";
     return name;
   }
+};
+
+template <typename T>
+struct SerializableTypeString<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
+  : public SerializableTypeString<vtkm::cont::ArrayHandleVirtual<T>>
+{
 };
 
 #ifndef vtk_m_cont_ArrayHandleVirtual_cxx

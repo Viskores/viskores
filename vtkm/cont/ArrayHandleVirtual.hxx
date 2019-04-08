@@ -154,6 +154,13 @@ struct Serialization<vtkm::cont::ArrayHandleVirtual<vtkm::Int64>>
   : public IntAnySerializer<vtkm::Int64>
 {
 };
-}
+
+template <typename T>
+struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
+  : public Serialization<vtkm::cont::ArrayHandleVirtual<T>>
+{
+};
+
+} // mangled_diy_namespace
 
 #endif
