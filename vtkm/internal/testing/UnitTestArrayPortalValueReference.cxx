@@ -129,7 +129,8 @@ void TryOperatorsInt(vtkm::Id index,
 
 #if defined(VTKM_CLANG) && __clang_major__ >= 7
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcovered-switch-default"
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
+#pragma clang diagnostic ignored "-Wself-assign-overloaded"
 #endif
 
   ref &= ref;
@@ -216,6 +217,13 @@ void TryOperators(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<Arra
   VTKM_TEST_ASSERT((ref / expected) == (expected / expected));
   VTKM_TEST_ASSERT((expected / ref) == (expected / expected));
 
+
+#if defined(VTKM_CLANG) && __clang_major__ >= 7
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
+#pragma clang diagnostic ignored "-Wself-assign-overloaded"
+#endif
+
   ref += ref;
   expected += expected;
   VTKM_TEST_ASSERT(ref == expected);
@@ -243,6 +251,10 @@ void TryOperators(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<Arra
   ref /= operand;
   expected /= operand;
   VTKM_TEST_ASSERT(ref == expected);
+
+#if defined(VTKM_CLANG) && __clang_major__ >= 7
+#pragma clang diagnostic pop
+#endif
 
   // Reset ref
   ref = TestValue(index, ValueType());
