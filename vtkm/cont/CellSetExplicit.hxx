@@ -255,7 +255,7 @@ VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
   GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id, ItemTupleLength>& ids) const
 {
-  this->Data->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  this->Data->PointToCell.BuildIndexOffsets(vtkm::cont::DeviceAdapterTagAny{});
   vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
   vtkm::Id start = this->Data->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
   for (vtkm::IdComponent i = 0; i < numIndices && i < ItemTupleLength; i++)
@@ -272,7 +272,7 @@ VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
   GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
 {
-  this->Data->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  this->Data->PointToCell.BuildIndexOffsets(vtkm::cont::DeviceAdapterTagAny{});
   vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
   ids.Allocate(numIndices);
   vtkm::Id start = this->Data->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
