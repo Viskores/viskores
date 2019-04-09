@@ -1,213 +1,85 @@
-# VTK-m #
+## DIY is a block-parallel library
 
-VTK-m is a toolkit of scientific visualization algorithms for emerging
-processor architectures. VTK-m supports the fine-grained concurrency for
-data analysis and visualization algorithms required to drive extreme scale
-computing by providing abstract models for data and execution that can be
-applied to a variety of algorithms across many different processor
-architectures.
+DIY is a block-parallel library for implementing scalable algorithms that can execute both
+in-core and out-of-core. The same program can be executed with one or more threads per MPI
+process, seamlessly combining distributed-memory message passing with shared-memory thread
+parallelism.  The abstraction enabling these capabilities is block parallelism; blocks
+and their message queues are mapped onto processing elements (MPI processes or threads) and are
+migrated between memory and storage by the DIY runtime. Complex communication patterns,
+including neighbor exchange, merge reduction, swap reduction, and all-to-all exchange, are
+possible in- and out-of-core in DIY.
 
-You can find out more about the design of VTK-m on the [VTK-m Wiki].
+## Licensing
 
+DIY is released as open source software under a BSD-style [license](./LICENSE.txt).
 
-## Learning Resources ##
+## Dependencies
 
-  + A high-level overview is given in the IEEE Vis talk "[VTK-m:
-    Accelerating the Visualization Toolkit for Massively Threaded
-    Architectures][VTK-m Overview]."
+DIY requires an MPI installation. We recommend [MPICH](http://www.mpich.org/).
 
-  + The [VTK-m Users Guide] provides extensive documentation. It is broken
-    into multiple parts for learning and references at multiple different
-    levels.
-      + "Part 1: Getting Started" provides the introductory instruction for
-        building VTK-m and using its high-level features.
-      + "Part 2: Using VTK-m" covers the core fundamental components of
-        VTK-m including data model, worklets, and filters.
-      + "Part 3: Developing with VTK-m" covers how to develop new worklets
-        and filters.
-      + "Part 4: Advanced Development" covers topics such as new worklet
-        types and custom device adapters.
+## Download, build, install
 
-  + Community discussion takes place on the [VTK-m users email list].
+- You can clone this repository, or
 
-  + Doxygen-generated nightly reference documentation is available
-    [online][VTK-m Doxygen].
+- You can download the [latest tarball](https://github.com/diatomic/diy2/archive/master.tar.gz).
 
 
-## Contributing ##
+DIY is a header-only library. It does not need to be built; you can simply
+include it in your project. The examples can be built using `cmake` from the
+top-level directory.
 
-There are many ways to contribute to [VTK-m], with varying levels of
-effort.
+## Documentation
 
-  + Ask a question on the [VTK-m users email list].
+[Doxygen pages](https://diatomic.github.io/diy)
 
-  + Submit new or add to discussions of a feature requests or bugs on the
-    [VTK-m Issue Tracker].
+## Example
 
-  + Submit a Pull Request to improve [VTK-m]
-      + See [CONTRIBUTING.md] for detailed instructions on how to create a
-        Pull Request.
-      + See the [VTK-m Coding Conventions] that must be followed for
-        contributed code.
+A simple DIY program, shown below, consists of the following components:
 
-  + Submit an Issue or Pull Request for the [VTK-m Users Guide]
+- `struct`s called blocks,
+- a diy object called the `master`,
+- a set of callback functions performed on each block by `master.foreach()`,
+- optionally, one or more message exchanges between the blocks by `master.exchange()`, and
+- there may be other collectives and global reductions not shown below.
 
-
-## Dependencies ##
-
-VTK-m Requires:
-
-  + C++11 Compiler. VTK-m has been confirmed to work with the following
-      + GCC 4.8+
-      + Clang 3.3+
-      + XCode 5.0+
-      + MSVC 2015+
-  + [CMake](http://www.cmake.org/download/)
-      + CMake 3.8+ (for any build)
-      + CMake 3.9+ (for CUDA build or OpenMP build)
-      + CMake 3.11+ (for Visual Studio generator)
-
-Optional dependencies are:
-
-  + CUDA Device Adapter
-      + [Cuda Toolkit 7.5+](https://developer.nvidia.com/cuda-toolkit)
-      + Note CUDA >= 10.0 is required on Windows
-  + TBB Device Adapter
-      + [TBB](https://www.threadingbuildingblocks.org/)
-  + OpenMP Device Adapter
-      + Requires a compiler that supports OpenMP >= 4.0.
-  + OpenGL Rendering
-      + The rendering module contains multiple rendering implementations
-        including standalone rendering code. The rendering module also
-        includes (optionally built) OpenGL rendering classes.
-      + The OpenGL rendering classes require that you have a extension
-        binding library and one rendering library. A windowing library is
-        not needed except for some optional tests.
-  + Extension Binding
-      + [GLEW](http://glew.sourceforge.net/)
-  + On Screen Rendering
-      + OpenGL Driver
-      + Mesa Driver
-  + On Screen Rendering Tests
-      + [GLFW](http://www.glfw.org/)
-      + [GLUT](http://freeglut.sourceforge.net/)
-  + Headless Rendering
-      + [OS Mesa](https://www.mesa3d.org/osmesa.html)
-      + EGL Driver
-
-VTK-m has been tested on the following configurations:
-  + On Linux
-      + GCC 4.8.5, 5.4.0, 6.4.0, 7.3.0 Clang 3.8.0, Intel 17.0.4
-      + CMake 3.9.3, 3.10.3
-      + CUDA 8.0.61, 9.1.85, 10.0.130
-      + TBB 4.4 U2, 2017 U7
-  + On Windows
-      + Visual Studio 2015, 2017
-      + CMake 3.8, 3.12.4
-      + CUDA 10.0.130
-      + TBB 2017 U3, 2018 U2
-  + On MacOS
-      + AppleClang 9.1
-      + CMake 3.12.0
-      + TBB 2018
-
-
-## Building ##
-
-VTK-m supports all majors platforms (Windows, Linux, OSX), and uses CMake
-to generate all the build rules for the project. The VTK-m source code is
-available from the [VTK-m download page] or by directly cloning the [VTK-m
-git repository].
-
-```
-$ git clone https://gitlab.kitware.com/vtk/vtk-m.git
-$ mkdir vtkm-build
-$ cd vtkm-build
-$ cmake-gui ../vtk-m
-$ make -j<N>
-$ make test
-```
-
-A more detailed description of building VTK-m is available in the [VTK-m
-Users Guide].
-
-
-## Example##
-
-The VTK-m source distribution includes a number of examples. The goal of the
-VTK-m examples is to illustrate specific VTK-m concepts in a consistent and
-simple format. However, these examples only cover a small part of the
-capabilities of VTK-m.
-
-Below is a simple example of using VTK-m to load a VTK image file, run the
-Marching Cubes algorithm on it, and render the results to an image:
+The callback functions (`enqueue_local()` and `average()` in the example below) receive the block
+pointer and a communication proxy for the message exchange between blocks. It is usual for the
+callback functions to enqueue or dequeue messages from the proxy, so that information can be
+received and sent during rounds of message exchange.
 
 ```cpp
-vtkm::io::reader::VTKDataSetReader reader("path/to/vtk_image_file");
-vtkm::cont::DataSet inputData = reader.ReadDataSet();
-std::string fieldName = "scalars";
+    // --- main program --- //
 
-vtkm::Range range;
-inputData.GetPointField(fieldName).GetRange(&range);
-vtkm::Float64 isovalue = range.Center();
+    struct Block { float local, average; };             // define your block structure
 
-// Create an isosurface filter
-vtkm::filter::MarchingCubes filter;
-filter.SetIsoValue(0, isovalue);
-filter.SetActiveField(fieldName);
-vtkm::cont::DataSet outputData = filter.Execute(inputData);
+    Master master(world);                               // world = MPI_Comm
+    ...                                                 // populate master with blocks
+    master.foreach(&enqueue_local);                     // call enqueue_local() for each block
+    master.exchange();                                  // exchange enqueued data between blocks
+    master.foreach(&average);                           // call average() for each block
 
-// compute the bounds and extends of the input data
-vtkm::Bounds coordsBounds = inputData.GetCoordinateSystem().GetBounds();
-vtkm::Vec<vtkm::Float64,3> totalExtent( coordsBounds.X.Length(),
-                                        coordsBounds.Y.Length(),
-                                        coordsBounds.Z.Length() );
-vtkm::Float64 mag = vtkm::Magnitude(totalExtent);
-vtkm::Normalize(totalExtent);
+    // --- callback functions --- //
 
-// setup a camera and point it to towards the center of the input data
-vtkm::rendering::Camera camera;
-camera.ResetToBounds(coordsBounds);
+    // enqueue block data prior to exchanging it
+    void enqueue_local(Block* b,                        // current block
+                       const Proxy& cp)                 // communication proxy provides access to the neighbor blocks
+    {
+        for (size_t i = 0; i < cp.link()->size(); i++)  // for all neighbor blocks
+            cp.enqueue(cp.link()->target(i), b->local); // enqueue the data to be sent to this neighbor
+                                                        // block in the next exchange
+    }
 
-camera.SetLookAt(totalExtent*(mag * .5f));
-camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
-camera.SetClippingRange(1.f, 100.f);
-camera.SetFieldOfView(60.f);
-camera.SetPosition(totalExtent*(mag * 2.f));
-vtkm::cont::ColorTable colorTable("inferno");
-
-// Create a mapper, canvas and view that will be used to render the scene
-vtkm::rendering::Scene scene;
-vtkm::rendering::MapperRayTracer mapper;
-vtkm::rendering::CanvasRayTracer canvas(512, 512);
-vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-
-// Render an image of the output isosurface
-scene.AddActor(vtkm::rendering::Actor(outputData.GetCellSet(),
-                                      outputData.GetCoordinateSystem(),
-                                      outputData.GetField(fieldName),
-                                      colorTable));
-vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
-view.Initialize();
-view.Paint();
-view.SaveAs("demo_output.pnm");
+    // use the received data after exchanging it, in this case compute its average
+    void average(Block* b,                              // current block
+                 const Proxy& cp)                       // communication proxy provides access to the neighbor blocks
+    {
+        float x, average = 0;
+        for (size_t i = 0; i < cp.link()->size(); i++)  // for all neighbor blocks
+        {
+            cp.dequeue(cp.link()->target(i).gid, x);    // dequeue the data received from this
+                                                        // neighbor block in the last exchange
+            average += x;
+        }
+        b->average = average / cp.link()->size();
+    }
 ```
-
-
-## License ##
-
-VTK-m is distributed under the OSI-approved BSD 3-clause License.
-See [LICENSE.txt](LICENSE.txt) for details.
-
-
-[VTK-m]:                    https://gitlab.kitware.com/vtk/vtk-m/
-[VTK-m Coding Conventions]: docs/CodingConventions.md
-[VTK-m Doxygen]:            http://m.vtk.org/documentation/
-[VTK-m download page]:      http://m.vtk.org/index.php/VTK-m_Releases
-[VTK-m git repository]:     https://gitlab.kitware.com/vtk/vtk-m/
-[VTK-m Issue Tracker]:      https://gitlab.kitware.com/vtk/vtk-m/issues
-[VTK-m Overview]:           http://m.vtk.org/images/2/29/VTKmVis2016.pptx
-[VTK-m Users Guide]:        http://m.vtk.org/images/c/c8/VTKmUsersGuide.pdf
-[VTK-m users email list]:   http://vtk.org/mailman/listinfo/vtkm
-[VTK-m Wiki]:               http://m.vtk.org/
-[CONTRIBUTING.md]:          CONTRIBUTING.md

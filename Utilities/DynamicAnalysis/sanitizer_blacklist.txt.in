@@ -1,2 +1,0 @@
-# Blacklist third party libraries from invoking sanitizer errors
-src:@VTKm_SOURCE_DIR@/vtkm/thirdparty/*

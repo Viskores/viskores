@@ -1,17 +1,1 @@
-# Attributes used for formatting.
-[attr]our-c-style   whitespace=tab-in-indent  format.clang-format
-
-*.cxx   our-c-style
-*.h     our-c-style
-*.hxx   our-c-style
-*.cu    our-c-style
-
-
-
-
-*.cmake          whitespace=tab-in-indent
-*.md             whitespace=tab-in-indent conflict-marker-size=79 -whitespace
-*.rst            whitespace=tab-in-indent conflict-marker-size=79
-*.txt            whitespace=tab-in-indent
-vtkm/thirdparty/diy/vtkmdiy/**           -format.clang-format -whitespace
 * !text !filter !merge !diff
