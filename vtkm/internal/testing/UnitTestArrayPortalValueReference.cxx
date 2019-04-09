@@ -129,6 +129,7 @@ void TryOperatorsInt(vtkm::Id index,
 
 #if defined(VTKM_CLANG) && __clang_major__ >= 7
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wself-assign-overloaded"
 #endif
 
