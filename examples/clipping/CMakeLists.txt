@@ -25,23 +25,9 @@ project(Clipping CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(Clipping_SERIAL Clipping.cxx)
-target_compile_definitions(Clipping_SERIAL PRIVATE
-                           "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-target_link_libraries(Clipping_SERIAL PRIVATE vtkm_filter)
-
-if(TARGET vtkm::tbb)
-  add_executable(Clipping_TBB Clipping.cxx)
-  target_compile_definitions(Clipping_TBB PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  target_link_libraries(Clipping_TBB PRIVATE vtkm_filter)
-endif()
+add_executable(Clipping Clipping.cxx)
+target_link_libraries(Clipping PRIVATE vtkm_filter)
 
 if(TARGET vtkm::cuda)
-  vtkm_compile_as_cuda(cudaSource Clipping.cxx)
-  add_executable(Clipping_CUDA ${cudaSource})
-
-  target_compile_definitions(Clipping_CUDA PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  target_link_libraries(Clipping_CUDA PRIVATE vtkm_filter)
+  set_source_files_properties(Clipping.cxx PROPERTIES LANGUAGE "CUDA")
 endif()

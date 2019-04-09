@@ -17,9 +17,6 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
-
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/testing/TestingCellLocatorUniformBins.h>
 

@@ -18,12 +18,6 @@
 //  this software.
 //============================================================================
 
-//We first check if VTKM_DEVICE_ADAPTER is defined, so that when TBB and CUDA
-//includes this file we use the device adapter that they have set.
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -119,6 +113,10 @@ void mouseCall(int button, int state, int vtkmNotUsed(x), int vtkmNotUsed(y))
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
+
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::DataSet ds = maker.Make3DUniformDataSet0();
 

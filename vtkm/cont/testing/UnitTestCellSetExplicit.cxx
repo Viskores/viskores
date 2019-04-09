@@ -175,7 +175,7 @@ void TestCellSetExplicit()
                    "CellToPoint table exists before PrepareForInput.");
 
   // Test a raw PrepareForInput call:
-  cellset.PrepareForInput(VTKM_DEFAULT_DEVICE_ADAPTER_TAG{}, CellTag{}, PointTag{});
+  cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, CellTag{}, PointTag{});
 
   VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(CellTag{}, PointTag{})),
                    "CellToPoint table missing after PrepareForInput.");

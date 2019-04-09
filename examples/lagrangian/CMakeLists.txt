@@ -19,11 +19,14 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(Lagrangian_SERIAL lagrangian.cxx ABCfield.h)
-target_compile_definitions(Lagrangian_SERIAL PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-target_link_libraries(Lagrangian_SERIAL PRIVATE vtkm_filter)
-target_link_libraries(Lagrangian_SERIAL ${VTKm_LIBRARIES})
+if(TARGET vtkm::cuda)
+  set_source_files_properties(lagrangian.cxx PROPERTIES LANGUAGE "CUDA")
+endif()
+
+add_executable(Lagrangian lagrangian.cxx ABCfield.h)
+target_link_libraries(Lagrangian PRIVATE vtkm_filter)

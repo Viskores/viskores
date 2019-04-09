@@ -32,17 +32,11 @@ if(TARGET OpenGL::GL AND
 
   set(gl_libs OpenGL::GL OpenGL::GLU GLEW::GLEW GLUT::GLUT)
 
-  add_executable(StreamLineUniformGrid_SERIAL StreamLineUniformGrid.cxx)
-  target_link_libraries(StreamLineUniformGrid_SERIAL PRIVATE vtkm_filter ${gl_libs})
+  add_executable(StreamLineUniformGrid StreamLineUniformGrid.cxx)
+  target_link_libraries(StreamLineUniformGrid PRIVATE vtkm_filter ${gl_libs})
 
-  if(TARGET vtkm::cont)
-    add_executable(StreamLineUniformGrid_CUDA StreamLineUniformGrid.cu)
-    target_link_libraries(StreamLineUniformGrid_CUDA PRIVATE vtkm_filter ${gl_libs})
-  endif()
-
-  if(TARGET vtkm::tbb)
-    add_executable(StreamLineUniformGrid_TBB StreamLineUniformGridTBB.cxx)
-    target_link_libraries(StreamLineUniformGrid_TBB PRIVATE vtkm_filter ${gl_libs})
+  if(TARGET vtkm::cuda)
+    set_source_files_properties(StreamLineUniformGrid.cxx PROPERTIES LANGUAGE "CUDA")
   endif()
 
 endif()

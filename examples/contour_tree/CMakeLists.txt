@@ -25,42 +25,12 @@ project(ContourTree CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(ContourTreeMesh2D_SERIAL ContourTreeMesh2D.cxx)
-target_link_libraries(ContourTreeMesh2D_SERIAL vtkm_filter)
+add_executable(ContourTreeMesh2D ContourTreeMesh2D.cxx)
+target_link_libraries(ContourTreeMesh2D vtkm_filter)
 
-add_executable(ContourTreeMesh3D_SERIAL ContourTreeMesh3D.cxx)
-target_link_libraries(ContourTreeMesh3D_SERIAL vtkm_filter)
-
-target_compile_definitions(ContourTreeMesh2D_SERIAL PRIVATE
-                           "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-target_compile_definitions(ContourTreeMesh3D_SERIAL PRIVATE
-                           "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
+add_executable(ContourTreeMesh3D ContourTreeMesh3D.cxx)
+target_link_libraries(ContourTreeMesh3D vtkm_filter)
 
 if(TARGET vtkm::cuda)
-  vtkm_compile_as_cuda(cudaSource ContourTreeMesh2D.cxx)
-  add_executable(ContourTreeMesh2D_CUDA ${cudaSource})
-
-  vtkm_compile_as_cuda(cudaSource ContourTreeMesh3D.cxx)
-  add_executable(ContourTreeMesh3D_CUDA ${cudaSource})
-
-  target_link_libraries(ContourTreeMesh2D_CUDA vtkm_filter)
-  target_link_libraries(ContourTreeMesh3D_CUDA vtkm_filter)
-
-  target_compile_definitions(ContourTreeMesh2D_CUDA PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  target_compile_definitions(ContourTreeMesh3D_CUDA PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-endif()
-
-if(TARGET vtkm::tbb)
-  add_executable(ContourTreeMesh2D_TBB ContourTreeMesh2D.cxx)
-  add_executable(ContourTreeMesh3D_TBB ContourTreeMesh3D.cxx)
-
-  target_link_libraries(ContourTreeMesh2D_TBB vtkm_filter)
-  target_link_libraries(ContourTreeMesh3D_TBB vtkm_filter)
-
-  target_compile_definitions(ContourTreeMesh2D_TBB PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  target_compile_definitions(ContourTreeMesh3D_TBB PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
+  set_source_files_properties(ContourTreeMesh2D.cxx ContourTreeMesh3D.cxx PROPERTIES LANGUAGE "CUDA")
 endif()

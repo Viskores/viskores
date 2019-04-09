@@ -18,12 +18,6 @@
 //  this software.
 //============================================================================
 
-//We first check if VTKM_DEVICE_ADAPTER is defined, so that when TBB and CUDA
-//includes this file we use the device adapter that they have set.
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
 #include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
@@ -31,6 +25,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Initialize.h>
 
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
@@ -240,6 +235,11 @@ void mouseCall(int button, int state, int x, int y)
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
+  //parse out all vtk-m related command line options
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
+
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
   vtkm::filter::MarchingCubes filter;

@@ -29,11 +29,10 @@ vtkm_find_gl(OPTIONAL GL GLUT GLEW)
 if(TARGET OpenGL::GL AND
    TARGET GLUT::GLUT AND
    TARGET GLEW::GLEW)
-  if(TARGET vtkm::cuda)
-    add_executable(GameOfLife GameOfLife.cu LoadShaders.h)
-  else()
-    add_executable(GameOfLife GameOfLife.cxx LoadShaders.h)
-  endif()
 
+  add_executable(GameOfLife GameOfLife.cxx LoadShaders.h)
+  if(TARGET vtkm::cuda)
+    set_source_files_properties(GameOfLife.cxx PROPERTIES LANGUAGE "CUDA")
+  endif()
   target_link_libraries(GameOfLife PRIVATE vtkm_filter OpenGL::GL GLEW::GLEW GLUT::GLUT)
 endif()

@@ -20,6 +20,7 @@
 
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 #include <vtkm/filter/Gradient.h>
@@ -49,6 +50,34 @@ void process_block_tbb(RuntimeTaskQueue& queue)
   //is actually thread-local, so we can use that.
   //
   vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
+
+  while (queue.hasTasks())
+  {
+    //Step 2. Get the task to run on TBB
+    auto task = queue.pop();
+
+    //Step 3. Run the task on TBB. We check the validity
+    //of the task since we could be given an empty task
+    //when the queue is empty and we are shutting down
+    if (task != nullptr)
+    {
+      task();
+    }
+
+    //Step 4. Notify the queue that we finished processing this task
+    queue.completedTask();
+    std::cout << "finished a block on tbb (" << std::this_thread::get_id() << ")" << std::endl;
+  }
+}
+
+void process_block_openMP(RuntimeTaskQueue& queue)
+{
+  //Step 1. Set the device adapter to this thread to TBB.
+  //This makes sure that any vtkm::filters used by our
+  //task operate only on TBB. The "global" thread tracker
+  //is actually thread-local, so we can use that.
+  //
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
 
   while (queue.hasTasks())
   {
@@ -108,8 +137,9 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
 {
   //Step 1. Determine the number of workers we want
   auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  const bool runOnTbb = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagTBB{});
   const bool runOnCuda = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{});
+  const bool runOnOpenMP = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagOpenMP{});
+  const bool runOnTbb = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagTBB{});
 
   //Note currently the virtual implementation has some issues
   //In a multi-threaded environment only cuda can be used or
@@ -135,7 +165,15 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
       this->Workers.emplace_back(std::bind(process_block_cuda, std::ref(this->Queue), i));
     }
   }
-  //Step 3. Launch a worker that will use tbb (if enabled).
+  //Step 3. Launch a worker that will use openMP (if enabled).
+  //The threads share a queue object so we need to explicitly pass it
+  //by reference (the std::ref call)
+  else if (runOnOpenMP)
+  {
+    std::cout << "adding a openMP worker" << std::endl;
+    this->Workers.emplace_back(std::bind(process_block_openMP, std::ref(this->Queue)));
+  }
+  //Step 4. Launch a worker that will use tbb (if enabled).
   //The threads share a queue object so we need to explicitly pass it
   //by reference (the std::ref call)
   else if (runOnTbb)

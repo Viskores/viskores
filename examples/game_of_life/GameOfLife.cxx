@@ -315,7 +315,9 @@ void populate(std::vector<vtkm::UInt8>& input_state,
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::Initialize(argc, argv);
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
 
   glewExperimental = GL_TRUE;
   glutInit(&argc, argv);

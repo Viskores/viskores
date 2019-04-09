@@ -25,22 +25,9 @@ project(Oscillator CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(Oscillator_SERIAL Oscillator.cxx)
-target_compile_definitions(Oscillator_SERIAL PRIVATE
-  "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-target_link_libraries(Oscillator_SERIAL PRIVATE vtkm_filter)
-
-if (TARGET vtkm::tbb)
-  add_executable(Oscillator_TBB Oscillator.cxx)
-  target_compile_definitions(Oscillator_TBB PRIVATE
-    "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  target_link_libraries(Oscillator_TBB PRIVATE vtkm_filter)
-endif()
-
 if (TARGET vtkm::cuda)
-  vtkm_compile_as_cuda(oscillatorCudaSrc Oscillator.cxx)
-  add_executable(Oscillator_CUDA ${oscillatorCudaSrc})
-  target_compile_definitions(Oscillator_CUDA PRIVATE
-    "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  target_link_libraries(Oscillator_CUDA PRIVATE vtkm_filter)
+  set_source_files_properties(Oscillator.cxx PROPERTIES LANGUAGE "CUDA")
 endif()
+
+add_executable(Oscillator Oscillator.cxx)
+target_link_libraries(Oscillator PRIVATE vtkm_filter)

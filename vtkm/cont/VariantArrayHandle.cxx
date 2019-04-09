@@ -21,6 +21,8 @@
 #include <sstream>
 #include <typeindex>
 
+#include <vtkm/cont/DeviceAdapter.h>
+
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 

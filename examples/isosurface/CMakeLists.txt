@@ -30,20 +30,12 @@ if(TARGET OpenGL::GL AND
    TARGET GLUT::GLUT AND
    TARGET GLEW::GLEW)
 
-  set_source_files_properties(quaternion.h PROPERTIES HEADER_FILE_ONLY TRUE)
-
   set(gl_libs OpenGL::GL OpenGL::GLU GLEW::GLEW GLUT::GLUT)
-  add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx quaternion.h)
-  target_link_libraries(IsosurfaceUniformGrid_SERIAL PRIVATE vtkm_filter ${gl_libs})
+  add_executable(IsosurfaceUniformGrid IsosurfaceUniformGrid.cxx quaternion.h)
+  target_link_libraries(IsosurfaceUniformGrid PRIVATE vtkm_filter ${gl_libs})
 
   if(TARGET vtkm::cuda)
-    add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu quaternion.h)
-    target_link_libraries(IsosurfaceUniformGrid_CUDA PRIVATE vtkm_filter ${gl_libs})
-  endif()
-
-  if(TARGET vtkm::tbb)
-    add_executable(IsosurfaceUniformGrid_TBB IsosurfaceUniformGridTBB.cxx quaternion.h)
-    target_link_libraries(IsosurfaceUniformGrid_TBB PRIVATE vtkm_filter ${gl_libs})
+    set_source_files_properties(IsosurfaceUniformGrid.cxx PROPERTIES LANGUAGE "CUDA")
   endif()
 
 endif()

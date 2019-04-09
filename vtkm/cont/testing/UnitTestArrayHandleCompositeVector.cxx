@@ -17,10 +17,6 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
-// Make sure ArrayHandleCompositeVector does not rely on default device adapter.
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
-
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 
 #include <vtkm/VecTraits.h>

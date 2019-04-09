@@ -41,7 +41,7 @@ add_subdirectory(rendering)
 add_subdirectory(streamline)
 add_subdirectory(temporal_advection)
 add_subdirectory(tetrahedra)
-add_subdirectory(unified_memory)
+# add_subdirectory(unified_memory)
 
 
 if (VTKm_ENABLE_TESTING)

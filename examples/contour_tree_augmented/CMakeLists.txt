@@ -66,60 +66,20 @@
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-# MAKE DEBUG BUILD
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -g -fsanitize=address")
-
-# MAKE OPTIMIZED BUILD
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3")
-
-####################################
-# Serial builds
-####################################
-# Serial 2D / 3D / MC
-add_executable(ContourTree_PPP2_SERIAL ContourTreeApp.cxx)
-target_link_libraries(ContourTree_PPP2_SERIAL vtkm_filter)
-target_compile_definitions(ContourTree_PPP2_SERIAL PRIVATE
-                           "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
+add_executable(ContourTree ContourTreeApp.cxx)
+target_link_libraries(ContourTree vtkm_filter)
 
 
 ####################################
-# Serial debug builds
+# Debug algorithm build
 ####################################
-
-# Debug Serial 2D / 3D / MC
-add_executable(ContourTree_PPP2_SERIAL_DEBUG ContourTreeApp.cxx)
-target_link_libraries(ContourTree_PPP2_SERIAL_DEBUG vtkm_filter)
-target_compile_definitions(ContourTree_PPP2_SERIAL_DEBUG PRIVATE
-                           "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL" "DEBUG_PRINT")
-
+# target_compile_definitions(ContourTree PRIVATE DEBUG_PRINT)
 
 if(TARGET vtkm::tbb)
   # TBB 2D/3D/MC
-  add_executable(ContourTree_PPP2_TBB ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_PPP2_TBB vtkm_filter)
-  target_compile_definitions(ContourTree_PPP2_TBB PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB" "ENABLE_SET_NUM_THREADS")
-
-  # TBB 2D/3D/MC DEBUG
-  add_executable(ContourTree_PPP2_TBB_DEBUG ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_PPP2_TBB_DEBUG vtkm_filter)
-  target_compile_definitions(ContourTree_PPP2_TBB_DEBUG PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB" "ENABLE_SET_NUM_THREADS" "DEBUG_PRINT")
-
+  target_compile_definitions(ContourTree PRIVATE ENABLE_SET_NUM_THREADS)
 endif()
 
 if(TARGET vtkm::cuda)
-  # CUDA 2D/3D/MC
-  vtkm_compile_as_cuda(cudaSource ContourTreeApp.cxx)
-  add_executable(ContourTree_PPP2_CUDA ${cudaSource})
-  target_link_libraries(ContourTree_PPP2_CUDA vtkm_filter)
-  target_compile_definitions(ContourTree_PPP2_CUDA PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-
-  # CUDA 2D/3D/MC
-  # vtkm_compile_as_cuda(cudaSource ContourTreeApp.cxx)
-  add_executable(ContourTree_PPP2_CUDA_DEBUG ${cudaSource})
-  target_link_libraries(ContourTree_PPP2_CUDA_DEBUG vtkm_filter)
-  target_compile_definitions(ContourTree_PPP2_CUDA_DEBUG PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA" "DEBUG_PRINT")
+  set_source_files_properties(ContourTreeApp.cxx PROPERTIES LANGUAGE "CUDA")
 endif()

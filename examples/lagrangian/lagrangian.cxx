@@ -27,12 +27,10 @@
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/filter/Lagrangian.h>
 
 using namespace std;
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
 
 vtkm::cont::DataSet make3DRectilinearDataSet(double time)
 {
@@ -88,8 +86,12 @@ vtkm::cont::DataSet make3DRectilinearDataSet(double time)
 }
 
 
-int main()
+int main(int argc, char** argv)
 {
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
+
   vtkm::filter::Lagrangian lagrangianFilter;
   lagrangianFilter.SetResetParticles(true);
   vtkm::Float32 stepSize = 0.01f;

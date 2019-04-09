@@ -19,6 +19,8 @@
 //============================================================================
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Initialize.h>
+
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/ParticleAdvectionWorklets.h>
@@ -115,6 +117,13 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
 
 int main(int argc, char** argv)
 {
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
+
+  std::cout << "TemporalAdvection Example" << std::endl;
+  std::cout << "Parameters are [options] numSteps stepSize advectionType" << std::endl << std::endl;
+  std::cout << "advectionType Particles=0 Streamlines=1" << std::endl;
+
   vtkm::Id numSteps;
   vtkm::Float32 stepSize;
   vtkm::Id advectionType;

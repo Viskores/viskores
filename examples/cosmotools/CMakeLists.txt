@@ -25,16 +25,11 @@ project(CosmoTools CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm::cuda)
-  vtkm_compile_as_cuda(cu_srcs CosmoCenterFinder.cxx)
-  add_executable(CosmoCenterFinder ${cu_srcs})
-
-  vtkm_compile_as_cuda(cu_srcs CosmoHaloFinder.cxx)
-  add_executable(CosmoHaloFinder ${cu_srcs})
-else()
-  add_executable(CosmoCenterFinder CosmoCenterFinder.cxx)
-  add_executable(CosmoHaloFinder CosmoHaloFinder.cxx)
-endif()
-
+add_executable(CosmoCenterFinder CosmoCenterFinder.cxx)
+add_executable(CosmoHaloFinder CosmoHaloFinder.cxx)
 target_link_libraries(CosmoCenterFinder PRIVATE vtkm_filter)
 target_link_libraries(CosmoHaloFinder PRIVATE vtkm_filter)
+
+if(TARGET vtkm::cuda)
+  set_source_files_properties(CosmoCenterFinder.cxx CosmoCenterFinder.cxx PROPERTIES LANGUAGE "CUDA")
+endif()

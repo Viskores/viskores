@@ -64,13 +64,11 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/Initialize.h>
+
 #include <vtkm/filter/ContourTreeUniform.h>
 
 #include <fstream>
@@ -81,9 +79,12 @@ int main(int argc, char* argv[])
 {
   std::cout << "ContourTreeMesh2D Example" << std::endl;
 
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
   if (argc != 2)
   {
-    std::cout << "Parameter is fileName" << std::endl;
+    std::cout << "Usage: "
+              << "$ " << argv[0] << " [-d device] input_file" << std::endl;
     std::cout << "File is expected to be ASCII with xdim ydim integers " << std::endl;
     std::cout << "followed by vector data last dimension varying fastest" << std::endl;
     return 0;

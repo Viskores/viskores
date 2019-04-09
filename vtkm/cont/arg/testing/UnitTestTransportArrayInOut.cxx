@@ -92,7 +92,8 @@ void TryArrayInOutTransport(Device)
 
 void TestArrayInOutTransport()
 {
-  TryArrayInOutTransport(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  std::cout << "Trying ArrayInOut transport with serial device." << std::endl;
+  TryArrayInOutTransport(vtkm::cont::DeviceAdapterTagSerial());
 }
 
 } // anonymous namespace

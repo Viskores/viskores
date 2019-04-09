@@ -189,7 +189,7 @@ struct PermutationTests
   using ValueArrayType = vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>;
   using PermutationArrayType = vtkm::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType>;
 
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using Device = vtkm::cont::DeviceAdapterTagSerial;
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
   ValueArrayType MakeValueArray() const

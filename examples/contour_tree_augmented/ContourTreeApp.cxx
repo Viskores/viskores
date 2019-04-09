@@ -71,7 +71,9 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
+
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -145,11 +147,13 @@ private:
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+
   vtkm::cont::Timer totalTime;
   totalTime.Start();
   vtkm::Float64 prevTime = 0;
   vtkm::Float64 currTime = 0;
-  std::cout << "ContourTreePPP2Mesh <options> <fileName>" << std::endl;
 
   ////////////////////////////////////////////
   // Parse the command line options
@@ -200,9 +204,11 @@ int main(int argc, char* argv[])
     std::cout << "--numThreads      Specify the number of threads to use. Available only with TBB."
               << std::endl;
 #endif
+    std::cout << config.Usage << std::endl;
     return 0;
   }
 
+  std::cout << "ContourTree <options> <fileName>" << std::endl;
   std::cout << "Settings:" << std::endl;
   std::cout << "    filename=" << filename << std::endl;
   std::cout << "    mc=" << useMarchingCubes << std::endl;
@@ -211,6 +217,7 @@ int main(int argc, char* argv[])
 #ifdef ENABLE_SET_NUM_THREADS
   std::cout << "    numThreads=" << numThreads << std::endl;
 #endif
+  std::cout << config.Usage << std::endl;
   std::cout << std::endl;
 
 

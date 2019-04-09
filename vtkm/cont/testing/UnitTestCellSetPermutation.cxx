@@ -19,9 +19,9 @@
 //============================================================================
 #include <vtkm/cont/CellSetPermutation.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -84,9 +84,7 @@ std::vector<vtkm::Id> ComputeCellToPointExpected(const CellSetType& cellset,
   std::cout << "\n";
 
   vtkm::cont::ArrayHandle<vtkm::Id> indexOffsets;
-  vtkm::Id connectivityLength =
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::ScanExclusive(
-      numIndices, indexOffsets);
+  vtkm::Id connectivityLength = vtkm::cont::Algorithm::ScanExclusive(numIndices, indexOffsets);
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   connectivity.Allocate(connectivityLength);

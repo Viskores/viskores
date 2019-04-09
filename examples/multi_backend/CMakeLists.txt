@@ -42,8 +42,7 @@ set(srcs
   )
 
 if(TARGET vtkm::cuda)
-  vtkm_compile_as_cuda(cuda_srcs ${device_srcs})
-  set(device_srcs ${cuda_srcs})
+  set_source_files_properties(${device_srcs} PROPERTIES LANGUAGE "CUDA")
 endif()
 
 add_executable(MultiBackend ${device_srcs} ${srcs} ${headers})

@@ -24,16 +24,6 @@
 
 #include <vtkm/cont/DeviceAdapter.h>
 
-#if ((VTKM_DEVICE_ADAPTER > 0) && (VTKM_DEVICE_ADAPTER < VTKM_MAX_DEVICE_ADAPTER_ID))
-// Use the default device adapter tag for testing whether execution objects are valid.
-#define VTK_M_DEVICE_ADAPTER_TO_TEST_EXEC_OBJECT VTKM_DEFAULT_DEVICE_ADAPTER_TAG
-#else
-// The default device adapter is invalid. Perhaps the error device adapter is being used.
-// In this case, try the serial device adapter instead. It should always be valid.
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#define VTK_M_DEVICE_ADAPTER_TO_TEST_EXEC_OBJECT ::vtkm::cont::DeviceAdapterTagSerial
-#endif
-
 namespace vtkm
 {
 namespace cont
@@ -59,8 +49,7 @@ struct CheckPrepareForExecution
 {
   template <typename T>
   static auto check(T* p)
-    -> decltype(p->PrepareForExecution(VTK_M_DEVICE_ADAPTER_TO_TEST_EXEC_OBJECT()),
-                std::true_type());
+    -> decltype(p->PrepareForExecution(vtkm::cont::DeviceAdapterTagSerial{}), std::true_type());
 
   template <typename T>
   static auto check(...) -> std::false_type;
