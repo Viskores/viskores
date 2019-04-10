@@ -266,4 +266,68 @@ ALIGN_RE_PAIR(vtkm::Int64, vtkm::Float64);
 }
 }
 
+//need to guard in 1.9.0 check
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <thrust/mr/allocator.h>
+#include <thrust/system/cuda/memory_resource.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+
+//So for thrust 1.9.0+ the stateless_resource_allocator has a bug
+//where it is not marked as __host__device__. To fix this we add a new
+//overload for void* with the correct markup (which is what everyone calls).
+namespace thrust
+{
+namespace mr
+{
+
+template <typename T>
+class stateless_resource_allocator<T, ::thrust::system::cuda::memory_resource>
+  : public thrust::mr::allocator<T, ::thrust::system::cuda::memory_resource>
+{
+  typedef ::thrust::system::cuda::memory_resource Upstream;
+  typedef thrust::mr::allocator<T, Upstream> base;
+
+public:
+  /*! The \p rebind metafunction provides the type of an \p stateless_resource_allocator instantiated with another type.
+     *
+     *  \tparam U the other type to use for instantiation.
+     */
+  template <typename U>
+  struct rebind
+  {
+    /*! The typedef \p other gives the type of the rebound \p stateless_resource_allocator.
+         */
+    typedef stateless_resource_allocator<U, Upstream> other;
+  };
+
+  /*! Default constructor. Uses \p get_global_resource to get the global instance of \p Upstream and initializes the
+     *      \p allocator base subobject with that resource.
+     */
+  __thrust_exec_check_disable__ //modification, required to suppress warnings
+    __host__ __device__         //modification, required to suppress warnings
+    stateless_resource_allocator()
+    : base(get_global_resource<Upstream>())
+  {
+  }
+
+  /*! Copy constructor. Copies the memory resource pointer. */
+  __host__ __device__ stateless_resource_allocator(const stateless_resource_allocator& other)
+    : base(other)
+  {
+  }
+
+  /*! Conversion constructor from an allocator of a different type. Copies the memory resource pointer. */
+  template <typename U>
+  __host__ __device__
+  stateless_resource_allocator(const stateless_resource_allocator<U, Upstream>& other)
+    : base(other)
+  {
+  }
+
+  /*! Destructor. */
+  __host__ __device__ ~stateless_resource_allocator() {}
+};
+}
+}
+
 #endif //vtk_m_exec_cuda_internal_ThrustPatches_h
