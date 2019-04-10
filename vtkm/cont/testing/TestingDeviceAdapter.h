@@ -410,6 +410,38 @@ public:
     IdPortalType Result;
   };
 
+  struct CustomPairOp
+  {
+    using ValueType = vtkm::Pair<vtkm::Id, vtkm::Float32>;
+
+    VTKM_EXEC
+    ValueType operator()(const vtkm::Id& a) const { return ValueType(a, 0.0f); }
+
+    VTKM_EXEC
+    ValueType operator()(const vtkm::Id& a, const vtkm::Id& b) const
+    {
+      return ValueType(vtkm::Max(a, b), 0.0f);
+    }
+
+    VTKM_EXEC
+    ValueType operator()(const ValueType& a, const ValueType& b) const
+    {
+      return ValueType(vtkm::Max(a.first, b.first), 0.0f);
+    }
+
+    VTKM_EXEC
+    ValueType operator()(const vtkm::Id& a, const ValueType& b) const
+    {
+      return ValueType(vtkm::Max(a, b.first), 0.0f);
+    }
+
+    VTKM_EXEC
+    ValueType operator()(const ValueType& a, const vtkm::Id& b) const
+    {
+      return ValueType(vtkm::Max(a.first, b), 0.0f);
+    }
+  };
+
   struct CustomTForReduce
   {
     constexpr CustomTForReduce()
@@ -425,20 +457,18 @@ public:
     VTKM_EXEC_CONT
     constexpr float value() const { return this->Value; }
 
-    //required due to how the CUDA::Reduction is implemented when
-    //the return Type of Reduction is different than the input type
-    VTKM_EXEC_CONT
-    constexpr explicit operator vtkm::Vec<float, 2>() const
-    {
-      return vtkm::Vec<float, 2>(this->Value);
-    }
-
     float Value;
   };
 
   template <typename T>
   struct CustomMinAndMax
   {
+    VTKM_EXEC_CONT
+    vtkm::Vec<float, 2> operator()(const T& a) const
+    {
+      return vtkm::make_Vec(a.value(), a.value());
+    }
+
     VTKM_EXEC_CONT
     vtkm::Vec<float, 2> operator()(const T& a, const T& b) const
     {
@@ -1299,8 +1329,19 @@ private:
       Algorithm::Reduce(input, vtkm::Vec<vtkm::Id, 2>(0, 0), vtkm::MinAndMax<vtkm::Id>());
 
     VTKM_TEST_ASSERT(maxValue == range[1], "Got bad value from Reduce with comparison object");
-
     VTKM_TEST_ASSERT(0 == range[0], "Got bad value from Reduce with comparison object");
+
+
+    std::cout << "  Reduce vtkm::Id array with custom functor that returns vtkm::Pair<>."
+              << std::endl;
+    auto pairInit = vtkm::Pair<vtkm::Id, vtkm::Float32>(0, 0.0f);
+    vtkm::Pair<vtkm::Id, vtkm::Float32> pairRange =
+      Algorithm::Reduce(input, pairInit, CustomPairOp());
+
+    VTKM_TEST_ASSERT(maxValue == pairRange.first,
+                     "Got bad value from Reduce with pair comparison object");
+    VTKM_TEST_ASSERT(0.0f == pairRange.second,
+                     "Got bad value from Reduce with pair comparison object");
 
 
     std::cout << "  Reduce bool array with vtkm::BitwiseAnd to see if all values are true."
