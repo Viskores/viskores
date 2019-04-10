@@ -98,6 +98,9 @@ template <typename T>
 struct MinAndMax
 {
   VTKM_EXEC_CONT
+  vtkm::Vec<T, 2> operator()(const T& a) const { return vtkm::make_Vec(a, a); }
+
+  VTKM_EXEC_CONT
   vtkm::Vec<T, 2> operator()(const T& a, const T& b) const
   {
     return vtkm::make_Vec(vtkm::Min(a, b), vtkm::Max(a, b));

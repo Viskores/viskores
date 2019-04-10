@@ -126,16 +126,19 @@ __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_
 #pragma GCC diagnostic pop
 #endif
 
-template <typename PortalType, typename OutValueType>
+template <typename PortalType, typename BinaryAndUnaryFunctor>
 struct CastPortal
 {
-  using ValueType = OutValueType;
+  using InputType = typename PortalType::ValueType;
+  using ValueType = decltype(std::declval<BinaryAndUnaryFunctor>()(std::declval<InputType>()));
 
   PortalType Portal;
+  BinaryAndUnaryFunctor Functor;
 
   VTKM_CONT
-  CastPortal(const PortalType& portal)
+  CastPortal(const PortalType& portal, const BinaryAndUnaryFunctor& functor)
     : Portal(portal)
+    , Functor(functor)
   {
   }
 
@@ -143,7 +146,7 @@ struct CastPortal
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
   VTKM_EXEC
-  ValueType Get(vtkm::Id index) const { return static_cast<OutValueType>(this->Portal.Get(index)); }
+  ValueType Get(vtkm::Id index) const { return this->Functor(this->Portal.Get(index)); }
 };
 }
 } // end namespace cuda::internal
@@ -332,7 +335,8 @@ private:
     //The portal type and the initial value AREN'T the same type so we have
     //to a slower approach, where we wrap the input portal inside a cast
     //portal
-    vtkm::cont::cuda::internal::CastPortal<InputPortal, T> castPortal(input);
+    vtkm::cont::cuda::internal::CastPortal<InputPortal, BinaryFunctor> castPortal(input,
+                                                                                  binary_functor);
 
     vtkm::exec::cuda::internal::WrappedBinaryOperator<T, BinaryFunctor> bop(binary_functor);
 
