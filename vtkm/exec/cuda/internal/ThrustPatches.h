@@ -176,8 +176,8 @@ ALIGN_RE_PAIR(vtkm::Int64, vtkm::Float64);
 }
 #endif //THRUST_VERSION >= 100900
 
-#if THRUST_VERSION >= 100903
-//So for thrust 1.9.3+ (CUDA 10.1+) the stateless_resource_allocator has a bug
+#if THRUST_VERSION >= 100904
+//So for thrust 1.9.4+ (CUDA 10.1+) the stateless_resource_allocator has a bug
 //where it is not marked as __host__ __device__ && __thrust_exec_check_disable__.
 //To fix this we add a new partial specialization on cuda::memory_resource
 //which the correct markup (which is what everyone calls).
