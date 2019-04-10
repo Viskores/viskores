@@ -42,7 +42,6 @@ set(headers
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
   ReverseConnectivityBuilder.h
-  SimplePolymorphicContainer.h
   StorageError.h
   TransferInfo.h
   VariantArrayHandleContainer.h

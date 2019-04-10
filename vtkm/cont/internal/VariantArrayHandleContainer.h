@@ -70,9 +70,7 @@ struct VTKM_CONT_EXPORT VariantArrayHandleContainerBase
 
 /// \brief ArrayHandle container that can use C++ run-time type information.
 ///
-/// The \c VariantArrayHandleContainer is similar to the
-/// \c SimplePolymorphicContainer in that it can contain an object of an
-/// unknown type. However, this class specifically holds ArrayHandle objects
+/// The \c VariantArrayHandleContainer holds ArrayHandle objects
 /// (with different template parameters) so that it can polymorphically answer
 /// simple questions about the object.
 ///

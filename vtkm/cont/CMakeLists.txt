@@ -138,7 +138,6 @@ set(sources
   internal/ArrayHandleBasicImpl.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
   internal/DeviceAdapterTag.cxx
-  internal/SimplePolymorphicContainer.cxx
   internal/TransferInfo.cxx
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
