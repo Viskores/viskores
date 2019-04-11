@@ -81,8 +81,7 @@ public:
   //
   // https://docs.microsoft.com/en-us/windows/desktop/sync/interlocked-variable-access
 
-  VTKM_EXEC_CONT
-  static vtkm::UInt8 Load(const vtkm::UInt8* addr)
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkm::UInt8 Load(const vtkm::UInt8* addr)
   {
     // This assumes that the memory interface is smart enough to load a 32-bit
     // word atomically and a properly aligned 8-bit word from it.
@@ -92,8 +91,7 @@ public:
     std::atomic_thread_fence(std::memory_order_acquire);
     return result;
   }
-  VTKM_EXEC_CONT
-  static vtkm::UInt16 Load(const vtkm::UInt16* addr)
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkm::UInt16 Load(const vtkm::UInt16* addr)
   {
     // This assumes that the memory interface is smart enough to load a 32-bit
     // word atomically and a properly aligned 16-bit word from it.
@@ -103,68 +101,62 @@ public:
     std::atomic_thread_fence(std::memory_order_acquire);
     return result;
   }
-  VTKM_EXEC_CONT
-  static vtkm::UInt32 Load(const vtkm::UInt32* addr)
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkm::UInt32 Load(const vtkm::UInt32* addr)
   {
     auto result = *static_cast<volatile const vtkm::UInt32*>(addr);
     std::atomic_thread_fence(std::memory_order_acquire);
     return result;
   }
-  VTKM_EXEC_CONT
-  static vtkm::UInt64 Load(const vtkm::UInt64* addr)
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkm::UInt64 Load(const vtkm::UInt64* addr)
   {
     auto result = *static_cast<volatile const vtkm::UInt64*>(addr);
     std::atomic_thread_fence(std::memory_order_acquire);
     return result;
   }
-  VTKM_EXEC_CONT
-  static void Store(vtkm::UInt8* addr, vtkm::UInt8 val)
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static void Store(vtkm::UInt8* addr, vtkm::UInt8 val)
   {
     // There doesn't seem to be an atomic store instruction in the windows
     // API, so just exchange and discard the result.
     _InterlockedExchange8(reinterpret_cast<volatile CHAR*>(addr), BitCast<CHAR>(val));
   }
-  VTKM_EXEC_CONT
-  static void Store(vtkm::UInt16* addr, vtkm::UInt16 val)
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static void Store(vtkm::UInt16* addr, vtkm::UInt16 val)
   {
     // There doesn't seem to be an atomic store instruction in the windows
     // API, so just exchange and discard the result.
     _InterlockedExchange16(reinterpret_cast<volatile SHORT*>(addr), BitCast<SHORT>(val));
   }
-  VTKM_EXEC_CONT
-  static void Store(vtkm::UInt32* addr, vtkm::UInt32 val)
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static void Store(vtkm::UInt32* addr, vtkm::UInt32 val)
   {
     std::atomic_thread_fence(std::memory_order_release);
     *addr = val;
   }
-  VTKM_EXEC_CONT
-  static void Store(vtkm::UInt64* addr, vtkm::UInt64 val)
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static void Store(vtkm::UInt64* addr, vtkm::UInt64 val)
   {
     std::atomic_thread_fence(std::memory_order_release);
     *addr = val;
   }
 
 #define VTKM_ATOMIC_OPS_FOR_TYPE(vtkmType, winType, suffix)                                        \
-  VTKM_EXEC_CONT static vtkmType Not(vtkmType* addr)                                               \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkmType Not(vtkmType* addr)                   \
   {                                                                                                \
     return Xor(addr, static_cast<vtkmType>(~vtkmType{ 0u }));                                      \
   }                                                                                                \
-  VTKM_EXEC_CONT static vtkmType And(vtkmType* addr, vtkmType mask)                                \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkmType And(vtkmType* addr, vtkmType mask)    \
   {                                                                                                \
     return BitCast<vtkmType>(                                                                      \
       _InterlockedAnd##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(mask))); \
   }                                                                                                \
-  VTKM_EXEC_CONT static vtkmType Or(vtkmType* addr, vtkmType mask)                                 \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkmType Or(vtkmType* addr, vtkmType mask)     \
   {                                                                                                \
     return BitCast<vtkmType>(                                                                      \
       _InterlockedOr##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(mask)));  \
   }                                                                                                \
-  VTKM_EXEC_CONT static vtkmType Xor(vtkmType* addr, vtkmType mask)                                \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkmType Xor(vtkmType* addr, vtkmType mask)    \
   {                                                                                                \
     return BitCast<vtkmType>(                                                                      \
       _InterlockedXor##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(mask))); \
   }                                                                                                \
-  VTKM_EXEC_CONT static vtkmType CompareAndSwap(                                                   \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkmType CompareAndSwap(                       \
     vtkmType* addr, vtkmType newWord, vtkmType expected)                                           \
   {                                                                                                \
     return BitCast<vtkmType>(                                                                      \
@@ -183,28 +175,32 @@ public:
 #else // gcc/clang
 
 #define VTKM_ATOMIC_OPS_FOR_TYPE(type)                                                             \
-  VTKM_EXEC_CONT static type Load(const type* addr)                                                \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static type Load(const type* addr)                    \
   {                                                                                                \
     return __atomic_load_n(addr, __ATOMIC_ACQUIRE);                                                \
   }                                                                                                \
-  VTKM_EXEC_CONT static void Store(type* addr, type value)                                         \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static void Store(type* addr, type value)             \
   {                                                                                                \
     return __atomic_store_n(addr, value, __ATOMIC_RELEASE);                                        \
   }                                                                                                \
-  VTKM_EXEC_CONT static type Not(type* addr) { return Xor(addr, static_cast<type>(~type{ 0u })); } \
-  VTKM_EXEC_CONT static type And(type* addr, type mask)                                            \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static type Not(type* addr)                           \
+  {                                                                                                \
+    return Xor(addr, static_cast<type>(~type{ 0u }));                                              \
+  }                                                                                                \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static type And(type* addr, type mask)                \
   {                                                                                                \
     return __atomic_fetch_and(addr, mask, __ATOMIC_SEQ_CST);                                       \
   }                                                                                                \
-  VTKM_EXEC_CONT static type Or(type* addr, type mask)                                             \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static type Or(type* addr, type mask)                 \
   {                                                                                                \
     return __atomic_fetch_or(addr, mask, __ATOMIC_SEQ_CST);                                        \
   }                                                                                                \
-  VTKM_EXEC_CONT static type Xor(type* addr, type mask)                                            \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static type Xor(type* addr, type mask)                \
   {                                                                                                \
     return __atomic_fetch_xor(addr, mask, __ATOMIC_SEQ_CST);                                       \
   }                                                                                                \
-  VTKM_EXEC_CONT static type CompareAndSwap(type* addr, type newWord, type expected)               \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static type CompareAndSwap(                           \
+    type* addr, type newWord, type expected)                                                       \
   {                                                                                                \
     __atomic_compare_exchange_n(                                                                   \
       addr, &expected, newWord, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);                        \
