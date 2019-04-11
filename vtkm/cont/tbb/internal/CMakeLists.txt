@@ -20,6 +20,7 @@
 
 set(headers
   ArrayManagerExecutionTBB.h
+  AtomicInterfaceExecutionTBB.h
   DeviceAdapterAlgorithmTBB.h
   DeviceAdapterRuntimeDetectorTBB.h
   DeviceAdapterTagTBB.h

@@ -18,17 +18,14 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_cont_openmp_DeviceAdapterOpenMP_h
-#define vtk_m_cont_openmp_DeviceAdapterOpenMP_h
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
-#include <vtkm/cont/openmp/internal/DeviceAdapterRuntimeDetectorOpenMP.h>
-#include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
+#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
+#include <vtkm/cont/testing/TestingBitField.h>
 
-#ifdef VTKM_ENABLE_OPENMP
-#include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
-#include <vtkm/cont/openmp/internal/AtomicInterfaceExecutionOpenMP.h>
-#include <vtkm/cont/openmp/internal/DeviceAdapterAlgorithmOpenMP.h>
-#include <vtkm/cont/openmp/internal/VirtualObjectTransferOpenMP.h>
-#endif
-
-#endif //vtk_m_cont_openmp_DeviceAdapterOpenMP_h
+int UnitTestOpenMPBitField(int argc, char* argv[])
+{
+  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
+  return vtkm::cont::testing::TestingBitField<vtkm::cont::DeviceAdapterTagOpenMP>::Run(argc, argv);
+}

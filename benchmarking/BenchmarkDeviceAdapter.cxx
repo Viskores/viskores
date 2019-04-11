@@ -26,6 +26,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/BitField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -63,20 +64,24 @@ namespace benchmarking
 
 enum BenchmarkName
 {
-  COPY = 1,
-  COPY_IF = 1 << 1,
-  LOWER_BOUNDS = 1 << 2,
-  REDUCE = 1 << 3,
-  REDUCE_BY_KEY = 1 << 4,
-  SCAN_INCLUSIVE = 1 << 5,
-  SCAN_EXCLUSIVE = 1 << 6,
-  SORT = 1 << 7,
-  SORT_BY_KEY = 1 << 8,
-  STABLE_SORT_INDICES = 1 << 9,
-  STABLE_SORT_INDICES_UNIQUE = 1 << 10,
-  UNIQUE = 1 << 11,
-  UPPER_BOUNDS = 1 << 12,
-  ALL = COPY | COPY_IF | LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY | SCAN_INCLUSIVE | SCAN_EXCLUSIVE |
+  BITFIELD_TO_UNORDERED_SET = 1 << 0,
+  COPY = 1 << 1,
+  COPY_IF = 1 << 2,
+  LOWER_BOUNDS = 1 << 3,
+  REDUCE = 1 << 4,
+  REDUCE_BY_KEY = 1 << 5,
+  SCAN_INCLUSIVE = 1 << 6,
+  SCAN_EXCLUSIVE = 1 << 7,
+  SORT = 1 << 8,
+  SORT_BY_KEY = 1 << 9,
+  STABLE_SORT_INDICES = 1 << 10,
+  STABLE_SORT_INDICES_UNIQUE = 1 << 11,
+  UNIQUE = 1 << 12,
+  UPPER_BOUNDS = 1 << 13,
+
+  ALL = BITFIELD_TO_UNORDERED_SET | COPY | COPY_IF | LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY |
+    SCAN_INCLUSIVE |
+    SCAN_EXCLUSIVE |
     SORT |
     SORT_BY_KEY |
     STABLE_SORT_INDICES |
@@ -131,6 +136,20 @@ struct BenchDevAlgoConfig
     return this->DoByteSizes
       ? static_cast<vtkm::Id>(this->ArraySizeBytes / static_cast<vtkm::UInt64>(sizeof(T)))
       : static_cast<vtkm::Id>(this->ArraySizeValues);
+  }
+
+  // Compute the number of words in a bit field with the given type.
+  // If DoByteSizes is true, the specified buffer is rounded down to the nearest
+  // number of words that fit into the byte limit. Otherwise, ArraySizeValues
+  // is used to indicate the number of bits.
+  template <typename WordType>
+  VTKM_CONT vtkm::Id ComputeNumberOfWords()
+  {
+    static constexpr vtkm::UInt64 BytesPerWord = static_cast<vtkm::UInt64>(sizeof(WordType));
+    static constexpr vtkm::UInt64 BitsPerWord = BytesPerWord * 8;
+
+    return this->DoByteSizes ? static_cast<vtkm::Id>(this->ArraySizeBytes / BytesPerWord)
+                             : static_cast<vtkm::Id>(this->ArraySizeValues / BitsPerWord);
   }
 };
 
@@ -255,7 +274,170 @@ public:
     }
   };
 
+  template <typename WordType, typename BitFieldPortal>
+  struct GenerateBitFieldFunctor : public vtkm::exec::FunctorBase
+  {
+    WordType Exemplar;
+    vtkm::Id Stride;
+    vtkm::Id MaxMaskedWord;
+    BitFieldPortal Portal;
+
+    VTKM_EXEC_CONT
+    GenerateBitFieldFunctor(WordType exemplar,
+                            vtkm::Id stride,
+                            vtkm::Id maxMaskedWord,
+                            const BitFieldPortal& portal)
+      : Exemplar(exemplar)
+      , Stride(stride)
+      , MaxMaskedWord(maxMaskedWord)
+      , Portal(portal)
+    {
+    }
+
+    VTKM_EXEC
+    void operator()(vtkm::Id wordIdx) const
+    {
+      if (wordIdx <= this->MaxMaskedWord && (wordIdx % this->Stride) == 0)
+      {
+        this->Portal.SetWord(wordIdx, this->Exemplar);
+      }
+      else
+      {
+        this->Portal.SetWord(wordIdx, static_cast<WordType>(0));
+      }
+    }
+  };
+
+  // Create a bit field for testing. The bit array will contain numWords words.
+  // The exemplar word is used to set bits in the array. Stride indicates how
+  // many words will be set to 0 between words initialized to the exemplar.
+  // Words with indices higher than maxMaskedWord will be set to 0.
+  // Stride and maxMaskedWord may be used to test different types of imbalanced
+  // loads.
+  template <typename WordType, typename DeviceAdapterTag>
+  static VTKM_CONT vtkm::cont::BitField GenerateBitField(WordType exemplar,
+                                                         vtkm::Id stride,
+                                                         vtkm::Id maxMaskedWord,
+                                                         vtkm::Id numWords)
+  {
+    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
+
+    if (stride == 0)
+    {
+      stride = 1;
+    }
+
+    vtkm::cont::BitField bits;
+    auto portal = bits.PrepareForOutput(numWords, DeviceAdapterTag{});
+
+    using Functor = GenerateBitFieldFunctor<WordType, decltype(portal)>;
+
+    Algo::Schedule(Functor{ exemplar, stride, maxMaskedWord, portal }, numWords);
+    Algo::Synchronize();
+
+    return bits;
+  }
+
 private:
+  template <typename WordType, typename DeviceAdapter>
+  struct BenchBitFieldToUnorderedSet
+  {
+    using IndicesArray = vtkm::cont::ArrayHandle<vtkm::Id>;
+
+    vtkm::Id NumWords;
+    vtkm::Id NumBits;
+    WordType Exemplar;
+    vtkm::Id Stride;
+    vtkm::Float32 FillRatio;
+    vtkm::Id MaxMaskedIndex;
+    std::string Name;
+
+    vtkm::cont::BitField Bits;
+    IndicesArray Indices;
+
+    // See GenerateBitField for details. fillRatio is used to compute
+    // maxMaskedWord.
+    VTKM_CONT
+    BenchBitFieldToUnorderedSet(WordType exemplar,
+                                vtkm::Id stride,
+                                vtkm::Float32 fillRatio,
+                                const std::string& name)
+      : NumWords(Config.ComputeNumberOfWords<WordType>())
+      , NumBits(this->NumWords * static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT))
+      , Exemplar(exemplar)
+      , Stride(stride)
+      , FillRatio(fillRatio)
+      , MaxMaskedIndex(this->NumWords / static_cast<vtkm::Id>(1. / this->FillRatio))
+      , Name(name)
+      , Bits(GenerateBitField<WordType, DeviceAdapter>(this->Exemplar,
+                                                       this->Stride,
+                                                       this->MaxMaskedIndex,
+                                                       this->NumWords))
+    {
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      Timer timer(DeviceAdapter{});
+      timer.Start();
+      Algorithm::BitFieldToUnorderedSet(DeviceAdapter{}, this->Bits, this->Indices);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      const vtkm::Id numFilledWords = this->MaxMaskedIndex / this->Stride;
+      const vtkm::Id numSetBits = numFilledWords * vtkm::CountSetBits(this->Exemplar);
+
+      std::stringstream description;
+      description << "BitFieldToUnorderedSet" << this->Name << " ( "
+                  << "NumWords: " << this->NumWords << " "
+                  << "Exemplar: " << std::hex << this->Exemplar << std::dec << " "
+                  << "FillRatio: " << this->FillRatio << " "
+                  << "Stride: " << this->Stride << " "
+                  << "NumSetBits: " << numSetBits << " )";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetNull,
+                      BenchBitFieldToUnorderedSet,
+                      0x00000000,
+                      1,
+                      0.f,
+                      "Null");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetFull,
+                      BenchBitFieldToUnorderedSet,
+                      0xffffffff,
+                      1,
+                      1.f,
+                      "Full");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetHalfWord,
+                      BenchBitFieldToUnorderedSet,
+                      0xffff0000,
+                      1,
+                      1.f,
+                      "HalfWord");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetHalfField,
+                      BenchBitFieldToUnorderedSet,
+                      0xffffffff,
+                      1,
+                      0.5f,
+                      "HalfField");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetAlternateWords,
+                      BenchBitFieldToUnorderedSet,
+                      0xffffffff,
+                      2,
+                      1.f,
+                      "AlternateWords");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetAlternateBits,
+                      BenchBitFieldToUnorderedSet,
+                      0x55555555,
+                      1,
+                      1.f,
+                      "AlternateBits");
+
   template <typename Value, typename DeviceAdapter>
   struct BenchCopy
   {
@@ -982,6 +1164,19 @@ public:
   template <typename ValueTypes>
   static VTKM_CONT void RunInternal(vtkm::cont::DeviceAdapterId id)
   {
+    using BitFieldWordTypes = vtkm::ListTagBase<vtkm::UInt32>;
+
+    if (Config.BenchmarkFlags & BITFIELD_TO_UNORDERED_SET)
+    {
+      std::cout << DIVIDER << "\nBenchmarking BitFieldToUnorderedSet\n";
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetNull, BitFieldWordTypes{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetFull, BitFieldWordTypes{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetHalfWord, BitFieldWordTypes{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetHalfField, BitFieldWordTypes{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetAlternateWords, BitFieldWordTypes{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetAlternateBits, BitFieldWordTypes{}, id);
+    }
+
     if (Config.BenchmarkFlags & COPY)
     {
       std::cout << DIVIDER << "\nBenchmarking Copy\n";
@@ -1434,7 +1629,11 @@ int main(int argc, char* argv[])
     std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
       return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     });
-    if (arg == "copy")
+    if (arg == "bitfieldtounorderedset")
+    {
+      config.BenchmarkFlags |= vtkm::benchmarking::BITFIELD_TO_UNORDERED_SET;
+    }
+    else if (arg == "copy")
     {
       config.BenchmarkFlags |= vtkm::benchmarking::COPY;
     }

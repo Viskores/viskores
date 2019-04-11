@@ -22,6 +22,7 @@ set(headers
   Algorithm.h
   ArrayCopy.h
   ArrayHandle.h
+  ArrayHandleBitField.h
   ArrayHandleCartesianProduct.h
   ArrayHandleCast.h
   ArrayHandleCompositeVector.h
@@ -49,6 +50,7 @@ set(headers
   ArrayRangeCompute.h
   AssignerMultiBlock.h
   AtomicArray.h
+  BitField.h
   BoundsCompute.h
   BoundsGlobalCompute.h
   CastAndCall.h

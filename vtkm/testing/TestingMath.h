@@ -33,6 +33,8 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+#include <limits>
+
 #define VTKM_MATH_ASSERT(condition, message)                                                       \
   if (!(condition))                                                                                \
   {                                                                                                \
@@ -762,6 +764,76 @@ struct TypeListTagAbs
 };
 
 //-----------------------------------------------------------------------------
+static constexpr vtkm::Id BitOpSamples = 1024 * 1024;
+
+template <typename T>
+struct BitOpTests : public vtkm::exec::FunctorBase
+{
+  static constexpr T MaxT = std::numeric_limits<T>::max();
+  static constexpr T Offset = MaxT / BitOpSamples;
+
+  VTKM_EXEC void operator()(vtkm::Id i) const
+  {
+    const T idx = static_cast<T>(i);
+    const T word = idx * this->Offset;
+
+    TestWord(word - idx);
+    TestWord(word);
+    TestWord(word + idx);
+  }
+
+  VTKM_EXEC void TestWord(T word) const
+  {
+    VTKM_MATH_ASSERT(test_equal(vtkm::CountSetBits(word), this->DumbCountBits(word)),
+                     "CountBits returned wrong value.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::FindFirstSetBit(word), this->DumbFindFirstSetBit(word)),
+                     "FindFirstSetBit returned wrong value.")
+  }
+
+  VTKM_EXEC vtkm::Int32 DumbCountBits(T word) const
+  {
+    vtkm::Int32 bits = 0;
+    while (word)
+    {
+      if (word & 0x1)
+      {
+        ++bits;
+      }
+      word >>= 1;
+    }
+    return bits;
+  }
+
+  VTKM_EXEC vtkm::Int32 DumbFindFirstSetBit(T word) const
+  {
+    if (word == 0)
+    {
+      return 0;
+    }
+
+    vtkm::Int32 bit = 1;
+    while ((word & 0x1) == 0)
+    {
+      word >>= 1;
+      ++bit;
+    }
+    return bit;
+  }
+};
+
+template <typename Device>
+struct TryBitOpTests
+{
+  template <typename T>
+  void operator()(const T&) const
+  {
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(BitOpTests<T>(), BitOpSamples);
+  }
+};
+
+using TypeListTagBitOp = vtkm::ListTagBase<vtkm::UInt32, vtkm::UInt64>;
+
+//-----------------------------------------------------------------------------
 template <typename Device>
 void RunMathTests()
 {
@@ -773,6 +845,8 @@ void RunMathTests()
   vtkm::testing::Testing::TryTypes(TryAllTypesTests<Device>());
   std::cout << "Test all Abs types" << std::endl;
   vtkm::testing::Testing::TryTypes(TryAbsTests<Device>(), TypeListTagAbs());
+  std::cout << "Test all bit operations" << std::endl;
+  vtkm::testing::Testing::TryTypes(TryBitOpTests<Device>(), TypeListTagBitOp());
 }
 
 } // namespace UnitTestMathNamespace

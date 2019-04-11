@@ -2443,6 +2443,100 @@ private:
     }
   }
 
+  static VTKM_CONT void TestBitFieldToUnorderedSet()
+  {
+    using IndexArray = vtkm::cont::ArrayHandle<vtkm::Id>;
+    using WordType = WordTypeDefault;
+
+    // Test that everything works correctly with a partial word at the end.
+    static constexpr vtkm::Id BitsPerWord = static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT);
+    // +5 to get a partial word:
+    static constexpr vtkm::Id NumBits = 1024 * BitsPerWord + 5;
+    static constexpr vtkm::Id NumWords = (NumBits + BitsPerWord - 1) / BitsPerWord;
+
+    auto testIndexArray = [](const BitField& bits) {
+      const vtkm::Id numBits = bits.GetNumberOfBits();
+      IndexArray indices;
+      Algorithm::BitFieldToUnorderedSet(bits, indices);
+      Algorithm::Sort(indices);
+
+      auto bitPortal = bits.GetPortalConstControl();
+      auto indexPortal = indices.GetPortalConstControl();
+
+      const vtkm::Id numIndices = indices.GetNumberOfValues();
+      vtkm::Id curIndex = 0;
+      for (vtkm::Id curBit = 0; curBit < numBits; ++curBit)
+      {
+        const bool markedSet = curIndex < numIndices ? indexPortal.Get(curIndex) == curBit : false;
+        const bool isSet = bitPortal.GetBit(curBit);
+
+        //        std::cout << "curBit: " << curBit
+        //                  << " activeIndex: "
+        //                  << (curIndex < numIndices ? indexPortal.Get(curIndex) : -1)
+        //                  << " isSet: " << isSet << " markedSet: " << markedSet << "\n";
+
+        VTKM_TEST_ASSERT(
+          markedSet == isSet, "Bit ", curBit, " is set? ", isSet, " Marked set? ", markedSet);
+
+        if (markedSet)
+        {
+          curIndex++;
+        }
+      }
+
+      VTKM_TEST_ASSERT(curIndex == indices.GetNumberOfValues(), "Index array has extra values.");
+    };
+
+    auto testRepeatedMask = [&](WordType mask) {
+      std::cout << "Testing BitFieldToUnorderedSet with repeated 32-bit word 0x" << std::hex << mask
+                << std::endl;
+
+      BitField bits;
+      {
+        bits.Allocate(NumBits);
+        auto fillPortal = bits.GetPortalControl();
+        for (vtkm::Id i = 0; i < NumWords; ++i)
+        {
+          fillPortal.SetWord(i, mask);
+        }
+      }
+
+      testIndexArray(bits);
+    };
+
+    auto testRandomMask = [&](WordType seed) {
+      std::cout << "Testing BitFieldToUnorderedSet with random sequence seeded with 0x" << std::hex
+                << seed << std::endl;
+
+      std::mt19937 mt{ seed };
+      std::uniform_int_distribution<std::mt19937::result_type> rng;
+
+      BitField bits;
+      {
+        bits.Allocate(NumBits);
+        auto fillPortal = bits.GetPortalControl();
+        for (vtkm::Id i = 0; i < NumWords; ++i)
+        {
+          fillPortal.SetWord(i, static_cast<WordType>(rng(mt)));
+        }
+      }
+
+      testIndexArray(bits);
+    };
+
+    testRepeatedMask(0x00000000);
+    testRepeatedMask(0xeeeeeeee);
+    testRepeatedMask(0xffffffff);
+    testRepeatedMask(0x1c0fd395);
+    testRepeatedMask(0xdeadbeef);
+
+    testRandomMask(0x00000000);
+    testRandomMask(0xeeeeeeee);
+    testRandomMask(0xffffffff);
+    testRandomMask(0x1c0fd395);
+    testRandomMask(0xdeadbeef);
+  }
+
   struct TestAll
   {
     VTKM_CONT void operator()() const
@@ -2496,6 +2590,8 @@ private:
       TestCopyArraysInDiffTypes();
 
       TestAtomicArray();
+
+      TestBitFieldToUnorderedSet();
     }
   };
 

@@ -25,6 +25,7 @@ set(headers
   TransportTagArrayInOut.h
   TransportTagArrayOut.h
   TransportTagAtomicArray.h
+  TransportTagBitField.h
   TransportTagCellSetIn.h
   TransportTagExecObject.h
   TransportTagKeyedValuesIn.h
@@ -38,6 +39,7 @@ set(headers
   TypeCheck.h
   TypeCheckTagArray.h
   TypeCheckTagAtomicArray.h
+  TypeCheckTagBitField.h
   TypeCheckTagCellSet.h
   TypeCheckTagCellSetStructured.h
   TypeCheckTagExecObject.h

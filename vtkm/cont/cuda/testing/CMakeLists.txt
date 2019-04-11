@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestCudaArrayHandle.cu
   UnitTestCudaArrayHandleFancy.cu
   UnitTestCudaArrayHandleVirtualCoordinates.cu
+  UnitTestCudaBitField.cu
   UnitTestCudaCellLocatorRectilinearGrid.cu
   UnitTestCudaCellLocatorUniformBins.cu
   UnitTestCudaCellLocatorUniformGrid.cu

@@ -30,9 +30,9 @@
 #define VTKM_EXEC __device__ __host__
 #define VTKM_EXEC_CONT __device__ __host__
 #if __CUDAVER__ >= 75000
-#define VTKM_SUPPRESS_EXEC_WARNINGS #pragma nv_exec_check_disable
+#define VTKM_SUPPRESS_EXEC_WARNINGS _Pragma("nv_exec_check_disable")
 #else
-#define VTKM_SUPPRESS_EXEC_WARNINGS #pragma hd_warning_disable
+#define VTKM_SUPPRESS_EXEC_WARNINGS _Pragma("hd_warning_disable")
 #endif
 #else
 #define VTKM_EXEC

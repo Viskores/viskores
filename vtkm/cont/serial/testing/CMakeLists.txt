@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestSerialArrayHandle.cxx
   UnitTestSerialArrayHandleFancy.cxx
   UnitTestSerialArrayHandleVirtualCoordinates.cxx
+  UnitTestSerialBitField.cxx
   UnitTestSerialCellLocatorRectilinearGrid.cxx
   UnitTestSerialCellLocatorUniformBins.cxx
   UnitTestSerialCellLocatorUniformGrid.cxx

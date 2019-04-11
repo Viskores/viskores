@@ -53,9 +53,14 @@ $# Ignore the following comment. It is meant for the generated file.
 #include <algorithm>
 #endif
 
-#if defined(VTKM_MSVC) && !defined(VTKM_CUDA)
+#ifdef VTKM_MSVC
+#include <intrin.h> // For bitwise intrinsics (__popcnt, etc)
+#include <vtkm/internal/Windows.h> // for types used by MSVC intrinsics.
+#ifndef VTKM_CUDA
 #include <math.h>
-#endif
+#endif // VTKM_CUDA
+#endif // VTKM_MSVC
+
 
 #define VTKM_CUDA_MATH_FUNCTION_32(func) func##f
 #define VTKM_CUDA_MATH_FUNCTION_64(func) func
@@ -1193,6 +1198,191 @@ inline VTKM_EXEC_CONT vtkm::Float64 Ldexp(vtkm::Float64 x, vtkm::Int32 exponent)
   return std::ldexp(x, exponent);
 #endif
 }
+
+/// Bitwise operations
+///
+
+/// Find the first set bit in @a word, and return its position (1-32). If no
+/// bits are set, returns 0.
+#ifdef VTKM_CUDA_DEVICE_PASS
+// Need to explicitly mark this as __device__ since __ffs is device only.
+inline __device__
+vtkm::Int32 FindFirstSetBit(vtkm::UInt32 word)
+{
+  // Output is [0,32], with ffs(0) == 0
+  return __ffs(static_cast<int>(word));
+}
+#else // CUDA_DEVICE_PASS
+inline VTKM_EXEC_CONT
+vtkm::Int32 FindFirstSetBit(vtkm::UInt32 word)
+{
+#  if defined(VTKM_GCC) || defined(VTKM_CLANG)
+
+  // Output is [0,32], with ffs(0) == 0
+  return __builtin_ffs(static_cast<int>(word));
+
+#  elif defined(VTKM_MSVC)
+
+  // Output is [0, 31], check return code to see if bits are set:
+  vtkm::UInt32 firstSet;
+  return _BitScanForward(reinterpret_cast<DWORD*>(&firstSet), word) != 0
+         ? static_cast<vtkm::Int32>(firstSet + 1) : 0;
+
+#  elif defined(VTKM_ICC)
+
+  // Output is [0, 31], undefined if word is 0.
+  return word != 0 ? _bit_scan_forward(word) + 1 : 0;
+
+#  else
+
+  // Naive implementation:
+  if (word == 0)
+  {
+    return 0;
+  }
+
+  vtkm::Int32 bit = 1;
+  while ((word & 0x1) == 0)
+  {
+    word >>= 1;
+    ++bit;
+  }
+  return bit;
+
+#  endif
+}
+#endif // CUDA_DEVICE_PASS
+
+/// Find the first set bit in @a word, and return its position (1-64). If no
+/// bits are set, returns 0.
+#ifdef VTKM_CUDA_DEVICE_PASS
+// Need to explicitly mark this as __device__ since __ffsll is device only.
+inline __device__
+vtkm::Int32 FindFirstSetBit(vtkm::UInt64 word)
+{
+
+  // Output is [0,64], with ffs(0) == 0
+  return __ffsll(static_cast<long long int>(word));
+}
+#else // CUDA_DEVICE_PASS
+inline VTKM_EXEC_CONT
+vtkm::Int32 FindFirstSetBit(vtkm::UInt64 word)
+{
+#  if defined(VTKM_GCC) || defined(VTKM_CLANG)
+
+  // Output is [0,64], with ffs(0) == 0
+  return __builtin_ffsll(static_cast<long long int>(word));
+
+#  elif defined(VTKM_MSVC) || defined(VTKM_ICC)
+
+  // Output is [0, 63], check return code to see if bits are set:
+  vtkm::UInt32 firstSet;
+  return _BitScanForward64(reinterpret_cast<DWORD*>(&firstSet), word) != 0
+         ? static_cast<vtkm::Int32>(firstSet + 1) : 0;
+
+#  else
+
+  // Naive implementation:
+  if (word == 0)
+  {
+    return 0;
+  }
+
+  vtkm::Int32 bit = 1;
+  while ((word & 0x1) == 0)
+  {
+    word >>= 1;
+    ++bit;
+  }
+  return bit;
+
+#  endif
+}
+#endif // CUDA_DEVICE_PASS
+
+/// Count the total number of bits set in @a word.
+#ifdef VTKM_CUDA_DEVICE_PASS
+// Need to explicitly mark this as __device__ since __popc is device only.
+inline __device__
+vtkm::Int32 CountSetBits(vtkm::UInt32 word)
+{
+  return __popc(word);
+}
+#else // CUDA_DEVICE_PASS
+inline VTKM_EXEC_CONT
+vtkm::Int32 CountSetBits(vtkm::UInt32 word)
+{
+#  if defined(VTKM_GCC) || defined(VTKM_CLANG)
+
+  return __builtin_popcount(word);
+
+#  elif defined(VTKM_MSVC)
+
+  return static_cast<vtkm::Int32>(__popcnt(word));
+
+#  elif defined(VTKM_ICC)
+
+  return _popcnt32(static_cast<int>(word));
+
+#  else
+
+  // Naive implementation:
+  vtkm::Int32 bits = 0;
+  while (word)
+  {
+    if (word & 0x1)
+    {
+      ++bits;
+    }
+    word >>= 1;
+  }
+  return bits;
+
+#  endif
+}
+#endif // CUDA_DEVICE_PASS
+
+/// Count the total number of bits set in @a word.
+#ifdef VTKM_CUDA_DEVICE_PASS
+// Need to explicitly mark this as __device__ since __popcll is device only.
+inline __device__
+vtkm::Int32 CountSetBits(vtkm::UInt64 word)
+{
+  return __popcll(word);
+}
+#else // CUDA_DEVICE_PASS
+inline VTKM_EXEC_CONT
+vtkm::Int32 CountSetBits(vtkm::UInt64 word)
+{
+#  if defined(VTKM_GCC) || defined(VTKM_CLANG)
+
+  return __builtin_popcountll(word);
+
+#  elif defined(VTKM_MSVC)
+
+  return static_cast<vtkm::Int32>(__popcnt64(word));
+
+#  elif defined(VTKM_ICC)
+
+  return _popcnt64(static_cast<vtkm::Int64>(word));
+
+#  else
+
+  // Naive implementation:
+  vtkm::Int32 bits = 0;
+  while (word)
+  {
+    if (word & 0x1)
+    {
+      ++bits;
+    }
+    word >>= 1;
+  }
+  return bits;
+
+#  endif
+}
+#endif // CUDA_DEVICE_PASS
 
 } // namespace vtkm
 // clang-format on

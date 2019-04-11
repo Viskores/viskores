@@ -36,6 +36,7 @@
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagAtomicArray.h>
+#include <vtkm/cont/arg/TransportTagBitField.h>
 #include <vtkm/cont/arg/TransportTagCellSetIn.h>
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayIn.h>
@@ -43,6 +44,7 @@
 #include <vtkm/cont/arg/TransportTagWholeArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagAtomicArray.h>
+#include <vtkm/cont/arg/TypeCheckTagBitField.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
@@ -216,6 +218,36 @@ public:
     using TransportTag = vtkm::cont::arg::TransportTagAtomicArray;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
+
+  /// \c ControlSignature tags for whole BitFields.
+  ///
+  /// When a BitField is passed in to a worklet expecting this ControlSignature
+  /// type, the appropriate BitPortal is generated and given to the worklet's
+  /// execution.
+  ///
+  /// Be aware that this data structure is especially prone to race conditions,
+  /// so be sure to use the appropriate atomic methods when necessary.
+  /// @{
+  ///
+  struct BitFieldIn : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagBitField;
+    using TransportTag = vtkm::cont::arg::TransportTagBitFieldIn;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+  };
+  struct BitFieldOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagBitField;
+    using TransportTag = vtkm::cont::arg::TransportTagBitFieldOut;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+  };
+  struct BitFieldInOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagBitField;
+    using TransportTag = vtkm::cont::arg::TransportTagBitFieldInOut;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+  };
+  /// @}
 
   /// \c ControlSignature tag for whole input topology.
   ///

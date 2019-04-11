@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2019 UT-Battelle, LLC.
+//  Copyright 2019 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -17,17 +17,29 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_tbb_DeviceAdapterTBB_h
-#define vtk_m_cont_tbb_DeviceAdapterTBB_h
+#ifndef vtk_m_cont_tbb_internal_AtomicInterfaceExecutionTBB_h
+#define vtk_m_cont_tbb_internal_AtomicInterfaceExecutionTBB_h
 
-#include <vtkm/cont/tbb/internal/DeviceAdapterRuntimeDetectorTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 
-#ifdef VTKM_ENABLE_TBB
-#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
-#include <vtkm/cont/tbb/internal/AtomicInterfaceExecutionTBB.h>
-#include <vtkm/cont/tbb/internal/DeviceAdapterAlgorithmTBB.h>
-#include <vtkm/cont/tbb/internal/VirtualObjectTransferTBB.h>
-#endif
+#include <vtkm/cont/internal/AtomicInterfaceControl.h>
+#include <vtkm/cont/internal/AtomicInterfaceExecution.h>
 
-#endif //vtk_m_cont_tbb_DeviceAdapterTBB_h
+#include <vtkm/Types.h>
+
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
+
+template <>
+class AtomicInterfaceExecution<DeviceAdapterTagTBB> : public AtomicInterfaceControl
+{
+};
+}
+}
+} // end namespace vtkm::cont::internal
+
+#endif // vtk_m_cont_tbb_internal_AtomicInterfaceExecutionTBB_h

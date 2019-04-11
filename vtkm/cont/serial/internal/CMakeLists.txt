@@ -20,6 +20,7 @@
 
 set(headers
   ArrayManagerExecutionSerial.h
+  AtomicInterfaceExecutionSerial.h
   DeviceAdapterAlgorithmSerial.h
   DeviceAdapterRuntimeDetectorSerial.h
   DeviceAdapterTagSerial.h

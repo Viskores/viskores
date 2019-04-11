@@ -28,6 +28,8 @@ set(headers
   ArrayPortalFromIterators.h
   ArrayPortalShrink.h
   ArrayTransfer.h
+  AtomicInterfaceControl.h
+  AtomicInterfaceExecution.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterAtomicArrayImplementation.h
