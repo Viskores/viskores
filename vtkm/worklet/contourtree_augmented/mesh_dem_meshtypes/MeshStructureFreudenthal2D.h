@@ -142,7 +142,8 @@ public:
         return vertex - this->nCols;
       //break; // row - 1, col
       default:
-        abort(); // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
+        VTKM_ASSERT(false);
+        return vertex;
     }
   } // GetNeighbourIndex
 
