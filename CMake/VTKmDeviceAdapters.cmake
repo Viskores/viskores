@@ -129,6 +129,7 @@ if(VTKm_ENABLE_CUDA)
   if (NOT TARGET vtkm_cuda OR NOT TARGET vtkm::cuda)
     add_library(vtkm_cuda INTERFACE)
     set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME vtkm::cuda)
+    install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
 
     # Workaround issue with CUDA 8.X where virtual don't work when building
     # VTK-m as shared. We don't want to force BUILD_SHARED_LIBS to a specific
@@ -263,10 +264,6 @@ if(VTKm_ENABLE_CUDA)
 
   if (NOT TARGET vtkm::cuda)
     add_library(vtkm::cuda ALIAS vtkm_cuda)
-
-    if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
-      install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
-    endif()
   endif()
 
 endif()
