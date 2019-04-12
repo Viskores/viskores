@@ -211,8 +211,8 @@ public:
       case 25:
         return vertex + (this->nRows * this->nCols) + this->nCols + 1; // {  1,  1,  1 }
       default:
-        abort(); // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
-        //default: std::cerr << "Internal error!"; abort();
+        VTKM_ASSERT(false);
+        return vertex;
     }
   } // GetNeighbourIndex
 
