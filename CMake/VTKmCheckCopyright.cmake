@@ -25,6 +25,7 @@
 ## cmake -DVTKm_SOURCE_DIR=<VTKm_SOURCE_DIR> -P <VTKm_SOURCE_DIR>/CMake/VTKMCheckCopyright.cmake
 ##
 
+cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
 set(FILES_TO_CHECK
   *.txt
   *.cmake
@@ -188,6 +189,7 @@ function(check_copyright filename)
   file(READ "${filename}" header_contents LIMIT 2000)
   list_of_lines(header_lines "${header_contents}")
 
+  set(printed)
   # Check each copyright line.
   foreach (copyright_line IN LISTS COPYRIGHT_LINE_LIST)
     set(match)
@@ -211,10 +213,11 @@ function(check_copyright filename)
         break()
       endif (match)
     endforeach (header_line)
-    if (NOT match)
+    if (NOT match AND NOT printed)
       message(STATUS "Could not find match for `${copyright_line}'")
       missing_copyright("${filename}" "${comment_prefix}")
-    endif (NOT match)
+      set(printed TRUE)
+    endif (NOT match AND NOT printed)
   endforeach (copyright_line)
 endfunction(check_copyright)
 
