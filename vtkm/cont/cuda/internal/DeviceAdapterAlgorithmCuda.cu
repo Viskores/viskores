@@ -21,7 +21,11 @@
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
 
 #include <atomic>
+#include <cstring>
+#include <functional>
 #include <mutex>
+
+#include <cuda.h>
 
 namespace vtkm
 {
@@ -29,35 +33,131 @@ namespace cont
 {
 namespace cuda
 {
+
+static vtkm::cont::cuda::ScheduleParameters (
+  *ComputeFromEnv)(const char*, int, int, int, int, int) = nullptr;
+
+//Use the provided function as the the compute function for ScheduleParameterBuilder
+VTKM_CONT_EXPORT void InitScheduleParameters(
+  vtkm::cont::cuda::ScheduleParameters (*function)(const char*, int, int, int, int, int))
+{
+  ComputeFromEnv = function;
+}
+
 namespace internal
 {
 
-VTKM_CONT_EXPORT vtkm::UInt32 getNumSMs(int dId)
-{
-  std::size_t index = 0;
-  if (dId > 0)
-  {
-    index = static_cast<size_t>(dId);
-  }
+//These represent the best block/threads-per for scheduling on each GPU
+static std::vector<std::pair<int, int>> scheduling_1d_parameters;
+static std::vector<std::pair<int, dim3>> scheduling_2d_parameters;
+static std::vector<std::pair<int, dim3>> scheduling_3d_parameters;
 
-  //check
+struct VTKM_CONT_EXPORT ScheduleParameterBuilder
+{
+  //This represents information that is used to compute the best
+  //ScheduleParameters for a given GPU
+  enum struct GPU_STRATA
+  {
+    ENV = 0,
+    OLDER = 5,
+    PASCAL = 6,
+    VOLTA = 7,
+    PASCAL_HPC = 6000,
+    VOLTA_HPC = 7000
+  };
+
+  std::map<GPU_STRATA, vtkm::cont::cuda::ScheduleParameters> Presets;
+  std::function<vtkm::cont::cuda::ScheduleParameters(const char*, int, int, int, int, int)> Compute;
+
+  // clang-format off
+  // The presets for [one,two,three]_d_blocks are before we multiply by the number of SMs on the hardware
+  ScheduleParameterBuilder()
+    : Presets{
+      { GPU_STRATA::ENV,        {  0,   0,  0, {  0,  0, 0 },  0, { 0, 0, 0 } } }, //use env settings
+      { GPU_STRATA::OLDER,
+                                { 32, 128,  8, { 16, 16, 1 }, 32, { 8, 8, 4 } } }, //VTK-m default for less than pascal
+      { GPU_STRATA::PASCAL,     { 32, 128,  8, { 16, 16, 1 }, 32, { 8, 8, 4 } } }, //VTK-m default for pascal
+      { GPU_STRATA::VOLTA,      { 32, 128,  8, { 16, 16, 1 }, 32, { 8, 8, 4 } } }, //VTK-m default for volta
+      { GPU_STRATA::PASCAL_HPC, { 32, 256, 16, { 16, 16, 1 }, 32, { 8, 8, 8 } } }, //P100
+      { GPU_STRATA::VOLTA_HPC,  { 32, 256, 16, { 16, 16, 1 }, 32, { 8, 8, 8 } } }, //V100
+    }
+    , Compute(nullptr)
+  {
+    if (vtkm::cont::cuda::ComputeFromEnv != nullptr)
+    {
+      this->Compute = vtkm::cont::cuda::ComputeFromEnv;
+    }
+    else
+    {
+      this->Compute = [=] (const char* name, int major, int minor,
+                          int numSMs, int maxThreadsPerSM, int maxThreadsPerBlock) -> ScheduleParameters  {
+        return this->ComputeFromPreset(name, major, minor, numSMs, maxThreadsPerSM, maxThreadsPerBlock); };
+    }
+  }
+  // clang-format on
+
+  vtkm::cont::cuda::ScheduleParameters ComputeFromPreset(const char* name,
+                                                         int major,
+                                                         int minor,
+                                                         int numSMs,
+                                                         int maxThreadsPerSM,
+                                                         int maxThreadsPerBlock)
+  {
+    (void)minor;
+    (void)maxThreadsPerSM;
+    (void)maxThreadsPerBlock;
+
+    const constexpr int GPU_STRATA_MAX_GEN = 7;
+    const constexpr int GPU_STRATA_MIN_GEN = 5;
+    int strataAsInt = std::min(major, GPU_STRATA_MAX_GEN);
+    strataAsInt = std::max(strataAsInt, GPU_STRATA_MIN_GEN);
+    if (strataAsInt > GPU_STRATA_MIN_GEN)
+    { //only pascal and above have fancy
+
+      //Currently the only
+      bool is_tesla = (0 == std::strncmp("Tesla", name, 4)); //see if the name starts with Tesla
+      if (is_tesla)
+      {
+        strataAsInt *= 1000; //tesla modifier
+      }
+    }
+
+    auto preset = this->Presets.find(static_cast<GPU_STRATA>(strataAsInt));
+    ScheduleParameters params{ preset->second };
+    params.one_d_blocks = params.one_d_blocks * numSMs;
+    params.two_d_blocks = params.two_d_blocks * numSMs;
+    params.three_d_blocks = params.three_d_blocks * numSMs;
+    return params;
+  }
+};
+
+VTKM_CONT_EXPORT void SetupKernelSchedulingParameters()
+{
+  //check flag
   static std::once_flag lookupBuiltFlag;
-  static std::vector<vtkm::UInt32> numSMs;
 
   std::call_once(lookupBuiltFlag, []() {
+    ScheduleParameterBuilder builder;
     //iterate over all devices
-    int numberOfSMs = 0;
     int count = 0;
     VTKM_CUDA_CALL(cudaGetDeviceCount(&count));
-    numSMs.reserve(static_cast<std::size_t>(count));
     for (int deviceId = 0; deviceId < count; ++deviceId)
-    { //get the number of sm's per deviceId
-      VTKM_CUDA_CALL(
-        cudaDeviceGetAttribute(&numberOfSMs, cudaDevAttrMultiProcessorCount, deviceId));
-      numSMs.push_back(static_cast<vtkm::UInt32>(numberOfSMs));
+    {
+      cudaDeviceProp deviceProp;
+      cudaGetDeviceProperties(&deviceProp, deviceId);
+
+      ScheduleParameters params = builder.Compute(deviceProp.name,
+                                                  deviceProp.major,
+                                                  deviceProp.minor,
+                                                  deviceProp.multiProcessorCount,
+                                                  deviceProp.maxThreadsPerMultiProcessor,
+                                                  deviceProp.maxThreadsPerBlock);
+      scheduling_1d_parameters.emplace_back(params.one_d_blocks, params.one_d_threads_per_block);
+      scheduling_2d_parameters.emplace_back(params.two_d_blocks, params.two_d_threads_per_block);
+      scheduling_3d_parameters.emplace_back(params.three_d_blocks,
+                                            params.three_d_threads_per_block);
     }
   });
-  return numSMs[index];
 }
 }
 } // end namespace cuda::internal
@@ -101,44 +201,41 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::CheckForErrors()
   }
 }
 
-void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(
-  vtkm::UInt32& grids,
+void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThreads(
   vtkm::UInt32& blocks,
+  vtkm::UInt32& threadsPerBlock,
   vtkm::Id size)
 {
   (void)size;
+  vtkm::cont::cuda::internal::SetupKernelSchedulingParameters();
+
   int deviceId;
   VTKM_CUDA_CALL(cudaGetDevice(&deviceId)); //get deviceid from cuda
-  grids = 32 * cuda::internal::getNumSMs(deviceId);
-  blocks = 128;
+  const auto& params = cuda::internal::scheduling_1d_parameters[static_cast<size_t>(deviceId)];
+  blocks = params.first;
+  threadsPerBlock = params.second;
 }
 
-void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(
-  vtkm::UInt32& grids,
-  dim3& blocks,
+void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThreads(
+  vtkm::UInt32& blocks,
+  dim3& threadsPerBlock,
   const dim3& size)
 {
+  vtkm::cont::cuda::internal::SetupKernelSchedulingParameters();
+
   int deviceId;
   VTKM_CUDA_CALL(cudaGetDevice(&deviceId)); //get deviceid from cuda
-  grids = 32 * cuda::internal::getNumSMs(deviceId);
-
-  if (size.x == 0)
-  { //grids that have no x dimension
-    blocks.x = 1;
-    blocks.y = 8;
-    blocks.z = 8;
-  }
-  else if (size.x > 128)
-  {
-    blocks.x = 8;
-    blocks.y = 8;
-    blocks.z = 4;
+  if (size.z <= 1)
+  { //2d images
+    const auto& params = cuda::internal::scheduling_2d_parameters[static_cast<size_t>(deviceId)];
+    blocks = params.first;
+    threadsPerBlock = params.second;
   }
   else
-  { //for really small grids
-    blocks.x = 4;
-    blocks.y = 4;
-    blocks.z = 4;
+  { //3d images
+    const auto& params = cuda::internal::scheduling_3d_parameters[static_cast<size_t>(deviceId)];
+    blocks = params.first;
+    threadsPerBlock = params.second;
   }
 }
 }

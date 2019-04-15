@@ -48,12 +48,6 @@
 #include <vtkm/exec/cuda/internal/TaskStrided.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
-// #define PARAMETER_SWEEP_VTKM_SCHEDULER_1D
-// #define PARAMETER_SWEEP_VTKM_SCHEDULER_3D
-#if defined(PARAMETER_SWEEP_VTKM_SCHEDULER_1D) || defined(PARAMETER_SWEEP_VTKM_SCHEDULER_3D)
-#include <vtkm/cont/cuda/internal/TaskTuner.h>
-#endif
-
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <cooperative_groups.h>
@@ -79,10 +73,73 @@ namespace vtkm
 {
 namespace cont
 {
-
-
 namespace cuda
 {
+/// \brief Represents how to schedule 1D, 2D, and 3D Cuda kernels
+///
+/// \c ScheduleParameters represents how VTK-m should schedule different
+/// cuda kernel types. By default VTK-m uses a preset table based on the
+/// GPU's found at runtime.
+///
+/// When these defaults are insufficient for certain projects it is possible
+/// to override the defaults by using \c InitScheduleParameters.
+///
+///
+struct VTKM_CONT_EXPORT ScheduleParameters
+{
+  int one_d_blocks;
+  int one_d_threads_per_block;
+
+  int two_d_blocks;
+  dim3 two_d_threads_per_block;
+
+  int three_d_blocks;
+  dim3 three_d_threads_per_block;
+};
+
+/// \brief Specify the custom scheduling to use for VTK-m CUDA kernel launches
+///
+/// By default VTK-m uses a preset table based on the GPU's found at runtime to
+/// determine the best scheduling parameters for a worklet.  When these defaults
+/// are insufficient for certain projects it is possible to override the defaults
+/// by binding a custom function to \c InitScheduleParameters.
+///
+/// Note: The this function must be called before any invocation of any worklets
+/// by VTK-m.
+///
+/// Note: This function will be called for each GPU on a machine.
+///
+/// \code{.cpp}
+///
+///  ScheduleParameters CustomScheduleValues(char const* name,
+///                                          int major,
+///                                          int minor,
+///                                          int multiProcessorCount,
+///                                          int maxThreadsPerMultiProcessor,
+///                                          int maxThreadsPerBlock)
+///  {
+///
+///    ScheduleParameters params  {
+///        64 * multiProcessorCount,  //1d blocks
+///        64,                        //1d threads per block
+///        64 * multiProcessorCount,  //2d blocks
+///        { 8, 8, 1 },               //2d threads per block
+///        64 * multiProcessorCount,  //3d blocks
+///        { 4, 4, 4 } };             //3d threads per block
+///    return params;
+///  }
+/// \endcode
+///
+///
+VTKM_CONT_EXPORT void InitScheduleParameters(
+  vtkm::cont::cuda::ScheduleParameters (*)(char const* name,
+                                           int major,
+                                           int minor,
+                                           int multiProcessorCount,
+                                           int maxThreadsPerMultiProcessor,
+                                           int maxThreadsPerBlock));
+
+
 namespace internal
 {
 
@@ -1358,10 +1415,12 @@ public:
   static void SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
 
   VTKM_CONT_EXPORT
-  static void GetGridsAndBlocks(vtkm::UInt32& grid, vtkm::UInt32& blocks, vtkm::Id size);
+  static void GetBlocksAndThreads(vtkm::UInt32& blocks,
+                                  vtkm::UInt32& threadsPerBlock,
+                                  vtkm::Id size);
 
   VTKM_CONT_EXPORT
-  static void GetGridsAndBlocks(vtkm::UInt32& grid, dim3& blocks, const dim3& size);
+  static void GetBlocksAndThreads(vtkm::UInt32& blocks, dim3& threadsPerBlock, const dim3& size);
 
 public:
   template <typename WType, typename IType>
@@ -1378,15 +1437,11 @@ public:
     CheckForErrors();
     SetupErrorBuffer(functor);
 
-    vtkm::UInt32 grids, blocks;
-    GetGridsAndBlocks(grids, blocks, numInstances);
+    vtkm::UInt32 blocks, threadsPerBlock;
+    GetBlocksAndThreads(blocks, threadsPerBlock, numInstances);
 
-    cuda::internal::TaskStrided1DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor,
-                                                                                   numInstances);
-
-#ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_1D
-    parameter_sweep_1d_schedule(functor, numInstances);
-#endif
+    cuda::internal::TaskStrided1DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
+      functor, numInstances);
   }
 
   template <typename WType, typename IType>
@@ -1407,15 +1462,12 @@ public:
                       static_cast<vtkm::UInt32>(rangeMax[1]),
                       static_cast<vtkm::UInt32>(rangeMax[2]));
 
-    vtkm::UInt32 grids;
-    dim3 blocks;
-    GetGridsAndBlocks(grids, blocks, ranges);
+    vtkm::UInt32 blocks;
+    dim3 threadsPerBlock;
+    GetBlocksAndThreads(blocks, threadsPerBlock, ranges);
 
-    cuda::internal::TaskStrided3DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor, ranges);
-
-#ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_3D
-    parameter_sweep_3d_schedule(functor, rangeMax);
-#endif
+    cuda::internal::TaskStrided3DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
+      functor, ranges);
   }
 
   template <class Functor>

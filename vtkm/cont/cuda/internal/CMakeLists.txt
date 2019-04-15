@@ -29,7 +29,6 @@ set(headers
   DeviceAdapterTimerImplementationCuda.h
   ExecutionArrayInterfaceBasicCuda.h
   MakeThrustIterator.h
-  TaskTuner.h
   ThrustExceptionHandler.h
   VirtualObjectTransferCuda.h
   )
