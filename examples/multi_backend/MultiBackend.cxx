@@ -95,7 +95,7 @@ void multiblock_processing(TaskQueue<vtkm::cont::MultiBlock>& queue)
         const auto& field = block.GetField("Gradients", vtkm::cont::Field::Association::POINTS);
         (void)field;
       }
-      catch (vtkm::cont::ErrorBadValue)
+      catch (const vtkm::cont::ErrorBadValue& error)
       {
         std::cerr << "gradient filter failed!" << std::endl;
         break;
