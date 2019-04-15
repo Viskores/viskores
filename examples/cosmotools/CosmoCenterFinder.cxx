@@ -123,11 +123,14 @@ int main(int argc, char* argv[])
 {
   vtkm::cont::SetLogLevelName(CosmoLogLevel, "Cosmo");
   vtkm::cont::SetStderrLogLevel(CosmoLogLevel);
-  vtkm::cont::Initialize(argc, argv);
+
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
 
   if (argc < 2)
   {
     std::cout << "Usage: " << std::endl << "$ " << argv[0] << " <input_file>" << std::endl;
+    std::cout << config.Usage << std::endl;
     return 1;
   }
 

@@ -196,7 +196,9 @@ void idle()
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::Initialize(argc, argv);
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
   std::cout << "Running Hello World example: " << std::endl;
 
   glewExperimental = GL_TRUE;

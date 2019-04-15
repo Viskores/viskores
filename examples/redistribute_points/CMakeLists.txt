@@ -24,23 +24,9 @@ project(RedistributePoints CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
-add_executable(RedistributePoints_SERIAL RedistributePoints.cxx RedistributePoints.h)
-target_compile_definitions(RedistributePoints_SERIAL PRIVATE
-                           "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-target_link_libraries(RedistributePoints_SERIAL PRIVATE vtkm_filter)
-
-if(TARGET vtkm::tbb)
-  add_executable(RedistributePoints_TBB RedistributePoints.cxx RedistributePoints.h)
-  target_compile_definitions(RedistributePoints_TBB PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  target_link_libraries(RedistributePoints_TBB PRIVATE vtkm_filter)
-endif()
+add_executable(RedistributePoints RedistributePoints.cxx RedistributePoints.h)
+target_link_libraries(RedistributePoints PRIVATE vtkm_filter)
 
 if(TARGET vtkm::cuda)
-  vtkm_compile_as_cuda(cudaSource RedistributePoints.cxx)
-  add_executable(RedistributePoints_CUDA ${cudaSource} RedistributePoints.h)
-
-  target_compile_definitions(RedistributePoints_CUDA PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  target_link_libraries(RedistributePoints_CUDA PRIVATE vtkm_filter)
+  set_source_files_properties(RedistributePoints.cxx PROPERTIES LANGUAGE "CUDA")
 endif()

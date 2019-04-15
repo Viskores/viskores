@@ -24,9 +24,9 @@
 
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/exec/FunctorBase.h>
 
@@ -121,7 +121,7 @@ struct TransformTests
   using CountingTransformHandle =
     vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<InputValueType>, MySquare>;
 
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using Device = vtkm::cont::DeviceAdapterTagSerial;
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
   void operator()() const

@@ -44,7 +44,7 @@ struct ExtractComponentTests
                                                     ReferenceComponentArray,
                                                     ReferenceComponentArray>;
 
-  using DeviceTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using DeviceTag = vtkm::cont::DeviceAdapterTagSerial;
   using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
 
   // This is used to build a ArrayHandleExtractComponent's internal array.

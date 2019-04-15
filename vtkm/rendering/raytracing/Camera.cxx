@@ -1002,7 +1002,7 @@ VTKM_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
   if (rays.NumRays != SubsetWidth * SubsetHeight)
   {
     RayOperations::Resize(
-      rays, this->SubsetHeight * this->SubsetWidth, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      rays, this->SubsetHeight * this->SubsetWidth, vtkm::cont::DeviceAdapterTagSerial());
   }
 }
 

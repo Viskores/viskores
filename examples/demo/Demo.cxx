@@ -19,8 +19,10 @@
 //============================================================================
 
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
@@ -54,6 +56,9 @@ void makeScene(const vtkm::cont::DataSet& inputData,
 
 int main(int argc, char* argv[])
 {
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+
   // Input variable declarations
   vtkm::cont::DataSet inputData;
   vtkm::Float32 isovalue;
@@ -73,7 +78,7 @@ int main(int argc, char* argv[])
     vtkm::io::reader::VTKDataSetReader reader(argv[1]);
     inputData = reader.ReadDataSet();
     isovalue = static_cast<vtkm::Float32>(atof(argv[2]));
-    fieldName = "SCALARS:pointvar";
+    fieldName = "pointvar";
   }
 
   using Mapper = vtkm::rendering::MapperRayTracer;

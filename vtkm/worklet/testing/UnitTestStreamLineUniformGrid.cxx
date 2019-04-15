@@ -23,12 +23,6 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/StreamLineUniformGrid.h>
 
-#include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
-#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
-#ifdef VTKM_ENABLE_CUDA
-#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
-#endif
-
 #include <fstream>
 #include <math.h>
 #include <vector>
@@ -115,27 +109,6 @@ float data[125 * 3] = {
 };
 }
 
-namespace detail
-{
-
-struct StreamLineFilterUniformGridFunctor
-{
-  vtkm::cont::DataSet OutDataSet;
-  template <typename DeviceAdapter, typename FieldType>
-  bool operator()(DeviceAdapter,
-                  const vtkm::cont::DataSet& inDataSet,
-                  vtkm::Id streamMode,
-                  vtkm::Id numSeeds,
-                  vtkm::Id maxSteps,
-                  FieldType timeStep)
-  {
-    vtkm::worklet::StreamLineFilterUniformGrid<FieldType, DeviceAdapter> streamLineFilter;
-    OutDataSet = streamLineFilter.Run(inDataSet, streamMode, numSeeds, maxSteps, timeStep);
-    return true;
-  }
-};
-}
-
 void TestStreamLineUniformGrid()
 {
   std::cout << "Testing StreamLineUniformGrid Filter" << std::endl;
@@ -175,14 +148,14 @@ void TestStreamLineUniformGrid()
   inDataSet.AddCellSet(inCellSet);
 
   // Create and run the filter
-  detail::StreamLineFilterUniformGridFunctor smfuFunctor;
-  vtkm::cont::TryExecute(
-    smfuFunctor, inDataSet, vtkm::worklet::internal::BOTH, numSeeds, maxSteps, timeStep);
+  vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32> streamLines;
+  auto outDataSet =
+    streamLines.Run(inDataSet, vtkm::worklet::streamline::BOTH, numSeeds, maxSteps, timeStep);
 
   // Check output
   vtkm::cont::CellSetExplicit<> outCellSet;
-  smfuFunctor.OutDataSet.GetCellSet(0).CopyTo(outCellSet);
-  auto coordArray = smfuFunctor.OutDataSet.GetCoordinateSystem(0).GetData();
+  outDataSet.GetCellSet(0).CopyTo(outCellSet);
+  auto coordArray = outDataSet.GetCoordinateSystem(0).GetData();
 
   vtkm::Id numberOfCells = outCellSet.GetNumberOfCells();
   vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();

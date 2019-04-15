@@ -52,8 +52,9 @@ public:
 // Run a simple worklet, and compute an isosurface
 int main(int argc, char* argv[])
 {
-  vtkm::cont::Initialize(argc, argv);
-
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
 
   vtkm::Int64 N = 4 * 512 * 512 * 512;
   if (argc > 1)

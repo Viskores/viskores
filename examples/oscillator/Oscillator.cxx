@@ -23,18 +23,16 @@
 #include <iostream>
 #include <sstream>
 
-#include "vtkm/Math.h"
-#include "vtkm/cont/ArrayHandle.h"
-#include "vtkm/cont/DataSetBuilderUniform.h"
+#include <vtkm/Math.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/Initialize.h>
 
-#include "vtkm/filter/FilterDataSet.h"
+#include <vtkm/filter/FilterDataSet.h>
 
-#include "vtkm/cont/TryExecute.h"
-#include "vtkm/cont/cuda/DeviceAdapterCuda.h"
-#include "vtkm/cont/serial/DeviceAdapterSerial.h"
-#include "vtkm/cont/tbb/DeviceAdapterTBB.h"
+#include <vtkm/cont/TryExecute.h>
 
-#include "vtkm/filter/OscillatorSource.h"
+#include <vtkm/filter/OscillatorSource.h>
 
 #if !defined(_WIN32) || defined(__CYGWIN__)
 #include <unistd.h> /* unlink */
@@ -48,20 +46,6 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-//This is the list of devices to compile in support for. The order of the
-//devices determines the runtime preference.
-struct DevicesToTry : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
-                                        vtkm::cont::DeviceAdapterTagTBB,
-                                        vtkm::cont::DeviceAdapterTagSerial>
-{
-};
-
-// ----------------------------------------------------------------------------
-
-struct OscillatorPolicy : public vtkm::filter::PolicyBase<OscillatorPolicy>
-{
-  using DeviceAdapterList = DevicesToTry;
-};
 
 // trim() from http://stackoverflow.com/a/217605/44738
 static inline std::string& ltrim(std::string& s)
@@ -235,18 +219,17 @@ void writeData(std::string& basePath, int timestep, int iSize, int jSize, int kS
 
 // ----------------------------------------------------------------------------
 
-void printUsage()
+void printUsage(const std::string& vtkm_options)
 {
-  std::cout << "Usage: Oscillator [options]\n"
-            << std::endl
-            << "Options:\n"
-            << std::endl
-            << "  -s, --shape POINT     domain shape [default: 64x64x64]" << std::endl
-            << "  -t, --dt FLOAT        time step [default: 0.01]" << std::endl
-            << "  -f, --config STRING   oscillator file (required)" << std::endl
-            << "      --t-end FLOAT     end time [default: 10]" << std::endl
+  std::cout << "Usage: Oscillator [options]\n\n"
+            << "Options:\n\n"
+            << "  -s, --shape POINT     domain shape [default: 64x64x64]\n"
+            << "  -t, --dt FLOAT        time step [default: 0.01]\n"
+            << "  -f, --config STRING   oscillator file (required)\n"
+            << "      --t-end FLOAT     end time [default: 10]\n"
             << "  -o, --output STRING   directory to output data\n"
-            << std::endl;
+            << "General VTK-m Options:\n\n"
+            << vtkm_options << std::endl;
 }
 
 // ----------------------------------------------------------------------------
@@ -264,6 +247,9 @@ int main(int argc, char** argv)
   float currentTime = startTime;
   bool generateOutput = false;
 
+  // Process vtk-m general args
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  auto initializeResults = vtkm::cont::Initialize(argc, argv, opts);
   // Process args
   int nbOptions = argc - 1;
   for (int i = 1; i < nbOptions; i += 2)
@@ -315,7 +301,7 @@ int main(int argc, char** argv)
 
   if (oscillatorConfigFile.size() < 2)
   {
-    printUsage();
+    printUsage(initializeResults.Usage);
     return 0;
   }
 
@@ -338,7 +324,7 @@ int main(int argc, char** argv)
   while (currentTime < endTime)
   {
     filter.SetTime(currentTime);
-    vtkm::cont::DataSet rdata = filter.Execute(dataset, OscillatorPolicy());
+    vtkm::cont::DataSet rdata = filter.Execute(dataset);
     if (generateOutput)
     {
       vtkm::cont::ArrayHandle<vtkm::Float64> tmp;

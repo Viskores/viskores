@@ -27,16 +27,10 @@ find_package(VTKm REQUIRED QUIET)
 
 if(TARGET vtkm_rendering)
 
-  add_executable(Tau_timing_SERIAL TauTiming.cxx)
-  target_link_libraries(Tau_timing_SERIAL vtkm_cont)
-
-  if(TARGET vtkm::tbb)
-    add_executable(Tau_timing_TBB TauTimingTBB.cxx)
-    target_link_libraries(Tau_timing_TBB vtkm_cont)
-  endif()
+  add_executable(Tau_timing TauTiming.cxx)
+  target_link_libraries(Tau_timing vtkm_cont)
 
   if(TARGET vtkm::cuda)
-    add_executable(Tau_timing_CUDA TauTiming.cu)
-    target_link_libraries(Tau_timing_CUDA PRIVATE vtkm_cont)
+    set_source_files_properties(TauTiming.cxx PROPERTIES LANGUAGE "CUDA")
   endif()
 endif()

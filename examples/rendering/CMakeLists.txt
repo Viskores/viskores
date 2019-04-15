@@ -34,12 +34,5 @@ if(NOT TARGET GLUT::GLUT)
   return()
 endif()
 
-add_executable(RenderingExample_SERIAL Rendering.cxx)
-target_link_libraries(RenderingExample_SERIAL PRIVATE vtkm_rendering GLUT::GLUT)
-
-if(TARGET vtkm::tbb)
-  add_executable(RenderingExample_TBB Rendering.cxx)
-  target_compile_definitions(Rendering_TBB PRIVATE
-                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  target_link_libraries(RenderingExample_TBB PRIVATE vtkm_rendering GLUT::GLUT)
-endif()
+add_executable(RenderingExample Rendering.cxx)
+target_link_libraries(RenderingExample PRIVATE vtkm_rendering GLUT::GLUT)

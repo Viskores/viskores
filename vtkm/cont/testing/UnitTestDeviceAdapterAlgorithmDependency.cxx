@@ -21,9 +21,6 @@
 // This tests a previous problem where code templated on the device adapter and
 // used one of the device adapter algorithms (for example, the dispatcher) had
 // to be declared after any device adapter it was ever used with.
-
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
-
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/cont/testing/Testing.h>

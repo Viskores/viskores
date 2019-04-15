@@ -27,15 +27,9 @@ project(TemporalAdvection CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(Temporal_Advection_SERIAL TemporalAdvection.cxx)
-target_link_libraries(Temporal_Advection_SERIAL PRIVATE vtkm_filter)
-
-if(TARGET vtkm::tbb)
-  add_executable(Temporal_Advection_TBB TemporalAdvectionTBB.cxx)
-  target_link_libraries(Temporal_Advection_TBB PRIVATE vtkm_filter)
-endif()
+add_executable(Temporal_Advection TemporalAdvection.cxx)
+target_link_libraries(Temporal_Advection PRIVATE vtkm_filter)
 
 if(TARGET vtkm::cuda)
-  add_executable(Temporal_Advection_CUDA TemporalAdvection.cu)
-  target_link_libraries(Temporal_Advection_CUDA PRIVATE vtkm_filter)
+  set_source_files_properties(TemporalAdvection.cxx PROPERTIES LANGUAGE "CUDA")
 endif()

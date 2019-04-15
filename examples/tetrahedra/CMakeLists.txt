@@ -32,37 +32,21 @@ if(TARGET OpenGL::GL AND
 
   set(gl_libs OpenGL::GL OpenGL::GLU GLEW::GLEW GLUT::GLUT)
 
-  add_executable(TetrahedralizeExplicitGrid_SERIAL TetrahedralizeExplicitGrid.cxx)
-  add_executable(TriangulateExplicitGrid_SERIAL TriangulateExplicitGrid.cxx)
-  add_executable(TetrahedralizeUniformGrid_SERIAL TetrahedralizeUniformGrid.cxx)
-  add_executable(TriangulateUniformGrid_SERIAL TriangulateUniformGrid.cxx)
+  add_executable(TetrahedralizeExplicitGrid TetrahedralizeExplicitGrid.cxx)
+  add_executable(TriangulateExplicitGrid TriangulateExplicitGrid.cxx)
+  add_executable(TetrahedralizeUniformGrid TetrahedralizeUniformGrid.cxx)
+  add_executable(TriangulateUniformGrid TriangulateUniformGrid.cxx)
 
-  target_link_libraries(TetrahedralizeExplicitGrid_SERIAL PRIVATE vtkm_filter ${gl_libs})
-  target_link_libraries(TriangulateExplicitGrid_SERIAL PRIVATE vtkm_filter ${gl_libs})
-  target_link_libraries(TetrahedralizeUniformGrid_SERIAL PRIVATE vtkm_filter ${gl_libs})
-  target_link_libraries(TriangulateUniformGrid_SERIAL PRIVATE vtkm_filter ${gl_libs})
+  target_link_libraries(TetrahedralizeExplicitGrid PRIVATE vtkm_filter ${gl_libs})
+  target_link_libraries(TriangulateExplicitGrid PRIVATE vtkm_filter ${gl_libs})
+  target_link_libraries(TetrahedralizeUniformGrid PRIVATE vtkm_filter ${gl_libs})
+  target_link_libraries(TriangulateUniformGrid PRIVATE vtkm_filter ${gl_libs})
 
   if(TARGET vtkm::cuda)
-    add_executable(TetrahedralizeExplicitGrid_CUDA TetrahedralizeExplicitGrid.cu)
-    add_executable(TriangulateExplicitGrid_CUDA TriangulateExplicitGrid.cu)
-    add_executable(TetrahedralizeUniformGrid_CUDA TetrahedralizeUniformGrid.cu)
-    add_executable(TriangulateUniformGrid_CUDA TriangulateUniformGrid.cu)
-
-    target_link_libraries(TetrahedralizeExplicitGrid_CUDA PRIVATE vtkm_filter ${gl_libs})
-    target_link_libraries(TriangulateExplicitGrid_CUDA PRIVATE vtkm_filter ${gl_libs})
-    target_link_libraries(TetrahedralizeUniformGrid_CUDA PRIVATE vtkm_filter ${gl_libs})
-    target_link_libraries(TriangulateUniformGrid_CUDA PRIVATE vtkm_filter ${gl_libs})
+  set_source_files_properties(TetrahedralizeExplicitGrid.cxx
+                              TriangulateExplicitGrid.cxx
+                              TetrahedralizeUniformGrid.cxx
+                              TriangulateUniformGrid.cxx PROPERTIES LANGUAGE "CUDA")
   endif()
 
-  if(TARGET vtkm::tbb)
-    add_executable(TetrahedralizeExplicitGrid_TBB TetrahedralizeExplicitGridTBB.cxx)
-    add_executable(TriangulateExplicitGrid_TBB TriangulateExplicitGridTBB.cxx)
-    add_executable(TetrahedralizeUniformGrid_TBB TetrahedralizeUniformGridTBB.cxx)
-    add_executable(TriangulateUniformGrid_TBB TriangulateUniformGridTBB.cxx)
-
-    target_link_libraries(TetrahedralizeExplicitGrid_TBB PRIVATE vtkm_filter ${gl_libs})
-    target_link_libraries(TriangulateExplicitGrid_TBB PRIVATE vtkm_filter ${gl_libs})
-    target_link_libraries(TetrahedralizeUniformGrid_TBB PRIVATE vtkm_filter ${gl_libs})
-    target_link_libraries(TriangulateUniformGrid_TBB PRIVATE vtkm_filter ${gl_libs})
-  endif()
 endif()

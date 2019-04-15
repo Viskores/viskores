@@ -36,12 +36,6 @@
 namespace
 {
 
-// For this test, we want using the default device adapter to be an error
-// to make sure that all the code is using the device adapter we specify.
-using MyDeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-#undef VTKM_DEFAULT_DEVICE_ADAPTER_TAG
-#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagError
-
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
 {
   const vtkm::cont::DynamicCellSet& inCellSet = inDataSet.GetCellSet(0);
@@ -201,8 +195,6 @@ void TestExternalFaces3()
 
 void TestExternalFaces()
 {
-  // Ignore the device passed in.
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(MyDeviceAdapter());
   TestExternalFaces1();
   TestExternalFaces2();
   TestExternalFaces3();

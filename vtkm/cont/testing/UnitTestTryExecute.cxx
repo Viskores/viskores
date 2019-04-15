@@ -17,9 +17,6 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/ErrorBadAllocation.h>

@@ -30,6 +30,7 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/EnvironmentTracker.h>
+#include <vtkm/cont/Initialize.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 
@@ -61,6 +62,11 @@ VTKM_CONT vtkm::cont::ArrayHandle<T> CreateArray(T min, T max, vtkm::Id numVals)
 
 int main(int argc, char* argv[])
 {
+  //parse out all vtk-m related command line options
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
+
   // setup MPI environment.
   MPI_Init(&argc, &argv);
 

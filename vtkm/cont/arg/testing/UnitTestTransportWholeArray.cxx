@@ -202,7 +202,7 @@ void TryArrayOutTransport(Device)
 void TestWholeArrayTransport()
 {
   std::cout << "Trying WholeArray transport." << std::endl;
-  TryArrayOutTransport(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  TryArrayOutTransport(vtkm::cont::DeviceAdapterTagSerial());
 }
 
 } // Anonymous namespace

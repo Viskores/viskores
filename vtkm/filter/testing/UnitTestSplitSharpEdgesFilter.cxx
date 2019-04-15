@@ -28,7 +28,6 @@ namespace
 {
 
 using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
-using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 const vtkm::Vec<vtkm::FloatDefault, 3> expectedCoords[24] = {
   { 0.0, 0.0, 0.0 }, { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 }, { 0.0, 1.0, 0.0 },

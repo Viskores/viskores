@@ -19,7 +19,9 @@
 //============================================================================
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
+
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
@@ -69,10 +71,13 @@ struct FieldMapper
 
 int main(int argc, char* argv[])
 {
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
   if (argc < 4)
   {
     std::cout << "Usage: " << std::endl
-              << "$ " << argv[0] << " <input_vtk_file> [fieldName] <isoval> <output_vtk_file>"
+              << "$ " << argv[0]
+              << " [-d device] <input_vtk_file> [fieldName] <isoval> <output_vtk_file>"
               << std::endl;
     return 1;
   }

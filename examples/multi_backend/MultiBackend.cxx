@@ -21,6 +21,7 @@
 #include <iostream>
 #include <thread>
 
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/MultiBlock.h>
 
 #include "IOGenerator.h"
@@ -48,8 +49,12 @@
 //threads, and 5 threads for heavy 'task' work.
 
 void multiblock_processing(TaskQueue<vtkm::cont::MultiBlock>& queue);
-int main(int, char**)
+int main(int argc, char** argv)
 {
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
+
   //Step 1. Construct the two primary 'main loops'. The threads
   //share a queue object so we need to explicitly pass it
   //by reference (the std::ref call)

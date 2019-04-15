@@ -25,10 +25,15 @@
 // succeed of the order is changed.)  Turn off formatting to keep the order.
 
 // clang-format off
-#include <vtkm/cont/internal/DeviceAdapterDefaultSelection.h>
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
+
 // clang-format on
 
 namespace vtkm
@@ -43,23 +48,23 @@ namespace cont
 /// mechanisms to run algorithms on a type of parallel device. The tag
 /// DeviceAdapterTag___ does not actually exist. Rather, this documentation is
 /// provided to describe the interface for a DeviceAdapter. Loading the
-/// vtkm/cont/DeviceAdapter.h header file will set a default device adapter
-/// appropriate for the current compile environment. You can specify the
-/// default device adapter by first setting the \c VTKM_DEVICE_ADAPTER macro.
-/// Valid values for \c VTKM_DEVICE_ADAPTER are the following:
+/// vtkm/cont/DeviceAdapter.h header file will import all device adapters
+/// appropriate for the current compile environment.
 ///
-/// \li \c VTKM_DEVICE_ADAPTER_SERIAL Runs all algorithms in serial. Can be
+/// \li \c vtkm::cont::DeviceAdapterTagSerial Runs all algorithms in serial. Can be
 /// helpful for debugging.
-/// \li \c VTKM_DEVICE_ADAPTER_CUDA Dispatches and runs algorithms on a GPU
+/// \li \c vtkm::cont::DeviceAdapterTagCuda Dispatches and runs algorithms on a GPU
 /// using CUDA.  Must be compiling with a CUDA compiler (nvcc).
-/// \li \c VTKM_DEVICE_ADAPTER_OPENMP Dispatches an algorithm over multiple
+/// \li \c vtkm::cont::DeviceAdapterTagOpenMP Dispatches an algorithm over multiple
 /// CPU cores using OpenMP compiler directives.  Must be compiling with an
 /// OpenMP-compliant compiler with OpenMP pragmas enabled.
-/// \li \c VTKM_DEVICE_ADAPTER_TBB Dispatches and runs algorithms on multiple
+/// \li \c vtkm::cont::DeviceAdapterTagTBB Dispatches and runs algorithms on multiple
 /// threads using the Intel Threading Building Blocks (TBB) libraries. Must
 /// have the TBB headers available and the resulting code must be linked with
 /// the TBB libraries.
 ///
+/// To execute algorithms on any device, see Algorithm.h which allows
+/// for abitrary device execution.
 /// See the ArrayManagerExecution.h and DeviceAdapterAlgorithm.h files for
 /// documentation on all the functions and classes that must be
 /// overloaded/specialized to create a new device adapter.

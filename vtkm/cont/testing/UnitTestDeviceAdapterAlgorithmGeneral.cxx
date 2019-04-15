@@ -25,9 +25,6 @@
 // everything else. Because this test is based of the serial device adapter,
 // make sure that UnitTestDeviceAdapterSerial is working before trying to debug
 // this one.
-
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/AtomicInterfaceControl.h>

@@ -29,6 +29,19 @@
 
 #include <string>
 
+#ifdef VTKM_DEVICE_ADAPTER
+// Rather than use defines to specify the default device adapter
+// VTK-m now builds for all device adapters and uses runtime controls
+// to determine where execution occurs
+#error The VTKM_DEVICE_ADAPTER define is no longer obeyed and needs to be removed
+#endif
+#ifdef VTKM_DEFAULT_DEVICE_ADAPTER_TAG
+// Rather than use device adapter tag that had no shared parent
+// VTK-m now uses a runtime device adapter implementation that
+// allows for runtime execution selection of what device to execute on
+#error The VTKM_DEFAULT_DEVICE_ADAPTER_TAG define is no longer required and needs to be removed
+#endif
+
 #define VTKM_DEVICE_ADAPTER_ERROR -2
 #define VTKM_DEVICE_ADAPTER_UNDEFINED -1
 #define VTKM_DEVICE_ADAPTER_SERIAL 1

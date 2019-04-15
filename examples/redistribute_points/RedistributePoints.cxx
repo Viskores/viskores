@@ -20,6 +20,8 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/EnvironmentTracker.h>
+#include <vtkm/cont/Initialize.h>
+
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
@@ -33,6 +35,10 @@ using std::endl;
 
 int main(int argc, char* argv[])
 {
+  // Process vtk-m general args
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
+
   vtkmdiy::mpi::environment env(argc, argv);
   auto comm = vtkmdiy::mpi::communicator(MPI_COMM_WORLD);
   vtkm::cont::EnvironmentTracker::SetCommunicator(comm);
@@ -40,7 +46,8 @@ int main(int argc, char* argv[])
   if (argc != 3)
   {
     cout << "Usage: " << endl
-         << "$ " << argv[0] << " <input-vtk-file> <output-file-prefix>" << endl;
+         << "$ " << argv[0] << " [options] <input-vtk-file> <output-file-prefix>" << endl;
+    cout << config.Usage << endl;
     return EXIT_FAILURE;
   }
 

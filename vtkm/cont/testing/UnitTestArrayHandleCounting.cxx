@@ -17,9 +17,6 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-
 #include <vtkm/cont/ArrayHandleCounting.h>
 
 #include <vtkm/cont/testing/Testing.h>
