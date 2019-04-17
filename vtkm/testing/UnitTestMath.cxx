@@ -8,13 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/testing/Testing.h>
 #include <vtkm/testing/TestingMath.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/testing/Testing.h>
 
 int UnitTestMath(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
+  return vtkm::testing::Testing::Run(
     UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagSerial>, argc, argv);
 }

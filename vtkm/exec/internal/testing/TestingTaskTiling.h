@@ -11,7 +11,7 @@
 #include <vtkm/StaticAssert.h>
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/testing/Testing.h>
 
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>

@@ -20,7 +20,6 @@
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/testing/Testing.h>
-
 namespace
 {
 

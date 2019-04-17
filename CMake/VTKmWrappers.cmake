@@ -270,6 +270,7 @@ endfunction(vtkm_library)
 #   SOURCES <source_list>
 #   BACKEND <type>
 #   LIBRARIES <dependent_library_list>
+#   DEFINES <target_compile_definitions>
 #   TEST_ARGS <argument_list>
 #   MPI
 #   ALL_BACKENDS
@@ -284,6 +285,8 @@ endfunction(vtkm_library)
 #            so you can test multiple backends easily
 #
 # [LIBRARIES] : extra libraries that this set of tests need to link too
+#
+# [DEFINES]   : extra defines that need to be set for all unit test sources
 #
 # [TEST_ARGS] : arguments that should be passed on the command line to the
 #               test executable
@@ -301,7 +304,7 @@ function(vtkm_unit_tests)
   set(options)
   set(global_options ${options} MPI ALL_BACKENDS)
   set(oneValueArgs BACKEND NAME)
-  set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
+  set(multiValueArgs SOURCES LIBRARIES DEFINES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
     "${global_options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -369,6 +372,8 @@ function(vtkm_unit_tests)
   else()
     target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
   endif()
+
+  target_compile_definitions(${test_prog} PRIVATE ${VTKm_UT_DEFINES})
 
   foreach(current_backend ${all_backends})
     set (device_command_line_argument --device=${current_backend})

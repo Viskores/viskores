@@ -11,10 +11,8 @@
 #include <sstream>
 #include <typeindex>
 
-#include <vtkm/cont/DeviceAdapter.h>
-
 #include <vtkm/cont/ErrorBadValue.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/internal/VariantArrayHandleContainer.h>
 
 namespace vtkm
 {
@@ -40,8 +38,9 @@ VariantArrayHandleContainerBase::~VariantArrayHandleContainerBase()
 
 namespace detail
 {
-void ThrowCastAndCallException(const vtkm::cont::internal::VariantArrayHandleContainerBase& ref,
-                               const std::type_info& type)
+VTKM_CONT_EXPORT void ThrowCastAndCallException(
+  const vtkm::cont::internal::VariantArrayHandleContainerBase& ref,
+  const std::type_info& type)
 {
   std::ostringstream out;
   out << "Could not find appropriate cast for array in CastAndCall1.\n"

@@ -8,13 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/internal/ArrayPortalValueReference.h>
-
-#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/testing/Testing.h>
 
 #include <vtkm/TypeTraits.h>
-
-#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/internal/ArrayPortalValueReference.h>
 
 namespace
 {
@@ -304,5 +302,5 @@ void DoTest()
 
 int UnitTestArrayPortalValueReference(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(DoTest, argc, argv);
+  return vtkm::testing::Testing::Run(DoTest, argc, argv);
 }

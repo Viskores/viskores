@@ -10,6 +10,7 @@
 
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/testing/TestingMath.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>

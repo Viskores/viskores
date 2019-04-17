@@ -78,34 +78,67 @@ set(headers
   )
 
 set(sources
+  BitmapFont.cxx
+  BitmapFontFactory.cxx
+
+  Camera.cxx
+  Color.cxx
+  DecodePNG.cxx
+  raytracing/Logger.cxx
+  )
+
+# This list of sources has code that uses devices and so might need to be
+# compiled with a device-specific compiler (like CUDA).
+set(device_sources
+  Actor.cxx
   AxisAnnotation.cxx
   AxisAnnotation2D.cxx
   AxisAnnotation3D.cxx
-  BitmapFont.cxx
-  BitmapFontFactory.cxx
   BoundingBoxAnnotation.cxx
-  Camera.cxx
-  Color.cxx
+  Canvas.cxx
+  CanvasRayTracer.cxx
   ColorBarAnnotation.cxx
   ColorLegendAnnotation.cxx
-  DecodePNG.cxx
+  ConnectivityProxy.cxx
   LineRenderer.cxx
+  Mapper.cxx
   MapperConnectivity.cxx
   MapperCylinder.cxx
   MapperPoint.cxx
   MapperQuad.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
+  MapperWireframer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
+  TextRenderer.cxx
   View.cxx
   View1D.cxx
   View2D.cxx
   View3D.cxx
   WorldAnnotator.cxx
-  raytracing/Logger.cxx
+
+  internal/RunTriangulator.cxx
+  raytracing/BoundingVolumeHierarchy.cxx
+  raytracing/Camera.cxx
+  raytracing/ChannelBuffer.cxx
+  raytracing/ConnectivityTracer.cxx
+  raytracing/CylinderExtractor.cxx
+  raytracing/CylinderIntersector.cxx
+  raytracing/MeshConnectivityBuilder.cxx
+  raytracing/MeshConnectivityContainers.cxx
+  raytracing/QuadExtractor.cxx
+  raytracing/QuadIntersector.cxx
+  raytracing/RayTracer.cxx
+  raytracing/RayOperations.cxx
+  raytracing/ShapeIntersector.cxx
+  raytracing/SphereExtractor.cxx
+  raytracing/SphereIntersector.cxx
+  raytracing/TriangleExtractor.cxx
+  raytracing/TriangleIntersector.cxx
+  raytracing/VolumeRendererStructured.cxx
   )
 
 # Note that EGL and OSMesa Canvas depend on the GL version being built. Only
@@ -140,38 +173,6 @@ set(osmesa_sources
   CanvasOSMesa.cxx
   )
 
-# This list of sources has code that uses devices and so might need to be
-# compiled with a device-specific compiler (like CUDA).
-set(device_sources
-  Actor.cxx
-  Canvas.cxx
-  CanvasRayTracer.cxx
-  ConnectivityProxy.cxx
-  Mapper.cxx
-  MapperWireframer.cxx
-  TextRenderer.cxx
-
-  internal/RunTriangulator.cxx
-  raytracing/BoundingVolumeHierarchy.cxx
-  raytracing/Camera.cxx
-  raytracing/ChannelBuffer.cxx
-  raytracing/ConnectivityTracer.cxx
-  raytracing/CylinderExtractor.cxx
-  raytracing/CylinderIntersector.cxx
-  raytracing/MeshConnectivityBuilder.cxx
-  raytracing/MeshConnectivityContainers.cxx
-  raytracing/QuadExtractor.cxx
-  raytracing/QuadIntersector.cxx
-  raytracing/RayTracer.cxx
-  raytracing/RayOperations.cxx
-  raytracing/ShapeIntersector.cxx
-  raytracing/SphereExtractor.cxx
-  raytracing/SphereIntersector.cxx
-  raytracing/TriangleExtractor.cxx
-  raytracing/TriangleIntersector.cxx
-  raytracing/VolumeRendererStructured.cxx
-  )
-
 #-----------------------------------------------------------------------------
 vtkm_library(
   NAME vtkm_rendering
@@ -196,9 +197,8 @@ endif()
 #-----------------------------------------------------------------------------
 target_link_libraries(vtkm_rendering PUBLIC vtkm_filter)
 
-
 if(UNIX AND NOT APPLE)
-  target_link_libraries(vtkm_rendering PRIVATE rt )
+  target_link_libraries(vtkm_rendering PRIVATE rt)
 endif()
 
 #-----------------------------------------------------------------------------

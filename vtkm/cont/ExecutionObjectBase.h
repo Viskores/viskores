@@ -12,7 +12,7 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
 namespace vtkm
 {
