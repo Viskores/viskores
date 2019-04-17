@@ -328,11 +328,11 @@ vtkm::Float64 Timer::GetElapsedTime(vtkm::cont::DeviceAdapterId device) const
 
   // If we have specified a specific device, make sure we can run on it.
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  if ((deviceToTime != vtkm::cont::DeviceAdapterTagAny()) && !tracker.CanRunOn(deviceToTime))
+  if (deviceToTime != vtkm::cont::DeviceAdapterTagAny() && !tracker.CanRunOn(deviceToTime))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Device '" << device.GetName() << "' can not run on current Device."
-                                                 "Thus timer is not usable");
+               "Device '" << deviceToTime.GetName() << "' can not run on current Device."
+                                                       " Thus timer is not usable");
     return 0.0;
   }
 
