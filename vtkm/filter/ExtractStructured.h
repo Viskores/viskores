@@ -91,9 +91,6 @@ public:
   VTKM_CONT
   void SetIncludeOffset(bool value) { this->IncludeOffset = value; }
 
-  VTKM_CONT
-  bool GetIncludeOffset() { return this->IncludeOffset; }
-
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
