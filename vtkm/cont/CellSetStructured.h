@@ -78,6 +78,13 @@ public:
     this->Structure.SetGlobalPointIndexStart(start);
   }
 
+  /*
+  vtkm::Id GetGlobalPointIndexStart() const 
+  {
+      return this->start;
+  }
+  */
+
   SchedulingRangeType GetPointDimensions() const { return this->Structure.GetPointDimensions(); }
 
   SchedulingRangeType GetCellDimensions() const { return this->Structure.GetCellDimensions(); }

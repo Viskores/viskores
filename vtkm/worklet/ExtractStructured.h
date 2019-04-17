@@ -34,6 +34,8 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
+#include <vtkm/cont/CellSetStructured.h>
+
 namespace vtkm
 {
 namespace worklet
@@ -74,6 +76,7 @@ private:
   vtkm::Id First, Last;
   vtkm::Id Stride;
   bool IncludeBoundary;
+  bool IncludeOffset = true;
 };
 
 template <vtkm::IdComponent Dimensions>
@@ -210,10 +213,20 @@ public:
   DynamicCellSetStructured Run(const vtkm::cont::CellSetStructured<Dimensionality>& cellset,
                                const vtkm::RangeId3& voi,
                                const vtkm::Id3& sampleRate,
-                               bool includeBoundary)
+                               bool includeBoundary,
+                               bool includeOffset)
   {
     // Verify input parameters
     vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellset.GetPointDimensions());
+    vtkm::Vec<vtkm::Id, Dimensionality> offset_vec;
+    if (includeOffset)
+    {
+      offset_vec = cellset.GetGlobalPointIndexStart();
+      ptdim[0] += offset_vec[0];
+      ptdim[1] += offset_vec[1];
+      if (Dimensionality == 3)
+        ptdim[2] += offset_vec[2];
+    }
     switch (Dimensionality)
     {
       case 1:
@@ -311,11 +324,13 @@ private:
             const vtkm::RangeId3& voi,
             const vtkm::Id3& sampleRate,
             bool includeBoundary,
+            bool includeOffset,
             DynamicCellSetStructured& output)
       : Worklet(worklet)
       , VOI(&voi)
       , SampleRate(&sampleRate)
       , IncludeBoundary(includeBoundary)
+      , IncludeOffset(includeOffset)
       , Output(&output)
     {
     }
@@ -323,8 +338,8 @@ private:
     template <vtkm::IdComponent Dimensionality>
     void operator()(const vtkm::cont::CellSetStructured<Dimensionality>& cellset) const
     {
-      *this->Output =
-        this->Worklet->Run(cellset, *this->VOI, *this->SampleRate, this->IncludeBoundary);
+      *this->Output = this->Worklet->Run(
+        cellset, *this->VOI, *this->SampleRate, this->IncludeBoundary, this->IncludeOffset);
     }
 
     template <typename CellSetType>
@@ -338,6 +353,7 @@ private:
     const vtkm::RangeId3* VOI;
     const vtkm::Id3* SampleRate;
     bool IncludeBoundary;
+    bool IncludeOffset;
     DynamicCellSetStructured* Output;
   };
 
@@ -346,10 +362,11 @@ public:
   DynamicCellSetStructured Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset,
                                const vtkm::RangeId3& voi,
                                const vtkm::Id3& sampleRate,
-                               bool includeBoundary)
+                               bool includeBoundary,
+                               bool includeOffset)
   {
     DynamicCellSetStructured output;
-    CallRun cr(this, voi, sampleRate, includeBoundary, output);
+    CallRun cr(this, voi, sampleRate, includeBoundary, includeOffset, output);
     vtkm::cont::CastAndCall(cellset, cr);
     return output;
   }
