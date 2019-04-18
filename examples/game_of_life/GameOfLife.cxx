@@ -204,7 +204,7 @@ struct RenderGameOfLife
     vtkm::Vec<float, 3> spacing(0.0075f, 0.0075f, 0.0f);
 
     vtkm::cont::ArrayHandleUniformPointCoordinates coords(dimensions, origin, spacing);
-    vtkm::interop::TransferToOpenGL(coords, this->VBOState, vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::interop::TransferToOpenGL(coords, this->VBOState);
   }
 
   void render(vtkm::cont::DataSet& data)
@@ -240,7 +240,7 @@ struct RenderGameOfLife
   }
 };
 
-vtkm::cont::Timer gTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+vtkm::cont::Timer gTimer;
 vtkm::cont::DataSet* gData = nullptr;
 GameOfLife* gFilter = nullptr;
 RenderGameOfLife* gRenderer = nullptr;

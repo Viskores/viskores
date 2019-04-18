@@ -106,6 +106,13 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
 
 void RunTest()
 {
+//If this test is run on a machine that already has heavy
+//cpu usage it will fail, so we limit the number of threads
+//to avoid the test timing out
+#ifdef VTKM_ENABLE_OPENMP
+  omp_set_num_threads(std::min(4, omp_get_max_threads()));
+#endif
+
   TestBoundingIntervalHierarchy(ConstructDataSet(16), 3);
   TestBoundingIntervalHierarchy(ConstructDataSet(16), 4);
   TestBoundingIntervalHierarchy(ConstructDataSet(16), 6);
