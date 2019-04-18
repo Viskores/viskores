@@ -32,7 +32,6 @@
 #error The VTKM_DEFAULT_DEVICE_ADAPTER_TAG define is no longer required and needs to be removed
 #endif
 
-#define VTKM_DEVICE_ADAPTER_ERROR -2
 #define VTKM_DEVICE_ADAPTER_UNDEFINED -1
 #define VTKM_DEVICE_ADAPTER_SERIAL 1
 #define VTKM_DEVICE_ADAPTER_CUDA 2

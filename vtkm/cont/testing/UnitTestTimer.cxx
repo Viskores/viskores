@@ -12,8 +12,6 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/cont/internal/DeviceAdapterError.h>
-
 #include <vtkm/cont/testing/Testing.h>
 
 #include <chrono>

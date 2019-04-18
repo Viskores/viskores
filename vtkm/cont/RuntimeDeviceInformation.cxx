@@ -16,7 +16,6 @@
 
 //Bring in each device adapters runtime class
 #include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterRuntimeDetectorOpenMP.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterRuntimeDetectorTBB.h>
@@ -105,10 +104,6 @@ DeviceAdapterNameType RuntimeDeviceInformation::GetName(DeviceAdapterId device) 
   {
     return detail::RuntimeNames.DeviceNames[id];
   }
-  else if (id == VTKM_DEVICE_ADAPTER_ERROR)
-  {
-    return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>::GetName();
-  }
   else if (id == VTKM_DEVICE_ADAPTER_UNDEFINED)
   {
     return vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagUndefined>::GetName();
@@ -136,10 +131,6 @@ DeviceAdapterId RuntimeDeviceInformation::GetId(DeviceAdapterNameType name) cons
   if (name == "any")
   {
     return vtkm::cont::DeviceAdapterTagAny{};
-  }
-  else if (name == "error")
-  {
-    return vtkm::cont::DeviceAdapterTagError{};
   }
   else if (name == "undefined")
   {

@@ -10,8 +10,6 @@
 #define vtk_m_cont_StorageVirtual_cxx
 #include <vtkm/cont/StorageVirtual.h>
 
-#include <vtkm/cont/internal/DeviceAdapterError.h>
-
 namespace vtkm
 {
 namespace cont
@@ -90,10 +88,6 @@ const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForInput(
   {
     throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_UNDEFINED");
   }
-  if (devId == vtkm::cont::DeviceAdapterTagError())
-  {
-    throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_ERROR");
-  }
 
   const bool needsUpload = !(this->DeviceTransferState->valid(devId) && this->DeviceUpToDate);
 
@@ -117,10 +111,6 @@ const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForOutput(
   {
     throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_UNDEFINED");
   }
-  if (devId == vtkm::cont::DeviceAdapterTagError())
-  {
-    throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_ERROR");
-  }
 
   const bool needsUpload = !(this->DeviceTransferState->valid(devId) && this->DeviceUpToDate);
   if (needsUpload)
@@ -140,10 +130,6 @@ const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForInPlace(
   if (devId == vtkm::cont::DeviceAdapterTagUndefined())
   {
     throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_UNDEFINED");
-  }
-  if (devId == vtkm::cont::DeviceAdapterTagError())
-  {
-    throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_ERROR");
   }
 
   const bool needsUpload = !(this->DeviceTransferState->valid(devId) && this->DeviceUpToDate);

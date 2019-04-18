@@ -11,7 +11,6 @@
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
@@ -64,14 +63,12 @@ void TestName(const std::string& name, Tag tag, vtkm::cont::DeviceAdapterId id)
 
 void TestNames()
 {
-  vtkm::cont::DeviceAdapterTagError errorTag;
   vtkm::cont::DeviceAdapterTagUndefined undefinedTag;
   vtkm::cont::DeviceAdapterTagSerial serialTag;
   vtkm::cont::DeviceAdapterTagTBB tbbTag;
   vtkm::cont::DeviceAdapterTagOpenMP openmpTag;
   vtkm::cont::DeviceAdapterTagCuda cudaTag;
 
-  TestName("Error", errorTag, errorTag);
   TestName("Undefined", undefinedTag, undefinedTag);
   TestName("Serial", serialTag, serialTag);
   TestName("TBB", tbbTag, tbbTag);
