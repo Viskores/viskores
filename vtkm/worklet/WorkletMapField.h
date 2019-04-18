@@ -45,8 +45,7 @@ public:
 
   /// \brief A control signature tag for input fields.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
+  /// This tag means that the field is read only.
   ///
   struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -57,8 +56,7 @@ public:
 
   /// \brief A control signature tag for output fields.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
+  /// This tag means that the field is write only.
   ///
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -69,8 +67,7 @@ public:
 
   /// \brief A control signature tag for input-output (in-place) fields.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
+  /// This tag means that the field is read and write.
   ///
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
