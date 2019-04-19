@@ -234,22 +234,29 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     // RangeID3 and subsample
-    vtkm::RangeId3 range(0, 2, 0, 2, 0, 2);
+    //vtkm::RangeId3 range(0,2,0,2,0,2);
+    vtkm::RangeId3 range(5, 15, 0, 10, 0, 10);
     vtkm::Id3 sample(1, 1, 1);
     vtkm::Id3 test_offset(1, 1, 1);
     vtkm::Id3 origin_offset(1, 1, 1);
     vtkm::Id3 no_offset(0, 0, 0);
+    const vtkm::Int32 Dimensionality = 3;
     bool includeBoundary = false;
     bool includeOffset = true;
+    cellSet.SetPointDimensions(vtkm::make_Vec(10, 0, 0));
+    vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
 
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
+    // worklet.Run(cellset, voi, sample rate, ...)
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
-    cellSet.SetGlobalPointIndexStart(test_offset);
 
-    //VTKM_TEST_ASSERT(test_equal(outCellSet.GetGlobelPointIndexStart(), offset));
-    //VTKM_TEST_ASSERT(test_equal(outCellSet.GetIncludeOffset(), offset));
-    VTKM_TEST_ASSERT(test_equal(worklet.GetIncludeOffset(), includeOffset));
+    VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
+
+    cellSet.SetGlobalPointIndexStart(test_offset);
+    VTKM_TEST_ASSERT(test_equal(cellSet.GetPointDimensions(), test_offset));
+
+    //VTKM_TEST_ASSERT(test_equal(worklet.GetIncludeOffset(), includeOffset));
     //VTKM_TEST_ASSERT(test_equal(outCellSet.GetIncludeOffset(), false));
   }
 
