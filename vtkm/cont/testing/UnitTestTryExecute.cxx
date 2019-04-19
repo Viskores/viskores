@@ -16,8 +16,6 @@
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
-#include <vtkm/cont/internal/DeviceAdapterError.h>
-
 #include <vtkm/cont/testing/Testing.h>
 
 #include <exception>
@@ -216,7 +214,7 @@ void TryExecuteErrorTests()
 static void Run()
 {
   using ValidDevice = vtkm::cont::DeviceAdapterTagSerial;
-  using InvalidDevice = vtkm::cont::DeviceAdapterTagError;
+  using InvalidDevice = vtkm::cont::DeviceAdapterTagUndefined;
 
   TryExecuteAllEdgeCases();
 

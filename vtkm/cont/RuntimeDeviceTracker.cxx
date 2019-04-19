@@ -11,7 +11,6 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/cont/ErrorBadValue.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
 
 #include <algorithm>
 #include <map>

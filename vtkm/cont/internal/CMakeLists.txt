@@ -23,7 +23,6 @@ set(headers
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterAtomicArrayImplementation.h
-  DeviceAdapterError.h
   DeviceAdapterListHelpers.h
   DynamicTransform.h
   FunctorsGeneral.h

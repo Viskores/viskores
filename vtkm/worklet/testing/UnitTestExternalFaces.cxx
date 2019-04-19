@@ -12,8 +12,6 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapter.h>
 
-#include <vtkm/cont/internal/DeviceAdapterError.h>
-
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>

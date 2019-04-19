@@ -16,7 +16,6 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/internal/ReverseConnectivityBuilder.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
 
@@ -114,10 +113,6 @@ struct ConnectivityExplicitInternals
     if (deviceId == vtkm::cont::DeviceAdapterTagUndefined())
     {
       throw vtkm::cont::ErrorBadValue("Cannot build indices using DeviceAdapterTagUndefined");
-    }
-    if (deviceId == vtkm::cont::DeviceAdapterTagError())
-    {
-      throw vtkm::cont::ErrorBadValue("Cannot build indices using DeviceAdapterTagError");
     }
 
     VTKM_ASSERT(this->ElementsValid);

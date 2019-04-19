@@ -27,7 +27,6 @@
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -492,20 +491,16 @@ private:
     std::cout << "Testing device adapter tag" << std::endl;
 
     constexpr DeviceAdapterTag deviceTag;
-    constexpr vtkm::cont::DeviceAdapterTagError errorTag;
+    constexpr vtkm::cont::DeviceAdapterTagUndefined undefinedTag;
 
     VTKM_TEST_ASSERT(deviceTag.GetValue() == deviceTag.GetValue(),
                      "Device adapter Id does not equal itself.");
-    VTKM_TEST_ASSERT(deviceTag.GetValue() != errorTag.GetValue(),
+    VTKM_TEST_ASSERT(deviceTag.GetValue() != undefinedTag.GetValue(),
                      "Device adapter Id not distinguishable from others.");
 
     using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    using ErrorTraits = vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>;
-
     VTKM_TEST_ASSERT(Traits::GetName() == Traits::GetName(),
                      "Device adapter Name does not equal itself.");
-    VTKM_TEST_ASSERT(Traits::GetName() != ErrorTraits::GetName(),
-                     "Device adapter Name not distinguishable from others.");
   }
 
   // Note: this test does not actually test to make sure the data is available

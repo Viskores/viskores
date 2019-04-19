@@ -14,8 +14,6 @@
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
-#include <vtkm/cont/internal/DeviceAdapterError.h>
-
 //------------------------------------------------------------------------------
 // This test ensures that exceptions thrown internally by the vtkm_cont library
 // can be correctly caught across library boundaries.
@@ -28,7 +26,7 @@ int UnitTestExceptions(int argc, char* argv[])
   {
     // This throws a ErrorBadValue from RuntimeDeviceTracker::CheckDevice,
     // which is compiled into the vtkm_cont library:
-    tracker.ResetDevice(vtkm::cont::DeviceAdapterTagError());
+    tracker.ResetDevice(vtkm::cont::DeviceAdapterTagUndefined());
   }
   catch (vtkm::cont::ErrorBadValue&)
   {
