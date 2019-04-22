@@ -79,8 +79,25 @@ namespace cont
 namespace detail
 {
 
-struct RuntimeDeviceNames
+class RuntimeDeviceNames
 {
+public:
+  static const DeviceAdapterNameType& GetDeviceName(vtkm::Int8 id)
+  {
+    return Instance().DeviceNames[id];
+  }
+
+  static const DeviceAdapterNameType& GetLowerCaseDeviceName(vtkm::Int8 id)
+  {
+    return Instance().LowerCaseDeviceNames[id];
+  }
+
+private:
+  static const RuntimeDeviceNames& Instance()
+  {
+    static RuntimeDeviceNames instance;
+    return instance;
+  }
 
   RuntimeDeviceNames()
   {
@@ -88,11 +105,11 @@ struct RuntimeDeviceNames
     vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
   }
 
+  friend struct InitializeDeviceNames;
+
   DeviceAdapterNameType DeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
   DeviceAdapterNameType LowerCaseDeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
 };
-
-thread_local RuntimeDeviceNames RuntimeNames;
 }
 
 VTKM_CONT
@@ -102,7 +119,7 @@ DeviceAdapterNameType RuntimeDeviceInformation::GetName(DeviceAdapterId device) 
 
   if (device.IsValueValid())
   {
-    return detail::RuntimeNames.DeviceNames[id];
+    return detail::RuntimeDeviceNames::GetDeviceName(id);
   }
   else if (id == VTKM_DEVICE_ADAPTER_UNDEFINED)
   {
@@ -114,7 +131,7 @@ DeviceAdapterNameType RuntimeDeviceInformation::GetName(DeviceAdapterId device) 
   }
 
   // Deviceis invalid:
-  return detail::RuntimeNames.DeviceNames[0];
+  return detail::RuntimeDeviceNames::GetDeviceName(0);
 }
 
 VTKM_CONT
@@ -139,7 +156,7 @@ DeviceAdapterId RuntimeDeviceInformation::GetId(DeviceAdapterNameType name) cons
 
   for (vtkm::Int8 id = 0; id < VTKM_MAX_DEVICE_ADAPTER_ID; ++id)
   {
-    if (name == detail::RuntimeNames.LowerCaseDeviceNames[id])
+    if (name == detail::RuntimeDeviceNames::GetLowerCaseDeviceName(id))
     {
       return vtkm::cont::make_DeviceAdapterId(id);
     }
