@@ -25,7 +25,7 @@ set(unit_tests
   UnitTestOpenMPPointLocatorUniformGrid.cxx
   UnitTestOpenMPVirtualObjectHandle.cxx
   )
-vtkm_unit_tests(OpenMP SOURCES ${unit_tests})
+vtkm_unit_tests(OpenMP SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
 
 if (VTKm_ENABLE_TESTING)
   #We need to have all OpenMP tests run serially as they

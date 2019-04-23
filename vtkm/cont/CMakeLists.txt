@@ -121,15 +121,13 @@ set(template_sources
 
 set(sources
   ArrayHandle.cxx
-  ArrayHandleVirtual.cxx
-  CellLocator.cxx
   ColorTablePresets.cxx
+  DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
   internal/ArrayHandleBasicImpl.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
-  internal/DeviceAdapterTag.cxx
   internal/TransferInfo.cxx
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
@@ -137,16 +135,17 @@ set(sources
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
   TryExecute.cxx
-  VariantArrayHandle.cxx
   )
 
-# This list of sources has code that uses devices and so might need to be
-# compiled with a device-specific compiler (like CUDA).
-set(device_sources
+  # This list of sources has code that uses devices and so might need to be
+  # compiled with a device-specific compiler (like CUDA).
+  set(device_sources
+  ArrayHandleVirtual.cxx
   ArrayRangeCompute.cxx
   AssignerMultiBlock.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
+  CellLocator.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorGeneral.cxx
   CellLocatorRectilinearGrid.cxx
@@ -161,6 +160,7 @@ set(device_sources
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
+  internal/VariantArrayHandleContainer.cxx
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx

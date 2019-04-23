@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/testing/Testing.h>
 
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
@@ -19,8 +19,6 @@
 
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
-
-#include <vtkm/cont/testing/Testing.h>
 
 #if defined(VTKM_MSVC)
 #pragma warning(push)
@@ -372,8 +370,7 @@ void TestTaskStrided()
 
 int UnitTestTaskStrided(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestTaskStrided<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
+  return vtkm::testing::Testing::Run(TestTaskStrided<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 }
 
 #if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)

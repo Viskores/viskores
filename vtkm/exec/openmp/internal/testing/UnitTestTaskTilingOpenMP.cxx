@@ -9,9 +9,10 @@
 //============================================================================
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/exec/internal/testing/TestingTaskTiling.h>
+#include <vtkm/testing/Testing.h>
 
 int UnitTestTaskTilingOpenMP(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
+  return vtkm::testing::Testing::Run(
     vtkm::exec::internal::testing::TestTaskTiling<vtkm::cont::DeviceAdapterTagOpenMP>, argc, argv);
 }

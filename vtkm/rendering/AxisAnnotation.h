@@ -12,7 +12,6 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/WorldAnnotator.h>

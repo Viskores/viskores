@@ -19,8 +19,6 @@
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-#include <vtkm/cont/testing/Testing.h>
-
 #include <limits>
 
 #define VTKM_MATH_ASSERT(condition, message)                                                       \

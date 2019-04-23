@@ -7,12 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
 #include <vtkm/internal/FunctionInterface.h>
-
-#include <vtkm/cont/Timer.h>
-
-#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/testing/Testing.h>
 
 #include <sstream>
 #include <string>
@@ -21,6 +17,9 @@
 // the most critical invoke (for the instance of a worklet) does not directly
 // use the Invoke method.
 //#define TEST_INVOKE_TIME
+#ifdef TEST_INVOKE_TIME
+#include <vtkm/cont/Timer.h>
+#endif
 
 namespace
 {
@@ -532,5 +531,5 @@ void TestFunctionInterface()
 
 int UnitTestFunctionInterface(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFunctionInterface, argc, argv);
+  return vtkm::testing::Testing::Run(TestFunctionInterface, argc, argv);
 }

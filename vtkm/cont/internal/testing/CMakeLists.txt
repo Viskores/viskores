@@ -15,4 +15,4 @@ set(unit_tests
   UnitTestDynamicTransform.cxx
   UnitTestIteratorFromArrayPortal.cxx
   )
-vtkm_unit_tests(SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)

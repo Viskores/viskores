@@ -78,8 +78,7 @@ set(unit_tests
   UnitTestTryExecute.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests})
-
+vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
 
 # add distributed tests i.e. test to run with MPI
 # if MPI is enabled.
@@ -88,4 +87,4 @@ set(mpi_unit_tests
   UnitTestSerializationArrayHandle.cxx
   UnitTestSerializationDataSet.cxx
   )
-vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests})
+vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)

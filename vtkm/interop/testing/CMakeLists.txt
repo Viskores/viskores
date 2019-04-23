@@ -42,5 +42,8 @@ elseif(VTKm_ENABLE_GL_CONTEXT AND TARGET vtkm_rendering)
 endif()
 
 if(unit_tests)
-  vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES vtkm_rendering GLUT::GLUT)
+  vtkm_unit_tests(SOURCES ${unit_tests}
+                  LIBRARIES vtkm_rendering GLUT::GLUT
+                  DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+
 endif()
