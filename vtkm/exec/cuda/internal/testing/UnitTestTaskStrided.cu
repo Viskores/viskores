@@ -7,8 +7,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/testing/Testing.h>
+
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>

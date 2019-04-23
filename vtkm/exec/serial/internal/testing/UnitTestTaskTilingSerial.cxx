@@ -7,9 +7,10 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#include <vtkm/testing/Testing.h>
+
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/exec/internal/testing/TestingTaskTiling.h>
-#include <vtkm/testing/Testing.h>
 
 int UnitTestTaskTilingSerial(int argc, char* argv[])
 {
