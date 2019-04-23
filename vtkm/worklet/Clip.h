@@ -37,9 +37,9 @@
   THRUST_SUBMINOR_VERSION < 3
 // Workaround a bug in thrust 1.8.0 - 1.8.2 scan implementations which produces
 // wrong results
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/detail/type_traits.h>
-#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 #define THRUST_SCAN_WORKAROUND
 #endif
