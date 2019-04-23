@@ -42,13 +42,12 @@ $# Ignore the following comment. It is meant for the generated file.
 #endif
 
 #ifdef VTKM_MSVC
-#include <intrin.h> // For bitwise intrinsics (__popcnt, etc)
+#include <intrin.h>                // For bitwise intrinsics (__popcnt, etc)
 #include <vtkm/internal/Windows.h> // for types used by MSVC intrinsics.
 #ifndef VTKM_CUDA
 #include <math.h>
 #endif // VTKM_CUDA
 #endif // VTKM_MSVC
-
 
 #define VTKM_CUDA_MATH_FUNCTION_32(func) func##f
 #define VTKM_CUDA_MATH_FUNCTION_64(func) func
