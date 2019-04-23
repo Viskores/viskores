@@ -28,7 +28,6 @@ public:
                                           const vtkm::filter::FieldMetadata& fieldMetadata,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>&);
 
-  // TODO: change radius to vec3<int>
   VTKM_CONT void SetRadius(vtkm::Vec<vtkm::Int32, 3> _radius) { this->Radius = _radius; }
 
   VTKM_CONT void SetOrder(vtkm::Int32 _order) { this->Order = _order; }

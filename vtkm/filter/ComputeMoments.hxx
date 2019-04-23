@@ -1,4 +1,5 @@
-//============================================================================
+//=============================================================================
+//
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -6,7 +7,8 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//=======================================================================
+//
+//=============================================================================
 #ifndef vtk_m_filter_ComputeMoments_hxx
 #define vtk_m_filter_ComputeMoments_hxx
 
@@ -37,6 +39,7 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
   }
 
   vtkm::cont::DataSet output = internal::CreateResult(input);
+
   auto worklet = vtkm::worklet::moments::ComputeMoments(this->Radius);
 
   worklet.Run(input.GetCellSet(this->GetActiveCellSetIndex()), field, this->Order, output);
