@@ -52,7 +52,8 @@ public:
   template <typename NeighIn, typename T>
   VTKM_EXEC void operator()(const NeighIn& image, T& moment) const
   {
-    vtkm::Float64 sum = 0;
+    // TODO: type safety and numerical precision
+    T sum{};
     vtkm::Float64 recp = 1.0 / Radius;
 
     for (int j = -Radius; j <= Radius; j++)

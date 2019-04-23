@@ -36,7 +36,7 @@ template <>
 class FilterTraits<vtkm::filter::ComputeMoments>
 {
 public:
-  struct InputFieldTypeList : vtkm::TypeListTagScalarAll
+  struct InputFieldTypeList : vtkm::TypeListTagAll
   {
   };
 };
