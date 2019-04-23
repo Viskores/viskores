@@ -14,9 +14,9 @@
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/internal/ExportMacros.h>
 
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system_error.h>
-#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm

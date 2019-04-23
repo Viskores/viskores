@@ -14,11 +14,11 @@
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/execution_policy.h>
 #include <thrust/system/cuda/execution_policy.h>
 #include <thrust/system/cuda/memory.h>
-#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #define ThrustCudaPolicyPerThread ::thrust::cuda::par.on(cudaStreamPerThread)

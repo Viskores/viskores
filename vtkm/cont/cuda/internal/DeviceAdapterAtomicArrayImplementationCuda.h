@@ -21,9 +21,9 @@
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/device_ptr.h>
-#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm

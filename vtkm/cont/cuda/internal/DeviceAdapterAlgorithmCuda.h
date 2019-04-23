@@ -39,7 +39,11 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
+//needs to be first
+#include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
+
 #include <cooperative_groups.h>
 #include <cuda.h>
 #include <thrust/advance.h>
@@ -52,8 +56,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cpp/memory.h>
 #include <thrust/system/cuda/vector.h>
 #include <thrust/unique.h>
-#include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
-#include <vtkm/exec/cuda/internal/ThrustPatches.h>
+
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <limits>
