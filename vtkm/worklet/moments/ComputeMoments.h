@@ -42,13 +42,15 @@ public:
     // TODO: type safety and numerical precision
     T sum{};
     vtkm::Float64 recp = 1.0 / Radius;
-
-    for (int j = -Radius; j <= Radius; j++)
+    for (int k = -Radius; k <= Radius; ++k)
     {
-      for (int i = -Radius; i <= Radius; i++)
+      for (int j = -Radius; j <= Radius; ++j)
       {
-        if (i * i + j * j <= Radius * Radius)
-          sum += pow(i * recp, p) * pow(j * recp, q) * image.Get(i, j, 0);
+        for (int i = -Radius; i <= Radius; ++i)
+        {
+          if (i * i + j * j <= Radius * Radius)
+            sum += pow(i * recp, p) * pow(j * recp, q) * image.Get(i, j, k);
+        }
       }
     }
 
