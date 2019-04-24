@@ -51,7 +51,7 @@ using SplitPropertiesArrayHandle =
 namespace
 {
 
-VTKM_CONT IdArrayHandle CalculateSegmentSizes(const IdArrayHandle& segmentIds, vtkm::Id numCells)
+IdArrayHandle CalculateSegmentSizes(const IdArrayHandle& segmentIds, vtkm::Id numCells)
 {
   IdArrayHandle discardKeys;
   IdArrayHandle segmentSizes;
@@ -63,7 +63,7 @@ VTKM_CONT IdArrayHandle CalculateSegmentSizes(const IdArrayHandle& segmentIds, v
   return segmentSizes;
 }
 
-VTKM_CONT IdArrayHandle GenerateSegmentIds(const IdArrayHandle& segmentSizes, vtkm::Id numCells)
+IdArrayHandle GenerateSegmentIds(const IdArrayHandle& segmentSizes, vtkm::Id numCells)
 {
   // Compact segment ids, removing non-contiguous values.
 
@@ -77,15 +77,15 @@ VTKM_CONT IdArrayHandle GenerateSegmentIds(const IdArrayHandle& segmentSizes, vt
   return segmentIds;
 }
 
-VTKM_CONT void CalculatePlaneSplitCost(vtkm::IdComponent planeIndex,
-                                       vtkm::IdComponent numPlanes,
-                                       RangePermutationArrayHandle& segmentRanges,
-                                       RangeArrayHandle& ranges,
-                                       CoordsArrayHandle& coords,
-                                       IdArrayHandle& segmentIds,
-                                       SplitPropertiesArrayHandle& splits,
-                                       vtkm::IdComponent index,
-                                       vtkm::IdComponent numTotalPlanes)
+void CalculatePlaneSplitCost(vtkm::IdComponent planeIndex,
+                             vtkm::IdComponent numPlanes,
+                             RangePermutationArrayHandle& segmentRanges,
+                             RangeArrayHandle& ranges,
+                             CoordsArrayHandle& coords,
+                             IdArrayHandle& segmentIds,
+                             SplitPropertiesArrayHandle& splits,
+                             vtkm::IdComponent index,
+                             vtkm::IdComponent numTotalPlanes)
 {
   vtkm::worklet::Invoker invoker;
 
@@ -154,12 +154,12 @@ VTKM_CONT void CalculatePlaneSplitCost(vtkm::IdComponent planeIndex,
           splits);
 }
 
-VTKM_CONT void CalculateSplitCosts(vtkm::IdComponent numPlanes,
-                                   RangePermutationArrayHandle& segmentRanges,
-                                   RangeArrayHandle& ranges,
-                                   CoordsArrayHandle& coords,
-                                   IdArrayHandle& segmentIds,
-                                   SplitPropertiesArrayHandle& splits)
+void CalculateSplitCosts(vtkm::IdComponent numPlanes,
+                         RangePermutationArrayHandle& segmentRanges,
+                         RangeArrayHandle& ranges,
+                         CoordsArrayHandle& coords,
+                         IdArrayHandle& segmentIds,
+                         SplitPropertiesArrayHandle& splits)
 {
   for (vtkm::IdComponent planeIndex = 0; planeIndex < numPlanes; ++planeIndex)
   {
@@ -178,9 +178,9 @@ VTKM_CONT void CalculateSplitCosts(vtkm::IdComponent numPlanes,
     0, 1, segmentRanges, ranges, coords, segmentIds, splits, numPlanes, numPlanes);
 }
 
-VTKM_CONT IdArrayHandle CalculateSplitScatterIndices(const IdArrayHandle& cellIds,
-                                                     const IdArrayHandle& leqFlags,
-                                                     const IdArrayHandle& segmentIds)
+IdArrayHandle CalculateSplitScatterIndices(const IdArrayHandle& cellIds,
+                                           const IdArrayHandle& leqFlags,
+                                           const IdArrayHandle& segmentIds)
 {
   vtkm::worklet::Invoker invoker;
 
@@ -225,9 +225,9 @@ VTKM_CONT IdArrayHandle CalculateSplitScatterIndices(const IdArrayHandle& cellId
 
 } // anonymous namespace
 
-VTKM_CONT CellLocatorBoundingIntervalHierarchy::~CellLocatorBoundingIntervalHierarchy() = default;
+CellLocatorBoundingIntervalHierarchy::~CellLocatorBoundingIntervalHierarchy() = default;
 
-VTKM_CONT
+
 void CellLocatorBoundingIntervalHierarchy::Build()
 {
   vtkm::worklet::Invoker invoker;
@@ -451,7 +451,7 @@ namespace
 struct CellLocatorBIHPrepareForExecutionFunctor
 {
   template <typename DeviceAdapter, typename CellSetType>
-  VTKM_CONT bool operator()(
+  bool operator()(
     DeviceAdapter,
     const CellSetType& cellset,
     vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& bihExec,
@@ -471,9 +471,7 @@ struct CellLocatorBIHPrepareForExecutionFunctor
 struct BIHCellSetCaster
 {
   template <typename CellSet, typename... Args>
-  VTKM_CONT void operator()(CellSet&& cellset,
-                            vtkm::cont::DeviceAdapterId device,
-                            Args&&... args) const
+  void operator()(CellSet&& cellset, vtkm::cont::DeviceAdapterId device, Args&&... args) const
   {
     //We need to go though CastAndCall first
     const bool success = vtkm::cont::TryExecuteOnDevice(
@@ -486,7 +484,7 @@ struct BIHCellSetCaster
 };
 }
 
-VTKM_CONT
+
 const vtkm::exec::CellLocator* CellLocatorBoundingIntervalHierarchy::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device) const
 {
