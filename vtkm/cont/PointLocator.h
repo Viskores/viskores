@@ -20,9 +20,11 @@ namespace vtkm
 namespace cont
 {
 
-class PointLocator : public vtkm::cont::ExecutionObjectBase
+class VTKM_CONT_EXPORT PointLocator : public vtkm::cont::ExecutionObjectBase
 {
 public:
+  virtual ~PointLocator();
+
   PointLocator()
     : Modified(true)
   {

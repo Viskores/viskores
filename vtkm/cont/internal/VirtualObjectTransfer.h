@@ -56,10 +56,10 @@ struct VirtualObjectTransfer
 #endif
 ;
 
-class TransferInterface
+class VTKM_CONT_EXPORT TransferInterface
 {
 public:
-  VTKM_CONT virtual ~TransferInterface() = default;
+  VTKM_CONT virtual ~TransferInterface();
 
   VTKM_CONT virtual const vtkm::VirtualObjectBase* PrepareForExecution(vtkm::Id) = 0;
   VTKM_CONT virtual void ReleaseResources() = 0;
