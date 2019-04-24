@@ -37,9 +37,9 @@
 #ifndef TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
 #ifdef __CUDACC__
 #if __CUDAVER__ >= 75000
-#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN #pragma nv_exec_check_disable
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN _Pragma("nv_exec_check_disable")
 #else
-#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN #pragma hd_warning_disable
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN _Pragma("hd_warning_disable")
 #endif
 #else
 #define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
