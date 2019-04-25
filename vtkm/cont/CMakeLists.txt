@@ -165,6 +165,8 @@ set(sources
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
   MultiBlock.cxx
+  PointLocator.cxx
+  PointLocatorUniformGrid.cxx
   RuntimeDeviceInformation.cxx
   StorageVirtual.cxx
   Timer.cxx

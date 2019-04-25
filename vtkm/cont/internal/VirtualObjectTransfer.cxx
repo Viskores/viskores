@@ -24,6 +24,8 @@ namespace cont
 namespace internal
 {
 
+VTKM_CONT TransferInterface::~TransferInterface() = default;
+
 bool TransferState::DeviceIdIsValid(vtkm::cont::DeviceAdapterId deviceId) const
 {
   auto index = static_cast<std::size_t>(deviceId.GetValue());
