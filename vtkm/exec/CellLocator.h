@@ -22,6 +22,12 @@ namespace exec
 class CellLocator : public vtkm::VirtualObjectBase
 {
 public:
+  VTKM_EXEC_CONT virtual ~CellLocator() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
+  }
+
   VTKM_EXEC
   virtual void FindCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
                         vtkm::Id& cellId,
