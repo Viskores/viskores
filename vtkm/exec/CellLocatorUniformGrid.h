@@ -28,7 +28,7 @@ namespace exec
 {
 
 template <typename DeviceAdapter>
-class CellLocatorUniformGrid : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid : public vtkm::exec::CellLocator
 {
 private:
   using FromType = vtkm::TopologyElementTagPoint;
@@ -55,6 +55,12 @@ public:
     , CellSet(cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType()))
     , Coords(coords.PrepareForInput(DeviceAdapter()))
   {
+  }
+
+  VTKM_EXEC_CONT virtual ~CellLocatorUniformGrid() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
   }
 
   VTKM_EXEC

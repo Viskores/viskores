@@ -29,7 +29,7 @@ namespace exec
 {
 
 template <typename DeviceAdapter>
-class CellLocatorRectilinearGrid : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid : public vtkm::exec::CellLocator
 {
 private:
   using FromType = vtkm::TopologyElementTagPoint;
@@ -69,6 +69,12 @@ public:
     this->MaxPoint[1] =
       coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
     this->MaxPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
+  }
+
+  VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
   }
 
   VTKM_EXEC

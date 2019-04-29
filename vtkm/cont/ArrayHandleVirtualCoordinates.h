@@ -37,7 +37,8 @@ public:
 
   template <typename T, typename S>
   explicit ArrayHandleVirtualCoordinates(const vtkm::cont::ArrayHandle<T, S>& ah)
-    : Superclass(vtkm::cont::make_ArrayHandleCast<ValueType>(ah))
+    : vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>(
+        vtkm::cont::make_ArrayHandleCast<ValueType>(ah))
   {
   }
 };

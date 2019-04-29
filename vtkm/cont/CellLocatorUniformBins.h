@@ -84,7 +84,7 @@ namespace exec
 
 //--------------------------------------------------------------------
 template <typename CellSetType, typename DeviceAdapter>
-class CellLocatorUniformBins : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorUniformBins : public vtkm::exec::CellLocator
 {
 private:
   using DimVec3 = vtkm::internal::cl_uniform_bins::DimVec3;
@@ -144,6 +144,12 @@ public:
                                       vtkm::TopologyElementTagCell{}))
     , Coords(coords.GetData().PrepareForInput(DeviceAdapter{}))
   {
+  }
+
+  VTKM_EXEC_CONT virtual ~CellLocatorUniformBins() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
   }
 
   VTKM_EXEC

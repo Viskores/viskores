@@ -25,7 +25,14 @@ class VTKM_ALWAYS_EXPORT ArrayPortalUniformPointCoordinates
 public:
   using ValueType = vtkm::Vec<vtkm::FloatDefault, 3>;
 
-  ArrayPortalUniformPointCoordinates() = default;
+  VTKM_EXEC_CONT
+  ArrayPortalUniformPointCoordinates()
+    : Dimensions(0)
+    , NumberOfValues(0)
+    , Origin(0, 0, 0)
+    , Spacing(1, 1, 1)
+  {
+  }
 
   VTKM_EXEC_CONT
   ArrayPortalUniformPointCoordinates(vtkm::Id3 dimensions, ValueType origin, ValueType spacing)

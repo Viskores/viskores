@@ -136,8 +136,8 @@ struct Range
   {
     if (range.IsNonEmpty())
     {
-      this->Include(range.Min);
-      this->Include(range.Max);
+      this->Min = vtkm::Min(this->Min, range.Min);
+      this->Max = vtkm::Max(this->Max, range.Max);
     }
   }
 
