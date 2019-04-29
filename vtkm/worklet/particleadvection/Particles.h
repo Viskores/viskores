@@ -201,7 +201,7 @@ public:
       this->PosArray, this->StepsArray, this->StatusArray, this->TimeArray, this->MaxSteps);
   }
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   Particles(vtkm::cont::ArrayHandle<VectorType>& posArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,

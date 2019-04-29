@@ -348,7 +348,7 @@ struct ArraySizeValidatorImpl
 {
   using Next = ArraySizeValidatorImpl<Index + 1, Count, TupleType>;
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   static bool Exec(const TupleType& tuple, vtkm::Id numVals)
   {
     return vtkmstd::get<Index>(tuple).GetNumberOfValues() == numVals && Next::Exec(tuple, numVals);
@@ -358,14 +358,14 @@ struct ArraySizeValidatorImpl
 template <std::size_t Index, typename TupleType>
 struct ArraySizeValidatorImpl<Index, Index, TupleType>
 {
-  VTKM_EXEC_CONT
+  VTKM_CONT
   static bool Exec(const TupleType&, vtkm::Id) { return true; }
 };
 
 template <typename TupleType>
 struct ArraySizeValidator
 {
-  VTKM_EXEC_CONT
+  VTKM_CONT
   static bool Exec(const TupleType& tuple, vtkm::Id numVals)
   {
     return ArraySizeValidatorImpl<0, vtkmstd::tuple_size<TupleType>::value, TupleType>::Exec(
