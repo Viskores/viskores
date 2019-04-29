@@ -16,22 +16,24 @@ namespace
 {
 
 template <typename T>
-void UnaryPredicateTest(){ //test IsZeroInitialized
-                           { vtkm::IsZeroInitialized is_default;
-VTKM_TEST_ASSERT(is_default(vtkm::TypeTraits<T>::ZeroInitialization()) == true,
-                 "IsZeroInitialized wrong.");
-VTKM_TEST_ASSERT(is_default(TestValue(1, T())) == false, "IsZeroInitialized wrong.");
-}
-
-//test NotZeroInitialized
+void UnaryPredicateTest()
 {
-  vtkm::NotZeroInitialized not_default;
-  VTKM_TEST_ASSERT(not_default(vtkm::TypeTraits<T>::ZeroInitialization()) == false,
-                   "NotZeroInitialized wrong.");
-  VTKM_TEST_ASSERT(not_default(TestValue(1, T())) == true, "NotZeroInitialized wrong.");
+  //test IsZeroInitialized
+  {
+    vtkm::IsZeroInitialized is_default;
+    VTKM_TEST_ASSERT(is_default(vtkm::TypeTraits<T>::ZeroInitialization()) == true,
+                     "IsZeroInitialized wrong.");
+    VTKM_TEST_ASSERT(is_default(TestValue(1, T())) == false, "IsZeroInitialized wrong.");
+  }
+
+  //test NotZeroInitialized
+  {
+    vtkm::NotZeroInitialized not_default;
+    VTKM_TEST_ASSERT(not_default(vtkm::TypeTraits<T>::ZeroInitialization()) == false,
+                     "NotZeroInitialized wrong.");
+    VTKM_TEST_ASSERT(not_default(TestValue(1, T())) == true, "NotZeroInitialized wrong.");
+  }
 }
-}
-;
 
 struct UnaryPredicateTestFunctor
 {
