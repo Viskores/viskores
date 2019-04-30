@@ -160,11 +160,11 @@ private:
       numVals, numThreads, chunksPerThread, sizeof(ValueType), numChunks, this->LeafSize);
 
     // Compute an upper-bound of the number of nodes in the tree:
-    size_t numNodes = numChunks;
+    std::size_t numNodes = static_cast<std::size_t>(numChunks);
     while (numChunks > 1)
     {
       numChunks = (numChunks + 1) / 2;
-      numNodes += numChunks;
+      numNodes += static_cast<std::size_t>(numChunks);
     }
     this->Nodes.resize(numNodes);
     this->NextNode = 0;

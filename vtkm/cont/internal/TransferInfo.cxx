@@ -43,9 +43,20 @@ void TransferInfoArray::updateDevice(vtkm::cont::DeviceAdapterId devId,
 void TransferInfoArray::releaseDevice()
 {
   this->DeviceId = vtkm::cont::DeviceAdapterTagUndefined{};
-  this->Device = nullptr;              //The device transfer state own this pointer
-  this->DeviceTransferState = nullptr; //release the device transfer state
-  this->HostCopyOfDevice.release();    //we own this pointer so release it
+  this->Device = nullptr; //The device transfer state own this pointer
+  if (this->DeviceTransferState == nullptr)
+  { //When the DeviceTransferState is a nullptr it means that
+    //that the device and host share memory. In that case we need to free
+    //the host copy
+    this->HostCopyOfDevice.reset(nullptr);
+  }
+  else
+  {
+    //The DeviceTransferState holds ownership of HostCopyOfDevice so we only
+    //need to delete DeviceTransferState, as it will do the rest
+    this->DeviceTransferState = nullptr; //release the device transfer state
+    this->HostCopyOfDevice.release();
+  }
 }
 
 void TransferInfoArray::releaseAll()
