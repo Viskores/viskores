@@ -68,10 +68,10 @@ public:
   {
   }
 
-  VTKM_CONT Storage(const ClassType& src) = default;
-  VTKM_CONT Storage(ClassType&& src) = default;
-  VTKM_CONT ClassType& operator=(const ClassType& src) = default;
-  VTKM_CONT ClassType& operator=(ClassType&& src) = default;
+  VTKM_CONT Storage(const ClassType&) = default;
+  VTKM_CONT Storage(ClassType&&) = default;
+  VTKM_CONT ClassType& operator=(const ClassType&) = default;
+  VTKM_CONT ClassType& operator=(ClassType&&) = default;
 
   // All these methods do nothing but raise errors.
   VTKM_CONT
