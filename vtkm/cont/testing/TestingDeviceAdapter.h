@@ -67,13 +67,7 @@ private:
 
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id, StorageTag>;
   using IdComponentArrayHandle = vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageTag>;
-
   using ScalarArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag>;
-
-  using IdArrayManagerExecution =
-    vtkm::cont::internal::ArrayManagerExecution<vtkm::Id, StorageTag, DeviceAdapterTag>;
-
-  using IdStorage = vtkm::cont::internal::Storage<vtkm::Id, StorageTag>;
 
   using IdPortalType = typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
   using IdPortalConstType =
@@ -507,13 +501,10 @@ private:
   // in the execution environment. It tests to make sure data gets to the array
   // and back, but it is possible that the data is not available in the
   // execution environment.
-  static VTKM_CONT void TestArrayManagerExecution()
+  static VTKM_CONT void TestArrayTransfer()
   {
     std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing ArrayManagerExecution" << std::endl;
-
-    using ArrayManagerExecution =
-      vtkm::cont::internal::ArrayManagerExecution<vtkm::Id, StorageTagBasic, DeviceAdapterTag>;
+    std::cout << "Testing ArrayHandle Transfer" << std::endl;
 
     using StorageType = vtkm::cont::internal::Storage<vtkm::Id, StorageTagBasic>;
 
@@ -530,30 +521,21 @@ private:
       portal.Set(index, TestValue(index, vtkm::Id()));
     }
 
-    ArrayManagerExecution manager(&storage);
+    vtkm::cont::ArrayHandle<vtkm::Id> handle(std::move(storage));
 
     // Do an operation just so we know the values are placed in the execution
     // environment and they change. We are only calling on half the array
     // because we are about to shrink.
-    Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(true)), ARRAY_SIZE);
+    Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{})), ARRAY_SIZE);
 
     // Change size.
-    manager.Shrink(ARRAY_SIZE);
+    handle.Shrink(ARRAY_SIZE);
 
-    VTKM_TEST_ASSERT(manager.GetNumberOfValues() == ARRAY_SIZE,
-                     "Shrink did not set size of array manager correctly.");
+    VTKM_TEST_ASSERT(handle.GetNumberOfValues() == ARRAY_SIZE,
+                     "Shrink did not set size of array handle correctly.");
 
-    // Get the array back and check its values. We have to get it back into
-    // the same storage since some ArrayManagerExecution classes will expect
-    // that.
-    manager.RetrieveOutputData(&storage);
-
-    VTKM_TEST_ASSERT(storage.GetNumberOfValues() == ARRAY_SIZE,
-                     "Storage has wrong number of values after execution "
-                     "array shrink.");
-
-    // Check array.
-    StorageType::PortalConstType checkPortal = storage.GetPortalConst();
+    // Get the array back and check its values.
+    StorageType::PortalConstType checkPortal = handle.GetPortalConstControl();
     VTKM_TEST_ASSERT(checkPortal.GetNumberOfValues() == ARRAY_SIZE, "Storage portal wrong size.");
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -574,14 +556,9 @@ private:
     try
     {
       std::cout << "Do array allocation that should fail." << std::endl;
-      vtkm::cont::internal::Storage<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic> supportArray;
-      vtkm::cont::internal::ArrayManagerExecution<vtkm::Vec<vtkm::Float32, 4>,
-                                                  StorageTagBasic,
-                                                  DeviceAdapterTag>
-        bigManager(&supportArray);
-
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic> bigArray;
       const vtkm::Id bigSize = 0x7FFFFFFFFFFFFFFFLL;
-      bigManager.PrepareForOutput(bigSize);
+      bigArray.PrepareForOutput(bigSize, DeviceAdapterTag{});
       // It does not seem reasonable to get here.  The previous call should fail.
       VTKM_TEST_FAIL("A ridiculously sized allocation succeeded.  Either there "
                      "was a failure that was not reported but should have been "
@@ -600,22 +577,17 @@ private:
   VTKM_CONT
   static void TestTimer()
   {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Timer" << std::endl;
     auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
     if (tracker.CanRunOn(DeviceAdapterTag()))
     {
-      std::cout << "-------------------------------------------" << std::endl;
-      std::cout << "Testing Timer" << std::endl;
-
       vtkm::cont::Timer timer{ DeviceAdapterTag() };
       timer.Start();
 
       std::cout << "Timer started. Sleeping..." << std::endl;
 
-#ifndef _WIN32
-      sleep(1);
-#else
-      Sleep(1000);
-#endif
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
       std::cout << "Woke up. Check time." << std::endl;
 
@@ -624,8 +596,8 @@ private:
 
       std::cout << "Elapsed time: " << elapsedTime << std::endl;
 
-      VTKM_TEST_ASSERT(elapsedTime > 0.999, "Timer did not capture full second wait.");
-      VTKM_TEST_ASSERT(elapsedTime < 2.0, "Timer counted too far or system really busy.");
+      VTKM_TEST_ASSERT(elapsedTime > 0.499, "Timer did not capture full second wait.");
+      VTKM_TEST_ASSERT(elapsedTime < 1.0, "Timer counted too far or system really busy.");
     }
   }
 
@@ -667,21 +639,18 @@ private:
 
     {
       std::cout << "Allocating execution array" << std::endl;
-      IdStorage storage;
-      IdArrayManagerExecution manager(&storage);
+      vtkm::cont::ArrayHandle<vtkm::Id> handle;
 
       std::cout << "Running clear." << std::endl;
-      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(1)), 1);
+      Algorithm::Schedule(ClearArrayKernel(handle.PrepareForOutput(1, DeviceAdapterTag{})), 1);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)), 1);
+      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{})), 1);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(&storage);
-
       for (vtkm::Id index = 0; index < 1; index++)
       {
-        vtkm::Id value = storage.GetPortalConst().Get(index);
+        vtkm::Id value = handle.GetPortalConstControl().Get(index);
         VTKM_TEST_ASSERT(value == index + OFFSET,
                          "Got bad value for single value scheduled kernel.");
       }
@@ -692,21 +661,19 @@ private:
 
     {
       std::cout << "Allocating execution array" << std::endl;
-      IdStorage storage;
-      IdArrayManagerExecution manager(&storage);
+      vtkm::cont::ArrayHandle<vtkm::Id> handle;
 
       std::cout << "Running clear." << std::endl;
-      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(ARRAY_SIZE)), ARRAY_SIZE);
+      Algorithm::Schedule(ClearArrayKernel(handle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag{})),
+                          ARRAY_SIZE);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)), ARRAY_SIZE);
+      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{})), ARRAY_SIZE);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(&storage);
-
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
-        vtkm::Id value = storage.GetPortalConst().Get(index);
+        vtkm::Id value = handle.GetPortalConstControl().Get(index);
         VTKM_TEST_ASSERT(value == index + OFFSET, "Got bad value for scheduled kernels.");
       }
     } //release memory
@@ -716,22 +683,20 @@ private:
 
     {
       std::cout << "Allocating execution array" << std::endl;
-      IdStorage storage;
-      IdArrayManagerExecution manager(&storage);
+      vtkm::cont::ArrayHandle<vtkm::Id> handle;
 
       std::cout << "Running clear." << std::endl;
 
       //size is selected to be larger than the CUDA backend can launch in a
       //single invocation when compiled for SM_2 support
       const vtkm::Id size = 8400000;
-      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(size)), size);
+      Algorithm::Schedule(ClearArrayKernel(handle.PrepareForOutput(size, DeviceAdapterTag{})),
+                          size);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)), size);
+      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{})), size);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(&storage);
-
       //Rather than testing for correctness every value of a large array,
       // we randomly test a subset of that array.
       std::default_random_engine generator(static_cast<unsigned int>(std::time(nullptr)));
@@ -740,7 +705,7 @@ private:
       for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
         vtkm::Id randomIndex = distribution(generator);
-        vtkm::Id value = storage.GetPortalConst().Get(randomIndex);
+        vtkm::Id value = handle.GetPortalConstControl().Get(randomIndex);
         VTKM_TEST_ASSERT(value == randomIndex + OFFSET, "Got bad value for scheduled kernels.");
       }
     } //release memory
@@ -751,25 +716,24 @@ private:
 
     {
       std::cout << "Allocating execution array" << std::endl;
-      IdStorage storage;
-      IdArrayManagerExecution manager(&storage);
+      vtkm::cont::ArrayHandle<vtkm::Id> handle;
       vtkm::Id3 maxRange(DIM_SIZE);
 
       std::cout << "Running clear." << std::endl;
       Algorithm::Schedule(
-        ClearArrayKernel(manager.PrepareForOutput(DIM_SIZE * DIM_SIZE * DIM_SIZE), maxRange),
+        ClearArrayKernel(
+          handle.PrepareForOutput(DIM_SIZE * DIM_SIZE * DIM_SIZE, DeviceAdapterTag{}), maxRange),
         maxRange);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false), maxRange), maxRange);
+      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}), maxRange),
+                          maxRange);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(&storage);
-
       const vtkm::Id maxId = DIM_SIZE * DIM_SIZE * DIM_SIZE;
       for (vtkm::Id index = 0; index < maxId; index++)
       {
-        vtkm::Id value = storage.GetPortalConst().Get(index);
+        vtkm::Id value = handle.GetPortalConstControl().Get(index);
         VTKM_TEST_ASSERT(value == index + OFFSET, "Got bad value for scheduled vtkm::Id3 kernels.");
       }
     } //release memory
@@ -2527,7 +2491,7 @@ private:
     VTKM_CONT void operator()() const
     {
       std::cout << "Doing DeviceAdapter tests" << std::endl;
-      TestArrayManagerExecution();
+      TestArrayTransfer();
       TestOutOfMemory();
       TestTimer();
       TestVirtualObjectTransfer();
