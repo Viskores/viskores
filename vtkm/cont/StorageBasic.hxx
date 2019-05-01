@@ -103,10 +103,11 @@ const T* Storage<T, vtkm::cont::StorageTagBasic>::GetArray() const
 }
 
 template <typename T>
-T* Storage<T, vtkm::cont::StorageTagBasic>::StealArray()
+vtkm::Pair<T*, void (*)(void*)> Storage<T, vtkm::cont::StorageTagBasic>::StealArray()
 {
+  vtkm::Pair<T*, void (*)(void*)> result(static_cast<T*>(this->Array), this->DeleteFunction);
   this->DeleteFunction = nullptr;
-  return static_cast<T*>(this->Array);
+  return result;
 }
 
 } // namespace internal
