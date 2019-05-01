@@ -85,18 +85,17 @@ public:
   {
   }
 
-  VTKM_CONT VariantArrayHandleBase(const VariantArrayHandleBase& src) = default;
-  VTKM_CONT VariantArrayHandleBase(VariantArrayHandleBase&& src) noexcept = default;
+  VTKM_CONT VariantArrayHandleBase(const VariantArrayHandleBase&) = default;
+  VTKM_CONT VariantArrayHandleBase(VariantArrayHandleBase&&) noexcept = default;
 
   VTKM_CONT
   ~VariantArrayHandleBase() {}
 
   VTKM_CONT
-  VariantArrayHandleBase<TypeList>& operator=(const VariantArrayHandleBase<TypeList>& src) =
-    default;
+  VariantArrayHandleBase<TypeList>& operator=(const VariantArrayHandleBase<TypeList>&) = default;
 
   VTKM_CONT
-  VariantArrayHandleBase<TypeList>& operator=(VariantArrayHandleBase<TypeList>&& src) noexcept =
+  VariantArrayHandleBase<TypeList>& operator=(VariantArrayHandleBase<TypeList>&&) noexcept =
     default;
 
 

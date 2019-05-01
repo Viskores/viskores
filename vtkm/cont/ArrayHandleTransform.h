@@ -244,7 +244,7 @@ struct TransformFunctorManager
 
   VTKM_CONT TransformFunctorManager() = default;
 
-  VTKM_CONT TransformFunctorManager(const TransformFunctorManager& other) = default;
+  VTKM_CONT TransformFunctorManager(const TransformFunctorManager&) = default;
 
   VTKM_CONT TransformFunctorManager(const ProvidedFunctorType& functor)
     : Superclass(functor)
