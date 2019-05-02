@@ -241,7 +241,10 @@ private:
                                             std::is_same<GlobalPopCountType, vtkm::UInt64>::value),
                            "Unsupported GlobalPopCountType. Must support CUDA atomicAdd.");
 
-    using Word = typename BitsPortal::WordTypePreferred;
+    //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
+    //which is the GCC required compiler for CUDA 9.2 on summit/power9
+    using Word = typename vtkm::cont::internal::AtomicInterfaceExecution<
+      DeviceAdapterTagCuda>::WordTypePreferred;
 
     VTKM_STATIC_ASSERT(
       VTKM_PASS_COMMAS(std::is_same<typename IndicesPortal::ValueType, vtkm::Id>::value));

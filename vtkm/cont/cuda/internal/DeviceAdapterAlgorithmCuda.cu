@@ -113,7 +113,7 @@ struct VTKM_CONT_EXPORT ScheduleParameterBuilder
     }
 
     auto preset = this->Presets.find(static_cast<GPU_STRATA>(strataAsInt));
-    ScheduleParameters params{ preset->second };
+    ScheduleParameters params = preset->second;
     params.one_d_blocks = params.one_d_blocks * numSMs;
     params.two_d_blocks = params.two_d_blocks * numSMs;
     params.three_d_blocks = params.three_d_blocks * numSMs;
