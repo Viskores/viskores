@@ -189,17 +189,17 @@ struct ConnIdxToCellIdCalc
 
       while (length > 0)
       {
-        vtkm::Id half = length / 2;
-        vtkm::Id pos = first + half;
+        vtkm::Id halfway = length / 2;
+        vtkm::Id pos = first + halfway;
         vtkm::Id val = this->Offsets.Get(pos);
         if (val <= inIdx)
         {
           first = pos + 1;
-          length -= half + 1;
+          length -= halfway + 1;
         }
         else
         {
-          length = half;
+          length = halfway;
         }
       }
 
