@@ -145,10 +145,10 @@ protected:
 
 public:
   BitPortalBase() noexcept = default;
-  BitPortalBase(const BitPortalBase& src) noexcept = default;
-  BitPortalBase(BitPortalBase&& src) noexcept = default;
-  BitPortalBase& operator=(const BitPortalBase& src) noexcept = default;
-  BitPortalBase& operator=(BitPortalBase&& src) noexcept = default;
+  BitPortalBase(const BitPortalBase&) noexcept = default;
+  BitPortalBase(BitPortalBase&&) noexcept = default;
+  BitPortalBase& operator=(const BitPortalBase&) noexcept = default;
+  BitPortalBase& operator=(BitPortalBase&&) noexcept = default;
 
   /// Returns the number of bits in the BitField.
   VTKM_EXEC_CONT
@@ -528,11 +528,11 @@ public:
     : Internals{ std::make_shared<InternalStruct>() }
   {
   }
-  VTKM_CONT BitField(const BitField& src) = default;
-  VTKM_CONT BitField(BitField&& src) noexcept = default;
+  VTKM_CONT BitField(const BitField&) = default;
+  VTKM_CONT BitField(BitField&&) noexcept = default;
   VTKM_CONT ~BitField() = default;
-  VTKM_CONT BitField& operator=(const BitField& src) = default;
-  VTKM_CONT BitField& operator=(BitField&& src) noexcept = default;
+  VTKM_CONT BitField& operator=(const BitField&) = default;
+  VTKM_CONT BitField& operator=(BitField&&) noexcept = default;
 
   VTKM_CONT
   bool operator==(const BitField& rhs) const { return this->Internals == rhs.Internals; }
