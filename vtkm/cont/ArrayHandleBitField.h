@@ -82,10 +82,10 @@ public:
   explicit VTKM_CONT Storage(vtkm::cont::BitField&& data) noexcept : Data{ std::move(data) } {}
 
   VTKM_CONT Storage() = default;
-  VTKM_CONT Storage(const Storage& src) = default;
-  VTKM_CONT Storage(Storage&& src) noexcept = default;
-  VTKM_CONT Storage& operator=(const Storage& src) = default;
-  VTKM_CONT Storage& operator=(Storage&& src) noexcept = default;
+  VTKM_CONT Storage(const Storage&) = default;
+  VTKM_CONT Storage(Storage&&) noexcept = default;
+  VTKM_CONT Storage& operator=(const Storage&) = default;
+  VTKM_CONT Storage& operator=(Storage&&) noexcept = default;
 
   VTKM_CONT
   PortalType GetPortal() { return PortalType{ this->Data.GetPortalControl() }; }
