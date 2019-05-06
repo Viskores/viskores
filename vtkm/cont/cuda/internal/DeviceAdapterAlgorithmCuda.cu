@@ -68,8 +68,8 @@ struct VTKM_CONT_EXPORT ScheduleParameterBuilder
                                 { 32, 128,  8, { 16, 16, 1 }, 32, { 8, 8, 4 } } }, //VTK-m default for less than pascal
       { GPU_STRATA::PASCAL,     { 32, 128,  8, { 16, 16, 1 }, 32, { 8, 8, 4 } } }, //VTK-m default for pascal
       { GPU_STRATA::VOLTA,      { 32, 128,  8, { 16, 16, 1 }, 32, { 8, 8, 4 } } }, //VTK-m default for volta
-      { GPU_STRATA::PASCAL_HPC, { 32, 256, 16, { 16, 16, 1 }, 32, { 8, 8, 8 } } }, //P100
-      { GPU_STRATA::VOLTA_HPC,  { 32, 256, 16, { 16, 16, 1 }, 32, { 8, 8, 8 } } }, //V100
+      { GPU_STRATA::PASCAL_HPC, { 32, 256, 16, { 16, 16, 1 }, 64, { 8, 8, 4 } } }, //P100
+      { GPU_STRATA::VOLTA_HPC,  { 32, 256, 16, { 16, 16, 1 }, 64, { 8, 8, 4 } } }, //V100
     }
     , Compute(nullptr)
   {
