@@ -11,6 +11,7 @@
 #define vtk_m_cont_StorageBasic_h
 
 #include <vtkm/Assert.h>
+#include <vtkm/Pair.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadValue.h>
@@ -116,14 +117,6 @@ public:
   /// instances that have been stolen (\c StealArray)
   VTKM_CONT bool WillDeallocate() const { return this->DeleteFunction != nullptr; }
 
-  /// \brief Return the free function that will be used to free this memory.
-  ///
-  /// Get the function that VTK-m will call to deallocate the memory. This
-  /// is useful when stealing memory from VTK-m so that you call the correct
-  /// free/delete function when releasing the memory
-  using DeleteFunctionSignature = void (*)(void*);
-  DeleteFunctionSignature GetDeleteFunction() const { return this->DeleteFunction; }
-
   /// \brief Change the Change the pointer that this class is using. Should only be used
   /// by ExecutionArrayInterface sublcasses.
   /// Note: This will release any previous allocated memory!
@@ -197,17 +190,17 @@ public:
 
   VTKM_CONT const ValueType* GetArray() const;
 
-  /// \brief Take the reference away from this object.
+  /// \brief Transfer ownership of the underlying away from this object.
   ///
-  /// This method returns the pointer to the array held by this array. It then
-  /// clears the internal ownership flags, thereby ensuring that the
-  /// Storage will never deallocate the array or be able to reallocate it. This
-  /// is helpful for taking a reference for an array created internally by
+  /// This method returns the pointer and free function to the array held
+  /// by this array. It then clears the internal ownership flags, thereby ensuring
+  /// that the Storage will never deallocate the array or be able to reallocate it.
+  /// This is helpful for taking a reference for an array created internally by
   /// VTK-m and not having to keep a VTK-m object around. Obviously the caller
-  /// becomes responsible for destroying the memory, and should before hand
-  /// grab the correct DeleteFunction by calling \c GetDeleteFunction
+  /// becomes responsible for destroying the memory, and should use the provided
+  /// delete function.
   ///
-  VTKM_CONT ValueType* StealArray();
+  VTKM_CONT vtkm::Pair<ValueType*, void (*)(void*)> StealArray();
 };
 
 } // namespace internal

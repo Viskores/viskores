@@ -291,8 +291,8 @@ VTKM_CONT void RenderTriangles(MapperGL& mapper,
 
 
     vtkm::Id vtx_cnt = out_vertices.GetNumberOfValues();
-    vtkm::Float32* v_ptr = out_vertices.GetStorage().StealArray();
-    vtkm::Float32* c_ptr = out_color.GetStorage().StealArray();
+    vtkm::Float32* v_ptr = out_vertices.GetStorage().GetArray();
+    vtkm::Float32* c_ptr = out_color.GetStorage().GetArray();
 
     vtkm::Id floatSz = static_cast<vtkm::Id>(sizeof(vtkm::Float32));
     GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt * floatSz);

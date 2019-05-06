@@ -74,7 +74,8 @@ struct TemplatedTests
     // This call steals the array and prevents deallocation.
     VTKM_TEST_ASSERT(stealMyArray.WillDeallocate() == true,
                      "Array to be stolen needs to be owned by VTK-m");
-    stolenArray = stealMyArray.StealArray();
+    auto stolen = stealMyArray.StealArray();
+    stolenArray = stolen.first;
     VTKM_TEST_ASSERT(stealMyArray.WillDeallocate() == false,
                      "Stolen array should not be owned by VTK-m");
 
