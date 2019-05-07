@@ -262,96 +262,7 @@ public:
     vtkm::Id3 globalOffset(0, 0, 0);
 =======
     vtkm::Vec<vtkm::Id, Dimensionality> offset_vec;
-    vtkm::Vec<vtkm::Id, 6> voiSubset;
-    //if(includeOffset)
-    //{
-    //    offset_vec = cellset.GetGlobalPointIndexStart();
-    //    //ptdim[0] += offset_vec[0];
-    //    //ptdim[1] += offset_vec[1];
-    //    //if(Dimensionality == 3)
-    //    //    ptdim[2] += offset_vec[2];
-    //}
-    voiSubset[0] = vtkm::Max(vtkm::Id(0), voi.X.Min);
-    voiSubset[1] = vtkm::Min(this->InputDimensions[0], voi.X.Max);
-    if (includeOffset)
-    {
-      offset_vec = cellset.GetGlobalPointIndexStart();
-      if (voi.X.Min < offset_vec[0])
-      {
-        voiSubset[0] = offset_vec[0];
-      }
-      else if (voi.X.Min > offset_vec[0] && voi.X.Min < offset_vec[0] + ptdim[0])
-      {
-        voiSubset[0] = voi.X.Min;
-      }
-      if (voi.X.Max < offset_vec[0])
-      {
-        voiSubset[1] = offset_vec[0];
-      }
-      else if (voi.X.Max > offset_vec[0])
-      {
-        if (voi.X.Max > offset_vec[0] + ptdim[0])
-        {
-          voiSubset[1] = offset_vec[0] + ptdim[0];
-        }
-        else
-        {
-          voiSubset[1] = voi.X.Max - offset_vec[0];
-        }
-      }
-      if (Dimensionality >= 2)
-      {
-        if (voi.Y.Min < offset_vec[2])
-        {
-          voiSubset[2] = offset_vec[2];
-        }
-        else if (voi.Y.Min > offset_vec[2] && voi.Y.Min < offset_vec[2] + ptdim[1])
-        {
-          voiSubset[2] = voi.Y.Min;
-        }
-        if (voi.Y.Max < offset_vec[2])
-        {
-          voiSubset[3] = offset_vec[2];
-        }
-        else if (voi.Y.Max > offset_vec[2])
-        {
-          if (voi.Y.Max > offset_vec[2] + ptdim[1])
-          {
-            voiSubset[3] = offset_vec[2] + ptdim[1];
-          }
-          else
-          {
-            voiSubset[3] = voi.Y.Max - offset_vec[2];
-          }
-        }
-      }
-      if (Dimensionality >= 3)
-      {
-        if (voi.Y.Min < offset_vec[4])
-        {
-          voiSubset[4] = offset_vec[4];
-        }
-        else if (voi.Y.Min > offset_vec[4] && voi.Y.Min < offset_vec[4] + ptdim[2])
-        {
-          voiSubset[4] = voi.Y.Min;
-        }
-        if (voi.Y.Max < offset_vec[4])
-        {
-          voiSubset[5] = offset_vec[4];
-        }
-        else if (voi.Y.Max > offset_vec[4])
-        {
-          if (voi.Y.Max > offset_vec[4] + ptdim[2])
-          {
-            voiSubset[5] = offset_vec[4] + ptdim[2];
-          }
-          else
-          {
-            voiSubset[5] = voi.Y.Max - offset_vec[4];
-          }
-        }
-      }
-    }
+
     this->SampleRate = vtkm::Id3(sampleRate[0], 1, 1);
     this->InputDimensions = vtkm::Id3(ptdim[0], 1, 1);
 >>>>>>> fcddeb5... Maybe right?
@@ -520,6 +431,7 @@ public:
 
 =======
     // intersect VOI
+<<<<<<< HEAD
     //this->VOI.X.Min = vtkm::Max(vtkm::Id(0), voi.X.Min);
     //this->VOI.X.Max = vtkm::Min(this->InputDimensions[0], voi.X.Max);
     this->VOI.X.Min = voiSubset[0];
@@ -533,6 +445,39 @@ public:
     //this->VOI.Z.Min = vtkm::Max(vtkm::Id(0), voi.Z.Min);
     //this->VOI.Z.Max = vtkm::Min(this->InputDimensions[2], voi.Z.Max);
 >>>>>>> fcddeb5... Maybe right?
+=======
+    if (includeOffset)
+    {
+      offset_vec = cellset.GetGlobalPointIndexStart();
+      if (voi.X.Min < offset_vec[0])
+        this->VOI.X.Min = vtkm::Max(vtkm::Id(0), offset_vec[0]);
+      if (voi.X.Max < offset_vec[0])
+        this->VOI.X.Max = vtkm::Min(this->InputDimensions[0], offset_vec[0]);
+      if (Dimensionality >= 2)
+      {
+        if (voi.Y.Min < offset_vec[1])
+          this->VOI.Y.Min = vtkm::Max(vtkm::Id(0), offset_vec[1]);
+        if (voi.Y.Max < offset_vec[1])
+          this->VOI.Y.Max = vtkm::Min(this->InputDimensions[1], offset_vec[1]);
+        if (Dimensionality == 3)
+        {
+          if (voi.Z.Min < offset_vec[2])
+            this->VOI.Z.Min = vtkm::Max(vtkm::Id(0), offset_vec[2]);
+          if (voi.Z.Max < offset_vec[2])
+            this->VOI.Z.Max = vtkm::Min(this->InputDimensions[2], offset_vec[2]);
+        }
+      }
+    }
+    else // includeOffset = false
+    {
+      this->VOI.X.Min = vtkm::Max(vtkm::Id(0), voi.X.Min);
+      this->VOI.X.Max = vtkm::Min(this->InputDimensions[0], voi.X.Max);
+      this->VOI.Y.Min = vtkm::Max(vtkm::Id(0), voi.Y.Min);
+      this->VOI.Y.Max = vtkm::Min(this->InputDimensions[1], voi.Y.Max);
+      this->VOI.Z.Min = vtkm::Max(vtkm::Id(0), voi.Z.Min);
+      this->VOI.Z.Max = vtkm::Min(this->InputDimensions[2], voi.Z.Max);
+    }
+>>>>>>> bdd013b... Getting there with ES
     if (!this->VOI.IsNonEmpty()) // empty VOI
     {
       vtkm::Id xyz[3] = { 0, 0, 0 };

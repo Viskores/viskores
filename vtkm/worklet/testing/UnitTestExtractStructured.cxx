@@ -43,7 +43,11 @@ public:
     vtkm::RangeId3 range(1, 4, 1, 4, 0, 1);
     vtkm::Id3 sample(1, 1, 1);
     bool includeBoundary = false;
+<<<<<<< HEAD
     bool includeOffset = false;
+=======
+    bool includeOffset = false;
+>>>>>>> bdd013b... Getting there with ES
 
     vtkm::worklet::ExtractStructured worklet;
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
@@ -306,7 +310,6 @@ public:
     CellSetType cellSet;
 =======
   // RangeID3 and subsample
-  //vtkm::RangeId3 range(0,2,0,2,0,2);
   vtkm::RangeId3 range(5, 15, 0, 10, 0, 10);
   vtkm::Id3 sample(1, 1, 1);
   vtkm::Id3 test_offset(1, 1, 1);
@@ -314,7 +317,7 @@ public:
   vtkm::Id3 no_offset(0, 0, 0);
   const vtkm::Int32 Dimensionality = 3;
   bool includeBoundary = false;
-  bool includeOffset = true;
+  bool includeOffset = false;
   cellSet.SetPointDimensions(vtkm::make_Vec(10, 0, 0));
   vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
 
@@ -325,38 +328,43 @@ public:
 
   VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
 
+  includeOffset = true;
+  outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
   cellSet.SetGlobalPointIndexStart(test_offset);
   VTKM_TEST_ASSERT(test_equal(cellSet.GetPointDimensions(), test_offset));
 
+<<<<<<< HEAD
   //VTKM_TEST_ASSERT(test_equal(worklet.GetIncludeOffset(), includeOffset));
   //VTKM_TEST_ASSERT(test_equal(outCellSet.GetIncludeOffset(), false));
 >>>>>>> fcddeb5... Maybe right?
 
-    // RangeID3 and subsample
-    vtkm::RangeId3 range(5, 15, 0, 10, 0, 1);
-    vtkm::Id3 sample(1, 1, 1);
-    vtkm::Id2 test_offset(10, 0);
-    vtkm::Id2 no_offset(0, 0);
-    vtkm::Id2 new_dims(5, 10);
-    bool includeBoundary = false;
-    bool includeOffset = true;
-    cellSet.SetPointDimensions(vtkm::make_Vec(10, 10));
+  // RangeID3 and subsample
+  vtkm::RangeId3 range(5, 15, 0, 10, 0, 1);
+  vtkm::Id3 sample(1, 1, 1);
+  vtkm::Id2 test_offset(10, 0);
+  vtkm::Id2 no_offset(0, 0);
+  vtkm::Id2 new_dims(5, 10);
+  bool includeBoundary = false;
+  bool includeOffset = true;
+  cellSet.SetPointDimensions(vtkm::make_Vec(10, 10));
 
-    vtkm::worklet::ExtractStructured worklet;
-    auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
+  vtkm::worklet::ExtractStructured worklet;
+  auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
 
-    VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
-    vtkm::Id2 cellDims =
-      outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+  VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
+  vtkm::Id2 cellDims =
+    outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
 
-    includeOffset = true;
-    cellSet.SetGlobalPointIndexStart(test_offset);
-    outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
-    cellDims = outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-    CellSetType cs = outCellSet.Cast<CellSetType>();
-    cellDims = cs.GetPointDimensions();
-    VTKM_TEST_ASSERT(test_equal(cellDims, new_dims));
-    VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), test_offset));
+  includeOffset = true;
+  cellSet.SetGlobalPointIndexStart(test_offset);
+  outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
+  cellDims = outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+  CellSetType cs = outCellSet.Cast<CellSetType>();
+  cellDims = cs.GetPointDimensions();
+  VTKM_TEST_ASSERT(test_equal(cellDims, new_dims));
+  VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), test_offset));
+=======
+>>>>>>> bdd013b... Getting there with ES
   }
 
   void operator()() const
