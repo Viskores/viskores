@@ -223,9 +223,9 @@ public:
                      "Wrong result for ExtractStructured worklet");
   }
 
-  void TestOffset3D() const
+  void TestOffset3D1() const
   {
-    std::cout << "Testing structured rectilinear" << std::endl;
+    std::cout << "Testing offset 3D-1" << std::endl;
     using CellSetType = vtkm::cont::CellSetStructured<3>;
 
     // Create the input uniform cell set
@@ -236,9 +236,9 @@ public:
     // RangeID3 and subsample
     vtkm::RangeId3 range(5, 15, 0, 10, 0, 10);
     vtkm::Id3 sample(1, 1, 1);
-    vtkm::Id3 test_offset(1, 1, 1);
-    vtkm::Id3 origin_offset(1, 1, 1);
+    vtkm::Id3 test_offset(10, 0, 0);
     vtkm::Id3 no_offset(0, 0, 0);
+    vtkm::Id3 new_dims(5, 10, 10);
     const vtkm::Int32 Dimensionality = 3;
     bool includeBoundary = false;
     bool includeOffset = false;
@@ -248,15 +248,61 @@ public:
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
     // worklet.Run(cellset, voi, sample rate, ...)
-    auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
+    //auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
+    vtkm::cont::DynamicCellSet outCellSet =
+      std::make_shared(worklet.Run(cellSet, range, sample, includeBoundary, includeOffset));
 
     VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
+    auto t4 = cellSet.GetGlobalPointIndexStart();
+    auto t5 = cellSet.GetPointDimensions();
+    vtkm::Id3 cellDims =
+      outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+    //vtkm::Id3 cellDims = outCellSet.GetSchedulingRange(vtkm::TopologyElementTagCell());
 
     includeOffset = true;
     outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
     cellSet.SetGlobalPointIndexStart(test_offset);
     VTKM_TEST_ASSERT(test_equal(cellSet.GetPointDimensions(), test_offset));
+    auto t1 = cellSet.GetPointDimensions();
+    auto t2 = cellSet.GetGlobalPointIndexStart();
+    auto t9 = outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+    //auto t3 = cellSet.GetGlobalPointDimensions();
+    std::cout << " " << std::endl;
   }
+
+  void TestOffset3D2() const
+  {
+    std::cout << "Testing Offset 3D-2" << std::endl;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
+
+    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DRectilinearDataSet0();
+    CellSetType cellSet;
+    dataSet.GetCellSet(0).CopyTo(cellSet);
+
+    vtkm::RangeId3 range(15, 20, 0, 10, 0, 10);
+    vtkm::Id3 sample(1, 1, 1);
+    vtkm::Id3 test_offset(15, 0, 0);
+    const vtkm::Int32 Dimensionality = 3;
+    bool includeBoundary = false;
+    bool includeOffset = true;
+    cellSet.SetPointDimensions(vtkm::make_Vec(10, 0, 0));
+    vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
+    vtkm::worklet::ExtractStructured worklet;
+
+    auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
+    cellSet.SetGlobalPointIndexStart(test_offset);
+    auto test = cellSet.GetPointDimensions();
+    VTKM_TEST_ASSERT(test_equal(cellSet.GetPointDimensions(), test_offset));
+  }
+  /*
+  void TestOffset3D3() const
+  {
+      std::cout << "Ehhh" << std::endl;
+      using CellSetType = vtkm::cont::CellSetStructured<3>;
+      vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DRectilinearDataSet0();
+      CellSetType cellset = dynamic_cells.Cast<CellSetStructured<3>>();
+  }
+  */
 
   void operator()() const
   {
@@ -265,7 +311,8 @@ public:
     TestUniform3D1();
     TestRectilinear2D();
     TestRectilinear3D();
-    TestOffset3D();
+    TestOffset3D1();
+    TestOffset3D2();
   }
 };
 
