@@ -2653,12 +2653,12 @@ vtkm::Int32 FindFirstSetBit(vtkm::UInt64 word)
 inline VTKM_EXEC_CONT
 vtkm::Int32 FindFirstSetBit(vtkm::UInt64 word)
 {
-#  if defined(VTKM_GCC) || defined(VTKM_CLANG)
+#  if defined(VTKM_GCC) || defined(VTKM_CLANG) || defined(VTKM_ICC)
 
   // Output is [0,64], with ffs(0) == 0
   return __builtin_ffsll(static_cast<long long int>(word));
 
-#  elif defined(VTKM_MSVC) || defined(VTKM_ICC)
+#  elif defined(VTKM_MSVC)
 
   // Output is [0, 63], check return code to see if bits are set:
   vtkm::UInt32 firstSet;
