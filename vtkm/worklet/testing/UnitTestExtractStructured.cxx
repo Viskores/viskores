@@ -304,6 +304,7 @@ public:
     using CellSetType = vtkm::cont::CellSetStructured<3>;
 >>>>>>> 6cacc28... Pushing for Abhishek (Don't merge)
 
+<<<<<<< HEAD
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
     CellSetType cs = outCellSet.Cast<CellSetType>();
     VTKM_TEST_ASSERT(test_equal(cs.GetPointDimensions(), test_dims));
@@ -312,6 +313,12 @@ public:
   {
     std::cout << "Testing offset 2D" << std::endl;
     using CellSetType = vtkm::cont::CellSetStructured<2>;
+=======
+    // Create the input uniform cell set
+    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DRectilinearDataSet0();
+    CellSetType cellSet;
+    //dataSet.GetCellSet(0).CopyTo(cellSet);
+>>>>>>> 43cabfc... Maybe closer
 
     CellSetType cellSet;
 =======
@@ -330,16 +337,18 @@ public:
   // Extract subset
   vtkm::worklet::ExtractStructured worklet;
   // worklet.Run(cellset, voi, sample rate, ...)
-  //auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
-  vtkm::cont::DynamicCellSet outCellSet =
-    std::make_shared(worklet.Run(cellSet, range, sample, includeBoundary, includeOffset));
+  auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
+  //CellSetType cellStruct = outCellSet.Cast<CellSetType>();
 
   VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
   auto t4 = cellSet.GetGlobalPointIndexStart();
   auto t5 = cellSet.GetPointDimensions();
   vtkm::Id3 cellDims =
     outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-  //vtkm::Id3 cellDims = outCellSet.GetSchedulingRange(vtkm::TopologyElementTagCell());
+  ////vtkm::Id3 cellDims = outCellSet.GetSchedulingRange(vtkm::TopologyElementTagCell());
+  //vtkm::Id3 cellDims = cellStruct.GetCellDimensions();
+  //vtkm::Id3 cellDims = cellSet.GetCellDimensions();
+  //CellSetType cs = dynamic_cells.Cast<CellSetType>();
 
   includeOffset = true;
   outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
@@ -347,7 +356,11 @@ public:
   VTKM_TEST_ASSERT(test_equal(cellSet.GetPointDimensions(), test_offset));
   auto t1 = cellSet.GetPointDimensions();
   auto t2 = cellSet.GetGlobalPointIndexStart();
-  auto t9 = outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+
+  //auto t9 = outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+
+  vtkm::Id3 cellDims2 = cellSet.GetCellDimensions();
+
   //auto t3 = cellSet.GetGlobalPointDimensions();
   std::cout << " " << std::endl;
 }
