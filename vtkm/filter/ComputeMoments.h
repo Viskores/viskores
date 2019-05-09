@@ -28,13 +28,14 @@ public:
                                           const vtkm::filter::FieldMetadata& fieldMetadata,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>&);
 
-  VTKM_CONT void SetRadius(int _radius) { this->radius = _radius; }
+  // TODO: change radius to vec3<int>
+  VTKM_CONT void SetRadius(int _radius) { this->Radius = _radius; }
 
-  VTKM_CONT void SetOrder(int _order) { this->order = _order; }
+  VTKM_CONT void SetOrder(int _order) { this->Order = _order; }
 
 private:
-  int radius;
-  int order;
+  int Radius;
+  int Order;
 };
 
 template <>

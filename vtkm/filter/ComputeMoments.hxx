@@ -29,7 +29,7 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   if (fieldMetadata.GetAssociation() != vtkm::cont::Field::Association::POINTS)
   {
@@ -38,7 +38,8 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
 
   vtkm::cont::DataSet output = internal::CreateResult(input);
 
-  for (int i = 0; i <= this->order; ++i)
+  // FIXME: 3D with i, j, k
+  for (int i = 0; i <= this->Order; ++i)
   {
     for (int p = i; p >= 0; --p)
     {
@@ -46,12 +47,20 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
 
       using DispatcherType =
         vtkm::worklet::DispatcherPointNeighborhood<vtkm::worklet::moments::ComputeMoments>;
-      DispatcherType dispatcher(vtkm::worklet::moments::ComputeMoments{ this->radius, p, i - p });
+      DispatcherType dispatcher(vtkm::worklet::moments::ComputeMoments{ this->Radius, p, i - p });
       dispatcher.SetDevice(vtkm::cont::DeviceAdapterTagSerial());
-      dispatcher.Invoke(input.GetCellSet(0), field, moments);
+      dispatcher.Invoke(
+        vtkm::filter::ApplyPolicy(input.GetCellSet(this->GetActiveCellSetIndex()), policy),
+        field,
+        moments);
 
-      std::string fieldName = "moments_";
-      fieldName += std::to_string(p) + std::to_string(i - p);
+      std::string fieldName = "index";
+      // names for i and j
+      for (int j = 0; j < p; ++j)
+        fieldName += std::to_string(0);
+      for (int j = 0; j < i - p; ++j)
+        fieldName += std::to_string(1);
+      // TODO: add the same for k
 
       vtkm::cont::Field momentsField(fieldName, vtkm::cont::Field::Association::POINTS, moments);
       output.AddField(momentsField);
