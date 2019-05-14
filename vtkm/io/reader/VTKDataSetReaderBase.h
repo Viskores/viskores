@@ -196,18 +196,21 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
     }
     case 2:
     case 3:
+    case 9:
     {
+      constexpr auto numComps = vtkm::VecTraits<T>::NUM_COMPONENTS;
+
       using InComponentType = typename vtkm::VecTraits<T>::ComponentType;
       using OutComponentType = typename ClosestFloat<InComponentType>::Type;
-      using CommonType = vtkm::Vec<OutComponentType, 3>;
+      using CommonType = vtkm::Vec<OutComponentType, numComps>;
       constexpr bool not_same = !std::is_same<T, CommonType>::value;
       if (not_same)
       {
         std::cerr << "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name() << "["
                   << vtkm::VecTraits<T>::NUM_COMPONENTS << "] "
                   << "is currently unsupported. Converting to "
-                  << vtkm::io::internal::DataTypeName<OutComponentType>::Name() << "[3]."
-                  << std::endl;
+                  << vtkm::io::internal::DataTypeName<OutComponentType>::Name() << "[" << numComps
+                  << "]." << std::endl;
       }
 
       vtkm::cont::ArrayHandle<CommonType> output;
@@ -216,7 +219,7 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
       for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
       {
         CommonType outval = CommonType();
-        for (vtkm::IdComponent j = 0; j < vtkm::VecTraits<T>::NUM_COMPONENTS; ++j)
+        for (vtkm::IdComponent j = 0; j < numComps; ++j)
         {
           outval[j] = static_cast<OutComponentType>(
             vtkm::VecTraits<T>::GetComponent(vec[static_cast<std::size_t>(i)], j));
@@ -228,7 +231,7 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
     }
     default:
     {
-      std::cerr << "Only 1, 2, or 3 components supported. Skipping." << std::endl;
+      std::cerr << "Only 1, 2, 3 or 9 components supported. Skipping." << std::endl;
       return vtkm::cont::VariantArrayHandle(vtkm::cont::ArrayHandle<vtkm::Float32>());
     }
   }
@@ -504,6 +507,17 @@ private:
     std::string skip;
     std::getline(this->DataFile->Stream, skip);
 
+    if ((this->DataFile->Version[0] > 4) ||
+        (this->DataFile->Version[0] == 4 && this->DataFile->Version[1] > 2))
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Reader may not correctly read >v4.2 files. Reading version "
+                   << this->DataFile->Version[0]
+                   << "."
+                   << this->DataFile->Version[1]
+                   << ".\n");
+    }
+
     // Read title line
     std::getline(this->DataFile->Stream, this->DataFile->Title);
 
@@ -737,6 +751,9 @@ protected:
   template <typename T>
   void ReadArray(std::vector<T>& buffer)
   {
+    using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
+    constexpr vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
+
     std::size_t numElements = buffer.size();
     if (this->DataFile->IsBinary)
     {
@@ -749,9 +766,6 @@ protected:
     }
     else
     {
-      using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
-      const vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
-
       for (std::size_t i = 0; i < numElements; ++i)
       {
         for (vtkm::IdComponent j = 0; j < numComponents; ++j)
@@ -763,6 +777,7 @@ protected:
       }
     }
     this->DataFile->Stream >> std::ws;
+    this->SkipArrayMetaData(numComponents);
   }
 
   template <vtkm::IdComponent NumComponents>
@@ -783,6 +798,9 @@ protected:
   template <typename T>
   void SkipArray(std::size_t numElements, T)
   {
+    using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
+    constexpr vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
+
     if (this->DataFile->IsBinary)
     {
       this->DataFile->Stream.seekg(static_cast<std::streamoff>(numElements * sizeof(T)),
@@ -790,9 +808,6 @@ protected:
     }
     else
     {
-      using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
-      const vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
-
       for (std::size_t i = 0; i < numElements; ++i)
       {
         for (vtkm::IdComponent j = 0; j < numComponents; ++j)
@@ -803,6 +818,7 @@ protected:
       }
     }
     this->DataFile->Stream >> std::ws;
+    this->SkipArrayMetaData(numComponents);
   }
 
   template <vtkm::IdComponent NumComponents>
@@ -810,10 +826,13 @@ protected:
                  vtkm::Vec<vtkm::io::internal::DummyBitType, NumComponents>)
   {
     this->SkipArray(numElements * static_cast<std::size_t>(NumComponents),
-                    vtkm::io::internal::DummyBitType());
+                    vtkm::io::internal::DummyBitType(),
+                    NumComponents);
   }
 
-  void SkipArray(std::size_t numElements, vtkm::io::internal::DummyBitType)
+  void SkipArray(std::size_t numElements,
+                 vtkm::io::internal::DummyBitType,
+                 vtkm::IdComponent numComponents = 1)
   {
     if (this->DataFile->IsBinary)
     {
@@ -829,6 +848,55 @@ protected:
       }
     }
     this->DataFile->Stream >> std::ws;
+    this->SkipArrayMetaData(numComponents);
+  }
+
+  void SkipArrayMetaData(vtkm::IdComponent numComponents)
+  {
+    if (!this->DataFile->Stream.good())
+    {
+      return;
+    }
+
+    auto begining = this->DataFile->Stream.tellg();
+
+    std::string tag;
+    this->DataFile->Stream >> tag;
+    if (tag != "METADATA")
+    {
+      this->DataFile->Stream.seekg(begining);
+      return;
+    }
+
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "METADATA is not supported. Attempting to Skip.");
+
+    this->DataFile->Stream >> tag >> std::ws;
+    if (tag == "COMPONENT_NAMES")
+    {
+      std::string name;
+      for (vtkm::IdComponent i = 0; i < numComponents; ++i)
+      {
+        this->DataFile->Stream >> name >> std::ws;
+      }
+    }
+    else if (tag == "INFORMATION")
+    {
+      int numKeys = 0;
+      this->DataFile->Stream >> numKeys >> std::ws;
+
+      // Skipping INFORMATION is tricky. The reader needs to be aware of the types of the
+      // information, which is not provided in the file.
+      // Here we will just skip until an empty line is found.
+      std::string line;
+      while (this->DataFile->Stream.good() && line != "\n")
+      {
+        std::getline(this->DataFile->Stream, line);
+      }
+    }
+    else
+    {
+      internal::parseAssert(false);
+    }
   }
 
 private:

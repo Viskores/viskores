@@ -106,7 +106,11 @@ const char structuredPointsAscii[] = "# vtk DataFile Version 3.0\n"
                                      "  0  10  20  30  40  50  50  40  30  20  10   0\n"
                                      "  0  10  20  30  40  50  50  40  30  20  10   0\n"
                                      "  0   5  10  15  20  25  25  20  15  10   5   0\n"
-                                     "  0   0   0   0   0   0   0   0   0   0   0   0\n";
+                                     "  0   0   0   0   0   0   0   0   0   0   0   0\n"
+                                     "\n"
+                                     "METADATA\n"
+                                     "INFORMATION 0\n"
+                                     "\n";
 
 const char structuredPointsVisItAscii[] = "# vtk DataFile Version 3.0\n"
                                           "Volume example\n"
