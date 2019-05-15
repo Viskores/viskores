@@ -59,8 +59,8 @@ public:
     const InputDomainType& inputDomain = invocation.GetInputDomain();
 
     // Now that we have the input domain, we can extract the range of the
-    // scheduling and call BadicInvoke.
-    this->BasicInvoke(invocation, inputDomain.GetInputRange());
+    // scheduling and call BasicInvoke.
+    this->BasicInvoke(invocation, internal::scheduling_range(inputDomain));
   }
 };
 }
