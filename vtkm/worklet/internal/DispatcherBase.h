@@ -153,15 +153,16 @@ struct ReportValueOnError<Value, true> : std::true_type
 };
 
 template <typename T>
-struct remove_pointer_and_decay : std::remove_pointer<typename std::decay<T>::type>
-{
-};
+using remove_pointer_and_decay = typename std::remove_pointer<typename std::decay<T>::type>::type;
+
+template <typename T>
+using remove_cvref = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
 // Is designed as a brigand fold operation.
 template <typename Type, typename State>
 struct DetermineIfHasDynamicParameter
 {
-  using T = typename std::remove_pointer<Type>::type;
+  using T = remove_pointer_and_decay<Type>;
   using DynamicTag = typename vtkm::cont::internal::DynamicTransformTraits<T>::DynamicTag;
   using isDynamic =
     typename std::is_same<DynamicTag, vtkm::cont::internal::DynamicTransformTagCastAndCall>::type;
@@ -314,7 +315,7 @@ struct DispatcherBaseTransportFunctor
   {
     using TransportTag =
       typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-    using T = typename remove_pointer_and_decay<ControlParameter>::type;
+    using T = remove_pointer_and_decay<ControlParameter>;
     using TransportType = typename vtkm::cont::arg::Transport<TransportTag, T, Device>;
     using type = typename TransportType::ExecObjectType;
   };
@@ -326,7 +327,7 @@ struct DispatcherBaseTransportFunctor
   {
     using TransportTag =
       typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-    using T = typename remove_pointer_and_decay<ControlParameter>::type;
+    using T = remove_pointer_and_decay<ControlParameter>;
     vtkm::cont::arg::Transport<TransportTag, T, Device> transport;
 
     not_nullptr(invokeData, Index);
@@ -412,7 +413,7 @@ struct for_each_dynamic_arg
   void operator()(const Trampoline& trampoline, ContParams&& sig, T&& t, Args&&... args) const
   {
     //Determine that state of T when it is either a `cons&` or a `* const&`
-    using Type = typename std::remove_pointer<typename std::decay<T>::type>::type;
+    using Type = remove_pointer_and_decay<T>;
     using tag = typename vtkm::cont::internal::DynamicTransformTraits<Type>::DynamicTag;
     //convert the first item to a known type
     convert_arg<LeftToProcess>(
@@ -494,7 +495,7 @@ private:
   VTKM_CONT void StartInvoke(Args&&... args) const
   {
     using ParameterInterface =
-      vtkm::internal::FunctionInterface<void(typename std::decay<Args>::type...)>;
+      vtkm::internal::FunctionInterface<void(detail::remove_cvref<Args>...)>;
 
     VTKM_STATIC_ASSERT_MSG(ParameterInterface::ARITY == NUM_INVOKE_PARAMS,
                            "Dispatcher Invoke called with wrong number of arguments.");
@@ -540,7 +541,7 @@ private:
   VTKM_CONT void StartInvokeDynamic(std::false_type, Args&&... args) const
   {
     using ParameterInterface =
-      vtkm::internal::FunctionInterface<void(typename std::decay<Args>::type...)>;
+      vtkm::internal::FunctionInterface<void(detail::remove_cvref<Args>...)>;
 
     //Nothing requires a conversion from dynamic to static types, so
     //next we need to verify that each argument's type is correct. If not
@@ -561,8 +562,7 @@ private:
     static_assert(isAllValid::value == expectedLen::value,
                   "All arguments failed the TypeCheck pass");
 
-    auto fi =
-      vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
+    auto fi = vtkm::internal::make_FunctionInterface<void, detail::remove_cvref<Args>...>(args...);
     auto ivc = vtkm::internal::Invocation<ParameterInterface,
                                           ControlInterface,
                                           ExecutionInterface,

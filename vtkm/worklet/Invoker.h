@@ -52,18 +52,44 @@ struct Invoker
   {
   }
 
-  /// Launch the worklet that is provided as the first parameter. The additional
-  /// parameters are the ControlSignature arguments for the worklet.
+  /// Launch the worklet that is provided as the first parameter.
+  /// Optional second parameter is the scatter type associated with the worklet.
+  /// Any additional parameters are the ControlSignature arguments for the worklet.
   ///
-  template <typename Worklet, typename... Args>
-  inline void operator()(Worklet&& worklet, Args&&... args) const
+  template <typename Worklet,
+            typename T,
+            typename... Args,
+            typename std::enable_if<
+              std::is_base_of<internal::ScatterBase, internal::detail::remove_cvref<T>>::value,
+              int>::type* = nullptr>
+  inline void operator()(Worklet&& worklet, T&& scatter, Args&&... args) const
   {
-    using WorkletType = typename std::decay<Worklet>::type;
+    using WorkletType = internal::detail::remove_cvref<Worklet>;
+    using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
+
+    DispatcherType dispatcher(worklet, scatter);
+    dispatcher.SetDevice(this->DeviceId);
+    dispatcher.Invoke(std::forward<Args>(args)...);
+  }
+
+  /// Launch the worklet that is provided as the first parameter.
+  /// Optional second parameter is the scatter type associated with the worklet.
+  /// Any additional parameters are the ControlSignature arguments for the worklet.
+  ///
+  template <typename Worklet,
+            typename T,
+            typename... Args,
+            typename std::enable_if<
+              !std::is_base_of<internal::ScatterBase, internal::detail::remove_cvref<T>>::value,
+              int>::type* = nullptr>
+  inline void operator()(Worklet&& worklet, T&& t, Args&&... args) const
+  {
+    using WorkletType = internal::detail::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet);
     dispatcher.SetDevice(this->DeviceId);
-    dispatcher.Invoke(std::forward<Args>(args)...);
+    dispatcher.Invoke(std::forward<T>(t), std::forward<Args>(args)...);
   }
 
   /// Get the device adapter that this Invoker is bound too

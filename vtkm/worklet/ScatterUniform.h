@@ -13,6 +13,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
+#include <vtkm/worklet/internal/ScatterBase.h>
 
 namespace vtkm
 {
@@ -49,7 +50,7 @@ struct FunctorDiv
 /// elements are grouped by the input associated.
 ///
 template <vtkm::IdComponent NumOutputsPerInput>
-struct ScatterUniform
+struct ScatterUniform : internal::ScatterBase
 {
   VTKM_CONT ScatterUniform() = default;
 

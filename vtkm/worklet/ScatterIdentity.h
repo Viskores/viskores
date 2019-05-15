@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/worklet/internal/ScatterBase.h>
 
 namespace vtkm
 {
@@ -26,7 +27,7 @@ namespace worklet
 /// element generates one output element associated with it. This is the
 /// default for basic maps.
 ///
-struct ScatterIdentity
+struct ScatterIdentity : internal::ScatterBase
 {
   using OutputToInputMapType = vtkm::cont::ArrayHandleIndex;
   VTKM_CONT

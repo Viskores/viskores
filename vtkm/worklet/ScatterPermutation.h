@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/worklet/internal/ScatterBase.h>
 
 namespace vtkm
 {
@@ -28,7 +29,7 @@ namespace worklet
 /// can be duplicates. Note that even with duplicates the VistIndex is always 0.
 ///
 template <typename PermutationStorage = VTKM_DEFAULT_STORAGE_TAG>
-class ScatterPermutation
+class ScatterPermutation : public internal::ScatterBase
 {
 private:
   using PermutationArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id, PermutationStorage>;
