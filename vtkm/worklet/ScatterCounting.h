@@ -10,6 +10,7 @@
 #ifndef vtk_m_worklet_ScatterCounting_h
 #define vtk_m_worklet_ScatterCounting_h
 
+#include <vtkm/worklet/internal/ScatterBase.h>
 #include <vtkm/worklet/vtkm_worklet_export.h>
 
 #include <vtkm/cont/VariantArrayHandle.h>
@@ -40,7 +41,7 @@ struct ScatterCountingBuilder;
 /// taken in the constructor and the index arrays are derived from that. So
 /// changing the counts after the scatter is created will have no effect.
 ///
-struct VTKM_WORKLET_EXPORT ScatterCounting
+struct VTKM_WORKLET_EXPORT ScatterCounting : internal::ScatterBase
 {
   struct CountTypes : vtkm::ListTagBase<vtkm::Int64,
                                         vtkm::Int32,

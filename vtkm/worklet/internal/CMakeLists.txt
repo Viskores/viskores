@@ -10,6 +10,7 @@
 
 set(headers
   DispatcherBase.h
+  ScatterBase.h
   TriangulateTables.h
   WorkletBase.h
   )
