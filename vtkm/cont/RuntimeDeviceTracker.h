@@ -28,11 +28,18 @@ namespace detail
 
 struct RuntimeDeviceTrackerInternals;
 }
+struct ScopedRuntimeDeviceTracker;
 
-/// A class that can be used to determine if a given device adapter
-/// is supported on the current machine at runtime. This is a more
-/// complex version of vtkm::cont::RunimeDeviceInformation, as this can
-/// also track when worklets fail, why the fail, and will update the list
+/// RuntimeDeviceTracker is the central location for determining
+/// which device adapter will be active for algorithm execution.
+/// Many features in VTK-m will attempt to run algorithms on the "best
+/// available device." This generally is determined at runtime as some
+/// backends require specific hardware, or failures in one device are
+/// recorded and that device is disabled.
+///
+/// While vtkm::cont::RunimeDeviceInformation reports on the existence
+/// of a device being supported, this tracks on a per-thread basis
+/// when worklets fail, why the fail, and will update the list
 /// of valid runtime devices based on that information.
 ///
 ///
@@ -82,48 +89,6 @@ public:
   VTKM_CONT
   void Reset();
 
-  /// \brief Perform a deep copy of the \c RuntimeDeviceTracker state.
-  ///
-  /// Normally when you assign or copy a \c RuntimeDeviceTracker, they share
-  /// state so that when you change the state of one (for example, find a
-  /// device that does not work), the other is also implicitly updated. This
-  /// important so that when you use the global runtime device tracker the
-  /// state is synchronized across all the units using it.
-  ///
-  /// If you want a \c RuntimeDeviceTracker with independent state, just create
-  /// one independently. If you want to start with the state of a source
-  /// \c RuntimeDeviceTracker but update the state independently, you can use
-  /// \c DeepCopy method to get the initial state. Further changes will
-  /// not be shared.
-  ///
-  /// This version of \c DeepCopy creates a whole new \c RuntimeDeviceTracker
-  /// with a state that is not shared with any other object.
-  ///
-  VTKM_CONT
-  vtkm::cont::RuntimeDeviceTracker DeepCopy() const;
-
-  /// \brief Perform a deep copy of the \c RuntimeDeviceTracker state.
-  ///
-  /// Normally when you assign or copy a \c RuntimeDeviceTracker, they share
-  /// state so that when you change the state of one (for example, find a
-  /// device that does not work), the other is also implicitly updated. This
-  /// important so that when you use the global runtime device tracker the
-  /// state is synchronized across all the units using it.
-  ///
-  /// If you want a \c RuntimeDeviceTracker with independent state, just create
-  /// one independently. If you want to start with the state of a source
-  /// \c RuntimeDeviceTracker but update the state independently, you can use
-  /// \c DeepCopy method to get the initial state. Further changes will
-  /// not be shared.
-  ///
-  /// This version of \c DeepCopy sets the state of the current object to
-  /// the one given in the argument. Any other \c RuntimeDeviceTrackers sharing
-  /// state with this object will also get updated. This method is good for
-  /// restoring a state that was previously saved.
-  ///
-  VTKM_CONT
-  void DeepCopy(const vtkm::cont::RuntimeDeviceTracker& src);
-
   /// \brief Disable the given device
   ///
   /// The main intention of \c RuntimeDeviceTracker is to keep track of what
@@ -148,14 +113,12 @@ public:
   VTKM_CONT void ForceDevice(DeviceAdapterId id);
 
 private:
+  friend struct ScopedRuntimeDeviceTracker;
+
   std::shared_ptr<detail::RuntimeDeviceTrackerInternals> Internals;
 
   VTKM_CONT
   RuntimeDeviceTracker();
-
-  // Deep Copy constructor.
-  VTKM_CONT
-  RuntimeDeviceTracker(const std::shared_ptr<detail::RuntimeDeviceTrackerInternals>& internals);
 
   VTKM_CONT
   void CheckDevice(vtkm::cont::DeviceAdapterId deviceId) const;
@@ -170,6 +133,29 @@ private:
   void ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId, bool runtimeExists);
 };
 
+/// A class that can be used to determine or modify which device adapter
+/// VTK-m algorithms should be run on. This class captures the state
+/// of the per-thread device adapter and will revert any changes applied
+/// during its lifetime on destruction.
+///
+///
+struct VTKM_CONT_EXPORT ScopedRuntimeDeviceTracker : public vtkm::cont::RuntimeDeviceTracker
+{
+  /// Constructor is not thread safe
+  VTKM_CONT ScopedRuntimeDeviceTracker();
+
+  /// Constructor is not thread safe
+  VTKM_CONT ScopedRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker& tracker);
+
+  /// Destructor is not thread safe
+  VTKM_CONT ~ScopedRuntimeDeviceTracker();
+
+  ScopedRuntimeDeviceTracker(const ScopedRuntimeDeviceTracker&) = delete;
+
+private:
+  std::unique_ptr<detail::RuntimeDeviceTrackerInternals> SavedState;
+};
+
 /// \brief Get the \c RuntimeDeviceTracker for the current thread.
 ///
 /// Many features in VTK-m will attempt to run algorithms on the "best
@@ -182,29 +168,6 @@ private:
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker();
-
-struct ScopedRuntimeDeviceTracker
-{
-  vtkm::cont::RuntimeDeviceTracker SavedTracker;
-
-  VTKM_CONT ScopedRuntimeDeviceTracker()
-    : SavedTracker(vtkm::cont::GetRuntimeDeviceTracker().DeepCopy())
-  {
-  }
-
-  VTKM_CONT ScopedRuntimeDeviceTracker(vtkm::cont::RuntimeDeviceTracker tracker)
-    : SavedTracker(vtkm::cont::GetRuntimeDeviceTracker().DeepCopy())
-  {
-    vtkm::cont::GetRuntimeDeviceTracker().DeepCopy(tracker);
-  }
-
-  VTKM_CONT ~ScopedRuntimeDeviceTracker()
-  {
-    vtkm::cont::GetRuntimeDeviceTracker().DeepCopy(this->SavedTracker);
-  }
-
-  ScopedRuntimeDeviceTracker(const ScopedRuntimeDeviceTracker&) = delete;
-};
 }
 } // namespace vtkm::cont
 

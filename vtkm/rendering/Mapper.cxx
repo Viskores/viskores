@@ -30,7 +30,7 @@ void Mapper::SetActiveColorTable(const vtkm::cont::ColorTable& colorTable)
 
   {
     vtkm::cont::ScopedRuntimeDeviceTracker tracker;
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     colorTable.Sample(1024, temp);
   }
 

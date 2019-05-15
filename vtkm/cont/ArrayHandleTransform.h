@@ -313,7 +313,7 @@ public:
   {
     VTKM_ASSERT(this->Valid);
     vtkm::cont::ScopedRuntimeDeviceTracker trackerScope;
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    trackerScope.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     return PortalConstType(this->Array.GetPortalConstControl(), this->Functor.PrepareForControl());
   }
 
@@ -405,7 +405,7 @@ public:
   {
     VTKM_ASSERT(this->Valid);
     vtkm::cont::ScopedRuntimeDeviceTracker trackerScope;
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    trackerScope.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     return PortalType(this->Array.GetPortalControl(),
                       this->Functor.PrepareForControl(),
                       this->InverseFunctor.PrepareForControl());
@@ -416,7 +416,7 @@ public:
   {
     VTKM_ASSERT(this->Valid);
     vtkm::cont::ScopedRuntimeDeviceTracker trackerScope;
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    trackerScope.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
     return PortalConstType(this->Array.GetPortalConstControl(),
                            this->Functor.PrepareForControl(),
                            this->InverseFunctor.PrepareForControl());
