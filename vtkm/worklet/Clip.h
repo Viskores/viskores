@@ -808,8 +808,6 @@ public:
 
       using ExecutionSignature = void(_2, _3);
 
-      using ScatterType = vtkm::worklet::ScatterIdentity;
-
       template <typename MappedValueVecType, typename MappedValueType>
       VTKM_EXEC void operator()(const MappedValueVecType& toReduce, MappedValueType& centroid) const
       {
