@@ -12,7 +12,7 @@
 
 int UnitTestTBBBitField(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
   return vtkm::cont::testing::TestingBitField<vtkm::cont::DeviceAdapterTagTBB>::Run(argc, argv);
 }

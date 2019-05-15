@@ -14,7 +14,7 @@
 
 int UnitTestCudaGeometry(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   return vtkm::cont::testing::Testing::Run(
     UnitTestGeometryNamespace::RunGeometryTests<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);

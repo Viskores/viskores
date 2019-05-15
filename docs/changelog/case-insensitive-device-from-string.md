@@ -8,7 +8,7 @@ vtkm::cont::DeviceAdapterId id1 = vtkm::cont::make_DeviceAdapterId("cuda");
 vtkm::cont::DeviceAdapterId id2 = vtkm::cont::make_DeviceAdapterId("CUDA");
 vtkm::cont::DeviceAdapterId id3 = vtkm::cont::make_DeviceAdapterId("Cuda");
 
-auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+auto& tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
 vtkm::cont::DeviceAdapterId id4 = tracker.GetDeviceAdapterId("cuda");
 vtkm::cont::DeviceAdapterId id5 = tracker.GetDeviceAdapterId("CUDA");
 vtkm::cont::DeviceAdapterId id6 = tracker.GetDeviceAdapterId("Cuda");

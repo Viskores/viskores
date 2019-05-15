@@ -12,7 +12,7 @@
 
 int UnitTestOpenMPArrayHandle(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
   return vtkm::cont::testing::TestingArrayHandles<vtkm::cont::DeviceAdapterTagOpenMP>::Run(argc,
                                                                                            argv);

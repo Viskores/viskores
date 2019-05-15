@@ -133,7 +133,7 @@ int UnitTestDeviceAdapterAlgorithmGeneral(int argc, char* argv[])
 {
   //need to enable DeviceAdapterTagTestAlgorithmGeneral as it
   //is not part of the default set of devices
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ResetDevice(vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral{});
 
   return vtkm::cont::testing::TestingDeviceAdapter<

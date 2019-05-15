@@ -14,7 +14,7 @@
 
 int UnitTestCudaDataSetExplicit(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   int result =
     vtkm::cont::testing::TestingDataSetExplicit<vtkm::cont::DeviceAdapterTagCuda>::Run(argc, argv);

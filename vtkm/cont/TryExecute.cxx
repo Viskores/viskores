@@ -22,7 +22,7 @@ namespace detail
 {
 
 VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::cont::DeviceAdapterId deviceId,
-                                                vtkm::cont::RuntimeDeviceTracker tracker,
+                                                vtkm::cont::RuntimeDeviceTracker& tracker,
                                                 const std::string& functorName)
 {
   try

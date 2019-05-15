@@ -166,7 +166,7 @@ void RunEdgeCases()
 
 int UnitTestCudaMath(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   int tests_valid = vtkm::cont::testing::Testing::Run(
     UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);

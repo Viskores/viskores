@@ -115,10 +115,16 @@ public:
 private:
   friend struct ScopedRuntimeDeviceTracker;
 
-  std::shared_ptr<detail::RuntimeDeviceTrackerInternals> Internals;
+  detail::RuntimeDeviceTrackerInternals* Internals;
 
   VTKM_CONT
-  RuntimeDeviceTracker();
+  RuntimeDeviceTracker(detail::RuntimeDeviceTrackerInternals* details, bool reset);
+
+  VTKM_CONT
+  RuntimeDeviceTracker(const RuntimeDeviceTracker&) = delete;
+
+  VTKM_CONT
+  RuntimeDeviceTracker& operator=(const RuntimeDeviceTracker&) = delete;
 
   VTKM_CONT
   void CheckDevice(vtkm::cont::DeviceAdapterId deviceId) const;
@@ -150,8 +156,6 @@ struct VTKM_CONT_EXPORT ScopedRuntimeDeviceTracker : public vtkm::cont::RuntimeD
   /// Destructor is not thread safe
   VTKM_CONT ~ScopedRuntimeDeviceTracker();
 
-  ScopedRuntimeDeviceTracker(const ScopedRuntimeDeviceTracker&) = delete;
-
 private:
   std::unique_ptr<detail::RuntimeDeviceTrackerInternals> SavedState;
 };
@@ -164,7 +168,6 @@ private:
 /// to check over and over again, VTK-m uses per thread runtime device tracker
 /// so that these choices are marked and shared.
 ///
-/// Xcode's clang only supports thread_local from version 8
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker();

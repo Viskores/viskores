@@ -12,7 +12,7 @@
 
 int UnitTestTBBCellLocatorRectilinearGrid(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
   return vtkm::cont::testing::Testing::Run(
     TestingCellLocatorRectilinearGrid<vtkm::cont::DeviceAdapterTagTBB>(), argc, argv);

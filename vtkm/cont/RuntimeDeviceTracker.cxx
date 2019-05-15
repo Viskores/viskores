@@ -33,10 +33,14 @@ struct RuntimeDeviceTrackerInternals
 }
 
 VTKM_CONT
-RuntimeDeviceTracker::RuntimeDeviceTracker()
-  : Internals(new detail::RuntimeDeviceTrackerInternals())
+RuntimeDeviceTracker::RuntimeDeviceTracker(detail::RuntimeDeviceTrackerInternals* details,
+                                           bool reset)
+  : Internals(details)
 {
-  this->Reset();
+  if (reset)
+  {
+    this->Reset();
+  }
 }
 
 VTKM_CONT
@@ -124,7 +128,7 @@ void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId deviceId)
 
 VTKM_CONT
 ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker()
-  : RuntimeDeviceTracker(GetRuntimeDeviceTracker())
+  : RuntimeDeviceTracker(GetRuntimeDeviceTracker().Internals, false)
   , SavedState(new detail::RuntimeDeviceTrackerInternals())
 {
   std::copy_n(
@@ -134,7 +138,7 @@ ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker()
 VTKM_CONT
 ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(
   const vtkm::cont::RuntimeDeviceTracker& tracker)
-  : RuntimeDeviceTracker(tracker)
+  : RuntimeDeviceTracker(tracker.Internals, false)
   , SavedState(new detail::RuntimeDeviceTrackerInternals())
 {
   std::copy_n(
@@ -154,6 +158,8 @@ vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker()
 #if defined(VTKM_CLANG) && defined(__apple_build_version__) && (__apple_build_version__ < 8000000)
   static std::mutex mtx;
   static std::map<std::thread::id, vtkm::cont::RuntimeDeviceTracker*> globalTrackers;
+  static std::map<std::thread::id, vtkm::cont::detail::RuntimeDeviceTrackerInternals*>
+    globalTrackerInternals;
   std::thread::id this_id = std::this_thread::get_id();
 
   std::unique_lock<std::mutex> lock(mtx);
@@ -164,12 +170,15 @@ vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker()
   }
   else
   {
-    vtkm::cont::RuntimeDeviceTracker* tracker = new vtkm::cont::RuntimeDeviceTracker();
+    auto* details = new vtkm::cont::detail::RuntimeDeviceTrackerInternals();
+    vtkm::cont::RuntimeDeviceTracker* tracker = new vtkm::cont::RuntimeDeviceTracker(details, true);
     globalTrackers[this_id] = tracker;
+    globalTrackerInternals[this_id] = details;
     return *tracker;
   }
 #else
-  static thread_local vtkm::cont::RuntimeDeviceTracker runtimeDeviceTracker;
+  static thread_local vtkm::cont::detail::RuntimeDeviceTrackerInternals details;
+  static thread_local vtkm::cont::RuntimeDeviceTracker runtimeDeviceTracker(&details, true);
   return runtimeDeviceTracker;
 #endif
 }
