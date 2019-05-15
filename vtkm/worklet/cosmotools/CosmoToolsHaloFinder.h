@@ -316,16 +316,15 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(vtkm::cont::ArrayHandle<
 
   // Setup the ScatterCounting worklets needed to expand the ReduceByKeyResults
   vtkm::worklet::ScatterCounting scatter(particlesPerHalo);
-  vtkm::worklet::DispatcherMapField<ScatterWorklet<vtkm::Id>> scatterWorkletIdDispatcher(scatter);
-  vtkm::worklet::DispatcherMapField<ScatterWorklet<T>> scatterWorkletDispatcher(scatter);
+  vtkm::worklet::Invoker invoke;
 
   // Calculate the minimum particle index per halo id and scatter
   DeviceAlgorithm::ScanExclusive(particlesPerHalo, tempI);
-  scatterWorkletIdDispatcher.Invoke(tempI, minParticle);
+  invoke(ScatterWorklet<vtkm::Id>{}, scatter, tempI, minParticle);
 
   // Calculate the maximum particle index per halo id and scatter
   DeviceAlgorithm::ScanInclusive(particlesPerHalo, tempI);
-  scatterWorkletIdDispatcher.Invoke(tempI, maxParticle);
+  invoke(ScatterWorklet<vtkm::Id>{}, scatter, tempI, maxParticle);
 
   using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
   vtkm::cont::ArrayHandleTransform<IdArrayType, ScaleBiasFunctor<vtkm::Id>> scaleBias =
@@ -354,7 +353,7 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(vtkm::cont::ArrayHandle<
 
   // Find minimum potential for all particles in a halo and scatter
   DeviceAlgorithm::ReduceByKey(haloId, potential, uniqueHaloIds, tempT, vtkm::Minimum());
-  scatterWorkletDispatcher.Invoke(tempT, minPotential);
+  invoke(ScatterWorklet<T>{}, scatter, tempT, minPotential);
 #ifdef DEBUG_PRINT
   DebugPrint("potential", potential);
   DebugPrint("minPotential", minPotential);
@@ -371,7 +370,7 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(vtkm::cont::ArrayHandle<
   vtkm::cont::ArrayHandle<vtkm::Id> minIndx;
   minIndx.Allocate(nParticles);
   DeviceAlgorithm::ReduceByKey(haloId, mbpId, uniqueHaloIds, minIndx, vtkm::Maximum());
-  scatterWorkletIdDispatcher.Invoke(minIndx, mbpId);
+  invoke(ScatterWorklet<vtkm::Id>{}, scatter, minIndx, mbpId);
 
   // Resort particle ids and mbpId to starting order
   vtkm::cont::ArrayHandle<vtkm::Id> savePartId;
