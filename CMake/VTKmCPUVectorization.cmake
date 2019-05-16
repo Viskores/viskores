@@ -69,7 +69,8 @@ endif()
 # We currently don't know the vectorization flags for MSVC. But we want
 # the vtkm_vectorization_flags target to exist so we have a consistent
 # interface.
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR
+   CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
   return()
 endif()
 
