@@ -550,6 +550,82 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
     static_cast<T>((field[1] - field[0]) / wCoords.GetSpacing()[0]), T(0), T(0));
 }
 
+template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
+VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
+  const FieldVecType& field,
+  const WorldCoordType& wCoords,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolyLine,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+  VTKM_ASSERT(numPoints == wCoords.GetNumberOfComponents());
+  /*
+  std::cout<<"CellDeriv_wWorld:"<<std::endl;
+  std::cout<<"  pcoords= "<<pcoords<<std::endl;
+  std::cout<<"  wCoords= (";
+  for (int i = 0; i < numPoints; i++) std::cout<<wCoords[i]<<" ";
+  std::cout<<")"<<std::endl;
+  std::cout<<"  field= (";
+  for (int i = 0; i < numPoints; i++) std::cout<<field[i]<<" ";
+  std::cout<<")"<<std::endl;
+*/
+  switch (numPoints)
+  {
+    case 1:
+      return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  vtkm::FloatDefault dt = 1 / static_cast<vtkm::FloatDefault>(numPoints - 1);
+  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(pcoords[0] / dt);
+  if (idx == 0)
+    idx = 1;
+
+  using FieldType = typename FieldVecType::ComponentType;
+  using BaseComponentType = typename BaseComponent<FieldType>::Type;
+
+  FieldType deltaField(field[idx] - field[idx - 1]);
+  vtkm::Vec<BaseComponentType, 3> vec(wCoords[idx] - wCoords[idx - 1]);
+
+  return detail::CellDerivativeLineImpl(deltaField,
+                                        vec,
+                                        vtkm::MagnitudeSquared(vec),
+                                        typename vtkm::TypeTraits<FieldType>::DimensionalityTag());
+}
+
+template <typename FieldVecType, typename ParametricCoordType>
+VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
+  const FieldVecType& field,
+  const vtkm::VecAxisAlignedPointCoordinates<1>& wCoords,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolyLine,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+
+  switch (numPoints)
+  {
+    case 1:
+      return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  vtkm::FloatDefault dt = 1 / static_cast<vtkm::FloatDefault>(numPoints - 1);
+  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(pcoords[0] / dt);
+  if (idx == 0)
+    idx = 1;
+
+  using T = typename FieldVecType::ComponentType;
+
+  return vtkm::Vec<T, 3>(
+    static_cast<T>((field[idx] - field[idx - 1]) / wCoords.GetSpacing()[0]), T(0), T(0));
+}
+
 //-----------------------------------------------------------------------------
 namespace detail
 {

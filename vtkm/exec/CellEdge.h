@@ -39,7 +39,7 @@ public:
       0,  //  1: CELL_SHAPE_VERTEX
       0,  //  2: Unused
       0,  //  3: CELL_SHAPE_LINE
-      0,  //  4: Unused
+      0,  //  4: CELL_SHAPE_POLY_LINE
       3,  //  5: CELL_SHAPE_TRIANGLE
       0,  //  6: Unused
       -1, //  7: CELL_SHAPE_POLYGON  ---special case---
@@ -73,7 +73,7 @@ public:
         //  3: CELL_SHAPE_LINE
         { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
           { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
-        //  4: Unused
+        //  4: CELL_SHAPE_POLY_LINE
         { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
           { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
         //  5: CELL_SHAPE_TRIANGLE

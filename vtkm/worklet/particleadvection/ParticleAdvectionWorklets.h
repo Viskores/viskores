@@ -216,7 +216,8 @@ private:
 
     vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
     cellTypes.Allocate(numSeeds);
-    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> polyLineShape(vtkm::CELL_SHAPE_LINE, numSeeds);
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> polyLineShape(vtkm::CELL_SHAPE_POLY_LINE,
+                                                               numSeeds);
     vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> cellCounts;

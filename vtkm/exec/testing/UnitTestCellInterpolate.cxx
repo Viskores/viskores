@@ -94,6 +94,7 @@ struct TestInterpolateFunctor
         vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
 
+      std::cout << "AVG= " << averageValue << " interp= " << interpolatedValue << std::endl;
       VTKM_TEST_ASSERT(test_equal(averageValue, interpolatedValue),
                        "Interpolation at center not average value.");
     }

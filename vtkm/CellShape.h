@@ -26,7 +26,7 @@ enum CellShapeIdEnum
   CELL_SHAPE_VERTEX = 1,
   //CELL_SHAPE_POLY_VERTEX      = 2,
   CELL_SHAPE_LINE = 3,
-  //CELL_SHAPE_POLY_LINE        = 4,
+  CELL_SHAPE_POLY_LINE = 4,
   CELL_SHAPE_TRIANGLE = 5,
   //CELL_SHAPE_TRIANGLE_STRIP   = 6,
   CELL_SHAPE_POLYGON = 7,
@@ -110,7 +110,7 @@ VTKM_DEFINE_CELL_TAG(Empty, CELL_SHAPE_EMPTY);
 VTKM_DEFINE_CELL_TAG(Vertex, CELL_SHAPE_VERTEX);
 //VTKM_DEFINE_CELL_TAG(PolyVertex, CELL_SHAPE_POLY_VERTEX);
 VTKM_DEFINE_CELL_TAG(Line, CELL_SHAPE_LINE);
-//VTKM_DEFINE_CELL_TAG(PolyLine, CELL_SHAPE_POLY_LINE);
+VTKM_DEFINE_CELL_TAG(PolyLine, CELL_SHAPE_POLY_LINE);
 VTKM_DEFINE_CELL_TAG(Triangle, CELL_SHAPE_TRIANGLE);
 //VTKM_DEFINE_CELL_TAG(TriangleStrip, CELL_SHAPE_TRIANGLE_STRIP);
 VTKM_DEFINE_CELL_TAG(Polygon, CELL_SHAPE_POLYGON);
@@ -182,6 +182,7 @@ struct CellShapeTagGeneric
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_EMPTY, call);                                           \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_VERTEX, call);                                          \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_LINE, call);                                            \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_POLY_LINE, call);                                       \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_TRIANGLE, call);                                        \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_POLYGON, call);                                         \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_QUAD, call);                                            \

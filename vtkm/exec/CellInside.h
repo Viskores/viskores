@@ -37,6 +37,12 @@ static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::Ce
 }
 
 template <typename T>
+static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagPolyLine)
+{
+  return pcoords[0] >= T(0) && pcoords[0] <= T(1);
+}
+
+template <typename T>
 static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagTriangle)
 {
   return pcoords[0] >= T(0) && pcoords[1] >= T(0) && (pcoords[0] + pcoords[1] <= T(1));
