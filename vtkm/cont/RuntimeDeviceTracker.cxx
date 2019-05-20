@@ -122,17 +122,37 @@ void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
 VTKM_CONT
 void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId deviceId)
 {
-  vtkm::cont::RuntimeDeviceInformation runtimeDevice;
-  this->ForceDeviceImpl(deviceId, runtimeDevice.Exists(deviceId));
+  if (deviceId == vtkm::cont::DeviceAdapterTagAny{})
+  {
+    this->Reset();
+  }
+  else
+  {
+    vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+    this->ForceDeviceImpl(deviceId, runtimeDevice.Exists(deviceId));
+  }
 }
 
 VTKM_CONT
-ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker()
+ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterId device)
   : RuntimeDeviceTracker(GetRuntimeDeviceTracker().Internals, false)
   , SavedState(new detail::RuntimeDeviceTrackerInternals())
 {
   std::copy_n(
     this->Internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, this->SavedState->RuntimeAllowed);
+  this->ForceDevice(device);
+}
+
+VTKM_CONT
+ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(
+  vtkm::cont::DeviceAdapterId device,
+  const vtkm::cont::RuntimeDeviceTracker& tracker)
+  : RuntimeDeviceTracker(tracker.Internals, false)
+  , SavedState(new detail::RuntimeDeviceTrackerInternals())
+{
+  std::copy_n(
+    this->Internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, this->SavedState->RuntimeAllowed);
+  this->ForceDevice(device);
 }
 
 VTKM_CONT

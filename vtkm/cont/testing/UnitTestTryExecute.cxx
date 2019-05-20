@@ -157,8 +157,7 @@ void RunErrorTest(bool shouldFail, bool shouldThrow, bool shouldDisable)
   bool threw = false;
   bool disabled = false;
 
-  vtkm::cont::ScopedRuntimeDeviceTracker scopedTracker;
-  scopedTracker.ForceDevice(Device{});
+  vtkm::cont::ScopedRuntimeDeviceTracker scopedTracker(Device{});
 
   try
   {

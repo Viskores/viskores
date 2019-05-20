@@ -39,6 +39,7 @@ the following block forces execution to only occur on
 
 ```cpp  
   {
+  vtkm::cont::DeviceAdapterTagCuda cuda;
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker->ForceDevice(cuda);
   vtkm::worklet::Invoker invoke;
@@ -55,8 +56,8 @@ correctly restore the threads `RuntimeDeviceTracker` state when `tracker`
 goes out of scope.
 ```cpp  
   {
-  vtkm::cont::ScopedRuntimeDeviceTracker tracker;
-  tracker.ForceDevice(cuda);
+  vtkm::cont::DeviceAdapterTagCuda cuda;
+  vtkm::cont::ScopedRuntimeDeviceTracker tracker(cuda);
   vtkm::worklet::Invoker invoke;
   invoke(LightTask{}, input, output);
   } 

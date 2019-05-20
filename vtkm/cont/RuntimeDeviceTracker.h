@@ -103,9 +103,9 @@ public:
   /// The main intention of \c RuntimeDeviceTracker is to keep track of what
   /// devices are working for VTK-m. However, it can also be used to turn
   /// devices on and off. Use this method to disable all devices except one
-  /// to effectively force VTK-m to use that device. Use \c Reset restore
-  /// all devices to their default values. You can also use the \c DeepCopy
-  /// methods to save and restore the state.
+  /// to effectively force VTK-m to use that device. Either pass the
+  /// DeviceAdapterTagAny to this function or call \c Reset to restore
+  /// all devices to their default state.
   ///
   /// This method will throw a \c ErrorBadValue if the given device does not
   /// exist on the system.
@@ -147,9 +147,35 @@ private:
 ///
 struct VTKM_CONT_EXPORT ScopedRuntimeDeviceTracker : public vtkm::cont::RuntimeDeviceTracker
 {
+  /// Construct a ScopedRuntimeDeviceTracker where the only active device
+  /// for the current thread is the one provided by the constructor. Passing
+  /// DeviceAdapterTagAny to this function will reset all devices to their
+  /// default state.
+  ///
   /// Constructor is not thread safe
-  VTKM_CONT ScopedRuntimeDeviceTracker();
+  VTKM_CONT ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterId device);
 
+  /// Construct a ScopedRuntimeDeviceTracker associated with the thread
+  /// associated with the provided tracker. The only active device
+  /// for this thread is the one provided by the constructor. Passing
+  /// DeviceAdapterTagAny to this function will reset all devices to their
+  /// default state.
+  ///
+  /// Any modifications to the ScopedRuntimeDeviceTracker will effect what
+  /// ever thread the \c tracker is associated with, which might not be
+  /// the thread which ScopedRuntimeDeviceTracker was constructed on.
+  ///
+  /// Constructor is not thread safe
+  VTKM_CONT ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterId device,
+                                       const vtkm::cont::RuntimeDeviceTracker& tracker);
+
+  /// Construct a ScopedRuntimeDeviceTracker associated with the thread
+  /// associated with the provided tracker.
+  ///
+  /// Any modifications to the ScopedRuntimeDeviceTracker will effect what
+  /// ever thread the \c tracker is associated with, which might not be
+  /// the thread which ScopedRuntimeDeviceTracker was constructed on.
+  ///
   /// Constructor is not thread safe
   VTKM_CONT ScopedRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker& tracker);
 
