@@ -39,17 +39,14 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
   vtkm::cont::DataSet output = internal::CreateResult(input);
 
   // FIXME: 3D with i, j, k
-  for (int i = 0; i <= this->Order; ++i)
+  for (int order = 0; order <= this->Order; ++order)
   {
-    for (int p = i; p >= 0; --p)
+    for (int p = order; p >= 0; --p)
     {
       vtkm::cont::ArrayHandle<T> moments;
 
-      using DispatcherType =
-        vtkm::worklet::DispatcherPointNeighborhood<vtkm::worklet::moments::ComputeMoments>;
-      DispatcherType dispatcher(vtkm::worklet::moments::ComputeMoments{ this->Radius, p, i - p });
-      dispatcher.SetDevice(vtkm::cont::DeviceAdapterTagSerial());
-      dispatcher.Invoke(
+
+      vtkm::worklet::moments::ComputeMoments().Run(
         vtkm::filter::ApplyPolicy(input.GetCellSet(this->GetActiveCellSetIndex()), policy),
         field,
         moments);
@@ -58,7 +55,7 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
       // names for i and j
       for (int j = 0; j < p; ++j)
         fieldName += std::to_string(0);
-      for (int j = 0; j < i - p; ++j)
+      for (int j = 0; j < order - p; ++j)
         fieldName += std::to_string(1);
       // TODO: add the same for k
 
