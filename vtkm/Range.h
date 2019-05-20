@@ -171,13 +171,13 @@ struct Range
   }
 };
 
-} // namespace vtkm
-
 /// Helper function for printing ranges during testing
 ///
-static inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Range& range)
+inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Range& range)
 {
   return stream << "[" << range.Min << ".." << range.Max << "]";
-}
+} // Declared inside of vtkm namespace so that the operator work with ADL lookup
+
+} // namespace vtkm
 
 #endif //vtk_m_Range_h
