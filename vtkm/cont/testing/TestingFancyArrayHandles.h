@@ -161,7 +161,8 @@ struct TransformExecObject : public vtkm::cont::ExecutionAndControlObjectBase
   {
     // Need to make sure the serial device is supported, since that is what is used on the
     // control side. Therefore we reset to all supported devices.
-    vtkm::cont::ScopedRuntimeDeviceTracker scopedTracker(vtkm::cont::DeviceAdapterTagAny{});
+    vtkm::cont::ScopedRuntimeDeviceTracker scopedTracker(
+      vtkm::cont::DeviceAdapterTagSerial{}, vtkm::cont::RuntimeDeviceTrackerMode::Enable);
     this->VirtualFunctor.Reset(new VirtualTransformFunctor<ValueType, FunctorType>(functor));
   }
 

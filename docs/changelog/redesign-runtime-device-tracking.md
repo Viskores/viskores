@@ -63,3 +63,28 @@ goes out of scope.
   } 
   //openmp/tbb/... are now again active
 ```
+
+The  `vtkm::cont::ScopedRuntimeDeviceTracker` is not limited to forcing
+execution to occur on a single device. When constructed it can either force
+execution to a device, disable a device or enable a device. These options
+also work with the `DeviceAdapterTagAny`.
+
+
+```cpp  
+  {
+  //enable all devices 
+  vtkm::cont::DeviceAdapterTagAny any;
+  vtkm::cont::ScopedRuntimeDeviceTracker tracker(any, 
+                                                 vtkm::cont::RuntimeDeviceTrackerMode::Enable);
+  ...
+  }
+
+  {
+  //disable only cuda
+  vtkm::cont::DeviceAdapterTagCuda cuda;
+  vtkm::cont::ScopedRuntimeDeviceTracker tracker(cuda, 
+                                                 vtkm::cont::RuntimeDeviceTrackerMode::Disable);
+
+  ...
+  }
+```

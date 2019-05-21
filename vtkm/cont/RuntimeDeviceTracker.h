@@ -54,11 +54,10 @@ public:
   /// Returns true if the given device adapter is supported on the current
   /// machine.
   ///
-  VTKM_CONT bool CanRunOn(DeviceAdapterId device) const { return this->CanRunOnImpl(device); }
+  VTKM_CONT bool CanRunOn(DeviceAdapterId deviceId) const;
 
   /// Report a failure to allocate memory on a device, this will flag the
-  /// device as being unusable for all future invocations of the instance of
-  /// the filter.
+  /// device as being unusable for all future invocations.
   ///
   VTKM_CONT void ReportAllocationFailure(vtkm::cont::DeviceAdapterId deviceId,
                                          const vtkm::cont::ErrorBadAllocation&)
@@ -75,13 +74,10 @@ public:
   }
 
   /// Reset the tracker for the given device. This will discard any updates
-  /// caused by reported failures
+  /// caused by reported failures. Passing DeviceAdapterTagAny to this will
+  /// reset all devices ( same as \c Reset ).
   ///
-  VTKM_CONT void ResetDevice(vtkm::cont::DeviceAdapterId device)
-  {
-    vtkm::cont::RuntimeDeviceInformation runtimeDevice;
-    this->SetDeviceState(device, runtimeDevice.Exists(device));
-  }
+  VTKM_CONT void ResetDevice(vtkm::cont::DeviceAdapterId deviceId);
 
   /// Reset the tracker to its default state for default devices.
   /// Will discard any updates caused by reported failures.
@@ -96,7 +92,9 @@ public:
   /// devices on and off. Use this method to disable (turn off) a given device.
   /// Use \c ResetDevice to turn the device back on (if it is supported).
   ///
-  VTKM_CONT void DisableDevice(DeviceAdapterId device) { this->SetDeviceState(device, false); }
+  /// Passing DeviceAdapterTagAny to this will disable all devices
+  ///
+  VTKM_CONT void DisableDevice(DeviceAdapterId deviceId);
 
   /// \brief Disable all devices except the specified one.
   ///
@@ -110,7 +108,7 @@ public:
   /// This method will throw a \c ErrorBadValue if the given device does not
   /// exist on the system.
   ///
-  VTKM_CONT void ForceDevice(DeviceAdapterId id);
+  VTKM_CONT void ForceDevice(DeviceAdapterId deviceId);
 
 private:
   friend struct ScopedRuntimeDeviceTracker;
@@ -130,13 +128,15 @@ private:
   void CheckDevice(vtkm::cont::DeviceAdapterId deviceId) const;
 
   VTKM_CONT
-  bool CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId) const;
-
-  VTKM_CONT
   void SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, bool state);
+};
 
-  VTKM_CONT
-  void ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId, bool runtimeExists);
+
+enum struct RuntimeDeviceTrackerMode
+{
+  Force,
+  Enable,
+  Disable
 };
 
 /// A class that can be used to determine or modify which device adapter
@@ -147,19 +147,39 @@ private:
 ///
 struct VTKM_CONT_EXPORT ScopedRuntimeDeviceTracker : public vtkm::cont::RuntimeDeviceTracker
 {
-  /// Construct a ScopedRuntimeDeviceTracker where the only active device
-  /// for the current thread is the one provided by the constructor. Passing
-  /// DeviceAdapterTagAny to this function will reset all devices to their
-  /// default state.
+  /// Construct a ScopedRuntimeDeviceTracker where the state of the active devices
+  /// for the current thread are determined by the parameters to the constructor.
+  ///
+  /// 'Force'
+  ///   - Force-Enable the provided single device adapter
+  ///   - Force-Enable all device adapters when using vtkm::cont::DeviceAdaterTagAny
+  /// 'Enable'
+  ///   - Enable the provided single device adapter if it was previously disabled
+  ///   - Enable all device adapters that are currently disabled when using
+  ///     vtkm::cont::DeviceAdaterTagAny
+  /// 'Disable'
+  ///   - Disable the provided single device adapter
+  ///   - Disable all device adapters when using vtkm::cont::DeviceAdaterTagAny
   ///
   /// Constructor is not thread safe
-  VTKM_CONT ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterId device);
+  VTKM_CONT ScopedRuntimeDeviceTracker(
+    vtkm::cont::DeviceAdapterId device,
+    RuntimeDeviceTrackerMode mode = RuntimeDeviceTrackerMode::Force);
 
   /// Construct a ScopedRuntimeDeviceTracker associated with the thread
-  /// associated with the provided tracker. The only active device
-  /// for this thread is the one provided by the constructor. Passing
-  /// DeviceAdapterTagAny to this function will reset all devices to their
-  /// default state.
+  /// associated with the provided tracker. The active devices
+  /// for the current thread are determined by the parameters to the constructor.
+  ///
+  /// 'Force'
+  ///   - Force-Enable the provided single device adapter
+  ///   - Force-Enable all device adapters when using vtkm::cont::DeviceAdaterTagAny
+  /// 'Enable'
+  ///   - Enable the provided single device adapter if it was previously disabled
+  ///   - Enable all device adapters that are currently disabled when using
+  ///     vtkm::cont::DeviceAdaterTagAny
+  /// 'Disable'
+  ///   - Disable the provided single device adapter
+  ///   - Disable all device adapters when using vtkm::cont::DeviceAdaterTagAny
   ///
   /// Any modifications to the ScopedRuntimeDeviceTracker will effect what
   /// ever thread the \c tracker is associated with, which might not be
@@ -167,6 +187,7 @@ struct VTKM_CONT_EXPORT ScopedRuntimeDeviceTracker : public vtkm::cont::RuntimeD
   ///
   /// Constructor is not thread safe
   VTKM_CONT ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterId device,
+                                       RuntimeDeviceTrackerMode mode,
                                        const vtkm::cont::RuntimeDeviceTracker& tracker);
 
   /// Construct a ScopedRuntimeDeviceTracker associated with the thread

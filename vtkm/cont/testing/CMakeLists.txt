@@ -71,6 +71,7 @@ set(unit_tests
   UnitTestMultiBlock.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestRuntimeDeviceNames.cxx
+  UnitTestScopedRuntimeDeviceTracker.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
   UnitTestStorageListTag.cxx
