@@ -234,13 +234,16 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
       return CellInterpolate(field, pcoords, vtkm::CellShapeTagLine(), worklet);
   }
 
-  vtkm::FloatDefault dt = 1 / static_cast<vtkm::FloatDefault>(numPoints - 1);
+  using T = ParametricCoordType;
+
+  T dt = 1 / static_cast<T>(numPoints - 1);
+  //vtkm::FloatDefault dt = 1 / static_cast<vtkm::FloatDefault>(numPoints - 1);
   vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(pcoords[0] / dt);
   if (idx == numPoints - 1)
     return field[numPoints - 1];
 
-  vtkm::FloatDefault t = pcoords[0] - static_cast<vtkm::FloatDefault>(idx) * dt;
-  t = t / dt;
+  T t = (pcoords[0] - static_cast<T>(idx) * dt) / dt;
+  //vtkm::FloatDefault t = pcoords[0] - static_cast<vtkm::FloatDefault>(idx) * dt;
   /*
   std::cout<<"  dt= "<<dt<<" idx= "<<idx<<" T= "<<t<<std::endl;
   std::cout<<"    Lerp("<<field[idx]<<", "<<field[idx+1]<<", "<<t<<")"<<std::endl;
