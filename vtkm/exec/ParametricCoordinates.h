@@ -695,15 +695,6 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
         pointWCoords, wcoords, vtkm::CellShapeTagLine(), success, worklet);
   }
 
-  /*
-  std::cout<<std::endl<<std::endl;
-  std::cout << "worldCoordsToParam:" << std::endl;
-  std::cout << "  PointWcoords= (";
-  for (int i = 0; i < numPoints; i++)
-    std::cout << pointWCoords[i] << " ";
-  std::cout << ")" << std::endl;
-  std::cout << "wCoords= " << wcoords << std::endl;
-*/
   using Vector3 = typename WorldCoordVector::ComponentType;
   using T = typename Vector3::ComponentType;
 
@@ -711,15 +702,10 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   vtkm::IdComponent idx = 0;
   Vector3 vec = pointWCoords[0] - wcoords;
   T minDistSq = vtkm::Dot(vec, vec);
-  /*
-  std::cout<<"Find idx: "<<std::endl;
-  std::cout<<"  idx: "<<idx<<" "<<minDistSq<<std::endl;
-  */
   for (vtkm::IdComponent i = 1; i < numPoints; i++)
   {
     vec = pointWCoords[i] - wcoords;
     T d = vtkm::Dot(vec, vec);
-    //std::cout<<"  idx: "<<i<<" "<<d<<" "<<pointWCoords[i]<<" "<<wcoords<<std::endl;
 
     if (d < minDistSq)
     {
@@ -739,7 +725,6 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   T denominator = vtkm::MagnitudeSquared(vec);
   T segmentParam = numerator / denominator;
 
-  //std::cout<<"segment: "<<idx-1<<" "<<idx<<" p= "<<segmentParam<<std::endl;
   //The point is on the OTHER side of idx. If there is a next segment reparam onto it.
   if (segmentParam > 1 && idx < numPoints - 1)
   {
@@ -748,16 +733,12 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
     numerator = vtkm::Dot(vec, wcoords - pointWCoords[idx - 1]);
     denominator = vtkm::MagnitudeSquared(vec);
     segmentParam = numerator / denominator;
-    //std::cout<<"  +++ segment: "<<idx-1<<" "<<idx<<" p= "<<segmentParam<<std::endl;
   }
 
   //Segment param is [0,1] on that segment.
   //Map that onto the param for the entire segment.
   T dParam = static_cast<T>(1) / static_cast<T>(numPoints - 1);
   T polyLineParam = static_cast<T>(idx - 1) * dParam + segmentParam * dParam;
-
-  //std::cout << "idx= " << idx << " dParam= "<<dParam<<std::endl;
-  //std::cout << "Param= " << Vector3(polyLineParam, 0, 0) << std::endl;
 
   return Vector3(polyLineParam, 0, 0);
 }

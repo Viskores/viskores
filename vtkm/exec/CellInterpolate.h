@@ -208,24 +208,6 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   VTKM_ASSERT(numPoints >= 1);
 
-  /*
-  std::cout<<"PolyLine: numPts= "<<numPoints<<std::endl;
-  std::cout<<"  field= [";
-  for (int i = 0; i < numPoints; i++)
-      std::cout<<field[i]<<" ";
-  std::cout<<"]"<<std::endl;
-  std::cout<<"  nodeT= [";
-  if (numPoints > 1)
-  {
-      float dn = 1.0f/(float)(numPoints-1);
-      float t = 0;
-      for (int i = 0; i < numPoints; i++, t+=dn)
-          std::cout<<t<<" ";
-      std::cout<<"]"<<std::endl;
-  }
-  std::cout<<" pcoords= "<<pcoords<<std::endl;
-  */
-
   switch (numPoints)
   {
     case 1:
@@ -237,17 +219,12 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   using T = ParametricCoordType;
 
   T dt = 1 / static_cast<T>(numPoints - 1);
-  //vtkm::FloatDefault dt = 1 / static_cast<vtkm::FloatDefault>(numPoints - 1);
   vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(pcoords[0] / dt);
   if (idx == numPoints - 1)
     return field[numPoints - 1];
 
   T t = (pcoords[0] - static_cast<T>(idx) * dt) / dt;
-  //vtkm::FloatDefault t = pcoords[0] - static_cast<vtkm::FloatDefault>(idx) * dt;
-  /*
-  std::cout<<"  dt= "<<dt<<" idx= "<<idx<<" T= "<<t<<std::endl;
-  std::cout<<"    Lerp("<<field[idx]<<", "<<field[idx+1]<<", "<<t<<")"<<std::endl;
-*/
+
   return vtkm::Lerp(field[idx], field[idx + 1], t);
 }
 
