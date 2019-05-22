@@ -671,4 +671,4 @@ public:
 }
 } // namespace vtkm::cont::testing
 
-#endif //vtk_m_cont_testing_TestingArrayHandles_h
+#endif // vtk_m_cont_testing_TestingBitFields_h
