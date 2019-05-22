@@ -139,9 +139,9 @@ void StorageVirtualImpl<T, S>::Shrink(vtkm::Id numberOfValues)
 struct PortalWrapperToDevice
 {
   template <typename DeviceAdapterTag, typename Handle>
-  bool operator()(DeviceAdapterTag device,
-                  Handle&& handle,
-                  vtkm::cont::internal::TransferInfoArray& payload) const
+  inline bool operator()(DeviceAdapterTag device,
+                         Handle&& handle,
+                         vtkm::cont::internal::TransferInfoArray& payload) const
   {
     auto portal = handle.PrepareForInput(device);
     using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
@@ -149,11 +149,11 @@ struct PortalWrapperToDevice
     return transfer(device, payload, portal);
   }
   template <typename DeviceAdapterTag, typename Handle>
-  bool operator()(DeviceAdapterTag device,
-                  Handle&& handle,
-                  vtkm::Id numberOfValues,
-                  vtkm::cont::internal::TransferInfoArray& payload,
-                  vtkm::cont::internal::detail::StorageVirtual::OutputMode mode) const
+  inline bool operator()(DeviceAdapterTag device,
+                         Handle&& handle,
+                         vtkm::Id numberOfValues,
+                         vtkm::cont::internal::TransferInfoArray& payload,
+                         vtkm::cont::internal::detail::StorageVirtual::OutputMode mode) const
   {
     using ACCESS_MODE = vtkm::cont::internal::detail::StorageVirtual::OutputMode;
     if (mode == ACCESS_MODE::WRITE)
@@ -183,18 +183,18 @@ void StorageVirtualImpl<T, S>::ControlPortalForInput(
 }
 
 template <typename HandleType>
-void make_writableHostPortal(std::true_type,
-                             vtkm::cont::internal::TransferInfoArray& payload,
-                             HandleType& handle)
+inline void make_writableHostPortal(std::true_type,
+                                    vtkm::cont::internal::TransferInfoArray& payload,
+                                    HandleType& handle)
 {
   auto portal = handle.GetPortalControl();
   using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
   vtkm::cont::make_hostPortal<DerivedPortal>(payload, portal);
 }
 template <typename HandleType>
-void make_writableHostPortal(std::false_type,
-                             vtkm::cont::internal::TransferInfoArray& payload,
-                             HandleType&)
+inline void make_writableHostPortal(std::false_type,
+                                    vtkm::cont::internal::TransferInfoArray& payload,
+                                    HandleType&)
 {
   payload.updateHost(nullptr);
   throw vtkm::cont::ErrorBadValue(
