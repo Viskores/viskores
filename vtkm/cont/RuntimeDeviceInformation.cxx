@@ -169,6 +169,11 @@ DeviceAdapterId RuntimeDeviceInformation::GetId(DeviceAdapterNameType name) cons
 VTKM_CONT
 bool RuntimeDeviceInformation::Exists(DeviceAdapterId id) const
 {
+  if (id == vtkm::cont::DeviceAdapterTagAny{})
+  {
+    return true;
+  }
+
   RuntimeDeviceInformationFunctor functor;
   vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(), id);
   return functor.Exists;

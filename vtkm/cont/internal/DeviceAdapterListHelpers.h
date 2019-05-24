@@ -35,7 +35,7 @@ struct ExecuteIfValidDeviceTag
   typename EnableIfValid<DeviceAdapter>::type operator()(
     DeviceAdapter device,
     Functor&& f,
-    const vtkm::cont::RuntimeDeviceTracker tracker,
+    const vtkm::cont::RuntimeDeviceTracker& tracker,
     Args&&... args) const
   {
     if (tracker.CanRunOn(device))
@@ -56,7 +56,7 @@ struct ExecuteIfValidDeviceTag
 template <typename DeviceList, typename Functor, typename... Args>
 VTKM_CONT void ForEachValidDevice(DeviceList devices, Functor&& functor, Args&&... args)
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   vtkm::ListForEach(
     ExecuteIfValidDeviceTag{}, devices, functor, tracker, std::forward<Args>(args)...);
 }

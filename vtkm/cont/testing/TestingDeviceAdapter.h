@@ -579,7 +579,7 @@ private:
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Timer" << std::endl;
-    auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
     if (tracker.CanRunOn(DeviceAdapterTag()))
     {
       vtkm::cont::Timer timer{ DeviceAdapterTag() };

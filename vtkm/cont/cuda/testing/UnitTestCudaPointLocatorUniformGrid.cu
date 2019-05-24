@@ -12,7 +12,7 @@
 
 int UnitTestCudaPointLocatorUniformGrid(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   return vtkm::cont::testing::Testing::Run(
     TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagCuda>(), argc, argv);

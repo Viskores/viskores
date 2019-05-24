@@ -12,7 +12,7 @@
 
 int UnitTestOpenMPPointLocatorUniformGrid(int argc, char* argv[])
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
   return vtkm::cont::testing::Testing::Run(
     TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagOpenMP>(), argc, argv);

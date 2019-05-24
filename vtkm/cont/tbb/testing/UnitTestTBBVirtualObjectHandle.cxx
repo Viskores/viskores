@@ -16,7 +16,7 @@ namespace
 
 void TestVirtualObjectHandle()
 {
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
   using DeviceAdapterList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagTBB>;
