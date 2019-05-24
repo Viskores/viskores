@@ -161,7 +161,10 @@ public:
   DynamicCellSetBase<CellSetList> NewInstance() const
   {
     DynamicCellSetBase<CellSetList> newCellSet;
-    newCellSet.CellSet = this->CellSet->NewInstance();
+    if (this->CellSet)
+    {
+      newCellSet.CellSet = this->CellSet->NewInstance();
+    }
     return newCellSet;
   }
 
@@ -172,22 +175,44 @@ public:
   const vtkm::cont::CellSet* GetCellSetBase() const { return this->CellSet.get(); }
 
   VTKM_CONT
-  std::string GetName() const { return this->CellSet->GetName(); }
+  std::string GetName() const { return this->CellSet ? this->CellSet->GetName() : std::string{}; }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfCells() const { return this->CellSet->GetNumberOfCells(); }
+  vtkm::Id GetNumberOfCells() const
+  {
+    return this->CellSet ? this->CellSet->GetNumberOfCells() : 0;
+  }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfFaces() const { return this->CellSet->GetNumberOfFaces(); }
+  vtkm::Id GetNumberOfFaces() const
+  {
+    return this->CellSet ? this->CellSet->GetNumberOfFaces() : 0;
+  }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfEdges() const { return this->CellSet->GetNumberOfEdges(); }
+  vtkm::Id GetNumberOfEdges() const
+  {
+    return this->CellSet ? this->CellSet->GetNumberOfEdges() : 0;
+  }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfPoints() const { return this->CellSet->GetNumberOfPoints(); }
+  vtkm::Id GetNumberOfPoints() const
+  {
+    return this->CellSet ? this->CellSet->GetNumberOfPoints() : 0;
+  }
 
   VTKM_CONT
-  void PrintSummary(std::ostream& stream) const { return this->CellSet->PrintSummary(stream); }
+  void PrintSummary(std::ostream& stream) const
+  {
+    if (this->CellSet)
+    {
+      this->CellSet->PrintSummary(stream);
+    }
+    else
+    {
+      stream << " DynamicCellSet = nullptr" << std::endl;
+    }
+  }
 
 private:
   std::shared_ptr<vtkm::cont::CellSet> CellSet;

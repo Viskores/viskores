@@ -48,6 +48,8 @@ namespace vtkm
 {
 namespace worklet
 {
+template <typename T>
+class VTKM_ALWAYS_EXPORT Keys;
 namespace internal
 {
 
@@ -57,11 +59,25 @@ inline auto scheduling_range(const Domain& inputDomain) -> decltype(inputDomain.
   return inputDomain.GetNumberOfValues();
 }
 
+template <typename KeyType>
+inline auto scheduling_range(const vtkm::worklet::Keys<KeyType>& inputDomain)
+  -> decltype(inputDomain.GetInputRange())
+{
+  return inputDomain.GetInputRange();
+}
+
 template <typename Domain>
 inline auto scheduling_range(const Domain* const inputDomain)
   -> decltype(inputDomain->GetNumberOfValues())
 {
   return inputDomain->GetNumberOfValues();
+}
+
+template <typename KeyType>
+inline auto scheduling_range(const vtkm::worklet::Keys<KeyType>* const inputDomain)
+  -> decltype(inputDomain->GetInputRange())
+{
+  return inputDomain->GetInputRange();
 }
 
 template <typename Domain, typename SchedulingRangeType>

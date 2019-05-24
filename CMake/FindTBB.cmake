@@ -203,12 +203,8 @@ if (WIN32 AND MSVC)
       list(APPEND TBB_LIB_SEARCH_PATH ${dir}/lib/ia32/${COMPILER_PREFIX})
     endif ()
   endforeach ()
-endif ()
-
-# For OS X binary distribution, choose libc++ based libraries for Mavericks (10.9)
-# and above and AppleClang
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND
-    NOT CMAKE_SYSTEM_VERSION VERSION_LESS 13.0)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND
+       NOT CMAKE_SYSTEM_VERSION VERSION_LESS 13.0)
   set (USE_LIBCXX OFF)
 
   if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -220,10 +216,8 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND
       list (APPEND TBB_LIB_SEARCH_PATH ${dir}/lib/libc++ ${dir}/libc++/lib)
     endforeach ()
   endif ()
-endif ()
-
-# check compiler ABI
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # check compiler ABI
   set(COMPILER_PREFIX)
   if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
     list(APPEND COMPILER_PREFIX "gcc4.7")

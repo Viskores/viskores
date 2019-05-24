@@ -1361,26 +1361,22 @@ inline VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, 4>& a)
 template <typename U, typename V>
 struct Pair;
 
-} // End of namespace vtkm
-
-// Declared outside of vtkm namespace so that the operator works with all code.
-
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(T scalar, const vtkm::Vec<T, Size>& vec)
+inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(T scalar, const vtkm::Vec<T, Size>& vec)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindLeftBinaryOp<T, vtkm::Multiply>(scalar));
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(const vtkm::Vec<T, Size>& vec, T scalar)
+inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(const vtkm::Vec<T, Size>& vec, T scalar)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindRightBinaryOp<T, vtkm::Multiply>(scalar));
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(vtkm::Float64 scalar,
+inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(vtkm::Float64 scalar,
                                                    const vtkm::Vec<T, Size>& vec)
 {
   return vtkm::Vec<T, Size>(vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
@@ -1388,7 +1384,7 @@ VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(vtkm::Float64 scalar,
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(const vtkm::Vec<T, Size>& vec,
+inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(const vtkm::Vec<T, Size>& vec,
                                                    vtkm::Float64 scalar)
 {
   return vtkm::Vec<T, Size>(vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
@@ -1396,30 +1392,32 @@ VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(const vtkm::Vec<T, Size>& vec
 }
 
 template <vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator*(vtkm::Float64 scalar,
-                                                        const vtkm::Vec<vtkm::Float64, Size>& vec)
+inline VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator*(
+  vtkm::Float64 scalar,
+  const vtkm::Vec<vtkm::Float64, Size>& vec)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindLeftBinaryOp<vtkm::Float64, vtkm::Multiply>(scalar));
 }
 
 template <vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator*(const vtkm::Vec<vtkm::Float64, Size>& vec,
-                                                        vtkm::Float64 scalar)
+inline VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator*(
+  const vtkm::Vec<vtkm::Float64, Size>& vec,
+  vtkm::Float64 scalar)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindRightBinaryOp<vtkm::Float64, vtkm::Multiply>(scalar));
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator/(const vtkm::Vec<T, Size>& vec, T scalar)
+inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator/(const vtkm::Vec<T, Size>& vec, T scalar)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindRightBinaryOp<T, vtkm::Divide>(scalar));
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator/(const vtkm::Vec<T, Size>& vec,
+inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator/(const vtkm::Vec<T, Size>& vec,
                                                    vtkm::Float64 scalar)
 {
   return vtkm::Vec<T, Size>(vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
@@ -1427,8 +1425,9 @@ VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator/(const vtkm::Vec<T, Size>& vec
 }
 
 template <vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator/(const vtkm::Vec<vtkm::Float64, Size>& vec,
-                                                        vtkm::Float64 scalar)
+inline VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator/(
+  const vtkm::Vec<vtkm::Float64, Size>& vec,
+  vtkm::Float64 scalar)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindRightBinaryOp<vtkm::Float64, vtkm::Divide>(scalar));
@@ -1441,7 +1440,7 @@ VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator/(const vtkm::Vec<vtkm::Fl
 // also allow other types like Vec<Vec<unsigned> >. If necessary, we could
 // change this implementation to be more inclusive.
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT
+inline VTKM_EXEC_CONT
 typename std::enable_if<(std::is_floating_point<T>::value || std::is_signed<T>::value),
                         vtkm::Vec<T, Size>>::type
 operator-(const vtkm::Vec<T, Size>& x)
@@ -1453,7 +1452,7 @@ operator-(const vtkm::Vec<T, Size>& x)
 /// Helper function for printing out vectors during testing.
 ///
 template <typename T, vtkm::IdComponent Size>
-VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Vec<T, Size>& vec)
+inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Vec<T, Size>& vec)
 {
   stream << "[";
   for (vtkm::IdComponent component = 0; component < Size - 1; component++)
@@ -1466,9 +1465,12 @@ VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Vec<T, Size
 /// Helper function for printing out pairs during testing.
 ///
 template <typename T, typename U>
-VTKM_EXEC_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Pair<T, U>& vec)
+inline VTKM_EXEC_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Pair<T, U>& vec)
 {
   return stream << "[" << vec.first << "," << vec.second << "]";
 }
 
+
+} // End of namespace vtkm
+// Declared inside of vtkm namespace so that the operator work with ADL lookup
 #endif //vtk_m_Types_h

@@ -8,30 +8,21 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR
+   CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
+  set(VTKM_COMPILER_IS_MSVC 1)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
+  set(VTKM_COMPILER_IS_PGI 1)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+  set(VTKM_COMPILER_IS_ICC 1)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  set(VTKM_COMPILER_IS_CLANG 1)
+  set(VTKM_COMPILER_IS_APPLECLANG 1)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(VTKM_COMPILER_IS_CLANG 1)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(VTKM_COMPILER_IS_GNU 1)
 endif()
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(VTKM_COMPILER_IS_CLANG 1)
-endif()
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  set(VTKM_COMPILER_IS_CLANG 1)
-endif()
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
-  set(VTKM_COMPILER_IS_PGI 1)
-endif()
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-  set(VTKM_COMPILER_IS_ICC 1)
-endif()
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  set(VTKM_COMPILER_IS_MSVC 1)
-endif()
-
 
 #-----------------------------------------------------------------------------
 # vtkm_compiler_flags is used by all the vtkm targets and consumers of VTK-m
@@ -51,7 +42,7 @@ target_link_libraries(vtkm_compiler_flags
 target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
 
 # Enable large object support so we can have 2^32 addressable sections
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(VTKM_COMPILER_IS_MSVC)
   target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/bigobj>)
   if(TARGET vtkm::cuda)
     target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/bigobj">)
@@ -72,11 +63,9 @@ add_library(vtkm_developer_flags INTERFACE)
 
 # Additional warnings just for Clang 3.5+, and AppleClang 7+
 # about failures to vectorize.
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
-    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)
+if (VTKM_COMPILER_IS_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
-       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.99)
+elseif(VTKM_COMPILER_IS_APPLECLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.99)
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>)
 endif()
 

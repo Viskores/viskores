@@ -41,6 +41,43 @@ class DummyCellSet : public vtkm::cont::CellSet
 {
 };
 
+void CheckEmptyDynamicCellSet()
+{
+  vtkm::cont::DynamicCellSet empty;
+
+  VTKM_TEST_ASSERT(empty.GetName() == std::string{}, "DynamicCellSet should have no name");
+  VTKM_TEST_ASSERT(empty.GetNumberOfCells() == 0, "DynamicCellSet should have no cells");
+  VTKM_TEST_ASSERT(empty.GetNumberOfFaces() == 0, "DynamicCellSet should have no faces");
+  VTKM_TEST_ASSERT(empty.GetNumberOfEdges() == 0, "DynamicCellSet should have no edges");
+  VTKM_TEST_ASSERT(empty.GetNumberOfPoints() == 0, "DynamicCellSet should have no points");
+
+  empty.PrintSummary(std::cout);
+
+  using CellSet2D = vtkm::cont::CellSetStructured<2>;
+  using CellSet3D = vtkm::cont::CellSetStructured<3>;
+  VTKM_TEST_ASSERT(!empty.template IsType<CellSet2D>(), "DynamicCellSet reports wrong type.");
+  VTKM_TEST_ASSERT(!empty.template IsType<CellSet3D>(), "DynamicCellSet reports wrong type.");
+  VTKM_TEST_ASSERT(!empty.template IsType<DummyCellSet>(), "DynamicCellSet reports wrong type.");
+
+  CellSet2D instance;
+  VTKM_TEST_ASSERT(!empty.IsSameType(instance), "DynamicCellSet reports wrong type.");
+
+  bool gotException = false;
+  try
+  {
+    instance = empty.Cast<CellSet2D>();
+  }
+  catch (vtkm::cont::ErrorBadType&)
+  {
+    gotException = true;
+  }
+  VTKM_TEST_ASSERT(gotException, "Empty DynamicCellSet should have thrown on casting");
+
+  auto empty2 = empty.NewInstance();
+  VTKM_TEST_ASSERT(empty.GetCellSetBase() == nullptr, "DynamicCellSet should contain a nullptr");
+  VTKM_TEST_ASSERT(empty2.GetCellSetBase() == nullptr, "DynamicCellSet should contain a nullptr");
+}
+
 template <typename CellSetType, typename CellSetList>
 void CheckDynamicCellSet(const CellSetType& cellSet,
                          vtkm::cont::DynamicCellSetBase<CellSetList> dynamicCellSet)
@@ -119,6 +156,9 @@ void TestDynamicCellSet()
   std::cout << "*** Explicit Grid Constant Shape ********" << std::endl;
   TryNonDefaultCellSet(
     vtkm::cont::CellSetExplicit<vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag>());
+
+  std::cout << std::endl << "Try empty DynamicCellSet." << std::endl;
+  CheckEmptyDynamicCellSet();
 }
 
 } // anonymous namespace
