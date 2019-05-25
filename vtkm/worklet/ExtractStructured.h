@@ -172,6 +172,45 @@ private:
     return vtkm::cont::make_ArrayHandleCounting(start, stride, count);
   }
 
+  static DynamicCellSetStructured MakeCellSetStructured(const vtkm::Id3& dimensions,
+                                                        const vtkm::Id3 offset)
+  {
+    int dimensionality = 0;
+    vtkm::Id xyz[3];
+    for (int i = 0; i < 3; ++i)
+    {
+      if (dimensions[i] > 1)
+      {
+        xyz[dimensionality++] = dimensions[i];
+      }
+    }
+    switch (dimensionality)
+    {
+      case 1:
+      {
+        vtkm::cont::CellSetStructured<1> outCs;
+        outCs.SetPointDimensions(xyz[0]);
+        outCs.SetGlobalPointIndexStart(offset[0]);
+        return outCs;
+      }
+      case 2:
+      {
+        vtkm::cont::CellSetStructured<2> outCs;
+        outCs.SetPointDimensions(vtkm::Id2(xyz[0], xyz[1]));
+        outCs.SetGlobalPointIndexStart(vtkm::Id2(offset[0], offset[1]));
+        return outCs;
+      }
+      case 3:
+      {
+        vtkm::cont::CellSetStructured<3> outCs;
+        outCs.SetPointDimensions(vtkm::Id3(xyz[0], xyz[1], xyz[2]));
+        outCs.SetGlobalPointIndexStart(vtkm::Id3(offset[0], offset[1], offset[2]));
+        return outCs;
+      }
+      default:
+        return DynamicCellSetStructured();
+    }
+  }
   static DynamicCellSetStructured MakeCellSetStructured(const vtkm::Id3& dimensions)
   {
     int dimensionality = 0;
@@ -218,10 +257,8 @@ public:
   {
     // Verify input parameters
     vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellset.GetPointDimensions());
-    vtkm::Vec<vtkm::Id, Dimensionality> offset_vec;
-
-    this->SampleRate = vtkm::Id3(sampleRate[0], 1, 1);
-    this->InputDimensions = vtkm::Id3(ptdim[0], 1, 1);
+    vtkm::Id3 offset_vec(0, 0, 0);
+    vtkm::Id3 globalOffset(0, 0, 0);
 
     switch (Dimensionality)
     {
@@ -258,50 +295,171 @@ public:
     }
     this->InputDimensionality = Dimensionality;
 
-    // intersect VOI
     if (includeOffset)
     {
-      offset_vec = cellset.GetGlobalPointIndexStart();
-      if (voi.X.Min < offset_vec[0])
-        this->VOI.X.Min = vtkm::Max(vtkm::Id(0), offset_vec[0]);
-      if (voi.X.Max < offset_vec[0])
-        this->VOI.X.Max = vtkm::Min(this->InputDimensions[0], offset_vec[0]);
-      if (Dimensionality >= 2)
+      vtkm::Id3 tmpDims(0, 0, 0);
+      vtkm::Vec<vtkm::Id, Dimensionality> tmpOffset_vec = cellset.GetGlobalPointIndexStart();
+      for (int i = 0; i < Dimensionality; ++i)
       {
-        if (voi.Y.Min < offset_vec[1])
-          this->VOI.Y.Min = vtkm::Max(vtkm::Id(0), offset_vec[1]);
-        if (voi.Y.Max < offset_vec[1])
-          this->VOI.Y.Max = vtkm::Min(this->InputDimensions[1], offset_vec[1]);
-        if (Dimensionality == 3)
+        tmpDims[i] = ptdim[i];
+        offset_vec[i] = tmpOffset_vec[i];
+      }
+      if (offset_vec[0] >= voi.X.Min)
+      {
+        globalOffset[0] = offset_vec[0];
+        this->VOI.X.Min = offset_vec[0];
+        if (globalOffset[0] + ptdim[0] < voi.X.Max)
         {
-          if (voi.Z.Min < offset_vec[2])
-            this->VOI.Z.Min = vtkm::Max(vtkm::Id(0), offset_vec[2]);
-          if (voi.Z.Max < offset_vec[2])
-            this->VOI.Z.Max = vtkm::Min(this->InputDimensions[2], offset_vec[2]);
+          // Start from our GPIS (start point) up to the length of the
+          // dimensions (if that is within VOI)
+          this->VOI.X.Max = globalOffset[0] + ptdim[0];
+        }
+        else
+        {
+          // If it isn't within the voi we set our dimensions from the
+          // GPIS up to the VOI.
+          tmpDims[0] = voi.X.Max - globalOffset[0];
         }
       }
+      else if (offset_vec[0] < voi.X.Min)
+      {
+        if (offset_vec[0] + ptdim[0] < voi.X.Min)
+        {
+          // If we're out of bounds we set the dimensions to 0. This
+          // causes a return of DynamicCellSetStructured
+          tmpDims[0] = 0;
+        }
+        else
+        {
+          // If our GPIS is less than VOI min, but our dimensions
+          // include the VOI we go from the minimal value that we
+          // can up to how far has been specified.
+          globalOffset[0] = voi.X.Min;
+          this->VOI.X.Min = voi.X.Min;
+          if (globalOffset[0] + ptdim[0] < voi.X.Max)
+          {
+            this->VOI.X.Max = globalOffset[0] + ptdim[0];
+          }
+          else
+          {
+            tmpDims[0] = voi.X.Max - globalOffset[0];
+          }
+        }
+      }
+      if (Dimensionality >= 2 && offset_vec[1] > voi.Y.Min)
+      {
+        globalOffset[1] = offset_vec[1];
+        this->VOI.Y.Min = offset_vec[1];
+        if (globalOffset[1] + ptdim[1] < voi.Y.Max)
+        {
+          this->VOI.Y.Max = globalOffset[1] + ptdim[1];
+        }
+        else
+        {
+          tmpDims[1] = voi.Y.Max - globalOffset[1];
+        }
+      }
+      else if (Dimensionality >= 2 && offset_vec[1] < voi.Y.Min)
+      {
+        if (offset_vec[1] + ptdim[1] < voi.Y.Min)
+        {
+          tmpDims[1] = 0;
+        }
+        else
+        {
+          globalOffset[1] = voi.Y.Min;
+          this->VOI.Y.Min = voi.Y.Min;
+          if (globalOffset[1] + ptdim[1] < voi.Y.Max)
+          {
+            this->VOI.Y.Max = globalOffset[1] + ptdim[1];
+          }
+          else
+          {
+            tmpDims[1] = voi.Y.Max - globalOffset[1];
+          }
+        }
+      }
+      if (Dimensionality == 3 && offset_vec[2] > voi.Z.Min)
+      {
+        globalOffset[2] = offset_vec[2];
+        this->VOI.Z.Min = offset_vec[2];
+        if (globalOffset[2] + ptdim[2] < voi.Z.Max)
+        {
+          this->VOI.Z.Max = globalOffset[2] + ptdim[2];
+        }
+        else
+        {
+          tmpDims[2] = voi.Z.Max - globalOffset[2];
+        }
+      }
+      else if (Dimensionality == 3 && offset_vec[2] < voi.Z.Min)
+      {
+        if (offset_vec[2] + ptdim[2] < voi.Z.Min)
+        {
+          tmpDims[2] = 0;
+        }
+        else
+        {
+          globalOffset[2] = voi.Z.Min;
+          this->VOI.Z.Min = voi.Z.Min;
+          if (globalOffset[2] + ptdim[2] < voi.Z.Max)
+          {
+            this->VOI.Z.Max = globalOffset[2] + ptdim[2];
+          }
+          else
+          {
+            tmpDims[2] = voi.Z.Max - globalOffset[2];
+          }
+        }
+      }
+      this->OutputDimensions = vtkm::Id3(tmpDims[0], tmpDims[1], tmpDims[2]);
     }
-    else // includeOffset = false
-    {
-      this->VOI.X.Min = vtkm::Max(vtkm::Id(0), voi.X.Min);
-      this->VOI.X.Max = vtkm::Min(this->InputDimensions[0], voi.X.Max);
-      this->VOI.Y.Min = vtkm::Max(vtkm::Id(0), voi.Y.Min);
-      this->VOI.Y.Max = vtkm::Min(this->InputDimensions[1], voi.Y.Max);
-      this->VOI.Z.Min = vtkm::Max(vtkm::Id(0), voi.Z.Min);
-      this->VOI.Z.Max = vtkm::Min(this->InputDimensions[2], voi.Z.Max);
-    }
+    this->VOI.X.Min = vtkm::Max(vtkm::Id(0), voi.X.Min);
+    this->VOI.X.Max = vtkm::Min(this->InputDimensions[0] + globalOffset[0], voi.X.Max);
+    this->VOI.Y.Min = vtkm::Max(vtkm::Id(0), voi.Y.Min);
+    this->VOI.Y.Max = vtkm::Min(this->InputDimensions[1] + globalOffset[1], voi.Y.Max);
+    this->VOI.Z.Min = vtkm::Max(vtkm::Id(0), voi.Z.Min);
+    this->VOI.Z.Max = vtkm::Min(this->InputDimensions[2] + globalOffset[2], voi.Z.Max);
+
     if (!this->VOI.IsNonEmpty()) // empty VOI
     {
-      return DynamicCellSetStructured();
+      vtkm::Id xyz[3] = { 0, 0, 0 };
+      switch (Dimensionality)
+      {
+        case 1:
+        {
+          vtkm::cont::CellSetStructured<1> outCs;
+          outCs.SetPointDimensions(xyz[0]);
+          return outCs;
+        }
+        case 2:
+        {
+          vtkm::cont::CellSetStructured<2> outCs;
+          outCs.SetPointDimensions(vtkm::Id2(xyz[0], xyz[1]));
+          return outCs;
+        }
+        case 3:
+        {
+          vtkm::cont::CellSetStructured<3> outCs;
+          outCs.SetPointDimensions(vtkm::Id3(xyz[0], xyz[1], xyz[2]));
+          return outCs;
+        }
+        default:
+          return DynamicCellSetStructured();
+      }
     }
 
-    // compute output dimensions
-    this->OutputDimensions = vtkm::Id3(1);
-    vtkm::Id3 voiDims = this->VOI.Dimensions();
-    for (int i = 0; i < Dimensionality; ++i)
+    //
+    if (!includeOffset)
     {
-      this->OutputDimensions[i] = ((voiDims[i] + this->SampleRate[i] - 1) / this->SampleRate[i]) +
-        ((includeBoundary && ((voiDims[i] - 1) % this->SampleRate[i])) ? 1 : 0);
+      // compute output dimensions
+      this->OutputDimensions = vtkm::Id3(1);
+      vtkm::Id3 voiDims = this->VOI.Dimensions();
+      for (int i = 0; i < Dimensionality; ++i)
+      {
+        this->OutputDimensions[i] = ((voiDims[i] + this->SampleRate[i] - 1) / this->SampleRate[i]) +
+          ((includeBoundary && ((voiDims[i] - 1) % this->SampleRate[i])) ? 1 : 0);
+      }
     }
 
     this->ValidPoints = vtkm::cont::make_ArrayHandleCartesianProduct(
@@ -332,6 +490,10 @@ public:
                               this->VOI.Z.Min,
                               this->SampleRate[2]));
 
+    if (includeOffset)
+    {
+      return MakeCellSetStructured(this->OutputDimensions, globalOffset);
+    }
     return MakeCellSetStructured(this->OutputDimensions);
   }
 
@@ -371,6 +533,7 @@ private:
     ExtractStructured* Worklet;
     const vtkm::RangeId3* VOI;
     const vtkm::Id3* SampleRate;
+    const vtkm::Id3* GlobalPointIndexStart;
     bool IncludeBoundary;
     bool IncludeOffset;
     DynamicCellSetStructured* Output;
