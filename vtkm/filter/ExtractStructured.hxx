@@ -31,7 +31,7 @@ inline VTKM_CONT ExtractStructured::ExtractStructured()
   , VOI(vtkm::RangeId3(0, -1, 0, -1, 0, -1))
   , SampleRate(vtkm::Id3(1, 1, 1))
   , IncludeBoundary(false)
-  , IncludeOffset(true)
+  , IncludeOffset(false)
   , Worklet()
 {
 }
