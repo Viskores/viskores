@@ -533,7 +533,6 @@ private:
     ExtractStructured* Worklet;
     const vtkm::RangeId3* VOI;
     const vtkm::Id3* SampleRate;
-    const vtkm::Id3* GlobalPointIndexStart;
     bool IncludeBoundary;
     bool IncludeOffset;
     DynamicCellSetStructured* Output;

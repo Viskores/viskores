@@ -24,10 +24,6 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-//#include <typeinfo>
-//#include <vtkm/cont/DynamicCellSet.h>
-//#include <memory>
-
 using vtkm::cont::testing::MakeTestDataSet;
 
 class TestingExtractStructured
@@ -240,11 +236,9 @@ public:
     vtkm::Id3 test_offset(10, 0, 0);
     vtkm::Id3 no_offset(0, 0, 0);
     vtkm::Id3 new_dims(5, 10, 10);
-    const vtkm::Int32 Dimensionality = 3;
     bool includeBoundary = false;
     bool includeOffset = false;
     cellSet.SetPointDimensions(vtkm::make_Vec(10, 10, 10));
-    vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
 
     vtkm::worklet::ExtractStructured worklet;
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
@@ -273,12 +267,10 @@ public:
     vtkm::Id3 test_dims(5, 10, 10);
     vtkm::Id3 gpis(10, 0, 0);
     vtkm::Id3 test_offset(15, 0, 0);
-    const vtkm::Int32 Dimensionality = 3;
     bool includeBoundary = false;
     bool includeOffset = true;
     cellSet.SetPointDimensions(vtkm::make_Vec(10, 10, 10));
     cellSet.SetGlobalPointIndexStart(gpis);
-    vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
     vtkm::worklet::ExtractStructured worklet;
 
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
@@ -296,11 +288,9 @@ public:
     vtkm::RangeId3 range(100, 110, 0, 10, 0, 10);
     vtkm::Id3 sample(1, 1, 1);
     vtkm::Id3 test_dims(0, 0, 0);
-    const vtkm::Int32 Dimensionality = 3;
     bool includeBoundary = false;
     bool includeOffset = true;
     cellSet.SetPointDimensions(vtkm::make_Vec(10, 10, 10));
-    vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
     vtkm::worklet::ExtractStructured worklet;
 
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
@@ -320,11 +310,9 @@ public:
     vtkm::Id2 test_offset(10, 0);
     vtkm::Id2 no_offset(0, 0);
     vtkm::Id2 new_dims(5, 10);
-    const vtkm::Int32 Dimensionality = 2;
     bool includeBoundary = false;
     bool includeOffset = true;
     cellSet.SetPointDimensions(vtkm::make_Vec(10, 10));
-    vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
 
     vtkm::worklet::ExtractStructured worklet;
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
