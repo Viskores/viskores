@@ -24,10 +24,6 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-//#include <typeinfo>
-//#include <vtkm/cont/DynamicCellSet.h>
-//#include <memory>
-
 using vtkm::cont::testing::MakeTestDataSet;
 
 class TestingExtractStructured
