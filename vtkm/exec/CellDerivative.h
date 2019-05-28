@@ -561,16 +561,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   VTKM_ASSERT(numPoints >= 1);
   VTKM_ASSERT(numPoints == wCoords.GetNumberOfComponents());
-  /*
-  std::cout<<"CellDeriv_wWorld:"<<std::endl;
-  std::cout<<"  pcoords= "<<pcoords<<std::endl;
-  std::cout<<"  wCoords= (";
-  for (int i = 0; i < numPoints; i++) std::cout<<wCoords[i]<<" ";
-  std::cout<<")"<<std::endl;
-  std::cout<<"  field= (";
-  for (int i = 0; i < numPoints; i++) std::cout<<field[i]<<" ";
-  std::cout<<")"<<std::endl;
-*/
+
   switch (numPoints)
   {
     case 1:
@@ -579,13 +570,16 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
       return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagLine(), worklet);
   }
 
-  vtkm::FloatDefault dt = 1 / static_cast<vtkm::FloatDefault>(numPoints - 1);
-  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(pcoords[0] / dt);
-  if (idx == 0)
-    idx = 1;
-
   using FieldType = typename FieldVecType::ComponentType;
   using BaseComponentType = typename BaseComponent<FieldType>::Type;
+
+  ParametricCoordType dt;
+  dt = static_cast<ParametricCoordType>(1) / static_cast<ParametricCoordType>(numPoints - 1);
+  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(vtkm::Ceil(pcoords[0] / dt));
+  if (idx == 0)
+    idx = 1;
+  if (idx > numPoints - 1)
+    idx = numPoints - 1;
 
   FieldType deltaField(field[idx] - field[idx - 1]);
   vtkm::Vec<BaseComponentType, 3> vec(wCoords[idx] - wCoords[idx - 1]);
@@ -615,10 +609,13 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
       return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagLine(), worklet);
   }
 
-  vtkm::FloatDefault dt = 1 / static_cast<vtkm::FloatDefault>(numPoints - 1);
-  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(pcoords[0] / dt);
+  ParametricCoordType dt;
+  dt = static_cast<ParametricCoordType>(1) / static_cast<ParametricCoordType>(numPoints - 1);
+  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(vtkm::Ceil(pcoords[0] / dt));
   if (idx == 0)
     idx = 1;
+  if (idx > numPoints - 1)
+    idx = numPoints - 1;
 
   using T = typename FieldVecType::ComponentType;
 
