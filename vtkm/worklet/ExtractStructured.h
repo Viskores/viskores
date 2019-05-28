@@ -449,7 +449,6 @@ public:
       }
     }
 
-    //
     if (!includeOffset)
     {
       // compute output dimensions
