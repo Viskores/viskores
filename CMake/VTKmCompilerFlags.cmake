@@ -126,7 +126,7 @@ endif()
 
 #common warnings for all platforms when building cuda
 if(TARGET vtkm::cuda)
-  if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER 8.99.0)
+  if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
     #nvcc 9 introduced specific controls to disable the stack size warning
     #otherwise we let the warning occur. We have to set this in CMAKE_CUDA_FLAGS
     #as it is passed to the device link step, unlike compile_options
