@@ -20,7 +20,7 @@
 int UnitTestExceptions(int argc, char* argv[])
 {
   vtkm::cont::Initialize(argc, argv);
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
   try
   {

@@ -25,7 +25,7 @@ namespace detail
 {
 
 VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::cont::DeviceAdapterId,
-                                                vtkm::cont::RuntimeDeviceTracker,
+                                                vtkm::cont::RuntimeDeviceTracker&,
                                                 const std::string& functorName);
 
 template <typename DeviceTag, typename Functor, typename... Args>

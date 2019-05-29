@@ -131,7 +131,6 @@ void TryExecuteAllEdgeCases()
 {
   using ValidDevice = vtkm::cont::DeviceAdapterTagSerial;
   using SingleValidList = vtkm::ListTagBase<ValidDevice>;
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
   std::cout << "TryExecute no Runtime, no Device, no parameters." << std::endl;
   vtkm::cont::TryExecute(EdgeCaseFunctor());
@@ -158,8 +157,7 @@ void RunErrorTest(bool shouldFail, bool shouldThrow, bool shouldDisable)
   bool threw = false;
   bool disabled = false;
 
-  auto tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  tracker.ForceDevice(Device{});
+  vtkm::cont::ScopedRuntimeDeviceTracker scopedTracker(Device{});
 
   try
   {
@@ -171,8 +169,8 @@ void RunErrorTest(bool shouldFail, bool shouldThrow, bool shouldDisable)
     threw = true;
   }
 
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   disabled = !tracker.CanRunOn(Device{});
-  tracker.Reset();
 
   std::cout << "Failed: " << !succeeded << " "
             << "Threw: " << threw << " "
