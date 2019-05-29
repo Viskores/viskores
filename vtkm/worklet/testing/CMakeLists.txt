@@ -89,7 +89,8 @@ vtkm_unit_tests(
   ALL_BACKENDS
   )
 if (TARGET vtkm::cuda)
-  if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
+  if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
+     CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
     set(problematic_cuda_srcs
       "${CMAKE_CURRENT_BINARY_DIR}/UnitTestParticleAdvection.cu"
       "${CMAKE_CURRENT_BINARY_DIR}/UnitTestBoundingIntervalHierarchy.cu"

@@ -110,6 +110,11 @@ if(VTKm_ENABLE_CUDA)
   cmake_minimum_required(VERSION 3.9...3.14 FATAL_ERROR)
   enable_language(CUDA)
 
+  if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
+    CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 9.2)
+    message(FATAL_ERROR "VTK-m CUDA support requires version 9.2+")
+  endif()
+
   #To work around https://gitlab.kitware.com/cmake/cmake/issues/17512
   #we need to fix the CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES variable
   if(${CMAKE_VERSION} VERSION_LESS 3.10 AND CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
@@ -121,16 +126,16 @@ if(VTKm_ENABLE_CUDA)
     set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME vtkm::cuda)
     install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
 
-    # Workaround issue with CUDA 8.X where virtual don't work when building
-    # VTK-m as shared. We don't want to force BUILD_SHARED_LIBS to a specific
+    # Reserve `INTERFACE_REQUIRES_STATIC_BUILDS` to potential work around issues
+    # where VTK-m doesn't work when building shared as virtual functions fail
+    # inside device code. We don't want to force BUILD_SHARED_LIBS to a specific
     # value as that could impact other projects that embed VTK-m. Instead what
     # we do is make sure that libraries built by vtkm_library() are static
-    # if they use cuda
-    if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 9.0)
-      set_target_properties(vtkm_cuda PROPERTIES INTERFACE_REQUIRES_STATIC_BUILDS TRUE)
-    else()
-      set_target_properties(vtkm_cuda PROPERTIES INTERFACE_REQUIRES_STATIC_BUILDS FALSE)
-    endif()
+    # if they use CUDA
+    set_target_properties(vtkm_cuda PROPERTIES
+      INTERFACE_REQUIRES_STATIC_BUILDS FALSE
+    )
+
 
     set_target_properties(vtkm_cuda PROPERTIES
       INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
