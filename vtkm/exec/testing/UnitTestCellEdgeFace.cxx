@@ -219,7 +219,7 @@ struct TestCellFacesFunctor
   {
     for (vtkm::IdComponent numPoints = 3; numPoints < 7; numPoints++)
     {
-      this->TryShapeWithNumPoints(numPoints, vtkm::CellShapeTagPolygon());
+      this->TryShapeWithNumPoints(numPoints, vtkm::CellShapeTagPolyLine());
     }
   }
 
