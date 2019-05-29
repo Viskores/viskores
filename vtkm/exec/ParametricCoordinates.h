@@ -75,9 +75,11 @@ static inline VTKM_EXEC void ParametricCoordinatesCenter(vtkm::IdComponent numPo
   switch (numPoints)
   {
     case 1:
-      return ParametricCoordinatesCenter(numPoints, pcoords, vtkm::CellShapeTagVertex(), worklet);
+      ParametricCoordinatesCenter(numPoints, pcoords, vtkm::CellShapeTagVertex(), worklet);
+      return;
     case 2:
-      return ParametricCoordinatesCenter(numPoints, pcoords, vtkm::CellShapeTagLine(), worklet);
+      ParametricCoordinatesCenter(numPoints, pcoords, vtkm::CellShapeTagLine(), worklet);
+      return;
   }
   pcoords[0] = 0.5;
   pcoords[1] = 0;
@@ -277,11 +279,12 @@ static inline VTKM_EXEC void ParametricCoordinatesPoint(vtkm::IdComponent numPoi
   switch (numPoints)
   {
     case 1:
-      return ParametricCoordinatesPoint(
+      ParametricCoordinatesPoint(
         numPoints, pointIndex, pcoords, vtkm::CellShapeTagVertex(), functor);
+      return;
     case 2:
-      return ParametricCoordinatesPoint(
-        numPoints, pointIndex, pcoords, vtkm::CellShapeTagLine(), functor);
+      ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, vtkm::CellShapeTagLine(), functor);
+      return;
   }
   pcoords[0] =
     static_cast<ParametricCoordType>(pointIndex) / static_cast<ParametricCoordType>(numPoints - 1);
