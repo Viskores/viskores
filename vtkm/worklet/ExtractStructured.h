@@ -461,7 +461,6 @@ public:
         this->OutputDimensions[i] = ((voiDims[i] + this->SampleRate[i] - 1) / this->SampleRate[i]) +
           ((includeBoundary && ((voiDims[i] - 1) % this->SampleRate[i])) ? 1 : 0);
       }
-
       this->ValidPoints = vtkm::cont::make_ArrayHandleCartesianProduct(
         MakeAxisIndexArrayPoints(this->OutputDimensions[0],
                                  this->VOI.X.Min,

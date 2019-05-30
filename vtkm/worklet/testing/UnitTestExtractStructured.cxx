@@ -288,11 +288,9 @@ public:
     vtkm::RangeId3 range(100, 110, 0, 10, 0, 10);
     vtkm::Id3 sample(1, 1, 1);
     vtkm::Id3 test_dims(0, 0, 0);
-    const vtkm::Int32 Dimensionality = 3;
     bool includeBoundary = false;
     bool includeOffset = true;
     cellSet.SetPointDimensions(vtkm::make_Vec(10, 10, 10));
-    vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
     vtkm::worklet::ExtractStructured worklet;
 
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
@@ -310,11 +308,9 @@ public:
     vtkm::Id2 test_offset(10, 0);
     vtkm::Id2 no_offset(0, 0);
     vtkm::Id2 new_dims(5, 10);
-    const vtkm::Int32 Dimensionality = 2;
     bool includeBoundary = false;
     bool includeOffset = false;
     cellSet.SetPointDimensions(vtkm::make_Vec(10, 10));
-    vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
     vtkm::worklet::ExtractStructured worklet;
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
     VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
