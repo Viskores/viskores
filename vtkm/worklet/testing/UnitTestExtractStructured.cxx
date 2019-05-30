@@ -315,14 +315,12 @@ public:
     bool includeOffset = false;
     cellSet.SetPointDimensions(vtkm::make_Vec(10, 10));
     vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellSet.GetPointDimensions());
-
     vtkm::worklet::ExtractStructured worklet;
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
-
     VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
     vtkm::Id2 cellDims =
       outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-
+    // Test with offset now
     includeOffset = true;
     cellSet.SetGlobalPointIndexStart(test_offset);
     outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
@@ -332,8 +330,6 @@ public:
     VTKM_TEST_ASSERT(test_equal(cellDims, new_dims));
     VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), test_offset));
   }
-
-
 
   void operator()() const
   {
