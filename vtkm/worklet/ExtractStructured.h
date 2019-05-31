@@ -24,6 +24,8 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
+#include <vtkm/cont/CellSetStructured.h>
+
 namespace vtkm
 {
 namespace worklet
@@ -64,6 +66,7 @@ private:
   vtkm::Id First, Last;
   vtkm::Id Stride;
   bool IncludeBoundary;
+  bool IncludeOffset = false;
 };
 
 template <vtkm::IdComponent Dimensions>
@@ -159,6 +162,46 @@ private:
     return vtkm::cont::make_ArrayHandleCounting(start, stride, count);
   }
 
+  static DynamicCellSetStructured MakeCellSetStructured(const vtkm::Id3& dimensions,
+                                                        const vtkm::Id3 offset)
+  {
+    int dimensionality = 0;
+    vtkm::Id xyz[3];
+    for (int i = 0; i < 3; ++i)
+    {
+      if (dimensions[i] > 1)
+      {
+        xyz[dimensionality++] = dimensions[i];
+      }
+    }
+    switch (dimensionality)
+    {
+      case 1:
+      {
+        vtkm::cont::CellSetStructured<1> outCs;
+        outCs.SetPointDimensions(xyz[0]);
+        outCs.SetGlobalPointIndexStart(offset[0]);
+        return outCs;
+      }
+      case 2:
+      {
+        vtkm::cont::CellSetStructured<2> outCs;
+        outCs.SetPointDimensions(vtkm::Id2(xyz[0], xyz[1]));
+        outCs.SetGlobalPointIndexStart(vtkm::Id2(offset[0], offset[1]));
+        return outCs;
+      }
+      case 3:
+      {
+        vtkm::cont::CellSetStructured<3> outCs;
+        outCs.SetPointDimensions(vtkm::Id3(xyz[0], xyz[1], xyz[2]));
+        outCs.SetGlobalPointIndexStart(vtkm::Id3(offset[0], offset[1], offset[2]));
+        return outCs;
+      }
+      default:
+        return DynamicCellSetStructured();
+    }
+  }
+
   static DynamicCellSetStructured MakeCellSetStructured(const vtkm::Id3& dimensions)
   {
     int dimensionality = 0;
@@ -200,10 +243,14 @@ public:
   DynamicCellSetStructured Run(const vtkm::cont::CellSetStructured<Dimensionality>& cellset,
                                const vtkm::RangeId3& voi,
                                const vtkm::Id3& sampleRate,
-                               bool includeBoundary)
+                               bool includeBoundary,
+                               bool includeOffset)
   {
     // Verify input parameters
     vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellset.GetPointDimensions());
+    vtkm::Id3 offset_vec(0, 0, 0);
+    vtkm::Id3 globalOffset(0, 0, 0);
+
     switch (Dimensionality)
     {
       case 1:
@@ -212,8 +259,6 @@ public:
         {
           throw vtkm::cont::ErrorBadValue("Bad sampling rate");
         }
-        this->SampleRate = vtkm::Id3(sampleRate[0], 1, 1);
-        this->InputDimensions = vtkm::Id3(ptdim[0], 1, 1);
         break;
       }
       case 2:
@@ -241,57 +286,207 @@ public:
     }
     this->InputDimensionality = Dimensionality;
 
-    // intersect VOI
+    if (includeOffset)
+    {
+      vtkm::Id3 tmpDims(0, 0, 0);
+      vtkm::Vec<vtkm::Id, Dimensionality> tmpOffset_vec = cellset.GetGlobalPointIndexStart();
+      for (int i = 0; i < Dimensionality; ++i)
+      {
+        tmpDims[i] = ptdim[i];
+        offset_vec[i] = tmpOffset_vec[i];
+      }
+      if (offset_vec[0] >= voi.X.Min)
+      {
+        globalOffset[0] = offset_vec[0];
+        this->VOI.X.Min = offset_vec[0];
+        if (globalOffset[0] + ptdim[0] < voi.X.Max)
+        {
+          // Start from our GPIS (start point) up to the length of the
+          // dimensions (if that is within VOI)
+          this->VOI.X.Max = globalOffset[0] + ptdim[0];
+        }
+        else
+        {
+          // If it isn't within the voi we set our dimensions from the
+          // GPIS up to the VOI.
+          tmpDims[0] = voi.X.Max - globalOffset[0];
+        }
+      }
+      else if (offset_vec[0] < voi.X.Min)
+      {
+        if (offset_vec[0] + ptdim[0] < voi.X.Min)
+        {
+          // If we're out of bounds we set the dimensions to 0. This
+          // causes a return of DynamicCellSetStructured
+          tmpDims[0] = 0;
+        }
+        else
+        {
+          // If our GPIS is less than VOI min, but our dimensions
+          // include the VOI we go from the minimal value that we
+          // can up to how far has been specified.
+          globalOffset[0] = voi.X.Min;
+          this->VOI.X.Min = voi.X.Min;
+          if (globalOffset[0] + ptdim[0] < voi.X.Max)
+          {
+            this->VOI.X.Max = globalOffset[0] + ptdim[0];
+          }
+          else
+          {
+            tmpDims[0] = voi.X.Max - globalOffset[0];
+          }
+        }
+      }
+      if (Dimensionality >= 2 && offset_vec[1] > voi.Y.Min)
+      {
+        globalOffset[1] = offset_vec[1];
+        this->VOI.Y.Min = offset_vec[1];
+        if (globalOffset[1] + ptdim[1] < voi.Y.Max)
+        {
+          this->VOI.Y.Max = globalOffset[1] + ptdim[1];
+        }
+        else
+        {
+          tmpDims[1] = voi.Y.Max - globalOffset[1];
+        }
+      }
+      else if (Dimensionality >= 2 && offset_vec[1] < voi.Y.Min)
+      {
+        if (offset_vec[1] + ptdim[1] < voi.Y.Min)
+        {
+          tmpDims[1] = 0;
+        }
+        else
+        {
+          globalOffset[1] = voi.Y.Min;
+          this->VOI.Y.Min = voi.Y.Min;
+          if (globalOffset[1] + ptdim[1] < voi.Y.Max)
+          {
+            this->VOI.Y.Max = globalOffset[1] + ptdim[1];
+          }
+          else
+          {
+            tmpDims[1] = voi.Y.Max - globalOffset[1];
+          }
+        }
+      }
+      if (Dimensionality == 3 && offset_vec[2] > voi.Z.Min)
+      {
+        globalOffset[2] = offset_vec[2];
+        this->VOI.Z.Min = offset_vec[2];
+        if (globalOffset[2] + ptdim[2] < voi.Z.Max)
+        {
+          this->VOI.Z.Max = globalOffset[2] + ptdim[2];
+        }
+        else
+        {
+          tmpDims[2] = voi.Z.Max - globalOffset[2];
+        }
+      }
+      else if (Dimensionality == 3 && offset_vec[2] < voi.Z.Min)
+      {
+        if (offset_vec[2] + ptdim[2] < voi.Z.Min)
+        {
+          tmpDims[2] = 0;
+        }
+        else
+        {
+          globalOffset[2] = voi.Z.Min;
+          this->VOI.Z.Min = voi.Z.Min;
+          if (globalOffset[2] + ptdim[2] < voi.Z.Max)
+          {
+            this->VOI.Z.Max = globalOffset[2] + ptdim[2];
+          }
+          else
+          {
+            tmpDims[2] = voi.Z.Max - globalOffset[2];
+          }
+        }
+      }
+      this->OutputDimensions = vtkm::Id3(tmpDims[0], tmpDims[1], tmpDims[2]);
+    }
     this->VOI.X.Min = vtkm::Max(vtkm::Id(0), voi.X.Min);
-    this->VOI.X.Max = vtkm::Min(this->InputDimensions[0], voi.X.Max);
+    this->VOI.X.Max = vtkm::Min(this->InputDimensions[0] + globalOffset[0], voi.X.Max);
     this->VOI.Y.Min = vtkm::Max(vtkm::Id(0), voi.Y.Min);
-    this->VOI.Y.Max = vtkm::Min(this->InputDimensions[1], voi.Y.Max);
+    this->VOI.Y.Max = vtkm::Min(this->InputDimensions[1] + globalOffset[1], voi.Y.Max);
     this->VOI.Z.Min = vtkm::Max(vtkm::Id(0), voi.Z.Min);
-    this->VOI.Z.Max = vtkm::Min(this->InputDimensions[2], voi.Z.Max);
-    if (!this->VOI.IsNonEmpty()) // empty VOI
+    this->VOI.Z.Max = vtkm::Min(this->InputDimensions[2] + globalOffset[2], voi.Z.Max);
+
+    if (!this->VOI.IsNonEmpty())
     {
-      return DynamicCellSetStructured();
+      vtkm::Id xyz[3] = { 0, 0, 0 };
+      switch (Dimensionality)
+      {
+        case 1:
+        {
+          vtkm::cont::CellSetStructured<1> outCs;
+          outCs.SetPointDimensions(xyz[0]);
+          return outCs;
+        }
+        case 2:
+        {
+          vtkm::cont::CellSetStructured<2> outCs;
+          outCs.SetPointDimensions(vtkm::Id2(xyz[0], xyz[1]));
+          return outCs;
+        }
+        case 3:
+        {
+          vtkm::cont::CellSetStructured<3> outCs;
+          outCs.SetPointDimensions(vtkm::Id3(xyz[0], xyz[1], xyz[2]));
+          return outCs;
+        }
+        default:
+        {
+          return DynamicCellSetStructured();
+        }
+      }
+    }
+    if (!includeOffset)
+    {
+      // compute output dimensions
+      this->OutputDimensions = vtkm::Id3(1);
+      vtkm::Id3 voiDims = this->VOI.Dimensions();
+      for (int i = 0; i < Dimensionality; ++i)
+      {
+        this->OutputDimensions[i] = ((voiDims[i] + this->SampleRate[i] - 1) / this->SampleRate[i]) +
+          ((includeBoundary && ((voiDims[i] - 1) % this->SampleRate[i])) ? 1 : 0);
+      }
+      this->ValidPoints = vtkm::cont::make_ArrayHandleCartesianProduct(
+        MakeAxisIndexArrayPoints(this->OutputDimensions[0],
+                                 this->VOI.X.Min,
+                                 this->VOI.X.Max - 1,
+                                 this->SampleRate[0],
+                                 includeBoundary),
+        MakeAxisIndexArrayPoints(this->OutputDimensions[1],
+                                 this->VOI.Y.Min,
+                                 this->VOI.Y.Max - 1,
+                                 this->SampleRate[1],
+                                 includeBoundary),
+        MakeAxisIndexArrayPoints(this->OutputDimensions[2],
+                                 this->VOI.Z.Min,
+                                 this->VOI.Z.Max - 1,
+                                 this->SampleRate[2],
+                                 includeBoundary));
+
+      this->ValidCells = vtkm::cont::make_ArrayHandleCartesianProduct(
+        MakeAxisIndexArrayCells(vtkm::Max(vtkm::Id(1), this->OutputDimensions[0] - 1),
+                                this->VOI.X.Min,
+                                this->SampleRate[0]),
+        MakeAxisIndexArrayCells(vtkm::Max(vtkm::Id(1), this->OutputDimensions[1] - 1),
+                                this->VOI.Y.Min,
+                                this->SampleRate[1]),
+        MakeAxisIndexArrayCells(vtkm::Max(vtkm::Id(1), this->OutputDimensions[2] - 1),
+                                this->VOI.Z.Min,
+                                this->SampleRate[2]));
     }
 
-    // compute output dimensions
-    this->OutputDimensions = vtkm::Id3(1);
-    vtkm::Id3 voiDims = this->VOI.Dimensions();
-    for (int i = 0; i < Dimensionality; ++i)
+    if (includeOffset)
     {
-      this->OutputDimensions[i] = ((voiDims[i] + this->SampleRate[i] - 1) / this->SampleRate[i]) +
-        ((includeBoundary && ((voiDims[i] - 1) % this->SampleRate[i])) ? 1 : 0);
+      return MakeCellSetStructured(this->OutputDimensions, globalOffset);
     }
-
-    this->ValidPoints = vtkm::cont::make_ArrayHandleCartesianProduct(
-      MakeAxisIndexArrayPoints(this->OutputDimensions[0],
-                               this->VOI.X.Min,
-                               this->VOI.X.Max - 1,
-                               this->SampleRate[0],
-                               includeBoundary),
-      MakeAxisIndexArrayPoints(this->OutputDimensions[1],
-                               this->VOI.Y.Min,
-                               this->VOI.Y.Max - 1,
-                               this->SampleRate[1],
-                               includeBoundary),
-      MakeAxisIndexArrayPoints(this->OutputDimensions[2],
-                               this->VOI.Z.Min,
-                               this->VOI.Z.Max - 1,
-                               this->SampleRate[2],
-                               includeBoundary));
-
-    this->ValidCells = vtkm::cont::make_ArrayHandleCartesianProduct(
-      MakeAxisIndexArrayCells(vtkm::Max(vtkm::Id(1), this->OutputDimensions[0] - 1),
-                              this->VOI.X.Min,
-                              this->SampleRate[0]),
-      MakeAxisIndexArrayCells(vtkm::Max(vtkm::Id(1), this->OutputDimensions[1] - 1),
-                              this->VOI.Y.Min,
-                              this->SampleRate[1]),
-      MakeAxisIndexArrayCells(vtkm::Max(vtkm::Id(1), this->OutputDimensions[2] - 1),
-                              this->VOI.Z.Min,
-                              this->SampleRate[2]));
-
     return MakeCellSetStructured(this->OutputDimensions);
   }
+
 
 private:
   class CallRun
@@ -301,11 +496,13 @@ private:
             const vtkm::RangeId3& voi,
             const vtkm::Id3& sampleRate,
             bool includeBoundary,
+            bool includeOffset,
             DynamicCellSetStructured& output)
       : Worklet(worklet)
       , VOI(&voi)
       , SampleRate(&sampleRate)
       , IncludeBoundary(includeBoundary)
+      , IncludeOffset(includeOffset)
       , Output(&output)
     {
     }
@@ -313,8 +510,8 @@ private:
     template <vtkm::IdComponent Dimensionality>
     void operator()(const vtkm::cont::CellSetStructured<Dimensionality>& cellset) const
     {
-      *this->Output =
-        this->Worklet->Run(cellset, *this->VOI, *this->SampleRate, this->IncludeBoundary);
+      *this->Output = this->Worklet->Run(
+        cellset, *this->VOI, *this->SampleRate, this->IncludeBoundary, this->IncludeOffset);
     }
 
     template <typename CellSetType>
@@ -328,6 +525,7 @@ private:
     const vtkm::RangeId3* VOI;
     const vtkm::Id3* SampleRate;
     bool IncludeBoundary;
+    bool IncludeOffset;
     DynamicCellSetStructured* Output;
   };
 
@@ -336,10 +534,11 @@ public:
   DynamicCellSetStructured Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset,
                                const vtkm::RangeId3& voi,
                                const vtkm::Id3& sampleRate,
-                               bool includeBoundary)
+                               bool includeBoundary,
+                               bool includeOffset)
   {
     DynamicCellSetStructured output;
-    CallRun cr(this, voi, sampleRate, includeBoundary, output);
+    CallRun cr(this, voi, sampleRate, includeBoundary, includeOffset, output);
     vtkm::cont::CastAndCall(cellset, cr);
     return output;
   }

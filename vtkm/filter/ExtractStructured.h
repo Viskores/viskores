@@ -78,6 +78,9 @@ public:
   VTKM_CONT
   void SetIncludeBoundary(bool value) { this->IncludeBoundary = value; }
 
+  VTKM_CONT
+  void SetIncludeOffset(bool value) { this->IncludeOffset = value; }
+
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
@@ -93,6 +96,7 @@ private:
   vtkm::RangeId3 VOI;
   vtkm::Id3 SampleRate;
   bool IncludeBoundary;
+  bool IncludeOffset;
   vtkm::worklet::ExtractStructured Worklet;
 };
 }
