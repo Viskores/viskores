@@ -39,7 +39,7 @@ public:
       0,  //  1: CELL_SHAPE_VERTEX
       0,  //  2: Unused
       0,  //  3: CELL_SHAPE_LINE
-      0,  //  4: Unused
+      0,  //  4: CELL_SHAPE_POLY_LINE
       3,  //  5: CELL_SHAPE_TRIANGLE
       0,  //  6: Unused
       -1, //  7: CELL_SHAPE_POLYGON  ---special case---
@@ -73,7 +73,7 @@ public:
         //  3: CELL_SHAPE_LINE
         { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
           { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
-        //  4: Unused
+        //  4: CELL_SHAPE_POLY_LINE
         { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
           { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
         //  5: CELL_SHAPE_TRIANGLE
@@ -133,6 +133,15 @@ static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(vtkm::IdComponen
   return numPoints;
 }
 
+static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(vtkm::IdComponent numPoints,
+                                                                vtkm::CellShapeTagPolyLine,
+                                                                const vtkm::exec::FunctorBase&)
+{
+  (void)numPoints; // Silence compiler warnings.
+  VTKM_ASSUME(numPoints > 0);
+  return detail::CellEdgeTables{}.NumEdges(vtkm::CELL_SHAPE_POLY_LINE);
+}
+
 static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(
   vtkm::IdComponent numPoints,
   vtkm::CellShapeTagGeneric shape,
@@ -141,6 +150,10 @@ static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(
   if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
   {
     return CellEdgeNumberOfEdges(numPoints, vtkm::CellShapeTagPolygon(), worklet);
+  }
+  else if (shape.Id == vtkm::CELL_SHAPE_POLY_LINE)
+  {
+    return CellEdgeNumberOfEdges(numPoints, vtkm::CellShapeTagPolyLine(), worklet);
   }
   else
   {

@@ -453,6 +453,14 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
   for (vtkm::Id i = 0; i < nSeeds; i++)
     VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(i) <= maxSteps,
                      "Too many steps taken in streamline");
+
+  vtkm::cont::DataSet ds;
+  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", res.positions));
+  ds.AddCellSet(res.polyLines);
+  ds.PrintSummary(std::cout);
+  vtkm::io::writer::VTKDataSetWriter writer1("ds.vtk");
+  writer1.WriteDataSet(ds);
+  exit(0);
 }
 
 void TestParticleWorklets()

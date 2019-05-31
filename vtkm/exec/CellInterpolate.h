@@ -202,6 +202,63 @@ template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   const FieldVecType& field,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolyLine,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+
+  switch (numPoints)
+  {
+    case 1:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  using T = ParametricCoordType;
+
+  T dt = 1 / static_cast<T>(numPoints - 1);
+  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(pcoords[0] / dt);
+  if (idx == numPoints - 1)
+    return field[numPoints - 1];
+
+  T t = (pcoords[0] - static_cast<T>(idx) * dt) / dt;
+
+  return vtkm::Lerp(field[idx], field[idx + 1], t);
+}
+
+template <typename ParametricCoordType>
+VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
+  const vtkm::VecAxisAlignedPointCoordinates<1>& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolyLine,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+
+  switch (numPoints)
+  {
+    case 1:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  using T = vtkm::Vec<vtkm::FloatDefault, 3>;
+  const T& origin = field.GetOrigin();
+  const T& spacing = field.GetSpacing();
+
+  return T(
+    origin[0] + static_cast<vtkm::FloatDefault>(pcoords[0]) * spacing[0], origin[1], origin[2]);
+}
+
+//-----------------------------------------------------------------------------
+template <typename FieldVecType, typename ParametricCoordType>
+VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagTriangle,
   const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {

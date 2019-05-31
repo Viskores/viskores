@@ -38,7 +38,7 @@ public:
       0, //  1: CELL_SHAPE_VERTEX
       0, //  2: Unused
       0, //  3: CELL_SHAPE_LINE
-      0, //  4: Unused
+      0, //  4: CELL_SHAPE_POLY_LINE
       0, //  5: CELL_SHAPE_TRIANGLE
       0, //  6: Unused
       0, //  7: CELL_SHAPE_POLYGON
@@ -62,7 +62,7 @@ public:
         { -1, -1, -1, -1, -1, -1 }, //  1: CELL_SHAPE_VERTEX
         { -1, -1, -1, -1, -1, -1 }, //  2: Unused
         { -1, -1, -1, -1, -1, -1 }, //  3: CELL_SHAPE_LINE
-        { -1, -1, -1, -1, -1, -1 }, //  4: Unused
+        { -1, -1, -1, -1, -1, -1 }, //  4: CELL_SHAPE_POLY_LINE
         { -1, -1, -1, -1, -1, -1 }, //  5: CELL_SHAPE_TRIANGLE
         { -1, -1, -1, -1, -1, -1 }, //  6: Unused
         { -1, -1, -1, -1, -1, -1 }, //  7: CELL_SHAPE_POLYGON
@@ -98,7 +98,7 @@ public:
       //  3: CELL_SHAPE_LINE
       { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
         { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
-      //  4: Unused
+      //  4: CELL_SHAPE_POLY_LINE
       { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
         { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
       //  5: CELL_SHAPE_TRIANGLE
