@@ -432,7 +432,7 @@ class BenchmarkFilters
     BenchWarpScalar()
       : Filter(2.)
     {
-      this->Filter.SetUseCoordinateSystemAsPrimaryField(true);
+      this->Filter.SetUseCoordinateSystemAsField(true);
       this->Filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
       this->Filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
     }

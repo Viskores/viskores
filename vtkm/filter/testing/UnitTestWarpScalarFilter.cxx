@@ -78,7 +78,7 @@ void CheckResult(const vtkm::filter::WarpScalar& filter, const vtkm::cont::DataS
       vtkm::FloatDefault x =
         static_cast<vtkm::FloatDefault>(i) / static_cast<vtkm::FloatDefault>(dim - 1);
       vtkm::FloatDefault y = (x * x + z * z) / static_cast<vtkm::FloatDefault>(2.0);
-      vtkm::FloatDefault targetZ = filter.GetUseCoordinateSystemAsPrimaryField()
+      vtkm::FloatDefault targetZ = filter.GetUseCoordinateSystemAsField()
         ? z + static_cast<vtkm::FloatDefault>(2 * sfPortal.Get(j * dim + i))
         : y + static_cast<vtkm::FloatDefault>(2 * sfPortal.Get(j * dim + i));
       auto point = outPortal.Get(j * dim + i);
@@ -98,7 +98,7 @@ void TestWarpScalarFilter()
   {
     std::cout << "   First field as coordinates" << std::endl;
     vtkm::filter::WarpScalar filter(scale);
-    filter.SetUseCoordinateSystemAsPrimaryField(true);
+    filter.SetUseCoordinateSystemAsField(true);
     filter.SetNormalField("normal");
     filter.SetScalarFactorField("scalarfactor");
     vtkm::cont::DataSet result = filter.Execute(ds);
@@ -108,7 +108,7 @@ void TestWarpScalarFilter()
   {
     std::cout << "   First field as a vector" << std::endl;
     vtkm::filter::WarpScalar filter(scale);
-    filter.SetPrimaryField("vec1");
+    filter.SetActiveField("vec1");
     filter.SetNormalField("normal");
     filter.SetScalarFactorField("scalarfactor");
     vtkm::cont::DataSet result = filter.Execute(ds);

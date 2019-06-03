@@ -83,7 +83,7 @@ void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataS
       vtkm::FloatDefault x =
         static_cast<vtkm::FloatDefault>(i) / static_cast<vtkm::FloatDefault>(dim - 1);
       vtkm::FloatDefault y = (x * x + z * z) / static_cast<vtkm::FloatDefault>(2.0);
-      vtkm::FloatDefault targetZ = filter.GetUseCoordinateSystemAsPrimaryField()
+      vtkm::FloatDefault targetZ = filter.GetUseCoordinateSystemAsField()
         ? z + static_cast<vtkm::FloatDefault>(2 * 2)
         : y + static_cast<vtkm::FloatDefault>(2 * 2);
       auto point = outPortal.Get(j * dim + i);
@@ -104,7 +104,7 @@ void TestWarpVectorFilter()
   {
     std::cout << "   First field as coordinates" << std::endl;
     vtkm::filter::WarpVector filter(scale);
-    filter.SetUseCoordinateSystemAsPrimaryField(true);
+    filter.SetUseCoordinateSystemAsField(true);
     filter.SetVectorField("vec2");
     vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpVector());
     CheckResult(filter, result);
@@ -113,7 +113,7 @@ void TestWarpVectorFilter()
   {
     std::cout << "   First field as a vector" << std::endl;
     vtkm::filter::WarpVector filter(scale);
-    filter.SetPrimaryField("vec1");
+    filter.SetActiveField("vec1");
     filter.SetVectorField("vec2");
     vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpVector());
     CheckResult(filter, result);

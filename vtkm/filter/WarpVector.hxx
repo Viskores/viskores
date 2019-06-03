@@ -22,7 +22,7 @@ namespace filter
 inline VTKM_CONT WarpVector::WarpVector(vtkm::FloatDefault scale)
   : vtkm::filter::FilterField<WarpVector>()
   , Worklet()
-  , VectorFieldName()
+  , VectorFieldName("normal")
   , VectorFieldAssociation(vtkm::cont::Field::Association::ANY)
   , Scale(scale)
 {
