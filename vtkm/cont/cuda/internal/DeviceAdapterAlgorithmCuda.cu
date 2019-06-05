@@ -17,6 +17,11 @@
 
 #include <cuda.h>
 
+// minwindef.h on Windows creates a preprocessor macro named PASCAL, which messes this up.
+#ifdef PASCAL
+#undef PASCAL
+#endif
+
 namespace vtkm
 {
 namespace cont
