@@ -39,6 +39,7 @@ set(unit_tests
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleDiscard.cxx
   UnitTestArrayHandleExtractComponent.cxx
+  UnitTestArrayHandleExtrude.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleReverse.cxx
@@ -53,6 +54,7 @@ set(unit_tests
   UnitTestCellLocatorGeneral.cxx
   UnitTestCellSet.cxx
   UnitTestCellSetExplicit.cxx
+  UnitTestCellSetExtrude.cxx
   UnitTestCellSetPermutation.cxx
   UnitTestContTesting.cxx
   UnitTestDataSetBuilderExplicit.cxx

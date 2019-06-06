@@ -20,6 +20,7 @@
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 #include <vtkm/worklet/connectivities/UnionFind.h>
 
+
 namespace vtkm
 {
 namespace worklet

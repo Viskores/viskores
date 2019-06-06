@@ -69,6 +69,11 @@ public:
       else
         quads = 0;
     }
+    VTKM_EXEC
+    void operator()(vtkm::CellShapeTagWedge vtkmNotUsed(shapeType), vtkm::Id& quads) const
+    {
+      quads = 3;
+    }
   }; //class CountQuads
 
   template <int DIM>
@@ -191,7 +196,19 @@ public:
       outputIndices.Set(offset++, quad);
     }
 
+    template <typename VecType, typename OutputPortal>
+    VTKM_EXEC void operator()(const vtkm::Id& pointOffset,
+                              vtkm::CellShapeTagWedge vtkmNotUsed(shapeType),
+                              const VecType& cellIndices,
+                              const vtkm::Id& cellId,
+                              OutputPortal& outputIndices) const
+    {
+      vtkm::Id offset = pointOffset;
 
+      cell2quad(offset, cellIndices, cellId, 3, 0, 2, 5, outputIndices);
+      cell2quad(offset, cellIndices, cellId, 1, 4, 5, 2, outputIndices);
+      cell2quad(offset, cellIndices, cellId, 0, 3, 4, 1, outputIndices);
+    }
     template <typename VecType, typename OutputPortal>
     VTKM_EXEC void operator()(const vtkm::Id& offset,
                               vtkm::CellShapeTagQuad shapeType,

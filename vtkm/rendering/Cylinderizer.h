@@ -68,12 +68,14 @@ public:
     }
 
     VTKM_EXEC
-    void operator()(vtkm::CellShapeTagQuad shapeType, vtkm::Id& segments) const
+    void operator()(vtkm::CellShapeTagQuad vtkmNotUsed(shapeType), vtkm::Id& segments) const
     {
-      if (shapeType.Id == vtkm::CELL_SHAPE_QUAD)
-        segments = 4;
-      else
-        segments = 0;
+      segments = 4;
+    }
+    VTKM_EXEC
+    void operator()(vtkm::CellShapeTagWedge vtkmNotUsed(shapeType), vtkm::Id& segments) const
+    {
+      segments = 24;
     }
   }; //class CountSegments
 
@@ -279,7 +281,24 @@ public:
       tri2seg(offset, cellIndices, cellId, 4, 5, 6, outputIndices);
       tri2seg(offset, cellIndices, cellId, 4, 6, 7, outputIndices);
     }
+    template <typename VecType, typename OutputPortal>
+    VTKM_EXEC void operator()(const vtkm::Id& pointOffset,
+                              vtkm::CellShapeTagWedge vtkmNotUsed(shapeType),
+                              const VecType& cellIndices,
+                              const vtkm::Id& cellId,
+                              OutputPortal& outputIndices) const
 
+    {
+      vtkm::Id offset = pointOffset;
+      tri2seg(offset, cellIndices, cellId, 0, 1, 2, outputIndices);
+      tri2seg(offset, cellIndices, cellId, 3, 5, 4, outputIndices);
+      tri2seg(offset, cellIndices, cellId, 3, 0, 2, outputIndices);
+      tri2seg(offset, cellIndices, cellId, 3, 2, 5, outputIndices);
+      tri2seg(offset, cellIndices, cellId, 1, 4, 5, outputIndices);
+      tri2seg(offset, cellIndices, cellId, 1, 5, 2, outputIndices);
+      tri2seg(offset, cellIndices, cellId, 0, 3, 4, outputIndices);
+      tri2seg(offset, cellIndices, cellId, 0, 4, 1, outputIndices);
+    }
     template <typename VecType, typename OutputPortal>
     VTKM_EXEC void operator()(const vtkm::Id& pointOffset,
                               vtkm::CellShapeTagGeneric shapeType,

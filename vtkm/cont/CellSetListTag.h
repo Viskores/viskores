@@ -17,6 +17,7 @@
 #include <vtkm/ListTag.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/CellSetExtrude.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetStructured.h>
 
@@ -40,6 +41,7 @@ struct VTKM_ALWAYS_EXPORT CellSetListTagStructured3D
 {
 };
 
+
 template <typename ShapeStorageTag = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
           typename NumIndicesStorageTag = VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG,
           typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
@@ -59,6 +61,7 @@ struct VTKM_ALWAYS_EXPORT CellSetListTagExplicitDefault : CellSetListTagExplicit
 struct VTKM_ALWAYS_EXPORT CellSetListTagCommon : vtkm::ListTagBase<vtkm::cont::CellSetStructured<2>,
                                                                    vtkm::cont::CellSetStructured<3>,
                                                                    vtkm::cont::CellSetExplicit<>,
+                                                                   vtkm::cont::CellSetExtrude,
                                                                    vtkm::cont::CellSetSingleType<>>
 {
 };

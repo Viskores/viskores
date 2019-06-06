@@ -52,6 +52,7 @@ set(headers
   PointTransform.h
   PolicyBase.h
   PolicyDefault.h
+  PolicyExtrude.h
   Probe.h
   SplitSharpEdges.h
   Streamline.h
