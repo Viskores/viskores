@@ -17,11 +17,26 @@ namespace
 static constexpr vtkm::Id MAX_VECTOR_SIZE = 5;
 static constexpr vtkm::Id VecInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
 
+void ExpectTrueType(std::true_type)
+{
+}
+
+void ExpectFalseType(std::false_type)
+{
+}
+
+struct TypeWithoutVecTraits
+{
+};
+
 struct TestVecTypeFunctor
 {
   template <typename T>
   void operator()(const T&) const
   {
+    // Make sure that VecTraits actually exists
+    ExpectTrueType(vtkm::HasVecTraits<T>());
+
     using Traits = vtkm::VecTraits<T>;
     using ComponentType = typename Traits::ComponentType;
     VTKM_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
@@ -48,6 +63,8 @@ void TestVecTraits()
   vtkm::testing::Testing::TryTypes(test);
   std::cout << "vtkm::Vec<vtkm::FloatDefault, 5>" << std::endl;
   test(vtkm::Vec<vtkm::FloatDefault, 5>());
+
+  ExpectFalseType(vtkm::HasVecTraits<TypeWithoutVecTraits>());
 
   vtkm::testing::TestVecComponentsTag<vtkm::Id3>();
   vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault, 3>>();
