@@ -523,6 +523,12 @@ struct TypeTraits<vtkm::Matrix<T, NumRow, NumCol>>
 {
   using NumericTag = typename TypeTraits<T>::NumericTag;
   using DimensionalityTag = vtkm::TypeTraitsMatrixTag;
+
+  VTKM_EXEC_CONT
+  static vtkm::Matrix<T, NumRow, NumCol> ZeroInitialization()
+  {
+    return vtkm::Matrix<T, NumRow, NumCol>(vtkm::TypeTraits<T>::ZeroInitialization());
+  }
 };
 
 /// A matrix has vector traits to implement component-wise operations.
@@ -563,8 +569,6 @@ public:
   }
 };
 
-} // namespace vtkm
-
 //---------------------------------------------------------------------------
 // Basic comparison operators.
 
@@ -588,5 +592,24 @@ VTKM_EXEC_CONT bool operator!=(const vtkm::Matrix<T, NumRow, NumCol>& a,
 {
   return !(a == b);
 }
+
+/// Helper function for printing out matricies during testing
+///
+template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
+VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Matrix<T, NumRow, NumCol>& mat)
+{
+  stream << std::endl;
+  for (vtkm::IdComponent row = 0; row < NumRow; ++row)
+  {
+    stream << "| ";
+    for (vtkm::IdComponent col = 0; col < NumCol; ++col)
+    {
+      stream << mat(row, col) << "\t";
+    }
+    stream << "|" << std::endl;
+  }
+  return stream;
+}
+} // namespace vtkm
 
 #endif //vtk_m_Matrix_h
