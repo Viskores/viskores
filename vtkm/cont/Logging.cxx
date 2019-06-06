@@ -18,8 +18,7 @@
 #pragma warning(disable : 4722)
 #endif // VTKM_MSVC
 
-#define LOGURU_IMPLEMENTATION 1
-#include <vtkm/thirdparty/loguru/vtkmloguru/loguru.hpp>
+#include <vtkm/thirdparty/loguru/vtkmloguru/loguru.cpp>
 
 #ifdef VTKM_MSVC
 #pragma warning(pop)
