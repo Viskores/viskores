@@ -57,15 +57,15 @@ struct VecTraitsMultipleComponentChooser<1>
   using Type = vtkm::VecTraitsTagSingleComponent;
 };
 
-} // namespace detail
+} // namespace internal
 
 /// The VecTraits class gives several static members that define how
 /// to use a given type as a vector.
 ///
 template <class VecType>
-struct VecTraits
-#ifdef VTKM_DOXYGEN_ONLY
+struct VTKM_NEVER_EXPORT VecTraits
 {
+#ifdef VTKM_DOXYGEN_ONLY
   /// Type of the components in the vector.
   ///
   using ComponentType = typename VecType::ComponentType;
@@ -115,21 +115,40 @@ struct VecTraits
   ///
   template <vktm::IdComponent destSize>
   VTKM_EXEC_CONT static void CopyInto(const VecType& src, vtkm::Vec<ComponentType, destSize>& dest);
-};
-#else  // VTKM_DOXYGEN_ONLY
-  ;
 #endif // VTKM_DOXYGEN_ONLY
+};
+
+namespace detail
+{
+
+template <typename T, typename S = typename vtkm::VecTraits<T>::ComponentType>
+std::true_type HasVecTraitsImpl(T*);
+
+std::false_type HasVecTraitsImpl(...);
+
+} // namespace detail
+
+/// \brief Determines whether the given type has VecTraits defined.
+///
+/// If the given type T has a valid VecTraits class, then HasVecTraits<T> will be set to
+/// std::true_type. Otherwise it will be set to std::false_type. For example,
+/// HasVecTraits<vtkm::Id> is the same as std::true_type whereas HasVecTraits<void *> is the same
+/// as std::false_type. This is useful to block the definition of methods using VecTraits when
+/// VecTraits are not defined.
+///
+template <typename T>
+using HasVecTraits = decltype(detail::HasVecTraitsImpl(std::declval<T*>()));
 
 // This partial specialization allows you to define a non-const version of
 // VecTraits and have it still work for const version.
 //
 template <typename T>
-struct VecTraits<const T> : VecTraits<T>
+struct VTKM_NEVER_EXPORT VecTraits<const T> : VecTraits<T>
 {
 };
 
 template <typename T, vtkm::IdComponent Size>
-struct VecTraits<vtkm::Vec<T, Size>>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
 {
   using VecType = vtkm::Vec<T, Size>;
 
@@ -193,7 +212,7 @@ struct VecTraits<vtkm::Vec<T, Size>>
 };
 
 template <typename T>
-struct VecTraits<vtkm::VecC<T>>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::VecC<T>>
 {
   using VecType = vtkm::VecC<T>;
 
@@ -258,7 +277,7 @@ struct VecTraits<vtkm::VecC<T>>
 };
 
 template <typename T>
-struct VecTraits<vtkm::VecCConst<T>>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::VecCConst<T>>
 {
   using VecType = vtkm::VecCConst<T>;
 
@@ -322,7 +341,7 @@ namespace internal
 /// Used for overriding VecTraits for basic scalar types.
 ///
 template <typename ScalarType>
-struct VecTraitsBasic
+struct VTKM_NEVER_EXPORT VecTraitsBasic
 {
   using ComponentType = ScalarType;
   static constexpr vtkm::IdComponent NUM_COMPONENTS = 1;
@@ -363,7 +382,8 @@ struct VecTraitsBasic
 /// component. Thus we treat a pair as a "scalar" unit.
 ///
 template <typename T, typename U>
-struct VecTraits<vtkm::Pair<T, U>> : public vtkm::internal::VecTraitsBasic<vtkm::Pair<T, U>>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::Pair<T, U>>
+  : public vtkm::internal::VecTraitsBasic<vtkm::Pair<T, U>>
 {
 };
 
@@ -373,7 +393,7 @@ struct VecTraits<vtkm::Pair<T, U>> : public vtkm::internal::VecTraitsBasic<vtkm:
   namespace vtkm                                                                                   \
   {                                                                                                \
   template <>                                                                                      \
-  struct VecTraits<type> : public vtkm::internal::VecTraitsBasic<type>                             \
+  struct VTKM_NEVER_EXPORT VecTraits<type> : public vtkm::internal::VecTraitsBasic<type>           \
   {                                                                                                \
   };                                                                                               \
   }
