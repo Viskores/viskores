@@ -17,18 +17,35 @@
   */
 
 #ifdef VTKM_CUDA
+
 #define VTKM_EXEC __device__ __host__
 #define VTKM_EXEC_CONT __device__ __host__
+
+#ifdef VTKM_MSVC
+
+#if __CUDAVER__ >= 75000
+#define VTKM_SUPPRESS_EXEC_WARNINGS __pragma(nv_exec_check_disable)
+#else
+#define VTKM_SUPPRESS_EXEC_WARNINGS __pragma(hd_warning_disable)
+#endif
+
+#else
+
 #if __CUDAVER__ >= 75000
 #define VTKM_SUPPRESS_EXEC_WARNINGS _Pragma("nv_exec_check_disable")
 #else
 #define VTKM_SUPPRESS_EXEC_WARNINGS _Pragma("hd_warning_disable")
 #endif
-#else
+
+#endif
+
+#else // !VTKM_CUDA
+
 #define VTKM_EXEC
 #define VTKM_EXEC_CONT
 #define VTKM_SUPPRESS_EXEC_WARNINGS
-#endif
+
+#endif // !VTKM_CUDA
 
 #define VTKM_CONT
 
