@@ -147,16 +147,6 @@ using AllCellList = vtkm::ListTagJoin<StructuredCellList, UnstructuredCellList>;
 
 using CoordinateList = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
 
-struct WaveletGeneratorDataFunctor
-{
-  template <typename DeviceAdapter>
-  bool operator()(DeviceAdapter, vtkm::worklet::WaveletGenerator& gen)
-  {
-    InputDataSet = gen.GenerateDataSet<DeviceAdapter>();
-    return true;
-  }
-};
-
 class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
 {
 public:
@@ -1373,9 +1363,7 @@ int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& con
     vtkm::worklet::WaveletGenerator gen;
     gen.SetExtent({ 0 }, { waveletDim });
 
-    // WaveletGenerator needs a template device argument not a id to deduce the portal type.
-    WaveletGeneratorDataFunctor genFunctor;
-    vtkm::cont::TryExecuteOnDevice(config.Device, genFunctor, gen);
+    InputDataSet = gen.GenerateDataSet(config.Device);
   }
 
   if (tetra)
