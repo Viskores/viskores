@@ -170,13 +170,13 @@ struct Bounds
   }
 };
 
-} // namespace vtkm
-
 /// Helper function for printing bounds during testing
 ///
 static inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Bounds& bounds)
 {
   return stream << "{ X:" << bounds.X << ", Y:" << bounds.Y << ", Z:" << bounds.Z << " }";
 }
+
+} // namespace vtkm
 
 #endif //vtk_m_Bounds_h
