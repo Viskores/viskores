@@ -10,20 +10,19 @@
 #ifndef vtk_m_worklet_SplitSharpEdges_h
 #define vtk_m_worklet_SplitSharpEdges_h
 
-#include <map>
-
 #include <vtkm/worklet/CellDeepCopy.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/Invoker.h>
+
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/exec/CellEdge.h>
 
 #include <vtkm/Bitset.h>
 #include <vtkm/CellTraits.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/exec/CellEdge.h>
 
 namespace vtkm
 {
@@ -445,64 +444,80 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec<CoordsComType, 3>, CoordsOutStorageType>& newCoords,
     NewCellSetType& newCellset)
   {
-    vtkm::FloatDefault featureAngleR =
+    vtkm::worklet::Invoker invoke;
+
+    const vtkm::FloatDefault featureAngleR =
       featureAngle / static_cast<vtkm::FloatDefault>(180.0) * vtkm::Pi<vtkm::FloatDefault>();
 
-    ClassifyPoint classifyPoint(vtkm::Cos(featureAngleR));
-    vtkm::worklet::DispatcherMapTopology<ClassifyPoint> cpDispatcher(classifyPoint);
-
-    // Array of newPointNums and cellNeedUpdateNums
+    //Launch the first kernel that computes which points need to be split
     vtkm::cont::ArrayHandle<vtkm::Id> newPointNums, cellNeedUpdateNums;
-    cpDispatcher.Invoke(oldCellset, oldCellset, faceNormals, newPointNums, cellNeedUpdateNums);
+    ClassifyPoint classifyPoint(vtkm::Cos(featureAngleR));
+    invoke(classifyPoint, oldCellset, oldCellset, faceNormals, newPointNums, cellNeedUpdateNums);
+    VTKM_ASSERT(newPointNums.GetNumberOfValues() == oldCoords.GetNumberOfValues());
 
-    vtkm::Id totalNewPointsNum =
-      vtkm::cont::Algorithm::Reduce(newPointNums, vtkm::Id(0), vtkm::Add());
+    //Compute relevant information from cellNeedUpdateNums so we can release
+    //that memory asap
+    vtkm::cont::ArrayHandle<vtkm::Id> pointCellsStartingIndexs;
+    vtkm::cont::Algorithm::ScanExclusive(cellNeedUpdateNums, pointCellsStartingIndexs);
+
+    const vtkm::Id cellsNeedUpdateNum =
+      vtkm::cont::Algorithm::Reduce(cellNeedUpdateNums, vtkm::Id(0));
+    cellNeedUpdateNums.ReleaseResources();
+
+
+    //Compute the mapping of new points to old points. This is required for
+    //processing additional point fields
+    const vtkm::Id totalNewPointsNum = vtkm::cont::Algorithm::Reduce(newPointNums, vtkm::Id(0));
+    this->NewPointsIdArray.Allocate(oldCoords.GetNumberOfValues() + totalNewPointsNum);
+    vtkm::cont::Algorithm::CopySubRange(
+      vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), oldCoords.GetNumberOfValues()),
+      0,
+      oldCoords.GetNumberOfValues(),
+      this->NewPointsIdArray,
+      0);
+    auto newPointsIdArrayPortal = this->NewPointsIdArray.GetPortalControl();
+
+    // Fill the new point coordinate system with all the existing values
+    newCoords.Allocate(oldCoords.GetNumberOfValues() + totalNewPointsNum);
+    vtkm::cont::Algorithm::CopySubRange(oldCoords, 0, oldCoords.GetNumberOfValues(), newCoords);
+
+    if (totalNewPointsNum > 0)
+    { //only if we have new points do we need add any of the new
+      //coordinate locations
+      vtkm::Id newCoordsIndex = oldCoords.GetNumberOfValues();
+      auto oldCoordsPortal = oldCoords.GetPortalConstControl();
+      auto newCoordsPortal = newCoords.GetPortalControl();
+      auto newPointNumsPortal = newPointNums.GetPortalControl();
+      for (vtkm::Id i = 0; i < oldCoords.GetNumberOfValues(); i++)
+      { // Find out for each new point, how many times it should be added
+        for (vtkm::Id j = 0; j < newPointNumsPortal.Get(i); j++)
+        {
+          newPointsIdArrayPortal.Set(newCoordsIndex, i);
+          newCoordsPortal.Set(newCoordsIndex++, oldCoordsPortal.Get(i));
+        }
+      }
+    }
+
     // Allocate the size for the updateCellTopologyArray
-    vtkm::Id cellsNeedUpdateNum =
-      vtkm::cont::Algorithm::Reduce(cellNeedUpdateNums, vtkm::Id(0), vtkm::Add());
-
     vtkm::cont::ArrayHandle<vtkm::Id3> cellTopologyUpdateTuples;
     cellTopologyUpdateTuples.Allocate(cellsNeedUpdateNum);
 
-    vtkm::cont::ArrayHandle<vtkm::Id> newpointStartingIndexs, pointCellsStartingIndexs;
+    vtkm::cont::ArrayHandle<vtkm::Id> newpointStartingIndexs;
     vtkm::cont::Algorithm::ScanExclusive(newPointNums, newpointStartingIndexs);
-    vtkm::cont::Algorithm::ScanExclusive(cellNeedUpdateNums, pointCellsStartingIndexs);
+    newPointNums.ReleaseResources();
+
 
     SplitSharpEdge splitSharpEdge(vtkm::Cos(featureAngleR), oldCoords.GetNumberOfValues());
-
-    vtkm::worklet::DispatcherMapTopology<SplitSharpEdge> sseDispatcher(splitSharpEdge);
-    sseDispatcher.Invoke(oldCellset,
-                         oldCellset,
-                         faceNormals,
-                         newpointStartingIndexs,
-                         pointCellsStartingIndexs,
-                         cellTopologyUpdateTuples);
+    invoke(splitSharpEdge,
+           oldCellset,
+           oldCellset,
+           faceNormals,
+           newpointStartingIndexs,
+           pointCellsStartingIndexs,
+           cellTopologyUpdateTuples);
     auto ctutPortal = cellTopologyUpdateTuples.GetPortalConstControl();
+    vtkm::cont::printSummary_ArrayHandle(cellTopologyUpdateTuples, std::cout);
 
-    // Create the new point coordinate system and update NewPointsIdArray to
-    // process point field
-    this->NewPointsIdArray.Allocate(oldCoords.GetNumberOfValues() + totalNewPointsNum);
-    auto newPointsIdArrayPortal = this->NewPointsIdArray.GetPortalControl();
-    for (vtkm::Id i = 0; i < newPointNums.GetNumberOfValues(); i++)
-    {
-      newPointsIdArrayPortal.Set(i, i);
-    }
-
-    newCoords.Allocate(oldCoords.GetNumberOfValues() + totalNewPointsNum);
-    vtkm::cont::Algorithm::CopySubRange(oldCoords, 0, oldCoords.GetNumberOfValues(), newCoords);
-    vtkm::Id newCoordsIndex = oldCoords.GetNumberOfValues();
-    auto oldCoordsPortal = oldCoords.GetPortalConstControl();
-    auto newCoordsPortal = newCoords.GetPortalControl();
-    auto newPointNumsPortal = newPointNums.GetPortalControl();
-
-    for (vtkm::Id i = 0; i < newPointNums.GetNumberOfValues(); i++)
-    { // Find out for each new point, how many times it should be added
-      for (vtkm::Id j = 0; j < newPointNumsPortal.Get(i); j++)
-      {
-        newPointsIdArrayPortal.Set(newCoordsIndex, i);
-        newCoordsPortal.Set(newCoordsIndex++, oldCoordsPortal.Get(i));
-      }
-    }
 
     // Create the new cellset
     CellDeepCopy::Run(oldCellset, newCellset);
