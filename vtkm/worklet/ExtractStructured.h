@@ -66,7 +66,6 @@ private:
   vtkm::Id First, Last;
   vtkm::Id Stride;
   bool IncludeBoundary;
-  bool IncludeOffset = false;
 };
 
 template <vtkm::IdComponent Dimensions>
