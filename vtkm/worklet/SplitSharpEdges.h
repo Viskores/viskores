@@ -126,6 +126,111 @@ VTKM_EXEC int FindNeighborCellInLocalIndex(const vtkm::Id2& eOI,
   }
   return neighboringCellIndex;
 }
+
+// Generalized logic for finding what 'regions' own the connected cells.
+template <typename IncidentCellVecType, typename PointFromCellSetType, typename FaceNormalVecType>
+VTKM_EXEC bool FindConnectedCellOwnerships(vtkm::FloatDefault cosFeatureAngle,
+                                           const IncidentCellVecType& incidentCells,
+                                           vtkm::Id pointIndex,
+                                           const PointFromCellSetType& pFromCellSet,
+                                           const FaceNormalVecType& faceNormals,
+                                           vtkm::Id visitedCellsRegionIndex[64],
+                                           vtkm::Id& regionIndex,
+                                           const vtkm::exec::FunctorBase& worklet)
+{
+  const vtkm::IdComponent numberOfIncidentCells = incidentCells.GetNumberOfComponents();
+  VTKM_ASSERT(numberOfIncidentCells < 64);
+  if (numberOfIncidentCells <= 1)
+  {
+    return false; // Not enough cells to compare
+  }
+  // Initialize a global cell mask to avoid confusion. globalCellIndex->status
+  // 0 means not visited yet 1 means visited.
+  vtkm::Bitset<vtkm::UInt64> visitedCells;
+  // Reallocate memory for visitedCellsGroup if needed
+
+  // Loop through each cell
+  for (vtkm::IdComponent incidentCellIndex = 0; incidentCellIndex < numberOfIncidentCells;
+       incidentCellIndex++)
+  {
+    vtkm::Id cellIndexG = incidentCells[incidentCellIndex]; // cell index in global order
+    // If not visited
+    if (!visitedCells.test(incidentCellIndex))
+    {
+      // Mark the cell and track the region
+      visitedCells.set(incidentCellIndex);
+      visitedCellsRegionIndex[incidentCellIndex] = regionIndex;
+
+      // Find two edges containing the current point in canonial index
+      vtkm::Id2 edge0G(-1, -1), edge1G(-1, -1);
+      internal::FindRelatedEdges(pointIndex, cellIndexG, pFromCellSet, edge0G, edge1G, worklet);
+      // Grow the area along each edge
+      for (size_t i = 0; i < 2; i++)
+      { // Reset these two values for each grow operation
+        vtkm::Id2 currentEdgeG = i == 0 ? edge0G : edge1G;
+        vtkm::IdComponent currentTestingCellIndex = incidentCellIndex;
+        while (currentTestingCellIndex >= 0)
+        {
+          // Find the neighbor cell of the current cell edge in local index
+          int neighboringCellIndexQuery = internal::FindNeighborCellInLocalIndex(
+            currentEdgeG, pFromCellSet, incidentCells, currentTestingCellIndex, worklet);
+          // The edge should be manifold and the neighboring cell should
+          // have not been visited
+          if (neighboringCellIndexQuery != -1 && !visitedCells.test(neighboringCellIndexQuery))
+          {
+            vtkm::IdComponent neighborCellIndex =
+              static_cast<vtkm::IdComponent>(neighboringCellIndexQuery);
+            // Try to grow the area if the feature angle between current neighbor
+            auto thisNormal = faceNormals[currentTestingCellIndex];
+            //neighborNormal
+            auto neighborNormal = faceNormals[neighborCellIndex];
+            // Try to grow the area
+            if (vtkm::dot(thisNormal, neighborNormal) > cosFeatureAngle)
+            { // No need to split.
+              visitedCells.set(neighborCellIndex);
+
+              // Mark the region visited
+              visitedCellsRegionIndex[neighborCellIndex] = regionIndex;
+
+              // Move to examine next cell
+              currentTestingCellIndex = neighborCellIndex;
+              vtkm::Id2 neighborCellEdge0G(-1, -1), neighborCellEdge1G(-1, -1);
+              internal::FindRelatedEdges(pointIndex,
+                                         incidentCells[currentTestingCellIndex],
+                                         pFromCellSet,
+                                         neighborCellEdge0G,
+                                         neighborCellEdge1G,
+                                         worklet);
+              // Update currentEdgeG
+              if ((currentEdgeG == neighborCellEdge0G) ||
+                  currentEdgeG == vtkm::Id2(neighborCellEdge0G[1], neighborCellEdge0G[0]))
+              {
+                currentEdgeG = neighborCellEdge1G;
+              }
+              else
+              {
+                currentEdgeG = neighborCellEdge0G;
+              }
+            }
+            else
+            {
+              currentTestingCellIndex = -1;
+            }
+          }
+          else
+          {
+            currentTestingCellIndex =
+              -1; // Either seperated by previous visit, boundary or non-manifold
+          }
+          // cells is smaller than the thresold and the nighboring cell has not been visited
+        }
+      }
+      regionIndex++;
+    }
+  }
+  return true;
+}
+
 } // internal namespace
 
 // Split sharp manifold edges where the feature angle between the
@@ -171,110 +276,36 @@ public:
                               vtkm::Id& newPointNum,
                               vtkm::Id& cellNum) const
     {
-      vtkm::IdComponent numberOfIncidentCells = incidentCells.GetNumberOfComponents();
-
-      VTKM_ASSERT(numberOfIncidentCells < 64);
-
-      if (numberOfIncidentCells <= 1)
-      {
-        return; // Not enought cells to compare
-      }
-
-      // Initialize a global cell mask to avoid confusion. globalCellIndex->status
-      // 0 means not visited yet 1 means visited.
-      vtkm::Bitset<vtkm::UInt64> visitedCells;
+      vtkm::Id regionIndex = 0;
       vtkm::Id visitedCellsRegionIndex[64] = { 0 };
-      // Reallocate memory for visitedCellsGroup if needed
-
-      int regionIndex = 0;
-      // Loop through each cell
-      for (vtkm::IdComponent incidentCellIndex = 0; incidentCellIndex < numberOfIncidentCells;
-           incidentCellIndex++)
+      const bool foundConnections = internal::FindConnectedCellOwnerships(this->CosFeatureAngle,
+                                                                          incidentCells,
+                                                                          pointIndex,
+                                                                          pFromCellSet,
+                                                                          faceNormals,
+                                                                          visitedCellsRegionIndex,
+                                                                          regionIndex,
+                                                                          *this);
+      if (!foundConnections)
       {
-        vtkm::Id cellIndexG = incidentCells[incidentCellIndex]; // cell index in global order
-        // If not visited
-        if (!visitedCells.test(incidentCellIndex))
+        newPointNum = 0;
+        cellNum = 0;
+      }
+      else
+      {
+        // For each new region you need a new point
+        vtkm::Id numberOfCellsNeedUpdate = 0;
+        const vtkm::IdComponent size = incidentCells.GetNumberOfComponents();
+        for (vtkm::IdComponent i = 0; i < size; i++)
         {
-          // Mark the cell and track the region
-          visitedCells.set(incidentCellIndex);
-          visitedCellsRegionIndex[incidentCellIndex] = regionIndex;
-
-          // Find two edges containing the current point in canonial index
-          vtkm::Id2 edge0G(-1, -1), edge1G(-1, -1);
-          internal::FindRelatedEdges(pointIndex, cellIndexG, pFromCellSet, edge0G, edge1G, *this);
-          // Grow the area along each edge
-          for (size_t i = 0; i < 2; i++)
-          { // Reset these two values for each grow operation
-            vtkm::Id2 currentEdgeG = i == 0 ? edge0G : edge1G;
-            vtkm::IdComponent currentTestingCellIndex = incidentCellIndex;
-            while (currentTestingCellIndex >= 0)
-            {
-              // Find the neighbor cell of the current cell edge in local index
-              int neighboringCellIndexQuery = internal::FindNeighborCellInLocalIndex(
-                currentEdgeG, pFromCellSet, incidentCells, currentTestingCellIndex, *this);
-              // The edge should be manifold and the neighboring cell should
-              // have not been visited
-              if (neighboringCellIndexQuery != -1 && !visitedCells.test(neighboringCellIndexQuery))
-              {
-                vtkm::IdComponent neighborCellIndex =
-                  static_cast<vtkm::IdComponent>(neighboringCellIndexQuery);
-                auto thisNormal = faceNormals[currentTestingCellIndex];
-                //neighborNormal
-                auto neighborNormal = faceNormals[neighborCellIndex];
-                // Try to grow the area
-                if (vtkm::dot(thisNormal, neighborNormal) > this->CosFeatureAngle)
-                { // No need to split.
-                  visitedCells.set(neighborCellIndex);
-                  visitedCellsRegionIndex[neighborCellIndex] = regionIndex;
-
-                  // Move to examine next cell
-                  currentTestingCellIndex = neighborCellIndex;
-                  vtkm::Id2 neighborCellEdge0G(-1, -1), neighborCellEdge1G(-1, -1);
-                  internal::FindRelatedEdges(pointIndex,
-                                             incidentCells[currentTestingCellIndex],
-                                             pFromCellSet,
-                                             neighborCellEdge0G,
-                                             neighborCellEdge1G,
-                                             *this);
-                  // Update currentEdgeG
-                  if ((currentEdgeG == neighborCellEdge0G) ||
-                      currentEdgeG == vtkm::Id2(neighborCellEdge0G[1], neighborCellEdge0G[0]))
-                  {
-                    currentEdgeG = neighborCellEdge1G;
-                  }
-                  else
-                  {
-                    currentEdgeG = neighborCellEdge0G;
-                  }
-                }
-                else
-                {
-                  currentTestingCellIndex = -1;
-                }
-              }
-              else
-              {
-                currentTestingCellIndex =
-                  -1; // Either seperated by previous visit, boundary or non-manifold
-              }
-              // cells is smaller than the thresold and the nighboring cell has not been visited
-            }
+          if (visitedCellsRegionIndex[i] > 0)
+          {
+            numberOfCellsNeedUpdate++;
           }
-          regionIndex++;
         }
+        newPointNum = regionIndex - 1;
+        cellNum = numberOfCellsNeedUpdate;
       }
-
-      // For each new region you need a new point
-      newPointNum = regionIndex - 1;
-      vtkm::Id numberOfCellsNeedUpdate = 0;
-      for (vtkm::IdComponent i = 0; i < numberOfIncidentCells; i++)
-      {
-        if (visitedCellsRegionIndex[i] > 0)
-        {
-          numberOfCellsNeedUpdate++;
-        }
-      }
-      cellNum = numberOfCellsNeedUpdate;
     }
 
   private:
@@ -318,109 +349,35 @@ public:
                               const vtkm::Id& pointCellsStartingIndex,
                               CellTopologyUpdateTuples& cellTopologyUpdateTuples) const
     {
-      vtkm::IdComponent numberOfIncidentCells = incidentCells.GetNumberOfComponents();
-      if (numberOfIncidentCells <= 1)
-      {
-        return; // Not enought cells to compare
-      }
-      // Initialize a global cell mask to avoid confusion. globalCellIndex->status
-      // 0 means not visited yet 1 means visited.
-      vtkm::Bitset<vtkm::UInt64> visitedCells;
+      vtkm::Id regionIndex = 0;
       vtkm::Id visitedCellsRegionIndex[64] = { 0 };
-      // Reallocate memory for visitedCellsGroup if needed
-
-      int regionIndex = 0;
-      // Loop through each cell
-      for (vtkm::IdComponent incidentCellIndex = 0; incidentCellIndex < numberOfIncidentCells;
-           incidentCellIndex++)
+      const bool foundConnections = internal::FindConnectedCellOwnerships(this->CosFeatureAngle,
+                                                                          incidentCells,
+                                                                          pointIndex,
+                                                                          pFromCellSet,
+                                                                          faceNormals,
+                                                                          visitedCellsRegionIndex,
+                                                                          regionIndex,
+                                                                          *this);
+      if (foundConnections)
       {
-        vtkm::Id cellIndexG = incidentCells[incidentCellIndex]; // cell index in global order
-        // If not visited
-        if (!visitedCells.test(incidentCellIndex))
+        // For each new region you need a new point
+        // Initialize the offset in the global cellTopologyUpdateTuples;
+        vtkm::Id cellTopologyUpdateTuplesIndex = pointCellsStartingIndex;
+        const vtkm::IdComponent size = incidentCells.GetNumberOfComponents();
+        for (vtkm::Id i = 0; i < size; i++)
         {
-          // Mark the cell and track the region
-          visitedCells.set(incidentCellIndex);
-          visitedCellsRegionIndex[incidentCellIndex] = regionIndex;
-
-          // Find two edges containing the current point in canonial index
-          vtkm::Id2 edge0G(-1, -1), edge1G(-1, -1);
-          internal::FindRelatedEdges(pointIndex, cellIndexG, pFromCellSet, edge0G, edge1G, *this);
-          // Grow the area along each edge
-          for (size_t i = 0; i < 2; i++)
-          { // Reset these two values for each grow operation
-            vtkm::Id2 currentEdgeG = i == 0 ? edge0G : edge1G;
-            vtkm::IdComponent currentTestingCellIndex = incidentCellIndex;
-            while (currentTestingCellIndex >= 0)
-            {
-              // Find the neighbor of the current cell edge in local index
-              int neighboringCellIndexQuery = internal::FindNeighborCellInLocalIndex(
-                currentEdgeG, pFromCellSet, incidentCells, currentTestingCellIndex, *this);
-              // The edge should be manifold and the neighboring cell should
-              // have not been visited
-              if (neighboringCellIndexQuery != -1 && !visitedCells.test(neighboringCellIndexQuery))
-              {
-                vtkm::IdComponent neighborCellIndex =
-                  static_cast<vtkm::IdComponent>(neighboringCellIndexQuery);
-                // Try to grow the area if the feature angle between current neighbor
-                auto thisNormal = faceNormals[currentTestingCellIndex];
-                //neighborNormal
-                auto neighborNormal = faceNormals[neighborCellIndex];
-                if (vtkm::dot(thisNormal, neighborNormal) > this->CosFeatureAngle)
-                { // No need to split.
-                  visitedCells.set(neighborCellIndex);
-                  // Move to examine next cell
-                  currentTestingCellIndex = neighborCellIndex;
-                  vtkm::Id2 neighborCellEdge0G(-1, -1), neighborCellEdge1G(-1, -1);
-                  internal::FindRelatedEdges(pointIndex,
-                                             incidentCells[currentTestingCellIndex],
-                                             pFromCellSet,
-                                             neighborCellEdge0G,
-                                             neighborCellEdge1G,
-                                             *this);
-                  // Update currentEdgeG
-                  if ((currentEdgeG == neighborCellEdge0G) ||
-                      currentEdgeG == vtkm::Id2(neighborCellEdge0G[1], neighborCellEdge0G[0]))
-                  {
-                    currentEdgeG = neighborCellEdge1G;
-                  }
-                  else
-                  {
-                    currentEdgeG = neighborCellEdge0G;
-                  }
-                }
-                else
-                {
-                  currentTestingCellIndex = -1;
-                }
-              }
-              else
-              {
-                currentTestingCellIndex =
-                  -1; // Either seperated by previous visit, boundary or non-manifold
-              }
-              // cells is smaller than the thresold and the nighboring cell has not been visited
-            }
+          if (visitedCellsRegionIndex[i])
+          { // New region generated. Need to update the topology
+            vtkm::Id replacementPointId =
+              NumberOfOldPoints + newPointStartingIndex + visitedCellsRegionIndex[i] - 1;
+            vtkm::Id globalCellId = incidentCells[static_cast<vtkm::IdComponent>(i)];
+            // (cellGlobalIndex, oldPointId, replacementPointId)
+            vtkm::Vec<vtkm::Id, 3> tuple =
+              vtkm::make_Vec(globalCellId, pointIndex, replacementPointId);
+            cellTopologyUpdateTuples.Set(cellTopologyUpdateTuplesIndex, tuple);
+            cellTopologyUpdateTuplesIndex++;
           }
-          regionIndex++;
-        }
-      }
-
-      // For each new region you need a new point
-      // Initialize the offset in the global cellTopologyUpdateTuples;
-      vtkm::Id cellTopologyUpdateTuplesIndex = pointCellsStartingIndex;
-
-      for (vtkm::Id i = 0; i < numberOfIncidentCells; i++)
-      {
-        if (visitedCellsRegionIndex[i])
-        { // New region generated. Need to update the topology
-          vtkm::Id replacementPointId =
-            NumberOfOldPoints + newPointStartingIndex + visitedCellsRegionIndex[i] - 1;
-          vtkm::Id globalCellId = incidentCells[static_cast<vtkm::IdComponent>(i)];
-          // (cellGlobalIndex, oldPointId, replacementPointId)
-          vtkm::Vec<vtkm::Id, 3> tuple =
-            vtkm::make_Vec(globalCellId, pointIndex, replacementPointId);
-          cellTopologyUpdateTuples.Set(cellTopologyUpdateTuplesIndex, tuple);
-          cellTopologyUpdateTuplesIndex++;
         }
       }
     }
