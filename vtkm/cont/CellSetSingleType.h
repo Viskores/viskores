@@ -223,8 +223,7 @@ public:
 
   virtual void PrintSummary(std::ostream& out) const override
   {
-    out << "   ExplicitSingleCellSet: " << this->Name << " Type " << this->CellShapeAsId
-        << std::endl;
+    out << "   CellSetSingleType: " << this->Name << " Type " << this->CellShapeAsId << std::endl;
     out << "   PointToCell: " << std::endl;
     this->Data->PointToCell.PrintSummary(out);
     out << "   CellToPoint: " << std::endl;
