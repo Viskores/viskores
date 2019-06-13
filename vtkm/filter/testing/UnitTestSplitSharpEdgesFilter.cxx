@@ -7,12 +7,16 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#include <vtkm/filter/CellAverage.h>
+#include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/SurfaceNormals.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WaveletGenerator.h>
 
 namespace
 {
@@ -109,6 +113,20 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
   return dataSet;
 }
 
+vtkm::cont::DataSet Make3DWavelet()
+{
+
+  vtkm::worklet::WaveletGenerator wavelet;
+  wavelet.SetMinimumExtent({ -25 });
+  wavelet.SetMaximumExtent({ 25 });
+  wavelet.SetFrequency({ 60, 30, 40 });
+  wavelet.SetMagnitude({ 5 });
+
+  vtkm::cont::DataSet result = wavelet.GenerateDataSet();
+  return result;
+}
+
+
 void TestSplitSharpEdgesFilterSplitEveryEdge(vtkm::cont::DataSet& simpleCubeWithSN,
                                              vtkm::filter::SplitSharpEdges& splitSharpEdgesFilter)
 {
@@ -187,7 +205,7 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
   }
 }
 
-void TestSplitSharpEdgesFilter()
+void TestWithExplicitData()
 {
   vtkm::cont::DataSet simpleCube = Make3DExplicitSimpleCube();
   // Generate surface normal field
@@ -204,6 +222,51 @@ void TestSplitSharpEdgesFilter()
 
   TestSplitSharpEdgesFilterSplitEveryEdge(simpleCubeWithSN, splitSharpEdgesFilter);
   TestSplitSharpEdgesFilterNoSplit(simpleCubeWithSN, splitSharpEdgesFilter);
+}
+
+struct SplitSharpTestPolicy : public vtkm::filter::PolicyBase<SplitSharpTestPolicy>
+{
+  using StructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
+  using UnstructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetSingleType<>>;
+  using AllCellSetList = vtkm::ListTagJoin<StructuredCellSetList, UnstructuredCellSetList>;
+  using FieldTypeList = vtkm::ListTagBase<vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
+};
+
+
+void TestWithStructuredData()
+{
+  // Generate a wavelet:
+  vtkm::cont::DataSet dataSet = Make3DWavelet();
+
+  // Cut a contour:
+  vtkm::filter::MarchingCubes contour;
+  contour.SetActiveField("scalars", vtkm::cont::Field::Association::POINTS);
+  contour.SetNumberOfIsoValues(1);
+  contour.SetIsoValue(192);
+  contour.SetMergeDuplicatePoints(true);
+  contour.SetGenerateNormals(true);
+  contour.SetComputeFastNormalsForStructured(true);
+  contour.SetNormalArrayName("normals");
+  dataSet = contour.Execute(dataSet, SplitSharpTestPolicy{});
+
+  // Compute cell normals:
+  vtkm::filter::CellAverage cellNormals;
+  cellNormals.SetActiveField("normals", vtkm::cont::Field::Association::POINTS);
+  dataSet = cellNormals.Execute(dataSet, SplitSharpTestPolicy{});
+
+  // Split sharp edges:
+  std::cout << dataSet.GetCellSet().GetNumberOfCells() << std::endl;
+  std::cout << dataSet.GetCoordinateSystem().GetNumberOfPoints() << std::endl;
+  vtkm::filter::SplitSharpEdges split;
+  split.SetActiveField("normals", vtkm::cont::Field::Association::CELL_SET);
+  dataSet = split.Execute(dataSet, SplitSharpTestPolicy{});
+}
+
+
+void TestSplitSharpEdgesFilter()
+{
+  TestWithExplicitData();
+  TestWithStructuredData();
 }
 
 } // anonymous namespace
