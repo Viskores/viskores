@@ -11,7 +11,7 @@ add_library(vtkm_loguru INTERFACE)
 
 vtkm_get_kit_name(kit_name kit_dir)
 
-# taotuple needs C++11
+# loguru needs C++11
 target_compile_features(vtkm_loguru INTERFACE cxx_std_11)
 
 target_include_directories(vtkm_loguru INTERFACE
