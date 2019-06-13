@@ -2,60 +2,31 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
-function(add_benchmark name files lib)
-  set(benchmarks )
+function(add_benchmark)
+  set(options)
+  set(oneValueArgs NAME FILE)
+  set(multiValueArgs LIBS)
+  cmake_parse_arguments(VTKm_AB
+    "${options}" "${oneValueArgs}" "${multiValueArgs}"
+    ${ARGN}
+    )
+  set(exe_name ${VTKm_AB_NAME})
 
-  add_executable(${name}_SERIAL ${files})
-  list(APPEND benchmarks ${name}_SERIAL)
-  target_compile_definitions(${name}_SERIAL PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-
-  if (TARGET vtkm::tbb)
-    add_executable(${name}_TBB ${files})
-    list(APPEND benchmarks ${name}_TBB)
-    target_compile_definitions(${name}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  endif()
-
-  if (TARGET vtkm::openmp)
-    add_executable(${name}_OPENMP ${files})
-    list(APPEND benchmarks ${name}_OPENMP)
-    target_compile_definitions(${name}_OPENMP PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_OPENMP")
-  endif()
+  add_executable(${exe_name} ${VTKm_AB_FILE})
+  target_link_libraries(${exe_name} PRIVATE ${VTKm_AB_LIBS})
+  set_target_properties(${exe_name} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
+    )
 
   if (TARGET vtkm::cuda)
-    get_filename_component(fname "${name}" NAME_WE)
-    get_filename_component(fullpath "${name}.cxx" ABSOLUTE)
-    file(GENERATE
-          OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu
-          CONTENT "#include \"${fullpath}\"")
-
-    add_executable(${name}_CUDA ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu)
-    list(APPEND benchmarks ${name}_CUDA)
-    target_compile_definitions(${name}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+    set_source_files_properties(${VTKm_AB_FILE} PROPERTIES LANGUAGE "CUDA")
+    set_property(TARGET ${exe_name} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
   endif()
-
-  foreach(benchmark ${benchmarks})
-    target_link_libraries(${benchmark} PRIVATE ${lib})
-    set_target_properties(${benchmark} PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
-      )
-  endforeach()
-
-
 endfunction()
 
 set(benchmarks
@@ -69,9 +40,9 @@ set(benchmarks
   )
 
 foreach (benchmark ${benchmarks})
-  add_benchmark(${benchmark} ${benchmark}.cxx vtkm_cont)
+  add_benchmark(NAME ${benchmark} FILE ${benchmark}.cxx LIBS vtkm_filter vtkm_cont)
 endforeach ()
 
 if(TARGET vtkm_rendering)
-  add_benchmark(BenchmarkRayTracing BenchmarkRayTracing.cxx vtkm_rendering)
+  add_benchmark(NAME BenchmarkRayTracing FILE BenchmarkRayTracing.cxx LIBS vtkm_rendering)
 endif()

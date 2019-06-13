@@ -2,25 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_Initialize_h
 #define vtk_m_cont_Initialize_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/vtkm_cont_export.h>
 #include <vtkm/internal/ExportMacros.h>
 
@@ -38,14 +28,39 @@ struct InitializeResult
   /// Device passed into -d, or undefined
   DeviceAdapterId Device = DeviceAdapterTagUndefined{};
 
-  /// Non-option arguments
-  std::vector<std::string> Arguments;
+  /// Usage statement for arguments parsed by VTK-m
+  std::string Usage;
 };
 
 enum class InitializeOptions
 {
-  None = 0x0,
-  RequireDevice = 0x1
+  None = 0x00,
+
+  /// Issue an error if the device argument is not specified.
+  RequireDevice = 0x01,
+
+  /// If no device is specified, treat it as if the user gave --device=Any. This means that
+  /// DeviceAdapterTagUndefined will never be return in the result.
+  DefaultAnyDevice = 0x02,
+
+  /// Add a help argument. If -h or --help is provided, prints a usage statement. Of course,
+  /// the usage statement will only print out arguments processed by VTK-m.
+  AddHelp = 0x04,
+
+  /// If an unknown option is encountered, the program terminates with an error and a usage
+  /// statement is printed. If this option is not provided, any unknown options are returned
+  /// in argv. If this option is used, it is a good idea to use AddHelp as well.
+  ErrorOnBadOption = 0x08,
+
+  /// If an extra argument is encountered, the program terminates with an error and a usage
+  /// statement is printed. If this option is not provided, any unknown arguments are returned
+  /// in argv.
+  ErrorOnBadArgument = 0x10,
+
+  /// If supplied, Initialize treats its own arguments as the only ones supported by the
+  /// application and provides an error if not followed exactly. This is a convenience
+  /// option that is a combination of ErrorOnBadOption, ErrorOnBadArgument, and AddHelp.
+  Strict = ErrorOnBadOption | ErrorOnBadArgument | AddHelp
 };
 
 // Allow options to be used as a bitfield

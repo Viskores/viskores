@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_CellSetExplicit_h
 #define vtk_m_cont_CellSetExplicit_h
@@ -123,12 +113,16 @@ public:
   void PrintSummary(std::ostream& out) const override;
   void ReleaseResourcesExecution() override;
 
+  std::shared_ptr<CellSet> NewInstance() const override;
+  void DeepCopy(const CellSet* src) override;
+
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const;
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagPoint) const;
 
-  VTKM_CONT vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const;
+  VTKM_CONT vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const override;
+  void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override;
 
-  VTKM_CONT vtkm::UInt8 GetCellShape(vtkm::Id cellIndex) const;
+  VTKM_CONT vtkm::UInt8 GetCellShape(vtkm::Id cellIndex) const override;
 
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id, ItemTupleLength>& ids) const;
@@ -350,15 +344,16 @@ namespace cont
 {
 
 template <typename ShapeST, typename CountST, typename ConnectivityST, typename OffsetST>
-struct TypeString<vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>>
+struct SerializableTypeString<
+  vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>>
 {
   static VTKM_CONT const std::string& Get()
   {
     static std::string name = "CS_Explicit<" +
-      TypeString<vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST>>::Get() + "_ST," +
-      TypeString<vtkm::cont::ArrayHandle<vtkm::IdComponent, CountST>>::Get() + "_ST," +
-      TypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST," +
-      TypeString<vtkm::cont::ArrayHandle<vtkm::Id, OffsetST>>::Get() + "_ST>";
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST>>::Get() + "_ST," +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::IdComponent, CountST>>::Get() + "_ST," +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST," +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, OffsetST>>::Get() + "_ST>";
 
     return name;
   }
@@ -366,7 +361,7 @@ struct TypeString<vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, 
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename ShapeST, typename CountST, typename ConnectivityST, typename OffsetST>
@@ -378,32 +373,32 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    diy::save(bb, cs.GetName());
-    diy::save(bb, cs.GetNumberOfPoints());
-    diy::save(bb,
-              cs.GetShapesArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
-    diy::save(
+    vtkmdiy::save(bb, cs.GetName());
+    vtkmdiy::save(bb, cs.GetNumberOfPoints());
+    vtkmdiy::save(
+      bb, cs.GetShapesArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
+    vtkmdiy::save(
       bb, cs.GetNumIndicesArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
-    diy::save(
+    vtkmdiy::save(
       bb, cs.GetConnectivityArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
-    diy::save(
+    vtkmdiy::save(
       bb, cs.GetIndexOffsetArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
     std::string name;
-    diy::load(bb, name);
+    vtkmdiy::load(bb, name);
     vtkm::Id numberOfPoints = 0;
-    diy::load(bb, numberOfPoints);
+    vtkmdiy::load(bb, numberOfPoints);
     vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST> shapes;
-    diy::load(bb, shapes);
+    vtkmdiy::load(bb, shapes);
     vtkm::cont::ArrayHandle<vtkm::IdComponent, CountST> counts;
-    diy::load(bb, counts);
+    vtkmdiy::load(bb, counts);
     vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST> connectivity;
-    diy::load(bb, connectivity);
+    vtkmdiy::load(bb, connectivity);
     vtkm::cont::ArrayHandle<vtkm::Id, OffsetST> offsets;
-    diy::load(bb, offsets);
+    vtkmdiy::load(bb, offsets);
 
     cs = Type(name);
     cs.Fill(numberOfPoints, shapes, counts, connectivity, offsets);

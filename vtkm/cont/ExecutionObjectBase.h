@@ -2,37 +2,17 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ExecutionObjectBase_h
 #define vtk_m_cont_ExecutionObjectBase_h
 
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/DeviceAdapter.h>
-
-#if ((VTKM_DEVICE_ADAPTER > 0) && (VTKM_DEVICE_ADAPTER < VTKM_MAX_DEVICE_ADAPTER_ID))
-// Use the default device adapter tag for testing whether execution objects are valid.
-#define VTK_M_DEVICE_ADAPTER_TO_TEST_EXEC_OBJECT VTKM_DEFAULT_DEVICE_ADAPTER_TAG
-#else
-// The default device adapter is invalid. Perhaps the error device adapter is being used.
-// In this case, try the serial device adapter instead. It should always be valid.
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#define VTK_M_DEVICE_ADAPTER_TO_TEST_EXEC_OBJECT ::vtkm::cont::DeviceAdapterTagSerial
-#endif
+#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
 namespace vtkm
 {
@@ -59,8 +39,7 @@ struct CheckPrepareForExecution
 {
   template <typename T>
   static auto check(T* p)
-    -> decltype(p->PrepareForExecution(VTK_M_DEVICE_ADAPTER_TO_TEST_EXEC_OBJECT()),
-                std::true_type());
+    -> decltype(p->PrepareForExecution(vtkm::cont::DeviceAdapterTagSerial{}), std::true_type());
 
   template <typename T>
   static auto check(...) -> std::false_type;

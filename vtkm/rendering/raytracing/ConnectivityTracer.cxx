@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/rendering/raytracing/ConnectivityTracer.h>
 
@@ -257,7 +247,7 @@ void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
   // Do some basic range checking
   if (numBins < 1)
     throw vtkm::cont::ErrorBadValue("Number of energy bins is less than 1");
-  vtkm::Id binCount = ScalarField.GetData().GetNumberOfValues();
+  vtkm::Id binCount = ScalarField.GetNumberOfValues();
   vtkm::Id cellCount = this->GetNumberOfMeshCells();
   if (cellCount != (binCount / vtkm::Id(numBins)))
   {
@@ -270,7 +260,7 @@ void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
   }
   if (HasEmission)
   {
-    binCount = EmissionField.GetData().GetNumberOfValues();
+    binCount = EmissionField.GetNumberOfValues();
     if (cellCount != (binCount / vtkm::Id(numBins)))
     {
       std::stringstream message;
@@ -1134,7 +1124,8 @@ template <typename FloatType>
 void ConnectivityTracer::IntersectCell(Ray<FloatType>& rays,
                                        detail::RayTracking<FloatType>& tracker)
 {
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
   vtkm::worklet::DispatcherMapField<LocateCell> locateDispatch;
   locateDispatch.Invoke(rays.HitIdx,
                         this->Coords,
@@ -1163,7 +1154,8 @@ void ConnectivityTracer::AccumulatePathLengths(Ray<FloatType>& rays,
 template <typename FloatType>
 void ConnectivityTracer::FindLostRays(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker)
 {
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
 
   vtkm::worklet::DispatcherMapField<RayBumper> bumpDispatch;
   bumpDispatch.Invoke(rays.HitIdx,
@@ -1184,7 +1176,8 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
 {
   using SampleP = SampleCellAssocPoints<FloatType>;
   using SampleC = SampleCellAssocCells<FloatType>;
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
 
   VTKM_ASSERT(rays.Buffers.at(0).GetNumChannels() == 4);
 
@@ -1231,7 +1224,8 @@ template <typename FloatType>
 void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
                                         detail::RayTracking<FloatType>& tracker)
 {
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
   if (HasEmission)
   {
     bool divideEmisByAbsorp = false;
@@ -1303,7 +1297,8 @@ void ConnectivityTracer::OffsetMinDistances(Ray<FloatType>& rays)
 template <typename FloatType>
 void ConnectivityTracer::FindMeshEntry(Ray<FloatType>& rays)
 {
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> entryTimer;
+  vtkm::cont::Timer entryTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+  entryTimer.Start();
   //
   // if ray misses the external face it will be marked RAY_EXITED_MESH
   //

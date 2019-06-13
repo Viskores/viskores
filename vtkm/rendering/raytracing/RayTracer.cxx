@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/rendering/raytracing/RayTracer.h>
 
@@ -29,6 +19,7 @@
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -230,7 +221,7 @@ Camera& RayTracer::GetCamera()
 }
 
 
-void RayTracer::AddShapeIntersector(ShapeIntersector* intersector)
+void RayTracer::AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersector)
 {
   NumberOfShapes += intersector->GetNumberOfShapes();
   Intersectors.push_back(intersector);
@@ -238,7 +229,7 @@ void RayTracer::AddShapeIntersector(ShapeIntersector* intersector)
 
 void RayTracer::SetField(const vtkm::cont::Field& scalarField, const vtkm::Range& scalarRange)
 {
-  ScalarField = &scalarField;
+  ScalarField = scalarField;
   ScalarRange = scalarRange;
 }
 
@@ -269,22 +260,17 @@ vtkm::Id RayTracer::GetNumberOfShapes() const
 
 void RayTracer::Clear()
 {
-  size_t numShapes = Intersectors.size();
-  for (size_t i = 0; i < numShapes; ++i)
-  {
-    delete Intersectors[i];
-  }
-
   Intersectors.clear();
 }
 
 template <typename Precision>
 void RayTracer::RenderOnDevice(Ray<Precision>& rays)
 {
-  using Timer = vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial>;
+  using Timer = vtkm::cont::Timer;
 
   Logger* logger = Logger::GetInstance();
-  Timer renderTimer;
+  Timer renderTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+  renderTimer.Start();
   vtkm::Float64 time = 0.;
   logger->OpenLogEntry("ray_tracer");
   logger->AddLogData("device", GetDeviceString());
@@ -295,6 +281,7 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
   if (NumberOfShapes > 0)
   {
     Timer timer;
+    timer.Start();
 
     for (size_t i = 0; i < numShapes; ++i)
     {
@@ -302,11 +289,11 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
       time = timer.GetElapsedTime();
       logger->AddLogData("intersect", time);
 
-      timer.Reset();
+      timer.Start();
       Intersectors[i]->IntersectionData(rays, ScalarField, ScalarRange);
       time = timer.GetElapsedTime();
       logger->AddLogData("intersection_data", time);
-      timer.Reset();
+      timer.Start();
 
       // Calculate the color at the intersection  point
       detail::SurfaceColor surfaceColor;
@@ -314,7 +301,6 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
 
       time = timer.GetElapsedTime();
       logger->AddLogData("shade", time);
-      timer.Reset();
     }
   }
 

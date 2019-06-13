@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtkm_m_worklet_Clip_h
 #define vtkm_m_worklet_Clip_h
@@ -47,6 +37,7 @@
   THRUST_SUBMINOR_VERSION < 3
 // Workaround a bug in thrust 1.8.0 - 1.8.2 scan implementations which produces
 // wrong results
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/detail/type_traits.h>
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -817,8 +808,6 @@ public:
 
       using ExecutionSignature = void(_2, _3);
 
-      using ScatterType = vtkm::worklet::ScatterIdentity;
-
       template <typename MappedValueVecType, typename MappedValueType>
       VTKM_EXEC void operator()(const MappedValueVecType& toReduce, MappedValueType& centroid) const
       {
@@ -827,7 +816,8 @@ public:
         for (vtkm::IdComponent i = 1; i < numValues; i++)
         {
           MappedValueType value = toReduce[i];
-          sum = sum + value;
+          // static_cast is for when MappedValueType is a small int that gets promoted to int32.
+          sum = static_cast<MappedValueType>(sum + value);
         }
         centroid = internal::Scale(sum, 1. / static_cast<vtkm::Float64>(numValues));
       }

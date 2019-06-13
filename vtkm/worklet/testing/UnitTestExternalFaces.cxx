@@ -2,27 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapter.h>
-
-#include <vtkm/cont/internal/DeviceAdapterError.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -35,12 +23,6 @@
 
 namespace
 {
-
-// For this test, we want using the default device adapter to be an error
-// to make sure that all the code is using the device adapter we specify.
-using MyDeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-#undef VTKM_DEFAULT_DEVICE_ADAPTER_TAG
-#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagError
 
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
 {
@@ -201,8 +183,6 @@ void TestExternalFaces3()
 
 void TestExternalFaces()
 {
-  // Ignore the device passed in.
-  vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(MyDeviceAdapter());
   TestExternalFaces1();
   TestExternalFaces2();
   TestExternalFaces3();

@@ -2,31 +2,18 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/AssignerMultiBlock.h>
 
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/MultiBlock.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/mpi.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+
+#include <vtkm/thirdparty/diy/diy.h>
 
 #include <algorithm> // std::lower_bound
 #include <numeric>   // std::iota
@@ -44,15 +31,15 @@ AssignerMultiBlock::AssignerMultiBlock(const vtkm::cont::MultiBlock& mb)
 
 VTKM_CONT
 AssignerMultiBlock::AssignerMultiBlock(vtkm::Id num_blocks)
-  : diy::StaticAssigner(vtkm::cont::EnvironmentTracker::GetCommunicator().size(), 1)
+  : vtkmdiy::StaticAssigner(vtkm::cont::EnvironmentTracker::GetCommunicator().size(), 1)
   , IScanBlockCounts()
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   if (comm.size() > 1)
   {
     vtkm::Id iscan;
-    diy::mpi::scan(comm, num_blocks, iscan, std::plus<vtkm::Id>());
-    diy::mpi::all_gather(comm, iscan, this->IScanBlockCounts);
+    vtkmdiy::mpi::scan(comm, num_blocks, iscan, std::plus<vtkm::Id>());
+    vtkmdiy::mpi::all_gather(comm, iscan, this->IScanBlockCounts);
   }
   else
   {

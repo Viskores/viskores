@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_particleadvection_Integrators_h
@@ -44,11 +34,7 @@ public:
 
 protected:
   VTKM_CONT
-  Integrator()
-    : StepLength(0)
-    , MinimizeError(false)
-  {
-  }
+  Integrator() = default;
 
   VTKM_CONT
   Integrator(ScalarType stepLength, bool minimizeError = false)
@@ -83,9 +69,9 @@ public:
                                              vtkm::Vec<ScalarType, 3>& outpos) const = 0;
 
   protected:
-    ScalarType StepLength;
-    ScalarType Tolerance;
-    bool MinimizeError;
+    ScalarType StepLength = 1.0f;
+    ScalarType Tolerance = 0.001f;
+    bool MinimizeError = false;
   };
 
   template <typename Device>
@@ -353,7 +339,7 @@ public:
 
   EulerIntegrator() = default;
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   EulerIntegrator(const FieldEvaluateType& evaluator,
                   const ScalarType stepLength,
                   bool minimizeError = false)

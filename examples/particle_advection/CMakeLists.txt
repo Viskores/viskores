@@ -1,5 +1,4 @@
-##=============================================================================
-##
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -7,33 +6,20 @@
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2015 UT-Battelle, LLC.
-##  Copyright 2015 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
-##
-##=============================================================================
-cmake_minimum_required(VERSION 3.8...3.13 FATAL_ERROR)
+##============================================================================
+cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
 project(ParticleAdvection CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(Particle_Advection_SERIAL ParticleAdvection.cxx)
-target_link_libraries(Particle_Advection_SERIAL PRIVATE vtkm_cont)
+add_executable(Particle_Advection ParticleAdvection.cxx)
+target_link_libraries(Particle_Advection PRIVATE vtkm_filter)
 
 if(TARGET vtkm::tbb)
-  add_executable(Particle_Advection_TBB ParticleAdvectionTBB.cxx)
-  target_link_libraries(Particle_Advection_TBB PRIVATE vtkm_cont)
+  target_compile_definitions(Particle_Advection PRIVATE BUILDING_TBB_VERSION)
 endif()
 
 if(TARGET vtkm::cuda)
-  add_executable(Particle_Advection_CUDA ParticleAdvection.cu)
-  target_link_libraries(Particle_Advection_CUDA PRIVATE vtkm_cont)
+  set_source_files_properties(ParticleAdvection.cxx PROPERTIES LANGUAGE "CUDA")
 endif()

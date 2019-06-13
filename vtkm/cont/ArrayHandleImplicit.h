@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_ArrayHandleImplicit_h
 #define vtk_m_cont_ArrayHandleImplicit_h
 
@@ -154,26 +142,26 @@ namespace cont
 {
 
 template <typename Functor>
-struct TypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Implicit<" + TypeString<Functor>::Get() + ">";
+    static std::string name = "AH_Implicit<" + SerializableTypeString<Functor>::Get() + ">";
     return name;
   }
 };
 
 template <typename Functor>
-struct TypeString<vtkm::cont::ArrayHandle<
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
   typename vtkm::cont::detail::ArrayHandleImplicitTraits<Functor>::ValueType,
   vtkm::cont::StorageTagImplicit<vtkm::cont::detail::ArrayPortalImplicit<Functor>>>>
-  : TypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename Functor>
@@ -186,17 +174,17 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    diy::save(bb, obj.GetNumberOfValues());
-    diy::save(bb, obj.GetPortalConstControl().GetFunctor());
+    vtkmdiy::save(bb, obj.GetNumberOfValues());
+    vtkmdiy::save(bb, obj.GetPortalConstControl().GetFunctor());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     vtkm::Id count = 0;
-    diy::load(bb, count);
+    vtkmdiy::load(bb, count);
 
     Functor functor;
-    diy::load(bb, functor);
+    vtkmdiy::load(bb, functor);
 
     obj = vtkm::cont::make_ArrayHandleImplicit(functor, count);
   }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -326,16 +316,15 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(vtkm::cont::ArrayHandle<
 
   // Setup the ScatterCounting worklets needed to expand the ReduceByKeyResults
   vtkm::worklet::ScatterCounting scatter(particlesPerHalo);
-  vtkm::worklet::DispatcherMapField<ScatterWorklet<vtkm::Id>> scatterWorkletIdDispatcher(scatter);
-  vtkm::worklet::DispatcherMapField<ScatterWorklet<T>> scatterWorkletDispatcher(scatter);
+  vtkm::worklet::Invoker invoke;
 
   // Calculate the minimum particle index per halo id and scatter
   DeviceAlgorithm::ScanExclusive(particlesPerHalo, tempI);
-  scatterWorkletIdDispatcher.Invoke(tempI, minParticle);
+  invoke(ScatterWorklet<vtkm::Id>{}, scatter, tempI, minParticle);
 
   // Calculate the maximum particle index per halo id and scatter
   DeviceAlgorithm::ScanInclusive(particlesPerHalo, tempI);
-  scatterWorkletIdDispatcher.Invoke(tempI, maxParticle);
+  invoke(ScatterWorklet<vtkm::Id>{}, scatter, tempI, maxParticle);
 
   using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
   vtkm::cont::ArrayHandleTransform<IdArrayType, ScaleBiasFunctor<vtkm::Id>> scaleBias =
@@ -364,7 +353,7 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(vtkm::cont::ArrayHandle<
 
   // Find minimum potential for all particles in a halo and scatter
   DeviceAlgorithm::ReduceByKey(haloId, potential, uniqueHaloIds, tempT, vtkm::Minimum());
-  scatterWorkletDispatcher.Invoke(tempT, minPotential);
+  invoke(ScatterWorklet<T>{}, scatter, tempT, minPotential);
 #ifdef DEBUG_PRINT
   DebugPrint("potential", potential);
   DebugPrint("minPotential", minPotential);
@@ -381,7 +370,7 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(vtkm::cont::ArrayHandle<
   vtkm::cont::ArrayHandle<vtkm::Id> minIndx;
   minIndx.Allocate(nParticles);
   DeviceAlgorithm::ReduceByKey(haloId, mbpId, uniqueHaloIds, minIndx, vtkm::Maximum());
-  scatterWorkletIdDispatcher.Invoke(minIndx, mbpId);
+  invoke(ScatterWorklet<vtkm::Id>{}, scatter, minIndx, mbpId);
 
   // Resort particle ids and mbpId to starting order
   vtkm::cont::ArrayHandle<vtkm::Id> savePartId;

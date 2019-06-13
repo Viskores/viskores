@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -107,8 +97,6 @@ public:
     typename m3d_marchingcubes::inCubeConnectionsType::template ExecutionTypes<
       DeviceAdapter>::PortalConst;
 
-
-
   // Default constructor needed to make the CUDA build work
   VTKM_EXEC_CONT
   MeshStructureMarchingCubes()
@@ -118,7 +106,6 @@ public:
   }
 
   // Main constructore used in the code
-  VTKM_EXEC_CONT
   MeshStructureMarchingCubes(
     vtkm::Id nrows,
     vtkm::Id ncols,
@@ -214,9 +201,8 @@ public:
       case 25:
         return vertex + (this->nRows * this->nCols) + this->nCols + 1; // {  1,  1,  1 }
       default:
-        std::
-          abort(); // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
-        //default: std::cerr << "Internal error!"; abort();
+        VTKM_ASSERT(false);
+        return vertex;
     }
   } // GetNeighbourIndex
 

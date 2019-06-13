@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -64,13 +54,11 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/Initialize.h>
+
 #include <vtkm/filter/ContourTreeUniform.h>
 
 #include <fstream>
@@ -80,10 +68,13 @@
 int main(int argc, char* argv[])
 {
   std::cout << "ContourTreeMesh3D Example" << std::endl;
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
 
   if (argc != 2)
   {
-    std::cout << "Parameter is fileName" << std::endl;
+    std::cout << "Usage: "
+              << "$ " << argv[0] << " [-d device] input_file" << std::endl;
     std::cout << "File is expected to be ASCII with xdim ydim zdim integers " << std::endl;
     std::cout << "followed by vector data last dimension varying fastest" << std::endl;
     return 0;

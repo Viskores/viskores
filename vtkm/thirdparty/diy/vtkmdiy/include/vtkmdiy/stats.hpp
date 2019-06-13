@@ -1,5 +1,5 @@
-#ifndef DIY_STATS_HPP
-#define DIY_STATS_HPP
+#ifndef VTKMDIY_STATS_HPP
+#define VTKMDIY_STATS_HPP
 
 #include <chrono>
 #include <string>

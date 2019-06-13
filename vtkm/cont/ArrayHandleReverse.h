@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #ifndef vtk_m_cont_ArrayHandleReverse_h
 #define vtk_m_cont_ArrayHandleReverse_h
@@ -251,25 +239,25 @@ namespace cont
 {
 
 template <typename AH>
-struct TypeString<vtkm::cont::ArrayHandleReverse<AH>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleReverse<AH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Reverse<" + TypeString<AH>::Get() + ">";
+    static std::string name = "AH_Reverse<" + SerializableTypeString<AH>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<typename AH::ValueType, vtkm::cont::StorageTagReverse<AH>>>
-  : TypeString<vtkm::cont::ArrayHandleReverse<AH>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleReverse<AH>>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH>
@@ -282,13 +270,13 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    diy::save(bb, obj.GetStorage().GetArray());
+    vtkmdiy::save(bb, obj.GetStorage().GetArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     AH array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
     obj = vtkm::cont::make_ArrayHandleReverse(array);
   }
 };

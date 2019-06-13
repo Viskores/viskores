@@ -1,5 +1,4 @@
-##=============================================================================
-##
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2017 UT-Battelle, LLC.
-##  Copyright 2017 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
-##
-##=============================================================================
+##============================================================================
 
 #Currently all we are going to build is a set of options that are possible
 #based on the compiler. For now we are going on the presumption
@@ -81,7 +69,8 @@ endif()
 # We currently don't know the vectorization flags for MSVC. But we want
 # the vtkm_vectorization_flags target to exist so we have a consistent
 # interface.
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR
+   CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
   return()
 endif()
 

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_cont_internal_DeviceAdapterAtomicArrayImplementationCuda_h
@@ -31,6 +21,7 @@
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/device_ptr.h>
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -61,7 +52,7 @@ public:
 // We work around this by calling the __device__ function inside of a
 // __CUDA_ARCH__ guard, as nvcc is smart enough to recognize that this is a
 // safe usage of a __device__ function in a __host__ __device__ context.
-#ifdef __CUDA_ARCH__
+#ifdef VTKM_CUDA_DEVICE_PASS
     T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return this->vtkmAtomicAdd(lockedValue, value);
 #else
@@ -85,7 +76,7 @@ public:
 // We work around this by calling the __device__ function inside of a
 // __CUDA_ARCH__ guard, as nvcc is smart enough to recognize that this is a
 // safe usage of a __device__ function in a __host__ __device__ context.
-#ifdef __CUDA_ARCH__
+#ifdef VTKM_CUDA_DEVICE_PASS
     T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return this->vtkmCompareAndSwap(lockedValue, newValue, oldValue);
 #else

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_PointAverage_h
@@ -72,10 +62,14 @@ private:
     OutType sum = OutType(cellValues[0]);
     for (vtkm::IdComponent cellIndex = 1; cellIndex < numCells; ++cellIndex)
     {
-      sum = sum + OutType(cellValues[cellIndex]);
+      // OutType constructor is for when OutType is a Vec.
+      // static_cast is for when OutType is a small int that gets promoted to int32.
+      sum = static_cast<OutType>(sum + OutType(cellValues[cellIndex]));
     }
 
-    average = sum / OutType(static_cast<OutComponentType>(numCells));
+    // OutType constructor is for when OutType is a Vec.
+    // static_cast is for when OutType is a small int that gets promoted to int32.
+    average = static_cast<OutType>(sum / OutType(static_cast<OutComponentType>(numCells)));
   }
 
   template <typename CellValueVecType, typename OutType>

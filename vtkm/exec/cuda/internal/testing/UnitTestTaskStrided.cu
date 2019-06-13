@@ -2,21 +2,12 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
+#include <vtkm/testing/Testing.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
@@ -29,8 +20,6 @@
 
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
-
-#include <vtkm/cont/testing/Testing.h>
 
 #if defined(VTKM_MSVC)
 #pragma warning(push)
@@ -72,6 +61,13 @@ struct MyVisitArrayPortal
   using ValueType = vtkm::IdComponent;
   VTKM_EXEC_CONT
   vtkm::IdComponent Get(vtkm::Id) const { return 1; }
+};
+
+struct MyThreadToOutputMapPortal
+{
+  using ValueType = vtkm::Id;
+  VTKM_EXEC_CONT
+  vtkm::Id Get(vtkm::Id index) const { return index; }
 };
 
 struct TestFetchTagInput
@@ -169,14 +165,16 @@ using InvocationType1 = vtkm::internal::Invocation<ExecutionParameterInterface,
                                                    TestExecutionInterface1,
                                                    1,
                                                    MyOutputToInputMapPortal,
-                                                   MyVisitArrayPortal>;
+                                                   MyVisitArrayPortal,
+                                                   MyThreadToOutputMapPortal>;
 
 using InvocationType2 = vtkm::internal::Invocation<ExecutionParameterInterface,
                                                    TestControlInterface,
                                                    TestExecutionInterface2,
                                                    1,
                                                    MyOutputToInputMapPortal,
-                                                   MyVisitArrayPortal>;
+                                                   MyVisitArrayPortal,
+                                                   MyThreadToOutputMapPortal>;
 
 template <typename TaskType>
 static __global__ void ScheduleTaskStrided(TaskType task, vtkm::Id start, vtkm::Id end)
@@ -202,17 +200,20 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
   template <typename T,
             typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             typename InputDomainType,
             typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType&,
     const G& globalThreadIndexOffset) const
   {
+    vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
   }
 };
 
@@ -227,17 +228,20 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
   template <typename T,
             typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             typename InputDomainType,
             typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType&,
     const G& globalThreadIndexOffset) const
   {
+    vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
   }
 };
 
@@ -365,9 +369,9 @@ void TestTaskStrided()
 
 } // anonymous namespace
 
-int UnitTestTaskStrided(int, char* [])
+int UnitTestTaskStrided(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestTaskStrided<vtkm::cont::DeviceAdapterTagCuda>);
+  return vtkm::testing::Testing::Run(TestTaskStrided<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 }
 
 #if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)

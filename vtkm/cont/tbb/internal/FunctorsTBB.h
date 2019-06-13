@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_tbb_internal_FunctorsTBB_h
 #define vtk_m_cont_tbb_internal_FunctorsTBB_h
@@ -495,7 +485,7 @@ VTKM_CONT static T ReducePortals(InputPortalType inputPortal,
 
 // Define this to print out timing information from the reduction and join
 // operations in the tbb ReduceByKey algorithm:
-//#define _VTKM_DEBUG_TBB_RBK
+//#define VTKM_DEBUG_TBB_RBK
 
 template <typename KeysInPortalType,
           typename ValuesInPortalType,
@@ -554,7 +544,7 @@ struct ReduceByKeyBody
   ValuesOutPortalType ValuesOutPortal;
   BinaryOperationType BinaryOperation;
   Range Ranges;
-#ifdef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
   double ReduceTime;
   double JoinTime;
 #endif
@@ -570,7 +560,7 @@ struct ReduceByKeyBody
     , KeysOutPortal(keysOutPortal)
     , ValuesOutPortal(valuesOutPortal)
     , BinaryOperation(binaryOperation)
-#ifdef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
     , ReduceTime(0)
     , JoinTime(0)
 #endif
@@ -584,7 +574,7 @@ struct ReduceByKeyBody
     , KeysOutPortal(body.KeysOutPortal)
     , ValuesOutPortal(body.ValuesOutPortal)
     , BinaryOperation(body.BinaryOperation)
-#ifdef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
     , ReduceTime(0)
     , JoinTime(0)
 #endif
@@ -595,9 +585,9 @@ struct ReduceByKeyBody
 
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range)
   {
-#ifdef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
     ::tbb::tick_count startTime = ::tbb::tick_count::now();
-#endif // _VTKM_DEBUG_TBB_RBK
+#endif // VTKM_DEBUG_TBB_RBK
     if (range.empty())
     {
       return;
@@ -714,7 +704,7 @@ struct ReduceByKeyBody
 
     this->Ranges.OutputEnd = writePos;
 
-#ifdef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
     ::tbb::tick_count endTime = ::tbb::tick_count::now();
     double time = (endTime - startTime).seconds();
     this->ReduceTime += time;
@@ -735,7 +725,7 @@ struct ReduceByKeyBody
     using KeysIteratorType = typename KeysIteratorsType::IteratorType;
     using ValuesIteratorType = typename ValuesIteratorsType::IteratorType;
 
-#ifdef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
     ::tbb::tick_count startTime = ::tbb::tick_count::now();
 #endif
 
@@ -775,7 +765,7 @@ struct ReduceByKeyBody
     this->Ranges.OutputEnd += srcEnd - srcBegin;
     this->Ranges.AssertSane();
 
-#ifdef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
     ::tbb::tick_count endTime = ::tbb::tick_count::now();
     double time = (endTime - startTime).seconds();
     this->JoinTime += rhs.JoinTime + time;
@@ -820,13 +810,13 @@ VTKM_CONT vtkm::Id ReduceByKeyPortals(KeysInPortalType keysInPortal,
     body(keysInPortal, valuesInPortal, keysOutPortal, valuesOutPortal, wrappedBinaryOp);
   ::tbb::blocked_range<vtkm::Id> range(0, inputLength, TBB_GRAIN_SIZE);
 
-#ifdef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
   std::cerr << "\n\nTBB ReduceByKey:\n";
 #endif
 
   ::tbb::parallel_reduce(range, body);
 
-#ifdef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
   std::cerr << "Total reduce time: " << body.ReduceTime << "s\n";
   std::cerr << "Total join time:   " << body.JoinTime << "s\n";
   std::cerr << "\nend\n";
@@ -839,8 +829,8 @@ VTKM_CONT vtkm::Id ReduceByKeyPortals(KeysInPortalType keysInPortal,
   return body.Ranges.OutputEnd;
 }
 
-#ifdef _VTKM_DEBUG_TBB_RBK
-#undef _VTKM_DEBUG_TBB_RBK
+#ifdef VTKM_DEBUG_TBB_RBK
+#undef VTKM_DEBUG_TBB_RBK
 #endif
 
 template <class InputPortalType, class OutputPortalType, class BinaryOperationType>

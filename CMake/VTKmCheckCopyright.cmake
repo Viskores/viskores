@@ -2,20 +2,10 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 ## This CMake script checks source files for the appropriate VTKM copyright
@@ -25,6 +15,7 @@
 ## cmake -DVTKm_SOURCE_DIR=<VTKm_SOURCE_DIR> -P <VTKm_SOURCE_DIR>/CMake/VTKMCheckCopyright.cmake
 ##
 
+cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
 set(FILES_TO_CHECK
   *.txt
   *.cmake
@@ -188,6 +179,7 @@ function(check_copyright filename)
   file(READ "${filename}" header_contents LIMIT 2000)
   list_of_lines(header_lines "${header_contents}")
 
+  set(printed)
   # Check each copyright line.
   foreach (copyright_line IN LISTS COPYRIGHT_LINE_LIST)
     set(match)
@@ -211,10 +203,11 @@ function(check_copyright filename)
         break()
       endif (match)
     endforeach (header_line)
-    if (NOT match)
+    if (NOT match AND NOT printed)
       message(STATUS "Could not find match for `${copyright_line}'")
       missing_copyright("${filename}" "${comment_prefix}")
-    endif (NOT match)
+      set(printed TRUE)
+    endif (NOT match AND NOT printed)
   endforeach (copyright_line)
 endfunction(check_copyright)
 
@@ -234,7 +227,6 @@ foreach (glob_expression ${FILES_TO_CHECK})
     endforeach(exception)
 
     if (NOT skip)
-      message("Checking ${file}")
       check_copyright("${VTKm_SOURCE_DIR}/${file}")
     endif (NOT skip)
   endforeach (file)

@@ -2,25 +2,14 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_PointLocatorUniformGrid_h
 #define vtk_m_exec_PointLocatorUniformGrid_h
 
-#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -35,35 +24,33 @@ namespace vtkm
 namespace exec
 {
 
-// TODO: remove template T
 template <typename DeviceAdapter>
 class PointLocatorUniformGrid : public vtkm::exec::PointLocator
 {
 public:
-  // TODO: figure hout how to parametize/passing DeviceAdapter.
-  //using DeviceAdapter = vtkm::cont::DeviceAdapterTagSerial;
-  using CoordPortalType = typename vtkm::cont::ArrayHandle<
-    vtkm::Vec<vtkm::FloatDefault, 3>>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using CoordPortalType =
+    typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
+      DeviceAdapter>::PortalConst;
   using IdPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
 
   PointLocatorUniformGrid() = default;
 
-  PointLocatorUniformGrid(const vtkm::Vec<vtkm::FloatDefault, 3>& _min,
-                          const vtkm::Vec<vtkm::FloatDefault, 3>& _max,
-                          const vtkm::Vec<vtkm::Id, 3>& _dims,
-                          const CoordPortalType& _coords,
-                          const IdPortalType& _pointIds,
-                          const IdPortalType& _cellLower,
-                          const IdPortalType& _cellUpper)
-    : Min(_min)
-    , Dims(_dims)
-    , Dxdydz((_max - Min) / Dims)
-    , coords(_coords)
-    , pointIds(_pointIds)
-    , cellLower(_cellLower)
-    , cellUpper(_cellUpper)
+  PointLocatorUniformGrid(const vtkm::Vec<vtkm::FloatDefault, 3>& min,
+                          const vtkm::Vec<vtkm::FloatDefault, 3>& max,
+                          const vtkm::Vec<vtkm::Id, 3>& dims,
+                          const CoordPortalType& coords,
+                          const IdPortalType& pointIds,
+                          const IdPortalType& cellLower,
+                          const IdPortalType& cellUpper)
+    : Min(min)
+    , Dims(dims)
+    , Dxdydz((max - Min) / Dims)
+    , Coords(coords)
+    , PointIds(pointIds)
+    , CellLower(cellLower)
+    , CellUpper(cellUpper)
   {
   }
 
@@ -82,7 +69,7 @@ public:
                                              vtkm::FloatDefault& distance2) const override
   {
     //std::cout << "FindNeareastNeighbor: " << queryPoint << std::endl;
-    vtkm::Id3 ijk = (queryPoint - Min) / this->Dxdydz;
+    vtkm::Id3 ijk = (queryPoint - this->Min) / this->Dxdydz;
     ijk = vtkm::Max(ijk, vtkm::Id3(0));
     ijk = vtkm::Min(ijk, this->Dims - vtkm::Id3(1));
 
@@ -104,12 +91,11 @@ private:
   vtkm::Vec<vtkm::Id, 3> Dims;
   vtkm::Vec<vtkm::FloatDefault, 3> Dxdydz;
 
-  CoordPortalType coords;
+  CoordPortalType Coords;
 
-  IdPortalType pointIds;
-  IdPortalType cellIds;
-  IdPortalType cellLower;
-  IdPortalType cellUpper;
+  IdPortalType PointIds;
+  IdPortalType CellLower;
+  IdPortalType CellUpper;
 
   VTKM_EXEC void FindInCell(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
                             const vtkm::Id3& ijk,
@@ -117,12 +103,12 @@ private:
                             vtkm::FloatDefault& nearestDistance2) const
   {
     vtkm::Id cellId = ijk[0] + (ijk[1] * this->Dims[0]) + (ijk[2] * this->Dims[0] * this->Dims[1]);
-    vtkm::Id lower = cellLower.Get(cellId);
-    vtkm::Id upper = cellUpper.Get(cellId);
+    vtkm::Id lower = this->CellLower.Get(cellId);
+    vtkm::Id upper = this->CellUpper.Get(cellId);
     for (vtkm::Id index = lower; index < upper; index++)
     {
-      vtkm::Id pointid = pointIds.Get(index);
-      vtkm::Vec<vtkm::FloatDefault, 3> point = coords.Get(pointid);
+      vtkm::Id pointid = this->PointIds.Get(index);
+      vtkm::Vec<vtkm::FloatDefault, 3> point = this->Coords.Get(pointid);
       vtkm::FloatDefault distance2 = vtkm::MagnitudeSquared(point - queryPoint);
       if (distance2 < nearestDistance2)
       {

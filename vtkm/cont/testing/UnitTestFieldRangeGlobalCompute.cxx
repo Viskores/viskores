@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -93,7 +83,7 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
               const ValueType& min,
               const ValueType& max)
 {
-  diy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   VTKM_TEST_ASSERT(ranges.GetNumberOfValues() == 1, "Wrong number of ranges");
 
   auto portal = ranges.GetPortalConstControl();
@@ -111,7 +101,7 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
               const vtkm::Vec<T, size>& min,
               const vtkm::Vec<T, size>& max)
 {
-  diy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   VTKM_TEST_ASSERT(ranges.GetNumberOfValues() == size, "Wrong number of ranges");
 
   auto portal = ranges.GetPortalConstControl();
@@ -132,7 +122,7 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
 template <typename ValueType>
 void DecomposeRange(ValueType& min, ValueType& max)
 {
-  diy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   auto delta = (max - min) / static_cast<ValueType>(comm.size());
   min = min + static_cast<ValueType>(comm.rank()) * delta;
   max = (comm.rank() == comm.size() - 1) ? max : min + delta;
@@ -150,7 +140,7 @@ void DecomposeRange(vtkm::Vec<T, size>& min, vtkm::Vec<T, size>& max)
 template <typename ValueType>
 void TryRangeGlobalComputeDS(const ValueType& min, const ValueType& max)
 {
-  diy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   PRINT_INFO_0("Trying type (dataset): " << vtkm::testing::TypeName<ValueType>::Name());
 
   // distribute range among all ranks, so we can confirm reduction works.
@@ -174,7 +164,7 @@ void TryRangeGlobalComputeDS(const ValueType& min, const ValueType& max)
 template <typename ValueType>
 void TryRangeGlobalComputeMB(const ValueType& min, const ValueType& max)
 {
-  diy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   PRINT_INFO("Trying type (multiblock): " << vtkm::testing::TypeName<ValueType>::Name());
 
   vtkm::cont::MultiBlock mb;
@@ -195,7 +185,7 @@ void TryRangeGlobalComputeMB(const ValueType& min, const ValueType& max)
 
 static void TestFieldRangeGlobalCompute()
 {
-  diy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   PRINT_INFO_0("Running on " << comm.size() << " ranks.");
 
   // init random seed.
@@ -212,7 +202,7 @@ static void TestFieldRangeGlobalCompute()
 };
 }
 
-int UnitTestFieldRangeGlobalCompute(int, char* [])
+int UnitTestFieldRangeGlobalCompute(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldRangeGlobalCompute);
+  return vtkm::cont::testing::Testing::Run(TestFieldRangeGlobalCompute, argc, argv);
 }

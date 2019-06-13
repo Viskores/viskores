@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_ArrayHandleConcatenate_h
 #define vtk_m_cont_ArrayHandleConcatenate_h
 
@@ -332,26 +320,26 @@ namespace cont
 {
 
 template <typename AH1, typename AH2>
-struct TypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_Concatenate<" + TypeString<AH1>::Get() + "," + TypeString<AH2>::Get() + ">";
+    static std::string name = "AH_Concatenate<" + SerializableTypeString<AH1>::Get() + "," +
+      SerializableTypeString<AH2>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH1, typename AH2>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<typename AH1::ValueType, vtkm::cont::StorageTagConcatenate<AH1, AH2>>>
-  : TypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH1, typename AH2>
@@ -365,8 +353,8 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetArray1());
-    diy::save(bb, storage.GetArray2());
+    vtkmdiy::save(bb, storage.GetArray1());
+    vtkmdiy::save(bb, storage.GetArray2());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -374,8 +362,8 @@ public:
     AH1 array1;
     AH2 array2;
 
-    diy::load(bb, array1);
-    diy::load(bb, array2);
+    vtkmdiy::load(bb, array1);
+    vtkmdiy::load(bb, array2);
 
     obj = vtkm::cont::make_ArrayHandleConcatenate(array1, array2);
   }

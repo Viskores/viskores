@@ -11,6 +11,7 @@ readonly repo="https://gitlab.kitware.com/third-party/$name.git"
 readonly tag="for/vtk-m"
 readonly paths="
 loguru.hpp
+loguru.cpp
 README.md
 "
 

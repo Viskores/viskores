@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -71,7 +61,9 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
+
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -145,11 +137,13 @@ private:
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
-  // TODO: Change timing to use logging in vtkm/cont/Logging.h
-  vtkm::cont::Timer<> totalTime;
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+
+  vtkm::cont::Timer totalTime;
+  totalTime.Start();
   vtkm::Float64 prevTime = 0;
   vtkm::Float64 currTime = 0;
-  std::cout << "ContourTreePPP2Mesh <options> <fileName>" << std::endl;
 
   ////////////////////////////////////////////
   // Parse the command line options
@@ -200,9 +194,11 @@ int main(int argc, char* argv[])
     std::cout << "--numThreads      Specify the number of threads to use. Available only with TBB."
               << std::endl;
 #endif
+    std::cout << config.Usage << std::endl;
     return 0;
   }
 
+  std::cout << "ContourTree <options> <fileName>" << std::endl;
   std::cout << "Settings:" << std::endl;
   std::cout << "    filename=" << filename << std::endl;
   std::cout << "    mc=" << useMarchingCubes << std::endl;
@@ -211,6 +207,7 @@ int main(int argc, char* argv[])
 #ifdef ENABLE_SET_NUM_THREADS
   std::cout << "    numThreads=" << numThreads << std::endl;
 #endif
+  std::cout << config.Usage << std::endl;
   std::cout << std::endl;
 
 
@@ -330,7 +327,8 @@ int main(int argc, char* argv[])
   if (computeBranchDecomposition)
   {
     // TODO: Change timing to use logging in vtkm/cont/Logging.h
-    vtkm::cont::Timer<> branchDecompTimer;
+    vtkm::cont::Timer branchDecompTimer;
+    branchDecompTimer.Start();
     // compute the volume for each hyperarc and superarc
     cppp2_ns::IdArrayType superarcIntrinsicWeight;
     cppp2_ns::IdArrayType superarcDependentWeight;
@@ -346,6 +344,7 @@ int main(int argc, char* argv[])
     std::cout << std::setw(42) << std::left << "Compute Volume Weights"
               << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
     branchDecompTimer.Reset();
+    branchDecompTimer.Start();
 
     // compute the branch decomposition by volume
     cppp2_ns::IdArrayType whichBranch;

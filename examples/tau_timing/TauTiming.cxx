@@ -2,26 +2,11 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
 #include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
@@ -32,8 +17,8 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/Initiailize.h>
 
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -62,8 +47,6 @@ VTKM_EXEC_CONT vtkm::Vec<T, 3> Normalize(vtkm::Vec<T, 3> v)
   else
     return one / magnitude * v;
 }
-
-using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 class TangleField : public vtkm::worklet::WorkletMapField
 {
@@ -321,8 +304,8 @@ void StreamlineTest(vtkm::cont::DataSet& ds, int N)
   const vtkm::Float32 tStep = 0.05f;
   const vtkm::Id direction = vtkm::worklet::internal::FORWARD; //vtkm::worklet::internal::BOTH;
 
-  vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>* streamLineFilter;
-  streamLineFilter = new vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>();
+  vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32>* streamLineFilter;
+  streamLineFilter = new vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32>();
 
   std::cout << "Streamline test: " << N << std::endl;
   for (int i = 0; i < N; i++)
@@ -403,19 +386,15 @@ streamlines: vector field must be named "vecData"
  */
 int main(int argc, char** argv)
 {
-  if (0)
-  {
-    int d = 16;
-    if (argc > 1)
-      d = atoi(argv[1]);
-    CreateData(d);
-    return 0;
-  }
+  // Process vtk-m general args
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
 
   if (argc != 5)
   {
-    std::cout << "Error: " << argv[0] << "  <algo:iso/sl/ext/rt/vol> N SZ <ftype:reg/rect/expl>"
-              << std::endl;
+    std::cout << "Error: " << argv[0]
+              << " [options] <algo:iso/sl/ext/rt/vol> N SZ <ftype:reg/rect/expl>" << std::endl;
+    std::cout << "General Options: \n" << config.Usage << std::endl;
     return -1;
   }
 

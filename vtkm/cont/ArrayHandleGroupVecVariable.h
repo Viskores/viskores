@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandleGroupVecVariable_h
 #define vtk_m_cont_ArrayHandleGroupVecVariable_h
@@ -191,7 +181,7 @@ public:
 
   using PortalType = vtkm::exec::internal::ArrayPortalGroupVecVariable<
     typename SourceArrayHandleType::PortalControl,
-    typename OffsetsArrayHandleType::PortalControl>;
+    typename OffsetsArrayHandleType::PortalConstControl>;
   using PortalConstType = vtkm::exec::internal::ArrayPortalGroupVecVariable<
     typename SourceArrayHandleType::PortalConstControl,
     typename OffsetsArrayHandleType::PortalConstControl>;
@@ -213,7 +203,8 @@ public:
   VTKM_CONT
   PortalType GetPortal()
   {
-    return PortalType(this->SourceArray.GetPortalControl(), this->OffsetsArray.GetPortalControl());
+    return PortalType(this->SourceArray.GetPortalControl(),
+                      this->OffsetsArray.GetPortalConstControl());
   }
 
   VTKM_CONT
@@ -514,27 +505,27 @@ namespace cont
 {
 
 template <typename SAH, typename OAH>
-struct TypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_GroupVecVariable<" + TypeString<SAH>::Get() + "," + TypeString<OAH>::Get() + ">";
+    static std::string name = "AH_GroupVecVariable<" + SerializableTypeString<SAH>::Get() + "," +
+      SerializableTypeString<OAH>::Get() + ">";
     return name;
   }
 };
 
 template <typename SAH, typename OAH>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<vtkm::VecFromPortal<typename SAH::PortalControl>,
                           vtkm::cont::internal::StorageTagGroupVecVariable<SAH, OAH>>>
-  : TypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename SAH, typename OAH>
@@ -547,8 +538,8 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    diy::save(bb, obj.GetStorage().GetSourceArray());
-    diy::save(bb, obj.GetStorage().GetOffsetsArray());
+    vtkmdiy::save(bb, obj.GetStorage().GetSourceArray());
+    vtkmdiy::save(bb, obj.GetStorage().GetOffsetsArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -556,8 +547,8 @@ public:
     SAH src;
     OAH off;
 
-    diy::load(bb, src);
-    diy::load(bb, off);
+    vtkmdiy::load(bb, src);
+    vtkmdiy::load(bb, off);
 
     obj = vtkm::cont::make_ArrayHandleGroupVecVariable(src, off);
   }

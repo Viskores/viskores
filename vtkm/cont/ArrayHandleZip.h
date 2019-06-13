@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandleZip_h
 #define vtk_m_cont_ArrayHandleZip_h
@@ -392,27 +382,27 @@ namespace cont
 {
 
 template <typename AH1, typename AH2>
-struct TypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_Zip<" + TypeString<AH1>::Get() + "," + TypeString<AH2>::Get() + ">";
+    static std::string name = "AH_Zip<" + SerializableTypeString<AH1>::Get() + "," +
+      SerializableTypeString<AH2>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH1, typename AH2>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<vtkm::Pair<typename AH1::ValueType, typename AH2::ValueType>,
                           vtkm::cont::internal::StorageTagZip<AH1, AH2>>>
-  : TypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
 {
 };
 }
 } // namespace vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH1, typename AH2>
@@ -426,8 +416,8 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetFirstArray());
-    diy::save(bb, storage.GetSecondArray());
+    vtkmdiy::save(bb, storage.GetFirstArray());
+    vtkmdiy::save(bb, storage.GetSecondArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -435,8 +425,8 @@ public:
     AH1 a1;
     AH2 a2;
 
-    diy::load(bb, a1);
-    diy::load(bb, a2);
+    vtkmdiy::load(bb, a1);
+    vtkmdiy::load(bb, a2);
 
     obj = vtkm::cont::make_ArrayHandleZip(a1, a2);
   }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include "Benchmarker.h"
@@ -36,6 +26,8 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
+
+#include <vtkm/cont/internal/OptionParser.h>
 
 #include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/ExternalFaces.h>
@@ -62,9 +54,10 @@
 #include <sstream>
 #include <type_traits>
 
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
+#ifdef VTKM_ENABLE_TBB
 #include <tbb/task_scheduler_init.h>
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
+#endif
+#ifdef VTKM_ENABLE_OPENMP
 #include <omp.h>
 #endif
 
@@ -97,8 +90,6 @@
 namespace
 {
 
-using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-using DevTraits = vtkm::cont::DeviceAdapterTraits<Device>;
 
 // unscoped enum so we can use bitwise ops without a lot of hassle:
 enum BenchmarkName
@@ -169,10 +160,9 @@ public:
 };
 
 // Class implementing all filter benchmarks:
-template <class DeviceAdapterTag>
 class BenchmarkFilters
 {
-  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
+  using Timer = vtkm::cont::Timer;
 
   enum GradOpts
   {
@@ -185,7 +175,7 @@ class BenchmarkFilters
     ScalarInput = 1 << 6
   };
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchGradient
   {
     vtkm::filter::Gradient Filter;
@@ -229,8 +219,10 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -238,7 +230,7 @@ class BenchmarkFilters
     std::string Description() const
     {
       std::ostringstream desc;
-      desc << "Gradient filter (options=";
+      desc << "Gradient (";
       if (this->Options & Gradient)
       {
         desc << "Gradient,";
@@ -269,11 +261,11 @@ class BenchmarkFilters
       }
       if (this->Options & ScalarInput)
       {
-        desc << "ScalarInput,";
+        desc << "ScalarInput";
       }
       else
       {
-        desc << "VectorInput,";
+        desc << "VectorInput";
       }
 
       desc << ")";
@@ -292,7 +284,7 @@ class BenchmarkFilters
                       BenchGradient,
                       Gradient | PointGradient | Divergence | Vorticity | QCriterion);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchThreshold
   {
     vtkm::filter::Threshold Filter;
@@ -316,17 +308,19 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const { return "Threshold filter"; }
+    std::string Description() const { return "Threshold"; }
   };
   VTKM_MAKE_BENCHMARK(Threshold, BenchThreshold);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchThresholdPoints
   {
     bool CompactPoints;
@@ -354,18 +348,20 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const { return "ThresholdPoints filter"; }
+    std::string Description() const { return "ThresholdPoints"; }
   };
   VTKM_MAKE_BENCHMARK(ThresholdPoints, BenchThresholdPoints, false);
   VTKM_MAKE_BENCHMARK(ThresholdPointsCompact, BenchThresholdPoints, true);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchCellAverage
   {
     vtkm::filter::CellAverage Filter;
@@ -379,17 +375,19 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const { return "CellAverage filter"; }
+    std::string Description() const { return "CellAverage"; }
   };
   VTKM_MAKE_BENCHMARK(CellAverage, BenchCellAverage);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchPointAverage
   {
     vtkm::filter::PointAverage Filter;
@@ -403,17 +401,19 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const { return "PointAverage filter"; }
+    std::string Description() const { return "PointAverage"; }
   };
   VTKM_MAKE_BENCHMARK(PointAverage, BenchPointAverage);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchWarpScalar
   {
     vtkm::filter::WarpScalar Filter;
@@ -422,7 +422,7 @@ class BenchmarkFilters
     BenchWarpScalar()
       : Filter(2.)
     {
-      this->Filter.SetUseCoordinateSystemAsPrimaryField(true);
+      this->Filter.SetUseCoordinateSystemAsField(true);
       this->Filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
       this->Filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
     }
@@ -430,17 +430,19 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const { return "WarpScalar filter"; }
+    std::string Description() const { return "WarpScalar"; }
   };
   VTKM_MAKE_BENCHMARK(WarpScalar, BenchWarpScalar);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchWarpVector
   {
     vtkm::filter::WarpVector Filter;
@@ -456,17 +458,19 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const { return "WarpVector filter"; }
+    std::string Description() const { return "WarpVector"; }
   };
   VTKM_MAKE_BENCHMARK(WarpVector, BenchWarpVector);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchMarchingCubes
   {
     vtkm::filter::MarchingCubes Filter;
@@ -498,8 +502,10 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -527,7 +533,7 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(MarchingCubes3FTT, BenchMarchingCubes, 3, false, true, true);
   VTKM_MAKE_BENCHMARK(MarchingCubes12FTT, BenchMarchingCubes, 12, false, true, true);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchExternalFaces
   {
     vtkm::filter::ExternalFaces Filter;
@@ -542,8 +548,10 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -551,7 +559,7 @@ class BenchmarkFilters
     std::string Description() const
     {
       std::ostringstream desc;
-      desc << "ExternalFaces filter";
+      desc << "ExternalFaces";
       if (this->Filter.GetCompactPoints())
       {
         desc << " (compact points)";
@@ -562,7 +570,7 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(ExternalFaces, BenchExternalFaces, false);
   VTKM_MAKE_BENCHMARK(ExternalFacesCompact, BenchExternalFaces, true);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchTetrahedralize
   {
     vtkm::filter::Tetrahedralize Filter;
@@ -576,17 +584,19 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const { return "Tetrahedralize filter"; }
+    std::string Description() const { return "Tetrahedralize"; }
   };
   VTKM_MAKE_BENCHMARK(Tetrahedralize, BenchTetrahedralize);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchVertexClustering
   {
     vtkm::filter::VertexClustering Filter;
@@ -601,8 +611,10 @@ class BenchmarkFilters
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      (void)result;
       return timer.GetElapsedTime();
     }
 
@@ -622,7 +634,7 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(VertexClustering512, BenchVertexClustering, 512);
   VTKM_MAKE_BENCHMARK(VertexClustering1024, BenchVertexClustering, 1024);
 
-  template <typename>
+  template <typename, typename DeviceAdapter>
   struct BenchCellToPoint
   {
     struct PrepareForInput
@@ -650,9 +662,10 @@ class BenchmarkFilters
                                      vtkm::TopologyElementTagPoint{});
         }
 
-        vtkm::cont::Timer<Device> timer;
+        Timer timer{ DeviceAdapter() };
+        timer.Start();
         cellSet.PrepareForInput(
-          Device{}, vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
+          DeviceAdapter(), vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
         this->Time = timer.GetElapsedTime();
       }
     };
@@ -680,7 +693,7 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(CellToPoint, BenchCellToPoint);
 
 public:
-  static VTKM_CONT int Run(int benches)
+  static VTKM_CONT int Run(int benches, vtkm::cont::DeviceAdapterId id)
   {
     // This has no influence on the benchmarks. See issue #286.
     auto dummyTypes = vtkm::ListTagBase<vtkm::Int32>{};
@@ -691,104 +704,104 @@ public:
     {
       if (ReducedOptions)
       {
-        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes);
+        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes, id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientPoint, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientDivergence, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientVorticity, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientQCriterion, dummyTypes);
-        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes);
+        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientPoint, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientDivergence, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientVorticity, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientQCriterion, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes, id);
       }
     }
     if (benches & BenchmarkName::THRESHOLD)
     {
-      VTKM_RUN_BENCHMARK(Threshold, dummyTypes);
+      VTKM_RUN_BENCHMARK(Threshold, dummyTypes, id);
     }
     if (benches & BenchmarkName::THRESHOLD_POINTS)
     {
-      VTKM_RUN_BENCHMARK(ThresholdPoints, dummyTypes);
-      VTKM_RUN_BENCHMARK(ThresholdPointsCompact, dummyTypes);
+      VTKM_RUN_BENCHMARK(ThresholdPoints, dummyTypes, id);
+      VTKM_RUN_BENCHMARK(ThresholdPointsCompact, dummyTypes, id);
     }
     if (benches & BenchmarkName::CELL_AVERAGE)
     {
-      VTKM_RUN_BENCHMARK(CellAverage, dummyTypes);
+      VTKM_RUN_BENCHMARK(CellAverage, dummyTypes, id);
     }
     if (benches & BenchmarkName::POINT_AVERAGE)
     {
-      VTKM_RUN_BENCHMARK(PointAverage, dummyTypes);
+      VTKM_RUN_BENCHMARK(PointAverage, dummyTypes, id);
     }
     if (benches & BenchmarkName::WARP_SCALAR)
     {
-      VTKM_RUN_BENCHMARK(WarpScalar, dummyTypes);
+      VTKM_RUN_BENCHMARK(WarpScalar, dummyTypes, id);
     }
     if (benches & BenchmarkName::WARP_VECTOR)
     {
-      VTKM_RUN_BENCHMARK(WarpVector, dummyTypes);
+      VTKM_RUN_BENCHMARK(WarpVector, dummyTypes, id);
     }
     if (benches & BenchmarkName::MARCHING_CUBES)
     {
       if (ReducedOptions)
       {
-        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes);
+        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes, id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes1TFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes3TFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes1FTF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FTF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes1FTT, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FTT, dummyTypes);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes);
+        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes3FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes1TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes3TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes1FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes3FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes1FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes3FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes, id);
       }
     }
     if (benches & BenchmarkName::EXTERNAL_FACES)
     {
-      VTKM_RUN_BENCHMARK(ExternalFaces, dummyTypes);
-      VTKM_RUN_BENCHMARK(ExternalFacesCompact, dummyTypes);
+      VTKM_RUN_BENCHMARK(ExternalFaces, dummyTypes, id);
+      VTKM_RUN_BENCHMARK(ExternalFacesCompact, dummyTypes, id);
     }
     if (benches & BenchmarkName::TETRAHEDRALIZE)
     {
-      VTKM_RUN_BENCHMARK(Tetrahedralize, dummyTypes);
+      VTKM_RUN_BENCHMARK(Tetrahedralize, dummyTypes, id);
     }
     if (benches & BenchmarkName::VERTEX_CLUSTERING)
     {
       if (ReducedOptions)
       {
-        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes);
+        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes, id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering64, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering128, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering512, dummyTypes);
-        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes);
+        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering64, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering128, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering512, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes, id);
       }
     }
     if (benches & BenchmarkName::CELL_TO_POINT)
     {
-      VTKM_RUN_BENCHMARK(CellToPoint, dummyTypes);
+      VTKM_RUN_BENCHMARK(CellToPoint, dummyTypes, id);
     }
 
     return 0;
@@ -924,7 +937,6 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
 
     PointVectorGenerator worklet(bounds);
     vtkm::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);
-    dispatch.SetDevice(Device());
     dispatch.Invoke(points, pvecs);
     InputDataSet.AddField(
       vtkm::cont::Field("GeneratedPointVectors", vtkm::cont::Field::Association::POINTS, pvecs));
@@ -1038,19 +1050,71 @@ void AssertFields(bool needPointScalars, bool needCellScalars, bool needPointVec
   }
 }
 
-int BenchmarkBody(int argc, char* argv[])
+struct Arg : vtkm::cont::internal::option::Arg
 {
-  int numThreads = 1;
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-  numThreads = tbb::task_scheduler_init::automatic;
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
-  numThreads = omp_get_max_threads();
-#endif // TBB
+  static vtkm::cont::internal::option::ArgStatus Number(
+    const vtkm::cont::internal::option::Option& option,
+    bool msg)
+  {
+    bool argIsNum = ((option.arg != nullptr) && (option.arg[0] != '\0'));
+    const char* c = option.arg;
+    while (argIsNum && (*c != '\0'))
+    {
+      argIsNum &= static_cast<bool>(std::isdigit(*c));
+      ++c;
+    }
 
-  // Force the requested device in case a tracker is used internally by a filter:
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(Device());
+    if (argIsNum)
+    {
+      return vtkm::cont::internal::option::ARG_OK;
+    }
+    else
+    {
+      if (msg)
+      {
+        std::cerr << "Option " << option.name << " requires a numeric argument." << std::endl;
+      }
 
+      return vtkm::cont::internal::option::ARG_ILLEGAL;
+    }
+  }
+
+  static vtkm::cont::internal::option::ArgStatus Required(
+    const vtkm::cont::internal::option::Option& option,
+    bool msg)
+  {
+    if ((option.arg != nullptr) && (option.arg[0] != '\0'))
+    {
+      if (msg)
+      {
+        std::cerr << "Option " << option.name << " requires an argument." << std::endl;
+      }
+      return vtkm::cont::internal::option::ARG_ILLEGAL;
+    }
+    else
+    {
+      return vtkm::cont::internal::option::ARG_OK;
+    }
+  }
+};
+
+enum optionIndex
+{
+  UNKNOWN,
+  HELP,
+  NUM_THREADS,
+  FILENAME,
+  POINT_SCALARS,
+  CELL_SCALARS,
+  POINT_VECTORS,
+  WAVELET_DIM,
+  TETRA,
+  REDUCED_OPTIONS
+};
+
+int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& config)
+{
+  int numThreads = 0;
   int benches = BenchmarkName::NONE;
   std::string filename;
   vtkm::Id waveletDim = 256;
@@ -1061,9 +1125,144 @@ int BenchmarkBody(int argc, char* argv[])
 
   ReducedOptions = false;
 
-  for (int i = 1; i < argc; ++i)
+  namespace option = vtkm::cont::internal::option;
+
+  std::vector<option::Descriptor> usage;
+  std::string usageHeader{ "Usage: " };
+  usageHeader.append(argv[0]);
+  usageHeader.append(" [options] [benchmarks]");
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, usageHeader.c_str() });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Options are:" });
+  usage.push_back({ HELP, 0, "h", "help", Arg::None, "  -h, --help\tDisplay this help." });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, config.Usage.c_str() });
+  usage.push_back({ NUM_THREADS,
+                    0,
+                    "",
+                    "num-threads",
+                    Arg::Number,
+                    "  --num-threads <N> \tSpecify the number of threads to use." });
+  usage.push_back({ FILENAME,
+                    0,
+                    "",
+                    "file",
+                    Arg::Required,
+                    "  --file <filename> \tFile (in legacy vtk format) to read as input. "
+                    "If not specified, a wavelet source is generated." });
+  usage.push_back({ POINT_SCALARS,
+                    0,
+                    "",
+                    "point-scalars",
+                    Arg::Required,
+                    "  --point-scalars <name> \tName of the point scalar field to operate on." });
+  usage.push_back({ CELL_SCALARS,
+                    0,
+                    "",
+                    "cell-scalars",
+                    Arg::Required,
+                    "  --cell-scalars <name> \tName of the cell scalar field to operate on." });
+  usage.push_back({ POINT_VECTORS,
+                    0,
+                    "",
+                    "point-vectors",
+                    Arg::Required,
+                    "  --point-vectors <name> \tName of the point vector field to operate on." });
+  usage.push_back({ WAVELET_DIM,
+                    0,
+                    "",
+                    "wavelet-dim",
+                    Arg::Number,
+                    "  --wavelet-dim <N> \tThe size in each dimension of the wavelet grid "
+                    "(if generated)." });
+  usage.push_back({ TETRA,
+                    0,
+                    "",
+                    "tetra",
+                    Arg::None,
+                    "  --tetra \tTetrahedralize data set before running benchmark." });
+  usage.push_back({ REDUCED_OPTIONS,
+                    0,
+                    "",
+                    "reduced-options",
+                    Arg::None,
+                    "  --reduced-options \tRun fewer variants of each filter. " });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Benchmarks are one or more of:" });
+  usage.push_back({ UNKNOWN,
+                    0,
+                    "",
+                    "",
+                    Arg::None,
+                    "\tgradient, threshold, threshold_points, cell_average, point_average, "
+                    "warp_scalar, warp_vector, marching_cubes, external_faces, "
+                    "tetrahedralize, cell_to_point" });
+  usage.push_back(
+    { UNKNOWN, 0, "", "", Arg::None, "If no benchmarks are listed, all will be run." });
+  usage.push_back({ 0, 0, nullptr, nullptr, nullptr, nullptr });
+
+
+  vtkm::cont::internal::option::Stats stats(usage.data(), argc - 1, argv + 1);
+  std::unique_ptr<option::Option[]> options{ new option::Option[stats.options_max] };
+  std::unique_ptr<option::Option[]> buffer{ new option::Option[stats.buffer_max] };
+  option::Parser commandLineParse(usage.data(), argc - 1, argv + 1, options.get(), buffer.get());
+
+  if (options[UNKNOWN])
   {
-    std::string arg = argv[i];
+    std::cerr << "Unknown option: " << options[UNKNOWN].name << std::endl;
+    option::printUsage(std::cerr, usage.data());
+    exit(1);
+  }
+
+  if (options[HELP])
+  {
+    option::printUsage(std::cerr, usage.data());
+    exit(0);
+  }
+
+  if (options[NUM_THREADS])
+  {
+    std::istringstream parse(options[NUM_THREADS].arg);
+    parse >> numThreads;
+    if (config.Device == vtkm::cont::DeviceAdapterTagTBB() ||
+        config.Device == vtkm::cont::DeviceAdapterTagOpenMP())
+    {
+      std::cout << "Selected " << numThreads << " " << config.Device.GetName() << " threads."
+                << std::endl;
+    }
+    else
+    {
+      std::cerr << options[NUM_THREADS].name << " not valid on this device. Ignoring." << std::endl;
+    }
+  }
+
+  if (options[FILENAME])
+  {
+    filename = options[FILENAME].arg;
+  }
+
+  if (options[POINT_SCALARS])
+  {
+    PointScalarsName = options[POINT_SCALARS].arg;
+  }
+  if (options[CELL_SCALARS])
+  {
+    CellScalarsName = options[CELL_SCALARS].arg;
+  }
+  if (options[POINT_VECTORS])
+  {
+    PointVectorsName = options[POINT_VECTORS].arg;
+  }
+
+  if (options[WAVELET_DIM])
+  {
+    std::istringstream parse(options[WAVELET_DIM].arg);
+    parse >> waveletDim;
+  }
+
+  tetra = (options[TETRA] != nullptr);
+  ReducedOptions = (options[REDUCED_OPTIONS] != nullptr);
+
+  for (int i = 0; i < commandLineParse.nonOptionsCount(); ++i)
+  {
+    std::string arg = commandLineParse.nonOption(i);
     std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
       return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     });
@@ -1125,69 +1324,22 @@ int BenchmarkBody(int argc, char* argv[])
     {
       benches |= BenchmarkName::CELL_TO_POINT;
     }
-    else if (arg == "filename")
-    {
-      ++i;
-      filename = argv[i];
-    }
-    else if (arg == "pointscalars")
-    {
-      ++i;
-      PointScalarsName = argv[i];
-    }
-    else if (arg == "cellscalars")
-    {
-      ++i;
-      CellScalarsName = argv[i];
-    }
-    else if (arg == "pointvectors")
-    {
-      ++i;
-      PointVectorsName = argv[i];
-    }
-    else if (arg == "waveletdim")
-    {
-      ++i;
-      std::istringstream parse(argv[i]);
-      parse >> waveletDim;
-    }
-    else if (arg == "tetra")
-    {
-      tetra = true;
-    }
-    else if (arg == "reducedoptions")
-    {
-      ReducedOptions = true;
-    }
-    else if (arg == "numthreads")
-    {
-      ++i;
-      if (Device{} == vtkm::cont::DeviceAdapterTagOpenMP{} ||
-          Device{} == vtkm::cont::DeviceAdapterTagTBB{})
-      {
-        std::istringstream parse(argv[i]);
-        parse >> numThreads;
-        std::cout << "Selected " << numThreads << " " << DevTraits::GetName() << " threads."
-                  << std::endl;
-      }
-      else
-      {
-        std::cerr << "NumThreads not valid on this device. Ignoring." << std::endl;
-      }
-    }
     else
     {
-      std::cerr << "Unrecognized option: " << argv[i] << std::endl;
+      std::cerr << "Unrecognized benchmark: " << arg << std::endl;
+      option::printUsage(std::cerr, usage.data());
       return 1;
     }
   }
 
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
+#ifdef VTKM_ENABLE_TBB
   // Must not be destroyed as long as benchmarks are running:
-  tbb::task_scheduler_init init(numThreads);
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
-  omp_set_num_threads(numThreads);
-#endif // TBB
+  tbb::task_scheduler_init init((numThreads > 0) ? numThreads
+                                                 : tbb::task_scheduler_init::automatic);
+#endif
+#ifdef VTKM_ENABLE_OPENMP
+  omp_set_num_threads((numThreads > 0) ? numThreads : omp_get_max_threads());
+#endif
 
   if (benches == BenchmarkName::NONE)
   {
@@ -1210,7 +1362,8 @@ int BenchmarkBody(int argc, char* argv[])
               << " wavelet...\n";
     vtkm::worklet::WaveletGenerator gen;
     gen.SetExtent({ 0 }, { waveletDim });
-    InputDataSet = gen.GenerateDataSet<Device>();
+
+    InputDataSet = gen.GenerateDataSet(config.Device);
   }
 
   if (tetra)
@@ -1259,7 +1412,7 @@ int BenchmarkBody(int argc, char* argv[])
   std::cout << "\n";
 
   //now actually execute the benchmarks
-  int result = BenchmarkFilters<Device>::Run(benches);
+  int result = BenchmarkFilters::Run(benches, config.Device);
 
   // Explicitly free resources before exit.
   InputDataSet.Clear();
@@ -1271,15 +1424,13 @@ int BenchmarkBody(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-  vtkm::cont::Initialize(argc, argv);
-
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  tracker.ForceDevice(Device{});
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
 
   int retval = 1;
   try
   {
-    retval = BenchmarkBody(argc, argv);
+    retval = BenchmarkBody(argc, argv, config);
   }
   catch (std::exception& e)
   {

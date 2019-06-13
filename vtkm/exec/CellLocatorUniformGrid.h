@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2019 UT-Battelle, LLC.
-//  Copyright 2019 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtkm_exec_celllocatoruniformgrid_h
 #define vtkm_exec_celllocatoruniformgrid_h
@@ -38,7 +28,7 @@ namespace exec
 {
 
 template <typename DeviceAdapter>
-class CellLocatorUniformGrid : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid : public vtkm::exec::CellLocator
 {
 private:
   using FromType = vtkm::TopologyElementTagPoint;
@@ -53,18 +43,24 @@ public:
   VTKM_CONT
   CellLocatorUniformGrid(const vtkm::Bounds& bounds,
                          const vtkm::Vec<vtkm::FloatDefault, 3> rangeTransform,
-                         const vtkm::Id planeSize,
-                         const vtkm::Id rowSize,
+                         const vtkm::Vec<vtkm::Id, 3> cellDims,
                          const vtkm::cont::CellSetStructured<3>& cellSet,
                          const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
                          DeviceAdapter)
     : Bounds(bounds)
     , RangeTransform(rangeTransform)
-    , PlaneSize(planeSize)
-    , RowSize(rowSize)
+    , CellDims(cellDims)
+    , PlaneSize(cellDims[0] * cellDims[1])
+    , RowSize(cellDims[0])
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType()))
+    , Coords(coords.PrepareForInput(DeviceAdapter()))
   {
-    CellSet = cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType());
-    Coords = coords.PrepareForInput(DeviceAdapter());
+  }
+
+  VTKM_EXEC_CONT virtual ~CellLocatorUniformGrid() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
   }
 
   VTKM_EXEC
@@ -80,12 +76,16 @@ public:
     }
     // Get the Cell Id from the point.
     vtkm::Vec<vtkm::Id, 3> logicalCell;
-    logicalCell[0] =
-      static_cast<vtkm::Id>(vtkm::Floor((point[0] - Bounds.X.Min) * RangeTransform[0]));
-    logicalCell[1] =
-      static_cast<vtkm::Id>(vtkm::Floor((point[1] - Bounds.Y.Min) * RangeTransform[1]));
-    logicalCell[2] =
-      static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * RangeTransform[2]));
+    logicalCell[0] = (point[0] == Bounds.X.Max)
+      ? CellDims[0] - 1
+      : static_cast<vtkm::Id>(vtkm::Floor((point[0] - Bounds.X.Min) * RangeTransform[0]));
+    logicalCell[1] = (point[1] == Bounds.Y.Max)
+      ? CellDims[1] - 1
+      : static_cast<vtkm::Id>(vtkm::Floor((point[1] - Bounds.Y.Min) * RangeTransform[1]));
+    logicalCell[2] = (point[2] == Bounds.Z.Max)
+      ? CellDims[2] - 1
+      : static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * RangeTransform[2]));
+
     // Get the actual cellId, from the logical cell index of the cell
     cellId = logicalCell[2] * PlaneSize + logicalCell[1] * RowSize + logicalCell[0];
 
@@ -102,6 +102,7 @@ public:
 private:
   vtkm::Bounds Bounds;
   vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
+  vtkm::Vec<vtkm::Id, 3> CellDims;
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;
   CellSetPortal CellSet;

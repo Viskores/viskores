@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandleCounting_h
 #define vtk_m_cont_ArrayHandleCounting_h
@@ -156,25 +146,25 @@ namespace cont
 {
 
 template <typename T>
-struct TypeString<vtkm::cont::ArrayHandleCounting<T>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Counting<" + TypeString<T>::Get() + ">";
+    static std::string name = "AH_Counting<" + SerializableTypeString<T>::Get() + ">";
     return name;
   }
 };
 
 template <typename T>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
-  : TypeString<vtkm::cont::ArrayHandleCounting<T>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename T>
@@ -188,9 +178,9 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto portal = obj.GetPortalConstControl();
-    diy::save(bb, portal.GetStart());
-    diy::save(bb, portal.GetStep());
-    diy::save(bb, portal.GetNumberOfValues());
+    vtkmdiy::save(bb, portal.GetStart());
+    vtkmdiy::save(bb, portal.GetStep());
+    vtkmdiy::save(bb, portal.GetNumberOfValues());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -198,9 +188,9 @@ public:
     T start{}, step{};
     vtkm::Id count = 0;
 
-    diy::load(bb, start);
-    diy::load(bb, step);
-    diy::load(bb, count);
+    vtkmdiy::load(bb, start);
+    vtkmdiy::load(bb, step);
+    vtkmdiy::load(bb, count);
 
     obj = vtkm::cont::make_ArrayHandleCounting(start, step, count);
   }

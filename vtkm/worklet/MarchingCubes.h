@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_MarchingCubes_h
@@ -39,12 +29,14 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/DispatcherPointNeighborhood.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/ScatterPermutation.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
@@ -597,7 +589,7 @@ public:
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();
@@ -681,7 +673,7 @@ public:
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();

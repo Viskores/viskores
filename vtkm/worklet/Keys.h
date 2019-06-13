@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_Keys_h
 #define vtk_m_worklet_Keys_h
@@ -27,7 +17,10 @@
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/Logging.h>
+
+#include <vtkm/Hash.h>
 
 #include <vtkm/exec/internal/ReduceByKeyLookup.h>
 
@@ -38,6 +31,7 @@
 #include <vtkm/cont/arg/TypeCheckTagKeys.h>
 
 #include <vtkm/worklet/StableSortIndices.h>
+#include <vtkm/worklet/vtkm_worklet_export.h>
 
 #include <vtkm/BinaryOperators.h>
 
@@ -45,6 +39,15 @@ namespace vtkm
 {
 namespace worklet
 {
+
+/// Select the type of sort for BuildArrays calls. Unstable sorting is faster
+/// but will not produce consistent ordering for equal keys. Stable sorting
+/// is slower, but keeps equal keys in their original order.
+enum class KeysSortType
+{
+  Unstable = 0,
+  Stable = 1
+};
 
 /// \brief Manage keys for a \c WorkletReduceByKey.
 ///
@@ -63,24 +66,15 @@ namespace worklet
 /// Keys structure is reused for all the \c Invoke. This is more efficient than
 /// creating a different \c Keys structure for each \c Invoke.
 ///
-template <typename _KeyType>
-class Keys
+template <typename T>
+class VTKM_ALWAYS_EXPORT Keys
 {
 public:
-  using KeyType = _KeyType;
+  using KeyType = T;
   using KeyArrayHandleType = vtkm::cont::ArrayHandle<KeyType>;
 
-  /// Select the type of sort for BuildArrays calls. Unstable sorting is faster
-  /// but will not produce consistent ordering for equal keys. Stable sorting
-  /// is slower, but keeps equal keys in their original order.
-  enum class SortType
-  {
-    Unstable = 0,
-    Stable = 1
-  };
-
   VTKM_CONT
-  Keys() = default;
+  Keys();
 
   /// \b Construct a Keys class from an array of keys.
   ///
@@ -89,13 +83,13 @@ public:
   ///
   /// The input keys object is not modified and the result is not stable
   /// sorted. This is the equivalent of calling
-  /// `BuildArrays(keys, SortType::Unstable, device)`.
+  /// `BuildArrays(keys, KeysSortType::Unstable, device)`.
   ///
   template <typename KeyStorage>
   VTKM_CONT Keys(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& keys,
                  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
-    this->BuildArrays(keys, SortType::Unstable, device);
+    this->BuildArrays(keys, KeysSortType::Unstable, device);
   }
 
   /// Build the internal arrays without modifying the input. This is more
@@ -103,14 +97,14 @@ public:
   /// keys for unstable sorting.
   template <typename KeyArrayType>
   VTKM_CONT void BuildArrays(const KeyArrayType& keys,
-                             SortType sort,
+                             KeysSortType sort,
                              vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArrays");
 
     switch (sort)
     {
-      case SortType::Unstable:
+      case KeysSortType::Unstable:
       {
         KeyArrayHandleType mutableKeys;
         vtkm::cont::Algorithm::Copy(device, keys, mutableKeys);
@@ -118,7 +112,7 @@ public:
         this->BuildArraysInternal(mutableKeys, device);
       }
       break;
-      case SortType::Stable:
+      case KeysSortType::Stable:
         this->BuildArraysInternalStable(keys, device);
         break;
     }
@@ -130,17 +124,17 @@ public:
   template <typename KeyArrayType>
   VTKM_CONT void BuildArraysInPlace(
     KeyArrayType& keys,
-    SortType sort,
+    KeysSortType sort,
     vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInPlace");
 
     switch (sort)
     {
-      case SortType::Unstable:
+      case KeysSortType::Unstable:
         this->BuildArraysInternal(keys, device);
         break;
-      case SortType::Stable:
+      case KeysSortType::Stable:
       {
         this->BuildArraysInternalStable(keys, device);
         KeyArrayHandleType tmp;
@@ -267,6 +261,9 @@ private:
     (void)offsetsTotal;                   // Shut up, compiler
   }
 };
+
+template <typename T>
+VTKM_CONT Keys<T>::Keys() = default;
 }
 } // namespace vtkm::worklet
 
@@ -422,5 +419,29 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, D
 }
 }
 } // namespace vtkm::cont::arg
+
+#ifndef vtk_m_worklet_Keys_cxx
+
+#define VTK_M_KEYS_EXPORT(T)                                                                       \
+  extern template class VTKM_WORKLET_TEMPLATE_EXPORT vtkm::worklet::Keys<T>;                       \
+  extern template VTKM_WORKLET_TEMPLATE_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
+    const vtkm::cont::ArrayHandle<T>& keys,                                                        \
+    vtkm::worklet::KeysSortType sort,                                                              \
+    vtkm::cont::DeviceAdapterId device);                                                           \
+  extern template VTKM_WORKLET_TEMPLATE_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
+    const vtkm::cont::ArrayHandleVirtual<T>& keys,                                                 \
+    vtkm::worklet::KeysSortType sort,                                                              \
+    vtkm::cont::DeviceAdapterId device)
+
+VTK_M_KEYS_EXPORT(vtkm::HashType);
+VTK_M_KEYS_EXPORT(vtkm::Id);
+VTK_M_KEYS_EXPORT(vtkm::Id3);
+#ifdef VTKM_USE_64BIT_IDS
+VTK_M_KEYS_EXPORT(vtkm::IdComponent);
+#endif
+
+#undef VTK_M_KEYS_EXPORT
+
+#endif // !vtk_m_worklet_Keys_cxx
 
 #endif //vtk_m_worklet_Keys_h

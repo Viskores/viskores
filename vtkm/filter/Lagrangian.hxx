@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/Types.h>
@@ -233,57 +223,21 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
 
   cycle += 1;
   std::cout << "Cycle : " << cycle << std::endl;
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(0);
+  const vtkm::cont::DynamicCellSet& cells =
+    input.GetCellSet(this->GetActiveCoordinateSystemIndex());
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
-  using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using RectilinearType =
-    vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
 
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
   vtkm::worklet::ParticleAdvection particleadvection;
   vtkm::worklet::ParticleAdvectionResult res;
 
-  if (coords.GetData().IsType<RectilinearType>())
-  {
-    using RectilinearGridEvalType =
-      vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldHandle>;
-    using RK4IntegratorType =
-      vtkm::worklet::particleadvection::RK4Integrator<RectilinearGridEvalType>;
-    /*
-  * If Euler step is preferred.
-  using EulerIntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<RectilinearGridEvalType, T>;
-  */
-    RectilinearGridEvalType eval(coords, cells, field);
-    RK4IntegratorType rk4(eval, static_cast<vtkm::Float32>(this->stepSize));
-    /*
-  * If Euler step is preferred.
-  EulerIntegratorType euler(eval, static_cast<vtkm::FloatDefault>(this->stepSize));
-  */
-    res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
-  }
-  else if (coords.GetData().IsType<UniformType>())
-  {
-    using UniformGridEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
-    using RK4IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<UniformGridEvalType>;
-    /*
-  * If Euler step is preferred.
-  using EulerIntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<UniformGridEvalType, T>;
-  */
-    UniformGridEvalType eval(coords, cells, field);
-    RK4IntegratorType rk4(eval, static_cast<vtkm::Float32>(this->stepSize));
-    /*
-  * If Euler step is preferred.
-  EulerIntegratorType euler(eval, static_cast<vtkm::FloatDefault>(this->stepSize));
-  */
-    res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
-  }
-  else
-  {
-    std::cout << "Data set type is not rectilinear or uniform." << std::endl;
-  }
+  GridEvalType gridEval(coords, cells, field);
+  RK4Type rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
+  res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
 
   auto particle_positions = res.positions;
   auto particle_stepstaken = res.stepsTaken;

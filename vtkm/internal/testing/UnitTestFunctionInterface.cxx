@@ -2,27 +2,13 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-
 #include <vtkm/internal/FunctionInterface.h>
-
-#include <vtkm/cont/Timer.h>
-
-#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/testing/Testing.h>
 
 #include <sstream>
 #include <string>
@@ -31,6 +17,9 @@
 // the most critical invoke (for the instance of a worklet) does not directly
 // use the Invoke method.
 //#define TEST_INVOKE_TIME
+#ifdef TEST_INVOKE_TIME
+#include <vtkm/cont/Timer.h>
+#endif
 
 namespace
 {
@@ -540,7 +529,7 @@ void TestFunctionInterface()
 
 } // anonymous namespace
 
-int UnitTestFunctionInterface(int, char* [])
+int UnitTestFunctionInterface(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFunctionInterface);
+  return vtkm::testing::Testing::Run(TestFunctionInterface, argc, argv);
 }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_CellSetStructured_h
 #define vtk_m_cont_CellSetStructured_h
@@ -87,12 +77,40 @@ public:
     return this->Structure.GetGlobalPointIndexStart();
   }
 
-  vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex) = 0) const
+  vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex) = 0) const override
   {
     return this->Structure.GetNumberOfPointsInCell();
   }
 
-  vtkm::IdComponent GetCellShape() const { return this->Structure.GetCellShape(); }
+  vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex) = 0) const override
+  {
+    return static_cast<vtkm::UInt8>(this->Structure.GetCellShape());
+  }
+
+  void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override
+  {
+    auto asVec = this->Structure.GetPointsOfCell(id);
+    for (vtkm::IdComponent i = 0; i < InternalsType::NUM_POINTS_IN_CELL; ++i)
+    {
+      ptids[i] = asVec[i];
+    }
+  }
+
+  std::shared_ptr<CellSet> NewInstance() const override
+  {
+    return std::make_shared<CellSetStructured>();
+  }
+
+  void DeepCopy(const CellSet* src) override
+  {
+    const auto* other = dynamic_cast<const CellSetStructured*>(src);
+    if (!other)
+    {
+      throw vtkm::cont::ErrorBadType("CellSetStructured::DeepCopy types don't match");
+    }
+
+    this->Structure = other->Structure;
+  }
 
   template <typename TopologyElement>
   SchedulingRangeType GetSchedulingRange(TopologyElement) const;
@@ -132,7 +150,7 @@ namespace cont
 {
 
 template <vtkm::IdComponent DIMENSION>
-struct TypeString<vtkm::cont::CellSetStructured<DIMENSION>>
+struct SerializableTypeString<vtkm::cont::CellSetStructured<DIMENSION>>
 {
   static VTKM_CONT const std::string& Get()
   {
@@ -143,7 +161,7 @@ struct TypeString<vtkm::cont::CellSetStructured<DIMENSION>>
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <vtkm::IdComponent DIMENSION>
@@ -155,18 +173,18 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    diy::save(bb, cs.GetName());
-    diy::save(bb, cs.GetPointDimensions());
-    diy::save(bb, cs.GetGlobalPointIndexStart());
+    vtkmdiy::save(bb, cs.GetName());
+    vtkmdiy::save(bb, cs.GetPointDimensions());
+    vtkmdiy::save(bb, cs.GetGlobalPointIndexStart());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
     std::string name;
-    diy::load(bb, name);
+    vtkmdiy::load(bb, name);
     typename Type::SchedulingRangeType dims, start;
-    diy::load(bb, dims);
-    diy::load(bb, start);
+    vtkmdiy::load(bb, dims);
+    vtkmdiy::load(bb, start);
 
     cs = Type(name);
     cs.SetPointDimensions(dims);

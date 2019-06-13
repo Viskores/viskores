@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_VertexClustering_h
 #define vtk_m_worklet_VertexClustering_h
@@ -357,8 +347,10 @@ public:
     }
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    vtkm::cont::Timer<> totalTimer;
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer totalTimer;
+    totalTimer.Start();
+    vtkm::cont::Timer timer;
+    timer.Start();
 #endif
 
     //////////////////////////////////////////////
@@ -374,15 +366,16 @@ public:
     mapPointsDispatcher.Invoke(coordinates, pointCidArray);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+    timer.stop();
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// pass 2 : Choose a representative point from each cluster for the output:
     vtkm::cont::VariantArrayHandle repPointArray;
     {
       vtkm::worklet::Keys<vtkm::Id> keys;
-      keys.BuildArrays(pointCidArray, vtkm::worklet::Keys<vtkm::Id>::SortType::Stable);
+      keys.BuildArrays(pointCidArray, vtkm::worklet::KeysSortType::Stable);
 
       // For mapping properties, this map will select an arbitrary point from
       // the cluster:
@@ -399,7 +392,7 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after reducing points (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// Pass 3 : Decimated mesh generation
@@ -415,7 +408,7 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after clustering cells (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
@@ -460,7 +453,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       this->CellIdMap = vtkm::worklet::StableSortIndices::Sort(pointId3HashArray);
@@ -469,7 +462,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       // Create a temporary permutation array and use that for unhashing.
@@ -485,7 +478,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       this->CellIdMap = vtkm::worklet::StableSortIndices::Sort(pointId3Array);
@@ -494,7 +487,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       // Permute the connectivity array into a basic array handle. Use a

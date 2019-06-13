@@ -2,25 +2,17 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
@@ -54,6 +46,9 @@ void makeScene(const vtkm::cont::DataSet& inputData,
 
 int main(int argc, char* argv[])
 {
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+
   // Input variable declarations
   vtkm::cont::DataSet inputData;
   vtkm::Float32 isovalue;
@@ -73,7 +68,7 @@ int main(int argc, char* argv[])
     vtkm::io::reader::VTKDataSetReader reader(argv[1]);
     inputData = reader.ReadDataSet();
     isovalue = static_cast<vtkm::Float32>(atof(argv[2]));
-    fieldName = "SCALARS:pointvar";
+    fieldName = "pointvar";
   }
 
   using Mapper = vtkm::rendering::MapperRayTracer;

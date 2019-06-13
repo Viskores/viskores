@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/CellShape.h>
@@ -35,11 +25,7 @@
 #include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/thirdparty/diy/Configure.h>
 
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/master.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/thirdparty/diy/diy.h>
 
 void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet);
 static void MultiBlockTest()
@@ -150,7 +136,7 @@ void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& Righ
   return;
 }
 
-int UnitTestMultiBlock(int, char* [])
+int UnitTestMultiBlock(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(MultiBlockTest);
+  return vtkm::cont::testing::Testing::Run(MultiBlockTest, argc, argv);
 }

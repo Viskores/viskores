@@ -2,35 +2,22 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_internal_ConnectivityExplicitInternals_h
 #define vtk_m_cont_internal_ConnectivityExplicitInternals_h
 
 #include <vtkm/CellShape.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/internal/ReverseConnectivityBuilder.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -39,10 +26,10 @@ namespace cont
 namespace internal
 {
 
-template <typename NumIndicesArrayType, typename IndexOffsetArrayType, typename DeviceAdapterTag>
+template <typename NumIndicesArrayType, typename IndexOffsetArrayType>
 void buildIndexOffsets(const NumIndicesArrayType& numIndices,
                        IndexOffsetArrayType& offsets,
-                       DeviceAdapterTag,
+                       vtkm::cont::DeviceAdapterId device,
                        std::true_type)
 {
   //We first need to make sure that NumIndices and IndexOffsetArrayType
@@ -52,14 +39,13 @@ void buildIndexOffsets(const NumIndicesArrayType& numIndices,
   // Although technically we are making changes to this object, the changes
   // are logically consistent with the previous state, so we consider it
   // valid under const.
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
-  Algorithm::ScanExclusive(CastedNumIndicesType(numIndices), offsets);
+  vtkm::cont::Algorithm::ScanExclusive(device, CastedNumIndicesType(numIndices), offsets);
 }
 
-template <typename NumIndicesArrayType, typename IndexOffsetArrayType, typename DeviceAdapterTag>
+template <typename NumIndicesArrayType, typename IndexOffsetArrayType>
 void buildIndexOffsets(const NumIndicesArrayType&,
                        IndexOffsetArrayType&,
-                       DeviceAdapterTag,
+                       vtkm::cont::DeviceAdapterId,
                        std::false_type)
 {
   //this is a no-op as the storage for the offsets is an implicit handle
@@ -69,13 +55,13 @@ void buildIndexOffsets(const NumIndicesArrayType&,
   //cause a compile time failure.
 }
 
-template <typename ArrayHandleIndices, typename ArrayHandleOffsets, typename DeviceAdapterTag>
+template <typename ArrayHandleIndices, typename ArrayHandleOffsets>
 void buildIndexOffsets(const ArrayHandleIndices& numIndices,
                        ArrayHandleOffsets offsets,
-                       DeviceAdapterTag tag)
+                       vtkm::cont::DeviceAdapterId deviceId)
 {
   using IsWriteable = vtkm::cont::internal::IsWriteableArrayHandle<ArrayHandleOffsets>;
-  buildIndexOffsets(numIndices, offsets, tag, typename IsWriteable::type());
+  buildIndexOffsets(numIndices, offsets, deviceId, typename IsWriteable::type());
 }
 
 template <typename ShapeStorageTag = VTKM_DEFAULT_STORAGE_TAG,
@@ -121,25 +107,20 @@ struct ConnectivityExplicitInternals
     this->IndexOffsets.ReleaseResourcesExecution();
   }
 
-  template <typename Device>
-  VTKM_CONT void BuildIndexOffsets(Device) const
+
+  VTKM_CONT void BuildIndexOffsets(vtkm::cont::DeviceAdapterId deviceId) const
   {
+    if (deviceId == vtkm::cont::DeviceAdapterTagUndefined())
+    {
+      throw vtkm::cont::ErrorBadValue("Cannot build indices using DeviceAdapterTagUndefined");
+    }
+
     VTKM_ASSERT(this->ElementsValid);
 
     if (!this->IndexOffsetsValid)
     {
-      buildIndexOffsets(this->NumIndices, this->IndexOffsets, Device());
+      buildIndexOffsets(this->NumIndices, this->IndexOffsets, deviceId);
       this->IndexOffsetsValid = true;
-    }
-  }
-
-  VTKM_CONT
-  void BuildIndexOffsets(vtkm::cont::DeviceAdapterTagError) const
-  {
-    if (!this->IndexOffsetsValid)
-    {
-      throw vtkm::cont::ErrorBadType(
-        "Cannot build indices using the error device. Must be created previously.");
     }
   }
 
@@ -208,17 +189,17 @@ struct ConnIdxToCellIdCalc
 
       while (length > 0)
       {
-        vtkm::Id half = length / 2;
-        vtkm::Id pos = first + half;
+        vtkm::Id halfway = length / 2;
+        vtkm::Id pos = first + halfway;
         vtkm::Id val = this->Offsets.Get(pos);
         if (val <= inIdx)
         {
           first = pos + 1;
-          length -= half + 1;
+          length -= halfway + 1;
         }
         else
         {
-          length = half;
+          length = halfway;
         }
       }
 

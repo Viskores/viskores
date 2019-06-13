@@ -1,5 +1,5 @@
-#ifndef DIY_PARTNERS_COMMON_HPP
-#define DIY_PARTNERS_COMMON_HPP
+#ifndef VTKMDIY_PARTNERS_COMMON_HPP
+#define VTKMDIY_PARTNERS_COMMON_HPP
 
 #include "../decomposition.hpp"
 #include "../types.hpp"

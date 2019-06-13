@@ -2,27 +2,11 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-
-//We first check if VTKM_DEVICE_ADAPTER is defined, so that when TBB and CUDA
-//includes this file we use the device adapter that they have set.
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
 
 #include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -31,6 +15,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Initialize.h>
 
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
@@ -240,6 +225,11 @@ void mouseCall(int button, int state, int x, int y)
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
+  //parse out all vtk-m related command line options
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
+
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
   vtkm::filter::MarchingCubes filter;

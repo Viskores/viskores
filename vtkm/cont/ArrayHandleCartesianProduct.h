@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandleCartesianProduct_h
 #define vtk_m_cont_ArrayHandleCartesianProduct_h
@@ -438,27 +428,27 @@ namespace cont
 {
 
 template <typename AH1, typename AH2, typename AH3>
-struct TypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_CartesianProduct<" + TypeString<AH1>::Get() + "," +
-      TypeString<AH2>::Get() + "," + TypeString<AH3>::Get() + ">";
+    static std::string name = "AH_CartesianProduct<" + SerializableTypeString<AH1>::Get() + "," +
+      SerializableTypeString<AH2>::Get() + "," + SerializableTypeString<AH3>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH1, typename AH2, typename AH3>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<vtkm::Vec<typename AH1::ValueType, 3>,
                           vtkm::cont::internal::StorageTagCartesianProduct<AH1, AH2, AH3>>>
-  : TypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH1, typename AH2, typename AH3>
@@ -472,9 +462,9 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetFirstArray());
-    diy::save(bb, storage.GetSecondArray());
-    diy::save(bb, storage.GetThirdArray());
+    vtkmdiy::save(bb, storage.GetFirstArray());
+    vtkmdiy::save(bb, storage.GetSecondArray());
+    vtkmdiy::save(bb, storage.GetThirdArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -483,9 +473,9 @@ public:
     AH2 array2;
     AH3 array3;
 
-    diy::load(bb, array1);
-    diy::load(bb, array2);
-    diy::load(bb, array3);
+    vtkmdiy::load(bb, array1);
+    vtkmdiy::load(bb, array2);
+    vtkmdiy::load(bb, array3);
 
     obj = vtkm::cont::make_ArrayHandleCartesianProduct(array1, array2, array3);
   }

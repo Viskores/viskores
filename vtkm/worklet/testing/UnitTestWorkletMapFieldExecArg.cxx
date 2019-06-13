@@ -2,30 +2,29 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/VariantArrayHandle.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
+
+struct SimpleExecObject : vtkm::cont::ExecutionObjectBase
+{
+  template <typename Device>
+  Device PrepareForExecution(Device) const
+  {
+    return Device();
+  }
+};
 
 struct TestExecObjectWorklet
 {
@@ -33,20 +32,24 @@ struct TestExecObjectWorklet
   class Worklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut, FieldOut);
-    using ExecutionSignature = void(_1, _2, _3, _4);
+    using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut, FieldOut, ExecObject);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, Device);
 
-    template <typename InPortalType, typename OutPortalType>
+    template <typename InPortalType, typename OutPortalType, typename DeviceTag>
     VTKM_EXEC void operator()(const vtkm::Id& index,
                               const InPortalType& execIn,
                               OutPortalType& execOut,
-                              T& out) const
+                              T& out,
+                              DeviceTag,
+                              DeviceTag) const
     {
+      VTKM_IS_DEVICE_ADAPTER_TAG(DeviceTag);
+
       if (!test_equal(execIn.Get(index), TestValue(index, T()) + T(100)))
       {
         this->RaiseError("Got wrong input value.");
       }
-      out = execIn.Get(index) - T(100);
+      out = static_cast<T>(execIn.Get(index) - T(100));
       execOut.Set(index, out);
     }
   };
@@ -68,7 +71,7 @@ struct DoTestWorklet
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      inputArray[index] = TestValue(index, T()) + T(100);
+      inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
     vtkm::cont::ArrayHandleIndex counting(ARRAY_SIZE);
@@ -79,7 +82,7 @@ struct DoTestWorklet
 
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<typename WorkletType::template Worklet<T>> dispatcher;
-    dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldArray);
+    dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldArray, SimpleExecObject());
 
     std::cout << "Check result." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());
@@ -92,7 +95,7 @@ struct DoTestWorklet
     outputHandle.Allocate(ARRAY_SIZE);
 
     vtkm::cont::VariantArrayHandleBase<vtkm::ListTagBase<T>> outputFieldDynamic(outputFieldArray);
-    dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldDynamic);
+    dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldDynamic, SimpleExecObject());
 
     std::cout << "Check dynamic array result." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());

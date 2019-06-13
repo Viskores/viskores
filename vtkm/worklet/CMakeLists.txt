@@ -2,20 +2,10 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 set(headers
@@ -50,7 +40,10 @@ set(headers
   Magnitude.h
   MarchingCubes.h
   Mask.h
+  MaskIndices.h
+  MaskNone.h
   MaskPoints.h
+  MaskSelect.h
   NDimsEntropy.h
   NDimsHistMarginalization.h
   NDimsHistogram.h
@@ -59,8 +52,10 @@ set(headers
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
+  PointMerge.h
   PointTransform.h
   Probe.h
+  RemoveDegenerateCells.h
   RemoveUnusedPoints.h
   ScalarsToColors.h
   ScatterCounting.h
@@ -98,15 +93,31 @@ set(header_impls
   )
 
 
+# This is a list of sources that does not have code that runs on devices. It only
+# needs a standard system C++ compiler.
+set(sources_no_device
+  )
+
+# This is a list of sources that has code that runs on devices and might need to
+# be compiled with a device-specific compiler (like CUDA).
+set(sources_device
+  Keys.cxx
+  MaskSelect.cxx
+  ScatterCounting.cxx
+  )
+
+
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(clip)
 add_subdirectory(colorconversion)
+add_subdirectory(connectivities)
 add_subdirectory(contour)
 add_subdirectory(contourtree)
 add_subdirectory(contourtree_augmented)
 add_subdirectory(cosmotools)
 add_subdirectory(gradient)
+add_subdirectory(histogram)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
 add_subdirectory(tetrahedralize)
@@ -115,8 +126,14 @@ add_subdirectory(wavelets)
 add_subdirectory(particleadvection)
 add_subdirectory(zfp)
 
-vtkm_declare_headers(${headers})
-vtkm_declare_headers(${header_impls} TESTABLE OFF)
+vtkm_library(
+  NAME vtkm_worklet
+  SOURCES ${sources_no_device}
+  TEMPLATE_SOURCES ${header_impls}
+  HEADERS ${headers}
+  WRAP_FOR_CUDA ${sources_device}
+  )
+target_link_libraries(vtkm_worklet PUBLIC vtkm_cont)
 
 
 #-----------------------------------------------------------------------------

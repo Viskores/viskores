@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_io_reader_VTKDataSetReaderBase_h
 #define vtk_m_io_reader_VTKDataSetReaderBase_h
@@ -30,6 +20,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 #include <vtkm/internal/ExportMacros.h>
 #include <vtkm/io/ErrorIO.h>
@@ -189,9 +180,11 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
       constexpr bool not_same = !std::is_same<T, CommonType>::value;
       if (not_same)
       {
-        std::cerr << "Type " << vtkm::io::internal::DataTypeName<T>::Name()
-                  << " is currently unsupported. Converting to "
-                  << vtkm::io::internal::DataTypeName<CommonType>::Name() << "." << std::endl;
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                   "Type " << vtkm::io::internal::DataTypeName<T>::Name()
+                           << " is currently unsupported. Converting to "
+                           << vtkm::io::internal::DataTypeName<CommonType>::Name()
+                           << ".");
       }
 
       vtkm::cont::ArrayHandle<CommonType> output;
@@ -206,18 +199,25 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
     }
     case 2:
     case 3:
+    case 9:
     {
+      constexpr auto numComps = vtkm::VecTraits<T>::NUM_COMPONENTS;
+
       using InComponentType = typename vtkm::VecTraits<T>::ComponentType;
       using OutComponentType = typename ClosestFloat<InComponentType>::Type;
-      using CommonType = vtkm::Vec<OutComponentType, 3>;
+      using CommonType = vtkm::Vec<OutComponentType, numComps>;
       constexpr bool not_same = !std::is_same<T, CommonType>::value;
       if (not_same)
       {
-        std::cerr << "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name() << "["
-                  << vtkm::VecTraits<T>::NUM_COMPONENTS << "] "
-                  << "is currently unsupported. Converting to "
-                  << vtkm::io::internal::DataTypeName<OutComponentType>::Name() << "[3]."
-                  << std::endl;
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                   "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name() << "["
+                           << vtkm::VecTraits<T>::GetNumberOfComponents(T())
+                           << "] "
+                           << "is currently unsupported. Converting to "
+                           << vtkm::io::internal::DataTypeName<OutComponentType>::Name()
+                           << "["
+                           << numComps
+                           << "].");
       }
 
       vtkm::cont::ArrayHandle<CommonType> output;
@@ -226,7 +226,7 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
       for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
       {
         CommonType outval = CommonType();
-        for (vtkm::IdComponent j = 0; j < vtkm::VecTraits<T>::NUM_COMPONENTS; ++j)
+        for (vtkm::IdComponent j = 0; j < numComps; ++j)
         {
           outval[j] = static_cast<OutComponentType>(
             vtkm::VecTraits<T>::GetComponent(vec[static_cast<std::size_t>(i)], j));
@@ -238,7 +238,7 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
     }
     default:
     {
-      std::cerr << "Only 1, 2, or 3 components supported. Skipping." << std::endl;
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Only 1, 2, 3, or 9 components supported. Skipping.");
       return vtkm::cont::VariantArrayHandle(vtkm::cont::ArrayHandle<vtkm::Float32>());
     }
   }
@@ -514,6 +514,17 @@ private:
     std::string skip;
     std::getline(this->DataFile->Stream, skip);
 
+    if ((this->DataFile->Version[0] > 4) ||
+        (this->DataFile->Version[0] == 4 && this->DataFile->Version[1] > 2))
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Reader may not correctly read >v4.2 files. Reading version "
+                   << this->DataFile->Version[0]
+                   << "."
+                   << this->DataFile->Version[1]
+                   << ".\n");
+    }
+
     // Read title line
     std::getline(this->DataFile->Stream, this->DataFile->Title);
 
@@ -574,7 +585,8 @@ private:
 
   void ReadColorScalars(std::size_t numElements, std::string& dataName)
   {
-    std::cerr << "Support for COLOR_SCALARS is not implemented. Skipping." << std::endl;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Support for COLOR_SCALARS is not implemented. Skipping.");
 
     std::size_t numValues;
     this->DataFile->Stream >> dataName >> numValues >> std::ws;
@@ -583,7 +595,8 @@ private:
 
   void ReadLookupTable(std::string& dataName)
   {
-    std::cerr << "Support for LOOKUP_TABLE is not implemented. Skipping." << std::endl;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Support for LOOKUP_TABLE is not implemented. Skipping.");
 
     std::size_t numEntries;
     this->DataFile->Stream >> dataName >> numEntries >> std::ws;
@@ -626,7 +639,7 @@ protected:
   //VisIt header fields
   void ReadFields(std::string& dataName, std::vector<vtkm::Float32>* visitBounds = nullptr)
   {
-    std::cerr << "Support for FIELD is not implemented. Skipping." << std::endl;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Support for FIELD is not implemented. Skipping.");
 
     vtkm::Id numArrays;
     this->DataFile->Stream >> dataName >> numArrays >> std::ws;
@@ -699,8 +712,8 @@ private:
     template <typename T>
     void operator()(vtkm::IdComponent numComponents, T) const
     {
-      std::cerr << "Support for " << numComponents << " components not implemented. Skipping."
-                << std::endl;
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Support for " << numComponents << " components not implemented. Skipping.");
       SkipArrayVariant::operator()(numComponents, T());
     }
 
@@ -747,6 +760,9 @@ protected:
   template <typename T>
   void ReadArray(std::vector<T>& buffer)
   {
+    using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
+    constexpr vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
+
     std::size_t numElements = buffer.size();
     if (this->DataFile->IsBinary)
     {
@@ -759,9 +775,6 @@ protected:
     }
     else
     {
-      using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
-      const vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
-
       for (std::size_t i = 0; i < numElements; ++i)
       {
         for (vtkm::IdComponent j = 0; j < numComponents; ++j)
@@ -773,19 +786,22 @@ protected:
       }
     }
     this->DataFile->Stream >> std::ws;
+    this->SkipArrayMetaData(numComponents);
   }
 
   template <vtkm::IdComponent NumComponents>
   void ReadArray(std::vector<vtkm::Vec<vtkm::io::internal::DummyBitType, NumComponents>>& buffer)
   {
-    std::cerr << "Support for data type 'bit' is not implemented. Skipping." << std::endl;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Support for data type 'bit' is not implemented. Skipping.");
     this->SkipArray(buffer.size(), vtkm::Vec<vtkm::io::internal::DummyBitType, NumComponents>());
     buffer.clear();
   }
 
   void ReadArray(std::vector<vtkm::io::internal::DummyBitType>& buffer)
   {
-    std::cerr << "Support for data type 'bit' is not implemented. Skipping." << std::endl;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Support for data type 'bit' is not implemented. Skipping.");
     this->SkipArray(buffer.size(), vtkm::io::internal::DummyBitType());
     buffer.clear();
   }
@@ -793,6 +809,9 @@ protected:
   template <typename T>
   void SkipArray(std::size_t numElements, T)
   {
+    using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
+    constexpr vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
+
     if (this->DataFile->IsBinary)
     {
       this->DataFile->Stream.seekg(static_cast<std::streamoff>(numElements * sizeof(T)),
@@ -800,9 +819,6 @@ protected:
     }
     else
     {
-      using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
-      const vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
-
       for (std::size_t i = 0; i < numElements; ++i)
       {
         for (vtkm::IdComponent j = 0; j < numComponents; ++j)
@@ -813,6 +829,7 @@ protected:
       }
     }
     this->DataFile->Stream >> std::ws;
+    this->SkipArrayMetaData(numComponents);
   }
 
   template <vtkm::IdComponent NumComponents>
@@ -820,10 +837,13 @@ protected:
                  vtkm::Vec<vtkm::io::internal::DummyBitType, NumComponents>)
   {
     this->SkipArray(numElements * static_cast<std::size_t>(NumComponents),
-                    vtkm::io::internal::DummyBitType());
+                    vtkm::io::internal::DummyBitType(),
+                    NumComponents);
   }
 
-  void SkipArray(std::size_t numElements, vtkm::io::internal::DummyBitType)
+  void SkipArray(std::size_t numElements,
+                 vtkm::io::internal::DummyBitType,
+                 vtkm::IdComponent numComponents = 1)
   {
     if (this->DataFile->IsBinary)
     {
@@ -839,6 +859,55 @@ protected:
       }
     }
     this->DataFile->Stream >> std::ws;
+    this->SkipArrayMetaData(numComponents);
+  }
+
+  void SkipArrayMetaData(vtkm::IdComponent numComponents)
+  {
+    if (!this->DataFile->Stream.good())
+    {
+      return;
+    }
+
+    auto begining = this->DataFile->Stream.tellg();
+
+    std::string tag;
+    this->DataFile->Stream >> tag;
+    if (tag != "METADATA")
+    {
+      this->DataFile->Stream.seekg(begining);
+      return;
+    }
+
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "METADATA is not supported. Attempting to Skip.");
+
+    this->DataFile->Stream >> tag >> std::ws;
+    if (tag == "COMPONENT_NAMES")
+    {
+      std::string name;
+      for (vtkm::IdComponent i = 0; i < numComponents; ++i)
+      {
+        this->DataFile->Stream >> name >> std::ws;
+      }
+    }
+    else if (tag == "INFORMATION")
+    {
+      int numKeys = 0;
+      this->DataFile->Stream >> numKeys >> std::ws;
+
+      // Skipping INFORMATION is tricky. The reader needs to be aware of the types of the
+      // information, which is not provided in the file.
+      // Here we will just skip until an empty line is found.
+      std::string line;
+      while (this->DataFile->Stream.good() && line != "\n")
+      {
+        std::getline(this->DataFile->Stream, line);
+      }
+    }
+    else
+    {
+      internal::parseAssert(false);
+    }
   }
 
 private:
@@ -852,11 +921,16 @@ private:
     {
     }
 
-    template <typename T>
-    void operator()(const vtkm::cont::ArrayHandleVirtual<T>& handle) const
+    template <typename ArrayHandleType>
+    void operator()(const ArrayHandleType& handle) const
     {
+      VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+      using T = typename ArrayHandleType::ValueType;
+
       if (this->Permutation.GetNumberOfValues() < 1)
+      {
         return;
+      }
       vtkm::cont::ArrayHandle<T> out;
       out.Allocate(this->Permutation.GetNumberOfValues());
 

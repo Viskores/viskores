@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_filter_WarpScalar_h
@@ -41,52 +31,6 @@ class WarpScalar : public vtkm::filter::FilterField<WarpScalar>
 public:
   VTKM_CONT
   WarpScalar(vtkm::FloatDefault scaleAmount);
-
-  //@{
-  /// Choose the primary field to operate on. In the warp op A + B *
-  /// scaleAmount * scalarFactor, A is the primary field
-  VTKM_CONT
-  void SetPrimaryField(
-    const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
-  {
-    this->SetActiveField(name, association);
-  }
-  //@}
-
-  VTKM_CONT const std::string& GetPrimaryFieldName() const { return this->GetActiveFieldName(); }
-
-  VTKM_CONT vtkm::cont::Field::Association GetPrimaryFieldAssociation() const
-  {
-    return this->GetActiveFieldAssociation();
-  }
-
-  //@{
-  /// When set to true, filter uses a coordinate system as the primary field instead of the one selected
-  /// by name. Use SetPrimaryCoordinateSystem to select which coordinate system.
-  VTKM_CONT
-  void SetUseCoordinateSystemAsPrimaryField(bool flag)
-  {
-    this->SetUseCoordinateSystemAsField(flag);
-  }
-  VTKM_CONT
-  bool GetUseCoordinateSystemAsPrimaryField() const
-  {
-    return this->GetUseCoordinateSystemAsField();
-  }
-  //@}
-
-  //@{
-  /// Select the coordinate system index to use as the primary field. This only has an effect when
-  /// UseCoordinateSystemAsPrimaryField is true.
-  VTKM_CONT
-  void SetPrimaryCoordinateSystem(vtkm::Id index) { this->SetActiveCoordinateSystem(index); }
-  VTKM_CONT
-  vtkm::Id GetPrimaryCoordinateSystemIndex() const
-  {
-    return this->GetActiveCoordinateSystemIndex();
-  }
-  //@}
 
   //@{
   /// Choose the secondary field to operate on. In the warp op A + B *

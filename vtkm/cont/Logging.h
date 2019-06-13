@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_Logging_h
 #define vtk_m_cont_Logging_h
@@ -102,7 +92,7 @@
 ///
 /// The helper functions vtkm::cont::GetHumanReadableSize and
 /// vtkm::cont::GetSizeString assist in formating byte sizes to a more readable
-/// format. Similarly, the vtkm::cont::TypeName template functions provide RTTI
+/// format. Similarly, the vtkm::cont::TypeToString template functions provide RTTI
 /// based type-name information. When logging is enabled, these use the logging
 /// backend to demangle symbol names on supported platforms.
 ///
@@ -130,7 +120,7 @@
 ///
 /// \code
 /// VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
-///            "Executed functor " << vtkm::cont::TypeName(functor)
+///            "Executed functor " << vtkm::cont::TypeToString(functor)
 ///             << " on device " << deviceId.GetName());
 /// \endcode
 
@@ -143,7 +133,7 @@
 /// \code
 /// VTKM_LOG_F(vtkm::cont::LogLevel::Perf,
 ///            "Executed functor %s on device %s",
-///            vtkm::cont::TypeName(functor).c_str(),
+///            vtkm::cont::TypeToString(functor).c_str(),
 ///            deviceId.GetName().c_str());
 /// \endcode
 
@@ -161,7 +151,7 @@
 /// {
 ///   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
 ///                  "Executing filter %s",
-///                  vtkm::cont::TypeName(myFilter).c_str());
+///                  vtkm::cont::TypeToString(myFilter).c_str());
 ///   myFilter.Execute();
 /// }
 /// \endcode
@@ -187,7 +177,7 @@
 /// \brief Convenience macro for logging a TryExecute failure to the Error level.
 /// If logging is disabled, a message is still printed to stderr.
 /// \param errorMessage The error message detailing the failure.
-/// \param functorName The name of the functor (see vtkm::cont::TypeName)
+/// \param functorName The name of the functor (see vtkm::cont::TypeToString)
 /// \param deviceId The device tag / id for the device on which the functor
 /// failed.
 
@@ -195,7 +185,7 @@
 /// \brief Similar to VTKM_LOG_TRYEXECUTE_FAIL, but also informs the user
 /// that the device has been disable for future TryExecute calls.
 /// \param errorMessage The error message detailing the failure.
-/// \param functorName The name of the functor (see vtkm::cont::TypeName)
+/// \param functorName The name of the functor (see vtkm::cont::TypeToString)
 /// \param deviceId The device tag / id for the device on which the functor
 /// failed.
 
@@ -219,18 +209,18 @@
 #define VTKM_LOG_CAST_SUCC(inObj, outObj)                                                          \
   VTKM_LOG_F(vtkm::cont::LogLevel::Cast,                                                           \
              "Cast succeeded: %s (%p) --> %s (%p)",                                                \
-             vtkm::cont::TypeName(inObj).c_str(),                                                  \
+             vtkm::cont::TypeToString(inObj).c_str(),                                              \
              &inObj,                                                                               \
-             vtkm::cont::TypeName(outObj).c_str(),                                                 \
+             vtkm::cont::TypeToString(outObj).c_str(),                                             \
              &outObj)
 
 // Cast failure:
 #define VTKM_LOG_CAST_FAIL(inObj, outType)                                                         \
   VTKM_LOG_F(vtkm::cont::LogLevel::Cast,                                                           \
              "Cast failed: %s (%p) --> %s",                                                        \
-             vtkm::cont::TypeName(inObj).c_str(),                                                  \
+             vtkm::cont::TypeToString(inObj).c_str(),                                              \
              &inObj,                                                                               \
-             vtkm::cont::TypeName<outType>().c_str())
+             vtkm::cont::TypeToString<outType>().c_str())
 
 // TryExecute failure
 #define VTKM_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)                              \
@@ -427,7 +417,7 @@ std::string GetSizeString(vtkm::UInt64 bytes, int prec = 2);
  * @{
  */
 template <typename T>
-static inline VTKM_CONT std::string TypeName()
+static inline VTKM_CONT std::string TypeToString()
 {
 #ifdef VTKM_ENABLE_LOGGING
   return loguru::demangle(typeid(T).name()).c_str();
@@ -437,9 +427,9 @@ static inline VTKM_CONT std::string TypeName()
 }
 
 template <typename T>
-static inline VTKM_CONT std::string TypeName(const T&)
+static inline VTKM_CONT std::string TypeToString(const T&)
 {
-  return TypeName<T>();
+  return TypeToString<T>();
 }
 /**@}*/
 }

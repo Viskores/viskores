@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayCopy.h>
@@ -29,19 +19,6 @@ namespace vtkm
 {
 namespace filter
 {
-
-namespace
-{
-
-template <typename CellSetList>
-bool IsCellSupported(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset)
-{
-  //We only support 3D structured for now.
-  if (cellset.template IsType<vtkm::cont::CellSetStructured<3>>())
-    return true;
-  return false;
-}
-} // anonymous namespace
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT Streamline::Streamline()
@@ -75,11 +52,6 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  if (!IsCellSupported(cells))
-  {
-    throw vtkm::cont::ErrorFilterExecution("Cell type not supported.");
-  }
-
   if (!fieldMeta.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
@@ -87,12 +59,11 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
 
   //todo: add check for rectilinear.
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
-  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
-  //RGEvalType eval(input.GetCoordinateSystem(), input.GetCellSet(0), field);
-  RGEvalType eval(coords, cells, field);
-  RK4RGType rk4(eval, static_cast<T>(this->StepSize));
+  GridEvalType eval(coords, cells, field);
+  RK4Type rk4(eval, static_cast<vtkm::worklet::particleadvection::ScalarType>(this->StepSize));
 
   vtkm::worklet::Streamline streamline;
   vtkm::worklet::StreamlineResult res;

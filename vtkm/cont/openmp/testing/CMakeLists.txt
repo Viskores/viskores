@@ -2,28 +2,19 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2018 UT-Battelle, LLC.
-##  Copyright 2018 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 set(unit_tests
   UnitTestOpenMPArrayHandle.cxx
   UnitTestOpenMPArrayHandleFancy.cxx
   UnitTestOpenMPArrayHandleVirtualCoordinates.cxx
+  UnitTestOpenMPBitField.cxx
   UnitTestOpenMPCellLocatorRectilinearGrid.cxx
-  UnitTestOpenMPCellLocatorTwoLevelUniformGrid.cxx
+  UnitTestOpenMPCellLocatorUniformBins.cxx
   UnitTestOpenMPCellLocatorUniformGrid.cxx
   UnitTestOpenMPColorTable.cxx
   UnitTestOpenMPComputeRange.cxx
@@ -34,7 +25,7 @@ set(unit_tests
   UnitTestOpenMPPointLocatorUniformGrid.cxx
   UnitTestOpenMPVirtualObjectHandle.cxx
   )
-vtkm_unit_tests(OpenMP SOURCES ${unit_tests})
+vtkm_unit_tests(OpenMP SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
 
 if (VTKm_ENABLE_TESTING)
   #We need to have all OpenMP tests run serially as they

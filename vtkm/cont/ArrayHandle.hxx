@@ -2,21 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
+#ifndef vtk_m_cont_ArrayHandle_hxx
+#define vtk_m_cont_ArrayHandle_hxx
+
+#include <vtkm/cont/ArrayHandle.h>
 
 namespace vtkm
 {
@@ -357,36 +351,36 @@ namespace internal
 namespace detail
 {
 template <typename ArrayHandle>
-inline void VTKM_CONT StorageSerialization(diy::BinaryBuffer& bb,
+inline void VTKM_CONT StorageSerialization(vtkmdiy::BinaryBuffer& bb,
                                            const ArrayHandle& obj,
                                            std::false_type)
 {
   vtkm::Id count = obj.GetNumberOfValues();
-  diy::save(bb, count);
+  vtkmdiy::save(bb, count);
 
-  diy::save(bb, vtkm::Id(0)); //not a basic storage
+  vtkmdiy::save(bb, vtkm::Id(0)); //not a basic storage
   auto portal = obj.GetPortalConstControl();
   for (vtkm::Id i = 0; i < count; ++i)
   {
-    diy::save(bb, portal.Get(i));
+    vtkmdiy::save(bb, portal.Get(i));
   }
 }
 
 template <typename ArrayHandle>
-inline void VTKM_CONT StorageSerialization(diy::BinaryBuffer& bb,
+inline void VTKM_CONT StorageSerialization(vtkmdiy::BinaryBuffer& bb,
                                            const ArrayHandle& obj,
                                            std::true_type)
 {
   vtkm::Id count = obj.GetNumberOfValues();
-  diy::save(bb, count);
+  vtkmdiy::save(bb, count);
 
-  diy::save(bb, vtkm::Id(1)); //is basic storage
-  diy::save(bb, obj.GetStorage().GetArray(), static_cast<std::size_t>(count));
+  vtkmdiy::save(bb, vtkm::Id(1)); //is basic storage
+  vtkmdiy::save(bb, obj.GetStorage().GetArray(), static_cast<std::size_t>(count));
 }
 }
 
 template <typename T, typename S>
-inline void VTKM_CONT ArrayHandleDefaultSerialization(diy::BinaryBuffer& bb,
+inline void VTKM_CONT ArrayHandleDefaultSerialization(vtkmdiy::BinaryBuffer& bb,
                                                       const vtkm::cont::ArrayHandle<T, S>& obj)
 {
   using is_basic = typename std::is_same<S, vtkm::cont::StorageTagBasic>::type;
@@ -396,7 +390,7 @@ inline void VTKM_CONT ArrayHandleDefaultSerialization(diy::BinaryBuffer& bb,
 }
 } // vtkm::cont::internal
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename T>
@@ -404,14 +398,14 @@ VTKM_CONT void Serialization<vtkm::cont::ArrayHandle<T>>::load(BinaryBuffer& bb,
                                                                vtkm::cont::ArrayHandle<T>& obj)
 {
   vtkm::Id count = 0;
-  diy::load(bb, count);
+  vtkmdiy::load(bb, count);
   obj.Allocate(count);
 
   vtkm::Id input_was_basic_storage = 0;
-  diy::load(bb, input_was_basic_storage);
+  vtkmdiy::load(bb, input_was_basic_storage);
   if (input_was_basic_storage)
   {
-    diy::load(bb, obj.GetStorage().GetArray(), static_cast<std::size_t>(count));
+    vtkmdiy::load(bb, obj.GetStorage().GetArray(), static_cast<std::size_t>(count));
   }
   else
   {
@@ -419,9 +413,11 @@ VTKM_CONT void Serialization<vtkm::cont::ArrayHandle<T>>::load(BinaryBuffer& bb,
     for (vtkm::Id i = 0; i < count; ++i)
     {
       T val{};
-      diy::load(bb, val);
+      vtkmdiy::load(bb, val);
       portal.Set(i, val);
     }
   }
 }
 } // diy
+
+#endif //vtk_m_cont_ArrayHandle_hxx

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_testing_TestingColorTable_h
 #define vtk_m_cont_testing_TestingColorTable_h
@@ -589,12 +579,12 @@ public:
     }
   };
 
-  static int Run()
+  static int Run(int argc, char* argv[])
   {
     //We need to verify the color table runs on this specific device
     //so we need to force our single device
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
-    return vtkm::cont::testing::Testing::Run(TestAll());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
+    return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
   }
 };
 }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_internal_DispatcherBase_h
 #define vtk_m_worklet_internal_DispatcherBase_h
@@ -25,7 +15,7 @@
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
 
-#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/TryExecute.h>
@@ -58,6 +48,8 @@ namespace vtkm
 {
 namespace worklet
 {
+template <typename T>
+class VTKM_ALWAYS_EXPORT Keys;
 namespace internal
 {
 
@@ -67,11 +59,25 @@ inline auto scheduling_range(const Domain& inputDomain) -> decltype(inputDomain.
   return inputDomain.GetNumberOfValues();
 }
 
+template <typename KeyType>
+inline auto scheduling_range(const vtkm::worklet::Keys<KeyType>& inputDomain)
+  -> decltype(inputDomain.GetInputRange())
+{
+  return inputDomain.GetInputRange();
+}
+
 template <typename Domain>
 inline auto scheduling_range(const Domain* const inputDomain)
   -> decltype(inputDomain->GetNumberOfValues())
 {
   return inputDomain->GetNumberOfValues();
+}
+
+template <typename KeyType>
+inline auto scheduling_range(const vtkm::worklet::Keys<KeyType>* const inputDomain)
+  -> decltype(inputDomain->GetInputRange())
+{
+  return inputDomain->GetInputRange();
 }
 
 template <typename Domain, typename SchedulingRangeType>
@@ -163,15 +169,16 @@ struct ReportValueOnError<Value, true> : std::true_type
 };
 
 template <typename T>
-struct remove_pointer_and_decay : std::remove_pointer<typename std::decay<T>::type>
-{
-};
+using remove_pointer_and_decay = typename std::remove_pointer<typename std::decay<T>::type>::type;
+
+template <typename T>
+using remove_cvref = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
 // Is designed as a brigand fold operation.
 template <typename Type, typename State>
 struct DetermineIfHasDynamicParameter
 {
-  using T = typename std::remove_pointer<Type>::type;
+  using T = remove_pointer_and_decay<Type>;
   using DynamicTag = typename vtkm::cont::internal::DynamicTransformTraits<T>::DynamicTag;
   using isDynamic =
     typename std::is_same<DynamicTag, vtkm::cont::internal::DynamicTransformTagCastAndCall>::type;
@@ -266,8 +273,9 @@ struct DispatcherBaseTryExecuteFunctor
                             Invocation& invocation,
                             const RangeType& dimensions)
   {
+    auto outputRange = self->Scatter.GetOutputRange(dimensions);
     self->InvokeTransportParameters(
-      invocation, dimensions, self->Scatter.GetOutputRange(dimensions), device);
+      invocation, dimensions, outputRange, self->Mask.GetThreadRange(outputRange), device);
     return true;
   }
 };
@@ -323,22 +331,10 @@ struct DispatcherBaseTransportFunctor
   {
     using TransportTag =
       typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-    using T = typename remove_pointer_and_decay<ControlParameter>::type;
+    using T = remove_pointer_and_decay<ControlParameter>;
     using TransportType = typename vtkm::cont::arg::Transport<TransportTag, T, Device>;
     using type = typename TransportType::ExecObjectType;
   };
-
-  // template<typename ControlParameter, vtkm::IdComponent Index>
-  // VTKM_CONT typename ReturnType<ControlParameter, Index>::type operator()(
-  //   ControlParameter const& invokeData,
-  //   vtkm::internal::IndexTag<Index>) const
-  // {
-  //   using TransportTag =
-  //     typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-  //   using T = typename remove_pointer_and_decay<ControlParameter>::type;
-  //   vtkm::cont::arg::Transport<TransportTag, T, Device> transport;
-  //   return transport(invokeData, as_ref(this->InputDomain), this->InputRange, this->OutputRange);
-  // }
 
   template <typename ControlParameter, vtkm::IdComponent Index>
   VTKM_CONT typename ReturnType<ControlParameter, Index>::type operator()(
@@ -347,7 +343,7 @@ struct DispatcherBaseTransportFunctor
   {
     using TransportTag =
       typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-    using T = typename remove_pointer_and_decay<ControlParameter>::type;
+    using T = remove_pointer_and_decay<ControlParameter>;
     vtkm::cont::arg::Transport<TransportTag, T, Device> transport;
 
     not_nullptr(invokeData, Index);
@@ -433,7 +429,7 @@ struct for_each_dynamic_arg
   void operator()(const Trampoline& trampoline, ContParams&& sig, T&& t, Args&&... args) const
   {
     //Determine that state of T when it is either a `cons&` or a `* const&`
-    using Type = typename std::remove_pointer<typename std::decay<T>::type>::type;
+    using Type = remove_pointer_and_decay<T>;
     using tag = typename vtkm::cont::internal::DynamicTransformTraits<Type>::DynamicTag;
     //convert the first item to a known type
     convert_arg<LeftToProcess>(
@@ -456,56 +452,6 @@ inline void deduce(Trampoline&& trampoline, ContParams&& sig, Args&&... args)
 {
   for_each_dynamic_arg<sizeof...(Args)>()(std::forward<Trampoline>(trampoline), sig, args...);
 }
-
-
-#if defined(VTKM_MSVC)
-#pragma warning(push)
-#pragma warning(disable : 4068) //unknown pragma
-#endif
-#if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)
-// Disable warning "calling a __host__ function from a __host__ __device__"
-// In some cases nv_exec_check_disable doesn't work and therefore you need
-// to use the following suppressions
-#pragma push
-
-#if (__CUDACC_VER_MAJOR__ < 8)
-#pragma diag_suppress 2670
-#pragma diag_suppress 2668
-#endif
-
-#if (__CUDACC_VER_MAJOR__ >= 8)
-#pragma diag_suppress 2735
-#pragma diag_suppress 2737
-#pragma diag_suppress 2739
-#endif
-
-#if (__CUDACC_VER_MAJOR__ >= 9)
-#pragma diag_suppress 2828
-#pragma diag_suppress 2864
-#pragma diag_suppress 2867
-#pragma diag_suppress 2885
-#endif
-
-#if (__CUDACC_VER_MAJOR__ >= 10)
-#pragma diag_suppress 2905
-#endif
-
-#endif
-//This is a separate function as the pragma guards can cause nvcc
-//to have an internal compiler error (codegen #3028)
-template <typename... Args>
-inline auto make_funcIFace(Args&&... args) -> decltype(
-  vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...))
-{
-  return vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
-}
-#if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)
-#pragma pop
-#endif
-#if defined(VTKM_MSVC)
-#pragma warning(pop)
-#endif
-
 
 } // namespace detail
 
@@ -565,7 +511,7 @@ private:
   VTKM_CONT void StartInvoke(Args&&... args) const
   {
     using ParameterInterface =
-      vtkm::internal::FunctionInterface<void(typename std::decay<Args>::type...)>;
+      vtkm::internal::FunctionInterface<void(detail::remove_cvref<Args>...)>;
 
     VTKM_STATIC_ASSERT_MSG(ParameterInterface::ARITY == NUM_INVOKE_PARAMS,
                            "Dispatcher Invoke called with wrong number of arguments.");
@@ -611,7 +557,7 @@ private:
   VTKM_CONT void StartInvokeDynamic(std::false_type, Args&&... args) const
   {
     using ParameterInterface =
-      vtkm::internal::FunctionInterface<void(typename std::decay<Args>::type...)>;
+      vtkm::internal::FunctionInterface<void(detail::remove_cvref<Args>...)>;
 
     //Nothing requires a conversion from dynamic to static types, so
     //next we need to verify that each argument's type is correct. If not
@@ -632,10 +578,7 @@ private:
     static_assert(isAllValid::value == expectedLen::value,
                   "All arguments failed the TypeCheck pass");
 
-    //This is a separate function as the pragma guards can cause nvcc
-    //to have an internal compiler error (codegen #3028)
-    auto fi = detail::make_funcIFace(std::forward<Args>(args)...);
-
+    auto fi = vtkm::internal::make_FunctionInterface<void, detail::remove_cvref<Args>...>(args...);
     auto ivc = vtkm::internal::Invocation<ParameterInterface,
                                           ControlInterface,
                                           ExecutionInterface,
@@ -659,21 +602,70 @@ public:
   //@}
 
   using ScatterType = typename WorkletType::ScatterType;
+  using MaskType = typename WorkletType::MaskType;
 
   template <typename... Args>
   VTKM_CONT void Invoke(Args&&... args) const
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
                    "Invoking Worklet: '%s'",
-                   vtkm::cont::TypeName<WorkletType>().c_str());
+                   vtkm::cont::TypeToString<WorkletType>().c_str());
     this->StartInvoke(std::forward<Args>(args)...);
   }
 
 protected:
+  // If you get a compile error here about there being no appropriate constructor for ScatterType
+  // or MapType, then that probably means that the worklet you are trying to execute has defined a
+  // custom ScatterType or MaskType and that you need to create one (because there is no default
+  // way to construct the scatter or mask).
   VTKM_CONT
-  DispatcherBase(const WorkletType& worklet, const ScatterType& scatter)
+  DispatcherBase(const WorkletType& worklet = WorkletType(),
+                 const ScatterType& scatter = ScatterType(),
+                 const MaskType& mask = MaskType())
     : Worklet(worklet)
     , Scatter(scatter)
+    , Mask(mask)
+    , Device(vtkm::cont::DeviceAdapterTagAny())
+  {
+  }
+
+  // If you get a compile error here about there being no appropriate constructor for MaskType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // MaskType and that you need to create one (because there is no default way to construct the
+  // mask).
+  VTKM_CONT
+  DispatcherBase(const ScatterType& scatter, const MaskType& mask = MaskType())
+    : Worklet(WorkletType())
+    , Scatter(scatter)
+    , Mask(mask)
+    , Device(vtkm::cont::DeviceAdapterTagAny())
+  {
+  }
+
+  // If you get a compile error here about there being no appropriate constructor for ScatterType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // ScatterType and that you need to create one (because there is no default way to construct the
+  // scatter).
+  VTKM_CONT
+  DispatcherBase(const WorkletType& worklet,
+                 const MaskType& mask,
+                 const ScatterType& scatter = ScatterType())
+    : Worklet(worklet)
+    , Scatter(scatter)
+    , Mask(mask)
+    , Device(vtkm::cont::DeviceAdapterTagAny())
+  {
+  }
+
+  // If you get a compile error here about there being no appropriate constructor for ScatterType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // ScatterType and that you need to create one (because there is no default way to construct the
+  // scatter).
+  VTKM_CONT
+  DispatcherBase(const MaskType& mask, const ScatterType& scatter = ScatterType())
+    : Worklet(WorkletType())
+    , Scatter(scatter)
+    , Mask(mask)
     , Device(vtkm::cont::DeviceAdapterTagAny())
   {
   }
@@ -718,6 +710,7 @@ protected:
 
   WorkletType Worklet;
   ScatterType Scatter;
+  MaskType Mask;
 
 private:
   // Dispatchers cannot be copied
@@ -729,10 +722,12 @@ private:
   template <typename Invocation,
             typename InputRangeType,
             typename OutputRangeType,
+            typename ThreadRangeType,
             typename DeviceAdapter>
   VTKM_CONT void InvokeTransportParameters(Invocation& invocation,
                                            const InputRangeType& inputRange,
                                            OutputRangeType&& outputRange,
+                                           ThreadRangeType&& threadRange,
                                            DeviceAdapter device) const
   {
     // The first step in invoking a worklet is to transport the arguments to
@@ -758,25 +753,33 @@ private:
       TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
 
     // Get the arrays used for scattering input to output.
-    typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
+    typename ScatterType::OutputToInputMapType outputToInputMap =
       this->Scatter.GetOutputToInputMap(inputRange);
-    typename WorkletType::ScatterType::VisitArrayType visitArray =
-      this->Scatter.GetVisitArray(inputRange);
+    typename ScatterType::VisitArrayType visitArray = this->Scatter.GetVisitArray(inputRange);
+
+    // Get the arrays used for masking output elements.
+    typename MaskType::ThreadToOutputMapType threadToOutputMap =
+      this->Mask.GetThreadToOutputMap(inputRange);
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
     this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
                            .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
-                           .ChangeVisitArray(visitArray.PrepareForInput(device)),
-                         outputRange,
+                           .ChangeVisitArray(visitArray.PrepareForInput(device))
+                           .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device)),
+                         threadRange,
                          device);
   }
 
   template <typename Invocation, typename RangeType, typename DeviceAdapter>
-  VTKM_CONT void InvokeSchedule(const Invocation& invocation, RangeType range, DeviceAdapter) const
+  VTKM_CONT void InvokeSchedule(const Invocation& invocation,
+                                RangeType range,
+                                DeviceAdapter device) const
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
+
+    auto invocationForDevice = invocation.ChangeDeviceAdapterTag(device);
 
     // The TaskType class handles the magic of fetching values
     // for each instance and calling the worklet's function.
@@ -785,7 +788,7 @@ private:
     // vtkm::exec::internal::TaskSingular
     // vtkm::exec::internal::TaskTiling1D
     // vtkm::exec::internal::TaskTiling3D
-    auto task = TaskTypes::MakeTask(this->Worklet, invocation, range);
+    auto task = TaskTypes::MakeTask(this->Worklet, invocationForDevice, range);
     Algorithm::ScheduleTask(task, range);
   }
 };

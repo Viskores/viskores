@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_cuda_internal_ArrayPortalFromThrust_h
 #define vtk_m_exec_cuda_internal_ArrayPortalFromThrust_h
@@ -26,6 +16,7 @@
 #include <iterator>
 #include <type_traits>
 
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/memory.h>
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -325,12 +316,12 @@ public:
     return static_cast<vtkm::Id>((this->EndIterator - this->BeginIterator));
   }
 
-//The __CUDA_ARCH__ define makes sure that the device only signature
+//The VTKM_CUDA_DEVICE_PASS define makes sure that the device only signature
 //only shows up for the device compilation. This allows the nvcc compiler
 //to have separate host and device code paths for the same method. This
 //solves the problem of trying to call a device only method from a
 //device/host method
-#if __CUDA_ARCH__
+#ifdef VTKM_CUDA_DEVICE_PASS
   __device__ ValueType Get(vtkm::Id index) const
   {
     return vtkm::exec::cuda::internal::load_through_texture<ValueType>::get(this->BeginIterator +

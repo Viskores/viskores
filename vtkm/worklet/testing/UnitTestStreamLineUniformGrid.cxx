@@ -2,32 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/StreamLineUniformGrid.h>
-
-#include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
-#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
-#ifdef VTKM_ENABLE_CUDA
-#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
-#endif
 
 #include <fstream>
 #include <math.h>
@@ -115,27 +99,6 @@ float data[125 * 3] = {
 };
 }
 
-namespace detail
-{
-
-struct StreamLineFilterUniformGridFunctor
-{
-  vtkm::cont::DataSet OutDataSet;
-  template <typename DeviceAdapter, typename FieldType>
-  bool operator()(DeviceAdapter,
-                  const vtkm::cont::DataSet& inDataSet,
-                  vtkm::Id streamMode,
-                  vtkm::Id numSeeds,
-                  vtkm::Id maxSteps,
-                  FieldType timeStep)
-  {
-    vtkm::worklet::StreamLineFilterUniformGrid<FieldType, DeviceAdapter> streamLineFilter;
-    OutDataSet = streamLineFilter.Run(inDataSet, streamMode, numSeeds, maxSteps, timeStep);
-    return true;
-  }
-};
-}
-
 void TestStreamLineUniformGrid()
 {
   std::cout << "Testing StreamLineUniformGrid Filter" << std::endl;
@@ -175,14 +138,14 @@ void TestStreamLineUniformGrid()
   inDataSet.AddCellSet(inCellSet);
 
   // Create and run the filter
-  detail::StreamLineFilterUniformGridFunctor smfuFunctor;
-  vtkm::cont::TryExecute(
-    smfuFunctor, inDataSet, vtkm::worklet::internal::BOTH, numSeeds, maxSteps, timeStep);
+  vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32> streamLines;
+  auto outDataSet =
+    streamLines.Run(inDataSet, vtkm::worklet::streamline::BOTH, numSeeds, maxSteps, timeStep);
 
   // Check output
   vtkm::cont::CellSetExplicit<> outCellSet;
-  smfuFunctor.OutDataSet.GetCellSet(0).CopyTo(outCellSet);
-  auto coordArray = smfuFunctor.OutDataSet.GetCoordinateSystem(0).GetData();
+  outDataSet.GetCellSet(0).CopyTo(outCellSet);
+  auto coordArray = outDataSet.GetCoordinateSystem(0).GetData();
 
   vtkm::Id numberOfCells = outCellSet.GetNumberOfCells();
   vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();

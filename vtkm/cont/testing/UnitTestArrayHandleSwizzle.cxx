@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,25 +6,13 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleSwizzle.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -51,8 +38,7 @@ struct SwizzleTests
   template <vtkm::IdComponent Size>
   using MapType = vtkm::Vec<vtkm::IdComponent, Size>;
 
-  using DeviceTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
+  using Algo = vtkm::cont::Algorithm;
 
   // This is used to build a ArrayHandleSwizzle's internal array.
   ReferenceArrayType RefArray;
@@ -170,6 +156,19 @@ struct SwizzleTests
     void operator()(vtkm::Id index) const { this->Portal.Set(index, this->Portal.Get(index) * 2.); }
   };
 
+  struct WriteExec
+  {
+    template <typename DeviceTag, typename SwizzleHandleType>
+    bool operator()(DeviceTag, SwizzleHandleType& swizzle) const
+    {
+      using Portal = typename SwizzleHandleType::template ExecutionTypes<DeviceTag>::Portal;
+      WriteTestFunctor<Portal> functor(swizzle.PrepareForInPlace(DeviceTag()));
+      Algo::Schedule(functor, swizzle.GetNumberOfValues());
+      return true;
+    }
+  };
+
+
   template <vtkm::IdComponent OutSize>
   void WriteTest(const MapType<OutSize>& map) const
   {
@@ -194,11 +193,7 @@ struct SwizzleTests
       SwizzleInputArrayType input = this->BuildSwizzleInputArray();
       auto swizzle = vtkm::cont::make_ArrayHandleSwizzle(input, map);
 
-      using Portal = typename SwizzleArrayType<OutSize>::template ExecutionTypes<DeviceTag>::Portal;
-
-      WriteTestFunctor<Portal> functor(swizzle.PrepareForInPlace(DeviceTag()));
-
-      Algo::Schedule(functor, swizzle.GetNumberOfValues());
+      vtkm::cont::TryExecute(WriteExec{}, swizzle);
       this->ValidateWriteTestArray(input, map);
     }
   }
@@ -234,6 +229,7 @@ struct SwizzleTests
   {
     this->SanityCheck(map);
     this->ReadTest(map);
+
     this->WriteTest(map);
   }
 
@@ -361,7 +357,7 @@ void TestComponentMapValidator()
 
 } // end anon namespace
 
-int UnitTestArrayHandleSwizzle(int, char* [])
+int UnitTestArrayHandleSwizzle(int argc, char* argv[])
 {
   try
   {
@@ -373,5 +369,5 @@ int UnitTestArrayHandleSwizzle(int, char* [])
     return EXIT_FAILURE;
   }
 
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleSwizzle);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleSwizzle, argc, argv);
 }

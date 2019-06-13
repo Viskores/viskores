@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleStreaming.h>
@@ -52,8 +42,9 @@ public:
 // Run a simple worklet, and compute an isosurface
 int main(int argc, char* argv[])
 {
-  vtkm::cont::Initialize(argc, argv);
-
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
 
   vtkm::Int64 N = 4 * 512 * 512 * 512;
   if (argc > 1)
@@ -84,7 +75,8 @@ int main(int argc, char* argv[])
     //run once to get the CUDA code warmed up
     dispatcher.Invoke(input, output);
 
-    vtkm::cont::Timer<DeviceTag> timer;
+    vtkm::cont::Timer timer{ DeviceTag() };
+    timer.Start();
 
     for (int i = 0; i < 3; ++i)
     {
@@ -117,7 +109,8 @@ int main(int argc, char* argv[])
   //run once to get the CUDA code warmed up
   dispatcher.Invoke(input, output);
 
-  vtkm::cont::Timer<DeviceTag> timer;
+  vtkm::cont::Timer timer{ DeviceTag() };
+  timer.Start();
 
   for (int i = 0; i < 3; ++i)
   {

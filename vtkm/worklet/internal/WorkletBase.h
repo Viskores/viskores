@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_internal_WorkletBase_h
 #define vtk_m_worklet_internal_WorkletBase_h
@@ -36,6 +26,7 @@
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagAtomicArray.h>
+#include <vtkm/cont/arg/TransportTagBitField.h>
 #include <vtkm/cont/arg/TransportTagCellSetIn.h>
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayIn.h>
@@ -43,9 +34,11 @@
 #include <vtkm/cont/arg/TransportTagWholeArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagAtomicArray.h>
+#include <vtkm/cont/arg/TypeCheckTagBitField.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
+#include <vtkm/worklet/MaskNone.h>
 #include <vtkm/worklet/ScatterIdentity.h>
 
 namespace vtkm
@@ -112,6 +105,15 @@ public:
   ///
   using VisitIndex = vtkm::exec::arg::VisitIndex;
 
+  /// \c ExecutionSignature tag for getting the device adapter tag.
+  ///
+  struct Device : vtkm::exec::arg::ExecutionSignatureTagBase
+  {
+    // INDEX 0 (which is an invalid parameter index) is reserved to mean the device adapter tag.
+    static constexpr vtkm::IdComponent INDEX = 0;
+    using AspectTag = vtkm::exec::arg::AspectTagDefault;
+  };
+
   /// \c ControlSignature tag for execution object inputs.
   struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -128,6 +130,11 @@ public:
   /// what output each input contributes to. The default scatter is the
   /// identity scatter (1-to-1 input to output).
   using ScatterType = vtkm::worklet::ScatterIdentity;
+
+  /// All worklets must define their mask operation. The mask defines which
+  /// outputs are generated. The default mask is the none mask, which generates
+  /// everything in the output domain.
+  using MaskType = vtkm::worklet::MaskNone;
 
   /// \c ControlSignature tag for whole input arrays.
   ///
@@ -202,6 +209,36 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
 
+  /// \c ControlSignature tags for whole BitFields.
+  ///
+  /// When a BitField is passed in to a worklet expecting this ControlSignature
+  /// type, the appropriate BitPortal is generated and given to the worklet's
+  /// execution.
+  ///
+  /// Be aware that this data structure is especially prone to race conditions,
+  /// so be sure to use the appropriate atomic methods when necessary.
+  /// @{
+  ///
+  struct BitFieldIn : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagBitField;
+    using TransportTag = vtkm::cont::arg::TransportTagBitFieldIn;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+  };
+  struct BitFieldOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagBitField;
+    using TransportTag = vtkm::cont::arg::TransportTagBitFieldOut;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+  };
+  struct BitFieldInOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagBitField;
+    using TransportTag = vtkm::cont::arg::TransportTagBitFieldInOut;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+  };
+  /// @}
+
   /// \c ControlSignature tag for whole input topology.
   ///
   /// The \c WholeCellSetIn control signature tag specifies an \c CellSet
@@ -229,16 +266,19 @@ public:
   template <typename T,
             typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType&,
     const T& globalThreadIndexOffset = 0) const
   {
+    vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
   }
 };
 }

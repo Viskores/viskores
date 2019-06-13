@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 #define vtk_m_cont_ArrayHandleUniformPointCoordinates_h
@@ -70,22 +60,22 @@ namespace cont
 {
 
 template <>
-struct TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
+struct SerializableTypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
 {
   static VTKM_CONT const std::string Get() { return "AH_UniformPointCoordinates"; }
 };
 
 template <>
-struct TypeString<vtkm::cont::ArrayHandle<
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
   vtkm::Vec<vtkm::FloatDefault, 3>,
   vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>>
-  : TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
+  : SerializableTypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <>
@@ -99,9 +89,9 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto portal = obj.GetPortalConstControl();
-    diy::save(bb, portal.GetDimensions());
-    diy::save(bb, portal.GetOrigin());
-    diy::save(bb, portal.GetSpacing());
+    vtkmdiy::save(bb, portal.GetDimensions());
+    vtkmdiy::save(bb, portal.GetOrigin());
+    vtkmdiy::save(bb, portal.GetSpacing());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
@@ -109,9 +99,9 @@ public:
     vtkm::Id3 dims;
     typename BaseType::ValueType origin, spacing;
 
-    diy::load(bb, dims);
-    diy::load(bb, origin);
-    diy::load(bb, spacing);
+    vtkmdiy::load(bb, dims);
+    vtkmdiy::load(bb, origin);
+    vtkmdiy::load(bb, spacing);
 
     obj = vtkm::cont::ArrayHandleUniformPointCoordinates(dims, origin, spacing);
   }

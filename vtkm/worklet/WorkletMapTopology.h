@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_WorkletMapTopology_h
 #define vtk_m_worklet_WorkletMapTopology_h
@@ -163,20 +153,49 @@ public:
   /// Topology map worklets use topology map indices.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename T,
-            typename OutToInArrayType,
+  template <typename OutToInArrayType,
             typename VisitArrayType,
-            typename InputDomainType,
-            typename G>
+            typename ThreadToOutArrayType,
+            typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType> GetThreadIndices(
-    const T& threadIndex,
+    vtkm::Id threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType& connectivity,
-    const G& globalThreadIndexOffset) const
+    vtkm::Id globalThreadIndexOffset) const
   {
+    const vtkm::Id outIndex = threadToOut.Get(threadIndex);
+    return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(threadIndex,
+                                                                      outToIn.Get(outIndex),
+                                                                      visit.Get(outIndex),
+                                                                      outIndex,
+                                                                      connectivity,
+                                                                      globalThreadIndexOffset);
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename OutToInArrayType,
+            typename VisitArrayType,
+            typename ThreadToOutArrayType,
+            typename InputDomainType>
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType> GetThreadIndices(
+    const vtkm::Id3& threadIndex,
+    const OutToInArrayType& vtkmNotUsed(outToIn),
+    const VisitArrayType& vtkmNotUsed(visit),
+    const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
+    const InputDomainType& connectivity,
+    vtkm::Id globalThreadIndexOffset = 0) const
+  {
+    using ScatterCheck = std::is_same<ScatterType, vtkm::worklet::ScatterIdentity>;
+    VTKM_STATIC_ASSERT_MSG(ScatterCheck::value,
+                           "Scheduling on 3D topologies only works with default ScatterIdentity.");
+    using MaskCheck = std::is_same<MaskType, vtkm::worklet::MaskNone>;
+    VTKM_STATIC_ASSERT_MSG(MaskCheck::value,
+                           "Scheduling on 3D topologies only works with default MaskNone.");
+
     return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(
-      threadIndex, outToIn, visit, connectivity, globalThreadIndexOffset);
+      threadIndex, connectivity, globalThreadIndexOffset);
   }
 };
 

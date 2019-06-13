@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/CellSetExplicit.h>
 
@@ -175,7 +165,7 @@ void TestCellSetExplicit()
                    "CellToPoint table exists before PrepareForInput.");
 
   // Test a raw PrepareForInput call:
-  cellset.PrepareForInput(VTKM_DEFAULT_DEVICE_ADAPTER_TAG{}, CellTag{}, PointTag{});
+  cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, CellTag{}, PointTag{});
 
   VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(CellTag{}, PointTag{})),
                    "CellToPoint table missing after PrepareForInput.");
@@ -192,7 +182,7 @@ void TestCellSetExplicit()
 
 } // anonymous namespace
 
-int UnitTestCellSetExplicit(int, char* [])
+int UnitTestCellSetExplicit(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellSetExplicit);
+  return vtkm::cont::testing::Testing::Run(TestCellSetExplicit, argc, argv);
 }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_WorkletReduceByKey_h
 #define vtk_m_worklet_WorkletReduceByKey_h
@@ -178,20 +168,23 @@ public:
   /// Reduce by key worklets use the related thread indices class.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename T,
-            typename OutToInArrayType,
+  template <typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesReduceByKey GetThreadIndices(
-    const T& threadIndex,
+    vtkm::Id threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType& inputDomain,
-    const T& globalThreadIndexOffset = 0) const
+    vtkm::Id globalThreadIndexOffset = 0) const
   {
+    const vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesReduceByKey(threadIndex,
-                                                     outToIn.Get(threadIndex),
-                                                     visit.Get(threadIndex),
+                                                     outToIn.Get(outIndex),
+                                                     visit.Get(outIndex),
+                                                     outIndex,
                                                      inputDomain,
                                                      globalThreadIndexOffset);
   }

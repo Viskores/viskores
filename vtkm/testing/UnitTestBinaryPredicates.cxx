@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/BinaryPredicates.h>
@@ -27,45 +17,43 @@ namespace
 
 //general pair test
 template <typename T>
-void BinaryPredicateTest(){
-
+void BinaryPredicateTest()
+{
   //Not using TestValue method as it causes roll-over to occur with
   //uint8 and int8 leading to unexpected comparisons.
 
   //test Equal
-  { vtkm::Equal is_equal;
-VTKM_TEST_ASSERT(is_equal(vtkm::TypeTraits<T>::ZeroInitialization(),
-                          vtkm::TypeTraits<T>::ZeroInitialization()),
-                 "Equal wrong.");
+  {
+    vtkm::Equal is_equal;
+    VTKM_TEST_ASSERT(is_equal(vtkm::TypeTraits<T>::ZeroInitialization(),
+                              vtkm::TypeTraits<T>::ZeroInitialization()),
+                     "Equal wrong.");
+    VTKM_TEST_ASSERT(is_equal(T(1), T(2)) == false, "Equal wrong.");
+  }
 
-VTKM_TEST_ASSERT(is_equal(T(1), T(2)) == false, "Equal wrong.");
-}
+  //test NotEqual
+  {
+    vtkm::NotEqual not_equal;
+    VTKM_TEST_ASSERT(not_equal(vtkm::TypeTraits<T>::ZeroInitialization(), T(1)), "NotEqual wrong.");
+    VTKM_TEST_ASSERT(not_equal(T(1), T(1)) == false, "NotEqual wrong.");
+  }
 
-//test NotEqual
-{
-  vtkm::NotEqual not_equal;
-  VTKM_TEST_ASSERT(not_equal(vtkm::TypeTraits<T>::ZeroInitialization(), T(1)), "NotEqual wrong.");
+  //test SortLess
+  {
+    vtkm::SortLess sort_less;
+    VTKM_TEST_ASSERT(sort_less(T(1), T(2)) == true, "SortLess wrong.");
+    VTKM_TEST_ASSERT(sort_less(T(2), T(2)) == false, "SortLess wrong.");
+    VTKM_TEST_ASSERT(sort_less(T(2), T(1)) == false, "SortLess wrong.");
+  }
 
-  VTKM_TEST_ASSERT(not_equal(T(1), T(1)) == false, "NotEqual wrong.");
+  //test SortGreater
+  {
+    vtkm::SortGreater sort_greater;
+    VTKM_TEST_ASSERT(sort_greater(T(1), T(2)) == false, "SortGreater wrong.");
+    VTKM_TEST_ASSERT(sort_greater(T(1), T(1)) == false, "SortGreater wrong.");
+    VTKM_TEST_ASSERT(sort_greater(T(3), T(2)) == true, "SortGreater wrong.");
+  }
 }
-
-//test SortLess
-{
-  vtkm::SortLess sort_less;
-  VTKM_TEST_ASSERT(sort_less(T(1), T(2)) == true, "SortLess wrong.");
-  VTKM_TEST_ASSERT(sort_less(T(2), T(2)) == false, "SortLess wrong.");
-  VTKM_TEST_ASSERT(sort_less(T(2), T(1)) == false, "SortLess wrong.");
-}
-
-//test SortGreater
-{
-  vtkm::SortGreater sort_greater;
-  VTKM_TEST_ASSERT(sort_greater(T(1), T(2)) == false, "SortGreater wrong.");
-  VTKM_TEST_ASSERT(sort_greater(T(1), T(1)) == false, "SortGreater wrong.");
-  VTKM_TEST_ASSERT(sort_greater(T(3), T(2)) == true, "SortGreater wrong.");
-}
-}
-;
 
 struct BinaryPredicateTestFunctor
 {
@@ -101,7 +89,7 @@ void TestBinaryPredicates()
 
 } // anonymous namespace
 
-int UnitTestBinaryPredicates(int, char* [])
+int UnitTestBinaryPredicates(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestBinaryPredicates);
+  return vtkm::testing::Testing::Run(TestBinaryPredicates, argc, argv);
 }

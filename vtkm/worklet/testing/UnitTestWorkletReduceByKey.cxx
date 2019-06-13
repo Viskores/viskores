@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
@@ -26,7 +14,7 @@
 #include <vtkm/worklet/Keys.h>
 
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -46,9 +34,9 @@ namespace
     }                                                                                              \
   } while (false)
 
-static constexpr vtkm::Id ARRAY_SIZE = 1033;
-static constexpr vtkm::IdComponent GROUP_SIZE = 10;
-static constexpr vtkm::Id NUM_UNIQUE = ARRAY_SIZE / GROUP_SIZE;
+#define ARRAY_SIZE 1033
+#define GROUP_SIZE 10
+#define NUM_UNIQUE (vtkm::Id)(ARRAY_SIZE / GROUP_SIZE)
 
 struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {

@@ -2,26 +2,17 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 set(headers
   Algorithm.h
   ArrayCopy.h
   ArrayHandle.h
+  ArrayHandleBitField.h
   ArrayHandleCartesianProduct.h
   ArrayHandleCast.h
   ArrayHandleCompositeVector.h
@@ -49,14 +40,15 @@ set(headers
   ArrayRangeCompute.h
   AssignerMultiBlock.h
   AtomicArray.h
-  BoundingIntervalHierarchy.h
-  BoundingIntervalHierarchyNode.h
+  BitField.h
   BoundsCompute.h
   BoundsGlobalCompute.h
+  CastAndCall.h
   CellLocator.h
-  CellLocatorHelper.h
+  CellLocatorBoundingIntervalHierarchy.h
+  CellLocatorGeneral.h
   CellLocatorRectilinearGrid.h
-  CellLocatorTwoLevelUniformGrid.h
+  CellLocatorUniformBins.h
   CellLocatorUniformGrid.h
   CellSet.h
   CellSetExplicit.h
@@ -75,6 +67,7 @@ set(headers
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
   DeviceAdapterListTag.h
+  DeviceAdapterTag.h
   DynamicCellSet.h
   EnvironmentTracker.h
   Error.h
@@ -100,14 +93,13 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageAny.h
   StorageBasic.h
   StorageImplicit.h
   StorageListTag.h
   StorageVirtual.h
   Timer.h
   TryExecute.h
-  TypeString.h
+  SerializableTypeString.h
   VariantArrayHandle.h
   VirtualObjectHandle.h
   )
@@ -116,60 +108,68 @@ set(template_sources
   ArrayHandle.hxx
   ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
-  BoundingIntervalHierarchy.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
   ColorTable.hxx
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
-  StorageAny.hxx
   StorageBasic.hxx
   StorageVirtual.hxx
+  VirtualObjectHandle.hxx
   )
 
 set(sources
   ArrayHandle.cxx
-  AssignerMultiBlock.cxx
-  BoundsCompute.cxx
-  BoundsGlobalCompute.cxx
-  CellSet.cxx
-  CellSetStructured.cxx
-  ColorTable.cxx
   ColorTablePresets.cxx
-  DataSet.cxx
-  DataSetBuilderExplicit.cxx
-  DataSetBuilderRectilinear.cxx
-  DataSetBuilderUniform.cxx
+  DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
-  Field.cxx
-  FieldRangeCompute.cxx
-  FieldRangeGlobalCompute.cxx
   internal/ArrayHandleBasicImpl.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
-  internal/DeviceAdapterTag.cxx
-  internal/SimplePolymorphicContainer.cxx
   internal/TransferInfo.cxx
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
-  MultiBlock.cxx
-  RuntimeDeviceInformation.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
-  StorageVirtual.cxx
   TryExecute.cxx
-  VariantArrayHandle.cxx
   )
 
-# This list of sources has code that uses devices and so might need to be
-# compiled with a device-specific compiler (like CUDA).
-set(device_sources
+  # This list of sources has code that uses devices and so might need to be
+  # compiled with a device-specific compiler (like CUDA).
+  set(device_sources
+  ArrayHandleVirtual.cxx
   ArrayRangeCompute.cxx
+  AssignerMultiBlock.cxx
+  BoundsCompute.cxx
+  BoundsGlobalCompute.cxx
+  CellLocator.cxx
+  CellLocatorBoundingIntervalHierarchy.cxx
+  CellLocatorGeneral.cxx
+  CellLocatorRectilinearGrid.cxx
+  CellLocatorUniformBins.cxx
+  CellLocatorUniformGrid.cxx
+  CellSet.cxx
   CellSetExplicit.cxx
+  CellSetStructured.cxx
+  ColorTable.cxx
   CoordinateSystem.cxx
+  DataSet.cxx
+  DataSetBuilderExplicit.cxx
+  DataSetBuilderRectilinear.cxx
+  DataSetBuilderUniform.cxx
+  internal/VariantArrayHandleContainer.cxx
+  Field.cxx
+  FieldRangeCompute.cxx
+  FieldRangeGlobalCompute.cxx
+  MultiBlock.cxx
+  PointLocator.cxx
+  PointLocatorUniformGrid.cxx
+  RuntimeDeviceInformation.cxx
+  StorageVirtual.cxx
+  Timer.cxx
   )
 
 #-----------------------------------------------------------------------------
@@ -199,12 +199,13 @@ if(TARGET vtkm::openmp)
   list(APPEND backends vtkm::openmp)
 endif()
 if (VTKm_ENABLE_LOGGING)
-  list(APPEND DL_LIBS ${CMAKE_DL_LIBS}) # dladdr function
+  list(APPEND DL_LIBS ${CMAKE_DL_LIBS} Threads::Threads) # dladdr function
 endif()
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends} ${DL_LIBS})
+target_link_libraries(vtkm_cont PUBLIC vtkm_taotuple vtkm_optionparser)
 if(TARGET vtkm_diy)
   # This will become a required dependency eventually.
-  target_link_libraries(vtkm_cont PUBLIC vtkm_diy vtkm_taotuple)
+  target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
 endif()
 
 #-----------------------------------------------------------------------------

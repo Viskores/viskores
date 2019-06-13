@@ -12,7 +12,8 @@ coding and because we expect vtkm to have continual interaction with VTK.
 
   + Copyright notices should appear at the top of all source,
     configuration, and text files. The statement should have the following
-    form (with 20XX replaced with the year the file was created):
+    form. Various copyright specific details are referenced in the LICENSE.txt
+    file.
 
     ```
 //==========================================================================
@@ -23,16 +24,6 @@ coding and because we expect vtkm to have continual interaction with VTK.
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//  
-//  Copyright 20XX National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 20XX UT-Battelle, LLC.
-//  Copyright 20XX Los Alamos National Security.
-//  
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //==========================================================================
     ```
 

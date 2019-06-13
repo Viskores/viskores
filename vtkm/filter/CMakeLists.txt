@@ -2,25 +2,16 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 set(headers
   CellAverage.h
   CellMeasures.h
+  CellSetConnectivity.h
   CleanGrid.h
   ClipWithField.h
   ClipWithImplicitFunction.h
@@ -43,9 +34,11 @@ set(headers
   FilterDataSetWithField.h
   FilterField.h
   FilterTraits.h
-  GhostZone.h
+  GhostCellClassify.h
+  GhostCellRemove.h
   Gradient.h
   Histogram.h
+  ImageConnectivity.h
   Lagrangian.h
   MarchingCubes.h
   Mask.h
@@ -53,6 +46,7 @@ set(headers
   NDEntropy.h
   NDHistogram.h
   OscillatorSource.h
+  Pathline.h
   PointAverage.h
   PointElevation.h
   PointTransform.h
@@ -81,6 +75,7 @@ set(headers
 set(header_template_sources
   CellAverage.hxx
   CellMeasures.hxx
+  CellSetConnectivity.hxx
   CleanGrid.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
@@ -100,9 +95,11 @@ set(header_template_sources
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
-  GhostZone.hxx
+  GhostCellClassify.hxx
+  GhostCellRemove.hxx
   Gradient.hxx
   Histogram.hxx
+  ImageConnectivity.hxx
   Lagrangian.hxx
   MarchingCubes.hxx
   Mask.hxx
@@ -110,6 +107,7 @@ set(header_template_sources
   NDEntropy.hxx
   NDHistogram.hxx
   OscillatorSource.hxx
+  Pathline.hxx
   PointAverage.hxx
   PointElevation.hxx
   PointTransform.hxx
@@ -133,9 +131,15 @@ set(header_template_sources
   ZFPDecompressor3D.hxx
 )
 
-vtkm_declare_headers(${headers}
-  EXCLUDE_FROM_TESTING ${header_template_sources}
-  )
+vtkm_declare_headers(${headers})
+vtkm_declare_headers(${header_template_sources})
+
+# Create an interface library for vtkm_filter. At some point, this will be replaced with a real
+# library that contains pre-built filters. That would be created with the vtkm_library CMake
+# function (defined in VTKmWrappers.cmake).
+add_library(vtkm_filter INTERFACE)
+target_link_libraries(vtkm_filter INTERFACE vtkm_worklet)
+install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
 add_subdirectory(internal)
 

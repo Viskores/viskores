@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_ArrayHandleTransform_h
 #define vtk_m_cont_ArrayHandleTransform_h
 
@@ -256,7 +244,7 @@ struct TransformFunctorManager
 
   VTKM_CONT TransformFunctorManager() = default;
 
-  VTKM_CONT TransformFunctorManager(const TransformFunctorManager& other) = default;
+  VTKM_CONT TransformFunctorManager(const TransformFunctorManager&) = default;
 
   VTKM_CONT TransformFunctorManager(const ProvidedFunctorType& functor)
     : Superclass(functor)
@@ -324,8 +312,7 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    vtkm::cont::ScopedGlobalRuntimeDeviceTracker trackerScope;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::cont::ScopedRuntimeDeviceTracker trackerScope(vtkm::cont::DeviceAdapterTagSerial{});
     return PortalConstType(this->Array.GetPortalConstControl(), this->Functor.PrepareForControl());
   }
 
@@ -416,8 +403,7 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    vtkm::cont::ScopedGlobalRuntimeDeviceTracker trackerScope;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::cont::ScopedRuntimeDeviceTracker trackerScope(vtkm::cont::DeviceAdapterTagSerial{});
     return PortalType(this->Array.GetPortalControl(),
                       this->Functor.PrepareForControl(),
                       this->InverseFunctor.PrepareForControl());
@@ -427,8 +413,7 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    vtkm::cont::ScopedGlobalRuntimeDeviceTracker trackerScope;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::cont::ScopedRuntimeDeviceTracker trackerScope(vtkm::cont::DeviceAdapterTagSerial{});
     return PortalConstType(this->Array.GetPortalConstControl(),
                            this->Functor.PrepareForControl(),
                            this->InverseFunctor.PrepareForControl());
@@ -747,38 +732,39 @@ namespace cont
 {
 
 template <typename AH, typename Functor, typename InvFunctor>
-struct TypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Transform<" + TypeString<AH>::Get() + "," +
-      TypeString<Functor>::Get() + "," + TypeString<InvFunctor>::Get() + ">";
+    static std::string name = "AH_Transform<" + SerializableTypeString<AH>::Get() + "," +
+      SerializableTypeString<Functor>::Get() + "," + SerializableTypeString<InvFunctor>::Get() +
+      ">";
     return name;
   }
 };
 
 template <typename AH, typename Functor>
-struct TypeString<vtkm::cont::ArrayHandleTransform<AH, Functor>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleTransform<AH, Functor>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_Transform<" + TypeString<AH>::Get() + "," + TypeString<Functor>::Get() + ">";
+    static std::string name = "AH_Transform<" + SerializableTypeString<AH>::Get() + "," +
+      SerializableTypeString<Functor>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH, typename Functor, typename InvFunctor>
-struct TypeString<vtkm::cont::ArrayHandle<
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
   typename vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>::ValueType,
   vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>>>
-  : TypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH, typename Functor>
@@ -792,16 +778,16 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetArray());
-    diy::save(bb, storage.GetFunctor());
+    vtkmdiy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, storage.GetFunctor());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     AH array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
     Functor functor;
-    diy::load(bb, functor);
+    vtkmdiy::load(bb, functor);
     obj = vtkm::cont::make_ArrayHandleTransform(array, functor);
   }
 };
@@ -817,19 +803,19 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetArray());
-    diy::save(bb, storage.GetFunctor());
-    diy::save(bb, storage.GetInverseFunctor());
+    vtkmdiy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, storage.GetFunctor());
+    vtkmdiy::save(bb, storage.GetInverseFunctor());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     AH array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
     Functor functor;
-    diy::load(bb, functor);
+    vtkmdiy::load(bb, functor);
     InvFunctor invFunctor;
-    diy::load(bb, invFunctor);
+    vtkmdiy::load(bb, invFunctor);
     obj = vtkm::cont::make_ArrayHandleTransform(array, functor, invFunctor);
   }
 };

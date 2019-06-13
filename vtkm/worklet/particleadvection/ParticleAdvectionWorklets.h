@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h
@@ -154,8 +144,6 @@ template <typename IntegratorType>
 class StreamlineWorklet
 {
 public:
-  VTKM_EXEC_CONT StreamlineWorklet() {}
-
   template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
            const vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>, PointStorage>& pts,
@@ -171,8 +159,6 @@ public:
     maxSteps = nSteps;
     run(positions, polyLines, statusArray, stepsTaken, timeArray);
   }
-
-  ~StreamlineWorklet() {}
 
   struct IsOne
   {
@@ -230,7 +216,8 @@ private:
 
     vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
     cellTypes.Allocate(numSeeds);
-    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> polyLineShape(vtkm::CELL_SHAPE_LINE, numSeeds);
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> polyLineShape(vtkm::CELL_SHAPE_POLY_LINE,
+                                                               numSeeds);
     vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> cellCounts;

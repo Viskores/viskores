@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
@@ -186,6 +176,21 @@ template <typename ShapeStorageTag,
           typename NumIndicesStorageTag,
           typename ConnectivityStorageTag,
           typename OffsetsStorageTag>
+void CellSetExplicit<ShapeStorageTag,
+                     NumIndicesStorageTag,
+                     ConnectivityStorageTag,
+                     OffsetsStorageTag>::GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const
+{
+  auto arrayWrapper = vtkm::cont::make_ArrayHandle(ptids, this->GetNumberOfPointsInCell(id));
+  this->GetIndices(id, arrayWrapper);
+}
+
+//----------------------------------------------------------------------------
+
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetsStorageTag>
 VTKM_CONT vtkm::Id
   CellSetExplicit<ShapeStorageTag,
                   NumIndicesStorageTag,
@@ -240,7 +245,7 @@ VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
   GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id, ItemTupleLength>& ids) const
 {
-  this->Data->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  this->Data->PointToCell.BuildIndexOffsets(vtkm::cont::DeviceAdapterTagAny{});
   vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
   vtkm::Id start = this->Data->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
   for (vtkm::IdComponent i = 0; i < numIndices && i < ItemTupleLength; i++)
@@ -257,7 +262,7 @@ VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
   GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
 {
-  this->Data->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  this->Data->PointToCell.BuildIndexOffsets(vtkm::cont::DeviceAdapterTagAny{});
   vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
   ids.Allocate(numIndices);
   vtkm::Id start = this->Data->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
@@ -481,6 +486,45 @@ VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
 {
   this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
   return this->GetConnectivity(FromTopology(), ToTopology()).IndexOffsets;
+}
+
+//----------------------------------------------------------------------------
+
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetsStorageTag>
+std::shared_ptr<CellSet> CellSetExplicit<ShapeStorageTag,
+                                         NumIndicesStorageTag,
+                                         ConnectivityStorageTag,
+                                         OffsetsStorageTag>::NewInstance() const
+{
+  return std::make_shared<CellSetExplicit>();
+}
+
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetsStorageTag>
+void CellSetExplicit<ShapeStorageTag,
+                     NumIndicesStorageTag,
+                     ConnectivityStorageTag,
+                     OffsetsStorageTag>::DeepCopy(const CellSet* src)
+{
+  const auto* other = dynamic_cast<const CellSetExplicit*>(src);
+  if (!other)
+  {
+    throw vtkm::cont::ErrorBadType("CellSetExplicit::DeepCopy types don't match");
+  }
+
+  // TODO: implement actual deep-copy of the arrays
+  auto pt = vtkm::TopologyElementTagPoint{};
+  auto ct = vtkm::TopologyElementTagCell{};
+  this->Fill(other->GetNumberOfPoints(),
+             other->GetShapesArray(pt, ct),
+             other->GetNumIndicesArray(pt, ct),
+             other->GetConnectivityArray(pt, ct),
+             other->GetIndexOffsetArray(pt, ct));
 }
 
 //----------------------------------------------------------------------------

@@ -1,5 +1,5 @@
-#ifndef DIY_STORAGE_HPP
-#define DIY_STORAGE_HPP
+#ifndef VTKMDIY_STORAGE_HPP
+#define VTKMDIY_STORAGE_HPP
 
 #include <string>
 #include <map>

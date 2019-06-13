@@ -2,26 +2,17 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_StorageVirtual_h
 #define vtk_m_cont_StorageVirtual_h
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/internal/TransferInfo.h>
@@ -41,31 +32,33 @@ struct VTKM_ALWAYS_EXPORT StorageTagVirtual
 namespace internal
 {
 
-template <>
-class VTKM_CONT_EXPORT Storage<void, vtkm::cont::StorageTagVirtual>
+namespace detail
+{
+
+class VTKM_CONT_EXPORT StorageVirtual
 {
 public:
   /// \brief construct storage that VTK-m is responsible for
-  Storage() = default;
-  Storage(const Storage<void, vtkm::cont::StorageTagVirtual>& src);
-  Storage(Storage<void, vtkm::cont::StorageTagVirtual>&& src) noexcept;
-  Storage& operator=(const Storage<void, vtkm::cont::StorageTagVirtual>& src);
-  Storage& operator=(Storage<void, vtkm::cont::StorageTagVirtual>&& src) noexcept;
+  StorageVirtual() = default;
+  StorageVirtual(const StorageVirtual& src);
+  StorageVirtual(StorageVirtual&& src) noexcept;
+  StorageVirtual& operator=(const StorageVirtual& src);
+  StorageVirtual& operator=(StorageVirtual&& src) noexcept;
 
-  virtual ~Storage();
+  virtual ~StorageVirtual();
 
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).
   ///
   /// Only needs to overridden by subclasses such as Zip that have member
   /// variables that themselves have execution memory
-  virtual void ReleaseResourcesExecution();
+  virtual void ReleaseResourcesExecution() = 0;
 
   /// Releases all resources in both the control and execution environments.
   ///
   /// Only needs to overridden by subclasses such as Zip that have member
   /// variables that themselves have execution memory
-  virtual void ReleaseResources();
+  virtual void ReleaseResources() = 0;
 
   /// Returns the number of entries in the array.
   ///
@@ -79,10 +72,7 @@ public:
   /// ErrorBadValue if the allocation is not feasible (for example, the
   /// array storage is read-only).
   ///
-  void Allocate(vtkm::Id numberOfValues)
-  {
-    std::cout << "StorageVirtual::Allocate(" << numberOfValues << ") Not Implemented!" << std::endl;
-  } //return this->DoAllocate(numberOfValues); }
+  virtual void Allocate(vtkm::Id numberOfValues) = 0;
 
   /// \brief Reduces the size of the array without changing its values.
   ///
@@ -92,10 +82,7 @@ public:
   /// \c numberOfValues must be equal or less than the preexisting size
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
-  void Shrink(vtkm::Id numberOfValues)
-  {
-    std::cout << "StorageVirtual::Shrink(" << numberOfValues << ") Not Implemented!." << std::endl;
-  } //return this->DoShrink(numberOfValues); }
+  virtual void Shrink(vtkm::Id numberOfValues) = 0;
 
   /// Determines if storage types matches the type passed in.
   ///
@@ -111,7 +98,7 @@ public:
   /// returns a unique_ptr for it. This method is convenient when
   /// creating output arrays that should be the same type as some input array.
   ///
-  std::unique_ptr<Storage<void, ::vtkm::cont::StorageTagVirtual>> NewInstance() const;
+  std::unique_ptr<StorageVirtual> NewInstance() const;
 
   template <typename DerivedStorage>
   const DerivedStorage* Cast() const
@@ -120,7 +107,7 @@ public:
     if (!derived)
     {
       VTKM_LOG_CAST_FAIL(*this, DerivedStorage);
-      throwFailedDynamicCast("StorageVirtual", vtkm::cont::TypeName<DerivedStorage>());
+      throwFailedDynamicCast("StorageVirtual", vtkm::cont::TypeToString<DerivedStorage>());
     }
     VTKM_LOG_CAST_SUCC(*this, derived);
     return derived;
@@ -153,14 +140,23 @@ public:
     READ_WRITE
   };
 
+protected:
+  /// Drop the reference to the execution portal. The underlying array handle might still be
+  /// managing data on the execution side, but our references might be out of date, so drop
+  /// them and refresh them later if necessary.
+  void DropExecutionPortal();
+
+  /// Drop the reference to all portals. The underlying array handle might still be managing data,
+  /// but our references might be out of date, so drop them and refresh them later if necessary.
+  void DropAllPortals();
+
 private:
   //Memory management routines
   // virtual void DoAllocate(vtkm::Id numberOfValues) = 0;
   // virtual void DoShrink(vtkm::Id numberOfValues) = 0;
 
   //RTTI routines
-  virtual std::unique_ptr<Storage<void, ::vtkm::cont::StorageTagVirtual>> MakeNewInstance()
-    const = 0;
+  virtual std::unique_ptr<StorageVirtual> MakeNewInstance() const = 0;
 
   //Portal routines
   virtual void ControlPortalForInput(vtkm::cont::internal::TransferInfoArray& payload) const = 0;
@@ -181,10 +177,117 @@ private:
     std::make_shared<vtkm::cont::internal::TransferInfoArray>();
 };
 
-} // namespace internal
+template <typename T, typename S>
+class VTKM_ALWAYS_EXPORT StorageVirtualImpl final
+  : public vtkm::cont::internal::detail::StorageVirtual
+{
+public:
+  VTKM_CONT
+  explicit StorageVirtualImpl(const vtkm::cont::ArrayHandle<T, S>& ah);
 
-using StorageVirtual = internal::Storage<void, vtkm::cont::StorageTagVirtual>;
+  explicit StorageVirtualImpl(vtkm::cont::ArrayHandle<T, S>&& ah) noexcept;
+
+  VTKM_CONT
+  ~StorageVirtualImpl() = default;
+
+  const vtkm::cont::ArrayHandle<T, S>& GetHandle() const { return this->Handle; }
+
+  vtkm::Id GetNumberOfValues() const override { return this->Handle.GetNumberOfValues(); }
+
+  void ReleaseResourcesExecution() override;
+  void ReleaseResources() override;
+
+  void Allocate(vtkm::Id numberOfValues) override;
+  void Shrink(vtkm::Id numberOfValues) override;
+
+private:
+  std::unique_ptr<vtkm::cont::internal::detail::StorageVirtual> MakeNewInstance() const override
+  {
+    return std::unique_ptr<vtkm::cont::internal::detail::StorageVirtual>(
+      new StorageVirtualImpl<T, S>{ vtkm::cont::ArrayHandle<T, S>{} });
+  }
+
+
+  void ControlPortalForInput(vtkm::cont::internal::TransferInfoArray& payload) const override;
+  void ControlPortalForOutput(vtkm::cont::internal::TransferInfoArray& payload) override;
+
+  void TransferPortalForInput(vtkm::cont::internal::TransferInfoArray& payload,
+                              vtkm::cont::DeviceAdapterId devId) const override;
+
+  void TransferPortalForOutput(vtkm::cont::internal::TransferInfoArray& payload,
+                               OutputMode mode,
+                               vtkm::Id numberOfValues,
+                               vtkm::cont::DeviceAdapterId devId) override;
+
+  vtkm::cont::ArrayHandle<T, S> Handle;
+};
+
+} // namespace detail
+
+template <typename T>
+class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagVirtual>
+{
+public:
+  using ValueType = T;
+
+  using PortalType = vtkm::ArrayPortalRef<T>;
+  using PortalConstType = vtkm::ArrayPortalRef<T>;
+
+  Storage() = default;
+
+  // Should never really be used, but just in case.
+  Storage(const Storage<T, vtkm::cont::StorageTagVirtual>&) = default;
+
+  template <typename S>
+  Storage(const vtkm::cont::ArrayHandle<T, S>& srcArray)
+    : VirtualStorage(std::make_shared<detail::StorageVirtualImpl<T, S>>(srcArray))
+  {
+  }
+
+  ~Storage() = default;
+
+  PortalType GetPortal()
+  {
+    return make_ArrayPortalRef(
+      static_cast<const vtkm::ArrayPortalVirtual<T>*>(this->VirtualStorage->GetPortalControl()),
+      this->GetNumberOfValues());
+  }
+
+  PortalConstType GetPortalConst() const
+  {
+    return make_ArrayPortalRef(static_cast<const vtkm::ArrayPortalVirtual<T>*>(
+                                 this->VirtualStorage->GetPortalConstControl()),
+                               this->GetNumberOfValues());
+  }
+
+  vtkm::Id GetNumberOfValues() const { return this->VirtualStorage->GetNumberOfValues(); }
+
+  void Allocate(vtkm::Id numberOfValues);
+
+  void Shrink(vtkm::Id numberOfValues);
+
+  void ReleaseResources();
+
+  Storage<T, vtkm::cont::StorageTagVirtual> NewInstance() const;
+
+  const detail::StorageVirtual* GetStorageVirtual() const { return this->VirtualStorage.get(); }
+  detail::StorageVirtual* GetStorageVirtual() { return this->VirtualStorage.get(); }
+
+private:
+  std::shared_ptr<detail::StorageVirtual> VirtualStorage;
+
+  Storage(std::shared_ptr<detail::StorageVirtual> virtualStorage)
+    : VirtualStorage(virtualStorage)
+  {
+  }
+};
+
+} // namespace internal
 }
 } // namespace vtkm::cont
+
+#ifndef vtk_m_cont_StorageVirtual_hxx
+#include <vtkm/cont/StorageVirtual.hxx>
+#endif
 
 #endif

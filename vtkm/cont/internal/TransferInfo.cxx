@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/internal/TransferInfo.h>
 
@@ -53,9 +43,20 @@ void TransferInfoArray::updateDevice(vtkm::cont::DeviceAdapterId devId,
 void TransferInfoArray::releaseDevice()
 {
   this->DeviceId = vtkm::cont::DeviceAdapterTagUndefined{};
-  this->Device = nullptr;              //The device transfer state own this pointer
-  this->DeviceTransferState = nullptr; //release the device transfer state
-  this->HostCopyOfDevice.release();    //we own this pointer so release it
+  this->Device = nullptr; //The device transfer state own this pointer
+  if (this->DeviceTransferState == nullptr)
+  { //When the DeviceTransferState is a nullptr it means that
+    //that the device and host share memory. In that case we need to free
+    //the host copy
+    this->HostCopyOfDevice.reset(nullptr);
+  }
+  else
+  {
+    //The DeviceTransferState holds ownership of HostCopyOfDevice so we only
+    //need to delete DeviceTransferState, as it will do the rest
+    this->DeviceTransferState = nullptr; //release the device transfer state
+    this->HostCopyOfDevice.release();
+  }
 }
 
 void TransferInfoArray::releaseAll()

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_openmp_internal_FunctorsOpenMP_h
 #define vtk_m_cont_openmp_internal_FunctorsOpenMP_h
@@ -40,8 +30,8 @@
 // Wrap all '#pragma omp ...' calls in this macro so we can disable them in
 // non-omp builds and avoid a multitude of 'ignoring pragma..." warnings.
 #ifdef _OPENMP
-#define _VTKM_OPENMP_DIRECTIVE_IMPL(fullDir) _Pragma(#fullDir)
-#define VTKM_OPENMP_DIRECTIVE(dir) _VTKM_OPENMP_DIRECTIVE_IMPL(omp dir)
+#define VTKM_OPENMP_DIRECTIVE_IMPL(fullDir) _Pragma(#fullDir)
+#define VTKM_OPENMP_DIRECTIVE(dir) VTKM_OPENMP_DIRECTIVE_IMPL(omp dir)
 #else // _OPENMP
 #define VTKM_OPENMP_DIRECTIVE(directive)
 #endif // _OPENMP
@@ -170,7 +160,7 @@ struct CopyIfHelper
   void Initialize(vtkm::Id numValues, vtkm::Id valueSize)
   {
     this->NumValues = numValues;
-    this->NumThreads = omp_get_num_threads();
+    this->NumThreads = static_cast<vtkm::Id>(omp_get_num_threads());
     this->ValueSize = valueSize;
 
     // Evenly distribute pages across the threads. We manually chunk the
@@ -178,7 +168,7 @@ struct CopyIfHelper
     ComputeChunkSize(
       this->NumValues, this->NumThreads, 8, valueSize, this->NumChunks, this->ChunkSize);
 
-    this->EndIds.resize(this->NumChunks);
+    this->EndIds.resize(static_cast<std::size_t>(this->NumChunks));
   }
 
   template <typename InIterT, typename StencilIterT, typename OutIterT, typename PredicateT>
@@ -200,7 +190,7 @@ struct CopyIfHelper
       }
     }
 
-    this->EndIds[chunk] = outPos;
+    this->EndIds[static_cast<std::size_t>(chunk)] = outPos;
   }
 
   template <typename OutIterT>
@@ -210,7 +200,7 @@ struct CopyIfHelper
     for (vtkm::Id i = 1; i < this->NumChunks; ++i)
     {
       vtkm::Id chunkStart = std::min(i * this->ChunkSize, this->NumValues);
-      vtkm::Id chunkEnd = this->EndIds[i];
+      vtkm::Id chunkEnd = this->EndIds[static_cast<std::size_t>(i)];
       vtkm::Id numValuesToCopy = chunkEnd - chunkStart;
       if (numValuesToCopy > 0 && chunkStart != endPos)
       {
@@ -318,7 +308,7 @@ struct ReduceHelper
           accum = f(accum, data[i]);
         }
 
-        threadData[tid] = accum;
+        threadData[static_cast<std::size_t>(tid)] = accum;
       }
     } // end parallel
 
@@ -575,11 +565,11 @@ private:
       this->NumValues, numThreads, chunksPerThread, sizeof(ValueType), numChunks, this->LeafSize);
 
     // Compute an upper-bound of the number of nodes in the tree:
-    size_t numNodes = numChunks;
+    std::size_t numNodes = static_cast<std::size_t>(numChunks);
     while (numChunks > 1)
     {
       numChunks = (numChunks + 1) / 2;
-      numNodes += numChunks;
+      numNodes += static_cast<std::size_t>(numChunks);
     }
     this->Nodes.resize(numNodes);
     this->NextNode = 0;

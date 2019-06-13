@@ -2,20 +2,10 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 include(CMakeParseArguments)
@@ -48,7 +38,7 @@ function(vtkm_pyexpander_generated_file generated_file_name)
         -DPYEXPANDER_COMMAND=${PYEXPANDER_COMMAND}
         -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
         -DGENERATED_FILE=${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}
-        -P ${VTKm_CMAKE_MODULE_PATH}/VTKmCheckPyexpander.cmake
+        -P ${VTKm_CMAKE_MODULE_PATH}/testing/VTKmCheckPyexpander.cmake
       MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}.in
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
       COMMENT "Checking validity of ${generated_file_name}"
@@ -94,86 +84,6 @@ function(vtkm_compile_as_cuda output)
     endif()
   endforeach()
   set(${output} ${_cuda_srcs} PARENT_SCOPE)
-endfunction()
-
-#-----------------------------------------------------------------------------
-function(vtkm_add_header_build_test name dir_prefix use_cuda)
-  set(hfiles ${ARGN})
-
-  #only attempt to add a test build executable if we have any headers to
-  #test. this might not happen when everything depends on thrust.
-  list(LENGTH hfiles num_srcs)
-  if (${num_srcs} EQUAL 0)
-    return()
-  endif()
-
-  set(ext "cxx")
-  if(use_cuda)
-    set(ext "cu")
-  endif()
-
-  set(srcs)
-  foreach (header ${hfiles})
-    get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
-    if( NOT cant_be_tested )
-      string(REPLACE "/" "_" headername "${header}")
-      string(REPLACE "." "_" headername "${headername}")
-      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext})
-
-      #By using file generate we will not trigger CMake execution when
-      #a header gets touched
-      file(GENERATE
-        OUTPUT ${src}
-        CONTENT "
-//mark that we are including headers as test for completeness.
-//This is used by headers that include thrust to properly define a proper
-//device backend / system
-#define VTKM_TEST_HEADER_BUILD
-#include <${dir_prefix}/${header}>
-int ${headername}_${headerextension}_testbuild_symbol;"
-        )
-
-      list(APPEND srcs ${src})
-    endif()
-  endforeach()
-
-  set_source_files_properties(${hfiles}
-    PROPERTIES HEADER_FILE_ONLY TRUE
-    )
-
-  if(TARGET TestBuild_${name})
-    #If the target already exists just add more sources to it
-    target_sources(TestBuild_${name} PRIVATE ${srcs})
-  else()
-    add_library(TestBuild_${name} STATIC ${srcs} ${hfiles})
-    # Send the libraries created for test builds to their own directory so as to
-    # not pollute the directory with useful libraries.
-    set_property(TARGET TestBuild_${name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
-    set_property(TARGET TestBuild_${name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
-
-    target_link_libraries(TestBuild_${name}
-      PRIVATE
-        $<BUILD_INTERFACE:vtkm_developer_flags>
-        vtkm_compiler_flags
-        vtkm_taotuple
-    )
-
-    if(TARGET vtkm::tbb)
-      #make sure that we have the tbb include paths when tbb is enabled.
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm::tbb)
-    endif()
-
-    if(TARGET vtkm_diy)
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm_diy)
-    endif()
-
-    if(TARGET vtkm_rendering_gl_context)
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm_rendering_gl_context)
-    endif()
-
-
-  endif()
-
 endfunction()
 
 #-----------------------------------------------------------------------------
@@ -229,37 +139,8 @@ endfunction(vtkm_install_headers)
 
 #-----------------------------------------------------------------------------
 function(vtkm_declare_headers)
-  #TODO: look at the testable and cuda options
-  set(options CUDA)
-  set(oneValueArgs TESTABLE)
-  set(multiValueArgs EXCLUDE_FROM_TESTING)
-  cmake_parse_arguments(VTKm_DH "${options}"
-    "${oneValueArgs}" "${multiValueArgs}"
-    ${ARGN}
-    )
-
-  #The testable keyword allows the caller to turn off the header testing,
-  #mainly used so that backends can be installed even when they can't be
-  #built on the machine.
-  #Since this is an optional property not setting it means you do want testing
-  if(NOT DEFINED VTKm_DH_TESTABLE)
-      set(VTKm_DH_TESTABLE ON)
-  endif()
-
-  set(hfiles ${VTKm_DH_UNPARSED_ARGUMENTS} ${VTKm_DH_EXCLUDE_FROM_TESTING})
   vtkm_get_kit_name(name dir_prefix)
-
-  #only do header testing if enable testing is turned on
-  if (VTKm_ENABLE_TESTING AND VTKm_DH_TESTABLE)
-    set_source_files_properties(${VTKm_DH_EXCLUDE_FROM_TESTING}
-      PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE
-      )
-
-    vtkm_add_header_build_test(
-      "${name}" "${dir_prefix}" "${VTKm_DH_CUDA}" ${hfiles})
-  endif()
-
-  vtkm_install_headers("${dir_prefix}" ${hfiles})
+  vtkm_install_headers("${dir_prefix}" ${ARGN})
 endfunction(vtkm_declare_headers)
 
 #-----------------------------------------------------------------------------
@@ -296,7 +177,7 @@ function(vtkm_library)
     #if cuda requires static libaries force
     #them no matter what
     if(TARGET vtkm::cuda)
-      get_target_property(force_static vtkm::cuda REQUIRES_STATIC_BUILDS)
+      get_target_property(force_static vtkm::cuda INTERFACE_REQUIRES_STATIC_BUILDS)
       if(force_static)
         set(VTKm_LIB_type STATIC)
         message("Forcing ${lib_name} to be built statically as we are using CUDA 8.X, which doesn't support virtuals sufficiently in dynamic libraries.")
@@ -355,10 +236,9 @@ function(vtkm_library)
   #generate the export header and install it
   vtkm_generate_export_header(${lib_name})
 
-  #test and install the headers
+  #install the headers
   vtkm_declare_headers(${VTKm_LIB_HEADERS}
-                       EXCLUDE_FROM_TESTING ${VTKm_LIB_TEMPLATE_SOURCES}
-                       )
+                       ${VTKm_LIB_TEMPLATE_SOURCES})
 
   # When building libraries/tests that are part of the VTK-m repository inherit
   # the properties from vtkm_developer_flags. The flags are intended only for
@@ -390,6 +270,7 @@ endfunction(vtkm_library)
 #   SOURCES <source_list>
 #   BACKEND <type>
 #   LIBRARIES <dependent_library_list>
+#   DEFINES <target_compile_definitions>
 #   TEST_ARGS <argument_list>
 #   MPI
 #   ALL_BACKENDS
@@ -404,6 +285,8 @@ endfunction(vtkm_library)
 #            so you can test multiple backends easily
 #
 # [LIBRARIES] : extra libraries that this set of tests need to link too
+#
+# [DEFINES]   : extra defines that need to be set for all unit test sources
 #
 # [TEST_ARGS] : arguments that should be passed on the command line to the
 #               test executable
@@ -421,7 +304,7 @@ function(vtkm_unit_tests)
   set(options)
   set(global_options ${options} MPI ALL_BACKENDS)
   set(oneValueArgs BACKEND NAME)
-  set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
+  set(multiValueArgs SOURCES LIBRARIES DEFINES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
     "${global_options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -489,6 +372,8 @@ function(vtkm_unit_tests)
   else()
     target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
   endif()
+
+  target_compile_definitions(${test_prog} PRIVATE ${VTKm_UT_DEFINES})
 
   foreach(current_backend ${all_backends})
     set (device_command_line_argument --device=${current_backend})

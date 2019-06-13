@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/TypeListTag.h>
@@ -158,6 +148,7 @@ void TestLists()
   TypeSet common;
   common.AddExpected(vtkm::Float32());
   common.AddExpected(vtkm::Float64());
+  common.AddExpected(vtkm::UInt8());
   common.AddExpected(vtkm::Int32());
   common.AddExpected(vtkm::Int64());
   common.AddExpected(vtkm::Vec<vtkm::Float32, 3>());
@@ -278,7 +269,7 @@ void TestLists()
 
 } // anonymous namespace
 
-int UnitTestTypeListTag(int, char* [])
+int UnitTestTypeListTag(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestLists);
+  return vtkm::testing::Testing::Run(TestLists, argc, argv);
 }

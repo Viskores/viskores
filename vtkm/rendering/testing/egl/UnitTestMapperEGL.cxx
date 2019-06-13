@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
@@ -61,7 +51,7 @@ void RenderTests()
     maker.Make1DExplicitDataSet0(), "pointvar", vtkm::rendering::Color::white, "expl1D.pnm");
 
   vtkm::cont::DataSet ds = maker.Make1DUniformDataSet0();
-  vtkm::Int32 nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  vtkm::Int32 nVerts = ds.GetField(0).GetNumberOfValues();
   vtkm::Float32 vars[nVerts];
   vtkm::Float32 smallVal = 1.000;
   for (vtkm::Int32 i = 0; i <= nVerts; i++)
@@ -75,7 +65,7 @@ void RenderTests()
 
   // Test to demonstrate that straight horizontal lines can be drawn
   ds = maker.Make1DUniformDataSet0();
-  nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  nVerts = ds.GetField(0).GetNumberOfValues();
   vtkm::Float32 largeVal = 1e-16;
   for (vtkm::Int32 i = 0; i <= nVerts; i++)
   {
@@ -87,7 +77,7 @@ void RenderTests()
 
 
   ds = maker.Make1DUniformDataSet0();
-  nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  nVerts = ds.GetField(0).GetNumberOfValues();
   largeVal = 1;
   for (vtkm::Int32 i = 0; i <= nVerts; i++)
   {
@@ -107,7 +97,7 @@ void RenderTests()
 }
 } //namespace
 
-int UnitTestMapperEGL(int, char* [])
+int UnitTestMapperEGL(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

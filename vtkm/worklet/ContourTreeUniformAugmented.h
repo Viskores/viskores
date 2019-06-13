@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -186,20 +176,17 @@ private:
                       bool computeRegularStructure)
   {
     using namespace vtkm::worklet::contourtree_augmented;
-    // TODO: This should be switched to use the logging macros defined in vtkm/cont/logging.h
-    // Start the timer
-    vtkm::cont::Timer<> totalTime;
-
     // Stage 1: Load the data into the mesh. This is done in the Run() method above and accessible
     //          here via the mesh parameter. The actual data load is performed outside of the
     //          worklet in the example contour tree app (or whoever uses the worklet)
 
     // Stage 2 : Sort the data on the mesh to initialize sortIndex & indexReverse on the mesh
     // Start the timer for the mesh sort
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer timer;
+    timer.Start();
     mesh.SortData(fieldArray);
     timings.push_back(std::pair<std::string, vtkm::Float64>("Sort Data", timer.GetElapsedTime()));
-    timer.Reset();
+    timer.Start();
 
     // Stage 3: Assign every mesh vertex to a peak
     MeshExtrema extrema(mesh.nVertices);
@@ -207,7 +194,7 @@ private:
     extrema.BuildRegularChains(true);
     timings.push_back(
       std::pair<std::string, vtkm::Float64>("Join Tree Regular Chains", timer.GetElapsedTime()));
-    timer.Reset();
+    timer.Start();
 
     // Stage 4: Identify join saddles & construct Active Join Graph
     MergeTree joinTree(mesh.nVertices, true);
@@ -220,7 +207,7 @@ private:
     joinGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
     joinGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
 #endif
-    timer.Reset();
+    timer.Start();
 
     // Stage 5: Compute Join Tree Hyperarcs from Active Join Graph
     joinGraph.MakeMergeTree(joinTree, extrema);
@@ -230,14 +217,14 @@ private:
     joinTree.DebugPrint("Join tree Computed", __FILE__, __LINE__);
     joinTree.DebugPrintTree("Join tree", __FILE__, __LINE__, mesh);
 #endif
-    timer.Reset();
+    timer.Start();
 
     // Stage 6: Assign every mesh vertex to a pit
     extrema.SetStarts(mesh, false);
     extrema.BuildRegularChains(false);
     timings.push_back(
       std::pair<std::string, vtkm::Float64>("Spit Tree Regular Chains", timer.GetElapsedTime()));
-    timer.Reset();
+    timer.Start();
 
     // Stage 7:     Identify split saddles & construct Active Split Graph
     MergeTree splitTree(mesh.nVertices, false);
@@ -248,7 +235,7 @@ private:
 #ifdef DEBUG_PRINT
     splitGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
 #endif
-    timer.Reset();
+    timer.Start();
 
     // Stage 8: Compute Split Tree Hyperarcs from Active Split Graph
     splitGraph.MakeMergeTree(splitTree, extrema);
@@ -260,7 +247,7 @@ private:
     joinTree.DebugPrintTree("Join tree", __FILE__, __LINE__, mesh);
     splitTree.DebugPrintTree("Split tree", __FILE__, __LINE__, mesh);
 #endif
-    timer.Reset();
+    timer.Start();
 
     // Stage 9: Join & Split Tree are Augmented, then combined to construct Contour Tree
     contourTree.Init(mesh.nVertices);
@@ -269,7 +256,7 @@ private:
     treeMaker.ComputeHyperAndSuperStructure();
     timings.push_back(std::pair<std::string, vtkm::Float64>(
       "Contour Tree Hyper and Super Structure", timer.GetElapsedTime()));
-    timer.Reset();
+    timer.Start();
 
     // 9.2 Then we compute the regular structure
     if (computeRegularStructure)
@@ -277,7 +264,6 @@ private:
       treeMaker.ComputeRegularStructure(extrema);
       timings.push_back(std::pair<std::string, vtkm::Float64>("Contour Tree Regular Structure",
                                                               timer.GetElapsedTime()));
-      timer.Reset();
     }
 
     // Collect the output data

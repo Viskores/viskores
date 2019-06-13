@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandle_h
 #define vtk_m_cont_ArrayHandle_h
@@ -29,6 +19,7 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/ErrorInternal.h>
+#include <vtkm/cont/SerializableTypeString.h>
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -163,6 +154,9 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
+  classname(Thisclass&& src) noexcept : Superclass(std::move(src)) {}                              \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType,                        \
                                           typename__ Superclass::StorageTag>& src)                 \
     : Superclass(src)                                                                              \
@@ -170,9 +164,23 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
+  classname(vtkm::cont::ArrayHandle<typename__ Superclass::ValueType,                              \
+                                    typename__ Superclass::StorageTag>&& src) noexcept             \
+    : Superclass(std::move(src))                                                                   \
+  {                                                                                                \
+  }                                                                                                \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
   Thisclass& operator=(const Thisclass& src)                                                       \
   {                                                                                                \
     this->Superclass::operator=(src);                                                              \
+    return *this;                                                                                  \
+  }                                                                                                \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
+  Thisclass& operator=(Thisclass&& src) noexcept                                                   \
+  {                                                                                                \
+    this->Superclass::operator=(std::move(src));                                                   \
     return *this;                                                                                  \
   }                                                                                                \
                                                                                                    \
@@ -683,11 +691,11 @@ namespace cont
 {
 
 template <typename T>
-struct TypeString<ArrayHandle<T>>
+struct SerializableTypeString<ArrayHandle<T>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH<" + TypeString<T>::Get() + ">";
+    static std::string name = "AH<" + SerializableTypeString<T>::Get() + ">";
     return name;
   }
 };
@@ -696,14 +704,14 @@ namespace internal
 {
 
 template <typename T, typename S>
-void VTKM_CONT ArrayHandleDefaultSerialization(diy::BinaryBuffer& bb,
+void VTKM_CONT ArrayHandleDefaultSerialization(vtkmdiy::BinaryBuffer& bb,
                                                const vtkm::cont::ArrayHandle<T, S>& obj);
 
 } // internal
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename T>
@@ -719,8 +727,14 @@ struct Serialization<vtkm::cont::ArrayHandle<T>>
 
 } // diy
 
+#ifndef vtk_m_cont_ArrayHandle_hxx
 #include <vtkm/cont/ArrayHandle.hxx>
+#endif
+
+#ifndef vtk_m_cont_internal_ArrayHandleBasicImpl_h
 #include <vtkm/cont/internal/ArrayHandleBasicImpl.h>
+#endif
+
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 
 #ifndef vtkm_cont_ArrayHandle_cxx
@@ -730,7 +744,7 @@ namespace vtkm
 namespace cont
 {
 
-#define _VTKM_ARRAYHANDLE_EXPORT(Type)                                                             \
+#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>;              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
     ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                              \
@@ -738,19 +752,19 @@ namespace cont
     ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
-_VTKM_ARRAYHANDLE_EXPORT(char)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt8)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int16)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt16)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int32)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt32)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int64)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt64)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Float32)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Float64)
+VTKM_ARRAYHANDLE_EXPORT(char)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt8)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int16)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt16)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int32)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt32)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int64)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt64)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Float32)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Float64)
 
-#undef _VTKM_ARRAYHANDLE_EXPORT
+#undef VTKM_ARRAYHANDLE_EXPORT
 }
 } // end vtkm::cont
 

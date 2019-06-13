@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -88,7 +78,7 @@ void CheckResult(const vtkm::filter::WarpScalar& filter, const vtkm::cont::DataS
       vtkm::FloatDefault x =
         static_cast<vtkm::FloatDefault>(i) / static_cast<vtkm::FloatDefault>(dim - 1);
       vtkm::FloatDefault y = (x * x + z * z) / static_cast<vtkm::FloatDefault>(2.0);
-      vtkm::FloatDefault targetZ = filter.GetUseCoordinateSystemAsPrimaryField()
+      vtkm::FloatDefault targetZ = filter.GetUseCoordinateSystemAsField()
         ? z + static_cast<vtkm::FloatDefault>(2 * sfPortal.Get(j * dim + i))
         : y + static_cast<vtkm::FloatDefault>(2 * sfPortal.Get(j * dim + i));
       auto point = outPortal.Get(j * dim + i);
@@ -108,7 +98,7 @@ void TestWarpScalarFilter()
   {
     std::cout << "   First field as coordinates" << std::endl;
     vtkm::filter::WarpScalar filter(scale);
-    filter.SetUseCoordinateSystemAsPrimaryField(true);
+    filter.SetUseCoordinateSystemAsField(true);
     filter.SetNormalField("normal");
     filter.SetScalarFactorField("scalarfactor");
     vtkm::cont::DataSet result = filter.Execute(ds);
@@ -118,7 +108,7 @@ void TestWarpScalarFilter()
   {
     std::cout << "   First field as a vector" << std::endl;
     vtkm::filter::WarpScalar filter(scale);
-    filter.SetPrimaryField("vec1");
+    filter.SetActiveField("vec1");
     filter.SetNormalField("normal");
     filter.SetScalarFactorField("scalarfactor");
     vtkm::cont::DataSet result = filter.Execute(ds);

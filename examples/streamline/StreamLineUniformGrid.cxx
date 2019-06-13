@@ -2,30 +2,18 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Initialize.h>
+
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/StreamLineUniformGrid.h>
 
@@ -49,17 +37,15 @@
 
 #include "../isosurface/quaternion.h"
 
-using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
 // Output data set shared with opengl
-static vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>* streamLineFilter;
+static vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32>* streamLineFilter;
 static vtkm::cont::DataSet outDataSet;
 
 // Input parameters
 const vtkm::Id nSeeds = 25;
 const vtkm::Id nSteps = 2000;
 const vtkm::Float32 tStep = 0.5f;
-const vtkm::Id direction = vtkm::worklet::internal::BOTH;
+const vtkm::Id direction = vtkm::worklet::streamline::BOTH;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> vertexArray;
@@ -200,12 +186,17 @@ VTKM_EXEC_CONT vtkm::Vec<T, 3> Normalize(vtkm::Vec<T, 3> v)
 // Run streamlines on a uniform grid of vector data
 int main(int argc, char* argv[])
 {
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
+
   std::cout << "StreamLineUniformGrid Example" << std::endl;
-  std::cout << "Parameters are fileName [numSeeds maxSteps timeStep direction]" << std::endl
+  std::cout << "Parameters are [options] fileName [numSeeds maxSteps timeStep direction]"
+            << std::endl
             << std::endl;
   std::cout << "Direction is FORWARD=0 BACKWARD=1 BOTH=2" << std::endl << std::endl;
   std::cout << "File is expected to be binary with xdim ydim zdim as 32 bit integers " << std::endl;
   std::cout << "followed by vector data per dimension point as 32 bit float" << std::endl;
+  std::cout << config.Usage << std::endl;
 
   // Read in the vector data for testing
   FILE* pFile = fopen(argv[1], "rb");
@@ -262,7 +253,7 @@ int main(int argc, char* argv[])
   inDataSet.AddCellSet(inCellSet);
 
   // Create and run the filter
-  streamLineFilter = new vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>();
+  streamLineFilter = new vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32>();
   outDataSet = streamLineFilter->Run(inDataSet, direction, nSeeds, nSteps, tStep);
 
   // Render the output dataset of polylines

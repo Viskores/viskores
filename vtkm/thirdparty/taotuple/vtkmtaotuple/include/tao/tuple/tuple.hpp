@@ -36,10 +36,18 @@
 // Ignore "calling a __host__ function from a __host__ _device__ function is not allowed" warnings
 #ifndef TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
 #ifdef __CUDACC__
+#if _MSC_VER
 #if __CUDAVER__ >= 75000
-#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN #pragma nv_exec_check_disable
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN __pragma("nv_exec_check_disable")
 #else
-#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN #pragma hd_warning_disable
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN __pragma("hd_warning_disable")
+#endif
+#else
+#if __CUDAVER__ >= 75000
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN _Pragma("nv_exec_check_disable")
+#else
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN _Pragma("hd_warning_disable")
+#endif
 #endif
 #else
 #define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
@@ -188,6 +196,7 @@ namespace tao
          tuple_value( const tuple_value& ) = default;
          tuple_value( tuple_value&& ) = default;
 
+         TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
          template< typename U >
          TAO_TUPLE_CUDA_ANNOTATE_COMMON tuple_value& operator=( U&& v ) noexcept( std::is_nothrow_assignable< T&, U >::value )
          {
@@ -374,6 +383,7 @@ namespace tao
             return *this;
          }
 
+         TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
          template< typename... Us >
          TAO_TUPLE_CUDA_ANNOTATE_COMMON tuple_base& operator=( tuple< Us... >&& v ) noexcept( seq::is_all< std::is_nothrow_assignable< Ts&, Us&& >::value... >::value )
          {

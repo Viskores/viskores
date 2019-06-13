@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_worklet_RemoveUnusedPoints_h
 #define vtk_m_worklet_RemoveUnusedPoints_h
 
@@ -141,7 +129,7 @@ public:
 
   /// \brief Map cell indices
   ///
-  /// Given a cell set (typically the same one passed to the constructor) and
+  /// Given a cell set (typically the same one passed to the constructor)
   /// returns a new cell set with cell points transformed to use the indices of
   /// the new reduced point arrays.
   ///
@@ -158,21 +146,53 @@ public:
                                                ConnectivityStorage,
                                                OffsetsStorage>& inCellSet) const
   {
+    VTKM_ASSERT(this->PointScatter);
+
+    return MapCellSet(inCellSet,
+                      this->PointScatter->GetInputToOutputMap(),
+                      this->PointScatter->GetOutputToInputMap().GetNumberOfValues());
+  }
+
+  /// \brief Map cell indices
+  ///
+  /// Given a cell set (typically the same one passed to the constructor) and
+  /// an array that maps point indices from an old set of indices to a new set,
+  /// returns a new cell set with cell points transformed to use the indices of
+  /// the new reduced point arrays.
+  ///
+  /// This helper method can be used by external items that do similar operations
+  /// that remove points or otherwise rearange points in a cell set. If points
+  /// were removed by calling \c FindPoints, then you should use the other form
+  /// of \c MapCellSet.
+  ///
+  template <typename ShapeStorage,
+            typename NumIndicesStorage,
+            typename ConnectivityStorage,
+            typename OffsetsStorage,
+            typename MapStorage>
+  VTKM_CONT static vtkm::cont::CellSetExplicit<ShapeStorage,
+                                               NumIndicesStorage,
+                                               VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
+                                               OffsetsStorage>
+  MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage,
+                                               NumIndicesStorage,
+                                               ConnectivityStorage,
+                                               OffsetsStorage>& inCellSet,
+             const vtkm::cont::ArrayHandle<vtkm::Id, MapStorage>& inputToOutputPointMap,
+             vtkm::Id numberOfPoints)
+  {
     using FromTopology = vtkm::TopologyElementTagPoint;
     using ToTopology = vtkm::TopologyElementTagCell;
 
     using NewConnectivityStorage = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG;
 
-    VTKM_ASSERT(this->PointScatter);
-
     vtkm::cont::ArrayHandle<vtkm::Id, NewConnectivityStorage> newConnectivityArray;
 
     vtkm::worklet::DispatcherMapField<TransformPointIndices> dispatcher;
     dispatcher.Invoke(inCellSet.GetConnectivityArray(FromTopology(), ToTopology()),
-                      this->PointScatter->GetInputToOutputMap(),
+                      inputToOutputPointMap,
                       newConnectivityArray);
 
-    vtkm::Id numberOfPoints = this->PointScatter->GetOutputToInputMap().GetNumberOfValues();
     vtkm::cont::
       CellSetExplicit<ShapeStorage, NumIndicesStorage, NewConnectivityStorage, OffsetsStorage>
         outCellSet(inCellSet.GetName());

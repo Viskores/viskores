@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_StorageImplicit
 #define vtk_m_cont_StorageImplicit
@@ -78,10 +68,10 @@ public:
   {
   }
 
-  VTKM_CONT Storage(const ClassType& src) = default;
-  VTKM_CONT Storage(ClassType&& src) = default;
-  VTKM_CONT ClassType& operator=(const ClassType& src) = default;
-  VTKM_CONT ClassType& operator=(ClassType&& src) = default;
+  VTKM_CONT Storage(const ClassType&) = default;
+  VTKM_CONT Storage(ClassType&&) = default;
+  VTKM_CONT ClassType& operator=(const ClassType&) = default;
+  VTKM_CONT ClassType& operator=(ClassType&&) = default;
 
   // All these methods do nothing but raise errors.
   VTKM_CONT
@@ -113,11 +103,10 @@ private:
 template <typename T, class ArrayPortalType, class DeviceAdapterTag>
 class ArrayTransfer<T, StorageTagImplicit<ArrayPortalType>, DeviceAdapterTag>
 {
-private:
+public:
   using StorageTag = StorageTagImplicit<ArrayPortalType>;
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
 
-public:
   using ValueType = T;
 
   using PortalControl = typename StorageType::PortalType;

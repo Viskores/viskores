@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 
 #include <iostream>
@@ -307,12 +295,12 @@ public:
 } //namespace
 
 
-template <typename Device, typename LocatorType>
+template <typename DeviceAdapterTag, typename LocatorType>
 class Sampler : public vtkm::worklet::WorkletMapField
 {
 private:
   using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
-  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;
@@ -327,7 +315,7 @@ public:
           const vtkm::Float32& maxScalar,
           const vtkm::Float32& sampleDistance,
           const LocatorType& locator)
-    : ColorMap(colorMap.PrepareForInput(Device()))
+    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag()))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
@@ -500,12 +488,12 @@ public:
   }
 }; //Sampler
 
-template <typename Device, typename LocatorType>
+template <typename DeviceAdapterTag, typename LocatorType>
 class SamplerCellAssoc : public vtkm::worklet::WorkletMapField
 {
 private:
   using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
-  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;
@@ -520,7 +508,7 @@ public:
                    const vtkm::Float32& maxScalar,
                    const vtkm::Float32& sampleDistance,
                    const LocatorType& locator)
-    : ColorMap(colorMap.PrepareForInput(Device()))
+    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag()))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
@@ -793,7 +781,8 @@ template <typename Precision, typename Device>
 void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<Precision>& rays,
                                               Device)
 {
-  vtkm::cont::Timer<Device> renderTimer;
+  vtkm::cont::Timer renderTimer{ Device() };
+  renderTimer.Start();
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("volume_render_structured");
   logger->AddLogData("device", GetDeviceString(Device()));
@@ -808,7 +797,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     SampleDistance = vtkm::Magnitude(extent) / defaultNumberOfSamples;
   }
 
-  vtkm::cont::Timer<Device> timer;
+  vtkm::cont::Timer timer{ Device() };
+  timer.Start();
   vtkm::worklet::DispatcherMapField<CalcRayStart> calcRayStartDispatcher(
     CalcRayStart(this->SpatialExtent));
   calcRayStartDispatcher.SetDevice(Device());
@@ -817,7 +807,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("calc_ray_start", time);
-  timer.Reset();
+  timer.Start();
 
   bool isSupportedField =
     (ScalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
@@ -908,7 +898,6 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
   time = timer.GetElapsedTime();
   logger->AddLogData("sample", time);
-  timer.Reset();
 
   time = renderTimer.GetElapsedTime();
   logger->CloseLogEntry(time);

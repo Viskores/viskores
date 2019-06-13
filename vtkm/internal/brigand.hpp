@@ -15,7 +15,7 @@
 #if _MSC_VER == 1900
 #define BRIGAND_COMP_MSVC_2015
 #endif
-#elif __INTEL_COMPILER
+#elif defined(__INTEL_COMPILER) || defined(__ICC)
 #define BRIGAND_COMP_INTEL
 #elif __GNUC__
 #ifndef __clang__

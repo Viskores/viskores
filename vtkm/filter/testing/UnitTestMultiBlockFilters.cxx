@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/CellShape.h>
@@ -95,8 +85,8 @@ void Result_Verify(const vtkm::cont::MultiBlock& Result,
     Filter.SetActiveField(FieldName);
     vtkm::cont::DataSet BlockResult = Filter.Execute(Blocks.GetBlock(j));
 
-    VTKM_TEST_ASSERT(Result.GetBlock(j).GetField(outputFieldName).GetData().GetNumberOfValues() ==
-                       BlockResult.GetField(outputFieldName).GetData().GetNumberOfValues(),
+    VTKM_TEST_ASSERT(Result.GetBlock(j).GetField(outputFieldName).GetNumberOfValues() ==
+                       BlockResult.GetField(outputFieldName).GetNumberOfValues(),
                      "result vectors' size incorrect");
 
     vtkm::cont::ArrayHandle<vtkm::Id> MBlockArray;
@@ -104,9 +94,7 @@ void Result_Verify(const vtkm::cont::MultiBlock& Result,
     vtkm::cont::ArrayHandle<vtkm::Id> SDataSetArray;
     BlockResult.GetField(outputFieldName).GetData().CopyTo(SDataSetArray);
 
-    for (vtkm::Id i = 0;
-         i < Result.GetBlock(j).GetField(outputFieldName).GetData().GetNumberOfValues();
-         i++)
+    for (vtkm::Id i = 0; i < Result.GetBlock(j).GetField(outputFieldName).GetNumberOfValues(); i++)
     {
       VTKM_TEST_ASSERT(MBlockArray.GetPortalConstControl().Get(i) ==
                          SDataSetArray.GetPortalConstControl().Get(i),

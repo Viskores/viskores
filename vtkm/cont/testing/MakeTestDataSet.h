@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_cont_testing_MakeTestDataSet_h
@@ -378,6 +368,13 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(const vtkm::Id
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddPointField(dataSet, "pointvar", pointvar);
+
+  vtkm::Id numCells = (dims[0] - 1) * (dims[1] - 1) * (dims[2] - 1);
+  dsf.AddCellField(
+    dataSet,
+    "cellvar",
+    vtkm::cont::make_ArrayHandleCounting(vtkm::Float64(0), vtkm::Float64(1), numCells));
+
   return dataSet;
 }
 
@@ -1040,8 +1037,8 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetZoo()
   vtkm::cont::DataSetFieldAdd dsf;
 
   // Coordinates
-  const int nVerts = 30;
-  const int nCells = 27;
+  constexpr int nVerts = 30;
+  constexpr int nCells = 25;
   using CoordType = vtkm::Vec<vtkm::Float32, 3>;
 
   std::vector<CoordType> coords =
@@ -1272,8 +1269,8 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetZoo()
 
   vtkm::Float32 cellvar[nCells] =
 
-    { 4.0f, 5.0f, 9.5f, 5.5f, 6.0f, 9.5f, 5.0f, 5.5f, 5.7f, 6.5f, 6.4f, 6.9f, 6.6f, 6.1f,
-      7.1f, 7.2f, 7.3f, 7.4f, 9.1f, 9.2f, 9.3f, 5.4f, 9.5f, 9.6f, 6.7f, 9.8f, 6.0f };
+    { 4.0f, 5.0f, 9.5f, 5.5f, 6.0f, 9.5f, 5.0f, 5.5f, 5.7f, 6.5f, 6.4f, 6.9f, 6.6f,
+      6.1f, 7.1f, 7.2f, 7.3f, 7.4f, 9.1f, 9.2f, 9.3f, 5.4f, 9.5f, 9.6f, 6.7f };
 
   dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
   dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");

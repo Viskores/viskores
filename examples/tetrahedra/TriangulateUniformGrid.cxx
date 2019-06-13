@@ -2,30 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/filter/Triangulate.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -40,8 +26,6 @@
 #else
 #include <GL/glut.h>
 #endif
-
-using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 // Default size of the example
 static vtkm::Id2 dims(4, 4);
@@ -139,9 +123,13 @@ void displayCall()
 // Triangulate and render uniform grid example
 int main(int argc, char* argv[])
 {
-  std::cout << "TrianguleUniformGrid Example" << std::endl;
-  std::cout << "Parameters are [xdim ydim [# of cellsToDisplay]]" << std::endl << std::endl;
+  // Process vtk-m general args
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
 
+  std::cout << "TrianguleUniformGrid Example" << std::endl;
+  std::cout << "Parameters are [options] [xdim ydim [# of cellsToDisplay]]" << std::endl;
+  std::cout << config.Usage << std::endl << std::endl;
   // Set the problem size and number of cells to display from command line
   if (argc >= 3)
   {

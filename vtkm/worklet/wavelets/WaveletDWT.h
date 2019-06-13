@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_wavelets_waveletdwt_h
@@ -602,7 +592,7 @@ public:
     using TopDownDispatcherType = vtkm::worklet::DispatcherMapField<TopDownXFormType>;
     using FrontBackDispatcherType = vtkm::worklet::DispatcherMapField<FrontBackXFormType>;
 
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer timer;
     vtkm::Float64 computationTime = 0.0;
 
     // First transform in X direction
@@ -646,7 +636,7 @@ public:
                                  sigPretendDimY,
                                  sigPretendDimZ);
       LeftRightDispatcherType dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(leftExt,
                         sigIn,
                         rightExt,
@@ -702,7 +692,7 @@ public:
                                addLen,
                                sigPretendDimZ);
       TopDownDispatcherType dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(topExt,
                         afterX,
                         bottomExt,
@@ -753,7 +743,7 @@ public:
                                  sigPretendDimY,
                                  addLen);
       FrontBackDispatcherType dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(frontExt,
                         afterY,
                         backExt,
@@ -795,7 +785,7 @@ public:
     using TopDownDispatcherType = vtkm::worklet::DispatcherMapField<TopDownXFormType>;
     using FrontBackDispatcherType = vtkm::worklet::DispatcherMapField<FrontBackXFormType>;
 
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer timer;
     vtkm::Float64 computationTime = 0.0;
 
     // First, inverse transform in Z direction
@@ -854,7 +844,7 @@ public:
                                  inStartY,
                                  inStartZ); // coeffIn
       FrontBackDispatcherType dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(ext1,
                         ext2,
                         ext3,
@@ -927,7 +917,7 @@ public:
                                0,
                                0);
       TopDownDispatcherType dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(ext1,
                         ext2,
                         ext3,
@@ -995,7 +985,7 @@ public:
                                  0,
                                  0);
       LeftRightDispatcherType dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(ext1,
                         ext2,
                         ext3,
@@ -1489,7 +1479,8 @@ public:
     vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform> dispatcher(
       forwardTransform);
     // put a timer
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer timer;
+    timer.Start();
     dispatcher.Invoke(sigInExtended,
                       WaveletBase::filter.GetLowDecomposeFilter(),
                       WaveletBase::filter.GetHighDecomposeFilter(),
@@ -1643,7 +1634,8 @@ public:
       vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd> dispatcher(
         inverseXformOdd);
       // use a timer
-      vtkm::cont::Timer<> timer;
+      vtkm::cont::Timer timer;
+      timer.Start();
       dispatcher.Invoke(coeffInExtended,
                         WaveletBase::filter.GetLowReconstructFilter(),
                         WaveletBase::filter.GetHighReconstructFilter(),
@@ -1657,7 +1649,8 @@ public:
       vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformEven> dispatcher(
         inverseXformEven);
       // use a timer
-      vtkm::cont::Timer<> timer;
+      vtkm::cont::Timer timer;
+      timer.Start();
       dispatcher.Invoke(coeffInExtended,
                         WaveletBase::filter.GetLowReconstructFilter(),
                         WaveletBase::filter.GetHighReconstructFilter(),
@@ -1728,7 +1721,7 @@ public:
     using ForwardXForm = vtkm::worklet::wavelets::ForwardTransform2D;
     using DispatcherType = typename vtkm::worklet::DispatcherMapField<ForwardXForm>;
 
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer timer;
     vtkm::Float64 computationTime = 0.0;
 
     ArrayType afterX;
@@ -1767,7 +1760,7 @@ public:
                            addLen,
                            sigPretendDimY);
       DispatcherType dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(leftExt,
                         sigIn,
                         rightExt,
@@ -1811,7 +1804,7 @@ public:
                            sigPretendDimX,
                            addLen);
       DispatcherType dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(topExt,
                         afterX,
                         bottomExt,
@@ -1842,7 +1835,7 @@ public:
     using BasicArrayType = vtkm::cont::ArrayHandle<typename ArrayInType::ValueType>;
     using IDWT2DWorklet = vtkm::worklet::wavelets::InverseTransform2D;
     using Dispatcher = vtkm::worklet::DispatcherMapField<IDWT2DWorklet>;
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer timer;
     vtkm::Float64 computationTime = 0.0;
 
     // First inverse transform on columns
@@ -1891,7 +1884,7 @@ public:
                             inStartY, // coeffIn
                             false);   // top-down
       Dispatcher dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(ext1,
                         ext2,
                         ext3,
@@ -1947,7 +1940,7 @@ public:
                             0,
                             true); // left-right
       Dispatcher dispatcher(worklet);
-      timer.Reset();
+      timer.Start();
       dispatcher.Invoke(ext1,
                         ext2,
                         ext3,

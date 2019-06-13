@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/Math.h>
@@ -320,7 +310,7 @@ void TestMarchingCubesUniformGrid()
 
     //verify that the number of points is correct (72)
     //verify that the number of cells is correct (160)
-    VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 72,
+    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 72,
                      "Should have less coordinates than the unmerged version");
     VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
   }
@@ -332,7 +322,7 @@ void TestMarchingCubesUniformGrid()
   {
     vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
 
-    VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 480,
+    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 480,
                      "Should have less coordinates than the unmerged version");
 
     //verify that the number of cells is correct (160)
@@ -376,8 +366,7 @@ void TestMarchingCubesCustomPolicy()
                    "Wrong number of fields in the output dataset");
 
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == (414 * 4),
-                   "Should have some coordinates");
+  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == (414 * 4), "Should have some coordinates");
 }
 
 
@@ -503,6 +492,7 @@ void TestMarchingCubesNormals()
   std::cout << "\tUnstructured dataset\n";
   vtkm::filter::CleanGrid makeUnstructured;
   makeUnstructured.SetCompactPointFields(false);
+  makeUnstructured.SetMergePoints(false);
   makeUnstructured.SetFieldsToPass("pointvar");
   auto result = makeUnstructured.Execute(dataset);
   TestNormals(result, false);

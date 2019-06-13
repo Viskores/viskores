@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
@@ -82,8 +72,12 @@ struct FetchArrayTopologyMapInTests
 
     FetchType fetch;
 
+    const vtkm::Id threadIndex = 0;
+    const vtkm::Id outputIndex = invocation.ThreadToOutputMap.Get(threadIndex);
+    const vtkm::Id inputIndex = invocation.OutputToInputMap.Get(outputIndex);
+    const vtkm::IdComponent visitIndex = invocation.VisitArray.Get(outputIndex);
     ThreadIndicesType indices(
-      0, invocation.OutputToInputMap, invocation.VisitArray, invocation.GetInputDomain());
+      threadIndex, inputIndex, visitIndex, outputIndex, invocation.GetInputDomain());
 
     typename FetchType::ValueType value =
       fetch.Load(indices, invocation.Parameters.template GetParameter<ParamIndex>());
@@ -125,7 +119,8 @@ struct FetchArrayTopologyMapInTests
       BaseFunctionInterface(),
       BaseFunctionInterface(),
       TestIndexPortal(),
-      TestZeroPortal()));
+      TestZeroPortal(),
+      TestIndexPortal()));
   }
 };
 
@@ -157,20 +152,32 @@ void TryStructuredPointCoordinatesInvocation(const Invocation& invocation)
   vtkm::Vec<vtkm::FloatDefault, 3> origin = TestValue(0, vtkm::Vec<vtkm::FloatDefault, 3>());
   vtkm::Vec<vtkm::FloatDefault, 3> spacing = TestValue(1, vtkm::Vec<vtkm::FloatDefault, 3>());
 
-  vtkm::VecAxisAlignedPointCoordinates<NumDimensions> value = fetch.Load(
-    ThreadIndicesType(
-      0, invocation.OutputToInputMap, invocation.VisitArray, invocation.GetInputDomain()),
-    invocation.Parameters.template GetParameter<ParamIndex>());
-  VTKM_TEST_ASSERT(test_equal(value.GetOrigin(), origin), "Bad origin.");
-  VTKM_TEST_ASSERT(test_equal(value.GetSpacing(), spacing), "Bad spacing.");
+  {
+    const vtkm::Id threadIndex = 0;
+    const vtkm::Id outputIndex = invocation.ThreadToOutputMap.Get(threadIndex);
+    const vtkm::Id inputIndex = invocation.OutputToInputMap.Get(outputIndex);
+    const vtkm::IdComponent visitIndex = invocation.VisitArray.Get(outputIndex);
+    vtkm::VecAxisAlignedPointCoordinates<NumDimensions> value =
+      fetch.Load(ThreadIndicesType(
+                   threadIndex, inputIndex, visitIndex, outputIndex, invocation.GetInputDomain()),
+                 invocation.Parameters.template GetParameter<ParamIndex>());
+    VTKM_TEST_ASSERT(test_equal(value.GetOrigin(), origin), "Bad origin.");
+    VTKM_TEST_ASSERT(test_equal(value.GetSpacing(), spacing), "Bad spacing.");
+  }
 
   origin[0] += spacing[0];
-  value = fetch.Load(
-    ThreadIndicesType(
-      1, invocation.OutputToInputMap, invocation.VisitArray, invocation.GetInputDomain()),
-    invocation.Parameters.template GetParameter<ParamIndex>());
-  VTKM_TEST_ASSERT(test_equal(value.GetOrigin(), origin), "Bad origin.");
-  VTKM_TEST_ASSERT(test_equal(value.GetSpacing(), spacing), "Bad spacing.");
+  {
+    const vtkm::Id threadIndex = 1;
+    const vtkm::Id outputIndex = invocation.ThreadToOutputMap.Get(threadIndex);
+    const vtkm::Id inputIndex = invocation.OutputToInputMap.Get(outputIndex);
+    const vtkm::IdComponent visitIndex = invocation.VisitArray.Get(outputIndex);
+    vtkm::VecAxisAlignedPointCoordinates<NumDimensions> value =
+      fetch.Load(ThreadIndicesType(
+                   threadIndex, inputIndex, visitIndex, outputIndex, invocation.GetInputDomain()),
+                 invocation.Parameters.template GetParameter<ParamIndex>());
+    VTKM_TEST_ASSERT(test_equal(value.GetOrigin(), origin), "Bad origin.");
+    VTKM_TEST_ASSERT(test_equal(value.GetSpacing(), spacing), "Bad spacing.");
+  }
 }
 
 template <vtkm::IdComponent NumDimensions>
@@ -192,14 +199,16 @@ void TryStructuredPointCoordinates(
     BaseFunctionInterface(),
     BaseFunctionInterface(),
     TestIndexPortal(),
-    TestZeroPortal()));
+    TestZeroPortal(),
+    TestIndexPortal()));
   // Try again with topology in argument 3 and point coordinates in argument 1
   TryStructuredPointCoordinatesInvocation<NumDimensions, 1>(vtkm::internal::make_Invocation<3>(
     BaseFunctionInterface().Replace<3>(connectivity).template Replace<1>(coordinates),
     BaseFunctionInterface(),
     BaseFunctionInterface(),
     TestIndexPortal(),
-    TestZeroPortal()));
+    TestZeroPortal(),
+    TestIndexPortal()));
 }
 
 void TryStructuredPointCoordinates()
@@ -242,7 +251,7 @@ void TestArrayTopologyMapIn()
 
 } // anonymous namespace
 
-int UnitTestFetchArrayTopologyMapIn(int, char* [])
+int UnitTestFetchArrayTopologyMapIn(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestArrayTopologyMapIn);
+  return vtkm::testing::Testing::Run(TestArrayTopologyMapIn, argc, argv);
 }

@@ -1,21 +1,11 @@
-#============================================================================
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 set(unit_tests
@@ -40,6 +30,7 @@ set(unit_tests
   UnitTestExtractStructured.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
+  UnitTestGraphConnectivity.cxx
   UnitTestInnerJoin.cxx
   UnitTestImageConnectivity.cxx
   UnitTestKdTreeBuildNNS.cxx
@@ -47,7 +38,9 @@ set(unit_tests
   UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
+  UnitTestMaskIndices.cxx
   UnitTestMaskPoints.cxx
+  UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
   UnitTestNDimsEntropy.cxx
   UnitTestNDimsHistogram.cxx
@@ -59,6 +52,7 @@ set(unit_tests
   UnitTestProbe.cxx
   UnitTestRemoveUnusedPoints.cxx
   UnitTestScalarsToColors.cxx
+  UnitTestScatterAndMask.cxx
   UnitTestScatterCounting.cxx
   UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
@@ -66,6 +60,7 @@ set(unit_tests
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestSurfaceNormals.cxx
+  UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
   UnitTestThresholdPoints.cxx
@@ -74,6 +69,7 @@ set(unit_tests
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldWholeArray.cxx
+  UnitTestWorkletMapFieldWholeArrayAtomic.cxx
   UnitTestWorkletMapPointNeighborhood.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyUniform.cxx
@@ -87,9 +83,14 @@ set(unit_tests
  )
 
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS)
+vtkm_unit_tests(
+  SOURCES ${unit_tests}
+  LIBRARIES vtkm_worklet
+  ALL_BACKENDS
+  )
 if (TARGET vtkm::cuda)
-  if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
+  if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
+     CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
     set(problematic_cuda_srcs
       "${CMAKE_CURRENT_BINARY_DIR}/UnitTestParticleAdvection.cu"
       "${CMAKE_CURRENT_BINARY_DIR}/UnitTestBoundingIntervalHierarchy.cu"

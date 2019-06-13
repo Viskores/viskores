@@ -2,28 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_DeviceAdapterAlgorithm_h
 #define vtk_m_cont_DeviceAdapterAlgorithm_h
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+
 
 #ifdef _WIN32
 #include <sys/timeb.h>
@@ -50,6 +42,15 @@ template <class DeviceAdapterTag>
 struct DeviceAdapterAlgorithm
 #ifdef VTKM_DOXYGEN_ONLY
 {
+  /// \brief Create a unique, unsorted list of indices denoting which bits are
+  /// set in a bitfield.
+  ///
+  /// Returns the total number of set bits.
+  template <typename IndicesStorage>
+  VTKM_CONT static vtkm::Id BitFieldToUnorderedSet(
+    const vtkm::cont::BitField& bits,
+    vtkm::cont::ArrayHandle<Id, IndicesStorage>& indices);
+
   /// \brief Copy the contents of one ArrayHandle to another
   ///
   /// Copies the contents of \c input to \c output. The array \c output will be
@@ -546,6 +547,11 @@ template <class DeviceAdapterTag>
 class DeviceAdapterTimerImplementation
 {
 public:
+  struct TimeStamp
+  {
+    vtkm::Int64 Seconds;
+    vtkm::Int64 Microseconds;
+  };
   /// When a timer is constructed, all threads are synchronized and the
   /// current time is marked so that GetElapsedTime returns the number of
   /// seconds elapsed since the construction.
@@ -555,7 +561,30 @@ public:
   /// number of seconds elapsed since the call to this. This method
   /// synchronizes all asynchronous operations.
   ///
-  VTKM_CONT void Reset() { this->StartTime = this->GetCurrentTime(); }
+  VTKM_CONT void Reset()
+  {
+    this->StartReady = false;
+    this->StopReady = false;
+  }
+
+  VTKM_CONT void Start()
+  {
+    this->Reset();
+    this->StartTime = this->GetCurrentTime();
+    this->StartReady = true;
+  }
+
+  VTKM_CONT void Stop()
+  {
+    this->StopTime = this->GetCurrentTime();
+    this->StopReady = true;
+  }
+
+  VTKM_CONT bool Started() const { return this->StartReady; }
+
+  VTKM_CONT bool Stopped() const { return this->StopReady; }
+
+  VTKM_CONT bool Ready() const { return true; }
 
   /// Returns the elapsed time in seconds between the construction of this
   /// class or the last call to Reset and the time this function is called. The
@@ -563,25 +592,28 @@ public:
   /// number of times to get the progressive time. This method synchronizes all
   /// asynchronous operations.
   ///
-  VTKM_CONT vtkm::Float64 GetElapsedTime()
+  VTKM_CONT vtkm::Float64 GetElapsedTime() const
   {
-    TimeStamp currentTime = this->GetCurrentTime();
+    assert(this->StartReady);
+    if (!this->StartReady)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Start() function should be called first then trying to call GetElapsedTime().");
+      return 0;
+    }
+
+    TimeStamp startTime = this->StartTime;
+    TimeStamp stopTime = this->StopReady ? this->StopTime : this->GetCurrentTime();
 
     vtkm::Float64 elapsedTime;
-    elapsedTime = vtkm::Float64(currentTime.Seconds - this->StartTime.Seconds);
-    elapsedTime += (vtkm::Float64(currentTime.Microseconds - this->StartTime.Microseconds) /
-                    vtkm::Float64(1000000));
+    elapsedTime = vtkm::Float64(stopTime.Seconds - startTime.Seconds);
+    elapsedTime +=
+      (vtkm::Float64(stopTime.Microseconds - startTime.Microseconds) / vtkm::Float64(1000000));
 
     return elapsedTime;
   }
-  struct TimeStamp
-  {
-    vtkm::Int64 Seconds;
-    vtkm::Int64 Microseconds;
-  };
-  TimeStamp StartTime;
 
-  VTKM_CONT TimeStamp GetCurrentTime()
+  VTKM_CONT TimeStamp GetCurrentTime() const
   {
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Synchronize();
 
@@ -599,6 +631,11 @@ public:
 #endif
     return retval;
   }
+
+  bool StartReady;
+  bool StopReady;
+  TimeStamp StartTime;
+  TimeStamp StopTime;
 };
 
 /// \brief Class providing a device-specific runtime support detector.
@@ -629,8 +666,17 @@ public:
 /// The class provide the actual implementation used by
 /// vtkm::cont::DeviceAdapterAtomicArrayImplementation.
 ///
+/// TODO combine this with AtomicInterfaceExecution.
 template <typename T, typename DeviceTag>
 class DeviceAdapterAtomicArrayImplementation;
+
+/// \brief Class providing a device-specific support for atomic operations.
+///
+/// AtomicInterfaceControl provides atomic operations for the control
+/// environment, and may be subclassed to implement the device interface when
+/// appropriate for a CPU-based device.
+template <typename DeviceTag>
+class AtomicInterfaceExecution;
 
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.

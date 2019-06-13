@@ -2,26 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/CellSetPermutation.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -84,9 +74,7 @@ std::vector<vtkm::Id> ComputeCellToPointExpected(const CellSetType& cellset,
   std::cout << "\n";
 
   vtkm::cont::ArrayHandle<vtkm::Id> indexOffsets;
-  vtkm::Id connectivityLength =
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::ScanExclusive(
-      numIndices, indexOffsets);
+  vtkm::Id connectivityLength = vtkm::cont::Algorithm::ScanExclusive(numIndices, indexOffsets);
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   connectivity.Allocate(connectivityLength);
@@ -193,7 +181,7 @@ void TestCellSetPermutation()
 
 } // anonymous namespace
 
-int UnitTestCellSetPermutation(int, char* [])
+int UnitTestCellSetPermutation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellSetPermutation);
+  return vtkm::cont::testing::Testing::Run(TestCellSetPermutation, argc, argv);
 }

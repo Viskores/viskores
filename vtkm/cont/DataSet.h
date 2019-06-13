@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_DataSet_h
 #define vtk_m_cont_DataSet_h
@@ -208,7 +198,7 @@ struct SerializableDataSet
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename FieldTypeList, typename CellSetTypesList>
@@ -223,24 +213,24 @@ public:
     const auto& dataset = serializable.DataSet;
 
     vtkm::IdComponent numberOfCoordinateSystems = dataset.GetNumberOfCoordinateSystems();
-    diy::save(bb, numberOfCoordinateSystems);
+    vtkmdiy::save(bb, numberOfCoordinateSystems);
     for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
     {
-      diy::save(bb, dataset.GetCoordinateSystem(i));
+      vtkmdiy::save(bb, dataset.GetCoordinateSystem(i));
     }
 
     vtkm::IdComponent numberOfCellSets = dataset.GetNumberOfCellSets();
-    diy::save(bb, numberOfCellSets);
+    vtkmdiy::save(bb, numberOfCellSets);
     for (vtkm::IdComponent i = 0; i < numberOfCellSets; ++i)
     {
-      diy::save(bb, dataset.GetCellSet(i).ResetCellSetList(CellSetTypesList{}));
+      vtkmdiy::save(bb, dataset.GetCellSet(i).ResetCellSetList(CellSetTypesList{}));
     }
 
     vtkm::IdComponent numberOfFields = dataset.GetNumberOfFields();
-    diy::save(bb, numberOfFields);
+    vtkmdiy::save(bb, numberOfFields);
     for (vtkm::IdComponent i = 0; i < numberOfFields; ++i)
     {
-      diy::save(bb, vtkm::cont::SerializableField<FieldTypeList>(dataset.GetField(i)));
+      vtkmdiy::save(bb, vtkm::cont::SerializableField<FieldTypeList>(dataset.GetField(i)));
     }
   }
 
@@ -250,29 +240,29 @@ public:
     dataset = {}; // clear
 
     vtkm::IdComponent numberOfCoordinateSystems = 0;
-    diy::load(bb, numberOfCoordinateSystems);
+    vtkmdiy::load(bb, numberOfCoordinateSystems);
     for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
     {
       vtkm::cont::CoordinateSystem coords;
-      diy::load(bb, coords);
+      vtkmdiy::load(bb, coords);
       dataset.AddCoordinateSystem(coords);
     }
 
     vtkm::IdComponent numberOfCellSets = 0;
-    diy::load(bb, numberOfCellSets);
+    vtkmdiy::load(bb, numberOfCellSets);
     for (vtkm::IdComponent i = 0; i < numberOfCellSets; ++i)
     {
       vtkm::cont::DynamicCellSetBase<CellSetTypesList> cells;
-      diy::load(bb, cells);
+      vtkmdiy::load(bb, cells);
       dataset.AddCellSet(vtkm::cont::DynamicCellSet(cells));
     }
 
     vtkm::IdComponent numberOfFields = 0;
-    diy::load(bb, numberOfFields);
+    vtkmdiy::load(bb, numberOfFields);
     for (vtkm::IdComponent i = 0; i < numberOfFields; ++i)
     {
       vtkm::cont::SerializableField<FieldTypeList> field;
-      diy::load(bb, field);
+      vtkmdiy::load(bb, field);
       dataset.AddField(field.Field);
     }
   }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 // This test makes sure that the algorithms specified in
@@ -25,11 +15,10 @@
 // everything else. Because this test is based of the serial device adapter,
 // make sure that UnitTestDeviceAdapterSerial is working before trying to debug
 // this one.
-
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
+#include <vtkm/cont/internal/AtomicInterfaceControl.h>
+#include <vtkm/cont/internal/AtomicInterfaceExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -101,6 +90,11 @@ public:
   }
 };
 
+template <>
+class AtomicInterfaceExecution<DeviceAdapterTagTestAlgorithmGeneral> : public AtomicInterfaceControl
+{
+};
+
 template <typename TargetClass>
 struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> final
   : public VirtualObjectTransferShareWithControl<TargetClass>
@@ -135,13 +129,13 @@ struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
 }
 } // namespace vtkm::cont::internal
 
-int UnitTestDeviceAdapterAlgorithmGeneral(int, char* [])
+int UnitTestDeviceAdapterAlgorithmGeneral(int argc, char* argv[])
 {
   //need to enable DeviceAdapterTagTestAlgorithmGeneral as it
   //is not part of the default set of devices
-  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ResetDevice(vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral{});
 
   return vtkm::cont::testing::TestingDeviceAdapter<
-    vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>::Run();
+    vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>::Run(argc, argv);
 }

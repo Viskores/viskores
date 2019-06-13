@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_io_writer_DataSetWriter_h
 #define vtk_m_io_writer_DataSetWriter_h
@@ -205,7 +195,7 @@ private:
 
   static void WriteVertexCells(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   {
-    vtkm::Id nCells = dataSet.GetCoordinateSystem(0).GetData().GetNumberOfValues();
+    vtkm::Id nCells = dataSet.GetCoordinateSystem(0).GetNumberOfPoints();
 
     out << "CELLS " << nCells << " " << nCells * 2 << std::endl;
     for (int i = 0; i < nCells; i++)
@@ -231,7 +221,7 @@ private:
         continue;
       }
 
-      vtkm::Id npoints = field.GetData().GetNumberOfValues();
+      vtkm::Id npoints = field.GetNumberOfValues();
       int ncomps = field.GetData().GetNumberOfComponents();
       if (ncomps > 4)
       {
@@ -272,7 +262,7 @@ private:
         continue;
       }
 
-      vtkm::Id ncells = field.GetData().GetNumberOfValues();
+      vtkm::Id ncells = field.GetNumberOfValues();
       int ncomps = field.GetData().GetNumberOfComponents();
       if (ncomps > 4)
         continue;

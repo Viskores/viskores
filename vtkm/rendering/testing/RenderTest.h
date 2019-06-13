@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_rendering_testing_RenderTest_h
 #define vtk_m_rendering_testing_RenderTest_h
@@ -33,6 +23,8 @@
 #include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
+
+#include <memory>
 
 namespace vtkm
 {
@@ -117,13 +109,13 @@ void Render(const vtkm::cont::DataSet& ds,
   ViewType view(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
-  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+  std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen("Test Plot",
                                               vtkm::rendering::Color(1, 1, 1, 1),
                                               .075f,
                                               vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
-                                              0.f);
-  view.AddAnnotation(titleAnnotation);
+                                              0.f));
+  view.AddAnnotation(std::move(titleAnnotation));
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
@@ -147,13 +139,13 @@ void Render(MapperType& mapper,
   ViewType view(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
-  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+  std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen("Test Plot",
                                               vtkm::rendering::Color(1, 1, 1, 1),
                                               .075f,
                                               vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
-                                              0.f);
-  view.AddAnnotation(titleAnnotation);
+                                              0.f));
+  view.AddAnnotation(std::move(titleAnnotation));
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
@@ -182,13 +174,13 @@ void Render(const vtkm::cont::DataSet& ds,
   ViewType view(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
-  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+  std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen("Test Plot",
                                               vtkm::rendering::Color(1, 1, 1, 1),
                                               .075f,
                                               vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
-                                              0.f);
-  view.AddAnnotation(titleAnnotation);
+                                              0.f));
+  view.AddAnnotation(std::move(titleAnnotation));
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
@@ -214,10 +206,10 @@ void Render(const vtkm::cont::DataSet& ds,
 
   ViewType view(scene, mapper, canvas, camera, background, foreground);
   // Print the title
-  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+  std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen(
-      "1D Test Plot", foreground, .1f, vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f), 0.f);
-  view.AddAnnotation(titleAnnotation);
+      "1D Test Plot", foreground, .1f, vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f), 0.f));
+  view.AddAnnotation(std::move(titleAnnotation));
   view.SetLogY(logY);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }

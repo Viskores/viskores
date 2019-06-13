@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_Invoker_h
 #define vtk_m_worklet_Invoker_h
@@ -62,18 +52,44 @@ struct Invoker
   {
   }
 
-  /// Launch the worklet that is provided as the first parameter. The additional
-  /// parameters are the ControlSignature arguments for the worklet.
+  /// Launch the worklet that is provided as the first parameter.
+  /// Optional second parameter is the scatter type associated with the worklet.
+  /// Any additional parameters are the ControlSignature arguments for the worklet.
   ///
-  template <typename Worklet, typename... Args>
-  inline void operator()(Worklet&& worklet, Args&&... args) const
+  template <typename Worklet,
+            typename T,
+            typename... Args,
+            typename std::enable_if<
+              std::is_base_of<internal::ScatterBase, internal::detail::remove_cvref<T>>::value,
+              int>::type* = nullptr>
+  inline void operator()(Worklet&& worklet, T&& scatter, Args&&... args) const
   {
-    using WorkletType = typename std::decay<Worklet>::type;
+    using WorkletType = internal::detail::remove_cvref<Worklet>;
+    using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
+
+    DispatcherType dispatcher(worklet, scatter);
+    dispatcher.SetDevice(this->DeviceId);
+    dispatcher.Invoke(std::forward<Args>(args)...);
+  }
+
+  /// Launch the worklet that is provided as the first parameter.
+  /// Optional second parameter is the scatter type associated with the worklet.
+  /// Any additional parameters are the ControlSignature arguments for the worklet.
+  ///
+  template <typename Worklet,
+            typename T,
+            typename... Args,
+            typename std::enable_if<
+              !std::is_base_of<internal::ScatterBase, internal::detail::remove_cvref<T>>::value,
+              int>::type* = nullptr>
+  inline void operator()(Worklet&& worklet, T&& t, Args&&... args) const
+  {
+    using WorkletType = internal::detail::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet);
     dispatcher.SetDevice(this->DeviceId);
-    dispatcher.Invoke(std::forward<Args>(args)...);
+    dispatcher.Invoke(std::forward<T>(t), std::forward<Args>(args)...);
   }
 
   /// Get the device adapter that this Invoker is bound too

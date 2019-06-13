@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
@@ -27,6 +17,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/DeviceAdapterAtomicArrayImplementation.h>
 #include <vtkm/cont/internal/FunctorsGeneral.h>
@@ -123,6 +114,35 @@ private:
   }
 
 public:
+  //--------------------------------------------------------------------------
+  // BitFieldToUnorderedSet
+  template <typename IndicesStorage>
+  VTKM_CONT static vtkm::Id BitFieldToUnorderedSet(
+    const vtkm::cont::BitField& bits,
+    vtkm::cont::ArrayHandle<Id, IndicesStorage>& indices)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    vtkm::Id numBits = bits.GetNumberOfBits();
+
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTag{});
+    auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    std::atomic<vtkm::UInt64> popCount;
+    popCount.store(0, std::memory_order_seq_cst);
+
+    using Functor = BitFieldToUnorderedSetFunctor<decltype(bitsPortal), decltype(indicesPortal)>;
+    Functor functor{ bitsPortal, indicesPortal, popCount };
+
+    DerivedAlgorithm::Schedule(functor, functor.GetNumberOfInstances());
+    DerivedAlgorithm::Synchronize();
+
+    numBits = static_cast<vtkm::Id>(popCount.load(std::memory_order_seq_cst));
+
+    indices.Shrink(numBits);
+    return numBits;
+  }
+
   //--------------------------------------------------------------------------
   // Copy
   template <typename T, typename U, class CIn, class COut>

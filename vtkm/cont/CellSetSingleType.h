@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_CellSetSingleType_h
 #define vtk_m_cont_CellSetSingleType_h
@@ -206,15 +196,34 @@ public:
   vtkm::Id GetCellShapeAsId() const { return this->CellShapeAsId; }
 
   VTKM_CONT
-  vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex)) const
+  vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex)) const override
   {
     return static_cast<vtkm::UInt8>(this->CellShapeAsId);
   }
 
-  virtual void PrintSummary(std::ostream& out) const
+  VTKM_CONT
+  std::shared_ptr<CellSet> NewInstance() const override
   {
-    out << "   ExplicitSingleCellSet: " << this->Name << " Type " << this->CellShapeAsId
-        << std::endl;
+    return std::make_shared<CellSetSingleType>();
+  }
+
+  VTKM_CONT
+  void DeepCopy(const CellSet* src) override
+  {
+    const auto* other = dynamic_cast<const CellSetSingleType*>(src);
+    if (!other)
+    {
+      throw vtkm::cont::ErrorBadType("CellSetSingleType::DeepCopy types don't match");
+    }
+
+    this->Superclass::DeepCopy(other);
+    this->CellShapeAsId = other->CellShapeAsId;
+    this->NumberOfPointsPerCell = other->NumberOfPointsPerCell;
+  }
+
+  virtual void PrintSummary(std::ostream& out) const override
+  {
+    out << "   CellSetSingleType: " << this->Name << " Type " << this->CellShapeAsId << std::endl;
     out << "   PointToCell: " << std::endl;
     this->Data->PointToCell.PrintSummary(out);
     out << "   CellToPoint: " << std::endl;
@@ -269,12 +278,12 @@ namespace cont
 {
 
 template <typename ConnectivityST>
-struct TypeString<vtkm::cont::CellSetSingleType<ConnectivityST>>
+struct SerializableTypeString<vtkm::cont::CellSetSingleType<ConnectivityST>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "CS_Single<" + TypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST>";
+    static std::string name = "CS_Single<" +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST>";
 
     return name;
   }
@@ -282,7 +291,7 @@ struct TypeString<vtkm::cont::CellSetSingleType<ConnectivityST>>
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename ConnectivityST>
@@ -294,26 +303,26 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    diy::save(bb, cs.GetName());
-    diy::save(bb, cs.GetNumberOfPoints());
-    diy::save(bb, cs.GetCellShape(0));
-    diy::save(bb, cs.GetNumberOfPointsInCell(0));
-    diy::save(
+    vtkmdiy::save(bb, cs.GetName());
+    vtkmdiy::save(bb, cs.GetNumberOfPoints());
+    vtkmdiy::save(bb, cs.GetCellShape(0));
+    vtkmdiy::save(bb, cs.GetNumberOfPointsInCell(0));
+    vtkmdiy::save(
       bb, cs.GetConnectivityArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
     std::string name;
-    diy::load(bb, name);
+    vtkmdiy::load(bb, name);
     vtkm::Id numberOfPoints = 0;
-    diy::load(bb, numberOfPoints);
+    vtkmdiy::load(bb, numberOfPoints);
     vtkm::UInt8 shape;
-    diy::load(bb, shape);
+    vtkmdiy::load(bb, shape);
     vtkm::IdComponent count;
-    diy::load(bb, count);
+    vtkmdiy::load(bb, count);
     vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST> connectivity;
-    diy::load(bb, connectivity);
+    vtkmdiy::load(bb, connectivity);
 
     cs = Type(name);
     cs.Fill(numberOfPoints, shape, count, connectivity);

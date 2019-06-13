@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayHandle.h>
@@ -51,23 +41,23 @@ struct Test
   void TestConstructors()
   {
     VirtHandle nullStorage;
-    VTKM_TEST_ASSERT(nullStorage.GetStorage() == nullptr,
+    VTKM_TEST_ASSERT(nullStorage.GetStorage().GetStorageVirtual() == nullptr,
                      "storage should be empty when using ArrayHandleVirtual().");
 
     VirtHandle fromArrayHandle{ ArrayHandle{} };
-    VTKM_TEST_ASSERT(fromArrayHandle.GetStorage() != nullptr,
+    VTKM_TEST_ASSERT(fromArrayHandle.GetStorage().GetStorageVirtual() != nullptr,
                      "storage should be empty when using ArrayHandleVirtual().");
     VTKM_TEST_ASSERT(vtkm::cont::IsType<ArrayHandle>(fromArrayHandle),
                      "ArrayHandleVirtual should contain a ArrayHandle<ValueType>.");
 
     VirtHandle fromVirtHandle(fromArrayHandle);
-    VTKM_TEST_ASSERT(fromVirtHandle.GetStorage() != nullptr,
+    VTKM_TEST_ASSERT(fromVirtHandle.GetStorage().GetStorageVirtual() != nullptr,
                      "storage should be empty when using ArrayHandleVirtual().");
     VTKM_TEST_ASSERT(vtkm::cont::IsType<ArrayHandle>(fromVirtHandle),
                      "ArrayHandleVirtual should contain a ArrayHandle<ValueType>.");
 
     VirtHandle fromNullPtrHandle(nullStorage);
-    VTKM_TEST_ASSERT(fromNullPtrHandle.GetStorage() == nullptr,
+    VTKM_TEST_ASSERT(fromNullPtrHandle.GetStorage().GetStorageVirtual() == nullptr,
                      "storage should be empty when constructing from a ArrayHandleVirtual that has "
                      "nullptr storage.");
     VTKM_TEST_ASSERT((vtkm::cont::IsType<ArrayHandle>(fromNullPtrHandle) == false),
@@ -77,31 +67,6 @@ struct Test
 
   void TestMoveConstructors()
   {
-    //test shared_ptr move constructor
-    {
-      vtkm::cont::ArrayHandleCounting<ValueType> countingHandle;
-      using ST = typename decltype(countingHandle)::StorageTag;
-      auto sharedPtr = std::make_shared<vtkm::cont::StorageAny<ValueType, ST>>(countingHandle);
-
-      VirtHandle virt(std::move(sharedPtr));
-      VTKM_TEST_ASSERT(
-        vtkm::cont::IsType<decltype(countingHandle)>(virt),
-        "ArrayHandleVirtual should be valid after move constructor shared_ptr<Storage>.");
-    }
-
-    //test unique_ptr move constructor
-    {
-      vtkm::cont::ArrayHandleCounting<ValueType> countingHandle;
-      using ST = typename decltype(countingHandle)::StorageTag;
-      auto uniquePtr = std::unique_ptr<vtkm::cont::StorageAny<ValueType, ST>>(
-        new vtkm::cont::StorageAny<ValueType, ST>(countingHandle));
-
-      VirtHandle virt(std::move(uniquePtr));
-      VTKM_TEST_ASSERT(
-        vtkm::cont::IsType<decltype(countingHandle)>(virt),
-        "ArrayHandleVirtual should be valid after move constructor unique_ptr<Storage>.");
-    }
-
     //test ArrayHandle move constructor
     {
       ArrayHandle handle;
@@ -242,8 +207,8 @@ void TestArrayHandleVirtual()
 
 } // end namespace UnitTestArrayHandleVirtualDetail
 
-int UnitTestArrayHandleVirtual(int, char* [])
+int UnitTestArrayHandleVirtual(int argc, char* argv[])
 {
   using namespace UnitTestArrayHandleVirtualDetail;
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleVirtual);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleVirtual, argc, argv);
 }

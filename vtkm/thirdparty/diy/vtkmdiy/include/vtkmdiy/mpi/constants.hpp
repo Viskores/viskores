@@ -1,5 +1,5 @@
-#ifndef DIY_MPI_CONSTANTS_HPP
-#define DIY_MPI_CONSTANTS_HPP
+#ifndef VTKMDIY_MPI_CONSTANTS_HPP
+#define VTKMDIY_MPI_CONSTANTS_HPP
 
 namespace diy
 {

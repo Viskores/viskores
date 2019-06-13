@@ -2,24 +2,13 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-#include "StorageVirtual.h"
-
-#include <vtkm/cont/internal/DeviceAdapterError.h>
+#define vtk_m_cont_StorageVirtual_cxx
+#include <vtkm/cont/StorageVirtual.h>
 
 namespace vtkm
 {
@@ -27,11 +16,12 @@ namespace cont
 {
 namespace internal
 {
+namespace detail
+{
 
 
 //--------------------------------------------------------------------
-Storage<void, ::vtkm::cont::StorageTagVirtual>::Storage(
-  const Storage<void, vtkm::cont::StorageTagVirtual>& src)
+StorageVirtual::StorageVirtual(const StorageVirtual& src)
   : HostUpToDate(src.HostUpToDate)
   , DeviceUpToDate(src.DeviceUpToDate)
   , DeviceTransferState(src.DeviceTransferState)
@@ -39,8 +29,7 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::Storage(
 }
 
 //--------------------------------------------------------------------
-Storage<void, ::vtkm::cont::StorageTagVirtual>::Storage(
-  Storage<void, vtkm::cont::StorageTagVirtual>&& src) noexcept
+StorageVirtual::StorageVirtual(StorageVirtual&& src) noexcept
   : HostUpToDate(src.HostUpToDate),
     DeviceUpToDate(src.DeviceUpToDate),
     DeviceTransferState(std::move(src.DeviceTransferState))
@@ -48,8 +37,7 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::Storage(
 }
 
 //--------------------------------------------------------------------
-Storage<void, vtkm::cont::StorageTagVirtual>& Storage<void, ::vtkm::cont::StorageTagVirtual>::
-operator=(const Storage<void, vtkm::cont::StorageTagVirtual>& src)
+StorageVirtual& StorageVirtual::operator=(const StorageVirtual& src)
 {
   this->HostUpToDate = src.HostUpToDate;
   this->DeviceUpToDate = src.DeviceUpToDate;
@@ -58,8 +46,7 @@ operator=(const Storage<void, vtkm::cont::StorageTagVirtual>& src)
 }
 
 //--------------------------------------------------------------------
-Storage<void, vtkm::cont::StorageTagVirtual>& Storage<void, ::vtkm::cont::StorageTagVirtual>::
-operator=(Storage<void, vtkm::cont::StorageTagVirtual>&& src) noexcept
+StorageVirtual& StorageVirtual::operator=(StorageVirtual&& src) noexcept
 {
   this->HostUpToDate = src.HostUpToDate;
   this->DeviceUpToDate = src.DeviceUpToDate;
@@ -68,19 +55,19 @@ operator=(Storage<void, vtkm::cont::StorageTagVirtual>&& src) noexcept
 }
 
 //--------------------------------------------------------------------
-Storage<void, ::vtkm::cont::StorageTagVirtual>::~Storage()
+StorageVirtual::~StorageVirtual()
 {
 }
 
 //--------------------------------------------------------------------
-void Storage<void, ::vtkm::cont::StorageTagVirtual>::ReleaseResourcesExecution()
+void StorageVirtual::DropExecutionPortal()
 {
   this->DeviceTransferState->releaseDevice();
   this->DeviceUpToDate = false;
 }
 
 //--------------------------------------------------------------------
-void Storage<void, ::vtkm::cont::StorageTagVirtual>::ReleaseResources()
+void StorageVirtual::DropAllPortals()
 {
   this->DeviceTransferState->releaseAll();
   this->HostUpToDate = false;
@@ -88,24 +75,18 @@ void Storage<void, ::vtkm::cont::StorageTagVirtual>::ReleaseResources()
 }
 
 //--------------------------------------------------------------------
-std::unique_ptr<Storage<void, ::vtkm::cont::StorageTagVirtual>>
-Storage<void, ::vtkm::cont::StorageTagVirtual>::NewInstance() const
+std::unique_ptr<StorageVirtual> StorageVirtual::NewInstance() const
 {
   return this->MakeNewInstance();
 }
 
 //--------------------------------------------------------------------
-const vtkm::internal::PortalVirtualBase*
-Storage<void, ::vtkm::cont::StorageTagVirtual>::PrepareForInput(
+const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForInput(
   vtkm::cont::DeviceAdapterId devId) const
 {
   if (devId == vtkm::cont::DeviceAdapterTagUndefined())
   {
     throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_UNDEFINED");
-  }
-  if (devId == vtkm::cont::DeviceAdapterTagError())
-  {
-    throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_ERROR");
   }
 
   const bool needsUpload = !(this->DeviceTransferState->valid(devId) && this->DeviceUpToDate);
@@ -122,17 +103,13 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::PrepareForInput(
 }
 
 //--------------------------------------------------------------------
-const vtkm::internal::PortalVirtualBase*
-Storage<void, ::vtkm::cont::StorageTagVirtual>::PrepareForOutput(vtkm::Id numberOfValues,
-                                                                 vtkm::cont::DeviceAdapterId devId)
+const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForOutput(
+  vtkm::Id numberOfValues,
+  vtkm::cont::DeviceAdapterId devId)
 {
   if (devId == vtkm::cont::DeviceAdapterTagUndefined())
   {
     throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_UNDEFINED");
-  }
-  if (devId == vtkm::cont::DeviceAdapterTagError())
-  {
-    throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_ERROR");
   }
 
   const bool needsUpload = !(this->DeviceTransferState->valid(devId) && this->DeviceUpToDate);
@@ -147,16 +124,12 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::PrepareForOutput(vtkm::Id number
 }
 
 //--------------------------------------------------------------------
-const vtkm::internal::PortalVirtualBase*
-Storage<void, ::vtkm::cont::StorageTagVirtual>::PrepareForInPlace(vtkm::cont::DeviceAdapterId devId)
+const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForInPlace(
+  vtkm::cont::DeviceAdapterId devId)
 {
   if (devId == vtkm::cont::DeviceAdapterTagUndefined())
   {
     throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_UNDEFINED");
-  }
-  if (devId == vtkm::cont::DeviceAdapterTagError())
-  {
-    throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_ERROR");
   }
 
   const bool needsUpload = !(this->DeviceTransferState->valid(devId) && this->DeviceUpToDate);
@@ -172,8 +145,7 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::PrepareForInPlace(vtkm::cont::De
 }
 
 //--------------------------------------------------------------------
-const vtkm::internal::PortalVirtualBase*
-Storage<void, ::vtkm::cont::StorageTagVirtual>::GetPortalControl()
+const vtkm::internal::PortalVirtualBase* StorageVirtual::GetPortalControl()
 {
   if (!this->HostUpToDate)
   {
@@ -188,8 +160,7 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::GetPortalControl()
 }
 
 //--------------------------------------------------------------------
-const vtkm::internal::PortalVirtualBase*
-Storage<void, ::vtkm::cont::StorageTagVirtual>::GetPortalConstControl() const
+const vtkm::internal::PortalVirtualBase* StorageVirtual::GetPortalConstControl() const
 {
   if (!this->HostUpToDate)
   {
@@ -202,28 +173,67 @@ Storage<void, ::vtkm::cont::StorageTagVirtual>::GetPortalConstControl() const
 }
 
 //--------------------------------------------------------------------
-DeviceAdapterId Storage<void, ::vtkm::cont::StorageTagVirtual>::GetDeviceAdapterId() const noexcept
+DeviceAdapterId StorageVirtual::GetDeviceAdapterId() const noexcept
 {
   return this->DeviceTransferState->deviceId();
 }
 
 //--------------------------------------------------------------------
-void Storage<void, ::vtkm::cont::StorageTagVirtual>::ControlPortalForOutput(
-  vtkm::cont::internal::TransferInfoArray&)
+void StorageVirtual::ControlPortalForOutput(vtkm::cont::internal::TransferInfoArray&)
 {
   throw vtkm::cont::ErrorBadValue(
     "StorageTagVirtual by default doesn't support control side writes.");
 }
 
 //--------------------------------------------------------------------
-void Storage<void, ::vtkm::cont::StorageTagVirtual>::TransferPortalForOutput(
-  vtkm::cont::internal::TransferInfoArray&,
-  OutputMode,
-  vtkm::Id,
-  vtkm::cont::DeviceAdapterId)
+void StorageVirtual::TransferPortalForOutput(vtkm::cont::internal::TransferInfoArray&,
+                                             OutputMode,
+                                             vtkm::Id,
+                                             vtkm::cont::DeviceAdapterId)
 {
   throw vtkm::cont::ErrorBadValue("StorageTagVirtual by default doesn't support exec side writes.");
 }
+
+#define VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(T)                                                \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<T>;                                         \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>;                           \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>;                           \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 4>>
+
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(char);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::Int8);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::UInt8);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::Int16);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::UInt16);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::Int32);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::UInt32);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::Int64);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::UInt64);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::Float32);
+VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::Float64);
+
+#undef VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE
+
+#define VTK_M_STORAGE_VIRTUAL_INSTANTIATE(T)                                                       \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<T, VTKM_DEFAULT_STORAGE_TAG>;                 \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 2>, VTKM_DEFAULT_STORAGE_TAG>;   \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 3>, VTKM_DEFAULT_STORAGE_TAG>;   \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 4>, VTKM_DEFAULT_STORAGE_TAG>
+
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(char);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::Int8);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::UInt8);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::Int16);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::UInt16);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::Int32);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::UInt32);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::Int64);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::UInt64);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::Float32);
+VTK_M_STORAGE_VIRTUAL_INSTANTIATE(vtkm::Float64);
+
+#undef VTK_M_STORAGE_VIRTUAL_INSTANTIATE
 }
 }
 }
+} // namespace vtkm::cont::internal::detail

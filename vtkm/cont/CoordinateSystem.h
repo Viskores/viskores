@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_CoordinateSystem_h
 #define vtk_m_cont_CoordinateSystem_h
@@ -24,6 +14,7 @@
 
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
+#include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/Field.h>
 
 namespace vtkm
@@ -61,6 +52,9 @@ public:
     vtkm::Vec<vtkm::FloatDefault, 3> spacing = vtkm::Vec<vtkm::FloatDefault, 3>(1.0f, 1.0f, 1.0f));
 
   VTKM_CONT
+  vtkm::Id GetNumberOfPoints() const { return this->GetNumberOfValues(); }
+
+  VTKM_CONT
   vtkm::cont::ArrayHandleVirtualCoordinates GetData() const;
 
   VTKM_CONT void SetData(
@@ -80,7 +74,15 @@ public:
   }
 
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const
+  vtkm::Vec<vtkm::Range, 3> GetRange() const
+  {
+    vtkm::Vec<vtkm::Range, 3> range;
+    this->GetRange(&range[0]);
+    return range;
+  }
+
+  VTKM_CONT
+  vtkm::cont::ArrayHandle<vtkm::Range> GetRangeAsArrayHandle() const
   {
     return this->Superclass::GetRange(CoordinatesTypeList());
   }
@@ -143,7 +145,7 @@ struct DynamicTransformTraits<vtkm::cont::CoordinateSystem>
 
 //=============================================================================
 // Specializations of serialization related classes
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <>
@@ -151,16 +153,16 @@ struct Serialization<vtkm::cont::CoordinateSystem>
 {
   static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::CoordinateSystem& cs)
   {
-    diy::save(bb, cs.GetName());
-    diy::save(bb, cs.GetData());
+    vtkmdiy::save(bb, cs.GetName());
+    vtkmdiy::save(bb, cs.GetData());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::CoordinateSystem& cs)
   {
     std::string name;
-    diy::load(bb, name);
+    vtkmdiy::load(bb, name);
     vtkm::cont::ArrayHandleVirtualCoordinates array;
-    diy::load(bb, array);
+    vtkmdiy::load(bb, array);
     cs = vtkm::cont::CoordinateSystem(name, array);
   }
 };

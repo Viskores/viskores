@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_BoundingVolumeHierachy_h
 #define vtk_m_worklet_BoundingVolumeHierachy_h
@@ -53,7 +43,6 @@ public:
   InnerNodesHandle FlatBVH;
   LeafNodesHandle Leafs;
   vtkm::Bounds TotalBounds;
-  struct ConstructFunctor;
   vtkm::Id LeafCount;
 
 protected:
@@ -69,8 +58,7 @@ public:
   VTKM_CONT
   LinearBVH(const LinearBVH& other);
 
-  template <typename DeviceAdapter>
-  VTKM_CONT void Allocate(const vtkm::Id& leafCount, DeviceAdapter deviceAdapter);
+  VTKM_CONT void Allocate(const vtkm::Id& leafCount);
 
   VTKM_CONT
   void Construct();
@@ -80,9 +68,6 @@ public:
 
   VTKM_CONT
   AABBs& GetAABBs();
-
-  template <typename Device>
-  VTKM_CONT void ConstructOnDevice(Device device);
 
   VTKM_CONT
   bool GetIsConstructed() const;

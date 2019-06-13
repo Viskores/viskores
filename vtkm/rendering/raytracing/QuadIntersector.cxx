@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/VectorAnalysis.h>
@@ -437,15 +427,15 @@ void QuadIntersector::IntersectRaysImp(Ray<Precision>& rays, bool vtkmNotUsed(re
 
 template <typename Precision>
 void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
-                                          const vtkm::cont::Field* scalarField,
+                                          const vtkm::cont::Field scalarField,
                                           const vtkm::Range& scalarRange)
 {
   ShapeIntersector::IntersectionPoint(rays);
 
   // TODO: if this is nodes of a mesh, support points
   bool isSupportedField =
-    (scalarField->GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-     scalarField->GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+    (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+     scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
   if (!isSupportedField)
     throw vtkm::cont::ErrorBadValue("Field not accociated with a cell set");
 
@@ -456,19 +446,19 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
     .Invoke(rays.HitIdx,
             rays.Scalar,
-            scalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+            scalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
             QuadIds);
 }
 
 void QuadIntersector::IntersectionData(Ray<vtkm::Float32>& rays,
-                                       const vtkm::cont::Field* scalarField,
+                                       const vtkm::cont::Field scalarField,
                                        const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);
 }
 
 void QuadIntersector::IntersectionData(Ray<vtkm::Float64>& rays,
-                                       const vtkm::cont::Field* scalarField,
+                                       const vtkm::cont::Field scalarField,
                                        const vtkm::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);

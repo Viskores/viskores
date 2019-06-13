@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/ExecutionArrayInterfaceBasicCuda.h>
@@ -61,6 +51,19 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
     }
   }
 
+  const std::size_t maxNumVals = (std::numeric_limits<std::size_t>::max() / sizeOfValue);
+  if (static_cast<std::size_t>(numberOfValues) > maxNumVals)
+  {
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemExec,
+               "Refusing to allocate CUDA memory; number of values (%llu) exceeds "
+               "std::size_t capacity.",
+               static_cast<vtkm::UInt64>(numberOfValues));
+
+    std::ostringstream err;
+    err << "Failed to allocate " << numberOfValues << " values on device: "
+        << "Number of bytes is not representable by std::size_t.";
+    throw vtkm::cont::ErrorBadAllocation(err.str());
+  }
   if (execArray.Array != nullptr)
   {
     const vtkm::UInt64 cap = static_cast<vtkm::UInt64>(static_cast<char*>(execArray.ArrayCapacity) -

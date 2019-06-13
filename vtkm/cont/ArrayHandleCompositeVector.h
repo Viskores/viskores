@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_ArrayHandleCompositeVector_h
 #define vtk_m_ArrayHandleCompositeVector_h
@@ -358,7 +348,7 @@ struct ArraySizeValidatorImpl
 {
   using Next = ArraySizeValidatorImpl<Index + 1, Count, TupleType>;
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   static bool Exec(const TupleType& tuple, vtkm::Id numVals)
   {
     return vtkmstd::get<Index>(tuple).GetNumberOfValues() == numVals && Next::Exec(tuple, numVals);
@@ -368,14 +358,14 @@ struct ArraySizeValidatorImpl
 template <std::size_t Index, typename TupleType>
 struct ArraySizeValidatorImpl<Index, Index, TupleType>
 {
-  VTKM_EXEC_CONT
+  VTKM_CONT
   static bool Exec(const TupleType&, vtkm::Id) { return true; }
 };
 
 template <typename TupleType>
 struct ArraySizeValidator
 {
-  VTKM_EXEC_CONT
+  VTKM_CONT
   static bool Exec(const TupleType& tuple, vtkm::Id numVals)
   {
     return ArraySizeValidatorImpl<0, vtkmstd::tuple_size<TupleType>::value, TupleType>::Exec(
@@ -732,27 +722,27 @@ namespace cont
 {
 
 template <typename... AHs>
-struct TypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
 {
   static VTKM_CONT const std::string& Get()
   {
     static std::string name =
-      "AH_CompositeVector<" + internal::GetVariadicTypeString(AHs{}...) + ">";
+      "AH_CompositeVector<" + internal::GetVariadicSerializableTypeString(AHs{}...) + ">";
     return name;
   }
 };
 
 template <typename... AHs>
-struct TypeString<vtkm::cont::ArrayHandle<
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
   typename vtkm::cont::internal::compvec::GetValueType<vtkmstd::tuple<AHs...>>::ValueType,
   vtkm::cont::internal::StorageTagCompositeVector<vtkmstd::tuple<AHs...>>>>
-  : TypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 namespace internal
@@ -804,7 +794,7 @@ private:
     template <typename AH>
     void operator()(const AH& ah, BinaryBuffer& bb) const
     {
-      diy::save(bb, ah);
+      vtkmdiy::save(bb, ah);
     }
   };
 
@@ -813,7 +803,7 @@ private:
     template <typename AH>
     void operator()(AH& ah, BinaryBuffer& bb) const
     {
-      diy::load(bb, ah);
+      vtkmdiy::load(bb, ah);
     }
   };
 

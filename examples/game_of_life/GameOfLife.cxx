@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 // Must be included before any other GL includes:
 #include <GL/glew.h>
@@ -214,13 +204,13 @@ struct RenderGameOfLife
     vtkm::Vec<float, 3> spacing(0.0075f, 0.0075f, 0.0f);
 
     vtkm::cont::ArrayHandleUniformPointCoordinates coords(dimensions, origin, spacing);
-    vtkm::interop::TransferToOpenGL(coords, this->VBOState, vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::interop::TransferToOpenGL(coords, this->VBOState);
   }
 
   void render(vtkm::cont::DataSet& data)
   {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    vtkm::Int32 arraySize = (vtkm::Int32)data.GetCoordinateSystem().GetData().GetNumberOfValues();
+    vtkm::Int32 arraySize = (vtkm::Int32)data.GetCoordinateSystem().GetNumberOfPoints();
 
     UploadData task(&this->ColorState,
                     data.GetField("colors", vtkm::cont::Field::Association::POINTS));
@@ -250,7 +240,7 @@ struct RenderGameOfLife
   }
 };
 
-vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> gTimer;
+vtkm::cont::Timer gTimer;
 vtkm::cont::DataSet* gData = nullptr;
 GameOfLife* gFilter = nullptr;
 RenderGameOfLife* gRenderer = nullptr;
@@ -315,7 +305,9 @@ void populate(std::vector<vtkm::UInt8>& input_state,
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::Initialize(argc, argv);
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
 
   glewExperimental = GL_TRUE;
   glutInit(&argc, argv);
@@ -363,6 +355,7 @@ int main(int argc, char** argv)
   gFilter = &filter;
   gRenderer = &renderer;
 
+  gTimer.Start();
   glutDisplayFunc([]() {
     const vtkm::Float32 c = static_cast<vtkm::Float32>(gTimer.GetElapsedTime());
 

@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,22 +6,18 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_ArrayHandleCast_h
 #define vtk_m_cont_ArrayHandleCast_h
 
 #include <vtkm/cont/ArrayHandleTransform.h>
+
+#include <vtkm/cont/Logging.h>
+
+#include <vtkm/BaseComponent.h>
+#include <vtkm/Range.h>
+
+#include <limits>
 
 namespace vtkm
 {
@@ -62,6 +57,60 @@ public:
   ArrayHandleCast(const ArrayHandleType& handle)
     : Superclass(handle)
   {
+    this->ValidateTypeCast<typename ArrayHandleType::ValueType>();
+  }
+
+private:
+  // Log warnings if type cast is valid but lossy:
+  template <typename SrcValueType>
+  VTKM_CONT static typename std::enable_if<!std::is_same<T, SrcValueType>::value>::type
+  ValidateTypeCast()
+  {
+#ifdef VTKM_ENABLE_LOGGING
+    using DstValueType = T;
+    using SrcComp = typename vtkm::BaseComponent<SrcValueType>::Type;
+    using DstComp = typename vtkm::BaseComponent<DstValueType>::Type;
+    using SrcLimits = std::numeric_limits<SrcComp>;
+    using DstLimits = std::numeric_limits<DstComp>;
+
+    const vtkm::Range SrcRange{ SrcLimits::min(), SrcLimits::max() };
+    const vtkm::Range DstRange{ DstLimits::min(), DstLimits::max() };
+
+    const bool RangeLoss = (SrcRange.Max > DstRange.Max || SrcRange.Min < DstRange.Min);
+    const bool PrecLoss = SrcLimits::digits > DstLimits::digits;
+
+    if (RangeLoss && PrecLoss)
+    {
+      VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
+                 "VariantArrayHandle::AsVirtual: Casting ComponentType of "
+                 "%s to %s reduces range and precision.",
+                 vtkm::cont::TypeToString<SrcValueType>().c_str(),
+                 vtkm::cont::TypeToString<DstValueType>().c_str());
+    }
+    else if (RangeLoss)
+    {
+      VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
+                 "VariantArrayHandle::AsVirtual: Casting ComponentType of "
+                 "%s to %s reduces range.",
+                 vtkm::cont::TypeToString<SrcValueType>().c_str(),
+                 vtkm::cont::TypeToString<DstValueType>().c_str());
+    }
+    else if (PrecLoss)
+    {
+      VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
+                 "VariantArrayHandle::AsVirtual: Casting ComponentType of "
+                 "%s to %s reduces precision.",
+                 vtkm::cont::TypeToString<SrcValueType>().c_str(),
+                 vtkm::cont::TypeToString<DstValueType>().c_str());
+    }
+#endif // Logging
+  }
+
+  template <typename SrcValueType>
+  VTKM_CONT static typename std::enable_if<std::is_same<T, SrcValueType>::value>::type
+  ValidateTypeCast()
+  {
+    //no-op if types match
   }
 };
 
@@ -110,26 +159,26 @@ namespace cont
 {
 
 template <typename T1, typename T2>
-struct TypeString<vtkm::cont::internal::Cast<T1, T2>>
+struct SerializableTypeString<vtkm::cont::internal::Cast<T1, T2>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name =
-      "AH_Cast_Functor<" + TypeString<T1>::Get() + "," + TypeString<T2>::Get() + ">";
+    static std::string name = "AH_Cast_Functor<" + SerializableTypeString<T1>::Get() + "," +
+      SerializableTypeString<T2>::Get() + ">";
     return name;
   }
 };
 
 template <typename T, typename AH>
-struct TypeString<vtkm::cont::ArrayHandleCast<T, AH>>
-  : TypeString<
+struct SerializableTypeString<vtkm::cont::ArrayHandleCast<T, AH>>
+  : SerializableTypeString<
       vtkm::cont::ArrayHandleTransform<AH, vtkm::cont::internal::Cast<typename AH::ValueType, T>>>
 {
 };
 }
 } // namespace vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename T1, typename T2>

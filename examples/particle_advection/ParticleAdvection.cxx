@@ -2,36 +2,28 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/Timer.h>
+
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/ParticleAdvectionWorklets.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
-#include <vtkm/cont/Timer.h>
 #include <vtkm/io/reader/BOVDataSetReader.h>
 
 #include <chrono>
 #include <vector>
 
-#ifdef __BUILDING_TBB_VERSION__
+#ifdef BUILDING_TBB_VERSION
 #include <tbb/task_scheduler_init.h>
 #endif
 
@@ -68,7 +60,7 @@ void RunTest(const std::string& fname,
   vtkm::io::reader::BOVDataSetReader rdr(fname);
   vtkm::cont::DataSet ds = rdr.ReadDataSet();
 
-  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
+  using RGEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
   using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType>;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
@@ -138,7 +130,7 @@ void RunTest(const std::string& fname,
     seeds.push_back(p);
   }
 
-#ifdef __BUILDING_TBB_VERSION__
+#ifdef BUILDING_TBB_VERSION
   int nT = tbb::task_scheduler_init::default_num_threads();
   if (numThreads != -1)
     nT = (int)numThreads;
@@ -172,6 +164,7 @@ void RunTest(const std::string& fname,
 
 bool ParseArgs(int argc,
                char** argv,
+               const vtkm::cont::InitializeResult& config,
                vtkm::Id& numSeeds,
                vtkm::Id& numSteps,
                vtkm::Float32& stepSize,
@@ -192,7 +185,7 @@ bool ParseArgs(int argc,
   particlesPerRound = -1;
   numThreads = -1;
   dataFile = "";
-  pgmType = "UNKNOWN";
+  pgmType = config.Device.GetName();
   dumpOutput = false;
   seeding = SPARSE;
 
@@ -206,17 +199,11 @@ bool ParseArgs(int argc,
     std::cerr << " -streamline steps_per_round (-1 = 0 rounds): particle history" << std::endl;
     std::cerr << " -t #numThreads" << std::endl;
     std::cerr << " -file dataFile" << std::endl;
-    std::cerr << " -dump : dump output points" << std::endl;
+    std::cerr << " -dump : dump output points" << std::endl << std::endl;
+    std::cerr << "General VTK-m Options" << std::endl;
+    std::cerr << config.Usage << std::endl;
     return false;
   }
-
-  std::string pgm = argv[0];
-  if (pgm.find("SERIAL") != std::string::npos)
-    pgmType = "SER";
-  else if (pgm.find("TBB") != std::string::npos)
-    pgmType = "TBB";
-  else if (pgm.find("CUDA") != std::string::npos)
-    pgmType = "CUD";
 
   for (int i = 1; i < argc; i++)
   {
@@ -284,6 +271,10 @@ bool ParseArgs(int argc,
 
 int main(int argc, char** argv)
 {
+  // Process vtk-m general args
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
+
   vtkm::Id numSeeds = 100, numSteps = 100, advectType = 0, numThreads = -1, stepsPerRound = -1,
            particlesPerRound = -1;
   vtkm::Float32 stepSize = 0.1f;
@@ -293,6 +284,7 @@ int main(int argc, char** argv)
 
   if (!ParseArgs(argc,
                  argv,
+                 config,
                  numSeeds,
                  numSteps,
                  stepSize,

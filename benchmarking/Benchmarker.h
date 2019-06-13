@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_benchmarking_Benchmarker_h
@@ -23,6 +13,8 @@
 
 #include <vtkm/ListTag.h>
 #include <vtkm/Math.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <algorithm>
@@ -83,17 +75,18 @@
 /*
  * Use the VTKM_MAKE_BENCHMARK macro to define a maker functor for your benchmark.
  * This is used to allow you to template the benchmark functor on the type being benchmarked
- * so you can write init code in the constructor. Then the maker will return a constructed
- * instance of your benchmark for the type being benchmarked. The VA_ARGS are used to
- * pass any extra arguments needed by your benchmark
+ * and the device adapter so you can write init code in the constructor. Then the maker will
+ * return a constructed instance of your benchmark for the type being benchmarked.
+ * The VA_ARGS are used to pass any extra arguments needed by your benchmark
  */
 #define VTKM_MAKE_BENCHMARK(Name, Bench, ...)                                                      \
   struct MakeBench##Name                                                                           \
   {                                                                                                \
-    template <typename Value>                                                                      \
-    VTKM_CONT Bench<Value> operator()(const Value vtkmNotUsed(v)) const                            \
+    template <typename Value, typename DeviceAdapter>                                              \
+    VTKM_CONT Bench<Value, DeviceAdapter> operator()(const Value vtkmNotUsed(v),                   \
+                                                     DeviceAdapter vtkmNotUsed(id)) const          \
     {                                                                                              \
-      return Bench<Value>(__VA_ARGS__);                                                            \
+      return Bench<Value, DeviceAdapter>(__VA_ARGS__);                                             \
     }                                                                                              \
   }
 
@@ -102,8 +95,8 @@
  * You must have previously defined a maker functor with VTKM_MAKE_BENCHMARK that this
  * macro will look for and use
  */
-#define VTKM_RUN_BENCHMARK(Name, Types)                                                            \
-  vtkm::benchmarking::BenchmarkTypes(MakeBench##Name(), (Types))
+#define VTKM_RUN_BENCHMARK(Name, Types, Id)                                                        \
+  vtkm::benchmarking::BenchmarkTypes(MakeBench##Name(), (Types), (Id))
 
 namespace vtkm
 {
@@ -223,7 +216,7 @@ vtkm::Float64 MedianAbsDeviation(const std::vector<vtkm::Float64>& samples)
  * in seconds, this lets us avoid including any per-run setup time in the benchmark.
  * However any one-time setup should be done in the functor's constructor
  */
-class Benchmarker
+struct Benchmarker
 {
   std::vector<vtkm::Float64> Samples;
   std::string BenchmarkName;
@@ -286,11 +279,13 @@ public:
         << "\tmax = " << this->Samples.back() << "s\n";
   }
 
-  template <typename Functor>
-  VTKM_CONT void operator()(Functor func)
+  template <typename DeviceAdapter, typename MakerFunctor, typename T>
+  VTKM_CONT bool operator()(DeviceAdapter id, MakerFunctor&& makerFunctor, T t)
   {
+    auto func = makerFunctor(t, id);
     this->GatherSamples(func);
     this->PrintSummary();
+    return true;
   }
 
   VTKM_CONT const std::vector<vtkm::Float64>& GetSamples() const { return this->Samples; }
@@ -315,13 +310,14 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT void operator()(T t) const
+  VTKM_CONT void operator()(T t, vtkm::cont::DeviceAdapterId id) const
   {
-    std::cout << "*** " << vtkm::testing::TypeName<T>::Name() << " ***************" << std::endl;
+    std::cout << "*** " << vtkm::testing::TypeName<T>::Name() << " on device " << id.GetName()
+              << " ***************" << std::endl;
     Benchmarker bench;
     try
     {
-      bench(Maker(t));
+      vtkm::cont::TryExecuteOnDevice(id, bench, Maker, t);
     }
     catch (std::exception& e)
     {
@@ -333,9 +329,10 @@ public:
 };
 
 template <class MakerFunctor, class TypeList>
-VTKM_CONT void BenchmarkTypes(const MakerFunctor& maker, TypeList)
+VTKM_CONT void BenchmarkTypes(MakerFunctor&& maker, TypeList, vtkm::cont::DeviceAdapterId id)
 {
-  vtkm::ListForEach(InternalPrintTypeAndBench<MakerFunctor>(maker), TypeList());
+  vtkm::ListForEach(
+    InternalPrintTypeAndBench<MakerFunctor>(std::forward<MakerFunctor>(maker)), TypeList(), id);
 }
 }
 }

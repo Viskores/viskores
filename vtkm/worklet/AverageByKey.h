@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_AverageByKey_h
 #define vtk_m_worklet_AverageByKey_h
@@ -55,7 +45,9 @@ struct AverageByKey
       for (vtkm::IdComponent index = 1; index < valuesIn.GetNumberOfComponents(); ++index)
       {
         FieldType component = valuesIn[index];
-        sum = sum + component;
+        // FieldType constructor is for when OutType is a Vec.
+        // static_cast is for when FieldType is a small int that gets promoted to int32.
+        sum = static_cast<FieldType>(sum + component);
       }
 
       // To get the average, we (of course) divide the sum by the amount of values, which is
@@ -68,7 +60,10 @@ struct AverageByKey
       // We use the VecTraits class to make this work regardless of whether FieldType is a real Vec
       // or just a scalar.
       using ComponentType = typename vtkm::VecTraits<FieldType>::ComponentType;
-      return sum / FieldType(static_cast<ComponentType>(valuesIn.GetNumberOfComponents()));
+      // FieldType constructor is for when OutType is a Vec.
+      // static_cast is for when FieldType is a small int that gets promoted to int32.
+      return static_cast<FieldType>(
+        sum / FieldType(static_cast<ComponentType>(valuesIn.GetNumberOfComponents())));
     }
   };
 

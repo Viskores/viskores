@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/VectorAnalysis.h>
@@ -758,13 +748,15 @@ template <typename Precision>
 VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds boundingBox)
 {
   Logger* logger = Logger::GetInstance();
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> createTimer;
+  vtkm::cont::Timer createTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+  createTimer.Start();
   logger->OpenLogEntry("ray_camera");
 
   bool ortho = this->CameraView.GetMode() == vtkm::rendering::Camera::MODE_2D;
   this->UpdateDimensions(rays, boundingBox, ortho);
   this->WriteSettingsToLog();
-  vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> timer;
+  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  timer.Start();
   //Set the origin of the ray back to the camera position
 
   Precision infinity;
@@ -782,7 +774,7 @@ VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds b
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("camera_memset", time);
-  timer.Reset();
+  timer.Start();
 
   //Reset the camera look vector
   this->Look = this->LookAt - this->Position;
@@ -1000,7 +992,7 @@ VTKM_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
   if (rays.NumRays != SubsetWidth * SubsetHeight)
   {
     RayOperations::Resize(
-      rays, this->SubsetHeight * this->SubsetWidth, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      rays, this->SubsetHeight * this->SubsetWidth, vtkm::cont::DeviceAdapterTagSerial());
   }
 }
 

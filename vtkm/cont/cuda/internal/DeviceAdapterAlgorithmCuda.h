@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmCuda_h
 #define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmCuda_h
@@ -26,6 +16,7 @@
 #include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/BitField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Logging.h>
@@ -35,6 +26,7 @@
 
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
+#include <vtkm/cont/cuda/internal/AtomicInterfaceExecutionCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterAtomicArrayImplementationCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
@@ -43,22 +35,17 @@
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
+#include <vtkm/exec/cuda/internal/TaskStrided.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
-
-#include <vtkm/exec/cuda/internal/TaskStrided.h>
-
-#include <cuda.h>
-
-// #define PARAMETER_SWEEP_VTKM_SCHEDULER_1D
-// #define PARAMETER_SWEEP_VTKM_SCHEDULER_3D
-#if defined(PARAMETER_SWEEP_VTKM_SCHEDULER_1D) || defined(PARAMETER_SWEEP_VTKM_SCHEDULER_3D)
-#include <vtkm/cont/cuda/internal/TaskTuner.h>
-#endif
-
 // Disable warnings we check vtkm for but Thrust does not.
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
-//our own custom thrust execution policy
+//needs to be first
+#include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
+
+#include <cooperative_groups.h>
+#include <cuda.h>
 #include <thrust/advance.h>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
@@ -69,17 +56,83 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cpp/memory.h>
 #include <thrust/system/cuda/vector.h>
 #include <thrust/unique.h>
-#include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
+
 VTKM_THIRDPARTY_POST_INCLUDE
+
+#include <limits>
+#include <memory>
 
 namespace vtkm
 {
 namespace cont
 {
-
-
 namespace cuda
 {
+/// \brief Represents how to schedule 1D, 2D, and 3D Cuda kernels
+///
+/// \c ScheduleParameters represents how VTK-m should schedule different
+/// cuda kernel types. By default VTK-m uses a preset table based on the
+/// GPU's found at runtime.
+///
+/// When these defaults are insufficient for certain projects it is possible
+/// to override the defaults by using \c InitScheduleParameters.
+///
+///
+struct VTKM_CONT_EXPORT ScheduleParameters
+{
+  int one_d_blocks;
+  int one_d_threads_per_block;
+
+  int two_d_blocks;
+  dim3 two_d_threads_per_block;
+
+  int three_d_blocks;
+  dim3 three_d_threads_per_block;
+};
+
+/// \brief Specify the custom scheduling to use for VTK-m CUDA kernel launches
+///
+/// By default VTK-m uses a preset table based on the GPU's found at runtime to
+/// determine the best scheduling parameters for a worklet.  When these defaults
+/// are insufficient for certain projects it is possible to override the defaults
+/// by binding a custom function to \c InitScheduleParameters.
+///
+/// Note: The this function must be called before any invocation of any worklets
+/// by VTK-m.
+///
+/// Note: This function will be called for each GPU on a machine.
+///
+/// \code{.cpp}
+///
+///  ScheduleParameters CustomScheduleValues(char const* name,
+///                                          int major,
+///                                          int minor,
+///                                          int multiProcessorCount,
+///                                          int maxThreadsPerMultiProcessor,
+///                                          int maxThreadsPerBlock)
+///  {
+///
+///    ScheduleParameters params  {
+///        64 * multiProcessorCount,  //1d blocks
+///        64,                        //1d threads per block
+///        64 * multiProcessorCount,  //2d blocks
+///        { 8, 8, 1 },               //2d threads per block
+///        64 * multiProcessorCount,  //3d blocks
+///        { 4, 4, 4 } };             //3d threads per block
+///    return params;
+///  }
+/// \endcode
+///
+///
+VTKM_CONT_EXPORT void InitScheduleParameters(
+  vtkm::cont::cuda::ScheduleParameters (*)(char const* name,
+                                           int major,
+                                           int minor,
+                                           int multiProcessorCount,
+                                           int maxThreadsPerMultiProcessor,
+                                           int maxThreadsPerBlock));
+
+
 namespace internal
 {
 
@@ -127,16 +180,19 @@ __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_
 #pragma GCC diagnostic pop
 #endif
 
-template <typename PortalType, typename OutValueType>
+template <typename PortalType, typename BinaryAndUnaryFunctor>
 struct CastPortal
 {
-  using ValueType = OutValueType;
+  using InputType = typename PortalType::ValueType;
+  using ValueType = decltype(std::declval<BinaryAndUnaryFunctor>()(std::declval<InputType>()));
 
   PortalType Portal;
+  BinaryAndUnaryFunctor Functor;
 
   VTKM_CONT
-  CastPortal(const PortalType& portal)
+  CastPortal(const PortalType& portal, const BinaryAndUnaryFunctor& functor)
     : Portal(portal)
+    , Functor(functor)
   {
   }
 
@@ -144,8 +200,24 @@ struct CastPortal
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
   VTKM_EXEC
-  ValueType Get(vtkm::Id index) const { return static_cast<OutValueType>(this->Portal.Get(index)); }
+  ValueType Get(vtkm::Id index) const { return this->Functor(this->Portal.Get(index)); }
 };
+
+struct CudaFreeFunctor
+{
+  void operator()(void* ptr) const { VTKM_CUDA_CALL(cudaFree(ptr)); }
+};
+
+template <typename T>
+using CudaUniquePtr = std::unique_ptr<T, CudaFreeFunctor>;
+
+template <typename T>
+CudaUniquePtr<T> make_CudaUniquePtr(std::size_t numElements)
+{
+  T* ptr;
+  VTKM_CUDA_CALL(cudaMalloc(&ptr, sizeof(T) * numElements));
+  return CudaUniquePtr<T>(ptr);
+}
 }
 } // end namespace cuda::internal
 
@@ -160,6 +232,135 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
 #ifndef VTKM_CUDA
 private:
 #endif
+
+  template <typename BitsPortal, typename IndicesPortal, typename GlobalPopCountType>
+  struct BitFieldToUnorderedSetFunctor : public vtkm::exec::FunctorBase
+  {
+    VTKM_STATIC_ASSERT_MSG(VTKM_PASS_COMMAS(std::is_same<GlobalPopCountType, vtkm::Int32>::value ||
+                                            std::is_same<GlobalPopCountType, vtkm::UInt32>::value ||
+                                            std::is_same<GlobalPopCountType, vtkm::UInt64>::value),
+                           "Unsupported GlobalPopCountType. Must support CUDA atomicAdd.");
+
+    //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
+    //which is the GCC required compiler for CUDA 9.2 on summit/power9
+    using Word = typename vtkm::cont::internal::AtomicInterfaceExecution<
+      DeviceAdapterTagCuda>::WordTypePreferred;
+
+    VTKM_STATIC_ASSERT(
+      VTKM_PASS_COMMAS(std::is_same<typename IndicesPortal::ValueType, vtkm::Id>::value));
+
+    VTKM_CONT
+    BitFieldToUnorderedSetFunctor(const BitsPortal& input,
+                                  const IndicesPortal& output,
+                                  GlobalPopCountType* globalPopCount)
+      : Input{ input }
+      , Output{ output }
+      , GlobalPopCount{ globalPopCount }
+      , FinalWordIndex{ input.GetNumberOfWords() - 1 }
+      , FinalWordMask(input.GetFinalWordMask())
+    {
+    }
+
+    ~BitFieldToUnorderedSetFunctor() {}
+
+    VTKM_CONT void Initialize()
+    {
+      assert(this->GlobalPopCount != nullptr);
+      VTKM_CUDA_CALL(cudaMemset(this->GlobalPopCount, 0, sizeof(GlobalPopCountType)));
+    }
+
+    VTKM_SUPPRESS_EXEC_WARNINGS
+    __device__ void operator()(vtkm::Id wordIdx) const
+    {
+      Word word = this->Input.GetWord(wordIdx);
+
+      // The last word may be partial -- mask out trailing bits if needed.
+      const Word mask = wordIdx == this->FinalWordIndex ? this->FinalWordMask : ~Word{ 0 };
+
+      word &= mask;
+
+      if (word != 0)
+      {
+        this->LocalPopCount = vtkm::CountSetBits(word);
+        this->ReduceAllocate();
+
+        vtkm::Id firstBitIdx = wordIdx * sizeof(Word) * CHAR_BIT;
+        do
+        {
+          // Find next bit. FindFirstSetBit's result is indexed starting at 1.
+          vtkm::Int32 bit = vtkm::FindFirstSetBit(word) - 1;
+          vtkm::Id outIdx = this->GetNextOutputIndex();
+          // Write index of bit
+          this->Output.Set(outIdx, firstBitIdx + bit);
+          word ^= (1 << bit); // clear bit
+        } while (word != 0);  // have bits
+      }
+    }
+
+    VTKM_CONT vtkm::Id Finalize() const
+    {
+      assert(this->GlobalPopCount != nullptr);
+      GlobalPopCountType result;
+      VTKM_CUDA_CALL(cudaMemcpy(
+        &result, this->GlobalPopCount, sizeof(GlobalPopCountType), cudaMemcpyDeviceToHost));
+      return static_cast<vtkm::Id>(result);
+    }
+
+  private:
+    // Every thread with a non-zero local popcount calls this function, which
+    // computes the total popcount for the coalesced threads and allocates
+    // a contiguous block in the output by atomically increasing the global
+    // popcount.
+    VTKM_SUPPRESS_EXEC_WARNINGS
+    __device__ void ReduceAllocate() const
+    {
+      const auto activeLanes = cooperative_groups::coalesced_threads();
+      const int activeRank = activeLanes.thread_rank();
+      const int activeSize = activeLanes.size();
+
+      // Reduction value:
+      vtkm::Int32 rVal = this->LocalPopCount;
+      for (int delta = 1; delta < activeSize; delta *= 2)
+      {
+        rVal += activeLanes.shfl_down(rVal, delta);
+      }
+
+      if (activeRank == 0)
+      {
+        this->AllocationHead =
+          atomicAdd(this->GlobalPopCount, static_cast<GlobalPopCountType>(rVal));
+      }
+
+      this->AllocationHead = activeLanes.shfl(this->AllocationHead, 0);
+    }
+
+    // The global output allocation is written to by striding the writes across
+    // the warp lanes, allowing the writes to global memory to be coalesced.
+    VTKM_SUPPRESS_EXEC_WARNINGS
+    __device__ vtkm::Id GetNextOutputIndex() const
+    {
+      // Only lanes with unwritten output indices left will call this method,
+      // so just check the coalesced threads:
+      const auto activeLanes = cooperative_groups::coalesced_threads();
+      const int activeRank = activeLanes.thread_rank();
+      const int activeSize = activeLanes.size();
+
+      vtkm::Id nextIdx = static_cast<vtkm::Id>(this->AllocationHead + activeRank);
+      this->AllocationHead += activeSize;
+
+      return nextIdx;
+    }
+
+    const BitsPortal Input;
+    const IndicesPortal Output;
+    GlobalPopCountType* GlobalPopCount;
+    mutable vtkm::UInt64 AllocationHead{ 0 };
+    mutable vtkm::Int32 LocalPopCount{ 0 };
+    // Used to mask trailing bits the in last word.
+    vtkm::Id FinalWordIndex{ 0 };
+    Word FinalWordMask{ 0 };
+  };
+
   template <class InputPortal, class OutputPortal>
   VTKM_CONT static void CopyPortal(const InputPortal& input, const OutputPortal& output)
   {
@@ -333,7 +534,8 @@ private:
     //The portal type and the initial value AREN'T the same type so we have
     //to a slower approach, where we wrap the input portal inside a cast
     //portal
-    vtkm::cont::cuda::internal::CastPortal<InputPortal, T> castPortal(input);
+    vtkm::cont::cuda::internal::CastPortal<InputPortal, BinaryFunctor> castPortal(input,
+                                                                                  binary_functor);
 
     vtkm::exec::cuda::internal::WrappedBinaryOperator<T, BinaryFunctor> bop(binary_functor);
 
@@ -743,9 +945,43 @@ private:
     }
   }
 
+  template <typename GlobalPopCountType, typename BitsPortal, typename IndicesPortal>
+  VTKM_CONT static vtkm::Id BitFieldToUnorderedSetPortal(const BitsPortal& bits,
+                                                         const IndicesPortal& indices)
+  {
+    using Functor = BitFieldToUnorderedSetFunctor<BitsPortal, IndicesPortal, GlobalPopCountType>;
+
+    // RAII for the global atomic counter.
+    auto globalCount = cuda::internal::make_CudaUniquePtr<GlobalPopCountType>(1);
+    Functor functor{ bits, indices, globalCount.get() };
+
+    functor.Initialize();
+    Schedule(functor, bits.GetNumberOfWords());
+    Synchronize(); // Ensure kernel is done before checking final atomic count
+    return functor.Finalize();
+  }
+
   //-----------------------------------------------------------------------------
 
 public:
+  template <typename IndicesStorage>
+  VTKM_CONT static vtkm::Id BitFieldToUnorderedSet(
+    const vtkm::cont::BitField& bits,
+    vtkm::cont::ArrayHandle<Id, IndicesStorage>& indices)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    vtkm::Id numBits = bits.GetNumberOfBits();
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTagCuda{});
+    auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTagCuda{});
+
+    // Use a uint64 for accumulator, as atomicAdd does not support signed int64.
+    numBits = BitFieldToUnorderedSetPortal<vtkm::UInt64>(bitsPortal, indicesPortal);
+
+    indices.Shrink(numBits);
+    return numBits;
+  }
+
   template <typename T, typename U, class SIn, class SOut>
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, SIn>& input,
                              vtkm::cont::ArrayHandle<U, SOut>& output)
@@ -1191,10 +1427,12 @@ public:
   static void SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
 
   VTKM_CONT_EXPORT
-  static void GetGridsAndBlocks(vtkm::UInt32& grid, vtkm::UInt32& blocks, vtkm::Id size);
+  static void GetBlocksAndThreads(vtkm::UInt32& blocks,
+                                  vtkm::UInt32& threadsPerBlock,
+                                  vtkm::Id size);
 
   VTKM_CONT_EXPORT
-  static void GetGridsAndBlocks(vtkm::UInt32& grid, dim3& blocks, const dim3& size);
+  static void GetBlocksAndThreads(vtkm::UInt32& blocks, dim3& threadsPerBlock, const dim3& size);
 
 public:
   template <typename WType, typename IType>
@@ -1211,15 +1449,11 @@ public:
     CheckForErrors();
     SetupErrorBuffer(functor);
 
-    vtkm::UInt32 grids, blocks;
-    GetGridsAndBlocks(grids, blocks, numInstances);
+    vtkm::UInt32 blocks, threadsPerBlock;
+    GetBlocksAndThreads(blocks, threadsPerBlock, numInstances);
 
-    cuda::internal::TaskStrided1DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor,
-                                                                                   numInstances);
-
-#ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_1D
-    parameter_sweep_1d_schedule(functor, numInstances);
-#endif
+    cuda::internal::TaskStrided1DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
+      functor, numInstances);
   }
 
   template <typename WType, typename IType>
@@ -1240,15 +1474,12 @@ public:
                       static_cast<vtkm::UInt32>(rangeMax[1]),
                       static_cast<vtkm::UInt32>(rangeMax[2]));
 
-    vtkm::UInt32 grids;
-    dim3 blocks;
-    GetGridsAndBlocks(grids, blocks, ranges);
+    vtkm::UInt32 blocks;
+    dim3 threadsPerBlock;
+    GetBlocksAndThreads(blocks, threadsPerBlock, ranges);
 
-    cuda::internal::TaskStrided3DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor, ranges);
-
-#ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_3D
-    parameter_sweep_3d_schedule(functor, rangeMax);
-#endif
+    cuda::internal::TaskStrided3DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
+      functor, ranges);
   }
 
   template <class Functor>

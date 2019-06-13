@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2019 UT-Battelle, LLC.
-//  Copyright 2019 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_testing_TestingCellLocatorUniformGrid_h
 #define vtk_m_cont_testing_TestingCellLocatorUniformGrid_h
@@ -37,9 +27,9 @@
 class LocatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  LocatorWorklet(vtkm::Bounds& bounds_, vtkm::Vec<vtkm::Id, 3>& dims_)
-    : bounds(bounds_)
-    , dims(dims_)
+  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Vec<vtkm::Id, 3>& cellDims)
+    : Bounds(bounds)
+    , CellDims(cellDims)
   {
   }
 
@@ -51,16 +41,24 @@ public:
   template <typename PointType>
   VTKM_EXEC vtkm::Id CalculateCellId(const PointType& point) const
   {
-    if (!bounds.Contains(point))
+    if (!Bounds.Contains(point))
       return -1;
+
     vtkm::Vec<vtkm::Id, 3> logical;
-    logical[0] = static_cast<vtkm::Id>(
-      vtkm::Floor((point[0] / bounds.X.Length()) * static_cast<vtkm::FloatDefault>(dims[0] - 1)));
-    logical[1] = static_cast<vtkm::Id>(
-      vtkm::Floor((point[1] / bounds.Y.Length()) * static_cast<vtkm::FloatDefault>(dims[1] - 1)));
-    logical[2] = static_cast<vtkm::Id>(
-      vtkm::Floor((point[2] / bounds.Z.Length()) * static_cast<vtkm::FloatDefault>(dims[2] - 1)));
-    return logical[2] * (dims[0] - 1) * (dims[1] - 1) + logical[1] * (dims[0] - 1) + logical[0];
+    logical[0] = (point[0] == Bounds.X.Max)
+      ? CellDims[0] - 1
+      : static_cast<vtkm::Id>(vtkm::Floor((point[0] / Bounds.X.Length()) *
+                                          static_cast<vtkm::FloatDefault>(CellDims[0])));
+    logical[1] = (point[1] == Bounds.Y.Max)
+      ? CellDims[1] - 1
+      : static_cast<vtkm::Id>(vtkm::Floor((point[1] / Bounds.Y.Length()) *
+                                          static_cast<vtkm::FloatDefault>(CellDims[1])));
+    logical[2] = (point[2] == Bounds.Z.Max)
+      ? CellDims[2] - 1
+      : static_cast<vtkm::Id>(vtkm::Floor((point[2] / Bounds.Z.Length()) *
+                                          static_cast<vtkm::FloatDefault>(CellDims[2])));
+
+    return logical[2] * CellDims[0] * CellDims[1] + logical[1] * CellDims[0] + logical[0];
   }
 
   template <typename PointType, typename LocatorType>
@@ -76,8 +74,8 @@ public:
   }
 
 private:
-  vtkm::Bounds bounds;
-  vtkm::Vec<vtkm::Id, 3> dims;
+  vtkm::Bounds Bounds;
+  vtkm::Vec<vtkm::Id, 3> CellDims;
 };
 
 template <typename DeviceAdapter>
@@ -98,9 +96,9 @@ public:
     std::cout << "Z bounds : " << bounds.Z.Min << " to " << bounds.Z.Max << std::endl;
 
     using StructuredType = vtkm::cont::CellSetStructured<3>;
-    vtkm::Vec<vtkm::Id, 3> dims =
-      cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
-    std::cout << "Dimensions of dataset : " << dims << std::endl;
+    vtkm::Vec<vtkm::Id, 3> cellDims =
+      cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+    std::cout << "Dimensions of dataset : " << cellDims << std::endl;
 
     vtkm::cont::CellLocatorUniformGrid locator;
     locator.SetCoordinates(coords);
@@ -124,13 +122,29 @@ public:
       PointType point = vtkm::make_Vec(outBounds(dre), outBounds(dre), outBounds(dre));
       pointsVec.push_back(point);
     }
+    std::uniform_real_distribution<vtkm::Float32> outBounds2(-1.0f, 0.0f);
+    for (size_t i = 0; i < 5; i++)
+    {
+      PointType point = vtkm::make_Vec(outBounds2(dre), outBounds2(dre), outBounds2(dre));
+      pointsVec.push_back(point);
+    }
+
+    // Add points right on the boundary.
+    pointsVec.push_back(vtkm::make_Vec(0, 0, 0));
+    pointsVec.push_back(vtkm::make_Vec(4, 4, 4));
+    pointsVec.push_back(vtkm::make_Vec(4, 0, 0));
+    pointsVec.push_back(vtkm::make_Vec(0, 4, 0));
+    pointsVec.push_back(vtkm::make_Vec(0, 0, 4));
+    pointsVec.push_back(vtkm::make_Vec(4, 4, 0));
+    pointsVec.push_back(vtkm::make_Vec(0, 4, 4));
+    pointsVec.push_back(vtkm::make_Vec(4, 0, 4));
 
     vtkm::cont::ArrayHandle<PointType> points = vtkm::cont::make_ArrayHandle(pointsVec);
     // Query the points using the locators.
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
     vtkm::cont::ArrayHandle<PointType> parametric;
     vtkm::cont::ArrayHandle<bool> match;
-    LocatorWorklet worklet(bounds, dims);
+    LocatorWorklet worklet(bounds, cellDims);
     vtkm::worklet::DispatcherMapField<LocatorWorklet> dispatcher(worklet);
     dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(points, locator, cellIds, parametric, match);
@@ -145,7 +159,7 @@ public:
 
   void operator()() const
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
     this->TestTest();
   }
 };

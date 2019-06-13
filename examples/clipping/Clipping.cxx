@@ -2,24 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
+
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
@@ -69,10 +61,13 @@ struct FieldMapper
 
 int main(int argc, char* argv[])
 {
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
   if (argc < 4)
   {
     std::cout << "Usage: " << std::endl
-              << "$ " << argv[0] << " <input_vtk_file> [fieldName] <isoval> <output_vtk_file>"
+              << "$ " << argv[0]
+              << " [-d device] <input_vtk_file> [fieldName] <isoval> <output_vtk_file>"
               << std::endl;
     return 1;
   }
@@ -85,8 +80,10 @@ int main(int argc, char* argv[])
   vtkm::Float32 clipValue = std::stof(argv[argc - 2]);
   vtkm::worklet::Clip clip;
 
-  vtkm::cont::Timer<> total;
-  vtkm::cont::Timer<> timer;
+  vtkm::cont::Timer total;
+  total.Start();
+  vtkm::cont::Timer timer;
+  timer.Start();
   bool invertClip = false;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(input.GetCellSet(0),
@@ -100,12 +97,12 @@ int main(int argc, char* argv[])
 
 
   auto inCoords = input.GetCoordinateSystem(0).GetData();
-  timer.Reset();
+  timer.Start();
   auto outCoords = clip.ProcessCellField(inCoords);
   vtkm::Float64 processCoordinatesTime = timer.GetElapsedTime();
   output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", outCoords));
 
-  timer.Reset();
+  timer.Start();
   for (vtkm::Id i = 0; i < input.GetNumberOfFields(); ++i)
   {
     vtkm::cont::Field inField = input.GetField(i);

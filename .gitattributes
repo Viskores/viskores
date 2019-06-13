@@ -14,4 +14,5 @@
 *.rst            whitespace=tab-in-indent conflict-marker-size=79
 *.txt            whitespace=tab-in-indent
 vtkm/thirdparty/diy/vtkmdiy/**           -format.clang-format -whitespace
+vtkm/thirdparty/optionparser/vtkmoptionparser/** -format.clang-format -whitespace
 * !text !filter !merge !diff

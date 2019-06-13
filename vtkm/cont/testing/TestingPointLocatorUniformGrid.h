@@ -2,26 +2,14 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
 #define vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
-
-//#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 
 #include <random>
 
@@ -124,13 +112,13 @@ public:
 
     vtkm::cont::CoordinateSystem coord("points", coordi_Handle);
 
-    // TODO: locator needs to be a pointer to have runtime polymorphism.
-    //vtkm::cont::PointLocator * locator = new vtkm::cont::PointLocatorUniformGrid(
-    //  { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    vtkm::cont::PointLocatorUniformGrid locator(
-      { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    locator.SetCoordinates(coord);
-    locator.Update();
+    vtkm::cont::PointLocatorUniformGrid pointLocatorUG;
+    pointLocatorUG.SetCoordinates(coord);
+    pointLocatorUG.SetRange({ { 0.0, 10.0 } });
+    pointLocatorUG.SetNumberOfBins({ 5, 5, 5 });
+
+    vtkm::cont::PointLocator* locator = &pointLocatorUG;
+    locator->Update();
 
     ///// randomly generate testing points/////
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
@@ -180,7 +168,7 @@ public:
 
   void operator()() const
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
     this->TestTest();
   }
 };

@@ -1,5 +1,5 @@
-#ifndef DIY_MPI_DATATYPES_HPP
-#define DIY_MPI_DATATYPES_HPP
+#ifndef VTKMDIY_MPI_DATATYPES_HPP
+#define VTKMDIY_MPI_DATATYPES_HPP
 
 #include <vector>
 
@@ -18,22 +18,22 @@ namespace detail
   template<class T>
   struct is_mpi_datatype        { typedef false_type    type; };
 
-#define DIY_MPI_DATATYPE_MAP(cpp_type, mpi_type) \
+#define VTKMDIY_MPI_DATATYPE_MAP(cpp_type, mpi_type) \
   template<>  inline MPI_Datatype  get_mpi_datatype<cpp_type>() { return mpi_type; }  \
   template<>  struct is_mpi_datatype<cpp_type>                  { typedef true_type type; };    \
   template<>  struct is_mpi_datatype< std::vector<cpp_type> >   { typedef true_type type; };
 
-  DIY_MPI_DATATYPE_MAP(char,                  MPI_BYTE);
-  DIY_MPI_DATATYPE_MAP(unsigned char,         MPI_BYTE);
-  DIY_MPI_DATATYPE_MAP(bool,                  MPI_BYTE);
-  DIY_MPI_DATATYPE_MAP(int,                   MPI_INT);
-  DIY_MPI_DATATYPE_MAP(unsigned,              MPI_UNSIGNED);
-  DIY_MPI_DATATYPE_MAP(long,                  MPI_LONG);
-  DIY_MPI_DATATYPE_MAP(unsigned long,         MPI_UNSIGNED_LONG);
-  DIY_MPI_DATATYPE_MAP(long long,             MPI_LONG_LONG_INT);
-  DIY_MPI_DATATYPE_MAP(unsigned long long,    MPI_UNSIGNED_LONG_LONG);
-  DIY_MPI_DATATYPE_MAP(float,                 MPI_FLOAT);
-  DIY_MPI_DATATYPE_MAP(double,                MPI_DOUBLE);
+  VTKMDIY_MPI_DATATYPE_MAP(char,                  MPI_BYTE);
+  VTKMDIY_MPI_DATATYPE_MAP(unsigned char,         MPI_BYTE);
+  VTKMDIY_MPI_DATATYPE_MAP(bool,                  MPI_BYTE);
+  VTKMDIY_MPI_DATATYPE_MAP(int,                   MPI_INT);
+  VTKMDIY_MPI_DATATYPE_MAP(unsigned,              MPI_UNSIGNED);
+  VTKMDIY_MPI_DATATYPE_MAP(long,                  MPI_LONG);
+  VTKMDIY_MPI_DATATYPE_MAP(unsigned long,         MPI_UNSIGNED_LONG);
+  VTKMDIY_MPI_DATATYPE_MAP(long long,             MPI_LONG_LONG_INT);
+  VTKMDIY_MPI_DATATYPE_MAP(unsigned long long,    MPI_UNSIGNED_LONG_LONG);
+  VTKMDIY_MPI_DATATYPE_MAP(float,                 MPI_FLOAT);
+  VTKMDIY_MPI_DATATYPE_MAP(double,                MPI_DOUBLE);
 
   /* mpi_datatype: helper routines, specialized for std::vector<...> */
   template<class T>

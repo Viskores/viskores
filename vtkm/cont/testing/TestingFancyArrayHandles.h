@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_testing_TestingFancyArrayHandles_h
 #define vtk_m_cont_testing_TestingFancyArrayHandles_h
 
@@ -172,9 +160,9 @@ struct TransformExecObject : public vtkm::cont::ExecutionAndControlObjectBase
   VTKM_CONT TransformExecObject(const FunctorType& functor)
   {
     // Need to make sure the serial device is supported, since that is what is used on the
-    // control side.
-    vtkm::cont::ScopedGlobalRuntimeDeviceTracker scopedTracker;
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ResetDevice(vtkm::cont::DeviceAdapterTagSerial());
+    // control side. Therefore we reset to all supported devices.
+    vtkm::cont::ScopedRuntimeDeviceTracker scopedTracker(
+      vtkm::cont::DeviceAdapterTagSerial{}, vtkm::cont::RuntimeDeviceTrackerMode::Enable);
     this->VirtualFunctor.Reset(new VirtualTransformFunctor<ValueType, FunctorType>(functor));
   }
 
@@ -795,11 +783,11 @@ private:
   // worklets.
   struct GroupVariableInputWorklet : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn);
-    using ExecutionSignature = void(_1, WorkIndex);
+    using ControlSignature = void(FieldIn, FieldOut);
+    using ExecutionSignature = void(_1, WorkIndex, _2);
 
     template <typename InputType>
-    VTKM_EXEC void operator()(const InputType& input, vtkm::Id workIndex) const
+    VTKM_EXEC void operator()(const InputType& input, vtkm::Id workIndex, vtkm::Id& dummyOut) const
     {
       using ComponentType = typename InputType::ComponentType;
       vtkm::IdComponent expectedSize = static_cast<vtkm::IdComponent>(workIndex + 1);
@@ -809,10 +797,11 @@ private:
       }
 
       vtkm::Id valueIndex = workIndex * (workIndex + 1) / 2;
+      dummyOut = valueIndex;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < expectedSize; componentIndex++)
       {
         ComponentType expectedValue = TestValue(valueIndex, ComponentType());
-        if (expectedValue != input[componentIndex])
+        if (vtkm::Abs(expectedValue - input[componentIndex]) > 0.000001)
         {
           this->RaiseError("Got bad value in GroupVariableInputWorklet.");
         }
@@ -840,8 +829,13 @@ private:
         vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray), std::cout);
       std::cout << std::endl;
 
+      vtkm::cont::ArrayHandle<vtkm::Id> dummyArray;
+
       vtkm::worklet::DispatcherMapField<GroupVariableInputWorklet> dispatcher;
-      dispatcher.Invoke(vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray));
+      dispatcher.Invoke(vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray),
+                        dummyArray);
+
+      dummyArray.GetPortalConstControl();
     }
   };
 
@@ -1375,10 +1369,10 @@ public:
   /// all the fancy array handles that vtkm supports. Returns an
   /// error code that can be returned from the main function of a test.
   ///
-  static VTKM_CONT int Run()
+  static VTKM_CONT int Run(int argc, char* argv[])
   {
-    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
-    return vtkm::cont::testing::Testing::Run(TestAll());
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
+    return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
   }
 };
 }

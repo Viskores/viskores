@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_Interpolate_h
 #define vtk_m_exec_Interpolate_h
@@ -200,6 +190,63 @@ VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
 {
   using T = vtkm::Vec<vtkm::FloatDefault, 3>;
 
+  const T& origin = field.GetOrigin();
+  const T& spacing = field.GetSpacing();
+
+  return T(
+    origin[0] + static_cast<vtkm::FloatDefault>(pcoords[0]) * spacing[0], origin[1], origin[2]);
+}
+
+//-----------------------------------------------------------------------------
+template <typename FieldVecType, typename ParametricCoordType>
+VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolyLine,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+
+  switch (numPoints)
+  {
+    case 1:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  using T = ParametricCoordType;
+
+  T dt = 1 / static_cast<T>(numPoints - 1);
+  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(pcoords[0] / dt);
+  if (idx == numPoints - 1)
+    return field[numPoints - 1];
+
+  T t = (pcoords[0] - static_cast<T>(idx) * dt) / dt;
+
+  return vtkm::Lerp(field[idx], field[idx + 1], t);
+}
+
+template <typename ParametricCoordType>
+VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
+  const vtkm::VecAxisAlignedPointCoordinates<1>& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolyLine,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+
+  switch (numPoints)
+  {
+    case 1:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  using T = vtkm::Vec<vtkm::FloatDefault, 3>;
   const T& origin = field.GetOrigin();
   const T& spacing = field.GetSpacing();
 

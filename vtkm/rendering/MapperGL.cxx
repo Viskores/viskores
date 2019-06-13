@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/rendering/MapperGL.h>
@@ -301,8 +291,8 @@ VTKM_CONT void RenderTriangles(MapperGL& mapper,
 
 
     vtkm::Id vtx_cnt = out_vertices.GetNumberOfValues();
-    vtkm::Float32* v_ptr = out_vertices.GetStorage().StealArray();
-    vtkm::Float32* c_ptr = out_color.GetStorage().StealArray();
+    vtkm::Float32* v_ptr = out_vertices.GetStorage().GetArray();
+    vtkm::Float32* c_ptr = out_color.GetStorage().GetArray();
 
     vtkm::Id floatSz = static_cast<vtkm::Id>(sizeof(vtkm::Float32));
     GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt * floatSz);
@@ -457,7 +447,7 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   vtkm::cont::ArrayHandle<vtkm::Float32> sf;
   sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
   auto dcoords = coords.GetData();
-  vtkm::Id numVerts = coords.GetData().GetNumberOfValues();
+  vtkm::Id numVerts = coords.GetNumberOfPoints();
 
   //Handle 1D cases.
   if (cellset.IsSameType(vtkm::cont::CellSetStructured<1>()))

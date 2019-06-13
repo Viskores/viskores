@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_CellSet_h
 #define vtk_m_cont_CellSet_h
@@ -67,6 +57,13 @@ public:
   virtual vtkm::Id GetNumberOfEdges() const = 0;
 
   virtual vtkm::Id GetNumberOfPoints() const = 0;
+
+  virtual vtkm::UInt8 GetCellShape(vtkm::Id id) const = 0;
+  virtual vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id id) const = 0;
+  virtual void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const = 0;
+
+  virtual std::shared_ptr<CellSet> NewInstance() const = 0;
+  virtual void DeepCopy(const CellSet* src) = 0;
 
   virtual void PrintSummary(std::ostream&) const = 0;
 

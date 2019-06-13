@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -357,8 +347,8 @@ void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintValues(
 } // worklet
 } // vtkm
 
-#include "vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_2D_Triangulation.h" // include Mesh_DEM_Triangulation_2D_Freudenthal
-#include "vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_3D_Triangulation.h" // include Mesh_DEM_Triangulation_3D_Freudenthal
-#include "vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MarchingCubes_3D_Triangulation.h" // include Mesh_DEM_Triangulation_3D_MarchinCubes
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_2D_Triangulation.h> // include Mesh_DEM_Triangulation_2D_Freudenthal
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_3D_Triangulation.h> // include Mesh_DEM_Triangulation_3D_Freudenthal
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MarchingCubes_3D_Triangulation.h> // include Mesh_DEM_Triangulation_3D_MarchinCubes
 
 #endif

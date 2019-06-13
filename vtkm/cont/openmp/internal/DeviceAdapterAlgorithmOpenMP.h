@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_openmp_internal_DeviceAdapterAlgorithmOpenMP_h
 #define vtk_m_cont_openmp_internal_DeviceAdapterAlgorithmOpenMP_h
@@ -397,7 +387,7 @@ class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagOpenMP>
 {
 public:
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
+  static vtkm::exec::openmp::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
                                                              const InvocationType& invocation,
                                                              vtkm::Id,
                                                              vtkm::Id globalIndexOffset = 0)
@@ -406,7 +396,7 @@ public:
   }
 
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
+  static vtkm::exec::openmp::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
                                                              const InvocationType& invocation,
                                                              vtkm::Id3,
                                                              vtkm::Id globalIndexOffset = 0)

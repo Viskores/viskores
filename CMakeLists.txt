@@ -2,30 +2,20 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 # If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX.
 # We require CMake 3.11 with the MSVC generator as the $<COMPILE_LANGUAGE:>
 # generator expression is not supported on older versions.
-cmake_minimum_required(VERSION 3.8...3.13)
+cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
 project (VTKm)
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-  cmake_minimum_required(VERSION 3.11...3.13 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.11...3.14 FATAL_ERROR)
 endif()
 
 # Update module path
@@ -153,9 +143,6 @@ include(VTKmCompilerFlags)
 
 
 #-----------------------------------------------------------------------------
-
-
-#-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)
   enable_testing()
   # Only include CTest if it has not been included by a superproject. The
@@ -170,24 +157,6 @@ if (VTKm_ENABLE_TESTING)
 
   configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
-
-  #-----------------------------------------------------------------------------
-  # Add "meta" tests that check the state of the repository
-  # SystemInformation prints out information about the current configuration
-  # CopyrightStatement checks that the copyright statement is in all source files
-  # SourceInBuild checks that all source files are listed in the build
-  add_test(NAME SystemInformation
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmSystemInformation.cmake"
-    )
-  add_test(NAME CopyrightStatement
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
-    )
-  # increase timeout since on some machines CopyrightStatement test takes a long time.
-  set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
-
-  add_test(NAME SourceInBuild
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInBuild.cmake"
-    )
 
   #-----------------------------------------------------------------------------
   # Find the Python interpreter, which we will use during the build process
@@ -318,6 +287,30 @@ endif ()
 #add the benchmarking folder
 if(VTKm_ENABLE_BENCHMARKS)
     add_subdirectory(benchmarking)
+endif()
+
+#-----------------------------------------------------------------------------
+if (VTKm_ENABLE_TESTING)
+
+  #-----------------------------------------------------------------------------
+  # Add "meta" tests that check the state of the repository
+  # SystemInformation prints out information about the current configuration
+  # CopyrightStatement checks that the copyright statement is in all source files
+  # SourceInBuild checks that all source files are listed in the build
+  # SourceInInstall checks that all source files are installed in the build
+  add_test(NAME SystemInformation
+    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmSystemInformation.cmake"
+    )
+  add_test(NAME CopyrightStatement
+    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
+    )
+  # increase timeout since on some machines CopyrightStatement test takes a long time.
+  set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
+
+  # Setup the infrastructure to allow VTK-m to run tests against a temporary
+  # installed version of VTK-m.
+  include(testing/VTKmTestInstall)
+  vtkm_test_install()
 endif()
 
 #-----------------------------------------------------------------------------

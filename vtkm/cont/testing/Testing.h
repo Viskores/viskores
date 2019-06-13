@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_testing_Testing_h
 #define vtk_m_cont_testing_Testing_h
@@ -33,11 +23,7 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include VTKM_DIY(diy/mpi.hpp)
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <vtkm/thirdparty/diy/serialization.h>
 
 namespace vtkm
 {
@@ -49,9 +35,8 @@ namespace testing
 struct Testing
 {
 public:
-
   template <class Func>
-  static VTKM_CONT int Run(Func function, int argc = 0, char* argv[] = nullptr)
+  static VTKM_CONT int Run(Func function, int argc, char* argv[])
   {
     vtkm::cont::Initialize(argc, argv);
 
@@ -84,7 +69,7 @@ public:
   }
 
   template <class Func>
-  static VTKM_CONT int RunOnDevice(Func function, int argc = 0, char* argv[] = nullptr)
+  static VTKM_CONT int RunOnDevice(Func function, int argc, char* argv[])
   {
     auto opts = vtkm::cont::InitializeOptions::RequireDevice;
     auto config = vtkm::cont::Initialize(argc, argv, opts);
@@ -127,11 +112,11 @@ struct Environment
     MPI_Init_thread(argc, argv, MPI_THREAD_FUNNELED, &provided_threading);
 
     // set the global communicator to use in VTKm.
-    diy::mpi::communicator comm(MPI_COMM_WORLD);
+    vtkmdiy::mpi::communicator comm(MPI_COMM_WORLD);
     vtkm::cont::EnvironmentTracker::SetCommunicator(comm);
 #else
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
 #endif
   }
 
@@ -147,20 +132,14 @@ struct Environment
 class TestEqualResult
 {
 public:
-  void PushMessage(const std::string& msg)
-  {
-    this->Messages.push_back(msg);
-  }
+  void PushMessage(const std::string& msg) { this->Messages.push_back(msg); }
 
-  const std::vector<std::string>& GetMessages() const
-  {
-    return this->Messages;
-  }
+  const std::vector<std::string>& GetMessages() const { return this->Messages; }
 
   std::string GetMergedMessage() const
   {
     std::string msg;
-    std::for_each(this->Messages.rbegin(), this->Messages.rend(), [&](const std::string& next){
+    std::for_each(this->Messages.rbegin(), this->Messages.rend(), [&](const std::string& next) {
       msg += (msg.empty() ? "" : ": ");
       msg += next;
     });
@@ -168,10 +147,7 @@ public:
     return msg;
   }
 
-  operator bool() const
-  {
-    return this->Messages.empty();
-  }
+  operator bool() const { return this->Messages.empty(); }
 
 private:
   std::vector<std::string> Messages;
@@ -183,20 +159,18 @@ namespace detail
 struct TestEqualArrayHandle
 {
   template <typename T1, typename T2, typename StorageTag1, typename StorageTag2>
-  VTKM_CONT void operator()(
-    const vtkm::cont::ArrayHandle<T1, StorageTag1>&,
-    const vtkm::cont::ArrayHandle<T2, StorageTag2>&,
-    TestEqualResult& result) const
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T1, StorageTag1>&,
+                            const vtkm::cont::ArrayHandle<T2, StorageTag2>&,
+                            TestEqualResult& result) const
   {
     result.PushMessage("types don't match");
     return;
   }
 
   template <typename T, typename StorageTag1, typename StorageTag2>
-  VTKM_CONT void operator()(
-    const vtkm::cont::ArrayHandle<T, StorageTag1>& array1,
-    const vtkm::cont::ArrayHandle<T, StorageTag2>& array2,
-    TestEqualResult& result) const
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag1>& array1,
+                            const vtkm::cont::ArrayHandle<T, StorageTag2>& array2,
+                            TestEqualResult& result) const
   {
     if (array1.GetNumberOfValues() != array2.GetNumberOfValues())
     {
@@ -209,36 +183,32 @@ struct TestEqualArrayHandle
     {
       if (!test_equal(portal1.Get(i), portal2.Get(i)))
       {
-        result.PushMessage(
-          std::string("values don't match at index ") + std::to_string(i));
+        result.PushMessage(std::string("values don't match at index ") + std::to_string(i));
         return;
       }
     }
   }
 
   template <typename T, typename StorageTag, typename TypeList>
-  VTKM_CONT void operator()(
-    const vtkm::cont::ArrayHandle<T, StorageTag>& array1,
-    const vtkm::cont::VariantArrayHandleBase<TypeList>& array2,
-    TestEqualResult& result) const
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& array1,
+                            const vtkm::cont::VariantArrayHandleBase<TypeList>& array2,
+                            TestEqualResult& result) const
   {
     array2.CastAndCall(*this, array1, result);
   }
 
   template <typename T, typename StorageTag, typename TypeList>
-  VTKM_CONT void operator()(
-    const vtkm::cont::VariantArrayHandleBase<TypeList>& array1,
-    const vtkm::cont::ArrayHandle<T, StorageTag>& array2,
-    TestEqualResult& result) const
+  VTKM_CONT void operator()(const vtkm::cont::VariantArrayHandleBase<TypeList>& array1,
+                            const vtkm::cont::ArrayHandle<T, StorageTag>& array2,
+                            TestEqualResult& result) const
   {
     array1.CastAndCall(*this, array2, result);
   }
 
   template <typename TypeList1, typename TypeList2>
-  VTKM_CONT void operator()(
-    const vtkm::cont::VariantArrayHandleBase<TypeList1>& array1,
-    const vtkm::cont::VariantArrayHandleBase<TypeList2>& array2,
-    TestEqualResult& result) const
+  VTKM_CONT void operator()(const vtkm::cont::VariantArrayHandleBase<TypeList1>& array1,
+                            const vtkm::cont::VariantArrayHandleBase<TypeList2>& array2,
+                            TestEqualResult& result) const
   {
     array2.CastAndCall(*this, array1, result);
   }
@@ -395,8 +365,8 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
     }
   }
 
-  result = test_equal_ArrayHandles(f1.GetData().ResetTypes(fTtypes),
-                                   f2.GetData().ResetTypes(fTtypes));
+  result =
+    test_equal_ArrayHandles(f1.GetData().ResetTypes(fTtypes), f2.GetData().ResetTypes(fTtypes));
   if (!result)
   {
     result.PushMessage("data doesn't match");
@@ -424,8 +394,8 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
                                      ds2.GetCoordinateSystem(i).GetData());
     if (!result)
     {
-      result.PushMessage(
-        std::string("coordinate systems don't match at index ") + std::to_string(i));
+      result.PushMessage(std::string("coordinate systems don't match at index ") +
+                         std::to_string(i));
       return result;
     }
   }
@@ -441,8 +411,7 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
                                  ds2.GetCellSet(i).ResetCellSetList(ctypes));
     if (!result)
     {
-      result.PushMessage(
-        std::string("cellsets don't match at index ") + std::to_string(i));
+      result.PushMessage(std::string("cellsets don't match at index ") + std::to_string(i));
       return result;
     }
   }
@@ -457,15 +426,13 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
     result = test_equal_Fields(ds1.GetField(i), ds2.GetField(i), fTtypes);
     if (!result)
     {
-      result.PushMessage(
-        std::string("fields don't match at index ") + std::to_string(i));
+      result.PushMessage(std::string("fields don't match at index ") + std::to_string(i));
       return result;
     }
   }
 
   return result;
 }
-
 }
 }
 } // namespace vtkm::cont::testing

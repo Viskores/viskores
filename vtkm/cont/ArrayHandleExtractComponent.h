@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_ArrayHandleExtractComponent_h
 #define vtk_m_cont_ArrayHandleExtractComponent_h
 
@@ -318,26 +306,26 @@ namespace cont
 {
 
 template <typename AH>
-struct TypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_ExtractComponent<" + TypeString<AH>::Get() + ">";
+    static std::string name = "AH_ExtractComponent<" + SerializableTypeString<AH>::Get() + ">";
     return name;
   }
 };
 
 template <typename AH>
-struct TypeString<
+struct SerializableTypeString<
   vtkm::cont::ArrayHandle<typename vtkm::VecTraits<typename AH::ValueType>::ComponentType,
                           vtkm::cont::StorageTagExtractComponent<AH>>>
-  : TypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleExtractComponent<AH>>
 {
 };
 }
 } // vtkm::cont
 
-namespace diy
+namespace mangled_diy_namespace
 {
 
 template <typename AH>
@@ -351,16 +339,16 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     auto storage = obj.GetStorage();
-    diy::save(bb, storage.GetComponent());
-    diy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, storage.GetComponent());
+    vtkmdiy::save(bb, storage.GetArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     vtkm::IdComponent component = 0;
     AH array;
-    diy::load(bb, component);
-    diy::load(bb, array);
+    vtkmdiy::load(bb, component);
+    vtkmdiy::load(bb, array);
 
     obj = vtkm::cont::make_ArrayHandleExtractComponent(array, component);
   }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/filter/FieldMetadata.h>
@@ -27,9 +17,6 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Logging.h>
-
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 namespace vtkm
 {
@@ -281,7 +268,7 @@ inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   VTKM_LOG_SCOPE(
-    vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeName<Derived>().c_str());
+    vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeToString<Derived>().c_str());
 
   Derived* self = static_cast<Derived*>(this);
   vtkm::cont::MultiBlock output = self->Execute(vtkm::cont::MultiBlock(input), policy);
@@ -301,7 +288,7 @@ inline VTKM_CONT vtkm::cont::MultiBlock Filter<Derived>::Execute(
 {
   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
                  "Filter (MultiBlock): '%s'",
-                 vtkm::cont::TypeName<Derived>().c_str());
+                 vtkm::cont::TypeToString<Derived>().c_str());
 
   Derived* self = static_cast<Derived*>(this);
 
