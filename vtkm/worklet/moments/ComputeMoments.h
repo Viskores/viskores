@@ -12,7 +12,7 @@
 #ifndef vtk_m_worklet_moments_ComputeMoments_h
 #define vtk_m_worklet_moments_ComputeMoments_h
 
-#include <vtkm/worklet/DispatcherPointNeighborhood.h>
+#include <vtkm/Math.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 #include <vtkm/cont/Field.h>
@@ -54,9 +54,6 @@ public:
                             T& moment) const
   {
     // TODO: type safety and numerical precision
-    // FIXME: Radius as Vec3<int>, however, radius_z may be 0 which cause divide by 0.
-    // We do need to have separate versions for 2D/3D, since we couldn't have Radius_z == 0
-    // which will cause devision byzero.
     auto sum = vtkm::TypeTraits<T>::ZeroInitialization();
     vtkm::Vec<vtkm::Float64, 2> recp{ 1.0 / Radius[0], 1.0 / Radius[1] };
 
@@ -125,9 +122,6 @@ public:
                             T& moment) const
   {
     // TODO: type safety and numerical precision
-    // FIXME: Radius as Vec3<int>, however, radius_z may be 0 which cause divide by 0.
-    // We do need to have separate versions for 2D/3D, since we couldn't have Radius_z == 0
-    // which will cause devision byzero.
     auto sum = vtkm::TypeTraits<T>::ZeroInitialization();
     const vtkm::Vec<vtkm::Float64, 3> recp{ 1.0 / this->Radius[0],
                                             1.0 / this->Radius[1],

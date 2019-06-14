@@ -13,6 +13,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/filter/internal/CreateResult.h>
+#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/moments/ComputeMoments.h>
 
 namespace vtkm
@@ -30,13 +31,14 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   if (fieldMetadata.GetAssociation() != vtkm::cont::Field::Association::POINTS)
   {
     throw vtkm::cont::ErrorBadValue("Active field for ComputeMoments must be a point field.");
   }
 
+  vtkm::worklet::Invoker invoke;
   vtkm::cont::DataSet output = internal::CreateResult(input);
 
   auto worklet = vtkm::worklet::moments::ComputeMoments(this->Radius);
