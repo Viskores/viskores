@@ -126,7 +126,7 @@ private:
 
   void AllocateFilterMemory()
   {
-    LowDecomposeFilter = new vtkm::Float64[FilterLength * 4];
+    LowDecomposeFilter = new vtkm::Float64[static_cast<std::size_t>(FilterLength * 4)];
     HighDecomposeFilter = LowDecomposeFilter + FilterLength;
     LowReconstructFilter = HighDecomposeFilter + FilterLength;
     HighReconstructFilter = LowReconstructFilter + FilterLength;

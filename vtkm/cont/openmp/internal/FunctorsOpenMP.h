@@ -291,7 +291,7 @@ struct ReduceHelper
         if (numVals >= numThreads * 2)
         {
           doParallel = true;
-          threadData.reset(new ReturnType[numThreads]);
+          threadData.reset(new ReturnType[static_cast<std::size_t>(numThreads)]);
         }
       }
 
