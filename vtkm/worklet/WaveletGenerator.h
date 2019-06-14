@@ -18,6 +18,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/Logging.h>
 
 #include <vtkm/exec/FunctorBase.h>
 
@@ -216,6 +217,8 @@ public:
   VTKM_CONT vtkm::cont::DataSet GenerateDataSet(
     vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny()) const
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     // Create points:
     const vtkm::Id3 dims{ this->MaximumExtent - this->MinimumExtent + vtkm::Id3{ 1 } };
     const Vec3F origin{ this->MinimumExtent };
@@ -241,6 +244,8 @@ public:
     const std::string& name,
     vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny()) const
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id3 dims{ this->MaximumExtent - this->MinimumExtent + vtkm::Id3{ 1 } };
     Vec3F minPt = Vec3F(this->MinimumExtent) * this->Spacing;
     vtkm::FloatDefault temp2 = 1.f / (2.f * this->StandardDeviation * this->StandardDeviation);
