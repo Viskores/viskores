@@ -25,7 +25,7 @@ namespace exec
 {
 
 template <typename DeviceAdapter>
-class PointLocatorUniformGrid : public vtkm::exec::PointLocator
+class VTKM_ALWAYS_EXPORT PointLocatorUniformGrid final : public vtkm::exec::PointLocator
 {
 public:
   using CoordPortalType =
