@@ -364,6 +364,12 @@ function(vtkm_unit_tests)
   set_property(TARGET ${test_prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
+  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+    set_property(TARGET ${test_prog} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
+    set_property(TARGET ${test_prog} PROPERTY CXX_VISIBILITY_PRESET "hidden")
+  endif()
+
+
   #Starting in CMake 3.13, cmake will properly drop duplicate libraries
   #from the link line so this workaround can be dropped
   if (CMAKE_VERSION VERSION_LESS 3.13 AND "vtkm_rendering" IN_LIST VTKm_UT_LIBRARIES)
