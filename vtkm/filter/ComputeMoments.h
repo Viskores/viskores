@@ -29,13 +29,13 @@ public:
                                           const vtkm::filter::PolicyBase<DerivedPolicy>&);
 
   // TODO: change radius to vec3<int>
-  VTKM_CONT void SetRadius(int _radius) { this->Radius = _radius; }
+  VTKM_CONT void SetRadius(vtkm::Vec<vtkm::Int32, 3> _radius) { this->Radius = _radius; }
 
-  VTKM_CONT void SetOrder(int _order) { this->Order = _order; }
+  VTKM_CONT void SetOrder(vtkm::Int32 _order) { this->Order = _order; }
 
 private:
-  int Radius;
-  int Order;
+  vtkm::Vec<vtkm::Int32, 3> Radius = { 1, 1, 1 };
+  vtkm::Int32 Order = 0;
 };
 
 template <>

@@ -37,6 +37,7 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
   }
 
   vtkm::cont::DataSet output = internal::CreateResult(input);
+  auto worklet = vtkm::worklet::moments::ComputeMoments(this->Radius);
 
   // FIXME: 3D with i, j, k
   for (int order = 0; order <= this->Order; ++order)
@@ -45,10 +46,11 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
     {
       vtkm::cont::ArrayHandle<T> moments;
 
-
-      vtkm::worklet::moments::ComputeMoments().Run(
+      worklet.Run(
         vtkm::filter::ApplyPolicy(input.GetCellSet(this->GetActiveCellSetIndex()), policy),
         field,
+        p,
+        Order - p,
         moments);
 
       std::string fieldName = "index";
