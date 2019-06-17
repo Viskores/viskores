@@ -423,6 +423,11 @@ function(vtkm_unit_tests)
         TIMEOUT ${timeout}
         RUN_SERIAL ${run_serial}
       )
+
+      set_tests_properties("${tname}${upper_backend}" PROPERTIES
+        FAIL_REGULAR_EXPRESSION "runtime error"
+      )
+
     endforeach (test)
   endforeach(current_backend)
 
