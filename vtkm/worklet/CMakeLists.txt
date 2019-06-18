@@ -70,6 +70,7 @@ set(headers
   Threshold.h
   ThresholdPoints.h
   Triangulate.h
+  Tube.h
   VertexClustering.h
   WarpScalar.h
   WarpVector.h
