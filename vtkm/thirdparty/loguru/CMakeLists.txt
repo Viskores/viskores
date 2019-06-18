@@ -18,6 +18,8 @@ target_include_directories(vtkm_loguru INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/loguru>)
 
+target_link_libraries(vtkm_loguru INTERFACE ${CMAKE_DL_LIBS} Threads::Threads)
+
 install(TARGETS vtkm_loguru
   EXPORT ${VTKm_EXPORT_NAME})
 
