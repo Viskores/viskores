@@ -15,4 +15,5 @@
 *.txt            whitespace=tab-in-indent
 vtkm/thirdparty/diy/vtkmdiy/**           -format.clang-format -whitespace
 vtkm/thirdparty/optionparser/vtkmoptionparser/** -format.clang-format -whitespace
+vtkm/thirdparty/lodepng/vtkmlodepng/** -format.clang-format -whitespace
 * !text !filter !merge !diff
