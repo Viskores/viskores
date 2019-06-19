@@ -104,6 +104,8 @@
 ///   execution environments, respectively.
 /// - MemTransfer: This level logs memory transfers between the control and host
 ///   environments.
+/// - KernelLaunches: This level logs details about each device side kernel launch
+///   such as the CUDA PTX, Warps, and Grids used.
 /// - Cast: Logs details of dynamic object resolution.
 ///
 /// The log may be shared and extended by applications that use VTK-m. There
@@ -310,6 +312,9 @@ enum class LogLevel
   /// Host->device / device->host data copies
   MemTransfer,
 
+  /// Details on Device-side Kernel Launches
+  KernelLaunches,
+
   /// When a dynamic object is (or isn't) resolved via CastAndCall, etc.
   Cast,
 
@@ -349,6 +354,13 @@ void InitLogging();
 VTKM_CONT_EXPORT
 VTKM_CONT
 void SetStderrLogLevel(vtkm::cont::LogLevel level);
+
+/**
+ * Get the active highest log level that will be printed to stderr.
+ */
+VTKM_CONT_EXPORT
+VTKM_CONT
+vtkm::cont::LogLevel GetStderrLogLevel();
 
 /**
  * Register a custom name to identify a log level. The name will be truncated
@@ -416,20 +428,23 @@ std::string GetSizeString(vtkm::UInt64 bytes, int prec = 2);
  * enabled and the platform supports it, the type name will also be demangled.
  * @{
  */
+static inline VTKM_CONT std::string TypeToString(const std::type_info& t)
+{
+#ifdef VTKM_ENABLE_LOGGING
+  return loguru::demangle(t.name()).c_str();
+#else  // VTKM_ENABLE_LOGGING
+  return t.name();
+#endif // VTKM_ENABLE_LOGGING
+}
 template <typename T>
 static inline VTKM_CONT std::string TypeToString()
 {
-#ifdef VTKM_ENABLE_LOGGING
-  return loguru::demangle(typeid(T).name()).c_str();
-#else  // VTKM_ENABLE_LOGGING
-  return typeid(T).name();
-#endif // VTKM_ENABLE_LOGGING
+  return TypeToString(typeid(T));
 }
-
 template <typename T>
-static inline VTKM_CONT std::string TypeToString(const T&)
+static inline VTKM_CONT std::string TypeToString(const T& t)
 {
-  return TypeToString<T>();
+  return TypeToString(typeid(t));
 }
 /**@}*/
 }
