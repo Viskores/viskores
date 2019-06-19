@@ -200,6 +200,9 @@ endif()
 
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
 target_link_libraries(vtkm_cont PUBLIC vtkm_taotuple vtkm_optionparser vtkm_diy)
+if(TARGET vtkm_loguru)
+  target_link_libraries(vtkm_cont PRIVATE vtkm_loguru)
+endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
