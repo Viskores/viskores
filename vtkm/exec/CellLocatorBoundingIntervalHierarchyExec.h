@@ -52,7 +52,8 @@ struct CellLocatorBoundingIntervalHierarchyNode
 }; // struct CellLocatorBoundingIntervalHierarchyNode
 
 template <typename DeviceAdapter, typename CellSetType>
-class VTKM_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchyExec : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchyExec final
+  : public vtkm::exec::CellLocator
 {
   using NodeArrayHandle =
     vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode>;

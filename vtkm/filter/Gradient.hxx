@@ -58,20 +58,6 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-Gradient::Gradient()
-  : ComputePointGradient(false)
-  , ComputeVorticity(false)
-  , ComputeQCriterion(false)
-  , StoreGradient(true)
-  , RowOrdering(true)
-  , GradientsName("Gradients")
-  , DivergenceName("Divergence")
-  , VorticityName("Vorticity")
-  , QCriterionName("QCriterion")
-{
-}
-
-//-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet& input,

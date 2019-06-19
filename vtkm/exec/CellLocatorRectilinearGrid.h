@@ -29,7 +29,7 @@ namespace exec
 {
 
 template <typename DeviceAdapter>
-class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid final : public vtkm::exec::CellLocator
 {
 private:
   using FromType = vtkm::TopologyElementTagPoint;
