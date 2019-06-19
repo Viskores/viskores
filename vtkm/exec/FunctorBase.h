@@ -27,7 +27,7 @@ namespace exec
 /// This class contains a public method named RaiseError that can be called in
 /// the execution environment to signal a problem.
 ///
-class FunctorBase
+class VTKM_NEVER_EXPORT FunctorBase
 {
 public:
   VTKM_EXEC_CONT
