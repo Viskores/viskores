@@ -54,10 +54,10 @@ public:
       for (int i = -Radius[0]; i <= Radius[0]; ++i)
       {
         vtkm::Float64 r0 = i * recp[0];
-        vtkm::Float64 r1 = i * recp[1];
+        vtkm::Float64 r1 = j * recp[1];
 
         if (r0 * r0 + r1 * r1 <= 1)
-          sum += pow(r0, p) * pow(r0, q) * image.Get(i, j, 0);
+          sum += pow(r0, p) * pow(r1, q) * image.Get(i, j, 0);
       }
     }
 
@@ -143,7 +143,6 @@ public:
       using DispatcherType =
         vtkm::worklet::DispatcherPointNeighborhood<vtkm::worklet::moments::ComputeMoments2D>;
       DispatcherType dispatcher(vtkm::worklet::moments::ComputeMoments2D{ Radius, p, q });
-      dispatcher.SetDevice(vtkm::cont::DeviceAdapterTagSerial());
       dispatcher.Invoke(input, pixels, momentsOut);
     }
 

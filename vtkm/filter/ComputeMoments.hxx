@@ -46,7 +46,7 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
     {
       vtkm::cont::ArrayHandle<T> moments;
 
-      worklet.Run(input.GetCellSet(this->GetActiveCellSetIndex()), field, p, Order - p, moments);
+      worklet.Run(input.GetCellSet(this->GetActiveCellSetIndex()), field, p, order - p, moments);
 
       std::string fieldName = "index";
       // names for i and j
