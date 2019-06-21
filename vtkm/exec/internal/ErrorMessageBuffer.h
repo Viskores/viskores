@@ -30,7 +30,7 @@ namespace internal
 /// Before scheduling worklets, the global array should be cleared to have no
 /// error. This can only be reliably done by the device adapter.
 ///
-class ErrorMessageBuffer
+class VTKM_NEVER_EXPORT ErrorMessageBuffer
 {
 public:
   VTKM_EXEC_CONT ErrorMessageBuffer()

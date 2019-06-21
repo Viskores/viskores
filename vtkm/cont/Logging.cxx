@@ -115,6 +115,7 @@ void InitLogging(int& argc, char* argv[])
   SetLogLevelName(vtkm::cont::LogLevel::MemCont, "MemC");
   SetLogLevelName(vtkm::cont::LogLevel::MemExec, "MemE");
   SetLogLevelName(vtkm::cont::LogLevel::MemTransfer, "MemT");
+  SetLogLevelName(vtkm::cont::LogLevel::KernelLaunches, "Kern");
   SetLogLevelName(vtkm::cont::LogLevel::Cast, "Cast");
 
 
@@ -149,6 +150,16 @@ void SetStderrLogLevel(LogLevel level)
   loguru::g_stderr_verbosity = static_cast<loguru::Verbosity>(level);
 #else  // VTKM_ENABLE_LOGGING
   (void)level;
+#endif // VTKM_ENABLE_LOGGING
+}
+
+VTKM_CONT
+vtkm::cont::LogLevel GetStderrLogLevel()
+{
+#ifdef VTKM_ENABLE_LOGGING
+  return static_cast<vtkm::cont::LogLevel>(loguru::g_stderr_verbosity);
+#else  // VTKM_ENABLE_LOGGING
+  return vtkm::cont::LogLevel::Off;
 #endif // VTKM_ENABLE_LOGGING
 }
 

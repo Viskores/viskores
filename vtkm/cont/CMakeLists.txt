@@ -188,7 +188,6 @@ add_subdirectory(openmp)
 add_subdirectory(cuda)
 
 set(backends )
-set (DL_LIBS )
 if(TARGET vtkm::tbb)
   list(APPEND backends vtkm::tbb)
 endif()
@@ -198,14 +197,11 @@ endif()
 if(TARGET vtkm::openmp)
   list(APPEND backends vtkm::openmp)
 endif()
-if (VTKm_ENABLE_LOGGING)
-  list(APPEND DL_LIBS ${CMAKE_DL_LIBS} Threads::Threads) # dladdr function
-endif()
-target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends} ${DL_LIBS})
-target_link_libraries(vtkm_cont PUBLIC vtkm_taotuple vtkm_optionparser)
-if(TARGET vtkm_diy)
-  # This will become a required dependency eventually.
-  target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
+
+target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
+target_link_libraries(vtkm_cont PUBLIC vtkm_taotuple vtkm_optionparser vtkm_diy)
+if(TARGET vtkm_loguru)
+  target_link_libraries(vtkm_cont PRIVATE vtkm_loguru)
 endif()
 
 #-----------------------------------------------------------------------------

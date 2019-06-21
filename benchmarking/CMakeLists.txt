@@ -21,11 +21,16 @@ function(add_benchmark)
   target_link_libraries(${exe_name} PRIVATE ${VTKm_AB_LIBS})
   set_target_properties(${exe_name} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
-    )
+    CXX_VISIBILITY_PRESET "hidden"
+  )
 
+  set_property(TARGET ${exe_name} PROPERTY  "hidden")
   if (TARGET vtkm::cuda)
     set_source_files_properties(${VTKm_AB_FILE} PROPERTIES LANGUAGE "CUDA")
-    set_property(TARGET ${exe_name} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+    set_target_properties(${exe_name} PROPERTIES
+      CUDA_VISIBILITY_PRESET "hidden"
+      CUDA_SEPARABLE_COMPILATION ON
+    )
   endif()
 endfunction()
 
