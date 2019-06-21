@@ -17,6 +17,11 @@
 
 #include <cuda.h>
 
+// minwindef.h on Windows creates a preprocessor macro named PASCAL, which messes this up.
+#ifdef PASCAL
+#undef PASCAL
+#endif
+
 namespace vtkm
 {
 namespace cont
@@ -227,6 +232,46 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThrea
     blocks = params.first;
     threadsPerBlock = params.second;
   }
+}
+
+void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::LogKernelLaunch(
+  const cudaFuncAttributes& func_attrs,
+  const std::type_info& worklet_info,
+  vtkm::UInt32 blocks,
+  vtkm::UInt32 threadsPerBlock,
+  vtkm::Id)
+{
+  (void)func_attrs;
+  (void)blocks;
+  (void)threadsPerBlock;
+  std::string name = vtkm::cont::TypeToString(worklet_info);
+  VTKM_LOG_F(vtkm::cont::LogLevel::KernelLaunches,
+             "Launching 1D kernel %s on CUDA [ptx=%i, blocks=%i, threadsPerBlock=%i]",
+             name.c_str(),
+             (func_attrs.ptxVersion * 10),
+             blocks,
+             threadsPerBlock);
+}
+
+void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::LogKernelLaunch(
+  const cudaFuncAttributes& func_attrs,
+  const std::type_info& worklet_info,
+  vtkm::UInt32 blocks,
+  dim3 threadsPerBlock,
+  const dim3&)
+{
+  (void)func_attrs;
+  (void)blocks;
+  (void)threadsPerBlock;
+  std::string name = vtkm::cont::TypeToString(worklet_info);
+  VTKM_LOG_F(vtkm::cont::LogLevel::KernelLaunches,
+             "Launching 3D kernel %s on CUDA [ptx=%i, blocks=%i, threadsPerBlock=%i, %i, %i]",
+             name.c_str(),
+             (func_attrs.ptxVersion * 10),
+             blocks,
+             threadsPerBlock.x,
+             threadsPerBlock.y,
+             threadsPerBlock.z);
 }
 }
 } // end namespace vtkm::cont

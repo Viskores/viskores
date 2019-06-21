@@ -19,7 +19,7 @@ namespace vtkm
 namespace exec
 {
 
-class CellLocator : public vtkm::VirtualObjectBase
+class VTKM_ALWAYS_EXPORT CellLocator : public vtkm::VirtualObjectBase
 {
 public:
   VTKM_EXEC_CONT virtual ~CellLocator() noexcept

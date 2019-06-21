@@ -36,10 +36,18 @@
 // Ignore "calling a __host__ function from a __host__ _device__ function is not allowed" warnings
 #ifndef TAO_TUPLE_SUPPRESS_NVCC_HD_WARN
 #ifdef __CUDACC__
+#if _MSC_VER
+#if __CUDAVER__ >= 75000
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN __pragma("nv_exec_check_disable")
+#else
+#define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN __pragma("hd_warning_disable")
+#endif
+#else
 #if __CUDAVER__ >= 75000
 #define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN _Pragma("nv_exec_check_disable")
 #else
 #define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN _Pragma("hd_warning_disable")
+#endif
 #endif
 #else
 #define TAO_TUPLE_SUPPRESS_NVCC_HD_WARN

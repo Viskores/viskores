@@ -4,14 +4,15 @@ set -e
 set -x
 shopt -s dotglob
 
-readonly name="loguru"
-readonly ownership="Loguru Upstream <kwrobot@kitware.com>"
+readonly name="lodepng"
+readonly ownership="LodePNG Upstream <kwrobot@kitware.com>"
 readonly subtree="vtkm/thirdparty/$name/vtkm$name"
 readonly repo="https://gitlab.kitware.com/third-party/$name.git"
 readonly tag="for/vtk-m"
 readonly paths="
-loguru.hpp
-loguru.cpp
+LICENSE
+lodepng.cpp
+lodepng.h
 README.md
 "
 

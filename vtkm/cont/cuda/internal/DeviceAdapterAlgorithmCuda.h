@@ -132,7 +132,6 @@ VTKM_CONT_EXPORT void InitScheduleParameters(
                                            int maxThreadsPerMultiProcessor,
                                            int maxThreadsPerBlock));
 
-
 namespace internal
 {
 
@@ -168,7 +167,6 @@ __global__ void TaskStrided3DLaunch(TaskType task, dim3 size)
     }
   }
 }
-
 
 template <typename T, typename BinaryOperationType>
 __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_op)
@@ -989,6 +987,11 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     const vtkm::Id inSize = input.GetNumberOfValues();
+    if (inSize <= 0)
+    {
+      output.Shrink(inSize);
+      return;
+    }
     CopyPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                output.PrepareForOutput(inSize, DeviceAdapterTagCuda()));
   }
@@ -1001,6 +1004,12 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id size = stencil.GetNumberOfValues();
+    if (size <= 0)
+    {
+      output.Shrink(size);
+      return;
+    }
+
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                                     stencil.PrepareForInput(DeviceAdapterTagCuda()),
                                     output.PrepareForOutput(size, DeviceAdapterTagCuda()),
@@ -1017,6 +1026,11 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id size = stencil.GetNumberOfValues();
+    if (size <= 0)
+    {
+      output.Shrink(size);
+      return;
+    }
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                                     stencil.PrepareForInput(DeviceAdapterTagCuda()),
                                     output.PrepareForOutput(size, DeviceAdapterTagCuda()),
@@ -1418,6 +1432,20 @@ public:
   VTKM_CONT_EXPORT
   static void GetBlocksAndThreads(vtkm::UInt32& blocks, dim3& threadsPerBlock, const dim3& size);
 
+  VTKM_CONT_EXPORT
+  static void LogKernelLaunch(const cudaFuncAttributes& func_attrs,
+                              const std::type_info& worklet_info,
+                              vtkm::UInt32 blocks,
+                              vtkm::UInt32 threadsPerBlock,
+                              vtkm::Id size);
+
+  VTKM_CONT_EXPORT
+  static void LogKernelLaunch(const cudaFuncAttributes& func_attrs,
+                              const std::type_info& worklet_info,
+                              vtkm::UInt32 blocks,
+                              dim3 threadsPerBlock,
+                              const dim3& size);
+
 public:
   template <typename WType, typename IType>
   static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided1D<WType, IType>& functor,
@@ -1435,6 +1463,17 @@ public:
 
     vtkm::UInt32 blocks, threadsPerBlock;
     GetBlocksAndThreads(blocks, threadsPerBlock, numInstances);
+
+#ifdef VTKM_ENABLE_LOGGING
+    if (GetStderrLogLevel() >= vtkm::cont::LogLevel::KernelLaunches)
+    {
+      using FunctorType = vtkm::exec::cuda::internal::TaskStrided1D<WType, IType>;
+      cudaFuncAttributes empty_kernel_attrs;
+      VTKM_CUDA_CALL(cudaFuncGetAttributes(&empty_kernel_attrs,
+                                           cuda::internal::TaskStrided1DLaunch<FunctorType>));
+      LogKernelLaunch(empty_kernel_attrs, typeid(WType), blocks, threadsPerBlock, numInstances);
+    }
+#endif
 
     cuda::internal::TaskStrided1DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
       functor, numInstances);
@@ -1462,6 +1501,17 @@ public:
     dim3 threadsPerBlock;
     GetBlocksAndThreads(blocks, threadsPerBlock, ranges);
 
+#ifdef VTKM_ENABLE_LOGGING
+    if (GetStderrLogLevel() >= vtkm::cont::LogLevel::KernelLaunches)
+    {
+      using FunctorType = vtkm::exec::cuda::internal::TaskStrided3D<WType, IType>;
+      cudaFuncAttributes empty_kernel_attrs;
+      VTKM_CUDA_CALL(cudaFuncGetAttributes(&empty_kernel_attrs,
+                                           cuda::internal::TaskStrided3DLaunch<FunctorType>));
+      LogKernelLaunch(empty_kernel_attrs, typeid(WType), blocks, threadsPerBlock, ranges);
+    }
+#endif
+
     cuda::internal::TaskStrided3DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
       functor, ranges);
   }
@@ -1472,6 +1522,7 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::exec::cuda::internal::TaskStrided1D<Functor, vtkm::internal::NullType> kernel(functor);
+
     ScheduleTask(kernel, numInstances);
   }
 

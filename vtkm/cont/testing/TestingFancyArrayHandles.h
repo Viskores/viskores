@@ -783,11 +783,11 @@ private:
   // worklets.
   struct GroupVariableInputWorklet : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn);
-    using ExecutionSignature = void(_1, WorkIndex);
+    using ControlSignature = void(FieldIn, FieldOut);
+    using ExecutionSignature = void(_1, WorkIndex, _2);
 
     template <typename InputType>
-    VTKM_EXEC void operator()(const InputType& input, vtkm::Id workIndex) const
+    VTKM_EXEC void operator()(const InputType& input, vtkm::Id workIndex, vtkm::Id& dummyOut) const
     {
       using ComponentType = typename InputType::ComponentType;
       vtkm::IdComponent expectedSize = static_cast<vtkm::IdComponent>(workIndex + 1);
@@ -797,10 +797,11 @@ private:
       }
 
       vtkm::Id valueIndex = workIndex * (workIndex + 1) / 2;
+      dummyOut = valueIndex;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < expectedSize; componentIndex++)
       {
         ComponentType expectedValue = TestValue(valueIndex, ComponentType());
-        if (expectedValue != input[componentIndex])
+        if (vtkm::Abs(expectedValue - input[componentIndex]) > 0.000001)
         {
           this->RaiseError("Got bad value in GroupVariableInputWorklet.");
         }
@@ -828,8 +829,13 @@ private:
         vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray), std::cout);
       std::cout << std::endl;
 
+      vtkm::cont::ArrayHandle<vtkm::Id> dummyArray;
+
       vtkm::worklet::DispatcherMapField<GroupVariableInputWorklet> dispatcher;
-      dispatcher.Invoke(vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray));
+      dispatcher.Invoke(vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray),
+                        dummyArray);
+
+      dummyArray.GetPortalConstControl();
     }
   };
 

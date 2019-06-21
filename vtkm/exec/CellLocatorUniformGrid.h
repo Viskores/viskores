@@ -28,7 +28,7 @@ namespace exec
 {
 
 template <typename DeviceAdapter>
-class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid final : public vtkm::exec::CellLocator
 {
 private:
   using FromType = vtkm::TopologyElementTagPoint;
