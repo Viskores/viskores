@@ -20,12 +20,9 @@ namespace exec
 
 struct IndicesExtrude
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
   IndicesExtrude() = default;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   IndicesExtrude(vtkm::Vec<vtkm::Int32, 3> pointIds1,
                  vtkm::Int32 plane1,
                  vtkm::Vec<vtkm::Int32, 3> pointIds2,
@@ -73,12 +70,9 @@ struct IndicesExtrude
 template <typename ConnectivityPortalType>
 struct ReverseIndicesExtrude
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
   ReverseIndicesExtrude() = default;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   ReverseIndicesExtrude(const ConnectivityPortalType conn,
                         vtkm::Id offset1,
                         vtkm::IdComponent length1,

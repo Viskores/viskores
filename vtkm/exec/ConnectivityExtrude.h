@@ -40,8 +40,6 @@ public:
 
   using IndicesType = IndicesExtrude;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
   ConnectivityExtrude() = default;
 
   ConnectivityExtrude(const ConnectivityPortalType& conn,
@@ -96,7 +94,7 @@ private:
 
 
 template <typename Device>
-class VTKM_ALWAYS_EXPORT ReverseConnectivityExtrude
+class ReverseConnectivityExtrude
 {
 private:
   using Int32HandleType = vtkm::cont::ArrayHandle<vtkm::Int32>;
@@ -114,10 +112,9 @@ public:
 
   using IndicesType = ReverseIndicesExtrude<ConnectivityPortalType>;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
   ReverseConnectivityExtrude() = default;
 
+  VTKM_EXEC
   ReverseConnectivityExtrude(const ConnectivityPortalType& conn,
                              const OffsetsPortalType& offsets,
                              const CountsPortalType& counts,
