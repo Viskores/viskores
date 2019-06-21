@@ -26,11 +26,20 @@ public:
   }
 
   template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
+  void operator()(const CellSetType& vtkmNotUsed(cellset)) const
   {
-    this->OutCellSet = Worklet.Run(cellset);
   }
 };
+template <>
+void DeduceCellSet::operator()(const vtkm::cont::CellSetExplicit<>& cellset) const
+{
+  this->OutCellSet = Worklet.Run(cellset);
+}
+template <>
+void DeduceCellSet::operator()(const vtkm::cont::CellSetStructured<3>& cellset) const
+{
+  this->OutCellSet = Worklet.Run(cellset);
+}
 }
 
 namespace vtkm

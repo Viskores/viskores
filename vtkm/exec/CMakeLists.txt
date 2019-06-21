@@ -23,6 +23,7 @@ set(headers
   CellMeasure.h
   ColorTable.h
   ConnectivityExplicit.h
+  ConnectivityExtrude.h
   ConnectivityPermuted.h
   ConnectivityStructured.h
   ExecutionWholeArray.h
