@@ -147,7 +147,7 @@ public:
   IndicesType GetIndices(const vtkm::Id2& index) const;
 
   template <typename IndexType>
-  VTKM_EXEC vtkm::IdComponent GetNumberOfIndices(const IndexType& index) const
+  VTKM_EXEC vtkm::IdComponent GetNumberOfIndices(const IndexType& vtkmNotUsed(index)) const
   {
     return 1;
   }
@@ -208,7 +208,11 @@ typename ConnectivityExtrude<Device>::IndicesType ConnectivityExtrude<Device>::G
     pointIds2[i] = this->NextNode.Get(pointIds1[i]);
   }
 
-  return IndicesType(pointIds1, p0, pointIds2, p1, this->NumberOfPointsPerPlane);
+  return IndicesType(pointIds1,
+                     static_cast<vtkm::Int32>(p0),
+                     pointIds2,
+                     static_cast<vtkm::Int32>(p1),
+                     this->NumberOfPointsPerPlane);
 }
 
 
