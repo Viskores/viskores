@@ -987,6 +987,11 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     const vtkm::Id inSize = input.GetNumberOfValues();
+    if (inSize <= 0)
+    {
+      output.Shrink(inSize);
+      return;
+    }
     CopyPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                output.PrepareForOutput(inSize, DeviceAdapterTagCuda()));
   }
@@ -999,6 +1004,12 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id size = stencil.GetNumberOfValues();
+    if (size <= 0)
+    {
+      output.Shrink(size);
+      return;
+    }
+
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                                     stencil.PrepareForInput(DeviceAdapterTagCuda()),
                                     output.PrepareForOutput(size, DeviceAdapterTagCuda()),
@@ -1015,6 +1026,11 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id size = stencil.GetNumberOfValues();
+    if (size <= 0)
+    {
+      output.Shrink(size);
+      return;
+    }
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                                     stencil.PrepareForInput(DeviceAdapterTagCuda()),
                                     output.PrepareForOutput(size, DeviceAdapterTagCuda()),
