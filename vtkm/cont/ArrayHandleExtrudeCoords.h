@@ -40,8 +40,8 @@ public:
   {
   }
 
-  vtkm::Int32 GetNumberOfPointsPerPlane() const { return (this->GetStorage().Length / 2); }
-  vtkm::Int32 GetNumberOfPlanes() const { return this->GetStorage().NumberOfPlanes; }
+  vtkm::Int32 GetNumberOfPointsPerPlane() const { return (this->GetStorage().GetLength() / 2); }
+  vtkm::Int32 GetNumberOfPlanes() const { return this->GetStorage().GetNumberOfPlanes(); }
 };
 
 template <typename T>

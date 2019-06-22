@@ -46,7 +46,6 @@ public:
 
   Storage()
     : Array()
-    , Length(-1)
     , NumberOfPlanes(0)
   {
   }
@@ -54,39 +53,42 @@ public:
   // Create with externally managed memory
   Storage(const BaseT* array, vtkm::Id arrayLength, vtkm::Int32 numberOfPlanes, bool cylindrical)
     : Array(vtkm::cont::make_ArrayHandle(array, arrayLength))
-    , Length(static_cast<vtkm::Int32>(arrayLength))
     , NumberOfPlanes(numberOfPlanes)
     , UseCylindrical(cylindrical)
   {
-    VTKM_ASSERT(this->Length >= 0);
+    VTKM_ASSERT(this->Array.GetNumberOfValues() >= 0);
   }
 
   Storage(const HandleType& array, vtkm::Int32 numberOfPlanes, bool cylindrical)
     : Array(array)
-    , Length(static_cast<vtkm::Int32>(array.GetNumberOfValues()))
     , NumberOfPlanes(numberOfPlanes)
     , UseCylindrical(cylindrical)
   {
-    VTKM_ASSERT(this->Length >= 0);
+    VTKM_ASSERT(this->Array.GetNumberOfValues() >= 0);
   }
 
   PortalType GetPortal() { return PortalType{}; }
 
   PortalConstType GetPortalConst() const
   {
-    VTKM_ASSERT(this->Length >= 0);
+    VTKM_ASSERT(this->Array.GetNumberOfValues() >= 0);
     return PortalConstType(this->Array.GetPortalConstControl(),
-                           this->Length,
+                           this->Array.GetNumberOfValues(),
                            this->NumberOfPlanes,
                            this->UseCylindrical);
   }
 
   vtkm::Id GetNumberOfValues() const
   {
-    VTKM_ASSERT(this->Length >= 0);
-    return (this->Length / 2) * static_cast<vtkm::Id>(this->NumberOfPlanes);
+    VTKM_ASSERT(this->Array.GetNumberOfValues() >= 0);
+    return (this->Array.GetNumberOfValues() / 2) * static_cast<vtkm::Id>(this->NumberOfPlanes);
   }
 
+  vtkm::Id GetLength() const { return this->Array.GetNumberOfValues(); }
+
+  vtkm::Int32 GetNumberOfPlanes() const { return NumberOfPlanes; }
+
+  bool GetUseCylindrical() const { return UseCylindrical; }
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorBadType("StorageTagExtrude is read only. It cannot be allocated.");
@@ -103,8 +105,10 @@ public:
     // to us
   }
 
+
   vtkm::cont::ArrayHandle<BaseT> Array;
-  vtkm::Int32 Length;
+
+private:
   vtkm::Int32 NumberOfPlanes;
   bool UseCylindrical;
 };
@@ -138,9 +142,9 @@ public:
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
     return PortalConstExecution(this->ControlData->Array.PrepareForInput(Device()),
-                                this->ControlData->Length,
-                                this->ControlData->NumberOfPlanes,
-                                this->ControlData->UseCylindrical);
+                                this->ControlData->Array.GetNumberOfValues(),
+                                this->ControlData->GetNumberOfPlanes(),
+                                this->ControlData->GetUseCylindrical());
   }
 
   VTKM_CONT
