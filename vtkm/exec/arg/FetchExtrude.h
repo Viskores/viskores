@@ -10,8 +10,6 @@
 #ifndef vtk_m_exec_arg_FetchExtrude_h
 #define vtk_m_exec_arg_FetchExtrude_h
 
-#include <vtkm/cont/ArrayPortalExtrude.h>
-#include <vtkm/cont/ArrayPortalExtrudePlane.h>
 #include <vtkm/exec/ConnectivityExtrude.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>

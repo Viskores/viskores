@@ -11,7 +11,6 @@
 #define vtk_m_cont_ArrayHandleExtrudeField_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayPortalExtrude.h>
 #include <vtkm/cont/StorageExtrude.h>
 
 namespace vtkm

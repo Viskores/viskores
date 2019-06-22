@@ -13,7 +13,6 @@
 #include <vtkm/cont/StorageExtrude.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayPortalExtrude.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/CoordinateSystem.hxx>
 

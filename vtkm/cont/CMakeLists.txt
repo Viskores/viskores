@@ -39,8 +39,6 @@ set(headers
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
-  ArrayPortalExtrude.h
-  ArrayPortalExtrudePlane.h
   ArrayRangeCompute.h
   AssignerMultiBlock.h
   AtomicArray.h
@@ -112,7 +110,6 @@ set(headers
 
 set(template_sources
   ArrayHandle.hxx
-  ArrayPortalExtrudePlane.hxx
   ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
   CellSetExplicit.hxx
