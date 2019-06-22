@@ -19,7 +19,7 @@ namespace vtkm
 namespace cont
 {
 
-VTKM_CONT CellSetExtrude::CellSetExtrude(const std::string& name)
+CellSetExtrude::CellSetExtrude(const std::string& name)
   : vtkm::cont::CellSet(name)
   , IsPeriodic(false)
   , NumberOfPointsPerPlane(0)
@@ -29,12 +29,12 @@ VTKM_CONT CellSetExtrude::CellSetExtrude(const std::string& name)
 {
 }
 
-VTKM_CONT CellSetExtrude::CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
-                                         vtkm::Int32 numberOfPointsPerPlane,
-                                         vtkm::Int32 numberOfPlanes,
-                                         const vtkm::cont::ArrayHandle<vtkm::Int32>& nextNode,
-                                         bool periodic,
-                                         const std::string& name)
+CellSetExtrude::CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
+                               vtkm::Int32 numberOfPointsPerPlane,
+                               vtkm::Int32 numberOfPlanes,
+                               const vtkm::cont::ArrayHandle<vtkm::Int32>& nextNode,
+                               bool periodic,
+                               const std::string& name)
   : vtkm::cont::CellSet(name)
   , IsPeriodic(periodic)
   , NumberOfPointsPerPlane(numberOfPointsPerPlane)
@@ -147,7 +147,7 @@ void CellSetExtrude::ReleaseResourcesExecution()
   this->PrevNode.ReleaseResourcesExecution();
 }
 
-VTKM_CONT vtkm::Id2 CellSetExtrude::GetSchedulingRange(vtkm::TopologyElementTagCell) const
+vtkm::Id2 CellSetExtrude::GetSchedulingRange(vtkm::TopologyElementTagCell) const
 {
   if (this->IsPeriodic)
   {
@@ -159,7 +159,7 @@ VTKM_CONT vtkm::Id2 CellSetExtrude::GetSchedulingRange(vtkm::TopologyElementTagC
   }
 }
 
-VTKM_CONT vtkm::Id2 CellSetExtrude::GetSchedulingRange(vtkm::TopologyElementTagPoint) const
+vtkm::Id2 CellSetExtrude::GetSchedulingRange(vtkm::TopologyElementTagPoint) const
 {
   return vtkm::Id2(this->NumberOfPointsPerPlane, this->NumberOfPlanes);
 }

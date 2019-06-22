@@ -26,17 +26,17 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_ALWAYS_EXPORT CellSetExtrude : public CellSet
+class VTKM_CONT_EXPORT CellSetExtrude : public CellSet
 {
 public:
-  CellSetExtrude(const std::string& name = "extrude");
+  VTKM_CONT CellSetExtrude(const std::string& name = "extrude");
 
-  CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
-                 vtkm::Int32 numberOfPointsPerPlane,
-                 vtkm::Int32 numberOfPlanes,
-                 const vtkm::cont::ArrayHandle<vtkm::Int32>& nextNode,
-                 bool periodic,
-                 const std::string& name = "extrude");
+  VTKM_CONT CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
+                           vtkm::Int32 numberOfPointsPerPlane,
+                           vtkm::Int32 numberOfPlanes,
+                           const vtkm::cont::ArrayHandle<vtkm::Int32>& nextNode,
+                           bool periodic,
+                           const std::string& name = "extrude");
 
   vtkm::Int32 GetNumberOfPlanes() const;
 
@@ -48,9 +48,9 @@ public:
 
   vtkm::Id GetNumberOfEdges() const override;
 
-  vtkm::Id2 GetSchedulingRange(vtkm::TopologyElementTagCell) const;
+  VTKM_CONT vtkm::Id2 GetSchedulingRange(vtkm::TopologyElementTagCell) const;
 
-  vtkm::Id2 GetSchedulingRange(vtkm::TopologyElementTagPoint) const;
+  VTKM_CONT vtkm::Id2 GetSchedulingRange(vtkm::TopologyElementTagPoint) const;
 
   vtkm::UInt8 GetCellShape(vtkm::Id id) const override;
   vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id id) const override;
