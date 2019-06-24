@@ -309,6 +309,4 @@ endif()
 
 #-----------------------------------------------------------------------------
 # Build examples
-if(VTKm_ENABLE_EXAMPLES)
-  add_subdirectory(examples)
-endif(VTKm_ENABLE_EXAMPLES)
+add_subdirectory(examples)
