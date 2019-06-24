@@ -45,6 +45,17 @@ public:
 
 template <typename T>
 vtkm::cont::ArrayHandleExtrudeCoords<T> make_ArrayHandleExtrudeCoords(
+  const vtkm::cont::ArrayHandle<T> arrHandle,
+  vtkm::Int32 numberOfPlanes,
+  bool cylindrical)
+{
+  using StorageType = vtkm::cont::internal::Storage<vtkm::Vec<T, 3>, internal::StorageTagExtrude>;
+  auto storage = StorageType(arrHandle, numberOfPlanes, cylindrical);
+  return ArrayHandleExtrudeCoords<T>(storage);
+}
+
+template <typename T>
+vtkm::cont::ArrayHandleExtrudeCoords<T> make_ArrayHandleExtrudeCoords(
   const T* array,
   vtkm::Id length,
   vtkm::Int32 numberOfPlanes,

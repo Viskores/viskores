@@ -19,6 +19,8 @@
 
 namespace
 {
+//std::vector<vtkm::Vec<vtkm::Float32,3>> points_rz = { vtkm::Vec<vtkm::Float32,3>(1.72485139f, 0.020562f,   1.73493571f),
+//                                vtkm::Vec<vtkm::Float32,3>(0.02052826f, 1.73478011f, 0.02299051f )}; //really a vec<float,2>
 std::vector<float> points_rz = { 1.72485139f, 0.020562f,   1.73493571f,
                                  0.02052826f, 1.73478011f, 0.02299051f }; //really a vec<float,2>
 std::vector<float> correct_x_coords = {
@@ -93,7 +95,8 @@ int TestArrayHandleExtrude()
 {
   const int numPlanes = 8;
 
-  auto coords = vtkm::cont::make_ArrayHandleExtrudeCoords(points_rz, numPlanes, false);
+  auto coords = vtkm::cont::make_ArrayHandleExtrudeCoords(
+    vtkm::cont::make_ArrayHandle(points_rz), numPlanes, false);
 
   VTKM_TEST_ASSERT(coords.GetNumberOfValues() ==
                      static_cast<vtkm::Id>(((points_rz.size() / 2) * numPlanes)),
