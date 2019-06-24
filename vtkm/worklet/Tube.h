@@ -31,19 +31,19 @@ public:
   VTKM_CONT
   CountSegments(const vtkm::Id& n)
     : NumSides(n)
-    , NumVertsPerCell(4) //Quad
+    , NumVertsPerCell(3) //TRI
   {
   }
 
   using ControlSignature = void(CellSetIn,
                                 FieldOut ptsPerPolyline,
                                 FieldOut ptsPerTube,
-                                FieldOut numTubeCells);
+                                FieldOut numTubeConnIds);
   using ExecutionSignature = void(CellShape shapeType,
                                   PointCount numPoints,
                                   _2 ptsPerPolyline,
                                   _3 ptsPerTube,
-                                  _4 numTubeCells);
+                                  _4 numTubeConnIds);
   using InputDomain = _1;
 
   template <typename CellShapeTag>
@@ -51,19 +51,22 @@ public:
                             const vtkm::IdComponent& numPoints,
                             vtkm::Id& ptsPerPolyline,
                             vtkm::Id& ptsPerTube,
-                            vtkm::Id& numTubeCells) const
+                            vtkm::Id& numTubeConnIds) const
   {
     if (shapeType.Id == vtkm::CELL_SHAPE_POLY_LINE)
     {
       ptsPerPolyline = numPoints;
       ptsPerTube = this->NumSides * numPoints;
-      numTubeCells = this->NumVertsPerCell * (numPoints - 1) * this->NumSides;
+      //numTubeConnIds = this->NumVertsPerCell * (numPoints - 1) * this->NumSides;
+      //two triangles per quad
+      //TRI
+      numTubeConnIds = this->NumVertsPerCell * (numPoints - 1) * this->NumSides * 2;
     }
     else
     {
       ptsPerPolyline = 0;
       ptsPerTube = 0;
-      numTubeCells = 0;
+      numTubeConnIds = 0;
     }
   }
 
@@ -269,8 +272,9 @@ class GeneratePoints : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
   VTKM_CONT
-  GeneratePoints(const vtkm::Id& n, const vtkm::FloatDefault& r)
-    : NumSides(n)
+  GeneratePoints(const bool& capping, const vtkm::Id& n, const vtkm::FloatDefault& r)
+    : Capping(capping)
+    , NumSides(n)
     , Radius(r)
     , Theta(2 * static_cast<vtkm::FloatDefault>(vtkm::Pi()) / n)
   {
@@ -314,6 +318,7 @@ public:
       return;
 
     vtkm::Vec<vtkm::FloatDefault, 3> n, p, pNext, sNext, sPrev, startCapNorm, endCapNorm;
+    vtkm::Id outIdx = tubePointOffsets;
     for (vtkm::IdComponent j = 0; j < numPoints; j++)
     {
       if (j == 0) //first point
@@ -359,11 +364,20 @@ public:
       auto nP = vtkm::Cross(w, s);
       vtkm::Normalize(nP);
 
+      //      vtkm::Id outIdx = tubePointOffsets + this->NumSides * j;
+
+      //Add the start cap vertex. This is just a point at the center of the tube (on the polyline).
+      if (this->Capping && j == 0)
+      {
+        std::cout << "outPts: " << outIdx << " = " << p << std::endl;
+        outPts.Set(outIdx, p);
+        outIdx++;
+      }
+
       //std::cout<<"normal_"<<j<<" "<<n<<std::endl;
       //std::cout<<"Vectors_"<<j<<" s= "<<s<<" w= "<<w<<" nP= "<<nP<<std::endl;
       //this only implements the 'sides share vertices' line 476
       vtkm::Vec<vtkm::FloatDefault, 3> normal;
-      vtkm::Id outIdx = tubePointOffsets + this->NumSides * j;
       for (vtkm::IdComponent k = 0; k < this->NumSides; k++)
       {
         vtkm::FloatDefault angle = static_cast<vtkm::FloatDefault>(k) * this->Theta;
@@ -371,14 +385,24 @@ public:
         vtkm::FloatDefault sinValue = vtkm::Sin(angle);
         normal = w * cosValue + nP * sinValue;
         auto newPt = p + this->Radius * normal;
-        //std::cout<<"outPts: "<<outIdx+k<<" = "<<newPt<<std::endl;
-        outPts.Set(outIdx + k, newPt);
+        std::cout << "outPts: " << outIdx << " = " << newPt << std::endl;
+        outPts.Set(outIdx, newPt);
+        outIdx++;
         //std::cout<<"  outPt["<<outIdx+k<<"] = "<<newPt<<std::endl;
+      }
+
+      //Add the end cap vertex. This is just a point at the center of the tube (on the polyline).
+      if (this->Capping && j == numPoints - 1)
+      {
+        std::cout << "outPts: " << outIdx << " = " << p << std::endl;
+        outPts.Set(outIdx, p);
+        outIdx++;
       }
     }
   }
 
 private:
+  bool Capping;
   vtkm::IdComponent NumSides;
   vtkm::FloatDefault Radius;
   vtkm::FloatDefault Theta;
@@ -388,19 +412,20 @@ class GenerateCells : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
   VTKM_CONT
-  GenerateCells(const vtkm::Id& n)
-    : NumSides(n)
+  GenerateCells(const bool& capping, const vtkm::Id& n)
+    : Capping(capping)
+    , NumSides(n)
   {
   }
 
   using ControlSignature = void(CellSetIn cellset,
                                 FieldInTo tubePointOffsets,
-                                FieldInTo tubeCellOffsets,
+                                FieldInTo tubeConnOffsets,
                                 WholeArrayOut outConnectivity);
   using ExecutionSignature = void(CellShape shapeType,
                                   PointCount numPoints,
                                   _2 tubePointOffset,
-                                  _3 tubeCellOffsets,
+                                  _3 tubeConnOffsets,
                                   _4 outConn);
   using InputDomain = _1;
 
@@ -408,7 +433,7 @@ public:
   VTKM_EXEC void operator()(const CellShapeTag& shapeType,
                             const vtkm::IdComponent& numPoints,
                             const vtkm::Id& tubePointOffset,
-                            const vtkm::Id& tubeCellOffset,
+                            const vtkm::Id& tubeConnOffset,
                             OutConnType& outConn) const
   {
     if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE)
@@ -418,25 +443,94 @@ public:
     //      std::cout<<"GenerateCells: ptOffset= "<<ptOffset<<" connOffset "<<connOffset<<std::endl;
     //      std::cout<<"  pointIndices: ";
     //      for (int i = 0; i < numPoints; i++) std::cout<<ptIndices[i]<<" "; std::cout<<std::endl;
-    vtkm::Id outIdx = tubeCellOffset;
+
+    vtkm::Id outIdx = tubeConnOffset;
+    vtkm::Id tubePtOffset = (this->Capping ? tubePointOffset + 1 : tubePointOffset);
+    std::cout << "Tube conn" << std::endl;
     for (vtkm::IdComponent i = 0; i < numPoints - 1; i++)
     {
       for (vtkm::Id j = 0; j < this->NumSides; j++)
       {
-        outConn.Set(outIdx + 0, tubePointOffset + i * this->NumSides + j);
-        outConn.Set(outIdx + 1, tubePointOffset + i * this->NumSides + (j + 1) % this->NumSides);
-        outConn.Set(outIdx + 2,
-                    tubePointOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides);
-        outConn.Set(outIdx + 3, tubePointOffset + (i + 1) * this->NumSides + j);
-        //              for (int k = 0; k < 4; k++)
-        //                  std::cout<<"  outConn["<<outIdx+k<<"] = "<<outConn.Get(outIdx+k)<<std::endl;
+        //We have a quad with vertices: 0,1,2,3
+        //The vertex ids are:
+        // 0: tubePointOffset+i*this->NumSides + j
+        // 1: tubePointOffset+i*this->NumSides + (j+1) % this->NumSides
+        // 2: tubePointOffset+(i+1)*this->NumSides + (j+1) % this->NumSides
+        // 3: tubePointOffset + (i + 1) * this->NumSides + j
+        //quad: 0123
+        /*
+        outConn.Set(outIdx+0, tubePointOffset+i*this->NumSides + j);
+        outConn.Set(outIdx+1, tubePointOffset+i*this->NumSides + (j+1) % this->NumSides);
+        outConn.Set(outIdx+2, tubePointOffset+(i+1)*this->NumSides + (j+1) % this->NumSides);
+        outConn.Set(outIdx+3, tubePointOffset + (i + 1) * this->NumSides + j);
         outIdx += 4;
+          */
+
+        //Triangle 1: verts 0,1,2
+        outConn.Set(outIdx + 0, tubePtOffset + i * this->NumSides + j);
+        outConn.Set(outIdx + 1, tubePtOffset + i * this->NumSides + (j + 1) % this->NumSides);
+        outConn.Set(outIdx + 2, tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides);
+
+        std::cout << "  " << outIdx + 0 << " " << tubePtOffset + i * this->NumSides + j
+                  << std::endl;
+        std::cout << "  " << outIdx + 1 << " "
+                  << tubePtOffset + i * this->NumSides + (j + 1) % this->NumSides << std::endl;
+        std::cout << "  " << outIdx + 2 << " "
+                  << tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides
+                  << std::endl;
+        outIdx += 3;
+
+        //Triangle 1: verts 0,2, 3
+        outConn.Set(outIdx + 0, tubePtOffset + i * this->NumSides + j);
+        outConn.Set(outIdx + 1, tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides);
+        outConn.Set(outIdx + 2, tubePtOffset + (i + 1) * this->NumSides + j);
+        std::cout << "  " << outIdx + 0 << " "
+                  << tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides
+                  << std::endl;
+        std::cout << "  " << outIdx + 1 << " "
+                  << tubePtOffset + i * this->NumSides + (j + 1) % this->NumSides << std::endl;
+        std::cout << "  " << outIdx + 2 << " " << tubePtOffset + (i + 1) * this->NumSides + j
+                  << std::endl;
+        outIdx += 3;
       }
     }
-    //      std::cout<<"*********** gen cells done ********"<<std::endl;
+
+    if (this->Capping)
+    {
+      //start cap triangles
+      vtkm::Id startCenterPt = 0 + tubePointOffset;
+      std::cout << "Start cap" << std::endl;
+      for (vtkm::Id j = 0; j < this->NumSides; j++)
+      {
+        outConn.Set(outIdx + 0, startCenterPt);
+        outConn.Set(outIdx + 1, startCenterPt + 1 + j);
+        outConn.Set(outIdx + 2, startCenterPt + 1 + ((j + 1) % this->NumSides));
+        std::cout << "  " << outIdx + 0 << ": " << outConn.Get(outIdx + 0) << std::endl;
+        std::cout << "  " << outIdx + 1 << ": " << outConn.Get(outIdx + 1) << std::endl;
+        std::cout << "  " << outIdx + 2 << ": " << outConn.Get(outIdx + 2) << std::endl;
+        outIdx += 3;
+      }
+
+      //end cap triangles
+      vtkm::Id endOffsetPt = 1 + (numPoints * this->NumSides - this->NumSides);
+      vtkm::Id endCenterPt = 1 + numPoints * this->NumSides;
+      std::cout << std::endl << "End cap lastpt= " << endCenterPt << std::endl;
+
+      for (vtkm::Id j = 0; j < this->NumSides; j++)
+      {
+        outConn.Set(outIdx + 0, endCenterPt);
+        outConn.Set(outIdx + 1, endOffsetPt + j);
+        outConn.Set(outIdx + 2, endOffsetPt + ((j + 1) % this->NumSides));
+        std::cout << "  " << outIdx + 0 << ": " << outConn.Get(outIdx + 0) << std::endl;
+        std::cout << "  " << outIdx + 1 << ": " << outConn.Get(outIdx + 1) << std::endl;
+        std::cout << "  " << outIdx + 2 << ": " << outConn.Get(outIdx + 2) << std::endl;
+        outIdx += 3;
+      }
+    }
   }
 
 private:
+  bool Capping;
   vtkm::IdComponent NumSides;
 };
 }
@@ -445,8 +539,9 @@ class Tube
 {
 public:
   VTKM_CONT
-  Tube(const vtkm::Id& n, const vtkm::FloatDefault& r)
-    : NumSides(n)
+  Tube(const bool& capping, const vtkm::Id& n, const vtkm::FloatDefault& r)
+    : Capping(capping)
+    , NumSides(n)
     , Radius(r)
 
   {
@@ -469,36 +564,34 @@ public:
     }
 
     //Count number of polyline pts, tube pts and tube cells
-    vtkm::cont::ArrayHandle<vtkm::Id> ptsPerPolyline, ptsPerTube, numTubeCells;
+    vtkm::cont::ArrayHandle<vtkm::Id> ptsPerPolyline, ptsPerTube, numTubeConnIds;
     detail::CountSegments countSegs(this->NumSides);
     vtkm::worklet::DispatcherMapTopology<detail::CountSegments> countInvoker(countSegs);
-    countInvoker.Invoke(cellset, ptsPerPolyline, ptsPerTube, numTubeCells);
+    countInvoker.Invoke(cellset, ptsPerPolyline, ptsPerTube, numTubeConnIds);
 
     vtkm::Id totalPolylinePts = vtkm::cont::Algorithm::Reduce(ptsPerPolyline, vtkm::Id(0));
     if (totalPolylinePts == 0)
       throw vtkm::cont::ErrorBadValue("Tube filter only supported for polyline data.");
     vtkm::Id totalTubePts = vtkm::cont::Algorithm::Reduce(ptsPerTube, vtkm::Id(0));
 
-    vtkm::cont::ArrayHandle<vtkm::Id> polylineOffset, tubePointOffsets, tubeCellOffsets;
+    vtkm::cont::ArrayHandle<vtkm::Id> polylineOffset, tubePointOffsets, tubeConnOffsets;
     vtkm::cont::Algorithm::ScanExclusive(ptsPerPolyline, polylineOffset);
     vtkm::cont::Algorithm::ScanExclusive(ptsPerTube, tubePointOffsets);
-    vtkm::cont::Algorithm::ScanExclusive(numTubeCells, tubeCellOffsets);
+    vtkm::cont::Algorithm::ScanExclusive(numTubeConnIds, tubeConnOffsets);
 
-    /*
-    std::cout<<"ptsPerPolyline: ";
+    std::cout << "ptsPerPolyline: ";
     vtkm::cont::printSummary_ArrayHandle(ptsPerPolyline, std::cout, true);
-    std::cout<<"totalPtsPerCell: ";
+    std::cout << "ptsPerTube: ";
     vtkm::cont::printSummary_ArrayHandle(ptsPerTube, std::cout, true);
-    std::cout<<"polylineOffset: ";
+    std::cout << "polylineOffset: ";
     vtkm::cont::printSummary_ArrayHandle(polylineOffset, std::cout, true);
-    std::cout<<"tubePointOffsets: ";
+    std::cout << "tubePointOffsets: ";
     vtkm::cont::printSummary_ArrayHandle(tubePointOffsets, std::cout, true);
-    std::cout<<"numTubeCells: ";
-    vtkm::cont::printSummary_ArrayHandle(numTubeCells, std::cout, true);
-    std::cout<<"tubeCellOffsets: ";
-    vtkm::cont::printSummary_ArrayHandle(tubeCellOffsets, std::cout, true);
-    std::cout<<"totalPolylinePts= "<<totalPolylinePts<<std::endl;
-    */
+    std::cout << "numTubeConnIds: ";
+    vtkm::cont::printSummary_ArrayHandle(numTubeConnIds, std::cout, true);
+    std::cout << "tubeConnOffsets: ";
+    vtkm::cont::printSummary_ArrayHandle(tubeConnOffsets, std::cout, true);
+    std::cout << "totalPolylinePts= " << totalPolylinePts << std::endl;
 
     //Generate normals at each point on all polylines
     ExplCoordsType inCoords = coords.GetData().Cast<ExplCoordsType>();
@@ -508,22 +601,37 @@ public:
     genNormalsDisp.Invoke(cellset, inCoords, polylineOffset, normals);
 
     //Generate the tube points
+    if (this->Capping) //Capping needs center point at each end.
+      totalTubePts += 2;
     newPoints.Allocate(totalTubePts);
-    detail::GeneratePoints genPts(this->NumSides, this->Radius);
+    detail::GeneratePoints genPts(this->Capping, this->NumSides, this->Radius);
     vtkm::worklet::DispatcherMapTopology<detail::GeneratePoints> genPtsDisp(genPts);
     genPtsDisp.Invoke(cellset, inCoords, normals, tubePointOffsets, polylineOffset, newPoints);
 
     //Generate tube cells
     vtkm::cont::ArrayHandle<vtkm::Id> newConnectivity;
-    newConnectivity.Allocate(this->NumSides * (totalPolylinePts - 1) * 4);
-    detail::GenerateCells genCells(this->NumSides);
-    vtkm::worklet::DispatcherMapTopology<detail::GenerateCells> genCellsDisp(genCells);
-    genCellsDisp.Invoke(cellset, tubePointOffsets, tubeCellOffsets, newConnectivity);
+    //TRI
+    vtkm::Id numTubeCells;
+    if (this->Capping)
+      numTubeCells = (totalPolylinePts - 1) /** 3*/ * 2 + 2;
+    else
+      numTubeCells = (totalPolylinePts - 1) /** 3*/ * 2;
 
-    newCells.Fill(totalTubePts, vtkm::CELL_SHAPE_QUAD, 4, newConnectivity);
+    std::cout << "newConn size= " << this->NumSides * numTubeCells << " = " << this->NumSides
+              << " x " << numTubeCells << std::endl;
+    newConnectivity.Allocate(this->NumSides * numTubeCells * 3);
+    //newConnectivity.Allocate(this->NumSides * (totalPolylinePts - 1) * 4);
+    detail::GenerateCells genCells(this->Capping, this->NumSides);
+    vtkm::worklet::DispatcherMapTopology<detail::GenerateCells> genCellsDisp(genCells);
+    genCellsDisp.Invoke(cellset, tubePointOffsets, tubeConnOffsets, newConnectivity);
+
+    //TRI
+    newCells.Fill(totalTubePts, vtkm::CELL_SHAPE_TRIANGLE, 3, newConnectivity);
+    //newCells.Fill(totalTubePts, vtkm::CELL_SHAPE_QUAD, 4, newConnectivity);
   }
 
 private:
+  bool Capping;
   vtkm::Id NumSides;
   vtkm::FloatDefault Radius;
 };
