@@ -9,7 +9,10 @@
 ##============================================================================
 
 if(VTKm_ENABLE_MPI AND NOT TARGET MPI::MPI_CXX)
-  if(CMAKE_VERSION VERSION_LESS 3.10)
+  if(CMAKE_VERSION VERSION_LESS 3.15)
+    #While CMake 3.10 introduced the new MPI module.
+    #Fixes related to MPI+CUDA that VTK-m needs are
+    #only found in CMake 3.15+.
     find_package(MPI REQUIRED MODULE)
   else()
     #clunky but we need to make sure we use the upstream module if it exists
