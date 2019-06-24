@@ -62,13 +62,12 @@ file(GENERATE
   OUTPUT "${${file_loc_var}}"
   CONTENT
 "
-set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING \"\")
-set(CMAKE_PREFIX_PATH ${install_prefix} CACHE STRING \"\")
-set(CMAKE_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE FILEPATH \"\")
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING \"\")
-set(CMAKE_CUDA_COMPILER ${CMAKE_CUDA_COMPILER} CACHE FILEPATH \"\")
-set(CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} CACHE STRING \"\")
-set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CUDA_HOST_COMPILER} CACHE FILEPATH \"\")
+set(CMAKE_PREFIX_PATH \"${install_prefix}/\" CACHE STRING \"\")
+set(CMAKE_CXX_COMPILER \"${CMAKE_CXX_COMPILER}\" CACHE FILEPATH \"\")
+set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" CACHE STRING \"\")
+set(CMAKE_CUDA_COMPILER \"${CMAKE_CUDA_COMPILER}\" CACHE FILEPATH \"\")
+set(CMAKE_CUDA_FLAGS \"${CMAKE_CUDA_FLAGS}\" CACHE STRING \"\")
+set(CMAKE_CUDA_HOST_COMPILER \"${CMAKE_CUDA_HOST_COMPILER}\" CACHE FILEPATH \"\")
 "
 )
 
@@ -93,10 +92,11 @@ function(vtkm_test_against_install dir)
 
   add_test(NAME ${build_name}
            COMMAND ${CMAKE_CTEST_COMMAND}
+           -C $<CONFIG>
            --build-and-test ${src_dir} ${build_dir}
            --build-generator ${CMAKE_GENERATOR}
            --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-           --build-options -C "${build_config}"
+           --build-options "-C" "${build_config}"
            )
 
   set_tests_properties(${build_name} PROPERTIES LABELS ${test_label} )
