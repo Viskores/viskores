@@ -24,23 +24,7 @@ target_include_directories(vtkm_diy INTERFACE
   $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/diy>)
 
 if(VTKm_ENABLE_MPI)
-  set(arg)
-  foreach(apath IN LISTS MPI_C_INCLUDE_PATH MPI_CXX_INCLUDE_PATH)
-    list(APPEND arg $<BUILD_INTERFACE:${apath}>)
-  endforeach()
-  list(REMOVE_DUPLICATES arg)
-  target_include_directories(vtkm_diy INTERFACE ${arg})
-  target_link_libraries(vtkm_diy INTERFACE
-    $<BUILD_INTERFACE:${MPI_C_LIBRARIES}>
-    $<BUILD_INTERFACE:${MPI_CXX_LIBRARIES}>)
-  if(MPI_C_COMPILE_DEFINITIONS)
-    target_compile_definitions(vtkm_diy INTERFACE
-      $<$<COMPILE_LANGUAGE:C>:${MPI_C_COMPILE_DEFINITIONS}>)
-  endif()
-  if(MPI_CXX_COMPILE_DEFNITIONS)
-    target_compile_definitions(vtkm_diy INTERFACE
-      $<$<COMPILE_LANGUAGE:CXX>:${MPI_CXX_COMPILE_DEFNITIONS>)
-  endif()
+  target_link_libraries(vtkm_diy INTERFACE MPI::MPI_CXX)
 endif()
 
 install(TARGETS vtkm_diy
