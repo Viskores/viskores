@@ -21,9 +21,9 @@ struct ComputeReverseMapping : public vtkm::worklet::WorkletMapField
   {
     //3 as we are building the connectivity for triangles
     const vtkm::Id offset = 3 * cellId;
-    pointIdValue.Set(offset, cellId);
-    pointIdValue.Set(offset + 1, cellId);
-    pointIdValue.Set(offset + 2, cellId);
+    pointIdValue.Set(offset, static_cast<vtkm::Int32>(cellId));
+    pointIdValue.Set(offset + 1, static_cast<vtkm::Int32>(cellId));
+    pointIdValue.Set(offset + 2, static_cast<vtkm::Int32>(cellId));
   }
 };
 

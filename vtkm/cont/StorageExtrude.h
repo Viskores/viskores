@@ -421,7 +421,7 @@ public:
   {
     VTKM_ASSERT(this->Array.GetNumberOfValues() >= 0);
     return PortalConstType(this->Array.GetPortalConstControl(),
-                           this->Array.GetNumberOfValues(),
+                           static_cast<vtkm::Int32>(this->Array.GetNumberOfValues()),
                            this->NumberOfPlanes,
                            this->UseCylindrical);
   }
@@ -489,10 +489,11 @@ public:
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    return PortalConstExecution(this->ControlData->Array.PrepareForInput(Device()),
-                                this->ControlData->Array.GetNumberOfValues(),
-                                this->ControlData->GetNumberOfPlanes(),
-                                this->ControlData->GetUseCylindrical());
+    return PortalConstExecution(
+      this->ControlData->Array.PrepareForInput(Device()),
+      static_cast<vtkm::Int32>(this->ControlData->Array.GetNumberOfValues()),
+      this->ControlData->GetNumberOfPlanes(),
+      this->ControlData->GetUseCylindrical());
   }
 
   VTKM_CONT

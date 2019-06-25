@@ -38,7 +38,8 @@ CellSetExtrude::CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
   : vtkm::cont::CellSet(name)
   , IsPeriodic(periodic)
   , NumberOfPointsPerPlane(numberOfPointsPerPlane)
-  , NumberOfCellsPerPlane(conn.GetNumberOfValues() / static_cast<vtkm::Id>(3))
+  , NumberOfCellsPerPlane(
+      static_cast<vtkm::Int32>(conn.GetNumberOfValues() / static_cast<vtkm::Id>(3)))
   , NumberOfPlanes(numberOfPlanes)
   , Connectivity(conn)
   , NextNode(nextNode)

@@ -132,7 +132,7 @@ CellSetExtrude make_CellSetExtrude(const std::vector<vtkm::Int32>& conn,
                                    const std::string name = "extrude")
 {
   return CellSetExtrude{ vtkm::cont::make_ArrayHandle(conn),
-                         coords.GetNumberOfPointsPerPlane(),
+                         static_cast<vtkm::Int32>(coords.GetNumberOfPointsPerPlane()),
                          coords.GetNumberOfPlanes(),
                          vtkm::cont::make_ArrayHandle(nextNode),
                          periodic,

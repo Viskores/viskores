@@ -248,8 +248,8 @@ ReverseConnectivityExtrude<Device>::GetIndices(const vtkm::Id2& index) const
                      this->Counts.Get(ptPre),
                      this->Offsets.Get(ptCur),
                      this->Counts.Get(ptCur),
-                     plPre,
-                     plCur,
+                     static_cast<vtkm::IdComponent>(plPre),
+                     static_cast<vtkm::IdComponent>(plCur),
                      this->NumberOfCellsPerPlane);
 }
 }

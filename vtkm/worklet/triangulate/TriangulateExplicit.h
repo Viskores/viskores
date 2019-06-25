@@ -102,8 +102,9 @@ public:
     }
   };
   template <typename CellSetType>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
+  vtkm::cont::CellSetSingleType<> Run(
+    const CellSetType& cellSet,
+    vtkm::cont::ArrayHandle<vtkm::IdComponent>& vtkmNotUsed(outCellsPerCell))
   {
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     return outCellSet;

@@ -66,25 +66,31 @@ void verify_topo(vtkm::cont::ArrayHandle<vtkm::Vec<T, 6>, S> const& handle, vtkm
   for (vtkm::Id i = 0; i < expectedLen - 1; ++i)
   {
     auto v = portal.Get(i);
-    vtkm::Vec<int, 6> e;
-    e[0] = (topology[0] + (i * topology.size()));
-    e[1] = (topology[1] + (i * topology.size()));
-    e[2] = (topology[2] + (i * topology.size()));
-    e[3] = (topology[0] + ((i + 1) * topology.size()));
-    e[4] = (topology[1] + ((i + 1) * topology.size()));
-    e[5] = (topology[2] + ((i + 1) * topology.size()));
+    vtkm::Vec<vtkm::Id, 6> e;
+    e[0] = (static_cast<vtkm::Id>(topology[0]) + (i * static_cast<vtkm::Id>(topology.size())));
+    e[1] = (static_cast<vtkm::Id>(topology[1]) + (i * static_cast<vtkm::Id>(topology.size())));
+    e[2] = (static_cast<vtkm::Id>(topology[2]) + (i * static_cast<vtkm::Id>(topology.size())));
+    e[3] =
+      (static_cast<vtkm::Id>(topology[0]) + ((i + 1) * static_cast<vtkm::Id>(topology.size())));
+    e[4] =
+      (static_cast<vtkm::Id>(topology[1]) + ((i + 1) * static_cast<vtkm::Id>(topology.size())));
+    e[5] =
+      (static_cast<vtkm::Id>(topology[2]) + ((i + 1) * static_cast<vtkm::Id>(topology.size())));
     std::cout << "v, e: " << v << ", " << e << "\n";
     VTKM_TEST_ASSERT(test_equal(v, e), "incorrect conversion of topology to Cartesian space");
   }
 
   auto v = portal.Get(expectedLen - 1);
-  vtkm::Vec<int, 6> e;
-  e[0] = (topology[0] + ((expectedLen - 1) * topology.size()));
-  e[1] = (topology[1] + ((expectedLen - 1) * topology.size()));
-  e[2] = (topology[2] + ((expectedLen - 1) * topology.size()));
-  e[3] = (topology[0]);
-  e[4] = (topology[1]);
-  e[5] = (topology[2]);
+  vtkm::Vec<vtkm::Id, 6> e;
+  e[0] = (static_cast<vtkm::Id>(topology[0]) +
+          ((expectedLen - 1) * static_cast<vtkm::Id>(topology.size())));
+  e[1] = (static_cast<vtkm::Id>(topology[1]) +
+          ((expectedLen - 1) * static_cast<vtkm::Id>(topology.size())));
+  e[2] = (static_cast<vtkm::Id>(topology[2]) +
+          ((expectedLen - 1) * static_cast<vtkm::Id>(topology.size())));
+  e[3] = (static_cast<vtkm::Id>(topology[0]));
+  e[4] = (static_cast<vtkm::Id>(topology[1]));
+  e[5] = (static_cast<vtkm::Id>(topology[2]));
   VTKM_TEST_ASSERT(test_equal(v, e), "incorrect conversion of topology to Cartesian space");
 }
 
@@ -122,13 +128,13 @@ int TestCellSetExtrude()
   dataset.AddCellSet(cells);
 
   // verify that a constant value point field can be accessed
-  std::vector<float> pvalues(coords.GetNumberOfValues(), 42.0f);
+  std::vector<float> pvalues(static_cast<size_t>(coords.GetNumberOfValues()), 42.0f);
   vtkm::cont::Field pfield(
     "pfield", vtkm::cont::Field::Association::POINTS, vtkm::cont::make_ArrayHandle(pvalues));
   dataset.AddField(pfield);
 
   // verify that a constant cell value can be accessed
-  std::vector<float> cvalues(cells.GetNumberOfCells(), 42.0f);
+  std::vector<float> cvalues(static_cast<size_t>(cells.GetNumberOfCells()), 42.0f);
   vtkm::cont::Field cfield("cfield",
                            vtkm::cont::Field::Association::CELL_SET,
                            cells.GetName(),
