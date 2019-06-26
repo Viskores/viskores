@@ -2438,7 +2438,7 @@ private:
 
     auto testRepeatedMask = [&](WordType mask) {
       std::cout << "Testing BitFieldToUnorderedSet with repeated 32-bit word 0x" << std::hex << mask
-                << std::endl;
+                << std::dec << std::endl;
 
       BitField bits;
       {
@@ -2455,7 +2455,7 @@ private:
 
     auto testRandomMask = [&](WordType seed) {
       std::cout << "Testing BitFieldToUnorderedSet with random sequence seeded with 0x" << std::hex
-                << seed << std::endl;
+                << seed << std::dec << std::endl;
 
       std::mt19937 mt{ seed };
       std::uniform_int_distribution<std::mt19937::result_type> rng;
@@ -2486,11 +2486,244 @@ private:
     testRandomMask(0xdeadbeef);
   }
 
+  static VTKM_CONT void TestCountSetBits()
+  {
+    using WordType = WordTypeDefault;
+
+    // Test that everything works correctly with a partial word at the end.
+    static constexpr vtkm::Id BitsPerWord = static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT);
+    // +5 to get a partial word:
+    static constexpr vtkm::Id NumFullWords = 1024;
+    static constexpr vtkm::Id NumBits = NumFullWords * BitsPerWord + 5;
+    static constexpr vtkm::Id NumWords = (NumBits + BitsPerWord - 1) / BitsPerWord;
+
+    auto verifyPopCount = [](const BitField& bits) {
+      vtkm::Id refPopCount = 0;
+      const vtkm::Id numBits = bits.GetNumberOfBits();
+      auto portal = bits.GetPortalConstControl();
+      for (vtkm::Id idx = 0; idx < numBits; ++idx)
+      {
+        if (portal.GetBit(idx))
+        {
+          ++refPopCount;
+        }
+      }
+
+      const vtkm::Id popCount = Algorithm::CountSetBits(bits);
+
+      VTKM_TEST_ASSERT(
+        refPopCount == popCount, "CountSetBits returned ", popCount, ", expected ", refPopCount);
+    };
+
+    auto testRepeatedMask = [&](WordType mask) {
+      std::cout << "Testing CountSetBits with repeated word 0x" << std::hex << mask << std::dec
+                << std::endl;
+
+      BitField bits;
+      {
+        bits.Allocate(NumBits);
+        auto fillPortal = bits.GetPortalControl();
+        for (vtkm::Id i = 0; i < NumWords; ++i)
+        {
+          fillPortal.SetWord(i, mask);
+        }
+      }
+
+      verifyPopCount(bits);
+    };
+
+    auto testRandomMask = [&](WordType seed) {
+      std::cout << "Testing CountSetBits with random sequence seeded with 0x" << std::hex << seed
+                << std::dec << std::endl;
+
+      std::mt19937 mt{ seed };
+      std::uniform_int_distribution<std::mt19937::result_type> rng;
+
+      BitField bits;
+      {
+        bits.Allocate(NumBits);
+        auto fillPortal = bits.GetPortalControl();
+        for (vtkm::Id i = 0; i < NumWords; ++i)
+        {
+          fillPortal.SetWord(i, static_cast<WordType>(rng(mt)));
+        }
+      }
+
+      verifyPopCount(bits);
+    };
+
+    testRepeatedMask(0x00000000);
+    testRepeatedMask(0xeeeeeeee);
+    testRepeatedMask(0xffffffff);
+    testRepeatedMask(0x1c0fd395);
+    testRepeatedMask(0xdeadbeef);
+
+    testRandomMask(0x00000000);
+    testRandomMask(0xeeeeeeee);
+    testRandomMask(0xffffffff);
+    testRandomMask(0x1c0fd395);
+    testRandomMask(0xdeadbeef);
+  }
+
+  template <typename WordType>
+  static VTKM_CONT void TestFillBitFieldMask(WordType mask)
+  {
+    std::cout << "Testing Fill with " << (sizeof(WordType) * CHAR_BIT) << " bit mask: " << std::hex
+              << vtkm::UInt64{ mask } << std::dec << std::endl;
+
+    // Test that everything works correctly with a partial word at the end.
+    static constexpr vtkm::Id BitsPerWord = static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT);
+    // +5 to get a partial word:
+    static constexpr vtkm::Id NumFullWords = 1024;
+    static constexpr vtkm::Id NumBits = NumFullWords * BitsPerWord + 5;
+    static constexpr vtkm::Id NumWords = (NumBits + BitsPerWord - 1) / BitsPerWord;
+
+    vtkm::cont::BitField bits;
+    {
+      Algorithm::Fill(bits, mask, NumBits);
+
+      vtkm::Id numBits = bits.GetNumberOfBits();
+      VTKM_TEST_ASSERT(numBits == NumBits, "Unexpected number of bits.");
+      vtkm::Id numWords = bits.GetNumberOfWords<WordType>();
+      VTKM_TEST_ASSERT(numWords == NumWords, "Unexpected number of words.");
+
+      auto portal = bits.GetPortalConstControl();
+      for (vtkm::Id wordIdx = 0; wordIdx < NumWords; ++wordIdx)
+      {
+        VTKM_TEST_ASSERT(portal.GetWord<WordType>(wordIdx) == mask,
+                         "Incorrect word in result BitField; expected 0x",
+                         std::hex,
+                         vtkm::UInt64{ mask },
+                         ", got 0x",
+                         vtkm::UInt64{ portal.GetWord<WordType>(wordIdx) },
+                         std::dec,
+                         " for word ",
+                         wordIdx,
+                         "/",
+                         NumWords);
+      }
+    }
+
+    // Now fill the BitField with the reversed mask to test the no-alloc
+    // overload:
+    {
+      WordType invWord = static_cast<WordType>(~mask);
+      Algorithm::Fill(bits, invWord);
+
+      vtkm::Id numBits = bits.GetNumberOfBits();
+      VTKM_TEST_ASSERT(numBits == NumBits, "Unexpected number of bits.");
+      vtkm::Id numWords = bits.GetNumberOfWords<WordType>();
+      VTKM_TEST_ASSERT(numWords == NumWords, "Unexpected number of words.");
+
+      auto portal = bits.GetPortalConstControl();
+      for (vtkm::Id wordIdx = 0; wordIdx < NumWords; ++wordIdx)
+      {
+        VTKM_TEST_ASSERT(portal.GetWord<WordType>(wordIdx) == invWord,
+                         "Incorrect word in result BitField; expected 0x",
+                         std::hex,
+                         vtkm::UInt64{ invWord },
+                         ", got 0x",
+                         vtkm::UInt64{ portal.GetWord<WordType>(wordIdx) },
+                         std::dec,
+                         " for word ",
+                         wordIdx,
+                         "/",
+                         NumWords);
+      }
+    }
+  }
+
+  static VTKM_CONT void TestFillBitFieldBool(bool value)
+  {
+    std::cout << "Testing Fill with bool: " << value << std::endl;
+
+    // Test that everything works correctly with a partial word at the end.
+    // +5 to get a partial word:
+    static constexpr vtkm::Id NumBits = 1024 * 32 + 5;
+
+    vtkm::cont::BitField bits;
+    {
+      Algorithm::Fill(bits, value, NumBits);
+
+      vtkm::Id numBits = bits.GetNumberOfBits();
+      VTKM_TEST_ASSERT(numBits == NumBits, "Unexpected number of bits.");
+
+      auto portal = bits.GetPortalConstControl();
+      for (vtkm::Id bitIdx = 0; bitIdx < NumBits; ++bitIdx)
+      {
+        VTKM_TEST_ASSERT(portal.GetBit(bitIdx) == value, "Incorrect bit in result BitField.");
+      }
+    }
+
+    // Now fill the BitField with the reversed mask to test the no-alloc
+    // overload:
+    {
+      Algorithm::Fill(bits, !value);
+
+      vtkm::Id numBits = bits.GetNumberOfBits();
+      VTKM_TEST_ASSERT(numBits == NumBits, "Unexpected number of bits.");
+
+      auto portal = bits.GetPortalConstControl();
+      for (vtkm::Id bitIdx = 0; bitIdx < NumBits; ++bitIdx)
+      {
+        VTKM_TEST_ASSERT(portal.GetBit(bitIdx) == !value, "Incorrect bit in result BitField.");
+      }
+    }
+  }
+
+  static VTKM_CONT void TestFillBitField()
+  {
+    TestFillBitFieldBool(true);
+    TestFillBitFieldBool(false);
+    TestFillBitFieldMask<vtkm::UInt8>(vtkm::UInt8{ 0 });
+    TestFillBitFieldMask<vtkm::UInt8>(static_cast<vtkm::UInt8>(~vtkm::UInt8{ 0 }));
+    TestFillBitFieldMask<vtkm::UInt8>(vtkm::UInt8{ 0xab });
+    TestFillBitFieldMask<vtkm::UInt8>(vtkm::UInt8{ 0x4f });
+    TestFillBitFieldMask<vtkm::UInt16>(vtkm::UInt16{ 0 });
+    TestFillBitFieldMask<vtkm::UInt16>(static_cast<vtkm::UInt16>(~vtkm::UInt16{ 0 }));
+    TestFillBitFieldMask<vtkm::UInt16>(vtkm::UInt16{ 0xfade });
+    TestFillBitFieldMask<vtkm::UInt16>(vtkm::UInt16{ 0xbeef });
+    TestFillBitFieldMask<vtkm::UInt32>(vtkm::UInt32{ 0 });
+    TestFillBitFieldMask<vtkm::UInt32>(static_cast<vtkm::UInt32>(~vtkm::UInt32{ 0 }));
+    TestFillBitFieldMask<vtkm::UInt32>(vtkm::UInt32{ 0xfacecafe });
+    TestFillBitFieldMask<vtkm::UInt32>(vtkm::UInt32{ 0xbaddecaf });
+    TestFillBitFieldMask<vtkm::UInt64>(vtkm::UInt64{ 0 });
+    TestFillBitFieldMask<vtkm::UInt64>(static_cast<vtkm::UInt64>(~vtkm::UInt64{ 0 }));
+    TestFillBitFieldMask<vtkm::UInt64>(vtkm::UInt64{ 0xbaddefacedfacade });
+    TestFillBitFieldMask<vtkm::UInt64>(vtkm::UInt64{ 0xfeeddeadbeef2dad });
+  }
+
+  static VTKM_CONT void TestFillArrayHandle()
+  {
+    vtkm::cont::ArrayHandle<vtkm::Int32> handle;
+    Algorithm::Fill(handle, 867, ARRAY_SIZE);
+
+    {
+      auto portal = handle.GetPortalConstControl();
+      VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE);
+      for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+      {
+        VTKM_TEST_ASSERT(portal.Get(i) == 867);
+      }
+    }
+
+    Algorithm::Fill(handle, 5309);
+    {
+      auto portal = handle.GetPortalConstControl();
+      VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE);
+      for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+      {
+        VTKM_TEST_ASSERT(portal.Get(i) == 5309);
+      }
+    }
+  }
+
   struct TestAll
   {
     VTKM_CONT void operator()() const
     {
       std::cout << "Doing DeviceAdapter tests" << std::endl;
+
       TestArrayTransfer();
       TestOutOfMemory();
       TestTimer();
@@ -2541,6 +2774,10 @@ private:
       TestAtomicArray();
 
       TestBitFieldToUnorderedSet();
+      TestCountSetBits();
+      TestFillBitField();
+
+      TestFillArrayHandle();
     }
   };
 

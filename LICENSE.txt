@@ -49,7 +49,6 @@ contents of these for details on the specifics of their respective
 licenses.
 - - - - - - - - - - - - - - - - - - - - - - - - do not remove this line
 CMake/FindTBB.cmake
-CMake/FindGLEW.cmake
 Utilities
 vtkm/cont/tbb/internal/parallel_sort.h
 vtkm/cont/tbb/internal/parallel_radix_sort_tbb.h

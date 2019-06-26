@@ -182,14 +182,6 @@ check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 
 #-----------------------------------------------------------------------------
 # Add subdirectories
-if(VTKm_ENABLE_MPI)
-  # This `if` is temporary and will be removed once `diy` supports building
-  # without MPI.
-  if (NOT MPI_C_FOUND)
-    find_package(MPI ${VTKm_FIND_PACKAGE_QUIETLY})
-  endif()
-endif()
-
 add_subdirectory(vtkm)
 
 #-----------------------------------------------------------------------------
@@ -241,6 +233,7 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(
     FILES
       ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
+      ${VTKm_SOURCE_DIR}/CMake/FindMPI.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindOpenGL.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindOpenMP.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
@@ -253,6 +246,7 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
       ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cu
       ${VTKm_SOURCE_DIR}/CMake/VTKmDeviceAdapters.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
+      ${VTKm_SOURCE_DIR}/CMake/VTKmMPI.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
@@ -315,6 +309,4 @@ endif()
 
 #-----------------------------------------------------------------------------
 # Build examples
-if(VTKm_ENABLE_EXAMPLES)
-  add_subdirectory(examples)
-endif(VTKm_ENABLE_EXAMPLES)
+add_subdirectory(examples)

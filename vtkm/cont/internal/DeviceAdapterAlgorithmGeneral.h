@@ -270,6 +270,170 @@ public:
   }
 
   //--------------------------------------------------------------------------
+  // Count Set Bits
+  VTKM_CONT static vtkm::Id CountSetBits(const vtkm::cont::BitField& bits)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTag{});
+
+    std::atomic<vtkm::UInt64> popCount;
+    popCount.store(0, std::memory_order_relaxed);
+
+    using Functor = CountSetBitsFunctor<decltype(bitsPortal)>;
+    Functor functor{ bitsPortal, popCount };
+
+    DerivedAlgorithm::Schedule(functor, functor.GetNumberOfInstances());
+    DerivedAlgorithm::Synchronize();
+
+    return static_cast<vtkm::Id>(popCount.load(std::memory_order_seq_cst));
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill Bit Field (bool, resize)
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, bool value, vtkm::Id numBits)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    if (numBits == 0)
+    {
+      bits.Shrink(0);
+      return;
+    }
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    using WordType =
+      typename vtkm::cont::BitField::template ExecutionTypes<DeviceAdapterTag>::WordTypePreferred;
+
+    using Functor = FillBitFieldFunctor<decltype(portal), WordType>;
+    Functor functor{ portal, value ? ~WordType{ 0 } : WordType{ 0 } };
+
+    const vtkm::Id numWords = portal.template GetNumberOfWords<WordType>();
+    DerivedAlgorithm::Schedule(functor, numWords);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill Bit Field (bool)
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, bool value)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    const vtkm::Id numBits = bits.GetNumberOfBits();
+    if (numBits == 0)
+    {
+      return;
+    }
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    using WordType =
+      typename vtkm::cont::BitField::template ExecutionTypes<DeviceAdapterTag>::WordTypePreferred;
+
+    using Functor = FillBitFieldFunctor<decltype(portal), WordType>;
+    Functor functor{ portal, value ? ~WordType{ 0 } : WordType{ 0 } };
+
+    const vtkm::Id numWords = portal.template GetNumberOfWords<WordType>();
+    DerivedAlgorithm::Schedule(functor, numWords);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill Bit Field (mask, resize)
+  template <typename WordType>
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word, vtkm::Id numBits)
+  {
+    VTKM_STATIC_ASSERT_MSG(vtkm::cont::BitField::IsValidWordType<WordType>{}, "Invalid word type.");
+
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    if (numBits == 0)
+    {
+      bits.Shrink(0);
+      return;
+    }
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    // If less than 32 bits, repeat the word until we get a 32 bit pattern.
+    // Using this for the pattern prevents races while writing small numbers
+    // to adjacent memory locations.
+    auto repWord = RepeatTo32BitsIfNeeded(word);
+    using RepWordType = decltype(repWord);
+
+    using Functor = FillBitFieldFunctor<decltype(portal), RepWordType>;
+    Functor functor{ portal, repWord };
+
+    const vtkm::Id numWords = portal.template GetNumberOfWords<RepWordType>();
+    DerivedAlgorithm::Schedule(functor, numWords);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill Bit Field (mask)
+  template <typename WordType>
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word)
+  {
+    VTKM_STATIC_ASSERT_MSG(vtkm::cont::BitField::IsValidWordType<WordType>{}, "Invalid word type.");
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    const vtkm::Id numBits = bits.GetNumberOfBits();
+    if (numBits == 0)
+    {
+      return;
+    }
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    // If less than 32 bits, repeat the word until we get a 32 bit pattern.
+    // Using this for the pattern prevents races while writing small numbers
+    // to adjacent memory locations.
+    auto repWord = RepeatTo32BitsIfNeeded(word);
+    using RepWordType = decltype(repWord);
+
+    using Functor = FillBitFieldFunctor<decltype(portal), RepWordType>;
+    Functor functor{ portal, repWord };
+
+    const vtkm::Id numWords = portal.template GetNumberOfWords<RepWordType>();
+    DerivedAlgorithm::Schedule(functor, numWords);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill ArrayHandle
+  template <typename T, typename S>
+  VTKM_CONT static void Fill(vtkm::cont::ArrayHandle<T, S>& handle, const T& value)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    const vtkm::Id numValues = handle.GetNumberOfValues();
+    if (numValues == 0)
+    {
+      return;
+    }
+
+    auto portal = handle.PrepareForOutput(numValues, DeviceAdapterTag{});
+    FillArrayHandleFunctor<decltype(portal)> functor{ portal, value };
+    DerivedAlgorithm::Schedule(functor, numValues);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill ArrayHandle (resize)
+  template <typename T, typename S>
+  VTKM_CONT static void Fill(vtkm::cont::ArrayHandle<T, S>& handle,
+                             const T& value,
+                             const vtkm::Id numValues)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+    if (numValues == 0)
+    {
+      handle.Shrink(0);
+      return;
+    }
+
+    auto portal = handle.PrepareForOutput(numValues, DeviceAdapterTag{});
+    FillArrayHandleFunctor<decltype(portal)> functor{ portal, value };
+    DerivedAlgorithm::Schedule(functor, numValues);
+  }
+
+  //--------------------------------------------------------------------------
   // Lower Bounds
   template <typename T, class CIn, class CVal, class COut>
   VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<T, CIn>& input,
