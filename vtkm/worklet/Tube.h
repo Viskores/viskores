@@ -139,112 +139,114 @@ public:
     if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE || numPoints == 0)
       return;
     //Assign default for 1pt polylines.
-    if (numPoints == 1)
+    else if (numPoints == 1)
     {
       outNormals.Set(ptIndices[0], this->DefaultNorm);
       return;
     }
-
-    //The following follows the VTK implementation in:
-    //vtkPolyLine::GenerateSlidingNormals
-    vtkm::Vec<vtkm::FloatDefault, 3> sPrev, sNext, normal, p0, p1;
-    vtkm::IdComponent sNextId = FindValidSegment(inPts, ptIndices, numPoints, 0);
-
-    if (sNextId != numPoints) // at least one valid segment
+    else
     {
-      p0 = inPts.Get(ptIndices[sNextId]);
-      p1 = inPts.Get(ptIndices[sNextId + 1]);
-      sPrev = vtkm::Normal(p1 - p0);
-    }
-    else // no valid segments. Set everything to the default normal.
-    {
-      for (vtkm::Id i = 0; i < numPoints; i++)
-        outNormals.Set(polylineOffset + i, this->DefaultNorm);
-      return;
-    }
+      //The following follows the VTK implementation in:
+      //vtkPolyLine::GenerateSlidingNormals
+      vtkm::Vec<vtkm::FloatDefault, 3> sPrev, sNext, normal, p0, p1;
+      vtkm::IdComponent sNextId = FindValidSegment(inPts, ptIndices, numPoints, 0);
 
-    // find the next valid, non-parallel segment
-    while (++sNextId < numPoints)
-    {
-      sNextId = FindValidSegment(inPts, ptIndices, numPoints, sNextId);
-      if (sNextId != numPoints)
+      if (sNextId != numPoints) // at least one valid segment
       {
         p0 = inPts.Get(ptIndices[sNextId]);
         p1 = inPts.Get(ptIndices[sNextId + 1]);
-        sNext = vtkm::Normal(p1 - p0);
+        sPrev = vtkm::Normal(p1 - p0);
+      }
+      else // no valid segments. Set everything to the default normal.
+      {
+        for (vtkm::Id i = 0; i < numPoints; i++)
+          outNormals.Set(polylineOffset + i, this->DefaultNorm);
+        return;
+      }
 
-        // now the starting normal should simply be the cross product
-        // in the following if statement we check for the case where
-        // the two segments are parallel, in which case, continue searching
-        // for the next valid segment
-        auto n = vtkm::Cross(sPrev, sNext);
-        if (vtkm::Magnitude(n) > vecMagnitudeEps)
+      // find the next valid, non-parallel segment
+      while (++sNextId < numPoints)
+      {
+        sNextId = FindValidSegment(inPts, ptIndices, numPoints, sNextId);
+        if (sNextId != numPoints)
         {
-          normal = n;
-          sPrev = sNext;
-          break;
+          p0 = inPts.Get(ptIndices[sNextId]);
+          p1 = inPts.Get(ptIndices[sNextId + 1]);
+          sNext = vtkm::Normal(p1 - p0);
+
+          // now the starting normal should simply be the cross product
+          // in the following if statement we check for the case where
+          // the two segments are parallel, in which case, continue searching
+          // for the next valid segment
+          auto n = vtkm::Cross(sPrev, sNext);
+          if (vtkm::Magnitude(n) > vecMagnitudeEps)
+          {
+            normal = n;
+            sPrev = sNext;
+            break;
+          }
         }
       }
-    }
 
-    //only one valid segment...
-    if (sNextId >= numPoints)
-    {
-      for (vtkm::IdComponent j = 0; j < 3; j++)
-        if (sPrev[j] != 0)
-        {
-          normal[(j + 2) % 3] = 0;
-          normal[(j + 1) % 3] = 1;
-          normal[j] = -sPrev[(j + 1) % 3] / sPrev[j];
+      //only one valid segment...
+      if (sNextId >= numPoints)
+      {
+        for (vtkm::IdComponent j = 0; j < 3; j++)
+          if (sPrev[j] != 0)
+          {
+            normal[(j + 2) % 3] = 0;
+            normal[(j + 1) % 3] = 1;
+            normal[j] = -sPrev[(j + 1) % 3] / sPrev[j];
+            break;
+          }
+      }
+
+      vtkm::Normalize(normal);
+      vtkm::Id lastNormalId = 0;
+      while (++sNextId < numPoints)
+      {
+        sNextId = FindValidSegment(inPts, ptIndices, numPoints, sNextId);
+        if (sNextId == numPoints)
           break;
-        }
-    }
 
-    vtkm::Normalize(normal);
-    vtkm::Id lastNormalId = 0;
-    while (++sNextId < numPoints)
-    {
-      sNextId = FindValidSegment(inPts, ptIndices, numPoints, sNextId);
-      if (sNextId == numPoints)
-        break;
+        p0 = inPts.Get(ptIndices[sNextId]);
+        p1 = inPts.Get(ptIndices[sNextId + 1]);
+        sNext = vtkm::Normal(p1 - p0);
+        auto w = vtkm::Cross(sPrev, normal);
 
-      p0 = inPts.Get(ptIndices[sNextId]);
-      p1 = inPts.Get(ptIndices[sNextId + 1]);
-      sNext = vtkm::Normal(p1 - p0);
-      auto w = vtkm::Cross(sPrev, normal);
+        if (vtkm::Magnitude(w) == 0) //can't use this segment
+          continue;
+        vtkm::Normalize(w);
 
-      if (vtkm::Magnitude(w) == 0) //can't use this segment
-        continue;
-      vtkm::Normalize(w);
+        auto q = vtkm::Cross(sNext, sPrev);
 
-      auto q = vtkm::Cross(sNext, sPrev);
+        if (vtkm::Magnitude(q) == 0) //can't use this segment
+          continue;
+        vtkm::Normalize(q);
 
-      if (vtkm::Magnitude(q) == 0) //can't use this segment
-        continue;
-      vtkm::Normalize(q);
+        vtkm::FloatDefault f1 = vtkm::Dot(q, normal);
+        vtkm::FloatDefault f2 = 1 - (f1 * f1);
+        if (f2 > 0)
+          f2 = vtkm::Sqrt(f2);
+        else
+          f2 = 0;
 
-      vtkm::FloatDefault f1 = vtkm::Dot(q, normal);
-      vtkm::FloatDefault f2 = 1 - (f1 * f1);
-      if (f2 > 0)
-        f2 = vtkm::Sqrt(f2);
-      else
-        f2 = 0;
+        auto c = vtkm::Normal(sNext + sPrev);
+        w = vtkm::Cross(c, q);
+        c = vtkm::Cross(sPrev, q);
+        if ((vtkm::Dot(normal, c) * vtkm::Dot(w, c)) < 0)
+          f2 = -f2;
 
-      auto c = vtkm::Normal(sNext + sPrev);
-      w = vtkm::Cross(c, q);
-      c = vtkm::Cross(sPrev, q);
-      if ((vtkm::Dot(normal, c) * vtkm::Dot(w, c)) < 0)
-        f2 = -f2;
+        for (vtkm::Id i = lastNormalId; i < sNextId; i++)
+          outNormals.Set(polylineOffset + i, normal);
+        lastNormalId = sNextId;
+        sPrev = sNext;
+        normal = (f1 * q) + (f2 * w);
+      }
 
-      for (vtkm::Id i = lastNormalId; i < sNextId; i++)
+      for (vtkm::Id i = lastNormalId; i < numPoints; i++)
         outNormals.Set(polylineOffset + i, normal);
-      lastNormalId = sNextId;
-      sPrev = sNext;
-      normal = (f1 * q) + (f2 * w);
     }
-
-    for (vtkm::Id i = lastNormalId; i < numPoints; i++)
-      outNormals.Set(polylineOffset + i, normal);
   }
 
 private:
@@ -295,79 +297,83 @@ public:
   {
     if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE)
       return;
-
-    vtkm::Vec<vtkm::FloatDefault, 3> n, p, pNext, sNext, sPrev, startCapNorm, endCapNorm;
-    vtkm::Id outIdx = tubePointOffsets;
-    for (vtkm::IdComponent j = 0; j < numPoints; j++)
+    else
     {
-      if (j == 0) //first point
+      vtkm::Vec<vtkm::FloatDefault, 3> n, p, pNext, sNext, sPrev, startCapNorm, endCapNorm;
+      vtkm::Id outIdx = tubePointOffsets;
+      for (vtkm::IdComponent j = 0; j < numPoints; j++)
       {
-        p = inPts.Get(ptIndices[j]);
-        pNext = inPts.Get(ptIndices[j + 1]);
-        sNext = pNext - p;
-        sPrev = sNext;
-        startCapNorm = -sPrev;
-        vtkm::Normalize(startCapNorm);
-      }
-      else if (j == numPoints - 1) //last point
-      {
-        sPrev = sNext;
-        p = pNext;
-        endCapNorm = sNext;
-        vtkm::Normalize(endCapNorm);
-      }
-      else
-      {
-        p = pNext;
-        pNext = inPts.Get(ptIndices[j + 1]);
-        sPrev = sNext;
-        sNext = pNext - p;
-      }
-      n = inNormals.Get(polylineOffset + j);
+        if (j == 0) //first point
+        {
+          p = inPts.Get(ptIndices[j]);
+          pNext = inPts.Get(ptIndices[j + 1]);
+          sNext = pNext - p;
+          sPrev = sNext;
+          startCapNorm = -sPrev;
+          vtkm::Normalize(startCapNorm);
+        }
+        else if (j == numPoints - 1) //last point
+        {
+          sPrev = sNext;
+          p = pNext;
+          endCapNorm = sNext;
+          vtkm::Normalize(endCapNorm);
+        }
+        else
+        {
+          p = pNext;
+          pNext = inPts.Get(ptIndices[j + 1]);
+          sPrev = sNext;
+          sNext = pNext - p;
+        }
+        n = inNormals.Get(polylineOffset + j);
 
-      if (vtkm::Magnitude(sNext) == 0)
-        throw vtkm::cont::ErrorBadValue("Coincident points.");
-      vtkm::Normalize(sNext);
+        //Coincident points.
+        if (vtkm::Magnitude(sNext) == 0)
+          return;
 
-      auto s = (sPrev + sNext) / 2.;
-      if (vtkm::Magnitude(s) == 0)
-        s = vtkm::Cross(sPrev, n);
-      vtkm::Normalize(s);
+        vtkm::Normalize(sNext);
+        auto s = (sPrev + sNext) / 2.;
+        if (vtkm::Magnitude(s) == 0)
+          s = vtkm::Cross(sPrev, n);
+        vtkm::Normalize(s);
 
-      auto w = vtkm::Cross(s, n);
-      if (vtkm::Magnitude(w) == 0)
-        throw vtkm::cont::ErrorBadValue("Bad normal in Tube worklet.");
-      vtkm::Normalize(w);
+        auto w = vtkm::Cross(s, n);
+        //Bad normal
+        if (vtkm::Magnitude(w) == 0)
+          return;
+        vtkm::Normalize(w);
 
-      //create orthogonal coordinate system.
-      auto nP = vtkm::Cross(w, s);
-      vtkm::Normalize(nP);
+        //create orthogonal coordinate system.
+        auto nP = vtkm::Cross(w, s);
+        vtkm::Normalize(nP);
 
-      //Add the start cap vertex. This is just a point at the center of the tube (on the polyline).
-      if (this->Capping && j == 0)
-      {
-        outPts.Set(outIdx, p);
-        outIdx++;
-      }
+        //Add the start cap vertex. This is just a point at the center of the tube (on the polyline).
+        if (this->Capping && j == 0)
+        {
+          outPts.Set(outIdx, p);
+          outIdx++;
+        }
 
-      //this only implements the 'sides share vertices' line 476
-      vtkm::Vec<vtkm::FloatDefault, 3> normal;
-      for (vtkm::IdComponent k = 0; k < this->NumSides; k++)
-      {
-        vtkm::FloatDefault angle = static_cast<vtkm::FloatDefault>(k) * this->Theta;
-        vtkm::FloatDefault cosValue = vtkm::Cos(angle);
-        vtkm::FloatDefault sinValue = vtkm::Sin(angle);
-        normal = w * cosValue + nP * sinValue;
-        auto newPt = p + this->Radius * normal;
-        outPts.Set(outIdx, newPt);
-        outIdx++;
-      }
+        //this only implements the 'sides share vertices' line 476
+        vtkm::Vec<vtkm::FloatDefault, 3> normal;
+        for (vtkm::IdComponent k = 0; k < this->NumSides; k++)
+        {
+          vtkm::FloatDefault angle = static_cast<vtkm::FloatDefault>(k) * this->Theta;
+          vtkm::FloatDefault cosValue = vtkm::Cos(angle);
+          vtkm::FloatDefault sinValue = vtkm::Sin(angle);
+          normal = w * cosValue + nP * sinValue;
+          auto newPt = p + this->Radius * normal;
+          outPts.Set(outIdx, newPt);
+          outIdx++;
+        }
 
-      //Add the end cap vertex. This is just a point at the center of the tube (on the polyline).
-      if (this->Capping && j == numPoints - 1)
-      {
-        outPts.Set(outIdx, p);
-        outIdx++;
+        //Add the end cap vertex. This is just a point at the center of the tube (on the polyline).
+        if (this->Capping && j == numPoints - 1)
+        {
+          outPts.Set(outIdx, p);
+          outIdx++;
+        }
       }
     }
   }
@@ -409,49 +415,53 @@ public:
   {
     if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE)
       return;
-
-    vtkm::Id outIdx = tubeConnOffset;
-    vtkm::Id tubePtOffset = (this->Capping ? tubePointOffset + 1 : tubePointOffset);
-    for (vtkm::IdComponent i = 0; i < numPoints - 1; i++)
+    else
     {
-      for (vtkm::Id j = 0; j < this->NumSides; j++)
+      vtkm::Id outIdx = tubeConnOffset;
+      vtkm::Id tubePtOffset = (this->Capping ? tubePointOffset + 1 : tubePointOffset);
+      for (vtkm::IdComponent i = 0; i < numPoints - 1; i++)
       {
-        //Triangle 1: verts 0,1,2
-        outConn.Set(outIdx + 0, tubePtOffset + i * this->NumSides + j);
-        outConn.Set(outIdx + 1, tubePtOffset + i * this->NumSides + (j + 1) % this->NumSides);
-        outConn.Set(outIdx + 2, tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides);
-        outIdx += 3;
+        for (vtkm::Id j = 0; j < this->NumSides; j++)
+        {
+          //Triangle 1: verts 0,1,2
+          outConn.Set(outIdx + 0, tubePtOffset + i * this->NumSides + j);
+          outConn.Set(outIdx + 1, tubePtOffset + i * this->NumSides + (j + 1) % this->NumSides);
+          outConn.Set(outIdx + 2,
+                      tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides);
+          outIdx += 3;
 
-        //Triangle 1: verts 0,2, 3
-        outConn.Set(outIdx + 0, tubePtOffset + i * this->NumSides + j);
-        outConn.Set(outIdx + 1, tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides);
-        outConn.Set(outIdx + 2, tubePtOffset + (i + 1) * this->NumSides + j);
-        outIdx += 3;
-      }
-    }
-
-    if (this->Capping)
-    {
-      //start cap triangles
-      vtkm::Id startCenterPt = 0 + tubePointOffset;
-      for (vtkm::Id j = 0; j < this->NumSides; j++)
-      {
-        outConn.Set(outIdx + 0, startCenterPt);
-        outConn.Set(outIdx + 1, startCenterPt + 1 + j);
-        outConn.Set(outIdx + 2, startCenterPt + 1 + ((j + 1) % this->NumSides));
-        outIdx += 3;
+          //Triangle 1: verts 0,2, 3
+          outConn.Set(outIdx + 0, tubePtOffset + i * this->NumSides + j);
+          outConn.Set(outIdx + 1,
+                      tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides);
+          outConn.Set(outIdx + 2, tubePtOffset + (i + 1) * this->NumSides + j);
+          outIdx += 3;
+        }
       }
 
-      //end cap triangles
-      vtkm::Id endCenterPt = (tubePointOffset + 1) + (numPoints * this->NumSides);
-      vtkm::Id endOffsetPt = endCenterPt - this->NumSides;
-
-      for (vtkm::Id j = 0; j < this->NumSides; j++)
+      if (this->Capping)
       {
-        outConn.Set(outIdx + 0, endCenterPt);
-        outConn.Set(outIdx + 1, endOffsetPt + j);
-        outConn.Set(outIdx + 2, endOffsetPt + ((j + 1) % this->NumSides));
-        outIdx += 3;
+        //start cap triangles
+        vtkm::Id startCenterPt = 0 + tubePointOffset;
+        for (vtkm::Id j = 0; j < this->NumSides; j++)
+        {
+          outConn.Set(outIdx + 0, startCenterPt);
+          outConn.Set(outIdx + 1, startCenterPt + 1 + j);
+          outConn.Set(outIdx + 2, startCenterPt + 1 + ((j + 1) % this->NumSides));
+          outIdx += 3;
+        }
+
+        //end cap triangles
+        vtkm::Id endCenterPt = (tubePointOffset + 1) + (numPoints * this->NumSides);
+        vtkm::Id endOffsetPt = endCenterPt - this->NumSides;
+
+        for (vtkm::Id j = 0; j < this->NumSides; j++)
+        {
+          outConn.Set(outIdx + 0, endCenterPt);
+          outConn.Set(outIdx + 1, endOffsetPt + j);
+          outConn.Set(outIdx + 2, endOffsetPt + ((j + 1) % this->NumSides));
+          outIdx += 3;
+        }
       }
     }
   }
