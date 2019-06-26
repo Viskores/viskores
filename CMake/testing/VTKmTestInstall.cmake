@@ -62,13 +62,13 @@ file(GENERATE
   OUTPUT "${${file_loc_var}}"
   CONTENT
 "
-set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING \"\")
-set(CMAKE_PREFIX_PATH ${install_prefix} CACHE STRING \"\")
-set(CMAKE_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE FILEPATH \"\")
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING \"\")
-set(CMAKE_CUDA_COMPILER ${CMAKE_CUDA_COMPILER} CACHE FILEPATH \"\")
-set(CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} CACHE STRING \"\")
-set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CUDA_HOST_COMPILER} CACHE FILEPATH \"\")
+set(CMAKE_MAKE_PROGRAM \"${CMAKE_MAKE_PROGRAM}\" CACHE FILEPATH \"\")
+set(CMAKE_PREFIX_PATH \"${CMAKE_PREFIX_PATH};${install_prefix}/\" CACHE STRING \"\")
+set(CMAKE_CXX_COMPILER \"${CMAKE_CXX_COMPILER}\" CACHE FILEPATH \"\")
+set(CMAKE_CXX_FLAGS \"$CACHE{CMAKE_CXX_FLAGS}\" CACHE STRING \"\")
+set(CMAKE_CUDA_COMPILER \"${CMAKE_CUDA_COMPILER}\" CACHE FILEPATH \"\")
+set(CMAKE_CUDA_FLAGS \"$CACHE{CMAKE_CUDA_FLAGS}\" CACHE STRING \"\")
+set(CMAKE_CUDA_HOST_COMPILER \"${CMAKE_CUDA_HOST_COMPILER}\" CACHE FILEPATH \"\")
 "
 )
 
@@ -81,8 +81,34 @@ function(vtkm_test_against_install dir)
   set(src_dir "${CMAKE_CURRENT_SOURCE_DIR}/${name}/")
   set(build_dir "${VTKm_BINARY_DIR}/CMakeFiles/_tmp_build/test_${name}/")
 
-  set(build_config "${build_dir}/build_options.cmake")
-  vtkm_generate_install_build_options(build_config)
+  set(args )
+  if(CMAKE_VERSION VERSION_LESS 3.13)
+    #Before 3.13 the config file passing to cmake via ctest --build-options
+    #was broken
+    set(args
+      -DCMAKE_MAKE_PROGRAM:FILEPATH=${CMAKE_MAKE_PROGRAM}
+      -DCMAKE_PREFIX_PATH:STRING=${install_prefix}
+      -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+      -DCMAKE_CUDA_COMPILER:FILEPATH=${CMAKE_CUDA_COMPILER}
+      -DCMAKE_CUDA_HOST_COMPILER:FILEPATH=${CMAKE_CUDA_HOST_COMPILER}
+      -DCMAKE_CXX_FLAGS:STRING=$CACHE{CMAKE_CXX_FLAGS}
+      -DCMAKE_CUDA_FLAGS:STRING=$CACHE{CMAKE_CUDA_FLAGS}
+    )
+  else()
+    set(build_config "${build_dir}build_options.cmake")
+    vtkm_generate_install_build_options(build_config)
+    set(args -C ${build_config})
+  endif()
+
+  if(WIN32 AND TARGET vtkm::tbb)
+    #on windows we need to specify these as FindTBB won't
+    #find the installed version just with the prefix path
+    list(APPEND args
+      -DTBB_LIBRARY_DEBUG:FILEPATH=${TBB_LIBRARY_DEBUG}
+      -DTBB_LIBRARY_RELEASE:FILEPATH=${TBB_LIBRARY_RELEASE}
+      -DTBB_INCLUDE_DIR:PATH=${TBB_INCLUDE_DIR}
+    )
+  endif()
 
   #determine if the test is expected to compile or fail to build. We use
   #this information to built the test name to make it clear to the user
@@ -93,10 +119,13 @@ function(vtkm_test_against_install dir)
 
   add_test(NAME ${build_name}
            COMMAND ${CMAKE_CTEST_COMMAND}
+           -C $<CONFIG>
            --build-and-test ${src_dir} ${build_dir}
            --build-generator ${CMAKE_GENERATOR}
            --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-           --build-options -C "${build_config}"
+           --build-options
+            ${args}
+            --no-warn-unused-cli
            )
 
   set_tests_properties(${build_name} PROPERTIES LABELS ${test_label} )
