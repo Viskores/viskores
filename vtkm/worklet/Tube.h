@@ -262,7 +262,7 @@ public:
     : Capping(capping)
     , NumSides(n)
     , Radius(r)
-    , Theta(2 * static_cast<vtkm::FloatDefault>(vtkm::Pi()) / n)
+    , Theta(2 * static_cast<vtkm::FloatDefault>(vtkm::Pi()) / static_cast<vtkm::FloatDefault>(n))
   {
   }
 
