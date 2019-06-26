@@ -439,6 +439,95 @@ private:
     }
   }
 
+
+  template <typename BitsPortal, typename GlobalPopCountType>
+  struct CountSetBitsFunctor : public vtkm::exec::FunctorBase
+  {
+    VTKM_STATIC_ASSERT_MSG(VTKM_PASS_COMMAS(std::is_same<GlobalPopCountType, vtkm::Int32>::value ||
+                                            std::is_same<GlobalPopCountType, vtkm::UInt32>::value ||
+                                            std::is_same<GlobalPopCountType, vtkm::UInt64>::value),
+                           "Unsupported GlobalPopCountType. Must support CUDA atomicAdd.");
+
+    //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
+    //which is the GCC required compiler for CUDA 9.2 on summit/power9
+    using Word = typename vtkm::cont::internal::AtomicInterfaceExecution<
+      DeviceAdapterTagCuda>::WordTypePreferred;
+
+    VTKM_CONT
+    CountSetBitsFunctor(const BitsPortal& portal, GlobalPopCountType* globalPopCount)
+      : Portal{ portal }
+      , GlobalPopCount{ globalPopCount }
+      , FinalWordIndex{ portal.GetNumberOfWords() - 1 }
+      , FinalWordMask{ portal.GetFinalWordMask() }
+    {
+    }
+
+    ~CountSetBitsFunctor() {}
+
+    VTKM_CONT void Initialize()
+    {
+      assert(this->GlobalPopCount != nullptr);
+      VTKM_CUDA_CALL(cudaMemset(this->GlobalPopCount, 0, sizeof(GlobalPopCountType)));
+    }
+
+    VTKM_SUPPRESS_EXEC_WARNINGS
+    __device__ void operator()(vtkm::Id wordIdx) const
+    {
+      Word word = this->Portal.GetWord(wordIdx);
+
+      // The last word may be partial -- mask out trailing bits if needed.
+      const Word mask = wordIdx == this->FinalWordIndex ? this->FinalWordMask : ~Word{ 0 };
+
+      word &= mask;
+
+      if (word != 0)
+      {
+        this->LocalPopCount = vtkm::CountSetBits(word);
+        this->Reduce();
+      }
+    }
+
+    VTKM_CONT vtkm::Id Finalize() const
+    {
+      assert(this->GlobalPopCount != nullptr);
+      GlobalPopCountType result;
+      VTKM_CUDA_CALL(cudaMemcpy(
+        &result, this->GlobalPopCount, sizeof(GlobalPopCountType), cudaMemcpyDeviceToHost));
+      return static_cast<vtkm::Id>(result);
+    }
+
+  private:
+    // Every thread with a non-zero local popcount calls this function, which
+    // computes the total popcount for the coalesced threads and atomically
+    // increasing the global popcount.
+    VTKM_SUPPRESS_EXEC_WARNINGS
+    __device__ void Reduce() const
+    {
+      const auto activeLanes = cooperative_groups::coalesced_threads();
+      const int activeRank = activeLanes.thread_rank();
+      const int activeSize = activeLanes.size();
+
+      // Reduction value:
+      vtkm::Int32 rVal = this->LocalPopCount;
+      for (int delta = 1; delta < activeSize; delta *= 2)
+      {
+        rVal += activeLanes.shfl_down(rVal, delta);
+      }
+
+      if (activeRank == 0)
+      {
+        atomicAdd(this->GlobalPopCount, static_cast<GlobalPopCountType>(rVal));
+      }
+    }
+
+    const BitsPortal Portal;
+    GlobalPopCountType* GlobalPopCount;
+    mutable vtkm::Int32 LocalPopCount{ 0 };
+    // Used to mask trailing bits the in last word.
+    vtkm::Id FinalWordIndex{ 0 };
+    Word FinalWordMask{ 0 };
+  };
+
   template <class InputPortal, class ValuesPortal, class OutputPortal>
   VTKM_CONT static void LowerBoundsPortal(const InputPortal& input,
                                           const ValuesPortal& values,
@@ -959,6 +1048,21 @@ private:
     return functor.Finalize();
   }
 
+  template <typename GlobalPopCountType, typename BitsPortal>
+  VTKM_CONT static vtkm::Id CountSetBitsPortal(const BitsPortal& bits)
+  {
+    using Functor = CountSetBitsFunctor<BitsPortal, GlobalPopCountType>;
+
+    // RAII for the global atomic counter.
+    auto globalCount = cuda::internal::make_CudaUniquePtr<GlobalPopCountType>(1);
+    Functor functor{ bits, globalCount.get() };
+
+    functor.Initialize();
+    Schedule(functor, bits.GetNumberOfWords());
+    Synchronize(); // Ensure kernel is done before checking final atomic count
+    return functor.Finalize();
+  }
+
   //-----------------------------------------------------------------------------
 
 public:
@@ -987,6 +1091,11 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     const vtkm::Id inSize = input.GetNumberOfValues();
+    if (inSize <= 0)
+    {
+      output.Shrink(inSize);
+      return;
+    }
     CopyPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                output.PrepareForOutput(inSize, DeviceAdapterTagCuda()));
   }
@@ -999,6 +1108,12 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id size = stencil.GetNumberOfValues();
+    if (size <= 0)
+    {
+      output.Shrink(size);
+      return;
+    }
+
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                                     stencil.PrepareForInput(DeviceAdapterTagCuda()),
                                     output.PrepareForOutput(size, DeviceAdapterTagCuda()),
@@ -1015,6 +1130,11 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id size = stencil.GetNumberOfValues();
+    if (size <= 0)
+    {
+      output.Shrink(size);
+      return;
+    }
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
                                     stencil.PrepareForInput(DeviceAdapterTagCuda()),
                                     output.PrepareForOutput(size, DeviceAdapterTagCuda()),
@@ -1094,6 +1214,13 @@ public:
     return true;
   }
 
+  VTKM_CONT static vtkm::Id CountSetBits(const vtkm::cont::BitField& bits)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTagCuda{});
+    // Use a uint64 for accumulator, as atomicAdd does not support signed int64.
+    return CountSetBitsPortal<vtkm::UInt64>(bitsPortal);
+  }
 
   template <typename T, class SIn, class SVal, class SOut>
   VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<T, SIn>& input,

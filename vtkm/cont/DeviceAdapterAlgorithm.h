@@ -126,6 +126,35 @@ struct DeviceAdapterAlgorithm
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0);
 
+  /// \brief Returns the total number of "1" bits in BitField.
+  VTKM_CONT static vtkm::Id CountSetBits(const vtkm::cont::BitField& bits);
+
+  /// \brief Fill the BitField with a specific pattern of bits.
+  /// For boolean values, all bits are set to 1 if value is true, or 0 if value
+  /// is false.
+  /// For word masks, the word type must be an unsigned integral type, which
+  /// will be stamped across the BitField.
+  /// If numBits is provided, the BitField is resized appropriately.
+  /// @{
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, bool value, vtkm::Id numBits);
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, bool value);
+  template <typename WordType>
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word, vtkm::Id numBits);
+  template <typename WordType>
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word, bool value);
+  /// @}
+
+  /// Fill @a array with @a value. If @a numValues is specified, the array will
+  /// be resized.
+  /// @{
+  template <typename T, typename S>
+  VTKM_CONT static void Fill(vtkm::cont::ArrayHandle<T, S>& array, const T& value);
+  template <typename T, typename S>
+  VTKM_CONT static void Fill(vtkm::cont::ArrayHandle<T, S>& array,
+                             const T& value,
+                             const vtkm::Id numValues);
+  /// @}
+
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
   ///
   /// LowerBounds is a vectorized search. From each value in \c values it finds

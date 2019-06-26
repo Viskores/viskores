@@ -57,21 +57,24 @@ enum BenchmarkName
   BITFIELD_TO_UNORDERED_SET = 1 << 0,
   COPY = 1 << 1,
   COPY_IF = 1 << 2,
-  LOWER_BOUNDS = 1 << 3,
-  REDUCE = 1 << 4,
-  REDUCE_BY_KEY = 1 << 5,
-  SCAN_INCLUSIVE = 1 << 6,
-  SCAN_EXCLUSIVE = 1 << 7,
-  SORT = 1 << 8,
-  SORT_BY_KEY = 1 << 9,
-  STABLE_SORT_INDICES = 1 << 10,
-  STABLE_SORT_INDICES_UNIQUE = 1 << 11,
-  UNIQUE = 1 << 12,
-  UPPER_BOUNDS = 1 << 13,
+  COUNT_SET_BITS = 1 << 3,
+  FILL = 1 << 4,
+  LOWER_BOUNDS = 1 << 5,
+  REDUCE = 1 << 6,
+  REDUCE_BY_KEY = 1 << 7,
+  SCAN_EXCLUSIVE = 1 << 8,
+  SCAN_INCLUSIVE = 1 << 9,
+  SORT = 1 << 10,
+  SORT_BY_KEY = 1 << 11,
+  STABLE_SORT_INDICES = 1 << 12,
+  STABLE_SORT_INDICES_UNIQUE = 1 << 13,
+  UNIQUE = 1 << 14,
+  UPPER_BOUNDS = 1 << 15,
 
-  ALL = BITFIELD_TO_UNORDERED_SET | COPY | COPY_IF | LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY |
-    SCAN_INCLUSIVE |
+  ALL = BITFIELD_TO_UNORDERED_SET | COPY | COPY_IF | COUNT_SET_BITS | FILL | LOWER_BOUNDS | REDUCE |
+    REDUCE_BY_KEY |
     SCAN_EXCLUSIVE |
+    SCAN_INCLUSIVE |
     SORT |
     SORT_BY_KEY |
     STABLE_SORT_INDICES |
@@ -84,28 +87,20 @@ enum BenchmarkName
 /// described below:
 struct BenchDevAlgoConfig
 {
-  /// Benchmarks to run. Possible values:
-  /// Copy, CopyIf, LowerBounds, Reduce, ReduceByKey, ScanInclusive,
-  /// ScanExclusive, Sort, SortByKey, StableSortIndices, StableSortIndicesUnique,
-  /// Unique, UpperBounds, or All. (Default: All).
-  // Zero is for parsing, will change to 'all' in main if needed.
+  /// Benchmarks to run. See BenchmarkName enum.
   int BenchmarkFlags{ 0 };
 
   /// ValueTypes to test.
-  /// CLI arg: "TypeList [Base|Extended]" (Base is default).
+  /// CLI arg: "--base-typelist | --extended-typelist" (Base is default).
   bool ExtendedTypeList{ false };
 
   /// Run benchmarks using the same number of bytes for all arrays.
-  /// CLI arg: "FixBytes [n|off]" (n is the number of bytes, default: 2097152, ie. 2MiB)
-  /// @note FixBytes and FixSizes are not mutually exclusive. If both are
-  /// specified, both will run.
+  /// CLI arg: "--array-size-bytes [n]" (n is the number of bytes, default: 2097152, ie. 2MiB)
   bool TestArraySizeBytes{ true };
   vtkm::UInt64 ArraySizeBytes{ 1 << 21 };
 
   /// Run benchmarks using the same number of values for all arrays.
-  /// CLI arg: "FixSizes [n|off]" (n is the number of values, default: off)
-  /// @note FixBytes and FixSizes are not mutually exclusive. If both are
-  /// specified, both will run.
+  /// CLI arg: "--array-size-values [n]" (n is the number of values, default: off)
   bool TestArraySizeValues{ false };
   vtkm::UInt64 ArraySizeValues{ 1 << 21 };
 
@@ -113,7 +108,7 @@ struct BenchDevAlgoConfig
   /// values (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 75%, 100%
   /// unique). If false (default), the range is limited to 5%, 25%, 50%, 75%,
   /// 100%.
-  /// CLI arg: "DetailedOutputRange" enables the extended range.
+  /// CLI arg: "--more-output-range" enables the extended range.
   bool DetailedOutputRangeScaling{ false };
 
   // Internal: The benchmarking code will set this depending on execution phase:
@@ -289,11 +284,11 @@ public:
     {
       if (wordIdx <= this->MaxMaskedWord && (wordIdx % this->Stride) == 0)
       {
-        this->Portal.SetWord(wordIdx, this->Exemplar);
+        this->Portal.SetWordAtomic(wordIdx, this->Exemplar);
       }
       else
       {
-        this->Portal.SetWord(wordIdx, static_cast<WordType>(0));
+        this->Portal.SetWordAtomic(wordIdx, static_cast<WordType>(0));
       }
     }
   };
@@ -317,8 +312,10 @@ public:
       stride = 1;
     }
 
+    vtkm::Id numBits = numWords * static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT);
+
     vtkm::cont::BitField bits;
-    auto portal = bits.PrepareForOutput(numWords, DeviceAdapterTag{});
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
 
     using Functor = GenerateBitFieldFunctor<WordType, decltype(portal)>;
 
@@ -532,6 +529,184 @@ private:
   VTKM_MAKE_BENCHMARK(CopyIf50, BenchCopyIf, 50);
   VTKM_MAKE_BENCHMARK(CopyIf75, BenchCopyIf, 75);
   VTKM_MAKE_BENCHMARK(CopyIf100, BenchCopyIf, 100);
+
+  template <typename WordType, typename DeviceAdapter>
+  struct BenchCountSetBits
+  {
+    vtkm::Id NumWords;
+    vtkm::Id NumBits;
+    WordType Exemplar;
+    vtkm::Id Stride;
+    vtkm::Float32 FillRatio;
+    vtkm::Id MaxMaskedIndex;
+    std::string Name;
+
+    vtkm::cont::BitField Bits;
+
+    // See GenerateBitField for details. fillRatio is used to compute
+    // maxMaskedWord.
+    VTKM_CONT
+    BenchCountSetBits(WordType exemplar,
+                      vtkm::Id stride,
+                      vtkm::Float32 fillRatio,
+                      const std::string& name)
+      : NumWords(Config.ComputeNumberOfWords<WordType>())
+      , NumBits(this->NumWords * static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT))
+      , Exemplar(exemplar)
+      , Stride(stride)
+      , FillRatio(fillRatio)
+      , MaxMaskedIndex(this->NumWords / static_cast<vtkm::Id>(1. / this->FillRatio))
+      , Name(name)
+      , Bits(GenerateBitField<WordType, DeviceAdapter>(this->Exemplar,
+                                                       this->Stride,
+                                                       this->MaxMaskedIndex,
+                                                       this->NumWords))
+    {
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      Timer timer(DeviceAdapter{});
+      timer.Start();
+      Algorithm::CountSetBits(DeviceAdapter{}, this->Bits);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      const vtkm::Id numFilledWords = this->MaxMaskedIndex / this->Stride;
+      const vtkm::Id numSetBits = numFilledWords * vtkm::CountSetBits(this->Exemplar);
+
+      std::stringstream description;
+      description << "CountSetBits" << this->Name << " ( "
+                  << "NumWords: " << this->NumWords << " "
+                  << "Exemplar: " << std::hex << this->Exemplar << std::dec << " "
+                  << "FillRatio: " << this->FillRatio << " "
+                  << "Stride: " << this->Stride << " "
+                  << "NumSetBits: " << numSetBits << " )";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(CountSetBitsNull, BenchCountSetBits, 0x00000000, 1, 0.f, "Null");
+  VTKM_MAKE_BENCHMARK(CountSetBitsFull, BenchCountSetBits, 0xffffffff, 1, 1.f, "Full");
+  VTKM_MAKE_BENCHMARK(CountSetBitsHalfWord, BenchCountSetBits, 0xffff0000, 1, 1.f, "HalfWord");
+  VTKM_MAKE_BENCHMARK(CountSetBitsHalfField, BenchCountSetBits, 0xffffffff, 1, 0.5f, "HalfField");
+  VTKM_MAKE_BENCHMARK(CountSetBitsAlternateWords,
+                      BenchCountSetBits,
+                      0xffffffff,
+                      2,
+                      1.f,
+                      "AlternateWords");
+  VTKM_MAKE_BENCHMARK(CountSetBitsAlternateBits,
+                      BenchCountSetBits,
+                      0x55555555,
+                      1,
+                      1.f,
+                      "AlternateBits");
+
+  template <typename ValueType, typename DeviceAdapter>
+  struct BenchFillArrayHandle
+  {
+    vtkm::cont::ArrayHandle<ValueType> Handle;
+
+    VTKM_CONT
+    BenchFillArrayHandle() {}
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      const vtkm::Id numVals = Config.ComputeSize<ValueType>();
+      Timer timer(DeviceAdapter{});
+      timer.Start();
+      Algorithm::Fill(DeviceAdapter{}, this->Handle, TestValue(19, ValueType{}), numVals);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      const vtkm::Id numVals = Config.ComputeSize<ValueType>();
+      std::stringstream description;
+      description << "Fill (ArrayHandle, " << numVals << " values)";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(FillArrayHandle, BenchFillArrayHandle);
+
+  template <typename WordType, typename DeviceAdapter>
+  struct BenchFillBitField
+  {
+    vtkm::Id NumWords;
+    vtkm::Id NumBits;
+    bool UseBool;
+    WordType Pattern;
+    std::string Name;
+
+    vtkm::cont::BitField Bits;
+
+    VTKM_CONT
+    BenchFillBitField(bool useBool, WordType pattern, const std::string& name)
+      : NumWords(Config.ComputeNumberOfWords<WordType>())
+      , NumBits(this->NumWords * static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT))
+      , UseBool(useBool)
+      , Pattern(pattern)
+      , Name(name)
+    {
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      Timer timer(DeviceAdapter{});
+      if (this->UseBool)
+      {
+        timer.Start();
+        Algorithm::Fill(DeviceAdapter{}, this->Bits, this->Pattern != 0, this->NumBits);
+        return timer.GetElapsedTime();
+      }
+      else
+      {
+        timer.Start();
+        Algorithm::Fill(DeviceAdapter{}, this->Bits, this->Pattern, this->NumBits);
+        return timer.GetElapsedTime();
+      }
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      std::stringstream description;
+      description << "Fill (BitField)" << this->Name << " ( "
+                  << "FillPattern: " << std::hex << this->Pattern << std::dec << " "
+                  << "UseBool: " << this->UseBool << " "
+                  << "NumBits: " << this->NumBits << " )";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(FillBitFieldTrue, BenchFillBitField, true, 0x1, "True");
+  VTKM_MAKE_BENCHMARK(FillBitFieldFalse, BenchFillBitField, true, 0x0, "False");
+  VTKM_MAKE_BENCHMARK(FillBitField8Bit,
+                      BenchFillBitField,
+                      false,
+                      static_cast<vtkm::UInt8>(0xcc),
+                      "8Bit");
+  VTKM_MAKE_BENCHMARK(FillBitField16Bit,
+                      BenchFillBitField,
+                      false,
+                      static_cast<vtkm::UInt16>(0xcccc),
+                      "16Bit");
+  VTKM_MAKE_BENCHMARK(FillBitField32Bit,
+                      BenchFillBitField,
+                      false,
+                      static_cast<vtkm::UInt32>(0xcccccccc),
+                      "32Bit");
+  VTKM_MAKE_BENCHMARK(FillBitField64Bit,
+                      BenchFillBitField,
+                      false,
+                      static_cast<vtkm::UInt64>(0xcccccccccccccccc),
+                      "64Bit");
 
   template <typename Value, typename DeviceAdapter>
   struct BenchLowerBounds
@@ -1154,17 +1329,46 @@ public:
   template <typename ValueTypes>
   static VTKM_CONT void RunInternal(vtkm::cont::DeviceAdapterId id)
   {
-    using BitFieldWordTypes = vtkm::ListTagBase<vtkm::UInt32>;
+    using UInt8Type = vtkm::ListTagBase<vtkm::UInt8>;
+    using UInt16Type = vtkm::ListTagBase<vtkm::UInt16>;
+    using UInt32Type = vtkm::ListTagBase<vtkm::UInt32>;
+    using UInt64Type = vtkm::ListTagBase<vtkm::UInt64>;
 
+    // These need specific word types:
     if (Config.BenchmarkFlags & BITFIELD_TO_UNORDERED_SET)
     {
       std::cout << DIVIDER << "\nBenchmarking BitFieldToUnorderedSet\n";
-      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetNull, BitFieldWordTypes{}, id);
-      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetFull, BitFieldWordTypes{}, id);
-      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetHalfWord, BitFieldWordTypes{}, id);
-      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetHalfField, BitFieldWordTypes{}, id);
-      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetAlternateWords, BitFieldWordTypes{}, id);
-      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetAlternateBits, BitFieldWordTypes{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetNull, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetFull, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetHalfWord, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetHalfField, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetAlternateWords, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetAlternateBits, UInt32Type{}, id);
+    }
+
+    if (Config.BenchmarkFlags & COUNT_SET_BITS)
+    {
+      std::cout << DIVIDER << "\nBenchmarking CountSetBits\n";
+      VTKM_RUN_BENCHMARK(CountSetBitsNull, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsFull, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsHalfWord, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsHalfField, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsAlternateWords, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsAlternateBits, UInt32Type{}, id);
+    }
+
+    if (Config.BenchmarkFlags & FILL)
+    {
+      std::cout << DIVIDER << "\nBenchmarking Fill (ArrayHandle)\n";
+      VTKM_RUN_BENCHMARK(FillArrayHandle, ValueTypes{}, id);
+
+      std::cout << DIVIDER << "\nBenchmarking Fill (BitField)\n";
+      VTKM_RUN_BENCHMARK(FillBitFieldTrue, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitFieldFalse, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitField8Bit, UInt8Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitField16Bit, UInt16Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitField32Bit, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitField64Bit, UInt64Type{}, id);
     }
 
     if (Config.BenchmarkFlags & COPY)
@@ -1413,7 +1617,7 @@ struct Arg : vtkm::cont::internal::option::Arg
     const char* c = option.arg;
     while (argIsNum && (*c != '\0'))
     {
-      argIsNum &= static_cast<bool>(std::isdigit(*c));
+      argIsNum = argIsNum && static_cast<bool>(std::isdigit(*c));
       ++c;
     }
 
@@ -1524,7 +1728,8 @@ int main(int argc, char* argv[])
                     "",
                     "",
                     Arg::None,
-                    "\tCopy, CopyIf, LowerBounds, Reduce, ReduceByKey, ScanExclusive, "
+                    "\tBitFieldToUnorderedSet, Copy, CopyIf, CountSetBits, FillBitField, "
+                    "LowerBounds, Reduce, ReduceByKey, ScanExclusive, "
                     "ScanInclusive, Sort, SortByKey, StableSortIndices, StableSortIndicesUnique, "
                     "Unique, UpperBounds" });
   usage.push_back(
@@ -1630,6 +1835,14 @@ int main(int argc, char* argv[])
     else if (arg == "copyif")
     {
       config.BenchmarkFlags |= vtkm::benchmarking::COPY_IF;
+    }
+    else if (arg == "countsetbits")
+    {
+      config.BenchmarkFlags |= vtkm::benchmarking::COUNT_SET_BITS;
+    }
+    else if (arg == "fill")
+    {
+      config.BenchmarkFlags |= vtkm::benchmarking::FILL;
     }
     else if (arg == "lowerbounds")
     {
