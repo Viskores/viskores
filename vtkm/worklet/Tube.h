@@ -119,6 +119,7 @@ public:
       auto pe = inPts.Get(ptIndices[end]);
       if (vtkm::Magnitude(pe - ps) > 0)
         return end - 1;
+      end++;
     }
 
     return numPoints;
