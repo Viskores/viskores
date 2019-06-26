@@ -75,6 +75,7 @@ set(headers
   Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h
+  TriangleWinding.h
   Triangulate.h
   Tube.h
   VertexClustering.h
