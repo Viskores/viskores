@@ -107,13 +107,13 @@ public:
 
 
   template <typename InPointsType, typename PointIndexType>
-  VTKM_EXEC vtkm::Id FindValidSegment(const InPointsType& inPts,
-                                      const PointIndexType& ptIndices,
-                                      const vtkm::Id& numPoints,
-                                      vtkm::Id start) const
+  VTKM_EXEC vtkm::IdComponent FindValidSegment(const InPointsType& inPts,
+                                               const PointIndexType& ptIndices,
+                                               const vtkm::IdComponent& numPoints,
+                                               vtkm::IdComponent start) const
   {
     auto ps = inPts.Get(ptIndices[start]);
-    vtkm::Id end = start + 1;
+    vtkm::IdComponent end = start + 1;
     while (end < numPoints)
     {
       auto pe = inPts.Get(ptIndices[end]);
@@ -374,7 +374,7 @@ public:
 
 private:
   bool Capping;
-  vtkm::IdComponent NumSides;
+  vtkm::Id NumSides;
   vtkm::FloatDefault Radius;
   vtkm::FloatDefault Theta;
 };
@@ -458,7 +458,7 @@ public:
 
 private:
   bool Capping;
-  vtkm::IdComponent NumSides;
+  vtkm::Id NumSides;
 };
 }
 

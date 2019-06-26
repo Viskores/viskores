@@ -35,6 +35,20 @@ void createNonPoly(vtkm::cont::DataSetBuilderExplicitIterative& dsb)
   dsb.AddCell(vtkm::CELL_SHAPE_TRIANGLE, ids);
 }
 
+vtkm::Id calcNumPoints(const std::size_t& numPtIds, const vtkm::Id& numSides, const bool& capEnds)
+{
+  //there are 'numSides' points for each polyline vertex
+  //plus, 2 more for the center point of start and end caps.
+  return static_cast<vtkm::Id>(numPtIds) * numSides + (capEnds ? 2 : 0);
+}
+
+vtkm::Id calcNumCells(const std::size_t& numPtIds, const vtkm::Id& numSides, const bool& capEnds)
+{
+  //Each line segment has numSides * 2 triangles.
+  //plus, numSides triangles for each cap.
+  return (2 * static_cast<vtkm::Id>(numPtIds - 1) * numSides) + (capEnds ? 2 * numSides : 0);
+}
+
 void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::Id insertNonPolyPos)
 {
   using VecType = vtkm::Vec<vtkm::FloatDefault, 3>;
@@ -51,8 +65,8 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
   appendPts(dsb, VecType(0, 0, 0), ids);
   appendPts(dsb, VecType(1, 0, 0), ids);
   dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
-  reqNumPts += (ids.size() * numSides + (capEnds ? 2 : 0));
-  reqNumCells += (2 * (ids.size() - 1) * numSides + (capEnds ? 2 * numSides : 0));
+  reqNumPts += calcNumPoints(ids.size(), numSides, capEnds);
+  reqNumCells += calcNumCells(ids.size(), numSides, capEnds);
 
   if (insertNonPolyPos == 1)
     createNonPoly(dsb);
@@ -62,8 +76,8 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
   appendPts(dsb, VecType(1, 0, 0), ids);
   appendPts(dsb, VecType(2, 0, 0), ids);
   dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
-  reqNumPts += (ids.size() * numSides + (capEnds ? 2 : 0));
-  reqNumCells += (2 * (ids.size() - 1) * numSides + (capEnds ? 2 * numSides : 0));
+  reqNumPts += calcNumPoints(ids.size(), numSides, capEnds);
+  reqNumCells += calcNumCells(ids.size(), numSides, capEnds);
 
   if (insertNonPolyPos == 2)
     createNonPoly(dsb);
@@ -75,8 +89,8 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
   appendPts(dsb, VecType(3, 0, 0), ids);
   appendPts(dsb, VecType(4, 0, 0), ids);
   dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
-  reqNumPts += (ids.size() * numSides + (capEnds ? 2 : 0));
-  reqNumCells += (2 * (ids.size() - 1) * numSides + (capEnds ? 2 * numSides : 0));
+  reqNumPts += calcNumPoints(ids.size(), numSides, capEnds);
+  reqNumCells += calcNumCells(ids.size(), numSides, capEnds);
 
   if (insertNonPolyPos == 3)
     createNonPoly(dsb);
@@ -89,8 +103,8 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
   for (vtkm::FloatDefault x = x0; x < x1; x += dx)
     appendPts(dsb, VecType(x, vtkm::Cos(x), vtkm::Sin(x) / 2), ids);
   dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
-  reqNumPts += (ids.size() * numSides + (capEnds ? 2 : 0));
-  reqNumCells += (2 * (ids.size() - 1) * numSides + (capEnds ? 2 * numSides : 0));
+  reqNumPts += calcNumPoints(ids.size(), numSides, capEnds);
+  reqNumCells += calcNumCells(ids.size(), numSides, capEnds);
 
   if (insertNonPolyPos == 4)
     createNonPoly(dsb);
