@@ -123,7 +123,8 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
       VTKM_OPENMP_DIRECTIVE(parallel for
                             default(none)
                             firstprivate(valuesInPortal, indexPortal, valuesOutPortal)
-                            schedule(static))
+                            schedule(static)
+                            VTKM_OPENMP_SHARED_CONST(size))
       for (vtkm::Id i = 0; i < size; ++i)
       {
         valuesOutPortal.Set(i, valuesInPortal.Get(indexPortal.Get(i)));
@@ -209,6 +210,7 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
     VTKM_OPENMP_DIRECTIVE(parallel for
                           default(none)
                           firstprivate(valuesInPortal, indexPortal, valuesOutPortal)
+                          VTKM_OPENMP_SHARED_CONST(size)
                           schedule(static))
     for (vtkm::Id i = 0; i < size; ++i)
     {

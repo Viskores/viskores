@@ -36,6 +36,18 @@
 #define VTKM_OPENMP_DIRECTIVE(directive)
 #endif // _OPENMP
 
+// See "OpenMP data sharing" section of
+// https://www.gnu.org/software/gcc/gcc-9/porting_to.html. OpenMP broke
+// backwards compatibility regarding const variable handling.
+// tl;dr, put all const variables accessed from openmp blocks in a
+// VTKM_OPENMP_SHARED_CONST(var1, var2, ...) macro. This will do The Right Thing
+// on all gcc.
+#if defined(__GNUC__) && __GNUC__ >= 9
+#define VTKM_OPENMP_SHARED_CONST(...) shared(__VA_ARGS__)
+#else
+#define VTKM_OPENMP_SHARED_CONST(...)
+#endif
+
 // When defined, supported type / operator combinations will use the OpenMP
 // reduction(...) clause. Otherwise, all reductions use the general
 // implementation with a manual reduction once the threads complete.
@@ -279,8 +291,8 @@ struct ReduceHelper
     int numThreads = 0;
     std::unique_ptr<ReturnType[]> threadData;
 
-    VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(f)
-                            shared(data, doParallel, numThreads, threadData))
+    VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(f) shared(
+      data, doParallel, numThreads, threadData) VTKM_OPENMP_SHARED_CONST(numVals))
     {
 
       int tid = omp_get_thread_num();
@@ -412,7 +424,7 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
   vtkm::Id outIdx = 0;
 
   VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(keysIn, valuesIn, keysOut, valuesOut, f)
-                          shared(outIdx))
+                          shared(outIdx) VTKM_OPENMP_SHARED_CONST(numValues))
   {
     int tid = omp_get_thread_num();
     int numThreads = omp_get_num_threads();
