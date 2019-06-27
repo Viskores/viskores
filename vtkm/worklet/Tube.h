@@ -141,10 +141,7 @@ public:
       return;
     //Assign default for 1pt polylines.
     else if (numPoints == 1)
-    {
       outNormals.Set(ptIndices[0], this->DefaultNorm);
-      return;
-    }
     else
     {
       //The following follows the VTK implementation in:
@@ -331,7 +328,7 @@ public:
 
         //Coincident points.
         if (vtkm::Magnitude(sNext) == 0)
-          return;
+          this->RaiseError("Coincident points in Tube worklet.");
 
         vtkm::Normalize(sNext);
         auto s = (sPrev + sNext) / 2.;
@@ -342,7 +339,7 @@ public:
         auto w = vtkm::Cross(s, n);
         //Bad normal
         if (vtkm::Magnitude(w) == 0)
-          return;
+          this->RaiseError("Bad normal in Tube worklet.");
         vtkm::Normalize(w);
 
         //create orthogonal coordinate system.
