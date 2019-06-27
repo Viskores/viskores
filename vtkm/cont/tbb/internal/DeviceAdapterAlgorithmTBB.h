@@ -79,35 +79,6 @@ public:
     output.Shrink(outputSize);
   }
 
-  template <typename T, typename U, class CIn, class CStencil, class COut>
-  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
-                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
-                               vtkm::cont::ArrayHandle<T, COut>& output,
-                               const vtkm::Id& output_size)
-  {
-
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-    ::vtkm::NotZeroInitialized unary_predicate;
-    CopyIf(input, stencil, output, output_size, unary_predicate);
-  }
-
-  template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
-  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
-                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
-                               vtkm::cont::ArrayHandle<T, COut>& output,
-                               const vtkm::Id& output_size,
-                               UnaryPredicate unary_predicate)
-  {
-
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-    vtkm::Id inputSize = input.GetNumberOfValues();
-    tbb::CopyIfPortals(input.PrepareForInput(DeviceAdapterTagTBB()),
-                       stencil.PrepareForInput(DeviceAdapterTagTBB()),
-                       output.PrepareForOutput(output_size, DeviceAdapterTagTBB()),
-                       unary_predicate);
-  }
-
-
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                      vtkm::Id inputStartIndex,
