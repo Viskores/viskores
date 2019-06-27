@@ -1142,21 +1142,6 @@ public:
     output.Shrink(newSize);
   }
 
-  template <typename T, typename U, class SIn, class SStencil, class SOut>
-  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<U, SIn>& input,
-                               const vtkm::cont::ArrayHandle<T, SStencil>& stencil,
-                               vtkm::cont::ArrayHandle<U, SOut>& output,
-                               const vtkm::Id& output_size)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-    vtkm::Id size = stencil.GetNumberOfValues();
-    CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                 stencil.PrepareForInput(DeviceAdapterTagCuda()),
-                 output.PrepareForOutput(output_size, DeviceAdapterTagCuda()),
-                 ::vtkm::NotZeroInitialized()); //yes on the stencil
-  }
-
-
   template <typename T, typename U, class SIn, class SOut>
   VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, SIn>& input,
                                      vtkm::Id inputStartIndex,
@@ -1782,6 +1767,17 @@ public:
     vtkm::Id globalIndexOffset = 0)
   {
     using Task = vtkm::exec::cuda::internal::TaskStrided1D<WorkletType, InvocationType>;
+    return Task(worklet, invocation, globalIndexOffset);
+  }
+
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::cuda::internal::TaskStrided3D<WorkletType, InvocationType> MakeTask(
+    WorkletType& worklet,
+    InvocationType& invocation,
+    vtkm::Id3,
+    vtkm::Id globalIndexOffset = 0)
+  {
+    using Task = vtkm::exec::cuda::internal::TaskStrided3D<WorkletType, InvocationType>;
     return Task(worklet, invocation, globalIndexOffset);
   }
 };

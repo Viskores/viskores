@@ -134,7 +134,6 @@ VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
 {
   if (numPts != 3)
   {
-    std::cout << "numPts triangle: " << numPts << "\n";
     worklet.RaiseError("Edge ratio metric(triangle) requires 3 points.");
     return OutType(0.0);
   }
