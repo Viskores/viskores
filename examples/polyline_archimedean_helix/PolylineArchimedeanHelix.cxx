@@ -94,17 +94,16 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
   camera.SetPosition(totalExtent * (mag * 2.f));
   vtkm::cont::ColorTable colorTable("inferno");
 
-  // Create a mapper, canvas and view that will be used to render the scene
   vtkm::rendering::Scene scene;
   vtkm::rendering::MapperRayTracer mapper;
   vtkm::rendering::CanvasRayTracer canvas(2048, 2048);
   vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
 
-  // Render an image of the output isosurface
+
   vtkm::cont::DataSetFieldAdd dsfa;
   std::vector<vtkm::FloatDefault> v(tubePoints.GetNumberOfValues());
+  // The first value is a cap:
   v[0] = 0;
-  //std::cout << "size of v = " << v.size() << "\n";
   for (vtkm::Id i = 1; i < vtkm::Id(v.size()); i += numSides)
   {
     vtkm::FloatDefault t = 4 * vtkm::FloatDefault(3.1415926) * (i + 1) / numSides;
@@ -137,9 +136,10 @@ int main()
   vtkm::FloatDefault radius = 0.5f;
   // How many segments is the tube decomposed into?
   vtkm::Id numLineSegments = 100;
+  // As numSides->infty, the tubes becomes perfectly cylindrical:
   vtkm::Id numSides = 50;
   TubeThatSpiral(radius, numLineSegments, numSides);
-  // Now make a square around the spiral:
+  // Setting numSides = 4 makes a square around the polyline:
   numSides = 4;
   TubeThatSpiral(radius, numLineSegments, numSides);
   return 0;
