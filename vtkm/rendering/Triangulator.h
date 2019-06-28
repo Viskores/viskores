@@ -71,6 +71,11 @@ public:
     {
       triangles = 2;
     }
+    VTKM_EXEC
+    void operator()(vtkm::CellShapeTagWedge vtkmNotUsed(shapeType), vtkm::Id& triangles) const
+    {
+      triangles = 8;
+    }
   }; //class CountTriangles
 
   template <int DIM>
@@ -271,6 +276,56 @@ public:
     using ControlSignature = void(CellSetIn cellset, FieldInCell, WholeArrayOut);
     using ExecutionSignature = void(_2, CellShape, PointIndices, WorkIndex, _3);
 
+    template <typename VecType, typename OutputPortal>
+    VTKM_EXEC void operator()(const vtkm::Id& triangleOffset,
+                              vtkm::CellShapeTagWedge vtkmNotUsed(shapeType),
+                              const VecType& cellIndices,
+                              const vtkm::Id& cellId,
+                              OutputPortal& outputIndices) const
+    {
+      vtkm::Vec<vtkm::Id, 4> triangle;
+
+      triangle[1] = cellIndices[0];
+      triangle[2] = cellIndices[1];
+      triangle[3] = cellIndices[2];
+      triangle[0] = cellId;
+      outputIndices.Set(triangleOffset, triangle);
+
+      triangle[1] = cellIndices[3];
+      triangle[2] = cellIndices[5];
+      triangle[3] = cellIndices[4];
+      outputIndices.Set(triangleOffset + 1, triangle);
+
+      triangle[1] = cellIndices[3];
+      triangle[2] = cellIndices[0];
+      triangle[3] = cellIndices[2];
+      outputIndices.Set(triangleOffset + 2, triangle);
+
+      triangle[1] = cellIndices[3];
+      triangle[2] = cellIndices[2];
+      triangle[3] = cellIndices[5];
+      outputIndices.Set(triangleOffset + 3, triangle);
+
+      triangle[1] = cellIndices[1];
+      triangle[2] = cellIndices[4];
+      triangle[3] = cellIndices[5];
+      outputIndices.Set(triangleOffset + 4, triangle);
+
+      triangle[1] = cellIndices[1];
+      triangle[2] = cellIndices[5];
+      triangle[3] = cellIndices[2];
+      outputIndices.Set(triangleOffset + 5, triangle);
+
+      triangle[1] = cellIndices[0];
+      triangle[2] = cellIndices[3];
+      triangle[3] = cellIndices[4];
+      outputIndices.Set(triangleOffset + 6, triangle);
+
+      triangle[1] = cellIndices[0];
+      triangle[2] = cellIndices[4];
+      triangle[3] = cellIndices[1];
+      outputIndices.Set(triangleOffset + 7, triangle);
+    }
     template <typename VecType, typename OutputPortal>
     VTKM_EXEC void operator()(const vtkm::Id& triangleOffset,
                               vtkm::CellShapeTagQuad vtkmNotUsed(shapeType),

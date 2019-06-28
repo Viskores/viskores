@@ -21,6 +21,8 @@ set(headers
   ArrayHandleCounting.h
   ArrayHandleDiscard.h
   ArrayHandleExtractComponent.h
+  ArrayHandleExtrudeCoords.h
+  ArrayHandleExtrudeField.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
@@ -52,6 +54,7 @@ set(headers
   CellLocatorUniformGrid.h
   CellSet.h
   CellSetExplicit.h
+  CellSetExtrude.h
   CellSetListTag.h
   CellSetPermutation.h
   CellSetSingleType.h
@@ -94,6 +97,7 @@ set(headers
   Serialization.h
   Storage.h
   StorageBasic.h
+  StorageExtrude.h
   StorageImplicit.h
   StorageListTag.h
   StorageVirtual.h
@@ -109,6 +113,7 @@ set(template_sources
   ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
   CellSetExplicit.hxx
+  CellSetExtrude.hxx
   CellSetStructured.hxx
   ColorTable.hxx
   CoordinateSystem.hxx
@@ -153,6 +158,7 @@ set(sources
   CellLocatorUniformGrid.cxx
   CellSet.cxx
   CellSetExplicit.cxx
+  CellSetExtrude.cxx
   CellSetStructured.cxx
   ColorTable.cxx
   CoordinateSystem.cxx

@@ -60,6 +60,7 @@ set(headers
   FunctionInterfaceDetailPost.h
   FunctionInterfaceDetailPre.h
   IndexTag.h
+  IndicesExtrude.h
   Invocation.h
   ListTagDetail.h
   Unreachable.h

@@ -15,6 +15,7 @@ set(headers
   CellShape.h
   ExecutionSignatureTagBase.h
   Fetch.h
+  FetchExtrude.h
   FetchTagArrayDirectIn.h
   FetchTagArrayDirectInOut.h
   FetchTagArrayDirectOut.h
@@ -30,6 +31,7 @@ set(headers
   OutputIndex.h
   ThreadIndices.h
   ThreadIndicesBasic.h
+  ThreadIndicesExtrude.h
   ThreadIndicesPointNeighborhood.h
   ThreadIndicesReduceByKey.h
   ThreadIndicesTopologyMap.h

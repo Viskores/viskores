@@ -58,6 +58,11 @@ public:
   {
     points = 0;
   }
+  VTKM_EXEC
+  void operator()(vtkm::CellShapeTagWedge vtkmNotUsed(shapeType), vtkm::Id& points) const
+  {
+    points = 0;
+  }
 
 }; // ClassCountSegments
 
@@ -73,6 +78,15 @@ public:
   template <typename VecType, typename OutputPortal>
   VTKM_EXEC void operator()(const vtkm::Id& vtkmNotUsed(pointOffset),
                             vtkm::CellShapeTagQuad vtkmNotUsed(shapeType),
+                            const VecType& vtkmNotUsed(cellIndices),
+                            const vtkm::Id& vtkmNotUsed(cellId),
+                            OutputPortal& vtkmNotUsed(outputIndices)) const
+  {
+  }
+
+  template <typename VecType, typename OutputPortal>
+  VTKM_EXEC void operator()(const vtkm::Id& vtkmNotUsed(pointOffset),
+                            vtkm::CellShapeTagWedge vtkmNotUsed(shapeType),
                             const VecType& vtkmNotUsed(cellIndices),
                             const vtkm::Id& vtkmNotUsed(cellId),
                             OutputPortal& vtkmNotUsed(outputIndices)) const
