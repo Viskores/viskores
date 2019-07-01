@@ -7,9 +7,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_cont_CellSetExtrude_hxx
+#define vtk_m_cont_CellSetExtrude_hxx
+
 namespace
 {
-
 struct ComputeReverseMapping : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn cellIndex, WholeArrayOut cellIds);
@@ -117,3 +119,4 @@ VTKM_CONT CellSetExtrude::ConnectivityC2P<Device> CellSetExtrude::PrepareForInpu
 }
 }
 } // vtkm::cont
+#endif

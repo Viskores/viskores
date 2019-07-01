@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_cont_CellSetStructured_hxx
+#define vtk_m_cont_CellSetStructured_hxx
 
 namespace vtkm
 {
@@ -73,3 +75,4 @@ void CellSetStructured<DIMENSION>::PrintSummary(std::ostream& out) const
 }
 }
 }
+#endif
