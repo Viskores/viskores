@@ -511,7 +511,7 @@ struct CountSetBitsFunctor : public vtkm::exec::FunctorBase
   VTKM_CONT
   CountSetBitsFunctor(const BitsPortal& input, std::atomic<vtkm::UInt64>& popCount)
     : Input{ input }
-    , PopCount{ popCount }
+    , PopCount(popCount)
     , FinalWordIndex{ input.GetNumberOfWords() - 1 }
     , FinalWordMask{ input.GetFinalWordMask() }
   {
