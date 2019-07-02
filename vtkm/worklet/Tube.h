@@ -212,11 +212,6 @@ private:
           p0 = inPts.Get(ptIndices[sNextId]);
           p1 = inPts.Get(ptIndices[sNextId + 1]);
           sNext = vtkm::Normal(p1 - p0);
-          auto w = vtkm::Cross(sPrev, normal);
-
-          if (vtkm::Magnitude(w) <= vtkm::Epsilon<vtkm::FloatDefault>()) //can't use this segment
-            continue;
-          vtkm::Normalize(w);
 
           auto q = vtkm::Cross(sNext, sPrev);
 
@@ -232,7 +227,7 @@ private:
             f2 = 0;
 
           auto c = vtkm::Normal(sNext + sPrev);
-          w = vtkm::Cross(c, q);
+          auto w = vtkm::Cross(c, q);
           c = vtkm::Cross(sPrev, q);
           if ((vtkm::Dot(normal, c) * vtkm::Dot(w, c)) < 0)
             f2 = -f2;
