@@ -7,7 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
 #ifndef vtk_m_cont_ColorTable_hxx
 #define vtk_m_cont_ColorTable_hxx
 
