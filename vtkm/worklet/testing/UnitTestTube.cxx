@@ -109,6 +109,12 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
   if (insertNonPolyPos == 4)
     createNonPoly(dsb);
 
+  //Finally, add a degenerate polyline: don't dance with the beast.
+  ids.clear();
+  appendPts(dsb, VecType(6, 6, 6), ids);
+  dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
+  //Should NOT produce a tubed polyline, so don't increment reqNumPts and reqNumCells.
+
   vtkm::cont::DataSet ds = dsb.Create();
 
   vtkm::worklet::Tube tubeWorklet(capEnds, numSides, radius);
@@ -121,6 +127,76 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
   VTKM_TEST_ASSERT(newCells.GetNumberOfCells() == reqNumCells, "Wrong cell shape in Tube worklet");
   VTKM_TEST_ASSERT(newCells.GetCellShape(0) == vtkm::CELL_SHAPE_TRIANGLE,
                    "Wrong cell shape in Tube worklet");
+}
+
+void TestLinearPolylines()
+{
+  using VecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+
+  //Create a number of linear polylines along a set of directions.
+  //We check that the tubes are all copacetic (proper number of cells, points),
+  //and that the tube points all lie in the proper plane.
+  //This will validate the code that computes the coordinate frame at each
+  //vertex in the polyline. There are numeric checks to handle co-linear segments.
+
+  std::vector<VecType> dirs;
+  for (int i = -1; i <= 1; i++)
+    for (int j = -1; j <= 1; j++)
+      for (int k = -1; k <= 1; k++)
+      {
+        if (!i && !j && !k)
+          continue;
+        dirs.push_back(vtkm::Normal(VecType(static_cast<vtkm::FloatDefault>(i),
+                                            static_cast<vtkm::FloatDefault>(j),
+                                            static_cast<vtkm::FloatDefault>(k))));
+      }
+
+  bool capEnds = false;
+  vtkm::Id numSides = 3;
+  vtkm::FloatDefault radius = 1;
+  for (auto& dir : dirs)
+  {
+    vtkm::cont::DataSetBuilderExplicitIterative dsb;
+    std::vector<vtkm::Id> ids;
+
+    VecType pt(0, 0, 0);
+    for (int i = 0; i < 5; i++)
+    {
+      appendPts(dsb, pt, ids);
+      pt = pt + dir;
+    }
+
+    dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
+    vtkm::cont::DataSet ds = dsb.Create();
+
+    vtkm::Id reqNumPts = calcNumPoints(ids.size(), numSides, capEnds);
+    vtkm::Id reqNumCells = calcNumCells(ids.size(), numSides, capEnds);
+
+    vtkm::worklet::Tube tubeWorklet(capEnds, numSides, radius);
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newPoints;
+    vtkm::cont::CellSetSingleType<> newCells;
+    tubeWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), newPoints, newCells);
+
+    VTKM_TEST_ASSERT(newPoints.GetNumberOfValues() == reqNumPts,
+                     "Wrong number of points in Tube worklet");
+    VTKM_TEST_ASSERT(newCells.GetNumberOfCells() == reqNumCells,
+                     "Wrong cell shape in Tube worklet");
+    VTKM_TEST_ASSERT(newCells.GetCellShape(0) == vtkm::CELL_SHAPE_TRIANGLE,
+                     "Wrong cell shape in Tube worklet");
+
+    //Each of the 3 points should be in the plane defined by dir.
+    auto portal = newPoints.GetPortalConstControl();
+    for (vtkm::Id i = 0; i < newPoints.GetNumberOfValues(); i += 3)
+    {
+      auto p0 = portal.Get(i + 0);
+      auto p1 = portal.Get(i + 1);
+      auto p2 = portal.Get(i + 2);
+      auto vec = vtkm::Normal(vtkm::Cross(p0 - p1, p0 - p2));
+      vtkm::FloatDefault dp = vtkm::Abs(vtkm::Dot(vec, dir));
+      VTKM_TEST_ASSERT((1 - dp) <= vtkm::Epsilon<vtkm::FloatDefault>(),
+                       "Tube points in wrong orientation");
+    }
+  }
 }
 
 void TestTubeWorklets()
@@ -138,6 +214,8 @@ void TestTubeWorklets()
         TestTube(false, r, n, i);
         TestTube(true, r, n, i);
       }
+
+  TestLinearPolylines();
 }
 }
 

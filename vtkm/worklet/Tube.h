@@ -54,7 +54,8 @@ public:
                             vtkm::Id& ptsPerTube,
                             vtkm::Id& numTubeConnIds) const
   {
-    if (shapeType.Id == vtkm::CELL_SHAPE_POLY_LINE)
+    // We only support polylines that contain 2 or more points.
+    if (shapeType.Id == vtkm::CELL_SHAPE_POLY_LINE && numPoints > 1)
     {
       ptsPerPolyline = numPoints;
       ptsPerTube = this->NumSides * numPoints;
@@ -136,12 +137,9 @@ public:
                             const vtkm::Id& polylineOffset,
                             OutNormalType& outNormals) const
   {
-    //Ignore non-polyline and 0 point polylines.
-    if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE || numPoints == 0)
+    //Ignore non-polyline and polyline with less than 2 points.
+    if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE || numPoints < 2)
       return;
-    //Assign default for 1pt polylines.
-    else if (numPoints == 1)
-      outNormals.Set(ptIndices[0], this->DefaultNorm);
     else
     {
       //The following follows the VTK implementation in:
@@ -212,13 +210,13 @@ public:
         sNext = vtkm::Normal(p1 - p0);
         auto w = vtkm::Cross(sPrev, normal);
 
-        if (vtkm::Magnitude(w) == 0) //can't use this segment
+        if (vtkm::Magnitude(w) <= vtkm::Epsilon<vtkm::FloatDefault>()) //can't use this segment
           continue;
         vtkm::Normalize(w);
 
         auto q = vtkm::Cross(sNext, sPrev);
 
-        if (vtkm::Magnitude(q) == 0) //can't use this segment
+        if (vtkm::Magnitude(q) <= vtkm::Epsilon<vtkm::FloatDefault>()) //can't use this segment
           continue;
         vtkm::Normalize(q);
 
@@ -293,11 +291,11 @@ public:
                             const vtkm::Id& polylineOffset,
                             OutPointsType& outPts) const
   {
-    if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE)
+    if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE || numPoints < 2)
       return;
     else
     {
-      vtkm::Vec<vtkm::FloatDefault, 3> n, p, pNext, sNext, sPrev, startCapNorm, endCapNorm;
+      vtkm::Vec<vtkm::FloatDefault, 3> n, p, pNext, sNext, sPrev;
       vtkm::Id outIdx = tubePointOffsets;
       for (vtkm::IdComponent j = 0; j < numPoints; j++)
       {
@@ -307,15 +305,11 @@ public:
           pNext = inPts.Get(ptIndices[j + 1]);
           sNext = pNext - p;
           sPrev = sNext;
-          startCapNorm = -sPrev;
-          vtkm::Normalize(startCapNorm);
         }
         else if (j == numPoints - 1) //last point
         {
           sPrev = sNext;
           p = pNext;
-          endCapNorm = sNext;
-          vtkm::Normalize(endCapNorm);
         }
         else
         {
@@ -327,18 +321,18 @@ public:
         n = inNormals.Get(polylineOffset + j);
 
         //Coincident points.
-        if (vtkm::Magnitude(sNext) == 0)
+        if (vtkm::Magnitude(sNext) <= vtkm::Epsilon<vtkm::FloatDefault>())
           this->RaiseError("Coincident points in Tube worklet.");
 
         vtkm::Normalize(sNext);
         auto s = (sPrev + sNext) / 2.;
-        if (vtkm::Magnitude(s) == 0)
+        if (vtkm::Magnitude(s) <= vtkm::Epsilon<vtkm::FloatDefault>())
           s = vtkm::Cross(sPrev, n);
         vtkm::Normalize(s);
 
         auto w = vtkm::Cross(s, n);
         //Bad normal
-        if (vtkm::Magnitude(w) == 0)
+        if (vtkm::Magnitude(w) <= vtkm::Epsilon<vtkm::FloatDefault>())
           this->RaiseError("Bad normal in Tube worklet.");
         vtkm::Normalize(w);
 
@@ -411,7 +405,7 @@ public:
                             const vtkm::Id& tubeConnOffset,
                             OutConnType& outConn) const
   {
-    if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE)
+    if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE || numPoints < 2)
       return;
     else
     {
@@ -428,7 +422,7 @@ public:
                       tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides);
           outIdx += 3;
 
-          //Triangle 1: verts 0,2, 3
+          //Triangle 2: verts 0,2,3
           outConn.Set(outIdx + 0, tubePtOffset + i * this->NumSides + j);
           outConn.Set(outIdx + 1,
                       tubePtOffset + (i + 1) * this->NumSides + (j + 1) % this->NumSides);
