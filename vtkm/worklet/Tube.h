@@ -26,7 +26,7 @@ namespace worklet
 
 class Tube
 {
-private:
+public:
   //Helper worklet to count various things in each polyline.
   class CountSegments : public vtkm::worklet::WorkletMapPointToCell
   {
@@ -464,8 +464,6 @@ private:
     vtkm::Id NumSides;
   };
 
-
-public:
   VTKM_CONT
   Tube(const bool& capping, const vtkm::Id& n, const vtkm::FloatDefault& r)
     : Capping(capping)
