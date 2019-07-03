@@ -46,7 +46,8 @@ vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Vec<vtkm::Float32
 {
   points.push_back(pt);
   vtkm::Id id = static_cast<vtkm::Id>(points.size());
-  return id;
+  //ID is zero-based.
+  return id - 1;
 }
 
 VTKM_CONT
@@ -56,7 +57,8 @@ vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Float32& x,
 {
   points.push_back(vtkm::make_Vec(x, y, z));
   vtkm::Id id = static_cast<vtkm::Id>(points.size());
-  return id;
+  //ID is zero-based.
+  return id - 1;
 }
 
 //Define cells.

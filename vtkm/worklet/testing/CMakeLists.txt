@@ -65,6 +65,7 @@ set(unit_tests
   UnitTestThreshold.cxx
   UnitTestThresholdPoints.cxx
   UnitTestTriangulate.cxx
+  UnitTestTube.cxx
   UnitTestWholeCellSetIn.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
