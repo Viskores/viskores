@@ -49,7 +49,7 @@ namespace vtkm
 namespace worklet
 {
 template <typename T>
-class VTKM_ALWAYS_EXPORT Keys;
+class Keys;
 namespace internal
 {
 

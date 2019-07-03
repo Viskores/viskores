@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_cont_StorageBasic_hxx
+#define vtk_m_cont_StorageBasic_hxx
 
 #include <vtkm/cont/StorageBasic.h>
 
@@ -113,3 +115,4 @@ vtkm::Pair<T*, void (*)(void*)> Storage<T, vtkm::cont::StorageTagBasic>::StealAr
 } // namespace internal
 }
 } // namespace vtkm::cont
+#endif

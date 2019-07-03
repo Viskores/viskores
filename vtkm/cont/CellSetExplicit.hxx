@@ -7,6 +7,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_cont_CellSetExplicit_hxx
+#define vtk_m_cont_CellSetExplicit_hxx
+
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 
@@ -637,3 +640,4 @@ CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, O
 }
 }
 } // vtkm::cont
+#endif

@@ -143,6 +143,15 @@ public:
   }
 
   template <typename IsoValuesType, typename FieldInType, typename NumTrianglesTablePortalType>
+  VTKM_EXEC void operator()(vtkm::CellShapeTagWedge vtkmNotUsed(shape),
+                            const IsoValuesType& vtkmNotUsed(isovalues),
+                            const FieldInType& vtkmNotUsed(fieldIn),
+                            vtkm::IdComponent& vtkmNotUsed(numTriangles),
+                            const NumTrianglesTablePortalType& vtkmNotUsed(numTrianglesTable)) const
+  {
+  }
+
+  template <typename IsoValuesType, typename FieldInType, typename NumTrianglesTablePortalType>
   VTKM_EXEC void operator()(vtkm::CellShapeTagHexahedron vtkmNotUsed(shape),
                             const IsoValuesType& isovalues,
                             const FieldInType& fieldIn,
@@ -330,6 +339,21 @@ public:
   { //covers when we have quads coming from 2d structured data
   }
 
+  template <typename IsoValuesType,
+            typename FieldInType, // Vec-like, one per input point
+            typename IndicesVecType,
+            typename DeviceAdapter>
+  VTKM_EXEC void operator()(
+    CellShapeTagWedge vtkmNotUsed(shape),
+    const IsoValuesType& vtkmNotUsed(isovalues),
+    const FieldInType& vtkmNotUsed(fieldIn), // Input point field defining the contour
+    EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& vtkmNotUsed(metaData),
+    vtkm::Id vtkmNotUsed(inputCellId),
+    vtkm::Id vtkmNotUsed(outputCellId),
+    vtkm::IdComponent vtkmNotUsed(visitIndex),
+    const IndicesVecType& vtkmNotUsed(indices)) const
+  { //covers when we have quads coming from 2d structured data
+  }
   template <typename IsoValuesType,
             typename FieldInType, // Vec-like, one per input point
             typename IndicesVecType,
