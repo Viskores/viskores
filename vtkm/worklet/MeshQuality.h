@@ -61,6 +61,7 @@ public:
                             const PointCoordVecType& pts,
                             OutType& metricValue) const
   {
+    printf("shape.Id: %u\n", shape.Id);
     vtkm::UInt8 thisId = shape.Id;
     if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
     {

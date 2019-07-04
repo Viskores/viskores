@@ -90,21 +90,32 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
     cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
   //Obtain the frequency counts of each cell type in the input dataset
-  IdHandle cellShapeCounts;
-  ShapeHandle uniqueCellShapes;
-  ShapeHandle sortedShapes;
+  IdHandle uniqueCellCounts;
+  ShapeHandle uniqueCellShapes, sortedShapes;
   Algorithm::Copy(cellShapes, sortedShapes);
   Algorithm::Sort(sortedShapes);
   Algorithm::ReduceByKey(
     sortedShapes,
     vtkm::cont::make_ArrayHandleConstant(vtkm::Id(1), cellShapes.GetNumberOfValues()),
     uniqueCellShapes,
-    cellShapeCounts,
+    uniqueCellCounts,
     vtkm::Add());
+
+  std::cout << "uniqueCellCounts: " << uniqueCellCounts.GetNumberOfValues() << "\n";
+
+  const vtkm::Id numUniqueShapes = uniqueCellShapes.GetNumberOfValues();
+  auto uniqueCellShapesPortal = uniqueCellShapes.GetPortalConstControl();
+  auto numCellsPerShapePortal = uniqueCellCounts.GetPortalConstControl();
+  std::vector<vtkm::Id> tempCounts(vtkm::NUMBER_OF_CELL_SHAPES);
+  for (vtkm::Id i = 0; i < numUniqueShapes; i++)
+    tempCounts[uniqueCellShapesPortal.Get(i)] = numCellsPerShapePortal.Get(i);
+  IdHandle cellShapeCounts = vtkm::cont::make_ArrayHandle(tempCounts);
+  std::cout << "cellShapeCounts: " << cellShapeCounts.GetNumberOfValues() << "\n";
 
   //Invoke the MeshQuality worklet
   vtkm::cont::ArrayHandle<T> outArray;
   vtkm::cont::ArrayHandle<CellMetric> cellMetrics = vtkm::cont::make_ArrayHandle(CellTypeMetrics);
+  std::cout << "cellMetrics: " << cellMetrics.GetNumberOfValues() << "\n";
   vtkm::worklet::DispatcherMapTopology<QualityWorklet> dispatcher;
   dispatcher.Invoke(
     vtkm::filter::ApplyPolicy(cellSet, policy), cellShapeCounts, cellMetrics, points, outArray);
@@ -140,9 +151,6 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
   //Compute the mesh quality for each shape type. This consists
   //of computing the summary statistics of the metric values for
   //each cell of the given shape type.
-  const vtkm::Id numUniqueShapes = uniqueCellShapes.GetNumberOfValues();
-  auto uniqueCellShapesPortal = uniqueCellShapes.GetPortalConstControl();
-  auto numCellsPerShapePortal = cellShapeCounts.GetPortalConstControl();
   std::string fieldName = "", metricName = "";
   vtkm::UInt8 cellShape = 0;
   vtkm::Id cellCount = 0;
