@@ -13,13 +13,10 @@ project(VTKmDemo CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-
 if(TARGET vtkm_rendering)
-
-  if(TARGET vtkm::cuda)
-    set_source_files_properties(Demo.cxx PROPERTIES LANGUAGE "CUDA")
-  endif()
-
   add_executable(Demo Demo.cxx)
   target_link_libraries(Demo PRIVATE vtkm_rendering)
+  vtkm_add_target_information(Demo
+                              MODIFY_CUDA_FLAGS
+                              DEVICE_SOURCES Demo.cxx)
 endif()

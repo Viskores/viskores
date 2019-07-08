@@ -14,7 +14,6 @@ project(RedistributePoints CXX)
 find_package(VTKm REQUIRED QUIET)
 add_executable(RedistributePoints RedistributePoints.cxx RedistributePoints.h)
 target_link_libraries(RedistributePoints PRIVATE vtkm_filter)
-
-if(TARGET vtkm::cuda)
-  set_source_files_properties(RedistributePoints.cxx PROPERTIES LANGUAGE "CUDA")
-endif()
+vtkm_add_target_information(RedistributePoints
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES RedistributePoints.cxx)

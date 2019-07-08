@@ -22,9 +22,7 @@ if(TARGET OpenGL::GL AND
 
   add_executable(StreamLineUniformGrid StreamLineUniformGrid.cxx)
   target_link_libraries(StreamLineUniformGrid PRIVATE vtkm_filter ${gl_libs})
-
-  if(TARGET vtkm::cuda)
-    set_source_files_properties(StreamLineUniformGrid.cxx PROPERTIES LANGUAGE "CUDA")
-  endif()
-
+  vtkm_add_target_information(StreamLineUniformGrid
+                              MODIFY_CUDA_FLAGS
+                              DEVICE_SOURCES StreamLineUniformGrid.cxx)
 endif()

@@ -56,7 +56,9 @@ find_package(VTKm REQUIRED QUIET)
 
 add_executable(ContourTree ContourTreeApp.cxx)
 target_link_libraries(ContourTree vtkm_filter)
-
+vtkm_add_target_information(ContourTree
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES ContourTreeApp.cxx)
 
 ####################################
 # Debug algorithm build
@@ -66,8 +68,4 @@ target_link_libraries(ContourTree vtkm_filter)
 if(TARGET vtkm::tbb)
   # TBB 2D/3D/MC
   target_compile_definitions(ContourTree PRIVATE ENABLE_SET_NUM_THREADS)
-endif()
-
-if(TARGET vtkm::cuda)
-  set_source_files_properties(ContourTreeApp.cxx PROPERTIES LANGUAGE "CUDA")
 endif()

@@ -22,16 +22,10 @@ function(add_benchmark)
   set_target_properties(${exe_name} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
     CXX_VISIBILITY_PRESET "hidden"
+    CUDA_VISIBILITY_PRESET "hidden"
+    CUDA_SEPARABLE_COMPILATION ON
   )
-
-  set_property(TARGET ${exe_name} PROPERTY  "hidden")
-  if (TARGET vtkm::cuda)
-    set_source_files_properties(${VTKm_AB_FILE} PROPERTIES LANGUAGE "CUDA")
-    set_target_properties(${exe_name} PROPERTIES
-      CUDA_VISIBILITY_PRESET "hidden"
-      CUDA_SEPARABLE_COMPILATION ON
-    )
-  endif()
+  vtkm_add_target_information(${exe_name} DEVICE_SOURCES ${VTKm_AB_FILE})
 endfunction()
 
 set(benchmarks
@@ -45,7 +39,7 @@ set(benchmarks
   )
 
 foreach (benchmark ${benchmarks})
-  add_benchmark(NAME ${benchmark} FILE ${benchmark}.cxx LIBS vtkm_filter vtkm_cont)
+  add_benchmark(NAME ${benchmark} FILE ${benchmark}.cxx LIBS vtkm_filter)
 endforeach ()
 
 if(TARGET vtkm_rendering)

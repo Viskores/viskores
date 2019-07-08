@@ -12,9 +12,8 @@ cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm::cuda)
-  set_source_files_properties(lagrangian.cxx PROPERTIES LANGUAGE "CUDA")
-endif()
-
 add_executable(Lagrangian lagrangian.cxx ABCfield.h)
 target_link_libraries(Lagrangian PRIVATE vtkm_filter)
+vtkm_add_target_information(Lagrangian
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES Lagrangian.cxx)

@@ -16,9 +16,8 @@ find_package(VTKm REQUIRED QUIET)
 if(TARGET vtkm_rendering)
 
   add_executable(Tau_timing TauTiming.cxx)
+  vtkm_add_target_information(Tau_timing
+                              MODIFY_CUDA_FLAGS
+                              DEVICE_SOURCES TauTiming.cxx)
   target_link_libraries(Tau_timing vtkm_cont)
-
-  if(TARGET vtkm::cuda)
-    set_source_files_properties(TauTiming.cxx PROPERTIES LANGUAGE "CUDA")
-  endif()
 endif()

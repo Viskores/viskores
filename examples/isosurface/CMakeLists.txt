@@ -21,9 +21,8 @@ if(TARGET OpenGL::GL AND
   set(gl_libs OpenGL::GL OpenGL::GLU GLEW::GLEW GLUT::GLUT)
   add_executable(IsosurfaceUniformGrid IsosurfaceUniformGrid.cxx quaternion.h)
   target_link_libraries(IsosurfaceUniformGrid PRIVATE vtkm_filter ${gl_libs})
-
-  if(TARGET vtkm::cuda)
-    set_source_files_properties(IsosurfaceUniformGrid.cxx PROPERTIES LANGUAGE "CUDA")
-  endif()
+  vtkm_add_target_information(IsosurfaceUniformGrid
+                              MODIFY_CUDA_FLAGS
+                              DEVICE_SOURCES IsosurfaceUniformGrid.cxx)
 
 endif()

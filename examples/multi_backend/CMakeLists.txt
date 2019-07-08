@@ -29,9 +29,8 @@ set(srcs
   MultiBackend.cxx
   )
 
-if(TARGET vtkm::cuda)
-  set_source_files_properties(${device_srcs} PROPERTIES LANGUAGE "CUDA")
-endif()
-
 add_executable(MultiBackend ${device_srcs} ${srcs} ${headers})
 target_link_libraries(MultiBackend PRIVATE vtkm_filter Threads::Threads)
+vtkm_add_target_information(MultiBackend
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES ${device_srcs})

@@ -21,9 +21,9 @@ if(TARGET OpenGL::GL AND
   set(gl_libs OpenGL::GL GLEW::GLEW GLUT::GLUT)
 
   add_executable(HelloWorld HelloWorld.cxx LoadShaders.h)
-  if(TARGET vtkm::cuda)
-  set_source_files_properties(HelloWorld.cxx PROPERTIES LANGUAGE "CUDA")
-  endif()
   target_link_libraries(HelloWorld PRIVATE vtkm_filter ${gl_libs})
+  vtkm_add_target_information(HelloWorld
+                              MODIFY_CUDA_FLAGS
+                              DEVICE_SOURCES HelloWorld.cxx)
 
 endif()
