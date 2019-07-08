@@ -45,4 +45,4 @@ set(unit_tests
   UnitTestVecVariable.cxx
   )
 
-VTKM_unit_tests(SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests})
