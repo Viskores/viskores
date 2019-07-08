@@ -15,6 +15,10 @@ include(VTKmCPUVectorization)
 include(VTKmMPI)
 
 #-----------------------------------------------------------------------------
+# INTERNAL FUNCTIONS
+# No promises when used from outside VTK-m
+
+#-----------------------------------------------------------------------------
 # Utility to build a kit name from the current directory.
 function(vtkm_get_kit_name kitvar)
   # Will this always work?  It should if ${CMAKE_CURRENT_SOURCE_DIR} is
@@ -87,7 +91,6 @@ function(vtkm_generate_export_header lib_name)
       DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
       )
   endif()
-
 endfunction(vtkm_generate_export_header)
 
 #-----------------------------------------------------------------------------
@@ -108,28 +111,128 @@ function(vtkm_declare_headers)
 endfunction(vtkm_declare_headers)
 
 #-----------------------------------------------------------------------------
+# FORWARD FACING API
+
+#-----------------------------------------------------------------------------
+# Pass to consumers extra compile flags they need to add to CMAKE_CUDA_FLAGS
+# to have CUDA compatibility.
+#
+# This is required as currently the -sm/-gencode flags when specified inside
+# COMPILE_OPTIONS / target_compile_options are not propagated to the device
+# linker. Instead they must be specified in CMAKE_CUDA_FLAGS
+#
+#
+# add_library(lib_that_uses_vtkm ...)
+# vtkm_add_cuda_flags(CMAKE_CUDA_FLAGS)
+# target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
+#
+function(vtkm_get_cuda_flags settings_var)
+  if(TARGET vtkm::cuda)
+    get_property(arch_flags
+      TARGET    vtkm::cuda
+      PROPERTY  INTERFACE_CUDA_Architecture_Flags)
+    set(${settings_var} "${${settings_var}} ${arch_flags}" PARENT_SCOPE)
+  endif()
+endfunction()
+
+
+#-----------------------------------------------------------------------------
 # Add a relevant information to target that wants to use VTK-m.
+#
+# This is a higher order function to allow build-systems that use VTK-m
+# to compose add_library/add_executable and the required information to have
+# VTK-m enabled.
 #
 # vtkm_add_target_information(
 #   target
-#   [ MODIFY_CUDA_FLAGS <ON|OFF*> ]
+#   [ MODIFY_CUDA_FLAGS ]
+#   [ EXTENDS_VTKM ]
 #   [ DEVICE_SOURCES <source_list>
-#   [ EXTENDS_VTKM <ON*|OFF> ]
 #   )
-function(vtkm_add_target_information)
+#
+# Usage:
+#   add_library(lib_that_uses_vtkm STATIC a.cxx)
+#   vtkm_add_target_information(lib_that_uses_vtkm
+#                               MODIFY_CUDA_FLAGS
+#                               DEVICE_SOURCES a.cxx
+#                               )
+#   target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
+#
+#  MODIFY_CUDA_FLAGS: If enabled will add the required -arch=<ver> flags
+#  that VTK-m was compiled with. This functionality is also provided by the
+#  the standalone `vtkm_get_cuda_flags` function. Default is OFF.
+#
+#  DEVICE_SOURCES: The collection of source files that are used by `target` that
+#  need to be marked as going to a special compiler for certain device adapters
+#  such as CUDA.
+#
+#  EXTENDS_VTKM: Some programming models have restrictions on how types can be extended.
+#  For example CUDA doesn't allow device side calls across dynamic library boundaries,
+#  and requires all polymorphic classes to be reachable at dynamic library/executable
+#  link time.
+#
+#  To accommodate these restrictions we need to handle the following allowable
+#  use-cases:
+#   Object library: do nothing, zero restrictions
+#   Executable: do nothing, zero restrictions
+#   Static library: do nothing, zero restrictions
+#   Dynamic library:
+#     -> Wanting to extend VTK-m and provide these types to consumers. This
+#     is supported when CUDA isn't enabled. Otherwise we need to ERROR!
+#     -> Wanting to use VTK-m as implementation detail, doesn't expose VTK-m
+#        types to consumers. This is supported no matter if CUDA is enabled.
+#
+#  For most consumers they can ignore the `EXTENDS_VTKM` property as the default
+#  will be correct.
+#
+#
+function(vtkm_add_target_information uses_vtkm_target)
+  set(options MODIFY_CUDA_FLAGS EXTENDS_VTKM)
+  set(multiValueArgs DEVICE_SOURCES)
+  cmake_parse_arguments(VTKm_TI
+    "${options}" "${oneValueArgs}" "${multiValueArgs}"
+    ${ARGN}
+    )
 
+  # Validate that following:
+  #   - We are building with CUDA enabled.
+  #   - We are building a VTK-m library or a library that wants cross library
+  #     device calls.
   #
+  # This is required as CUDA currently doesn't support device side calls across
+  # dynamic library boundaries.
   if(TARGET vtkm::cuda)
-    set_source_files_properties(Clipping.cxx PROPERTIES LANGUAGE "CUDA")
-    set_target_properties(Clipping PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-    set_target_properties(Clipping PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    get_target_property(lib_type ${uses_vtkm_target} TYPE)
+    get_target_property(requires_static vtkm::cuda INTERFACE_REQUIRES_STATIC_BUILDS)
 
-    vtkm_get_cuda_flags(CMAKE_CUDA_FLAGS)
-    message(STATUS "cuda flags: ${CMAKE_CUDA_FLAGS}")
+    if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY")
+      #We provide different error messages based on if we are building VTK-m
+      #or being called by a consumer of VTK-m. We use PROJECT_NAME so that we
+      #produce the correct error message when VTK-m is a subdirectory include
+      #of another project
+      if(PROJECT_NAME STREQUAL "VTKm")
+        message(SEND_ERROR "${uses_vtkm_target} needs to be built STATIC as CUDA doesn't"
+              " support virtual methods across dynamic library boundaries. You"
+              " need to set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+      else()
+        message(SEND_ERROR "${uses_vtkm_target} needs to be built STATIC as CUDA doesn't"
+                " support virtual methods across dynamic library boundaries. You"
+                " should either explicitly call add_library with the `STATIC` keyword"
+                " or set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+      endif()
+    endif()
+
+    set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
   endif()
 
-endfunction()
+  set_target_properties(${uses_vtkm_target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(${uses_vtkm_target} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
+  if(VTKm_TI_MODIFY_CUDA_FLAGS)
+    vtkm_get_cuda_flags(CMAKE_CUDA_FLAGS)
+    set(CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} PARENT_SCOPE)
+  endif()
+endfunction()
 
 
 #-----------------------------------------------------------------------------
@@ -173,43 +276,18 @@ function(vtkm_library)
               ${VTKm_LIB_TEMPLATE_SOURCES}
               ${VTKm_LIB_DEVICE_SOURCES}
               )
-
-  # Validate that following:
-  #   - We are building with CUDA enabled.
-  #   - We are building a VTK-m library or a library that wants cross library
-  #     device calls.
-  #
-  # This is required as CUDA currently doesn't support device side calls across
-  # dynamic library boundaries.
-  if(TARGET vtkm::cuda)
-    get_target_property(lib_type ${lib_name} TYPE)
-    get_target_property(requires_static vtkm::cuda INTERFACE_REQUIRES_STATIC_BUILDS)
-    if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY")
-      message(FATAL_ERROR "${lib_name} Needs to be built STATIC as CUDA doesn't"
-              " support virtual methods across dynamic library boundaries. You"
-              " need to set the CMake option BUILD_SHARED_LIBS to OFF.")
-    endif()
-
-    # We are a validate target type for CUDA compilation, so mark all the requested
-    # sources to be compiled by CUDA
-    set_source_files_properties(${VTKm_LIB_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
+  vtkm_add_target_information(${lib_name}
+                              DEVICE_SOURCES ${VTKm_LIB_DEVICE_SOURCES}
+                              )
+  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+    set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
+    set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
   endif()
-
-  #when building either static or shared we want pic code
-  set_target_properties(${lib_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-  #specify when building with cuda we want separable compilation
-  set_property(TARGET ${lib_name} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-
   #specify where to place the built library
   set_property(TARGET ${lib_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${lib_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${lib_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
-  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
-    set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
-    set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
-  endif()
 
   # allow the static cuda runtime find the driver (libcuda.dyllib) at runtime.
   if(APPLE)
@@ -256,6 +334,7 @@ function(vtkm_library)
     )
 
 endfunction(vtkm_library)
+
 
 #-----------------------------------------------------------------------------
 # Declare unit tests, which should be in the same directory as a kit
