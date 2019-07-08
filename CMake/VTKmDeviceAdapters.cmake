@@ -133,7 +133,7 @@ if(VTKm_ENABLE_CUDA)
     # we do is make sure that libraries built by vtkm_library() are static
     # if they use CUDA
     set_target_properties(vtkm_cuda PROPERTIES
-      INTERFACE_REQUIRES_STATIC_BUILDS FALSE
+      INTERFACE_REQUIRES_STATIC_BUILDS TRUE
     )
 
 
