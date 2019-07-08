@@ -51,43 +51,6 @@ function(vtkm_pyexpander_generated_file generated_file_name)
 endfunction(vtkm_pyexpander_generated_file)
 
 #-----------------------------------------------------------------------------
-# This function is not needed by the core infrastructure of VTK-m
-# as we now require CMake 3.11 on windows, and for tests we compile a single
-# executable for all backends, instead of compiling for each backend.
-# It is currently kept around so that examples which haven't been updated
-# continue to work
-function(vtkm_compile_as_cuda output)
-  # We can't use set_source_files_properties(<> PROPERTIES LANGUAGE "CUDA")
-  # for the following reasons:
-  #
-  # 1. As of CMake 3.10 MSBuild cuda language support has a bug where files
-  #    aren't passed to nvcc with the explicit '-x cu' flag which will cause
-  #    them to be compiled without CUDA actually enabled.
-  # 2. If the source file is used by multiple targets(libraries/executable)
-  #    they will all see the source file marked as being CUDA. This will cause
-  #    tests / examples that reuse sources with different backends to use CUDA
-  #    by mistake
-  #
-  # The result of this is that instead we will use file(GENERATE ) to construct
-  # a proxy cu file
-  set(_cuda_srcs )
-  foreach(_to_be_cuda_file ${ARGN})
-    get_filename_component(_fname_ext "${_to_be_cuda_file}" EXT)
-    if(_fname_ext STREQUAL ".cu")
-      list(APPEND _cuda_srcs "${_to_be_cuda_file}")
-    else()
-      get_filename_component(_cuda_fname "${_to_be_cuda_file}" NAME_WE)
-      get_filename_component(_not_cuda_fullpath "${_to_be_cuda_file}" ABSOLUTE)
-      list(APPEND _cuda_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu")
-      file(GENERATE
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu
-            CONTENT "#include \"${_not_cuda_fullpath}\"")
-    endif()
-  endforeach()
-  set(${output} ${_cuda_srcs} PARENT_SCOPE)
-endfunction()
-
-#-----------------------------------------------------------------------------
 function(vtkm_generate_export_header lib_name)
   # Get the location of this library in the directory structure
   # export headers work on the directory structure more than the lib_name
