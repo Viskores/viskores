@@ -108,21 +108,46 @@ function(vtkm_declare_headers)
 endfunction(vtkm_declare_headers)
 
 #-----------------------------------------------------------------------------
+# Add a relevant information to target that wants to use VTK-m.
+#
+# vtkm_add_target_information(
+#   target
+#   [ MODIFY_CUDA_FLAGS <ON|OFF*> ]
+#   [ DEVICE_SOURCES <source_list>
+#   [ EXTENDS_VTKM <ON*|OFF> ]
+#   )
+function(vtkm_add_target_information)
+
+  #
+  if(TARGET vtkm::cuda)
+    set_source_files_properties(Clipping.cxx PROPERTIES LANGUAGE "CUDA")
+    set_target_properties(Clipping PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    set_target_properties(Clipping PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+    vtkm_get_cuda_flags(CMAKE_CUDA_FLAGS)
+    message(STATUS "cuda flags: ${CMAKE_CUDA_FLAGS}")
+  endif()
+
+endfunction()
+
+
+
+#-----------------------------------------------------------------------------
 # Add a VTK-m library. The name of the library will match the "kit" name
 # (e.g. vtkm_rendering) unless the NAME argument is given.
 #
 # vtkm_library(
-#   [NAME <name>]
+#   [ NAME <name> ]
 #   [ OBJECT | STATIC | SHARED ]
 #   SOURCES <source_list>
 #   TEMPLATE_SOURCES <.hxx >
 #   HEADERS <header list>
-#   [WRAP_FOR_CUDA <source_list>]
+#   [ DEVICE_SOURCES <source_list> ]
 #   )
 function(vtkm_library)
   set(options OBJECT STATIC SHARED)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES WRAP_FOR_CUDA)
+  set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES DEVICE_SOURCES)
   cmake_parse_arguments(VTKm_LIB
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -146,7 +171,7 @@ function(vtkm_library)
               ${VTKm_LIB_SOURCES}
               ${VTKm_LIB_HEADERS}
               ${VTKm_LIB_TEMPLATE_SOURCES}
-              ${VTKm_LIB_WRAP_FOR_CUDA}
+              ${VTKm_LIB_DEVICE_SOURCES}
               )
 
   # Validate that following:
@@ -167,7 +192,7 @@ function(vtkm_library)
 
     # We are a validate target type for CUDA compilation, so mark all the requested
     # sources to be compiled by CUDA
-    set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} PROPERTIES LANGUAGE "CUDA")
+    set_source_files_properties(${VTKm_LIB_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
   endif()
 
   #when building either static or shared we want pic code
