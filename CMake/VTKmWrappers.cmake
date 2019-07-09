@@ -150,13 +150,14 @@ endfunction(vtkm_declare_headers)
 #
 # vtkm_library(
 #   [NAME <name>]
+#   [ OBJECT | STATIC | SHARED ]
 #   SOURCES <source_list>
 #   TEMPLATE_SOURCES <.hxx >
 #   HEADERS <header list>
 #   [WRAP_FOR_CUDA <source_list>]
 #   )
 function(vtkm_library)
-  set(options STATIC SHARED)
+  set(options OBJECT STATIC SHARED)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES WRAP_FOR_CUDA)
   cmake_parse_arguments(VTKm_LIB
@@ -169,27 +170,12 @@ function(vtkm_library)
   endif()
   set(lib_name ${VTKm_LIB_NAME})
 
-  if(VTKm_LIB_STATIC)
+  if(VTKm_LIB_OBJECT)
+    set(VTKm_LIB_type OBJECT)
+  elseif(VTKm_LIB_STATIC)
     set(VTKm_LIB_type STATIC)
-  else()
-    if(VTKm_LIB_SHARED)
-      set(VTKm_LIB_type SHARED)
-    endif()
-    #if cuda requires static libaries force
-    #them no matter what
-    if(TARGET vtkm::cuda)
-      get_target_property(force_static vtkm::cuda INTERFACE_REQUIRES_STATIC_BUILDS)
-      if(force_static)
-        set(VTKm_LIB_type STATIC)
-        message("Forcing ${lib_name} to be built statically as we are using CUDA 8.X, which doesn't support virtuals sufficiently in dynamic libraries.")
-      endif()
-    endif()
-
-  endif()
-
-
-  if(TARGET vtkm::cuda)
-    set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} PROPERTIES LANGUAGE "CUDA")
+  elseif(VTKm_LIB_SHARED)
+    set(VTKm_LIB_type SHARED)
   endif()
 
   add_library(${lib_name}
@@ -199,6 +185,27 @@ function(vtkm_library)
               ${VTKm_LIB_TEMPLATE_SOURCES}
               ${VTKm_LIB_WRAP_FOR_CUDA}
               )
+
+  # Validate that following:
+  #   - We are building with CUDA enabled.
+  #   - We are building a VTK-m library or a library that wants cross library
+  #     device calls.
+  #
+  # This is required as CUDA currently doesn't support device side calls across
+  # dynamic library boundaries.
+  if(TARGET vtkm::cuda)
+    get_target_property(lib_type ${lib_name} TYPE)
+    get_target_property(requires_static vtkm::cuda INTERFACE_REQUIRES_STATIC_BUILDS)
+    if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY")
+      message(FATAL_ERROR "${lib_name} Needs to be built STATIC as CUDA doesn't"
+              " support virtual methods across dynamic library boundaries. You"
+              " need to set the CMake option BUILD_SHARED_LIBS to OFF.")
+    endif()
+
+    # We are a validate target type for CUDA compilation, so mark all the requested
+    # sources to be compiled by CUDA
+    set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} PROPERTIES LANGUAGE "CUDA")
+  endif()
 
   #when building either static or shared we want pic code
   set_target_properties(${lib_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
