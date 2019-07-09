@@ -84,20 +84,19 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(native_flags -march=native)
   set(avx_flags -mavx)
   set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.7 OR
-  CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.7)
-  #if GNU is less than 4.9 you get avx, avx2
-  list(APPEND vec_levels avx2)
-elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
-  #if GNU is less than 5.1 you get avx, avx2, and some avx512
-  list(APPEND vec_levels avx2 avx512-knl)
-  set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
-else()
-  #if GNU is 5.1+ you get avx, avx2, and more avx512
-  list(APPEND vec_levels avx2 avx512-skx avx512-knl)
-  set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
-  set(skylake_flags ${avx2_flags} -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl)
-endif()
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
+    #if GNU is less than 4.9 you get avx, avx2
+    list(APPEND vec_levels avx2)
+  elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
+    #if GNU is less than 5.1 you get avx, avx2, and some avx512
+    list(APPEND vec_levels avx2 avx512-knl)
+    set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
+  else()
+    #if GNU is 5.1+ you get avx, avx2, and more avx512
+    list(APPEND vec_levels avx2 avx512-skx avx512-knl)
+    set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
+    set(skylake_flags ${avx2_flags} -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl)
+  endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   list(APPEND vec_levels avx avx2 avx512-skx avx512-knl)
   set(native_flags -march=native)
