@@ -108,6 +108,16 @@ public:
     {
       coordi.push_back(vtkm::make_Vec(dr(dre), dr(dre), dr(dre)));
     }
+    // Add a point to each corner to test the case where points might slip out
+    // of the range by epsilon
+    coordi.push_back(vtkm::make_Vec(00.0f, 00.0f, 00.0f));
+    coordi.push_back(vtkm::make_Vec(00.0f, 10.0f, 00.0f));
+    coordi.push_back(vtkm::make_Vec(10.0f, 00.0f, 00.0f));
+    coordi.push_back(vtkm::make_Vec(10.0f, 10.0f, 00.0f));
+    coordi.push_back(vtkm::make_Vec(00.0f, 00.0f, 10.0f));
+    coordi.push_back(vtkm::make_Vec(00.0f, 10.0f, 10.0f));
+    coordi.push_back(vtkm::make_Vec(10.0f, 00.0f, 10.0f));
+    coordi.push_back(vtkm::make_Vec(10.0f, 10.0f, 10.0f));
     auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi);
 
     vtkm::cont::CoordinateSystem coord("points", coordi_Handle);
@@ -126,6 +136,15 @@ public:
     {
       qcVec.push_back(vtkm::make_Vec(dr(dre), dr(dre), dr(dre)));
     }
+    // Test near each corner to make sure that corner gets included
+    qcVec.push_back(vtkm::make_Vec(0.01f, 0.01f, 0.01f));
+    qcVec.push_back(vtkm::make_Vec(0.01f, 9.99f, 0.01f));
+    qcVec.push_back(vtkm::make_Vec(9.99f, 0.01f, 0.01f));
+    qcVec.push_back(vtkm::make_Vec(9.99f, 9.99f, 0.01f));
+    qcVec.push_back(vtkm::make_Vec(0.01f, 0.01f, 9.991f));
+    qcVec.push_back(vtkm::make_Vec(0.01f, 9.99f, 9.99f));
+    qcVec.push_back(vtkm::make_Vec(9.99f, 0.01f, 9.99f));
+    qcVec.push_back(vtkm::make_Vec(9.99f, 9.99f, 9.99f));
     auto qc_Handle = vtkm::cont::make_ArrayHandle(qcVec);
 
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
