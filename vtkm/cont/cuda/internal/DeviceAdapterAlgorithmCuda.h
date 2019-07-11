@@ -320,7 +320,11 @@ private:
       vtkm::Int32 rVal = this->LocalPopCount;
       for (int delta = 1; delta < activeSize; delta *= 2)
       {
-        rVal += activeLanes.shfl_down(rVal, delta);
+        const vtkm::Int32 shflVal = activeLanes.shfl_down(rVal, delta);
+        if (activeRank + delta < activeSize)
+        {
+          rVal += shflVal;
+        }
       }
 
       if (activeRank == 0)
@@ -511,7 +515,11 @@ private:
       vtkm::Int32 rVal = this->LocalPopCount;
       for (int delta = 1; delta < activeSize; delta *= 2)
       {
-        rVal += activeLanes.shfl_down(rVal, delta);
+        const vtkm::Int32 shflVal = activeLanes.shfl_down(rVal, delta);
+        if (activeRank + delta < activeSize)
+        {
+          rVal += shflVal;
+        }
       }
 
       if (activeRank == 0)
