@@ -48,6 +48,8 @@ public:
   VTKM_EXEC void operator()(const CoordVecType& coord, IdType& label) const
   {
     vtkm::Vec<vtkm::Id, 3> ijk = (coord - Min) / Dxdydz;
+    ijk = vtkm::Max(ijk, vtkm::Id3(0));
+    ijk = vtkm::Min(ijk, this->Dims - vtkm::Id3(1));
     label = ijk[0] + ijk[1] * Dims[0] + ijk[2] * Dims[0] * Dims[1];
   }
 
