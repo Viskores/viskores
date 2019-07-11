@@ -43,6 +43,7 @@ public:
                             IntegralCurveType& integralCurve) const
   {
     vtkm::Vec<ScalarType, 3> inpos = integralCurve.GetPos(idx);
+    std::cout << "Advecting index " << idx << " point " << inpos << std::endl;
     vtkm::Vec<ScalarType, 3> outpos;
     ScalarType time = integralCurve.GetTime(idx);
     ParticleStatus status;

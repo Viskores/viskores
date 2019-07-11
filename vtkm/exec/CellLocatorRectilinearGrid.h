@@ -28,7 +28,7 @@ namespace vtkm
 namespace exec
 {
 
-template <typename DeviceAdapter>
+template <typename DeviceAdapter, vtkm::IdComponent dimensions>
 class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid final : public vtkm::exec::CellLocator
 {
 private:
@@ -36,7 +36,7 @@ private:
   using ToType = vtkm::TopologyElementTagCell;
   using CellSetPortal = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                                            vtkm::TopologyElementTagCell,
-                                                           3>;
+                                                           dimensions>;
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
@@ -48,7 +48,7 @@ public:
   VTKM_CONT
   CellLocatorRectilinearGrid(const vtkm::Id planeSize,
                              const vtkm::Id rowSize,
-                             const vtkm::cont::CellSetStructured<3>& cellSet,
+                             const vtkm::cont::CellSetStructured<dimensions>& cellSet,
                              const RectilinearType& coords,
                              DeviceAdapter)
     : PlaneSize(planeSize)
@@ -58,16 +58,18 @@ public:
     , PointDimensions(cellSet.GetPointDimensions())
   {
     this->AxisPortals[0] = Coords.GetFirstPortal();
-    this->AxisPortals[1] = Coords.GetSecondPortal();
-    this->AxisPortals[2] = Coords.GetThirdPortal();
-
     this->MinPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(0);
-    this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
-    this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
-
     this->MaxPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1);
+
+    this->AxisPortals[1] = Coords.GetSecondPortal();
+    this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
     this->MaxPoint[1] =
       coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
+    if
+      constexpr(dimensions == 2) return;
+
+    this->AxisPortals[2] = Coords.GetThirdPortal();
+    this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
     this->MaxPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
   }
 
@@ -85,6 +87,8 @@ public:
       inside = false;
     if (point[1] < this->MinPoint[1] || point[1] > this->MaxPoint[1])
       inside = false;
+    if
+      constexpr(dimensions == 2) return inside;
     if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
       inside = false;
     return inside;
@@ -104,7 +108,7 @@ public:
 
     // Get the Cell Id from the point.
     vtkm::Vec<vtkm::Id, 3> logicalCell(0, 0, 0);
-    for (vtkm::Int32 dim = 0; dim < 3; ++dim)
+    for (vtkm::Int32 dim = 0; dim < dimensions; ++dim)
     {
       //
       // When searching for points, we consider the max value of the cell
@@ -167,7 +171,7 @@ private:
   CellSetPortal CellSet;
   RectilinearPortalType Coords;
   AxisPortalType AxisPortals[3];
-  vtkm::Id3 PointDimensions;
+  vtkm::Vec<vtkm::Id, dimensions> PointDimensions;
   vtkm::Vec<vtkm::FloatDefault, 3> MinPoint;
   vtkm::Vec<vtkm::FloatDefault, 3> MaxPoint;
 };

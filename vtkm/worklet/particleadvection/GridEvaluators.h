@@ -127,7 +127,8 @@ public:
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using StructuredType = vtkm::cont::CellSetStructured<3>;
+  using Structured2DType = vtkm::cont::CellSetStructured<2>;
+  using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
   VTKM_CONT
   GridEvaluator() = default;
@@ -139,7 +140,7 @@ public:
     : Vectors(field)
     , Bounds(coordinates.GetBounds())
   {
-    if (cellset.IsSameType(StructuredType()))
+    if (cellset.IsSameType(Structured2DType()) || cellset.IsSameType(Structured3DType()))
     {
       if (coordinates.GetData().IsType<UniformType>())
       {
@@ -149,8 +150,7 @@ public:
         locator.Update();
         this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformGrid>(locator);
       }
-      else if (coordinates.GetData().IsType<RectilinearType>() &&
-               cellset.IsSameType(StructuredType()))
+      else if (coordinates.GetData().IsType<RectilinearType>())
       {
         vtkm::cont::CellLocatorRectilinearGrid locator;
         locator.SetCoordinates(coordinates);
