@@ -148,6 +148,8 @@ void TryList(const vtkm::Vec<int, N>& expected, ListTag)
 {
   VTKM_IS_LIST_TAG(ListTag);
 
+  VTKM_STATIC_ASSERT(vtkm::ListSize<ListTag>::value == N);
+
   std::cout << "    Try mutable for each" << std::endl;
   MutableFunctor<int> functor;
   vtkm::ListForEach(functor, ListTag());

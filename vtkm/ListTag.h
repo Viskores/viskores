@@ -88,6 +88,17 @@ struct ListTagIntersect : detail::ListRoot
     typename detail::ListIntersect<typename ListTag1::list, typename ListTag2::list>::type;
 };
 
+/// \brief Determines the number of types in the given list.
+///
+/// There is a static member named \c value that is set to the length of the list.
+///
+template <typename ListTag>
+struct ListSize
+{
+  VTKM_IS_LIST_TAG(ListTag);
+  static constexpr vtkm::IdComponent value = detail::ListSizeImpl<typename ListTag::list>::value;
+};
+
 /// For each typename represented by the list tag, call the functor with a
 /// default instance of that type.
 ///
@@ -109,7 +120,8 @@ struct ListCrossProduct : detail::ListRoot
     typename detail::ListCrossProductImpl<typename ListTag1::list, typename ListTag2::list>::type;
 };
 
-/// Checks to see if the given \c Type is in the list pointed to by \c ListTag.
+/// \brief Checks to see if the given \c Type is in the list pointed to by \c ListTag.
+///
 /// There is a static boolean named \c value that is set to true if the type is
 /// contained in the list and false otherwise.
 ///
@@ -118,6 +130,31 @@ struct ListContains
 {
   VTKM_IS_LIST_TAG(ListTag);
   static constexpr bool value = detail::ListContainsImpl<Type, typename ListTag::list>::value;
+};
+
+/// \brief Finds the type at the given index.
+///
+/// This struct contains subtype \c type that resolves to the type at the given index.
+///
+template <typename ListTag, vtkm::IdComponent Index>
+struct ListTypeAt
+{
+  VTKM_IS_LIST_TAG(ListTag);
+  using type =
+    brigand::at<typename ListTag::list, std::integral_constant<vtkm::IdComponent, Index>>;
+};
+
+/// \brief Finds the index of the given type.
+///
+/// There is a static member named \c value that is set to the index of the given type. If the
+/// given type is not in the list, the value is set to -1.
+///
+template <typename ListTag, typename Type>
+struct ListIndexOf
+{
+  VTKM_IS_LIST_TAG(ListTag);
+  static constexpr vtkm::IdComponent value =
+    detail::ListIndexOfImpl<Type, typename ListTag::list, 0>::value;
 };
 
 } // namespace vtkm

@@ -64,6 +64,7 @@ set(headers
   Invocation.h
   ListTagDetail.h
   Unreachable.h
+  Variant.h
   Windows.h
   )
 
