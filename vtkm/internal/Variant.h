@@ -74,7 +74,7 @@ VTKM_EXEC_CONT ReturnType VariantCastAndCallImpl(brigand::list<T0, Ts...>,
 {
   if (index == 0)
   {
-    return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
+    return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
   }
   else
   {
@@ -161,7 +161,7 @@ public:
   template <typename T>
   VTKM_EXEC_CONT Variant(const T& src)
   {
-    constexpr vtkm::IdComponent index = IndexOf<T>::value;
+    constexpr vtkm::IdComponent index = GetIndexOf<T>();
     // Might be a way to use an enable_if to enforce a proper type.
     VTKM_STATIC_ASSERT_MSG(index >= 0, "Attempting to put invalid type into a Variant");
 
@@ -351,7 +351,7 @@ public:
 /// \brief Convert a ListTag to a Variant.
 ///
 template <typename ListTag>
-using ListTagAsVariant = vtkm::ListTagApply<ListTag, vtkm::internal::Variant>;
+using ListTagAsVariant = typename vtkm::ListTagApply<ListTag, vtkm::internal::Variant>::type;
 }
 } // namespace vtkm::internal
 

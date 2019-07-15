@@ -143,6 +143,16 @@ struct ListTagIntersect : detail::ListRoot
                                               internal::ListTagAsBrigandList<ListTag2>>::type;
 };
 
+/// A list tag that consists of each item in another list tag fed into a template that takes
+/// a single parameter.
+template <typename ListTag, template <typename> class Transform>
+struct ListTagTransform : detail::ListRoot
+{
+  VTKM_IS_LIST_TAG(ListTag);
+  using list = brigand::transform<internal::ListTagAsBrigandList<ListTag>,
+                                  brigand::bind<Transform, brigand::_1>>;
+};
+
 /// \brief Determines the number of types in the given list.
 ///
 /// There is a static member named \c value that is set to the length of the list.
