@@ -64,18 +64,21 @@ public:
     Locator->FindCell(point, cellId, parametric, tmp);
     return cellId != -1;
   }
+
   VTKM_EXEC
   bool IsWithinTemporalBoundary(const vtkm::FloatDefault vtkmNotUsed(time)) const { return true; }
+
   VTKM_EXEC
-  void GetSpatialBoundary(vtkm::Vec<vtkm::FloatDefault, 3>& dir,
-                          vtkm::Vec<ScalarType, 3>& boundary) const
+  void GetSpatialBoundary(vtkm::Bounds& bounds) const
   {
     // Based on the direction of the velocity we need to be able to tell where
     // the particle will exit the domain from to actually push it out of domain.
-    boundary[0] = static_cast<ScalarType>(dir[0] > 0 ? this->Bounds.X.Max : this->Bounds.X.Min);
+    /*boundary[0] = static_cast<ScalarType>(dir[0] > 0 ? this->Bounds.X.Max : this->Bounds.X.Min);
     boundary[1] = static_cast<ScalarType>(dir[1] > 0 ? this->Bounds.Y.Max : this->Bounds.Y.Min);
-    boundary[2] = static_cast<ScalarType>(dir[2] > 0 ? this->Bounds.Z.Max : this->Bounds.Z.Min);
+    boundary[2] = static_cast<ScalarType>(dir[2] > 0 ? this->Bounds.Z.Max : this->Bounds.Z.Min);*/
+    bounds = this->Bounds;
   }
+
   VTKM_EXEC_CONT
   void GetTemporalBoundary(vtkm::FloatDefault& boundary) const
   {

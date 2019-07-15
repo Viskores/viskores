@@ -43,8 +43,9 @@ public:
                             IntegralCurveType& integralCurve) const
   {
     vtkm::Vec<ScalarType, 3> inpos = integralCurve.GetPos(idx);
-    std::cout << "Advecting index " << idx << " point " << inpos << std::endl;
+    std::cout << "Advecting : " << idx << " " << inpos << std::endl;
     vtkm::Vec<ScalarType, 3> outpos;
+    vtkm::Id smallStepCounter = 0;
     ScalarType time = integralCurve.GetTime(idx);
     ParticleStatus status;
     while (!integralCurve.Done(idx))
@@ -65,29 +66,32 @@ public:
       // push it a little out of the boundary so that it will start advection in
       // another domain, or in another time slice. Taking small steps enables
       // reducing the error introduced at spatial or temporal boundaries.
-      if (status == ParticleStatus::AT_SPATIAL_BOUNDARY ||
-          status == ParticleStatus::AT_TEMPORAL_BOUNDARY)
+      else if (status == ParticleStatus::AT_TEMPORAL_BOUNDARY)
       {
-        vtkm::Id numSteps = integralCurve.GetStep(idx);
-        status = integrator->PushOutOfBoundary(inpos, numSteps, time, status, outpos);
+        integralCurve.SetAtTemporalBoundary(idx);
+        break;
+      }
+      else if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
+      {
+        ScalarType fraction = static_cast<ScalarType>(1 << ++smallStepCounter);
+        status = integrator->SmallStep(inpos, time, outpos, fraction);
         integralCurve.TakeStep(idx, outpos, status);
         integralCurve.SetTime(idx, time);
-        if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
-          integralCurve.SetExitedSpatialBoundary(idx);
-        if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
-          integralCurve.SetExitedTemporalBoundary(idx);
-      }
-      // If the particle has exited spatial boundary, set corresponding status.
-      else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
-      {
-        integralCurve.TakeStep(idx, outpos, status);
-        integralCurve.SetExitedSpatialBoundary(idx);
-      }
-      // If the particle has exited temporal boundary, set corresponding status.
-      else if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
-      {
-        integralCurve.TakeStep(idx, outpos, status);
-        integralCurve.SetExitedTemporalBoundary(idx);
+        if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
+        {
+          integralCurve.SetAtSpatialBoundary(idx);
+          break;
+        }
+        else if (status == ParticleStatus::AT_TEMPORAL_BOUNDARY)
+        {
+          integralCurve.SetAtTemporalBoundary(idx);
+          break;
+        }
+        else if (status == ParticleStatus::STATUS_ERROR)
+        {
+          integralCurve.SetError(idx);
+          break;
+        }
       }
     }
   }

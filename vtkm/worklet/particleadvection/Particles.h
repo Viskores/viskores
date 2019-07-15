@@ -106,6 +106,18 @@ public:
     SetBit(idx, TERMINATED);
   }
   VTKM_EXEC
+  void SetAtSpatialBoundary(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, AT_SPATIAL_BOUNDARY);
+  }
+  VTKM_EXEC
+  void SetAtTemporalBoundary(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, AT_TEMPORAL_BOUNDARY);
+  }
+  VTKM_EXEC
   void SetExitedSpatialBoundary(const vtkm::Id& idx)
   {
     ClearBit(idx, STATUS_OK);
