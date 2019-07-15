@@ -287,20 +287,22 @@ public:
         vtkm::TypeTraits<vtkm::Vec<ScalarType, 3>>::ZeroInitialization();
       vtkm::Vec<ScalarType, 3> k2 = k1, k3 = k1, k4 = k1;
 
-      bool status1 = this->Evaluator.Evaluate(inpos, time, k1);
-      bool status2 = this->Evaluator.Evaluate(inpos + var1 * k1, var2, k2);
-      bool status3 = this->Evaluator.Evaluate(inpos + var1 * k2, var2, k3);
-      bool status4 = this->Evaluator.Evaluate(inpos + stepLength * k3, var3, k4);
+      ParticleStatus status;
+      status = this->Evaluator.Evaluate(inpos, time, k1);
+      if (status != ParticleStatus::STATUS_OK)
+        return status;
+      status = this->Evaluator.Evaluate(inpos + var1 * k1, var2, k2);
+      if (status != ParticleStatus::STATUS_OK)
+        return status;
+      status = this->Evaluator.Evaluate(inpos + var1 * k2, var2, k3);
+      if (status != ParticleStatus::STATUS_OK)
+        return status;
+      status = this->Evaluator.Evaluate(inpos + stepLength * k3, var3, k4);
+      if (status != ParticleStatus::STATUS_OK)
+        return status;
 
-      if ((status1 & status2 & status3 & status4) == ParticleStatus::STATUS_OK)
-      {
-        velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
-        return ParticleStatus::STATUS_OK;
-      }
-      else
-      {
-        return ParticleStatus::AT_SPATIAL_BOUNDARY;
-      }
+      velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
+      return ParticleStatus::STATUS_OK;
     }
   };
 

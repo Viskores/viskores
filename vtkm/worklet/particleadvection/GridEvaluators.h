@@ -87,20 +87,22 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC bool Evaluate(const Point& pos, vtkm::FloatDefault vtkmNotUsed(time), Point& out) const
+  VTKM_EXEC ParticleStatus Evaluate(const Point& pos,
+                                    vtkm::FloatDefault vtkmNotUsed(time),
+                                    Point& out) const
   {
     return this->Evaluate(pos, out);
   }
 
   template <typename Point>
-  VTKM_EXEC bool Evaluate(const Point point, Point& out) const
+  VTKM_EXEC ParticleStatus Evaluate(const Point point, Point& out) const
   {
     vtkm::Id cellId;
     Point parametric;
     vtkm::exec::FunctorBase tmp;
     Locator->FindCell(point, cellId, parametric, tmp);
     if (cellId == -1)
-      return false;
+      return ParticleStatus::AT_SPATIAL_BOUNDARY;
 
     vtkm::UInt8 cellShape;
     vtkm::IdComponent nVerts;
@@ -112,7 +114,7 @@ public:
       fieldValues.Append(Field.Get(ptIndices[i]));
     out = vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, tmp);
 
-    return true;
+    return ParticleStatus::STATUS_OK;
   }
 
 private:
