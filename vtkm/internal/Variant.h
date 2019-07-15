@@ -315,7 +315,7 @@ public:
   {
     VTKM_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl<decltype(f(std::declval<const TypeAt<0>&>(), args...))>(
-      typename ListTag::list(),
+      vtkm::internal::ListTagAsBrigandList<ListTag>(),
       this->GetIndex(),
       std::forward<Functor>(f),
       this->GetPointer(),
@@ -328,7 +328,7 @@ public:
   {
     VTKM_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl<decltype(f(std::declval<TypeAt<0>&>(), args...))>(
-      typename ListTag::list(),
+      vtkm::internal::ListTagAsBrigandList<ListTag>(),
       this->GetIndex(),
       std::forward<Functor>(f),
       this->GetPointer(),
@@ -347,6 +347,11 @@ public:
     }
   }
 };
+
+/// \brief Convert a ListTag to a Variant.
+///
+template <typename ListTag>
+using ListTagAsVariant = vtkm::ListTagApply<ListTag, vtkm::internal::Variant>;
 }
 } // namespace vtkm::internal
 

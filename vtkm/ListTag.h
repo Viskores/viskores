@@ -40,6 +40,52 @@ struct ListTagCheck : std::is_base_of<vtkm::detail::ListRoot, ListTag>
   VTKM_STATIC_ASSERT_MSG((::vtkm::internal::ListTagCheck<tag>::value),                             \
                          "Provided type is not a valid VTK-m list tag.")
 
+namespace internal
+{
+
+namespace detail
+{
+
+template <typename ListTag>
+struct ListTagAsBrigandListImpl
+{
+  VTKM_IS_LIST_TAG(ListTag);
+  using type = typename ListTag::list;
+};
+
+} // namespace detail
+
+/// Converts a ListTag to a brigand::list.
+///
+template <typename ListTag>
+using ListTagAsBrigandList = typename detail::ListTagAsBrigandListImpl<ListTag>::type;
+
+} // namespace internal
+
+
+namespace detail
+{
+
+template <typename BrigandList, template <typename...> class Target>
+struct ListTagApplyImpl;
+
+template <typename... Ts, template <typename...> class Target>
+struct ListTagApplyImpl<brigand::list<Ts...>, Target>
+{
+  using type = Target<Ts...>;
+};
+
+} // namespace detail
+
+/// \brief Applies the list of types to a template.
+///
+/// Given a ListTag and a templated class, returns the class instantiated with the types
+/// represented by the ListTag.
+///
+template <typename ListTag, template <typename...> class Target>
+using ListTagApply =
+  typename detail::ListTagApplyImpl<internal::ListTagAsBrigandList<ListTag>, Target>;
+
 /// A special tag for a list that represents holding all potential values
 ///
 /// Note: Can not be used with ForEach for obvious reasons.
@@ -60,7 +106,10 @@ struct ListTagEmpty : detail::ListRoot
 template <typename ListTag1, typename ListTag2>
 struct ListTagJoin : detail::ListRoot
 {
-  using list = typename detail::ListJoin<typename ListTag1::list, typename ListTag2::list>::type;
+  VTKM_IS_LIST_TAG(ListTag1);
+  VTKM_IS_LIST_TAG(ListTag2);
+  using list = typename detail::ListJoin<internal::ListTagAsBrigandList<ListTag1>,
+                                         internal::ListTagAsBrigandList<ListTag2>>::type;
 };
 
 
@@ -68,7 +117,9 @@ struct ListTagJoin : detail::ListRoot
 template <typename ListTag, typename Type>
 struct ListTagAppend : detail::ListRoot
 {
-  using list = typename detail::ListJoin<typename ListTag::list, detail::ListBase<Type>>::type;
+  VTKM_IS_LIST_TAG(ListTag);
+  using list = typename detail::ListJoin<internal::ListTagAsBrigandList<ListTag>,
+                                         detail::ListBase<Type>>::type;
 };
 
 /// Append \c Type to \c ListTag only if \c ListTag does not already contain \c Type.
@@ -76,7 +127,9 @@ struct ListTagAppend : detail::ListRoot
 template <typename ListTag, typename Type>
 struct ListTagAppendUnique : detail::ListRoot
 {
-  using list = typename detail::ListAppendUniqueImpl<typename ListTag::list, Type>::type;
+  VTKM_IS_LIST_TAG(ListTag);
+  using list =
+    typename detail::ListAppendUniqueImpl<internal::ListTagAsBrigandList<ListTag>, Type>::type;
 };
 
 /// A tag that consists of elements that are found in both tags. This struct
@@ -84,8 +137,10 @@ struct ListTagAppendUnique : detail::ListRoot
 template <typename ListTag1, typename ListTag2>
 struct ListTagIntersect : detail::ListRoot
 {
-  using list =
-    typename detail::ListIntersect<typename ListTag1::list, typename ListTag2::list>::type;
+  VTKM_IS_LIST_TAG(ListTag1);
+  VTKM_IS_LIST_TAG(ListTag2);
+  using list = typename detail::ListIntersect<internal::ListTagAsBrigandList<ListTag1>,
+                                              internal::ListTagAsBrigandList<ListTag2>>::type;
 };
 
 /// \brief Determines the number of types in the given list.
@@ -96,7 +151,8 @@ template <typename ListTag>
 struct ListSize
 {
   VTKM_IS_LIST_TAG(ListTag);
-  static constexpr vtkm::IdComponent value = detail::ListSizeImpl<typename ListTag::list>::value;
+  static constexpr vtkm::IdComponent value =
+    detail::ListSizeImpl<internal::ListTagAsBrigandList<ListTag>>::value;
 };
 
 /// For each typename represented by the list tag, call the functor with a
@@ -106,18 +162,22 @@ template <typename Functor, typename ListTag, typename... Args>
 VTKM_CONT void ListForEach(Functor&& f, ListTag, Args&&... args)
 {
   VTKM_IS_LIST_TAG(ListTag);
-  detail::ListForEachImpl(
-    std::forward<Functor>(f), typename ListTag::list{}, std::forward<Args>(args)...);
+  detail::ListForEachImpl(std::forward<Functor>(f),
+                          internal::ListTagAsBrigandList<ListTag>{},
+                          std::forward<Args>(args)...);
 }
 
 /// Generate a tag that is the cross product of two other tags. The resulting
-// a tag has the form of Tag< brigand::list<A1,B1>, brigand::list<A1,B2> .... >
+/// tag has the form of Tag< brigand::list<A1,B1>, brigand::list<A1,B2> .... >
 ///
 template <typename ListTag1, typename ListTag2>
 struct ListCrossProduct : detail::ListRoot
 {
+  VTKM_IS_LIST_TAG(ListTag1);
+  VTKM_IS_LIST_TAG(ListTag2);
   using list =
-    typename detail::ListCrossProductImpl<typename ListTag1::list, typename ListTag2::list>::type;
+    typename detail::ListCrossProductImpl<internal::ListTagAsBrigandList<ListTag1>,
+                                          internal::ListTagAsBrigandList<ListTag2>>::type;
 };
 
 /// \brief Checks to see if the given \c Type is in the list pointed to by \c ListTag.
@@ -129,7 +189,8 @@ template <typename ListTag, typename Type>
 struct ListContains
 {
   VTKM_IS_LIST_TAG(ListTag);
-  static constexpr bool value = detail::ListContainsImpl<Type, typename ListTag::list>::value;
+  static constexpr bool value =
+    detail::ListContainsImpl<Type, internal::ListTagAsBrigandList<ListTag>>::value;
 };
 
 /// \brief Finds the type at the given index.
@@ -140,8 +201,8 @@ template <typename ListTag, vtkm::IdComponent Index>
 struct ListTypeAt
 {
   VTKM_IS_LIST_TAG(ListTag);
-  using type =
-    brigand::at<typename ListTag::list, std::integral_constant<vtkm::IdComponent, Index>>;
+  using type = brigand::at<internal::ListTagAsBrigandList<ListTag>,
+                           std::integral_constant<vtkm::IdComponent, Index>>;
 };
 
 /// \brief Finds the index of the given type.
@@ -154,7 +215,7 @@ struct ListIndexOf
 {
   VTKM_IS_LIST_TAG(ListTag);
   static constexpr vtkm::IdComponent value =
-    detail::ListIndexOfImpl<Type, typename ListTag::list, 0>::value;
+    detail::ListIndexOfImpl<Type, internal::ListTagAsBrigandList<ListTag>, 0>::value;
 };
 
 } // namespace vtkm
