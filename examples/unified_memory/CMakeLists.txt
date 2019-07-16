@@ -16,5 +16,6 @@ find_package(VTKm REQUIRED QUIET)
 if(TARGET vtkm::cuda)
   add_executable(UnifiedMemory_CUDA UnifiedMemory.cu)
   target_link_libraries(UnifiedMemory_CUDA PRIVATE vtkm_filter)
+  vtkm_add_target_information(UnifiedMemory_CUDA MODIFY_CUDA_FLAGS)
 endif()
 

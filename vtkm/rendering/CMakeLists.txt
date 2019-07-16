@@ -178,7 +178,7 @@ vtkm_library(
   NAME vtkm_rendering
   SOURCES ${sources}
   HEADERS ${headers}
-  WRAP_FOR_CUDA ${device_sources}
+  DEVICE_SOURCES ${device_sources}
   )
 
 # Install all headers no matter what backend was selected

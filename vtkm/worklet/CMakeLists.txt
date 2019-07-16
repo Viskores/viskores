@@ -132,7 +132,7 @@ vtkm_library(
   SOURCES ${sources_no_device}
   TEMPLATE_SOURCES ${header_impls}
   HEADERS ${headers}
-  WRAP_FOR_CUDA ${sources_device}
+  DEVICE_SOURCES ${sources_device}
   )
 target_link_libraries(vtkm_worklet PUBLIC vtkm_cont)
 

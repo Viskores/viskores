@@ -30,11 +30,17 @@ if(TARGET OpenGL::GL AND
   target_link_libraries(TetrahedralizeUniformGrid PRIVATE vtkm_filter ${gl_libs})
   target_link_libraries(TriangulateUniformGrid PRIVATE vtkm_filter ${gl_libs})
 
-  if(TARGET vtkm::cuda)
-  set_source_files_properties(TetrahedralizeExplicitGrid.cxx
-                              TriangulateExplicitGrid.cxx
-                              TetrahedralizeUniformGrid.cxx
-                              TriangulateUniformGrid.cxx PROPERTIES LANGUAGE "CUDA")
-  endif()
+  vtkm_add_target_information(TetrahedralizeExplicitGrid
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES TetrahedralizeExplicitGrid.cxx)
+  vtkm_add_target_information(TriangulateExplicitGrid
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES TriangulateExplicitGrid.cxx)
+  vtkm_add_target_information(TetrahedralizeUniformGrid
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES TetrahedralizeUniformGrid.cxx)
+  vtkm_add_target_information(TriangulateUniformGrid
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES TriangulateUniformGrid.cxx)
 
 endif()

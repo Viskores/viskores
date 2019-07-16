@@ -13,15 +13,10 @@ project(VTKmDemo CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-set(srcs Demo.cxx)
-
 if(TARGET vtkm_rendering)
-
-  if(TARGET vtkm::cuda)
-    vtkm_compile_as_cuda(cuda_srcs ${srcs})
-    set(srcs ${cuda_srcs})
-  endif()
-
-  add_executable(Demo ${srcs})
+  add_executable(Demo Demo.cxx)
   target_link_libraries(Demo PRIVATE vtkm_rendering)
+  vtkm_add_target_information(Demo
+                              MODIFY_CUDA_FLAGS
+                              DEVICE_SOURCES Demo.cxx)
 endif()
