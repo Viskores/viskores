@@ -30,7 +30,7 @@ public:
   {
     assert(_radius[0] >= 1);
     assert(_radius[1] >= 1);
-    assert(_radius[2] >= 1);
+    //    assert(_radius[2] >= 1);
 
     assert(_p >= 0);
     assert(_q >= 0);
@@ -38,10 +38,12 @@ public:
 
   using ControlSignature = void(CellSetIn, FieldInNeighborhood, FieldOut);
 
-  using ExecutionSignature = void(_2, _3);
+  using ExecutionSignature = void(_2, Boundary, _3);
 
   template <typename NeighIn, typename T>
-  VTKM_EXEC void operator()(const NeighIn& image, T& moment) const
+  VTKM_EXEC void operator()(const NeighIn& image,
+                            const vtkm::exec::BoundaryState& boundary,
+                            T& moment) const
   {
     // TODO: type safety and numerical precision
     // FIXME: Radius as Vec3<int>, however, radius_z may be 0 which cause divide by 0.
@@ -49,15 +51,32 @@ public:
     // which will cause devision byzero.
     auto sum = vtkm::TypeTraits<T>::ZeroInitialization();
     vtkm::Vec<vtkm::Float64, 2> recp{ 1.0 / Radius[0], 1.0 / Radius[1] };
-    for (int j = -Radius[1]; j <= Radius[1]; ++j)
+
+    // Clamp the radius to the dataset bounds (discard out-of-bounds points).
+    const auto minRadius = boundary.ClampNeighborIndex(-this->Radius);
+    const auto maxRadius = boundary.ClampNeighborIndex(this->Radius);
+
+    for (vtkm::IdComponent j = minRadius[1]; j <= maxRadius[1]; ++j)
     {
-      for (int i = -Radius[0]; i <= Radius[0]; ++i)
+      if (j > -this->Radius[1] && boundary.IJK[1] + j == 0)
+      { // Don't double count samples that exist on other nodes:
+        continue;
+      }
+
+      for (vtkm::IdComponent i = minRadius[0]; i <= maxRadius[0]; ++i)
       {
+        if (i > -this->Radius[0] && boundary.IJK[0] + i == 0)
+        { // Don't double count samples that exist on other nodes:
+          continue;
+        }
+
         vtkm::Float64 r0 = i * recp[0];
         vtkm::Float64 r1 = j * recp[1];
 
         if (r0 * r0 + r1 * r1 <= 1)
+        {
           sum += pow(r0, p) * pow(r1, q) * image.Get(i, j, 0);
+        }
       }
     }
 
@@ -87,10 +106,12 @@ public:
 
   using ControlSignature = void(CellSetIn, FieldInNeighborhood, FieldOut);
 
-  using ExecutionSignature = void(_2, _3);
+  using ExecutionSignature = void(_2, Boundary, _3);
 
   template <typename NeighIn, typename T>
-  VTKM_EXEC void operator()(const NeighIn& image, T& moment) const
+  VTKM_EXEC void operator()(const NeighIn& image,
+                            const vtkm::exec::BoundaryState& boundary,
+                            T& moment) const
   {
     // TODO: type safety and numerical precision
     // FIXME: Radius as Vec3<int>, however, radius_z may be 0 which cause divide by 0.
@@ -98,12 +119,32 @@ public:
     // which will cause devision byzero.
     auto sum = vtkm::TypeTraits<T>::ZeroInitialization();
     vtkm::Float64 recp = 1.0 / Radius; // extend to Vec3<double>
-    for (int k = -Radius; k <= Radius; ++k)
+
+    // Clamp the radius to the dataset bounds (discard out-of-bounds points).
+    const auto minRadius = boundary.ClampNeighborIndex({ -this->Radius });
+    const auto maxRadius = boundary.ClampNeighborIndex({ this->Radius });
+
+    for (vtkm::IdComponent k = minRadius[2]; k <= maxRadius[2]; ++k)
     {
-      for (int j = -Radius; j <= Radius; ++j)
+      if (k > -this->Radius && boundary.IJK[2] + k == 0)
+      { // Don't double count samples that exist on other nodes:
+        continue;
+      }
+
+      for (vtkm::IdComponent j = minRadius[1]; j <= maxRadius[1]; ++j)
       {
-        for (int i = -Radius; i <= Radius; ++i)
+        if (j > -this->Radius && boundary.IJK[1] + j == 0)
+        { // Don't double count samples that exist on other nodes:
+          continue;
+        }
+
+        for (vtkm::IdComponent i = minRadius[0]; i <= maxRadius[0]; ++i)
         {
+          if (i > -this->Radius && boundary.IJK[0] + i == 0)
+          { // Don't double count samples that exist on other nodes:
+            continue;
+          }
+
           if (i * i + j * j + k * k <= Radius * Radius)
             sum += pow(i * recp, p) * pow(j * recp, q) * pow(k * recp, r) * image.Get(i, j, k);
         }
