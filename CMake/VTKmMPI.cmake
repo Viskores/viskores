@@ -18,7 +18,7 @@ if(VTKm_ENABLE_MPI AND NOT TARGET MPI::MPI_CXX)
     #clunky but we need to make sure we use the upstream module if it exists
     set(orig_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
     set(CMAKE_MODULE_PATH "")
-    find_package(MPI MODULE)
+    find_package(MPI REQUIRED MODULE)
     set(CMAKE_MODULE_PATH ${orig_CMAKE_MODULE_PATH})
   endif()
 endif()
