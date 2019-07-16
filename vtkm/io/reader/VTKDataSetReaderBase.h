@@ -490,8 +490,16 @@ private:
   void OpenFile()
   {
     this->DataFile->Stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    this->DataFile->Stream.open(this->DataFile->FileName.c_str(),
-                                std::ios_base::in | std::ios_base::binary);
+    try
+    {
+      this->DataFile->Stream.open(this->DataFile->FileName.c_str(),
+                                  std::ios_base::in | std::ios_base::binary);
+    }
+    catch (std::ifstream::failure&)
+    {
+      std::string message("could not open file \"" + this->DataFile->FileName + "\"");
+      throw vtkm::io::ErrorIO(message);
+    }
   }
 
   void ReadHeader()
