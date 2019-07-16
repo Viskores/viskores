@@ -107,18 +107,12 @@ if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
 endif()
 
 if(VTKm_ENABLE_CUDA)
-  cmake_minimum_required(VERSION 3.9...3.14 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.13...3.14 FATAL_ERROR)
   enable_language(CUDA)
 
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
     CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 9.2)
     message(FATAL_ERROR "VTK-m CUDA support requires version 9.2+")
-  endif()
-
-  #To work around https://gitlab.kitware.com/cmake/cmake/issues/17512
-  #we need to fix the CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES variable
-  if(${CMAKE_VERSION} VERSION_LESS 3.10 AND CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
-    list(APPEND CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
   endif()
 
   if (NOT TARGET vtkm_cuda OR NOT TARGET vtkm::cuda)
