@@ -27,16 +27,16 @@ namespace cont
 namespace testing
 {
 
+template <typename T>
+struct TestValueFunctor
+{
+  VTKM_EXEC_CONT T operator()(vtkm::Id index) const { return TestValue(index, T()); }
+};
+
 template <typename DeviceAdapter>
 class TestingArrayHandleMultiplexer
 {
   static constexpr vtkm::Id ARRAY_SIZE = 10;
-
-  template <typename T>
-  struct TestValueFunctor
-  {
-    T operator()(vtkm::Id index) const { return TestValue(index, T()); }
-  };
 
   template <typename... Ts0, typename... Ts1>
   static void CheckArray(const vtkm::cont::ArrayHandleMultiplexer<Ts0...>& multiplexerArray,
@@ -73,12 +73,15 @@ class TestingArrayHandleMultiplexer
 
     vtkm::cont::ArrayHandleMultiplexer<ArrayType1, ArrayType2, ArrayType3> multiplexer;
 
+    std::cout << "Check array1" << std::endl;
     multiplexer = array1;
     CheckArray(multiplexer, array1);
 
+    std::cout << "Check array2" << std::endl;
     multiplexer = array2;
     CheckArray(multiplexer, array2);
 
+    std::cout << "Check array3" << std::endl;
     multiplexer = array3;
     CheckArray(multiplexer, array3);
   }

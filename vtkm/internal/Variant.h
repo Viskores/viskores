@@ -44,6 +44,7 @@ VariantCastAndCallImpl(brigand::list<>, vtkm::IdComponent, Functor&&, const void
   return VariantDummyReturn<ReturnType>::F();
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename ReturnType, typename T0, typename... Ts, typename Functor, typename... Args>
 VTKM_EXEC_CONT ReturnType VariantCastAndCallImpl(brigand::list<T0, Ts...>,
                                                  vtkm::IdComponent index,
@@ -65,6 +66,7 @@ VTKM_EXEC_CONT ReturnType VariantCastAndCallImpl(brigand::list<T0, Ts...>,
   }
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename ReturnType, typename T0, typename... Ts, typename Functor, typename... Args>
 VTKM_EXEC_CONT ReturnType VariantCastAndCallImpl(brigand::list<T0, Ts...>,
                                                  vtkm::IdComponent index,
@@ -88,6 +90,7 @@ VTKM_EXEC_CONT ReturnType VariantCastAndCallImpl(brigand::list<T0, Ts...>,
 
 struct VariantCopyFunctor
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
   VTKM_EXEC_CONT void operator()(const T& src, void* destPointer) const
   {
@@ -97,6 +100,7 @@ struct VariantCopyFunctor
 
 struct VariantDestroyFunctor
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
   VTKM_EXEC_CONT void operator()(T& src) const
   {
@@ -156,7 +160,7 @@ public:
   ///
   static constexpr vtkm::IdComponent NumberOfTypes = vtkm::IdComponent{ sizeof...(Ts) };
 
-  VTKM_EXEC_CONT Variant() = default;
+  Variant() = default;
 
   template <typename T>
   VTKM_EXEC_CONT Variant(const T& src)
@@ -268,18 +272,18 @@ public:
   /// Returns the value as the type at the given index. The behavior is undefined if the
   /// variant does not contain the value at the given index.
   ///
-  template <vtkm::IdComponent GetIndex>
-  VTKM_EXEC_CONT TypeAt<GetIndex>& Get()
+  template <vtkm::IdComponent I>
+  VTKM_EXEC_CONT TypeAt<I>& Get()
   {
-    VTKM_ASSERT(GetIndex == this->GetIndex());
-    return *reinterpret_cast<TypeAt<GetIndex>*>(this->GetPointer());
+    VTKM_ASSERT(I == this->GetIndex());
+    return *reinterpret_cast<TypeAt<I>*>(this->GetPointer());
   }
 
-  template <vtkm::IdComponent GetIndex>
-  VTKM_EXEC_CONT const TypeAt<GetIndex>& Get() const
+  template <vtkm::IdComponent I>
+  VTKM_EXEC_CONT const TypeAt<I>& Get() const
   {
-    VTKM_ASSERT(GetIndex == this->GetIndex());
-    return *reinterpret_cast<const TypeAt<GetIndex>*>(this->GetPointer());
+    VTKM_ASSERT(I == this->GetIndex());
+    return *reinterpret_cast<const TypeAt<I>*>(this->GetPointer());
   }
   //@}
 

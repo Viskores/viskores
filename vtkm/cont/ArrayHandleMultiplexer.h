@@ -70,12 +70,12 @@ struct ArrayPortalMultiplexer
 
   using ValueType = typename PortalVariantType::template TypeAt<0>::ValueType;
 
-  VTKM_EXEC_CONT ArrayPortalMultiplexer() = default;
-  VTKM_EXEC_CONT ~ArrayPortalMultiplexer() = default;
-  VTKM_EXEC_CONT ArrayPortalMultiplexer(ArrayPortalMultiplexer&&) = default;
-  VTKM_EXEC_CONT ArrayPortalMultiplexer(const ArrayPortalMultiplexer&) = default;
-  VTKM_EXEC_CONT ArrayPortalMultiplexer& operator=(ArrayPortalMultiplexer&&) = default;
-  VTKM_EXEC_CONT ArrayPortalMultiplexer& operator=(const ArrayPortalMultiplexer&) = default;
+  ArrayPortalMultiplexer() = default;
+  ~ArrayPortalMultiplexer() = default;
+  ArrayPortalMultiplexer(ArrayPortalMultiplexer&&) = default;
+  ArrayPortalMultiplexer(const ArrayPortalMultiplexer&) = default;
+  ArrayPortalMultiplexer& operator=(ArrayPortalMultiplexer&&) = default;
+  ArrayPortalMultiplexer& operator=(const ArrayPortalMultiplexer&) = default;
 
   template <typename Portal>
   VTKM_EXEC_CONT ArrayPortalMultiplexer(const Portal& src)
@@ -194,11 +194,11 @@ public:
   using PortalConstType =
     vtkm::internal::ArrayPortalMultiplexer<StorageToPortalConstControl<StorageTags>...>;
 
-  VTKM_CONT Storage() = default;
-  VTKM_CONT Storage(Storage&&) = default;
-  VTKM_CONT Storage(const Storage&) = default;
-  VTKM_CONT Storage& operator=(Storage&&) = default;
-  VTKM_CONT Storage& operator=(const Storage&) = default;
+  Storage() = default;
+  Storage(Storage&&) = default;
+  Storage(const Storage&) = default;
+  Storage& operator=(Storage&&) = default;
+  Storage& operator=(const Storage&) = default;
 
   template <typename S>
   VTKM_CONT Storage(vtkm::cont::ArrayHandle<ValueType, S>&& rhs)
