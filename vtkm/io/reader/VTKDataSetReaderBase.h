@@ -495,7 +495,7 @@ private:
       this->DataFile->Stream.open(this->DataFile->FileName.c_str(),
                                   std::ios_base::in | std::ios_base::binary);
     }
-    catch (std::ifstream::failure& e)
+    catch (std::ifstream::failure&)
     {
       std::string message("could not open file \"" + this->DataFile->FileName + "\"");
       throw vtkm::io::ErrorIO(message);
