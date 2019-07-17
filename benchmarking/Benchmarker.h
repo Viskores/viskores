@@ -283,6 +283,7 @@ public:
   VTKM_CONT bool operator()(DeviceAdapter id, MakerFunctor&& makerFunctor, T t)
   {
     auto func = makerFunctor(t, id);
+    std::cout << "Running '" << func.Description() << "'" << std::endl;
     this->GatherSamples(func);
     this->PrintSummary();
     return true;
