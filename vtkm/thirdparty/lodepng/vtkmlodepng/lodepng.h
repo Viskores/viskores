@@ -28,6 +28,11 @@ freely, subject to the following restrictions:
 
 #include <string.h> /*for size_t*/
 
+namespace vtkm
+{
+namespace png
+{
+
 extern const char* LODEPNG_VERSION_STRING;
 
 /*
@@ -1034,6 +1039,9 @@ unsigned compress(std::vector<unsigned char>& out, const std::vector<unsigned ch
 #endif /* LODEPNG_COMPILE_ZLIB */
 } /* namespace lodepng */
 #endif /*LODEPNG_COMPILE_CPP*/
+
+} /* namespace png */
+} /* namespace vtkm */
 
 /*
 TODO:
