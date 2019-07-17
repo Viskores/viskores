@@ -391,8 +391,18 @@ struct ArrayHandleMultiplexerTraits
   };
   using CheckArrayHandle = brigand::list<CheckArrayHandleTransform<ArrayHandleTypes>...>;
 
+  // Note that this group of code could be simplified as the pair of lines:
+  //   template <typename ArrayHandle>
+  //   using ArrayHandleToStorageTag = typename ArrayHandle::StorageTag;
+  // However, there are issues with older Visual Studio compilers that is not working
+  // correctly with that form.
   template <typename ArrayHandle>
-  using ArrayHandleToStorageTag = typename ArrayHandle::StorageTag;
+  struct ArrayHandleToStorageTagImpl
+  {
+    using Type = typename ArrayHandle::StorageTag;
+  };
+  template <typename ArrayHandle>
+  using ArrayHandleToStorageTag = typename ArrayHandleToStorageTagImpl<ArrayHandle>::Type;
 
   using StorageTag =
     vtkm::cont::StorageTagMultiplexer<ArrayHandleToStorageTag<ArrayHandleTypes>...>;
