@@ -36,6 +36,18 @@
 #define VTKM_OPENMP_DIRECTIVE(directive)
 #endif // _OPENMP
 
+// See "OpenMP data sharing" section of
+// https://www.gnu.org/software/gcc/gcc-9/porting_to.html. OpenMP broke
+// backwards compatibility regarding const variable handling.
+// tl;dr, put all const variables accessed from openmp blocks in a
+// VTKM_OPENMP_SHARED_CONST(var1, var2, ...) macro. This will do The Right Thing
+// on all gcc.
+#if defined(__GNUC__) && __GNUC__ >= 9
+#define VTKM_OPENMP_SHARED_CONST(...) shared(__VA_ARGS__)
+#else
+#define VTKM_OPENMP_SHARED_CONST(...)
+#endif
+
 // When defined, supported type / operator combinations will use the OpenMP
 // reduction(...) clause. Otherwise, all reductions use the general
 // implementation with a manual reduction once the threads complete.
@@ -266,6 +278,23 @@ using OpenMPReductionSupported = std::false_type;
 
 struct ReduceHelper
 {
+  // std::is_integral, but adapted to see through vecs and pairs.
+  template <typename T>
+  struct IsIntegral : public std::is_integral<T>
+  {
+  };
+
+  template <typename T, vtkm::IdComponent Size>
+  struct IsIntegral<vtkm::Vec<T, Size>> : public std::is_integral<T>
+  {
+  };
+
+  template <typename T, typename U>
+  struct IsIntegral<vtkm::Pair<T, U>>
+    : public std::integral_constant<bool, std::is_integral<T>{} && std::is_integral<U>{}>
+  {
+  };
+
   // Generic implementation:
   template <typename PortalT, typename ReturnType, typename Functor>
   static ReturnType Execute(PortalT portal, ReturnType init, Functor functorIn, std::false_type)
@@ -279,8 +308,8 @@ struct ReduceHelper
     int numThreads = 0;
     std::unique_ptr<ReturnType[]> threadData;
 
-    VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(f)
-                            shared(data, doParallel, numThreads, threadData))
+    VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(f) shared(
+      data, doParallel, numThreads, threadData) VTKM_OPENMP_SHARED_CONST(numVals))
     {
 
       int tid = omp_get_thread_num();
@@ -297,18 +326,11 @@ struct ReduceHelper
 
       if (doParallel)
       {
-        // Use the first (numThreads*2) values for initializing:
-        ReturnType accum;
-        accum = f(data[2 * tid], data[2 * tid + 1]);
+        // Static dispatch to unroll non-integral types:
+        const ReturnType localResult = ReduceHelper::DoParallelReduction<ReturnType>(
+          data, numVals, tid, numThreads, f, IsIntegral<ReturnType>{});
 
-        // Assign each thread chunks of the remaining values for local reduction
-        VTKM_OPENMP_DIRECTIVE(for schedule(static))
-        for (vtkm::Id i = numThreads * 2; i < numVals; i++)
-        {
-          accum = f(accum, data[i]);
-        }
-
-        threadData[static_cast<std::size_t>(tid)] = accum;
+        threadData[static_cast<std::size_t>(tid)] = localResult;
       }
     } // end parallel
 
@@ -330,6 +352,64 @@ struct ReduceHelper
     }
 
     return init;
+  }
+
+  // non-integer reduction: unroll loop manually.
+  // This gives faster code for floats and non-trivial types.
+  template <typename ReturnType, typename IterType, typename FunctorType>
+  static ReturnType DoParallelReduction(IterType data,
+                                        vtkm::Id numVals,
+                                        int tid,
+                                        int numThreads,
+                                        FunctorType f,
+                                        std::false_type /* isIntegral */)
+  {
+    // Use the first (numThreads*2) values for initializing:
+    ReturnType accum = f(data[2 * tid], data[2 * tid + 1]);
+
+    vtkm::Id i = numThreads * 2;
+    const vtkm::Id unrollEnd = (numVals / 4) * 4;
+    VTKM_OPENMP_DIRECTIVE(for schedule(static))
+    for (i = numThreads * 2; i < unrollEnd; i += 4)
+    {
+      const auto t1 = f(data[i], data[i + 1]);
+      const auto t2 = f(data[i + 2], data[i + 3]);
+      accum = f(accum, t1);
+      accum = f(accum, t2);
+    }
+    // Let thread 0 mop up any remaining values:
+    if (tid == 0)
+    {
+      for (i = unrollEnd; i < numVals; ++i)
+      {
+        accum = f(accum, data[i]);
+      }
+    }
+
+    return accum;
+  }
+
+  // Integer reduction: no unrolling. Ints vectorize easily and unrolling can
+  // hurt performance.
+  template <typename ReturnType, typename IterType, typename FunctorType>
+  static ReturnType DoParallelReduction(IterType data,
+                                        vtkm::Id numVals,
+                                        int tid,
+                                        int numThreads,
+                                        FunctorType f,
+                                        std::true_type /* isIntegral */)
+  {
+    // Use the first (numThreads*2) values for initializing:
+    ReturnType accum = f(data[2 * tid], data[2 * tid + 1]);
+
+    // Assign each thread chunks of the remaining values for local reduction
+    VTKM_OPENMP_DIRECTIVE(for schedule(static))
+    for (vtkm::Id i = numThreads * 2; i < numVals; i++)
+    {
+      accum = f(accum, data[i]);
+    }
+
+    return accum;
   }
 
 #ifdef VTKM_OPENMP_USE_NATIVE_REDUCTION
@@ -412,7 +492,7 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
   vtkm::Id outIdx = 0;
 
   VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(keysIn, valuesIn, keysOut, valuesOut, f)
-                          shared(outIdx))
+                          shared(outIdx) VTKM_OPENMP_SHARED_CONST(numValues))
   {
     int tid = omp_get_thread_num();
     int numThreads = omp_get_num_threads();
