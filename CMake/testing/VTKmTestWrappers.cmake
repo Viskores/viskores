@@ -129,14 +129,7 @@ function(vtkm_unit_tests)
   set_property(TARGET ${test_prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
-  #Starting in CMake 3.13, cmake will properly drop duplicate libraries
-  #from the link line so this workaround can be dropped
-  if (CMAKE_VERSION VERSION_LESS 3.13 AND "vtkm_rendering" IN_LIST VTKm_UT_LIBRARIES)
-    list(REMOVE_ITEM VTKm_UT_LIBRARIES "vtkm_cont")
-    target_link_libraries(${test_prog} PRIVATE ${VTKm_UT_LIBRARIES})
-  else()
-    target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
-  endif()
+  target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
 
   foreach(index RANGE per_device_command_line_arguments)
     if(per_device_command_line_arguments STREQUAL "")
