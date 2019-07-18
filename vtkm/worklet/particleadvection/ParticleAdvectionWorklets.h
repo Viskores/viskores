@@ -43,7 +43,6 @@ public:
                             IntegralCurveType& integralCurve) const
   {
     vtkm::Vec<ScalarType, 3> inpos = integralCurve.GetPos(idx);
-    std::cout << "Advecting : " << idx << " " << inpos << std::endl;
     vtkm::Vec<ScalarType, 3> outpos;
     vtkm::Id smallStepCounter = 0;
     ScalarType time = integralCurve.GetTime(idx);
