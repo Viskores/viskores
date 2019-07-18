@@ -12,6 +12,8 @@
 
 #include <vtkm/internal/IndicesExtrude.h>
 
+#include <vtkm/cont/ErrorBadType.h>
+
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
@@ -97,16 +99,13 @@ class VTKM_ALWAYS_EXPORT Storage<T, internal::StorageTagExtrudePlane>
 public:
   using ValueType = T;
 
-  // This is meant to be invalid. Because point arrays are read only, you
-  // should only be able to use the const version.
-  struct PortalType
-  {
-    using ValueType = void*;
-    using IteratorType = void*;
-  };
-
   using PortalConstType =
     vtkm::exec::ArrayPortalExtrudePlane<typename HandleType::PortalConstControl>;
+
+  // Note that this array is read only, so you really should only be getting the const
+  // version of the portal. If you actually try to write to this portal, you will
+  // get an error.
+  using PortalType = PortalConstType;
 
   Storage()
     : Array()
@@ -120,7 +119,11 @@ public:
   {
   }
 
-  PortalType GetPortal() { return PortalType{}; }
+  PortalType GetPortal()
+  {
+    throw vtkm::cont::ErrorBadType(
+      "Extrude ArrayHandles are read only. Cannot get writable portal.");
+  }
 
   PortalConstType GetPortalConst() const
   {
@@ -382,15 +385,12 @@ class Storage<T, internal::StorageTagExtrude>
 public:
   using ValueType = T;
 
-  // This is meant to be invalid. Because point arrays are read only, you
-  // should only be able to use the const version.
-  struct PortalType
-  {
-    using ValueType = void*;
-    using IteratorType = void*;
-  };
-
   using PortalConstType = exec::ArrayPortalExtrude<TPortalType>;
+
+  // Note that this array is read only, so you really should only be getting the const
+  // version of the portal. If you actually try to write to this portal, you will
+  // get an error.
+  using PortalType = PortalConstType;
 
   Storage()
     : Array()
@@ -415,7 +415,11 @@ public:
     VTKM_ASSERT(this->Array.GetNumberOfValues() >= 0);
   }
 
-  PortalType GetPortal() { return PortalType{}; }
+  PortalType GetPortal()
+  {
+    throw vtkm::cont::ErrorBadType(
+      "Extrude ArrayHandles are read only. Cannot get writable portal.");
+  }
 
   PortalConstType GetPortalConst() const
   {
