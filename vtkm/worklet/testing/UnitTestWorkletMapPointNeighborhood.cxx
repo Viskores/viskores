@@ -44,24 +44,48 @@ struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood
 
     auto* nboundary = inputField.Boundary;
 
-    if (!(nboundary->InXBoundary(1) == boundary.InXBoundary(1)))
+    if (!(nboundary->IsRadiusInXBoundary(1) == boundary.IsRadiusInXBoundary(1)))
     {
       this->RaiseError("Got invalid XPos boundary state");
     }
 
-    if (!(nboundary->InYBoundary(1) == boundary.InYBoundary(1)))
+    if (!(nboundary->IsRadiusInYBoundary(1) == boundary.IsRadiusInYBoundary(1)))
     {
       this->RaiseError("Got invalid YPos boundary state");
     }
 
-    if (!(nboundary->InZBoundary(1) == boundary.InZBoundary(1)))
+    if (!(nboundary->IsRadiusInZBoundary(1) == boundary.IsRadiusInZBoundary(1)))
     {
       this->RaiseError("Got invalid ZPos boundary state");
     }
 
-    if (!(nboundary->InBoundary(1) == boundary.InBoundary(1)))
+    if (!(nboundary->IsRadiusInBoundary(1) == boundary.IsRadiusInBoundary(1)))
     {
       this->RaiseError("Got invalid boundary state");
+    }
+
+    if (nboundary->IsRadiusInXBoundary(1) !=
+        (boundary.IsNeighborInXBoundary(-1) && boundary.IsNeighborInXBoundary(1)))
+    {
+      this->RaiseError("Neighbor/Radius boundary mismatch in X dimension.");
+    }
+
+    if (nboundary->IsRadiusInYBoundary(1) !=
+        (boundary.IsNeighborInYBoundary(-1) && boundary.IsNeighborInYBoundary(1)))
+    {
+      this->RaiseError("Neighbor/Radius boundary mismatch in Y dimension.");
+    }
+
+    if (nboundary->IsRadiusInZBoundary(1) !=
+        (boundary.IsNeighborInZBoundary(-1) && boundary.IsNeighborInZBoundary(1)))
+    {
+      this->RaiseError("Neighbor/Radius boundary mismatch in Z dimension.");
+    }
+
+    if (nboundary->IsRadiusInBoundary(1) !=
+        (boundary.IsNeighborInBoundary({ -1 }) && boundary.IsNeighborInBoundary({ 1 })))
+    {
+      this->RaiseError("Neighbor/Radius boundary mismatch.");
     }
 
 
