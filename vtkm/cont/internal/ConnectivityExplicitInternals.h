@@ -60,8 +60,8 @@ void buildIndexOffsets(const ArrayHandleIndices& numIndices,
                        ArrayHandleOffsets offsets,
                        vtkm::cont::DeviceAdapterId deviceId)
 {
-  using IsWriteable = vtkm::cont::internal::IsWriteableArrayHandle<ArrayHandleOffsets>;
-  buildIndexOffsets(numIndices, offsets, deviceId, typename IsWriteable::type());
+  using IsWritable = vtkm::cont::internal::IsWritableArrayHandle<ArrayHandleOffsets>;
+  buildIndexOffsets(numIndices, offsets, deviceId, typename IsWritable::type());
 }
 
 template <typename ShapeStorageTag = VTKM_DEFAULT_STORAGE_TAG,
