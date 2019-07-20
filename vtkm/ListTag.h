@@ -84,7 +84,7 @@ struct ListTagApplyImpl<brigand::list<Ts...>, Target>
 ///
 template <typename ListTag, template <typename...> class Target>
 using ListTagApply =
-  typename detail::ListTagApplyImpl<internal::ListTagAsBrigandList<ListTag>, Target>;
+  typename detail::ListTagApplyImpl<internal::ListTagAsBrigandList<ListTag>, Target>::type;
 
 /// A special tag for a list that represents holding all potential values
 ///
