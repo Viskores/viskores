@@ -65,8 +65,8 @@ public:
     this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
     this->MaxPoint[1] =
       coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
-    if
-      constexpr(dimensions == 2) return;
+    if (dimensions == 2)
+      return;
 
     this->AxisPortals[2] = Coords.GetThirdPortal();
     this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
@@ -87,8 +87,8 @@ public:
       inside = false;
     if (point[1] < this->MinPoint[1] || point[1] > this->MaxPoint[1])
       inside = false;
-    if
-      constexpr(dimensions == 2) return inside;
+    if (dimensions == 2)
+      return inside;
     if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
       inside = false;
     return inside;
