@@ -10,11 +10,9 @@
 #ifndef vtk_m_internal_Variant_h
 #define vtk_m_internal_Variant_h
 
-#include <vtkm/ListTag.h>
-#include <vtkm/Types.h>
-#include <vtkm/internal/brigand.hpp>
+#include <vtkm/internal/VariantDetail.h>
 
-#include <type_traits>
+#include <vtkm/ListTag.h>
 
 namespace vtkm
 {
@@ -23,70 +21,6 @@ namespace internal
 
 namespace detail
 {
-
-template <typename ReturnType>
-struct VariantDummyReturn
-{
-  VTKM_EXEC_CONT static ReturnType F() { return ReturnType{}; }
-};
-template <>
-struct VariantDummyReturn<void>
-{
-  VTKM_EXEC_CONT static void F() {}
-};
-
-template <typename ReturnType, typename Functor, typename... Args>
-VTKM_EXEC_CONT ReturnType
-VariantCastAndCallImpl(brigand::list<>, vtkm::IdComponent, Functor&&, const void*, Args&&...)
-{
-  // If we are here, it means we failed to find the appropriate type in a variant
-  VTKM_ASSERT(false && "Internal error, bad Variant state.");
-  return VariantDummyReturn<ReturnType>::F();
-}
-
-VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename ReturnType, typename T0, typename... Ts, typename Functor, typename... Args>
-VTKM_EXEC_CONT ReturnType VariantCastAndCallImpl(brigand::list<T0, Ts...>,
-                                                 vtkm::IdComponent index,
-                                                 Functor&& f,
-                                                 const void* storage,
-                                                 Args&&... args)
-{
-  if (index == 0)
-  {
-    return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-  }
-  else
-  {
-    return VariantCastAndCallImpl<ReturnType>(brigand::list<Ts...>(),
-                                              index - 1,
-                                              std::forward<Functor>(f),
-                                              storage,
-                                              std::forward<Args>(args)...);
-  }
-}
-
-VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename ReturnType, typename T0, typename... Ts, typename Functor, typename... Args>
-VTKM_EXEC_CONT ReturnType VariantCastAndCallImpl(brigand::list<T0, Ts...>,
-                                                 vtkm::IdComponent index,
-                                                 Functor&& f,
-                                                 void* storage,
-                                                 Args&&... args)
-{
-  if (index == 0)
-  {
-    return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
-  }
-  else
-  {
-    return VariantCastAndCallImpl<ReturnType>(brigand::list<Ts...>(),
-                                              index - 1,
-                                              std::forward<Functor>(f),
-                                              storage,
-                                              std::forward<Args>(args)...);
-  }
-}
 
 struct VariantCopyFunctor
 {

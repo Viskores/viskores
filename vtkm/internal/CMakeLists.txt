@@ -65,6 +65,7 @@ set(headers
   ListTagDetail.h
   Unreachable.h
   Variant.h
+  VariantDetail.h
   Windows.h
   )
 
@@ -72,6 +73,7 @@ vtkm_declare_headers(${headers})
 
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPre.h)
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPost.h)
+vtkm_pyexpander_generated_file(VariantDetail.h)
 
 add_subdirectory(testing)
 
