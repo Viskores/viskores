@@ -82,19 +82,21 @@ struct IsInValidArrayHandle
 /// Both of these have a typedef named value with the respective boolean value.
 ///
 template <typename ArrayHandle>
-struct IsWriteableArrayHandle
+struct IsWritableArrayHandle
 {
 private:
-  using ValueType = typename ArrayHandle::PortalControl::ValueType;
+  template <typename U,
+            typename S = decltype(std::declval<U>().Set(vtkm::Id{},
+                                                        std::declval<typename U::ValueType>()))>
+  static std::true_type hasSet(int);
+  template <typename U>
+  static std::false_type hasSet(...);
 
-  //All ArrayHandles that use ImplicitStorage as the final writable location
-  //will have a value type of void*, which is what we are trying to detect
-  using RawValueType = typename std::remove_pointer<ValueType>::type;
-  using IsVoidType = std::is_void<RawValueType>;
+  using PortalType = typename ArrayHandle::PortalControl;
 
 public:
-  using type = std::integral_constant<bool, !IsVoidType::value>;
-  static constexpr bool value = !IsVoidType::value;
+  using type = decltype(hasSet<PortalType>(0));
+  static constexpr bool value = type::value;
 };
 
 /// Checks to see if the given object is an array handle. This check is

@@ -206,9 +206,9 @@ void StorageVirtualImpl<T, S>::ControlPortalForOutput(
   vtkm::cont::internal::TransferInfoArray& payload)
 {
   using HT = vtkm::cont::ArrayHandle<T, S>;
-  constexpr auto isWriteable = typename vtkm::cont::internal::IsWriteableArrayHandle<HT>::type{};
+  constexpr auto isWritable = typename vtkm::cont::internal::IsWritableArrayHandle<HT>::type{};
 
-  detail::make_writableHostPortal(isWriteable, payload, this->Handle);
+  detail::make_writableHostPortal(isWritable, payload, this->Handle);
 }
 
 template <typename T, typename S>

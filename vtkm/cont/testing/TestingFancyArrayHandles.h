@@ -681,6 +681,37 @@ private:
     }
   };
 
+  struct TestCastAsOutput
+  {
+    template <typename CastFromType>
+    VTKM_CONT void operator()(CastFromType vtkmNotUsed(type)) const
+    {
+      using InputArrayType = vtkm::cont::ArrayHandleIndex;
+      using ResultArrayType = vtkm::cont::ArrayHandle<CastFromType>;
+
+      InputArrayType input(ARRAY_SIZE);
+
+      ResultArrayType result;
+      vtkm::cont::ArrayHandleCast<vtkm::Id, ResultArrayType> castArray =
+        vtkm::cont::make_ArrayHandleCast<CastFromType>(result);
+
+      vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
+      dispatcher.Invoke(input, castArray);
+
+      vtkm::cont::printSummary_ArrayHandle(castArray, std::cout);
+      std::cout << std::endl;
+
+      // verify results
+      vtkm::Id length = ARRAY_SIZE;
+      for (vtkm::Id i = 0; i < length; ++i)
+      {
+        VTKM_TEST_ASSERT(input.GetPortalConstControl().Get(i) ==
+                           static_cast<vtkm::Id>(result.GetPortalConstControl().Get(i)),
+                         "Casting ArrayHandle Failed");
+      }
+    }
+  };
+
   template <vtkm::IdComponent NUM_COMPONENTS>
   struct TestGroupVecAsInput
   {
@@ -1283,6 +1314,11 @@ private:
       std::cout << "Testing ArrayHandleCast as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(
         TestingFancyArrayHandles<DeviceAdapterTag>::TestCastAsInput(), CastTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleCast as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestCastAsOutput(), CastTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleGroupVec<3> as Input" << std::endl;
