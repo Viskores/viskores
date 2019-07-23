@@ -291,7 +291,7 @@ struct ReduceHelper
 
   template <typename T, typename U>
   struct IsIntegral<vtkm::Pair<T, U>>
-    : public std::integral_constant<bool, std::is_integral<T>{} && std::is_integral<U>{}>
+    : public std::integral_constant<bool, std::is_integral<T>::value && std::is_integral<U>::value>
   {
   };
 
