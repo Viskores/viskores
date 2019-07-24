@@ -39,27 +39,7 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
   vtkm::cont::DataSet output = internal::CreateResult(input);
   auto worklet = vtkm::worklet::moments::ComputeMoments(this->Radius);
 
-  // FIXME: 3D with i, j, k
-  for (int order = 0; order <= this->Order; ++order)
-  {
-    for (int p = order; p >= 0; --p)
-    {
-      vtkm::cont::ArrayHandle<T> moments;
-
-      worklet.Run(input.GetCellSet(this->GetActiveCellSetIndex()), field, p, order - p, moments);
-
-      std::string fieldName = "index";
-      // names for i and j
-      for (int j = 0; j < p; ++j)
-        fieldName += std::to_string(0);
-      for (int j = 0; j < order - p; ++j)
-        fieldName += std::to_string(1);
-      // TODO: add the same for k
-
-      vtkm::cont::Field momentsField(fieldName, vtkm::cont::Field::Association::POINTS, moments);
-      output.AddField(momentsField);
-    }
-  }
+  worklet.Run(input.GetCellSet(this->GetActiveCellSetIndex()), field, this->Order, output);
 
   return output;
 }
