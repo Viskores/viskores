@@ -26,7 +26,7 @@ struct VariantCopyFunctor
 {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
-  VTKM_EXEC_CONT void operator()(const T& src, void* destPointer) const
+  VTKM_EXEC_CONT void operator()(const T& src, void* destPointer) const noexcept
   {
     new (destPointer) T(src);
   }
@@ -36,7 +36,7 @@ struct VariantDestroyFunctor
 {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
-  VTKM_EXEC_CONT void operator()(T& src) const
+  VTKM_EXEC_CONT void operator()(T& src) const noexcept
   {
     src.~T();
   }
@@ -65,12 +65,12 @@ public:
   /// Returns the index of the type of object this variant is storing. If no object is currently
   /// stored (i.e. the Variant is invalid), -1 is returned.
   ///
-  VTKM_EXEC_CONT vtkm::IdComponent GetIndex() const { return this->Index; }
+  VTKM_EXEC_CONT vtkm::IdComponent GetIndex() const noexcept { return this->Index; }
 
   /// Returns true if this Variant is storing an object from one of the types in the template
   /// list, false otherwise.
   ///
-  VTKM_EXEC_CONT bool IsValid() const { return this->GetIndex() >= 0; }
+  VTKM_EXEC_CONT bool IsValid() const noexcept { return this->GetIndex() >= 0; }
 
   /// Type that converts to a std::integral_constant containing the index of the given type (or
   /// -1 if that type is not in the list).
@@ -97,7 +97,7 @@ public:
   Variant() = default;
 
   template <typename T>
-  VTKM_EXEC_CONT Variant(const T& src)
+  VTKM_EXEC_CONT Variant(const T& src) noexcept
   {
     constexpr vtkm::IdComponent index = GetIndexOf<T>();
     // Might be a way to use an enable_if to enforce a proper type.
@@ -108,7 +108,7 @@ public:
   }
 
   template <typename T>
-  VTKM_EXEC_CONT Variant(const T&& src)
+  VTKM_EXEC_CONT Variant(const T&& src) noexcept
   {
     constexpr vtkm::IdComponent index = IndexOf<T>::value;
     // Might be a way to use an enable_if to enforce a proper type.
@@ -118,14 +118,14 @@ public:
     this->Index = index;
   }
 
-  VTKM_EXEC_CONT Variant(Variant&& rhs)
+  VTKM_EXEC_CONT Variant(Variant&& rhs) noexcept
   {
     this->Storage = std::move(rhs.Storage);
     this->Index = std::move(rhs.Index);
     rhs.Index = -1;
   }
 
-  VTKM_EXEC_CONT Variant(const Variant& src)
+  VTKM_EXEC_CONT Variant(const Variant& src) noexcept
   {
     src.CastAndCall(detail::VariantCopyFunctor{}, this->GetPointer());
     this->Index = src.GetIndex();
@@ -133,7 +133,7 @@ public:
 
   VTKM_EXEC_CONT ~Variant() { this->Reset(); }
 
-  VTKM_EXEC_CONT Variant& operator=(Variant&& rhs)
+  VTKM_EXEC_CONT Variant& operator=(Variant&& rhs) noexcept
   {
     this->Reset();
     this->Storage = std::move(rhs.Storage);
@@ -142,7 +142,7 @@ public:
     return *this;
   }
 
-  VTKM_EXEC_CONT Variant& operator=(const Variant& src)
+  VTKM_EXEC_CONT Variant& operator=(const Variant& src) noexcept
   {
     this->Reset();
     src.CastAndCall(detail::VariantCopyFunctor{}, this->GetPointer());
@@ -207,14 +207,14 @@ public:
   /// variant does not contain the value at the given index.
   ///
   template <vtkm::IdComponent I>
-  VTKM_EXEC_CONT TypeAt<I>& Get()
+  VTKM_EXEC_CONT TypeAt<I>& Get() noexcept
   {
     VTKM_ASSERT(I == this->GetIndex());
     return *reinterpret_cast<TypeAt<I>*>(this->GetPointer());
   }
 
   template <vtkm::IdComponent I>
-  VTKM_EXEC_CONT const TypeAt<I>& Get() const
+  VTKM_EXEC_CONT const TypeAt<I>& Get() const noexcept
   {
     VTKM_ASSERT(I == this->GetIndex());
     return *reinterpret_cast<const TypeAt<I>*>(this->GetPointer());
@@ -226,14 +226,14 @@ public:
   /// contain a value of the given type.
   ///
   template <typename T>
-  VTKM_EXEC_CONT T& Get()
+  VTKM_EXEC_CONT T& Get() noexcept
   {
     VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
     return *reinterpret_cast<T*>(this->GetPointer());
   }
 
   template <typename T>
-  VTKM_EXEC_CONT const T& Get() const
+  VTKM_EXEC_CONT const T& Get() const noexcept
   {
     VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
     return *reinterpret_cast<const T*>(this->GetPointer());
@@ -249,7 +249,8 @@ public:
   ///
   template <typename Functor, typename... Args>
   VTKM_EXEC_CONT auto CastAndCall(Functor&& f, Args&&... args) const
-    -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
+    noexcept(noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
+      -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl<decltype(f(std::declval<const TypeAt<0>&>(), args...))>(
@@ -261,7 +262,8 @@ public:
   }
 
   template <typename Functor, typename... Args>
-  VTKM_EXEC_CONT auto CastAndCall(Functor&& f, Args&&... args)
+  VTKM_EXEC_CONT auto CastAndCall(Functor&& f, Args&&... args) noexcept(
+    noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
     -> decltype(f(std::declval<TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
@@ -276,7 +278,7 @@ public:
   /// Destroys any object the Variant is holding and sets the Variant to an invalid state. This
   /// method is not thread safe.
   ///
-  VTKM_EXEC_CONT void Reset()
+  VTKM_EXEC_CONT void Reset() noexcept
   {
     if (this->IsValid())
     {

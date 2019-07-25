@@ -35,12 +35,12 @@ namespace detail
 template <typename ReturnType>
 struct VariantDummyReturn
 {
-  VTKM_EXEC_CONT static inline ReturnType F() { return ReturnType{}; }
+  VTKM_EXEC_CONT static inline ReturnType F() noexcept { return ReturnType{}; }
 };
 template <>
 struct VariantDummyReturn<void>
 {
-  VTKM_EXEC_CONT static inline void F() {}
+  VTKM_EXEC_CONT static inline void F() noexcept {}
 };
 
 template <typename ReturnType, typename Functor, typename... Args>
@@ -48,7 +48,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(brigand::list<>,
                                                         vtkm::IdComponent,
                                                         Functor&&,
                                                         const void*,
-                                                        Args&&...)
+                                                        Args&&...) noexcept
 {
   // If we are here, it means we failed to find the appropriate type in a variant
   VTKM_ASSERT(false && "Internal error, bad Variant state.");
@@ -67,7 +67,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -90,7 +90,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -114,7 +114,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -140,7 +140,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -167,7 +167,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -196,7 +196,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -226,7 +226,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -258,7 +258,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -291,7 +291,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -326,7 +326,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -362,7 +362,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -400,7 +400,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -439,7 +439,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -480,7 +480,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -522,7 +522,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -566,7 +566,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -611,7 +611,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -658,7 +658,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -706,7 +706,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -756,7 +756,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -807,7 +807,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -860,7 +860,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -914,7 +914,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -970,7 +970,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1027,7 +1027,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1086,7 +1086,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1146,7 +1146,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1208,7 +1208,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1271,7 +1271,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1336,7 +1336,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1402,7 +1402,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1470,7 +1470,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1539,7 +1539,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1610,7 +1610,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1682,7 +1682,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1756,7 +1756,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1831,7 +1831,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1908,7 +1908,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -1986,7 +1986,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -2066,7 +2066,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   switch (index)
   {
@@ -2151,7 +2151,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   const void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   if (index < 20)
   {
@@ -2200,7 +2200,7 @@ VTKM_EXEC_CONT inline ReturnType VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
   void* storage,
-  Args&&... args)
+  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
 {
   if (index < 20)
   {

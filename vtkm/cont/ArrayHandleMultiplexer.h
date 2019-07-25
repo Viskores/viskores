@@ -33,7 +33,7 @@ namespace detail
 struct ArrayPortalMultiplexerGetNumberOfValuesFunctor
 {
   template <typename PortalType>
-  VTKM_EXEC_CONT vtkm::Id operator()(const PortalType& portal) const
+  VTKM_EXEC_CONT vtkm::Id operator()(const PortalType& portal) const noexcept
   {
     return portal.GetNumberOfValues();
   }
@@ -43,7 +43,7 @@ struct ArrayPortalMultiplexerGetFunctor
 {
   template <typename PortalType>
   VTKM_EXEC_CONT typename PortalType::ValueType operator()(const PortalType& portal,
-                                                           vtkm::Id index) const
+                                                           vtkm::Id index) const noexcept
   {
     return portal.Get(index);
   }
@@ -54,7 +54,7 @@ struct ArrayPortalMultiplexerSetFunctor
   template <typename PortalType>
   VTKM_EXEC_CONT void operator()(const PortalType& portal,
                                  vtkm::Id index,
-                                 const typename PortalType::ValueType& value) const
+                                 const typename PortalType::ValueType& value) const noexcept
   {
     portal.Set(index, value);
   }
@@ -78,30 +78,29 @@ struct ArrayPortalMultiplexer
   ArrayPortalMultiplexer& operator=(const ArrayPortalMultiplexer&) = default;
 
   template <typename Portal>
-  VTKM_EXEC_CONT ArrayPortalMultiplexer(const Portal& src)
-    : PortalVariant(src)
+  VTKM_EXEC_CONT ArrayPortalMultiplexer(const Portal& src) noexcept : PortalVariant(src)
   {
   }
 
   template <typename Portal>
-  VTKM_EXEC_CONT ArrayPortalMultiplexer& operator=(const Portal& src)
+  VTKM_EXEC_CONT ArrayPortalMultiplexer& operator=(const Portal& src) noexcept
   {
     this->PortalVariant = src;
     return *this;
   }
 
-  VTKM_EXEC_CONT vtkm::Id GetNumberOfValues() const
+  VTKM_EXEC_CONT vtkm::Id GetNumberOfValues() const noexcept
   {
     return this->PortalVariant.CastAndCall(
       detail::ArrayPortalMultiplexerGetNumberOfValuesFunctor{});
   }
 
-  VTKM_EXEC_CONT ValueType Get(vtkm::Id index) const
+  VTKM_EXEC_CONT ValueType Get(vtkm::Id index) const noexcept
   {
     return this->PortalVariant.CastAndCall(detail::ArrayPortalMultiplexerGetFunctor{}, index);
   }
 
-  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const noexcept
   {
     this->PortalVariant.CastAndCall(detail::ArrayPortalMultiplexerSetFunctor{}, index, value);
   }
