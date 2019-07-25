@@ -37,15 +37,6 @@ private:
   vtkm::Vec<vtkm::Int32, 3> Radius = { 1, 1, 1 };
   vtkm::Int32 Order = 0;
 };
-
-template <>
-class FilterTraits<vtkm::filter::ComputeMoments>
-{
-public:
-  struct InputFieldTypeList : vtkm::TypeListTagAll
-  {
-  };
-};
 }
 } // namespace vtkm::filter
 
