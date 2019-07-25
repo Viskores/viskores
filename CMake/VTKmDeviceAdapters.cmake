@@ -216,13 +216,11 @@ if(VTKm_ENABLE_CUDA)
           set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
                   "device type(s) for cuda[native]")
         else()
-          set(VTKm_CUDA_Architecture "kepler")
+          message(FATAL_ERROR "Error detecting architecture flags for CUDA. Please set VTKm_CUDA_Architecture manually.")
         endif()
       endif()
     endif()
 
-    #since when we are native we can fail, and fall back to "kepler" these have
-    #to happen after, and separately of the native check
     if(VTKm_CUDA_Architecture STREQUAL "fermi")
       set(arch_flags --generate-code=arch=compute_20,code=sm_20)
     elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
