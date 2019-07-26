@@ -11,6 +11,7 @@
 set(unit_tests
   UnitTestOpenMPArrayHandle.cxx
   UnitTestOpenMPArrayHandleFancy.cxx
+  UnitTestOpenMPArrayHandleMultiplexer.cxx
   UnitTestOpenMPArrayHandleVirtualCoordinates.cxx
   UnitTestOpenMPBitField.cxx
   UnitTestOpenMPCellLocatorRectilinearGrid.cxx

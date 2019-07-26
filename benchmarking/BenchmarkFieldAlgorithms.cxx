@@ -12,11 +12,12 @@
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleMultiplexer.h>
+#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -292,6 +293,40 @@ private:
   const T2* Function2;
 };
 
+struct PassThroughFunctor
+{
+  template <typename T>
+  VTKM_EXEC_CONT T operator()(const T& x) const
+  {
+    return x;
+  }
+};
+
+template <typename ArrayHandleType>
+using ArrayHandlePassThrough =
+  vtkm::cont::ArrayHandleTransform<ArrayHandleType, PassThroughFunctor, PassThroughFunctor>;
+
+template <typename ArrayHandleType>
+using BMArrayHandleMultiplexer =
+  vtkm::ListTagApply<vtkm::ListTagAppend<vtkm::cont::internal::ArrayHandleMultiplexerDefaultArrays<
+                                           typename ArrayHandleType::ValueType>,
+                                         ArrayHandlePassThrough<ArrayHandleType>>,
+                     vtkm::cont::ArrayHandleMultiplexer>;
+
+template <typename ArrayHandleType>
+BMArrayHandleMultiplexer<ArrayHandleType> make_ArrayHandleMultiplexer0(const ArrayHandleType& array)
+{
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+  return BMArrayHandleMultiplexer<ArrayHandleType>(array);
+}
+
+template <typename ArrayHandleType>
+BMArrayHandleMultiplexer<ArrayHandleType> make_ArrayHandleMultiplexerN(const ArrayHandleType& array)
+{
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+  return BMArrayHandleMultiplexer<ArrayHandleType>(ArrayHandlePassThrough<ArrayHandleType>(array));
+}
+
 struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>
 {
 };
@@ -307,10 +342,6 @@ class BenchmarkFieldAlgorithms
   using StorageTag = vtkm::cont::StorageTagBasic;
 
   using Timer = vtkm::cont::Timer;
-
-  using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
-  using InterpVariantHandle = vtkm::cont::VariantArrayHandleBase<InterpValueTypes>;
-  using EdgeIdVariantHandle = vtkm::cont::VariantArrayHandleBase<vtkm::TypeListTagId2>;
 
 private:
   template <typename Value, typename DeviceAdapter>
@@ -349,8 +380,10 @@ private:
       this->OptionYears = vtkm::cont::make_ArrayHandle(this->years);
     }
 
-    VTKM_CONT
-    vtkm::Float64 operator()()
+    template <typename StockPriceType, typename OptionStrikeType, typename OptionYearsType>
+    VTKM_CONT static vtkm::Float64 Run(const StockPriceType& stockPrice,
+                                       const OptionStrikeType& optionStrike,
+                                       const OptionYearsType& optionYears)
     {
       vtkm::cont::ArrayHandle<Value> callResultHandle, putResultHandle;
       const Value RISKFREE = 0.02f;
@@ -361,10 +394,15 @@ private:
       BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
       vtkm::worklet::DispatcherMapField<BlackScholes<Value>> dispatcher(worklet);
 
-      dispatcher.Invoke(
-        this->StockPrice, this->OptionStrike, this->OptionYears, callResultHandle, putResultHandle);
+      dispatcher.Invoke(stockPrice, optionStrike, optionYears, callResultHandle, putResultHandle);
 
       return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      return this->Run(this->StockPrice, this->OptionStrike, this->OptionYears);
     }
 
     virtual std::string Type() const { return std::string("Static"); }
@@ -387,29 +425,66 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      ValueVariantHandle dstocks(this->StockPrice);
-      ValueVariantHandle dstrikes(this->OptionStrike);
-      ValueVariantHandle doptions(this->OptionYears);
-
-      vtkm::cont::ArrayHandle<Value> callResultHandle, putResultHandle;
-      const Value RISKFREE = 0.02f;
-      const Value VOLATILITY = 0.30f;
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
-      vtkm::worklet::DispatcherMapField<BlackScholes<Value>> dispatcher(worklet);
-
-      dispatcher.Invoke(dstocks, dstrikes, doptions, callResultHandle, putResultHandle);
-
-      return timer.GetElapsedTime();
+      return this->Run(vtkm::cont::make_ArrayHandleVirtual(this->StockPrice),
+                       vtkm::cont::make_ArrayHandleVirtual(this->OptionStrike),
+                       vtkm::cont::make_ArrayHandleVirtual(this->OptionYears));
     }
 
     virtual std::string Type() const { return std::string("Dynamic"); }
   };
 
+  template <typename Value, typename DeviceAdapter>
+  struct BenchBlackScholesMultiplexer0 : public BenchBlackScholes<Value, DeviceAdapter>
+  {
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      return this->Run(make_ArrayHandleMultiplexer0(this->StockPrice),
+                       make_ArrayHandleMultiplexer0(this->OptionStrike),
+                       make_ArrayHandleMultiplexer0(this->OptionYears));
+    }
+
+    virtual std::string Type() const
+    {
+      std::stringstream desc;
+      desc << "Multiplexer-"
+           << make_ArrayHandleMultiplexer0(this->StockPrice)
+                .GetStorage()
+                .GetArrayHandleVariant()
+                .GetIndex();
+      return desc.str();
+    }
+  };
+
+  template <typename Value, typename DeviceAdapter>
+  struct BenchBlackScholesMultiplexerN : public BenchBlackScholes<Value, DeviceAdapter>
+  {
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      return this->Run(make_ArrayHandleMultiplexerN(this->StockPrice),
+                       make_ArrayHandleMultiplexerN(this->OptionStrike),
+                       make_ArrayHandleMultiplexerN(this->OptionYears));
+    }
+
+    virtual std::string Type() const
+    {
+      std::stringstream desc;
+      desc << "Multiplexer-"
+           << make_ArrayHandleMultiplexerN(this->StockPrice)
+                .GetStorage()
+                .GetArrayHandleVariant()
+                .GetIndex();
+      return desc.str();
+    }
+  };
+
   VTKM_MAKE_BENCHMARK(BlackScholes, BenchBlackScholes);
   VTKM_MAKE_BENCHMARK(BlackScholesDynamic, BenchBlackScholesDynamic);
+  VTKM_MAKE_BENCHMARK(BlackScholesMultiplexer0, BenchBlackScholesMultiplexer0);
+  VTKM_MAKE_BENCHMARK(BlackScholesMultiplexerN, BenchBlackScholesMultiplexerN);
 
   template <typename Value, typename DeviceAdapter>
   struct BenchMath
@@ -470,13 +545,11 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      using MathTypes = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
-
       vtkm::cont::ArrayHandle<Value> temp1;
       vtkm::cont::ArrayHandle<Value> temp2;
-      vtkm::cont::VariantArrayHandleBase<MathTypes> dinput(this->InputHandle);
-      ValueVariantHandle dtemp1(temp1);
-      ValueVariantHandle dtemp2(temp2);
+      auto dinput = vtkm::cont::make_ArrayHandleVirtual(this->InputHandle);
+      auto dtemp1 = vtkm::cont::make_ArrayHandleVirtual(temp1);
+      auto dtemp2 = vtkm::cont::make_ArrayHandleVirtual(temp2);
 
       Timer timer{ DeviceAdapter() };
       timer.Start();
@@ -493,8 +566,84 @@ private:
     virtual std::string Type() const { return std::string("Dynamic"); }
   };
 
+  template <typename Value, typename DeviceAdapter>
+  struct BenchMathMultiplexer0 : public BenchMath<Value, DeviceAdapter>
+  {
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      vtkm::cont::ArrayHandle<Value> temp1;
+      vtkm::cont::ArrayHandle<Value> temp2;
+      auto mInput = make_ArrayHandleMultiplexer0(this->InputHandle);
+      auto mTemp1 = make_ArrayHandleMultiplexer0(temp1);
+      auto mTemp2 = make_ArrayHandleMultiplexer0(temp2);
+
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+
+      vtkm::worklet::Invoker invoke(DeviceAdapter{});
+      invoke(Mag{}, mInput, mTemp1);
+      invoke(Sin{}, mTemp1, mTemp2);
+      invoke(Square{}, mTemp2, mTemp1);
+      invoke(Cos{}, mTemp1, mTemp2);
+
+      return timer.GetElapsedTime();
+    }
+
+    virtual std::string Type() const
+    {
+      std::stringstream desc;
+      desc << "Multiplexer-"
+           << make_ArrayHandleMultiplexer0(this->InputHandle)
+                .GetStorage()
+                .GetArrayHandleVariant()
+                .GetIndex();
+      return desc.str();
+    }
+  };
+
+  template <typename Value, typename DeviceAdapter>
+  struct BenchMathMultiplexerN : public BenchMath<Value, DeviceAdapter>
+  {
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      vtkm::cont::ArrayHandle<Value> temp1;
+      vtkm::cont::ArrayHandle<Value> temp2;
+      auto mInput = make_ArrayHandleMultiplexerN(this->InputHandle);
+      auto mTemp1 = make_ArrayHandleMultiplexerN(temp1);
+      auto mTemp2 = make_ArrayHandleMultiplexerN(temp2);
+
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+
+      vtkm::worklet::Invoker invoke(DeviceAdapter{});
+      invoke(Mag{}, mInput, mTemp1);
+      invoke(Sin{}, mTemp1, mTemp2);
+      invoke(Square{}, mTemp2, mTemp1);
+      invoke(Cos{}, mTemp1, mTemp2);
+
+      return timer.GetElapsedTime();
+    }
+
+    virtual std::string Type() const
+    {
+      std::stringstream desc;
+      desc << "Multiplexer-"
+           << make_ArrayHandleMultiplexerN(this->InputHandle)
+                .GetStorage()
+                .GetArrayHandleVariant()
+                .GetIndex();
+      return desc.str();
+    }
+  };
+
   VTKM_MAKE_BENCHMARK(Math, BenchMath);
   VTKM_MAKE_BENCHMARK(MathDynamic, BenchMathDynamic);
+  VTKM_MAKE_BENCHMARK(MathMultiplexer0, BenchMathMultiplexer0);
+  VTKM_MAKE_BENCHMARK(MathMultiplexerN, BenchMathMultiplexerN);
 
   template <typename Value, typename DeviceAdapter>
   struct BenchFusedMath
@@ -517,18 +666,21 @@ private:
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
     }
 
-    VTKM_CONT
-    vtkm::Float64 operator()()
+    template <typename InputHandleType>
+    VTKM_CONT static vtkm::Float64 Run(const InputHandleType& inputHandle)
     {
-      vtkm::cont::ArrayHandle<Value> result;
+      vtkm::cont::ArrayHandle<Value, StorageTag> result;
 
       Timer timer{ DeviceAdapter() };
       timer.Start();
       vtkm::worklet::DispatcherMapField<FusedMath> dispatcher;
-      dispatcher.Invoke(this->InputHandle, result);
+      dispatcher.Invoke(inputHandle, result);
 
       return timer.GetElapsedTime();
     }
+
+    VTKM_CONT
+    vtkm::Float64 operator()() { return this->Run(this->InputHandle); }
 
     virtual std::string Type() const { return std::string("Static"); }
 
@@ -550,25 +702,60 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      using MathTypes = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
-
-      vtkm::cont::VariantArrayHandleBase<MathTypes> dinput(this->InputHandle);
-
-      vtkm::cont::ArrayHandle<Value, StorageTag> result;
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      vtkm::worklet::DispatcherMapField<FusedMath> dispatcher;
-      dispatcher.Invoke(dinput, result);
-
-      return timer.GetElapsedTime();
+      return this->Run(vtkm::cont::make_ArrayHandleVirtual(this->InputHandle));
     }
 
     virtual std::string Type() const { return std::string("Dynamic"); }
   };
 
+  template <typename Value, typename DeviceAdapter>
+  struct BenchFusedMathMultiplexer0 : public BenchFusedMath<Value, DeviceAdapter>
+  {
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      return this->Run(make_ArrayHandleMultiplexer0(this->InputHandle));
+    }
+
+    virtual std::string Type() const
+    {
+      std::stringstream desc;
+      desc << "Multiplexer-"
+           << make_ArrayHandleMultiplexer0(this->InputHandle)
+                .GetStorage()
+                .GetArrayHandleVariant()
+                .GetIndex();
+      return desc.str();
+    }
+  };
+
+  template <typename Value, typename DeviceAdapter>
+  struct BenchFusedMathMultiplexerN : public BenchFusedMath<Value, DeviceAdapter>
+  {
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      return this->Run(make_ArrayHandleMultiplexerN(this->InputHandle));
+    }
+
+    virtual std::string Type() const
+    {
+      std::stringstream desc;
+      desc << "Multiplexer-"
+           << make_ArrayHandleMultiplexerN(this->InputHandle)
+                .GetStorage()
+                .GetArrayHandleVariant()
+                .GetIndex();
+      return desc.str();
+    }
+  };
+
   VTKM_MAKE_BENCHMARK(FusedMath, BenchFusedMath);
   VTKM_MAKE_BENCHMARK(FusedMathDynamic, BenchFusedMathDynamic);
+  VTKM_MAKE_BENCHMARK(FusedMathMultiplexer0, BenchFusedMathMultiplexer0);
+  VTKM_MAKE_BENCHMARK(FusedMathMultiplexerN, BenchFusedMathMultiplexerN);
 
   template <typename Value, typename DeviceAdapter>
   struct BenchEdgeInterp
@@ -655,9 +842,9 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      InterpVariantHandle dfield(this->FieldHandle);
-      ValueVariantHandle dweight(this->WeightHandle);
-      EdgeIdVariantHandle dedges(this->EdgePairHandle);
+      auto dfield = vtkm::cont::make_ArrayHandleVirtual(this->FieldHandle);
+      auto dweight = vtkm::cont::make_ArrayHandleVirtual(this->WeightHandle);
+      auto dedges = vtkm::cont::make_ArrayHandleVirtual(this->EdgePairHandle);
       vtkm::cont::ArrayHandle<Value> result;
 
       Timer timer{ DeviceAdapter() };
@@ -877,6 +1064,8 @@ public:
       std::cout << DIVIDER << "\nBenchmarking BlackScholes\n";
       VTKM_RUN_BENCHMARK(BlackScholes, ValueTypes(), id);
       VTKM_RUN_BENCHMARK(BlackScholesDynamic, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(BlackScholesMultiplexer0, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(BlackScholesMultiplexerN, ValueTypes(), id);
     }
 
     if (benchmarks & MATH)
@@ -884,6 +1073,8 @@ public:
       std::cout << DIVIDER << "\nBenchmarking Multiple Math Worklets\n";
       VTKM_RUN_BENCHMARK(Math, ValueTypes(), id);
       VTKM_RUN_BENCHMARK(MathDynamic, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(MathMultiplexer0, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(MathMultiplexerN, ValueTypes(), id);
     }
 
     if (benchmarks & FUSED_MATH)
@@ -891,6 +1082,8 @@ public:
       std::cout << DIVIDER << "\nBenchmarking Single Fused Math Worklet\n";
       VTKM_RUN_BENCHMARK(FusedMath, ValueTypes(), id);
       VTKM_RUN_BENCHMARK(FusedMathDynamic, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(FusedMathMultiplexer0, ValueTypes(), id);
+      VTKM_RUN_BENCHMARK(FusedMathMultiplexerN, ValueTypes(), id);
     }
 
     if (benchmarks & INTERPOLATE_FIELD)

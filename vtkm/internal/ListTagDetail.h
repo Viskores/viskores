@@ -120,6 +120,40 @@ struct ListContainsImpl
 };
 
 //-----------------------------------------------------------------------------
+template <typename BrigandList>
+struct ListSizeImpl;
+
+template <typename... Ts>
+struct ListSizeImpl<brigand::list<Ts...>>
+{
+  static constexpr vtkm::IdComponent value = vtkm::IdComponent{ sizeof...(Ts) };
+};
+
+//-----------------------------------------------------------------------------
+template <typename Type, typename RemainingList, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl;
+
+template <typename Type, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl<Type, brigand::list<>, NumBefore>
+{
+  // Could not find index.
+  static constexpr vtkm::IdComponent value = -1;
+};
+
+template <typename Type, typename T1, typename... RemainingList, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl<Type, brigand::list<T1, RemainingList...>, NumBefore>
+{
+  static constexpr vtkm::IdComponent value =
+    ListIndexOfImpl<Type, brigand::list<RemainingList...>, NumBefore + 1>::value;
+};
+
+template <typename Type, typename... RemainingList, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl<Type, brigand::list<Type, RemainingList...>, NumBefore>
+{
+  static constexpr vtkm::IdComponent value = NumBefore;
+};
+
+//-----------------------------------------------------------------------------
 template <class T, class U, class ListTag>
 struct intersect_tags
 {
