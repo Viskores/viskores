@@ -66,6 +66,7 @@ set(headers
   SplitSharpEdges.h
   StableSortIndices.h
   StreamLineUniformGrid.h
+  StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
