@@ -69,6 +69,12 @@ public:
   VTKM_CONT
   bool GetGenerateNormals() const { return this->GenerateNormals; }
 
+  /// Set/Get whether to append the ids of the intersected edges to the vertices of the isosurface triangles. Off by default.
+  VTKM_CONT
+  void SetAddInterpolationEdgeIds(bool on) { this->AddInterpolationEdgeIds = on; }
+  VTKM_CONT
+  bool GetAddInterpolationEdgeIds() const { return this->AddInterpolationEdgeIds; }
+
   /// Set/Get whether the fast path should be used for normals computation for
   /// structured datasets. Off by default.
   VTKM_CONT
@@ -112,9 +118,11 @@ public:
 private:
   std::vector<vtkm::Float64> IsoValues;
   bool GenerateNormals;
+  bool AddInterpolationEdgeIds;
   bool ComputeFastNormalsForStructured;
   bool ComputeFastNormalsForUnstructured;
   std::string NormalArrayName;
+  std::string InterpolationEdgeIdsArrayName;
   vtkm::worklet::MarchingCubes Worklet;
 };
 
