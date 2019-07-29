@@ -29,7 +29,7 @@ public:
 
   LagrangianStructures();
 
-  void SetStepSize(ScalarType s) { this->StepSize = s; }
+  void SetStepSize(Scalar s) { this->StepSize = s; }
   Scalar GetStepSize() { return this->StepSize; }
 
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
@@ -38,19 +38,20 @@ public:
   void SetAdvectionTime(Scalar advectionTime) { this->AdvectionTime = advectionTime; }
   Scalar GetAdvectionTime() { return this->AdvectionTime; }
 
-  void SetUseAuxiliaryGrid(bool useAuxiliaryGrid){ this->UseAuxiliaryGrid = useAuxiliaryGrid };
+  void SetUseAuxiliaryGrid(bool useAuxiliaryGrid) { this->UseAuxiliaryGrid = useAuxiliaryGrid; }
   bool GetUseAuxiliaryGrid() { return this->UseAuxiliaryGrid; }
 
-  void SetAuxiliaryGridDimensions(vtkm::Id3 auxiliaryDims){ this->AuxiliaryDims = auxiliaryDims };
-  vtkm::Id3 GetAuxiliaryGridDimensions(){ return this->AuxiliaryDims };
+  void SetAuxiliaryGridDimensions(vtkm::Id3 auxiliaryDims) { this->AuxiliaryDims = auxiliaryDims; }
+  vtkm::Id3 GetAuxiliaryGridDimensions() { return this->AuxiliaryDims; }
 
-  void SetUseFlowMapOutput(bool useFLowMapOutput){ this->UseFlowMapOutput = useFlowMapOutput };
+  void SetUseFlowMapOutput(bool useFlowMapOutput) { this->UseFlowMapOutput = useFlowMapOutput; }
   bool GetUseFlowMapOutput() { return this->UseFlowMapOutput; }
 
-  inline void SetFlowMapOutput(vtkm::cont::ArrayHandle<Vector>& flowMap){
-    this->FlowMapOutput = flowMap
-  };
-  inline vtkm::cont::ArrayHandle<Vector> GetFlowMapOutput(){ return this->FlowMapOutput };
+  inline void SetFlowMapOutput(vtkm::cont::ArrayHandle<Vector>& flowMap)
+  {
+    this->FlowMapOutput = flowMap;
+  }
+  inline vtkm::cont::ArrayHandle<Vector> GetFlowMapOutput() { return this->FlowMapOutput; }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -68,13 +69,12 @@ public:
                             vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
-  vtkm::worklet::LagrangianStructures Worklet;
   Scalar StepSize;
   vtkm::Id NumberOfSteps;
   Scalar AdvectionTime;
   bool UseAuxiliaryGrid = false;
   vtkm::Id3 AuxiliaryDims;
-  bool UseFlowMapOutput;
+  bool UseFlowMapOutput = false;
   vtkm::cont::ArrayHandle<Vector> FlowMapOutput;
 };
 

@@ -39,29 +39,23 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   using Structured2DType = vtkm::cont::CellSetStructured<2>;
   using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
-  vtkm::cont::ArrayHandle<Point> points;
-  vtkm::cont::ArrayHandle<Point> vectors;
-  // From the sample dataset extract points and vectors
-  vtkm::cont::ArrayCopy(input.GetCoordinateSystem().GetData(), points);
-  input.GetField(variableName, vtkm::cont::Field::Association::POINTS).GetData().CopyTo(vectors);
-
-  using FieldHandle = vtkm::cont::ArrayHandle<Point>;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
   using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
   using Integrator = vtkm::worklet::particleadvection::RK4Integrator<GridEvaluator>;
 
-  Scalar stepLength = this->GetStepLength();
-  vtkm::Id numberOfSteps = this->GetNumberOfStep();
+  Scalar stepSize = this->GetStepSize();
+  vtkm::Id numberOfSteps = this->GetNumberOfSteps();
 
   vtkm::cont::CoordinateSystem coordinates = input.GetCoordinateSystem();
   vtkm::cont::DynamicCellSet cellset = input.GetCellSet();
 
-  vtkm::cont::Dataset lcsInput;
+  vtkm::cont::DataSet lcsInput;
   if (this->GetUseAuxiliaryGrid())
   {
     vtkm::Id3 lcsGridDims = this->GetAuxiliaryGridDimensions();
-    vtkm::Bounds inputBounds = this->input.GetBounds();
-    vtkm::Vec<Scalar, 3> origin(inputBounds.X.Min, inputBounds.Y.Min, inputBounds.Z.Min);
-    vtkm::Vec<Scalar, 3> spacing;
+    vtkm::Bounds inputBounds = coordinates.GetBounds();
+    Vector origin(inputBounds.X.Min, inputBounds.Y.Min, inputBounds.Z.Min);
+    Vector spacing;
     spacing[0] = inputBounds.X.Length() / static_cast<Scalar>(lcsGridDims[0] - 1);
     spacing[1] = inputBounds.Y.Length() / static_cast<Scalar>(lcsGridDims[1] - 1);
     spacing[2] = inputBounds.Z.Length() / static_cast<Scalar>(lcsGridDims[2] - 1);
@@ -73,8 +67,8 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
     // Check if input dataset is structured.
     // If not, we cannot proceed.
     if (!(cellset.IsType<Structured2DType>() || cellset.IsType<Structured3DType>()))
-      throw vtkm::cont::ErrorFilterExecution("Provided data is not structured, 
-                                              provide parameters for an auxiliary grid.");
+      throw vtkm::cont::ErrorFilterExecution(
+        "Provided data is not structured, provide parameters for an auxiliary grid.");
     lcsInput = input;
   }
   vtkm::cont::ArrayHandle<Vector> lcsInputPoints, lcsOutputPoints;
@@ -85,14 +79,14 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
     // and the input points
     lcsOutputPoints = this->GetFlowMapOutput();
     if (lcsInputPoints.GetNumberOfValues() != lcsOutputPoints.GetNumberOfValues())
-      throw vtkm::cont::ErrorFilterExecution("Provided flow map does not correspond
-                                              to the input points for LCS filter.");
+      throw vtkm::cont::ErrorFilterExecution(
+        "Provided flow map does not correspond to the input points for LCS filter.");
   }
   else
   {
     std::cout << "Advecting particles" << std::endl;
     GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), field);
-    Integrator integrator(evaluator, stepLength);
+    Integrator integrator(evaluator, stepSize);
     vtkm::worklet::ParticleAdvection particles;
     vtkm::worklet::ParticleAdvectionResult advectionResult;
     vtkm::cont::ArrayHandle<Vector> advectionPoints;

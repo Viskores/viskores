@@ -152,10 +152,10 @@ public:
     vtkm::MatrixSetRow(jacobian, 0, vtkm::Vec<vtkm::FloatDefault, 2>(f1x, f1y));
     vtkm::MatrixSetRow(jacobian, 1, vtkm::Vec<vtkm::FloatDefault, 2>(f2x, f2y));
 
-    ComputeLeftCauchyGreenTensor(jacobian);
+    detail::ComputeLeftCauchyGreenTensor(jacobian);
 
     vtkm::Vec<vtkm::FloatDefault, 2> eigenValues;
-    Jacobi(jacobian, eigenValues);
+    detail::Jacobi(jacobian, eigenValues);
 
     vtkm::FloatDefault delta = eigenValues[0];
     // Check if we need to clamp these values
@@ -246,10 +246,10 @@ public:
     vtkm::MatrixSetRow(jacobian, 1, vtkm::Vec<vtkm::FloatDefault, 3>(f2x, f2y, f2z));
     vtkm::MatrixSetRow(jacobian, 2, vtkm::Vec<vtkm::FloatDefault, 3>(f3x, f3y, f3z));
 
-    ComputeLeftCauchyGreenTensor(jacobian);
+    detail::ComputeLeftCauchyGreenTensor(jacobian);
 
     vtkm::Vec<vtkm::FloatDefault, 3> eigenValues;
-    Jacobi(jacobian, eigenValues);
+    detail::Jacobi(jacobian, eigenValues);
 
     vtkm::FloatDefault delta = eigenValues[0];
     if (delta == 0.0)

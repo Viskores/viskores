@@ -9,7 +9,7 @@
 ##============================================================================
 
 set(headers
-  LagrangianStrucutreHelpers.h
+  LagrangianStructureHelpers.h
   )
 
 vtkm_declare_headers(${headers})
