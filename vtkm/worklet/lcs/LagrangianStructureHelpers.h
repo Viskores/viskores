@@ -165,22 +165,22 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
   T D = (r * r * r - q * q);
   T phi = 0.0f;
 
-  if (D < std::numeric_limits<T>::epsilon())
+  if (D < vtkm::Epsilon<T>())
     phi = 0.0f;
   else
   {
-    phi = atanf(sqrt(D) / q) / 3.0f;
+    phi = vtkm::ATan(vtkm::Sqrt(D) / q) / 3.0f;
 
     if (phi < 0)
       phi += M_PI;
   }
 
-  const T sqrt3 = sqrt(3.0f);
-  const T sqrtr = sqrt(r);
+  const T sqrt3 = vtkm::Sqrt(3.0f);
+  const T sqrtr = vtkm::Sqrt(r);
 
   T sinphi = 0.0f, cosphi = 0.0f;
-  sinphi = sinf(phi);
-  cosphi = cosf(phi);
+  sinphi = vtkm::Sin(phi);
+  cosphi = vtkm::Cos(phi);
 
   // Sorted in decreasing order.
   T w0 = x + 2.0 * sqrtr * cosphi;
