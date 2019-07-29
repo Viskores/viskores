@@ -27,39 +27,29 @@ public:
   using Scalar = vtkm::worklet::particleadvection::ScalarType;
   using Vector = vtkm::Vec<Scalar, 3>;
 
-  VTKM_CONT
   LagrangianStructures();
 
-  VTKM_CONT
   void SetStepSize(ScalarType s) { this->StepSize = s; }
-  VTKM_CONT
-  ScalarType GetStepSize() { return this->StepSize; }
+  Scalar GetStepSize() { return this->StepSize; }
 
-  VTKM_CONT
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
-  VTKM_CONT
   vtkm::Id GetNumberOfSteps() { return this->NumberOfSteps; }
 
-  VTKM_CONT
+  void SetAdvectionTime(Scalar advectionTime) { this->AdvectionTime = advectionTime; }
+  Scalar GetAdvectionTime() { return this->AdvectionTime; }
+
   void SetUseAuxiliaryGrid(bool useAuxiliaryGrid){ this->UseAuxiliaryGrid = useAuxiliaryGrid };
-  VTKM_CONT
   bool GetUseAuxiliaryGrid() { return this->UseAuxiliaryGrid; }
 
-  VTKM_CONT
   void SetAuxiliaryGridDimensions(vtkm::Id3 auxiliaryDims){ this->AuxiliaryDims = auxiliaryDims };
-  VTKM_CONT
   vtkm::Id3 GetAuxiliaryGridDimensions(){ return this->AuxiliaryDims };
 
-  VTKM_CONT
   void SetUseFlowMapOutput(bool useFLowMapOutput){ this->UseFlowMapOutput = useFlowMapOutput };
-  VTKM_CONT
   bool GetUseFlowMapOutput() { return this->UseFlowMapOutput; }
 
-  VTKM_CONT
   inline void SetFlowMapOutput(vtkm::cont::ArrayHandle<Vector>& flowMap){
     this->FlowMapOutput = flowMap
   };
-  VTKM_CONT
   inline vtkm::cont::ArrayHandle<Vector> GetFlowMapOutput(){ return this->FlowMapOutput };
 
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -81,6 +71,7 @@ private:
   vtkm::worklet::LagrangianStructures Worklet;
   Scalar StepSize;
   vtkm::Id NumberOfSteps;
+  Scalar AdvectionTime;
   bool UseAuxiliaryGrid = false;
   vtkm::Id3 AuxiliaryDims;
   bool UseFlowMapOutput;

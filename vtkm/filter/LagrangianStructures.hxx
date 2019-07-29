@@ -15,6 +15,8 @@
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
+#include <vtkm/worklet/LagrangianStructures.h>
+
 namespace vtkm
 {
 namespace filter
@@ -23,15 +25,7 @@ namespace filter
 //-----------------------------------------------------------------------------
 inline VTKM_CONT LagrangianStructures::LagrangianStructures()
   : vtkm::filter::FilterDataSetWithField<LagrangianStructures>()
-  , Worklet()
 {
-}
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT void LagrangianStructures::SetSeeds(
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& seeds)
-{
-  this->Seeds = seeds;
 }
 
 //-----------------------------------------------------------------------------
@@ -55,53 +49,84 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
   using Integrator = vtkm::worklet::particleadvection::RK4Integrator<GridEvaluator>;
 
-  Scalar stepLength = static_cast<Scalar>(0.025);
-  vtkm::Id numberOfSteps = 500;
+  Scalar stepLength = this->GetStepLength();
+  vtkm::Id numberOfSteps = this->GetNumberOfStep();
 
   vtkm::cont::CoordinateSystem coordinates = input.GetCoordinateSystem();
   vtkm::cont::DynamicCellSet cellset = input.GetCellSet();
 
-  GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), vectors);
-  Integrator integrator(evaluator, stepLength);
-
-  vtkm::worklet::ParticleAdvection particles;
-  vtkm::worklet::ParticleAdvectionResult res;
-
-  std::cout << "Advecting particles" << std::endl;
-  res = particles.Run(integrator, points, numberOfSteps);
-  std::cout << "Advected particles" << std::endl;
-
-  vtkm::cont::ArrayHandle<Point> outputPoints;
-  vtkm::cont::ArrayCopy(res.positions, outputPoints);
-  vtkm::cont::ArrayCopy(input.GetCoordinateSystem().GetData(), points);
-
+  vtkm::cont::Dataset lcsInput;
+  if (this->GetUseAuxiliaryGrid())
+  {
+    vtkm::Id3 lcsGridDims = this->GetAuxiliaryGridDimensions();
+    vtkm::Bounds inputBounds = this->input.GetBounds();
+    vtkm::Vec<Scalar, 3> origin(inputBounds.X.Min, inputBounds.Y.Min, inputBounds.Z.Min);
+    vtkm::Vec<Scalar, 3> spacing;
+    spacing[0] = inputBounds.X.Length() / static_cast<Scalar>(lcsGridDims[0] - 1);
+    spacing[1] = inputBounds.Y.Length() / static_cast<Scalar>(lcsGridDims[1] - 1);
+    spacing[2] = inputBounds.Z.Length() / static_cast<Scalar>(lcsGridDims[2] - 1);
+    vtkm::cont::DataSetBuilderUniform uniformDatasetBuilder;
+    lcsInput = uniformDatasetBuilder.Create(lcsGridDims, origin, spacing);
+  }
+  else
+  {
+    // Check if input dataset is structured.
+    // If not, we cannot proceed.
+    if (!(cellset.IsType<Structured2DType>() || cellset.IsType<Structured3DType>()))
+      throw vtkm::cont::ErrorFilterExecution("Provided data is not structured, 
+                                              provide parameters for an auxiliary grid.");
+    lcsInput = input;
+  }
+  vtkm::cont::ArrayHandle<Vector> lcsInputPoints, lcsOutputPoints;
+  vtkm::cont::ArrayCopy(lcsInput.GetCoordinateSystem().GetData(), lcsInputPoints);
+  if (this->GetUseFlowMapOutput())
+  {
+    // Check if there is a 1:1 correspondense between the flow map
+    // and the input points
+    lcsOutputPoints = this->GetFlowMapOutput();
+    if (lcsInputPoints.GetNumberOfValues() != lcsOutputPoints.GetNumberOfValues())
+      throw vtkm::cont::ErrorFilterExecution("Provided flow map does not correspond
+                                              to the input points for LCS filter.");
+  }
+  else
+  {
+    std::cout << "Advecting particles" << std::endl;
+    GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), field);
+    Integrator integrator(evaluator, stepLength);
+    vtkm::worklet::ParticleAdvection particles;
+    vtkm::worklet::ParticleAdvectionResult advectionResult;
+    vtkm::cont::ArrayHandle<Vector> advectionPoints;
+    vtkm::cont::ArrayCopy(lcsInputPoints, advectionPoints);
+    advectionResult = particles.Run(integrator, advectionPoints, numberOfSteps);
+    std::cout << "Advected particles" << std::endl;
+    lcsOutputPoints = advectionResult.positions;
+  }
   // FTLE output field
   vtkm::cont::ArrayHandle<Scalar> outputField;
-  //std::cout << "Calculating FTLE field" << std::endl;
-  vtkm::FloatDefault advectionTime = stepLength * numberOfSteps;
-  std::cout << "Calculating FTLE" << std::endl;
-  detail::CalculateLCSField(cellset, points, outputPoints, advectionTime, outputField);
-  std::cout << "Calculated FTLE" << std::endl;
+  std::cout << "Calculating FTLE field" << std::endl;
+  vtkm::FloatDefault advectionTime = this->GetAdvectionTime();
 
-  if (cellSet.IsType<Structured2DType>())
+  vtkm::cont::DynamicCellSet lcsCellSet = lcsInput.GetCellSet();
+  if (lcsCellSet.IsType<Structured2DType>())
   {
-    using AnalysisType = detail::FTLECalc<2>;
-    AnalysisType ftleCalculator(advectionTime, cellSet);
+    using AnalysisType = vtkm::worklet::LagrangianStructures<2>;
+    AnalysisType ftleCalculator(advectionTime, lcsCellSet);
     vtkm::worklet::DispatcherMapField<AnalysisType> dispatcher(ftleCalculator);
-    dispatcher.Invoke(inputPoints, outputPoints, outputField);
+    dispatcher.Invoke(lcsInputPoints, lcsOutputPoints, outputField);
   }
-  else if (cellSet.IsType<Structured3DType>())
+  else if (lcsCellSet.IsType<Structured3DType>())
   {
-    using AnalysisType = detail::FTLECalc<3>;
-    AnalysisType ftleCalculator(advectionTime, cellSet);
+    using AnalysisType = vtkm::worklet::LagrangianStructures<3>;
+    AnalysisType ftleCalculator(advectionTime, lcsCellSet);
     vtkm::worklet::DispatcherMapField<AnalysisType> dispatcher(ftleCalculator);
-    dispatcher.Invoke(inputPoints, outputPoints, outputField);
+    dispatcher.Invoke(lcsInputPoints, lcsOutputPoints, outputField);
   }
 
+  std::cout << "Calculated FTLE field" << std::endl;
   vtkm::cont::DataSet output;
   vtkm::cont::DataSetFieldAdd fieldAdder;
-  output.AddCoordinateSystem(input.GetCoordinateSystem());
-  output.AddCellSet(input.GetCellSet());
+  output.AddCoordinateSystem(lcsInput.GetCoordinateSystem());
+  output.AddCellSet(lcsInput.GetCellSet());
   fieldAdder.AddPointField(output, "FTLE", outputField);
   return output;
 }

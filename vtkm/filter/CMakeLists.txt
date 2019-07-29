@@ -40,6 +40,7 @@ set(headers
   Histogram.h
   ImageConnectivity.h
   Lagrangian.h
+  LagrangianStructures.h
   MarchingCubes.h
   Mask.h
   MaskPoints.h
@@ -103,6 +104,7 @@ set(header_template_sources
   Histogram.hxx
   ImageConnectivity.hxx
   Lagrangian.hxx
+  LagrangianStructures.hxx
   MarchingCubes.hxx
   Mask.hxx
   MaskPoints.hxx
