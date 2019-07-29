@@ -14,6 +14,45 @@
 
 #include <vtkm/ListTag.h>
 
+
+// It would make sense to put this in its own header file, but it is hard to imagine needing
+// aligned_union anywhere else.
+#if (defined(VTKM_GCC) && (__GNUC__ == 4)) || (defined(VTKM_ICC) && (__INTEL_COMPILER < 1800))
+#include <algorithm>
+namespace vtkmstd
+{
+template <std::size_t... Xs>
+struct max_size;
+template <std::size_t X>
+struct max_size<X>
+{
+  static constexpr std::size_t value = X;
+};
+template <std::size_t X0, std::size_t... Xs>
+struct max_size<X0, Xs...>
+{
+  static constexpr std::size_t other_value = max_size<Xs...>::value;
+  static constexpr std::size_t value = (other_value > X0) ? other_value : X0;
+};
+// This implementation comes from https://en.cppreference.com/w/cpp/types/aligned_union
+template <std::size_t Len, class... Types>
+struct aligned_union
+{
+  static constexpr std::size_t alignment_value = vtkmstd::max_size<alignof(Types)...>::value;
+
+  struct type
+  {
+    alignas(alignment_value) char _s[vtkmstd::max_size<Len, sizeof(Types)...>::value];
+  };
+};
+} // namespace vtkmstd
+#else
+namespace vtkmstd
+{
+using std::aligned_union;
+} // namespace vtkmstd
+#endif
+
 namespace vtkm
 {
 namespace internal
@@ -51,7 +90,7 @@ class Variant
   {
   };
 
-  typename std::aligned_union<0, Ts...>::type Storage;
+  typename vtkmstd::aligned_union<0, Ts...>::type Storage;
 
   VTKM_EXEC_CONT void* GetPointer() { return reinterpret_cast<void*>(&this->Storage); }
   VTKM_EXEC_CONT const void* GetPointer() const
