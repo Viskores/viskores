@@ -96,47 +96,6 @@ indices = indicesInMemory;
 
 All the code that uses `indices` will continue to work.
 
-If `ArrayHandleMultiplexer` is created with only a single template
-parameter, then the parameter is interpreted differently. Instead of being
-interpreted as a type of array, it is interpreted as the `ValueType` of the
-array. In this case, a default set of arrays will set for you. The basic
-storage type array will always be part of this list.
-
-``` cpp
-vtkm::cont::ArrayHandleMultiplexer<vtkm::FloatDefault> multiplexerArray;
-
-vtkm::cont::ArrayHandle<vtkm::FloatDefault> basicArray;
-// Fill basicArray...
-
-multiplexerArray = basicArray;
-```
-
-The default list of arrays includes `ArrayHandleCast` from pretty much any
-basic type of the same vector length. This allows you to get an
-`ArrayHandleMultiplexer` of some known type and then use it for other
-types. For example, you can use an integer-based array in a place where you
-expect a floating point field.
-
-``` cpp
-vtkm::cont::ArrayHandleMultiplexer<vtkm::FloatDefault> multiplexerArray;
-
-vtkm::cont::ArrayHandle<vtkm::Int32> integerField;
-// Fill integerField...
-
-multiplexerArray = vtkm::cont::make_ArrayHandleCast<vtkm::FloatDefault>(integerField);
-```
-
-We (as developers) also have the option of putting in special storage types
-for particular value types. For example, the default list of arrays for a
-`Vec<FloatDefault,3>` include `ArrayHandleUniformPointCoordinates` (whereas
-this array cannot be placed in other default lists).
-
-``` cpp
-vtkm::cont::ArrayHandleMultiplexer<vtkm::Vec<vtkm::FloatDefault, 3>> multiplexerArray;
-
-multiplexerArray = vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(50));
-```
-
 ## Variant
 
 To implement `ArrayHandleMultiplexer`, the class `vtkm::internal::Variant`
