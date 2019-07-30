@@ -375,13 +375,18 @@ private:
 namespace detail
 {
 
-template <typename ValueType, typename... ArrayHandleTypes>
+template <typename... ArrayHandleTypes>
 struct ArrayHandleMultiplexerTraits
 {
-  // If there is a compile error in this group of lines, then the list tag given to
-  // ArrayHandleMultiplexer must contain an invalid ArrayHandle. That could mean that
-  // it is not an ArrayHandle type or it could mean that the value type does not match
-  // the appropriate value type.
+  using ArrayHandleType0 =
+    brigand::at<brigand::list<ArrayHandleTypes...>, std::integral_constant<vtkm::IdComponent, 0>>;
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType0);
+  using ValueType = typename ArrayHandleType0::ValueType;
+
+  // If there is a compile error in this group of lines, then one of the array types given to
+  // ArrayHandleMultiplexer must contain an invalid ArrayHandle. That could mean that it is not an
+  // ArrayHandle type or it could mean that the value type does not match the appropriate value
+  // type.
   template <typename ArrayHandle>
   struct CheckArrayHandleTransform
   {
@@ -409,154 +414,6 @@ struct ArrayHandleMultiplexerTraits
 };
 }
 
-/// \brief Base implementation of \c ArrayHandleMultiplexer.
-///
-/// This behavies the same as \c ArrayHandleMultiplexer, but the template parameters are
-/// more explicit. The first template parameter must be the \c ValueType of the array.
-/// The remaining template parameters are the array handles to support.
-///
-template <typename ValueType_, typename... ArrayHandleTypes>
-class ArrayHandleMultiplexerBase
-  : public vtkm::cont::ArrayHandle<
-      ValueType_,
-      typename detail::ArrayHandleMultiplexerTraits<ValueType_, ArrayHandleTypes...>::StorageTag>
-{
-  using Traits = detail::ArrayHandleMultiplexerTraits<ValueType_, ArrayHandleTypes...>;
-
-public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleMultiplexerBase,
-                             (ArrayHandleMultiplexerBase<ValueType_, ArrayHandleTypes...>),
-                             (vtkm::cont::ArrayHandle<ValueType_, typename Traits::StorageTag>));
-
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
-  template <typename RealStorageTag>
-  VTKM_CONT ArrayHandleMultiplexerBase(
-    const vtkm::cont::ArrayHandle<ValueType, RealStorageTag>& src)
-    : Superclass(StorageType(src))
-  {
-  }
-
-  template <typename RealStorageTag>
-  VTKM_CONT ArrayHandleMultiplexerBase(vtkm::cont::ArrayHandle<ValueType, RealStorageTag>&& rhs)
-    : Superclass(StorageType(std::move(rhs)))
-  {
-  }
-};
-
-namespace internal
-{
-
-namespace detail
-{
-
-template <typename ValueType>
-struct MakeArrayListFromStorage
-{
-  template <typename S>
-  using Transform = vtkm::cont::ArrayHandle<ValueType, S>;
-};
-
-template <typename ValueType>
-struct SupportedArrays
-  : vtkm::ListTagTransform<vtkm::cont::StorageListTagSupported,
-                           MakeArrayListFromStorage<ValueType>::template Transform>
-{
-};
-
-template <typename DestType, typename SrcTypeList>
-struct MakeCastArrayListImpl
-{
-  using TypeStoragePairs = vtkm::ListCrossProduct<SrcTypeList, vtkm::cont::StorageListTagSupported>;
-
-  template <typename Pair>
-  struct PairToCastArrayImpl;
-  template <typename T, typename S>
-  struct PairToCastArrayImpl<brigand::list<T, S>>
-  {
-    using Type = vtkm::cont::ArrayHandleCast<DestType, vtkm::cont::ArrayHandle<T, S>>;
-  };
-  template <typename Pair>
-  using PairToCastArray = typename PairToCastArrayImpl<Pair>::Type;
-
-  using Type = vtkm::ListTagTransform<TypeStoragePairs, PairToCastArray>;
-};
-
-template <typename DestType>
-struct MakeCastArrayList
-{
-  using Type = typename MakeCastArrayListImpl<DestType, vtkm::TypeListTagScalarAll>::Type;
-};
-
-template <typename ComponentType, vtkm::IdComponent N>
-struct MakeCastArrayList<vtkm::Vec<ComponentType, N>>
-{
-  template <typename T>
-  using ScalarToVec = vtkm::Vec<T, N>;
-  using SourceTypes = vtkm::ListTagTransform<vtkm::TypeListTagScalarAll, ScalarToVec>;
-
-  using Type = typename MakeCastArrayListImpl<vtkm::Vec<ComponentType, N>, SourceTypes>::Type;
-};
-
-template <typename T>
-struct ArrayHandleMultiplexerDefaultArraysBase
-  : vtkm::ListTagJoin<SupportedArrays<T>, typename MakeCastArrayList<T>::Type>
-{
-};
-
-} // namespace detail
-
-template <typename T>
-struct ArrayHandleMultiplexerDefaultArrays : detail::ArrayHandleMultiplexerDefaultArraysBase<T>
-{
-};
-
-template <>
-struct ArrayHandleMultiplexerDefaultArrays<vtkm::Vec<vtkm::FloatDefault, 3>>
-  : vtkm::ListTagJoin<
-      detail::ArrayHandleMultiplexerDefaultArraysBase<vtkm::Vec<vtkm::FloatDefault, 3>>,
-      vtkm::ListTagBase<
-#if 1
-        vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>>,
-#endif
-        vtkm::cont::ArrayHandleUniformPointCoordinates>>
-{
-};
-
-} // namespace internal
-
-namespace detail
-{
-
-template <typename ValueType, typename ListTagArrays>
-struct ArrayHandleMultiplexerChooseBaseImpl
-{
-  VTKM_IS_LIST_TAG(ListTagArrays);
-
-  template <typename BrigandListArrays>
-  struct BrigandListArraysToArrayHandleMultiplexerBase;
-
-  template <typename... ArrayHandleTypes>
-  struct BrigandListArraysToArrayHandleMultiplexerBase<brigand::list<ArrayHandleTypes...>>
-  {
-    using Type = vtkm::cont::ArrayHandleMultiplexerBase<ValueType, ArrayHandleTypes...>;
-  };
-
-  using Type = typename BrigandListArraysToArrayHandleMultiplexerBase<
-    vtkm::internal::ListTagAsBrigandList<ListTagArrays>>::Type;
-};
-
-template <typename ValueType>
-using ArrayHandleMultiplexerChooseBase = typename ArrayHandleMultiplexerChooseBaseImpl<
-  ValueType,
-  internal::ArrayHandleMultiplexerDefaultArrays<ValueType>>::Type;
-
-} // namespace detail
-
 /// \brief An ArrayHandle that can behave like several other handles.
 ///
 /// An \c ArrayHandleMultiplexer simply redirects its calls to another \c ArrayHandle. However
@@ -568,58 +425,41 @@ using ArrayHandleMultiplexerChooseBase = typename ArrayHandleMultiplexerChooseBa
 /// see which type of array is currently stored in it. It then redirects to the \c ArrayHandle
 /// of the appropriate type.
 ///
+/// The \c ArrayHandleMultiplexer template parameters are all the ArrayHandle types it
+/// should support.
+///
 /// If only one template parameter is given, it is assumed to be the \c ValueType of the
 /// array. A default list of supported arrays is supported (see
 /// \c vtkm::cont::internal::ArrayHandleMultiplexerDefaultArrays.) If multiple template
 /// parameters are given, they are all considered possible \c ArrayHandle types.
 ///
-template <typename... Ts>
-class ArrayHandleMultiplexer;
-
-template <typename ValueType_>
-class ArrayHandleMultiplexer<ValueType_>
-  : public detail::ArrayHandleMultiplexerChooseBase<ValueType_>
+template <typename... ArrayHandleTypes>
+class ArrayHandleMultiplexer
+  : public vtkm::cont::ArrayHandle<
+      typename detail::ArrayHandleMultiplexerTraits<ArrayHandleTypes...>::ValueType,
+      typename detail::ArrayHandleMultiplexerTraits<ArrayHandleTypes...>::StorageTag>
 {
+  using Traits = detail::ArrayHandleMultiplexerTraits<ArrayHandleTypes...>;
+
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleMultiplexer,
-                             (ArrayHandleMultiplexer<ValueType_>),
-                             (detail::ArrayHandleMultiplexerChooseBase<ValueType_>));
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+    ArrayHandleMultiplexer,
+    (ArrayHandleMultiplexer<ArrayHandleTypes...>),
+    (vtkm::cont::ArrayHandle<typename Traits::ValueType, typename Traits::StorageTag>));
 
-  template <typename RealT, typename RealStorageTag>
-  VTKM_CONT ArrayHandleMultiplexer(const vtkm::cont::ArrayHandle<RealT, RealStorageTag>& src)
-    : Superclass(src)
-  {
-  }
+private:
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
-  template <typename RealT, typename RealStorageTag>
-  VTKM_CONT ArrayHandleMultiplexer(vtkm::cont::ArrayHandle<RealT, RealStorageTag>&& rhs)
-    : Superclass(std::move(rhs))
-  {
-  }
-};
-
-template <typename ArrayType0, typename... ArrayTypes>
-class ArrayHandleMultiplexer<ArrayType0, ArrayTypes...>
-  : public vtkm::cont::ArrayHandleMultiplexerBase<typename ArrayType0::ValueType,
-                                                  ArrayType0,
-                                                  ArrayTypes...>
-{
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleMultiplexer,
-                             (ArrayHandleMultiplexer<ArrayType0, ArrayTypes...>),
-                             (vtkm::cont::ArrayHandleMultiplexerBase<typename ArrayType0::ValueType,
-                                                                     ArrayType0,
-                                                                     ArrayTypes...>));
-
-  template <typename RealT, typename RealStorageTag>
-  VTKM_CONT ArrayHandleMultiplexer(const vtkm::cont::ArrayHandle<RealT, RealStorageTag>& src)
-    : Superclass(src)
+  template <typename RealStorageTag>
+  VTKM_CONT ArrayHandleMultiplexer(const vtkm::cont::ArrayHandle<ValueType, RealStorageTag>& src)
+    : Superclass(StorageType(src))
   {
   }
 
-  template <typename RealT, typename RealStorageTag>
-  VTKM_CONT ArrayHandleMultiplexer(vtkm::cont::ArrayHandle<RealT, RealStorageTag>&& rhs)
-    : Superclass(std::move(rhs))
+  template <typename RealStorageTag>
+  VTKM_CONT ArrayHandleMultiplexer(vtkm::cont::ArrayHandle<ValueType, RealStorageTag>&& rhs)
+    : Superclass(StorageType(std::move(rhs)))
   {
   }
 };
