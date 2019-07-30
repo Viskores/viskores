@@ -59,12 +59,11 @@ public:
   }
 
   VTKM_EXEC
-  void GetSpatialBoundary(vtkm::Vec<vtkm::FloatDefault, 3>& dir,
-                          vtkm::Vec<ScalarType, 3>& boundary) const
+  void GetSpatialBoundary(vtkm::Bounds& bounds) const
   {
     // Based on the direction of the velocity we need to be able to tell where
     // the particle will exit the domain from to actually push it out of domain.
-    return this->EvaluatorTwo.GetSpatialBoundary(dir, boundary);
+    return this->EvaluatorTwo.GetSpatialBoundary(bounds);
   }
 
   VTKM_EXEC_CONT
