@@ -93,12 +93,12 @@ struct ValidateNormals
   using NormalsPortalType = decltype(std::declval<NormalsArrayType>().GetPortalConstControl());
   using ConnType =
     decltype(std::declval<CellSetType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
-                                                         vtkm::TopologyElementTagPoint{},
-                                                         vtkm::TopologyElementTagCell{}));
-  using RConnType =
-    decltype(std::declval<CellSetType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
                                                          vtkm::TopologyElementTagCell{},
                                                          vtkm::TopologyElementTagPoint{}));
+  using RConnType =
+    decltype(std::declval<CellSetType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
+                                                         vtkm::TopologyElementTagPoint{},
+                                                         vtkm::TopologyElementTagCell{}));
   using PointsType =
     decltype(std::declval<vtkm::cont::CoordinateSystem>().GetData().GetPortalConstControl());
 
@@ -160,16 +160,16 @@ struct ValidateNormals
     // cell sets....
     // Build the connectivity table on any device, then get a portal for serial
     // so we can do lookups on the CPU.
-    this->Cells.GetConnectivityArray(vtkm::TopologyElementTagPoint{},
-                                     vtkm::TopologyElementTagCell{});
+    this->Cells.GetConnectivityArray(vtkm::TopologyElementTagCell{},
+                                     vtkm::TopologyElementTagPoint{});
     this->Cells.GetConnectivityArray(vtkm::TopologyElementTagCell{},
                                      vtkm::TopologyElementTagPoint{});
     this->Conn = this->Cells.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
-                                             vtkm::TopologyElementTagPoint{},
-                                             vtkm::TopologyElementTagCell{});
+                                             vtkm::TopologyElementTagCell{},
+                                             vtkm::TopologyElementTagPoint{});
     this->RConn = this->Cells.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
-                                              vtkm::TopologyElementTagCell{},
-                                              vtkm::TopologyElementTagPoint{});
+                                              vtkm::TopologyElementTagPoint{},
+                                              vtkm::TopologyElementTagCell{});
 
     if (this->CheckPoints)
     {

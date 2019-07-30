@@ -246,7 +246,7 @@ public:
   // as 89 degree, each point would be duplicated twice and there are two cells
   // need connectivity update. There is no guarantee on which cell would get which
   // new point.
-  class ClassifyPoint : public vtkm::worklet::WorkletMapCellToPoint
+  class ClassifyPoint : public vtkm::worklet::WorkletVisitPointsWithCells
   {
   public:
     ClassifyPoint(vtkm::FloatDefault cosfeatureAngle)
@@ -254,7 +254,7 @@ public:
     {
     }
     using ControlSignature = void(CellSetIn intputCells,
-                                  WholeCellSetIn<Point, Cell>, // Query points from cell
+                                  WholeCellSetIn<Cell, Point>, // Query points from cell
                                   FieldInCell faceNormals,
                                   FieldOutPoint newPointNum,
                                   FieldOutPoint cellNum);
@@ -314,7 +314,7 @@ public:
 
   // This worklet split the sharp edges and populate the
   // cellTopologyUpdateTuples as (cellGlobalId, oldPointId, newPointId).
-  class SplitSharpEdge : public vtkm::worklet::WorkletMapCellToPoint
+  class SplitSharpEdge : public vtkm::worklet::WorkletVisitPointsWithCells
   {
   public:
     SplitSharpEdge(vtkm::FloatDefault cosfeatureAngle, vtkm::Id numberOfOldPoints)
@@ -323,7 +323,7 @@ public:
     {
     }
     using ControlSignature = void(CellSetIn intputCells,
-                                  WholeCellSetIn<Point, Cell>, // Query points from cell
+                                  WholeCellSetIn<Cell, Point>, // Query points from cell
                                   FieldInCell faceNormals,
                                   FieldInPoint newPointStartingIndex,
                                   FieldInPoint pointCellsStartingIndex,
@@ -479,11 +479,11 @@ public:
     CellDeepCopy::Run(oldCellset, newCellset);
     // FIXME: Since the non const get array function is not in CellSetExplict.h,
     // here I just get a non-const copy of the array handle.
-    auto connectivityArrayHandle = newCellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                                   vtkm::TopologyElementTagCell());
+    auto connectivityArrayHandle = newCellset.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                                   vtkm::TopologyElementTagPoint());
     auto connectivityArrayHandleP = connectivityArrayHandle.GetPortalControl();
-    auto offsetArrayHandle = newCellset.GetIndexOffsetArray(vtkm::TopologyElementTagPoint(),
-                                                            vtkm::TopologyElementTagCell());
+    auto offsetArrayHandle = newCellset.GetIndexOffsetArray(vtkm::TopologyElementTagCell(),
+                                                            vtkm::TopologyElementTagPoint());
     auto offsetArrayHandleP = offsetArrayHandle.GetPortalControl();
     for (vtkm::Id i = 0; i < cellTopologyUpdateTuples.GetNumberOfValues(); i++)
     {

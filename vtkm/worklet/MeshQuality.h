@@ -38,7 +38,7 @@ namespace worklet
   * the computed metric values (one per cell) is returned as output.
   */
 template <typename MetricTagType>
-class MeshQuality : public vtkm::worklet::WorkletMapPointToCell
+class MeshQuality : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset,

@@ -104,22 +104,22 @@ public:
 
       vtkm::cont::ArrayHandle<vtkm::Id> conn;
       {
-        const auto& connIn = cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint{},
-                                                          vtkm::TopologyElementTagCell{});
+        const auto& connIn = cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell{},
+                                                          vtkm::TopologyElementTagPoint{});
         vtkm::cont::Algorithm::Copy(connIn, conn);
       }
 
-      const auto& offsets = cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagPoint{},
-                                                        vtkm::TopologyElementTagCell{});
+      const auto& offsets = cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell{},
+                                                        vtkm::TopologyElementTagPoint{});
       auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
       WindToCellNormals dispatcher;
       dispatcher.Invoke(cellNormals, cells, coords);
 
       const auto& shapes =
-        cellSet.GetShapesArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
+        cellSet.GetShapesArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
       const auto& numIndices =
-        cellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
+        cellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
       vtkm::cont::CellSetExplicit<S, N, vtkm::cont::StorageTagBasic, O> newCells;
       newCells.Fill(cellSet.GetNumberOfPoints(), shapes, numIndices, conn, offsets);
 
@@ -141,13 +141,13 @@ public:
 
       vtkm::cont::ArrayHandle<vtkm::Id> conn;
       {
-        const auto& connIn = cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint{},
-                                                          vtkm::TopologyElementTagCell{});
+        const auto& connIn = cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell{},
+                                                          vtkm::TopologyElementTagPoint{});
         vtkm::cont::Algorithm::Copy(connIn, conn);
       }
 
-      const auto& offsets = cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagPoint{},
-                                                        vtkm::TopologyElementTagCell{});
+      const auto& offsets = cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell{},
+                                                        vtkm::TopologyElementTagPoint{});
       auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
       WindToCellNormals dispatcher;

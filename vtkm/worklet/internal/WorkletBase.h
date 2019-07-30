@@ -247,13 +247,15 @@ public:
   /// operator argument with one of the default args. This can be used to
   /// global lookup for arbitrary topology information
 
-  using Cell = vtkm::TopologyElementTagCell;
   using Point = vtkm::TopologyElementTagPoint;
-  template <typename FromType = Point, typename ToType = Cell>
+  using Cell = vtkm::TopologyElementTagCell;
+  using Edge = vtkm::TopologyElementTagEdge;
+  using Face = vtkm::TopologyElementTagFace;
+  template <typename VisitTopology = Cell, typename IncidentTopology = Point>
   struct WholeCellSetIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagCellSet;
-    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<FromType, ToType>;
+    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<VisitTopology, IncidentTopology>;
     using FetchTag = vtkm::exec::arg::FetchTagWholeCellSetIn;
   };
 

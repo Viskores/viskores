@@ -56,9 +56,9 @@ void Validate(vtkm::cont::DataSet dataSet)
   const auto cellSet = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
   const auto coordsArray = dataSet.GetCoordinateSystem().GetData();
   const auto conn =
-    cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
+    cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
   const auto offsets =
-    cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
+    cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
   const auto cellArray = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
   const auto cellNormalsVar =
     dataSet.GetField("normals", vtkm::cont::Field::Association::CELL_SET).GetData();

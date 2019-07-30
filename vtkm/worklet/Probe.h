@@ -72,7 +72,7 @@ private:
 
   //============================================================================
 public:
-  class ProbeUniformPoints : public vtkm::worklet::WorkletMapPointToCell
+  class ProbeUniformPoints : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
@@ -278,7 +278,7 @@ public:
   }
 
   //============================================================================
-  struct HiddenCellsWorklet : public WorkletMapPointToCell
+  struct HiddenCellsWorklet : public WorkletVisitCellsWithPoints
   {
     using ControlSignature = void(CellSetIn cellset, FieldInPoint cellids, FieldOutCell);
     using ExecutionSignature = _3(_2, PointCount);

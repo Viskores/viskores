@@ -37,7 +37,7 @@ using PointType = vtkm::Vec3f;
 
 std::default_random_engine RandomGenerator;
 
-class ParametricToWorldCoordinates : public vtkm::worklet::WorkletMapPointToCell
+class ParametricToWorldCoordinates : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset,

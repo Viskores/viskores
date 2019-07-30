@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_exec_arg_FromCount_h
-#define vtk_m_exec_arg_FromCount_h
+#ifndef vtk_m_exec_arg_IncidentElementCount_h
+#define vtk_m_exec_arg_IncidentElementCount_h
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 #include <vtkm/exec/arg/Fetch.h>
@@ -21,32 +21,32 @@ namespace exec
 namespace arg
 {
 
-/// \brief Aspect tag to use for getting the from count.
+/// \brief Aspect tag to use for getting the incident element count.
 ///
-/// The \c AspectTagFromCount aspect tag causes the \c Fetch class to obtain
-/// the number of indices that map to the current topology element.
+/// The \c AspectTagIncidentElementCount aspect tag causes the \c Fetch class to
+/// obtain the number of indices that map to the current topology element.
 ///
-struct AspectTagFromCount
+struct AspectTagIncidentElementCount
 {
 };
 
-/// \brief The \c ExecutionSignature tag to get the number of from elements.
+/// \brief The \c ExecutionSignature tag to get the number of incident elements.
 ///
-/// In a topology map, there are \em from and \em to topology elements
-/// specified. The scheduling occurs on the \em to elements, and for each \em
-/// to element there is some number of incident \em from elements that are
-/// accessible. This \c ExecutionSignature tag provides the number of these \em
-/// from elements that are accessible.
+/// In a topology map, there are \em visited and \em incident topology elements
+/// specified. The scheduling occurs on the \em visited elements, and for each
+/// \em visited element there is some number of incident \em incident elements
+/// that are accessible. This \c ExecutionSignature tag provides the number of
+/// these \em incident elements that are accessible.
 ///
-struct FromCount : vtkm::exec::arg::ExecutionSignatureTagBase
+struct IncidentElementCount : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static constexpr vtkm::IdComponent INDEX = 1;
-  using AspectTag = vtkm::exec::arg::AspectTagFromCount;
+  using AspectTag = vtkm::exec::arg::AspectTagIncidentElementCount;
 };
 
 template <typename FetchTag, typename ConnectivityType, typename ExecObjectType>
 struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagFromCount,
+             vtkm::exec::arg::AspectTagIncidentElementCount,
              vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
              ExecObjectType>
 {
@@ -58,7 +58,7 @@ struct Fetch<FetchTag,
   VTKM_EXEC
   ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
-    return indices.GetIndicesFrom().GetNumberOfComponents();
+    return indices.GetIndicesIncident().GetNumberOfComponents();
   }
 
   VTKM_EXEC
@@ -71,4 +71,4 @@ struct Fetch<FetchTag,
 }
 } // namespace vtkm::exec::arg
 
-#endif //vtk_m_exec_arg_FromCount_h
+#endif //vtk_m_exec_arg_IncidentElementCount_h

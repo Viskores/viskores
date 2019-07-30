@@ -517,20 +517,20 @@ private:
 // We may want to generalize this class depending on how ConnectivityExplicit
 // eventually handles retrieving cell to point connectivity.
 
-template <typename From, typename To, vtkm::IdComponent Dimension>
+template <typename VisitTopology, typename IncidentTopology, vtkm::IdComponent Dimension>
 struct ConnectivityStructuredIndexHelper
 {
   // We want an unconditional failure if this unspecialized class ever gets
   // instantiated, because it means someone missed a topology mapping type.
   // We need to create a test which depends on the templated types so
   // it doesn't get picked up without a concrete instantiation.
-  VTKM_STATIC_ASSERT_MSG(sizeof(To) == static_cast<size_t>(-1),
+  VTKM_STATIC_ASSERT_MSG(sizeof(VisitTopology) == static_cast<size_t>(-1),
                          "Missing Specialization for Topologies");
 };
 
 template <vtkm::IdComponent Dimension>
-struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
-                                         vtkm::TopologyElementTagCell,
+struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagCell,
+                                         vtkm::TopologyElementTagPoint,
                                          Dimension>
 {
   using ConnectivityType = vtkm::internal::ConnectivityStructuredInternals<Dimension>;
@@ -590,8 +590,8 @@ struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
 };
 
 template <vtkm::IdComponent Dimension>
-struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagCell,
-                                         vtkm::TopologyElementTagPoint,
+struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
+                                         vtkm::TopologyElementTagCell,
                                          Dimension>
 {
   using ConnectivityType = vtkm::internal::ConnectivityStructuredInternals<Dimension>;

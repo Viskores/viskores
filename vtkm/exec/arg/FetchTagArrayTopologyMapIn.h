@@ -56,9 +56,9 @@ struct FetchArrayTopologyMapInImplementation
 {
   using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
-  // ThreadIndicesTopologyMap has special "from" indices that are stored in a
-  // Vec-like object.
-  using IndexVecType = typename ThreadIndicesType::IndicesFromType;
+  // ThreadIndicesTopologyMap has special incident element indices that are
+  // stored in a Vec-like object.
+  using IndexVecType = typename ThreadIndicesType::IndicesIncidentType;
 
   // The FieldExecObjectType is expected to behave like an ArrayPortal.
   using PortalType = FieldExecObjectType;
@@ -73,7 +73,7 @@ struct FetchArrayTopologyMapInImplementation
     // pointer that will stay around during the time the Vec is valid. Thus, we
     // should make sure that indices is a reference that goes up the stack at
     // least as far as the returned VecFromPortalPermute is used.
-    return ValueType(indices.GetIndicesFromPointer(), field);
+    return ValueType(indices.GetIndicesIncidentPointer(), field);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -84,7 +84,7 @@ struct FetchArrayTopologyMapInImplementation
     // pointer that will stay around during the time the Vec is valid. Thus, we
     // should make sure that indices is a reference that goes up the stack at
     // least as far as the returned VecFromPortalPermute is used.
-    return ValueType(indices.GetIndicesFromPointer(), field);
+    return ValueType(indices.GetIndicesIncidentPointer(), field);
   }
 };
 
@@ -130,14 +130,14 @@ static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<3> make_VecAxisAlig
 
 template <vtkm::IdComponent NumDimensions>
 struct FetchArrayTopologyMapInImplementation<
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                     vtkm::TopologyElementTagCell,
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                     vtkm::TopologyElementTagPoint,
                                      NumDimensions>,
   vtkm::internal::ArrayPortalUniformPointCoordinates>
 
 {
-  using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                              vtkm::TopologyElementTagCell,
+  using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                                              vtkm::TopologyElementTagPoint,
                                                               NumDimensions>;
   using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
@@ -157,18 +157,18 @@ struct FetchArrayTopologyMapInImplementation<
 
 template <typename PermutationPortal, vtkm::IdComponent NumDimensions>
 struct FetchArrayTopologyMapInImplementation<
-  vtkm::exec::ConnectivityPermutedPointToCell<
+  vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                       vtkm::TopologyElementTagCell,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                       vtkm::TopologyElementTagPoint,
                                        NumDimensions>>,
   vtkm::internal::ArrayPortalUniformPointCoordinates>
 
 {
-  using ConnectivityType = vtkm::exec::ConnectivityPermutedPointToCell<
+  using ConnectivityType = vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                       vtkm::TopologyElementTagCell,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                       vtkm::TopologyElementTagPoint,
                                        NumDimensions>>;
   using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 

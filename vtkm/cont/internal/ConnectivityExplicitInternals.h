@@ -225,11 +225,11 @@ struct ConnIdxToCellIdCalcSingleType
   vtkm::Id operator()(vtkm::Id inIdx) const { return inIdx / this->CellSize; }
 };
 
-template <typename PointToCell, typename CellToPoint, typename Device>
-void ComputeCellToPointConnectivity(CellToPoint& cell2Point,
-                                    const PointToCell& point2Cell,
-                                    vtkm::Id numberOfPoints,
-                                    Device)
+template <typename VisitCellsWithPoints, typename VisitPointsWithCells, typename Device>
+void ComputeVisitPointsWithCellsConnectivity(VisitPointsWithCells& cell2Point,
+                                             const VisitCellsWithPoints& point2Cell,
+                                             vtkm::Id numberOfPoints,
+                                             Device)
 {
   if (cell2Point.ElementsValid)
   {
@@ -258,7 +258,7 @@ void ComputeCellToPointConnectivity(CellToPoint& cell2Point,
               rConnSize,
               Device());
 
-  // Set the CellToPoint information
+  // Set the VisitPointsWithCells information
   cell2Point.Shapes = vtkm::cont::make_ArrayHandleConstant(
     static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
   cell2Point.ElementsValid = true;
@@ -269,10 +269,10 @@ void ComputeCellToPointConnectivity(CellToPoint& cell2Point,
 template <typename ShapeStorageTag,
           typename ConnectivityStorageTag,
           typename IndexOffsetStorageTag,
-          typename CellToPoint,
+          typename VisitPointsWithCells,
           typename Device>
-void ComputeCellToPointConnectivity(
-  CellToPoint& cell2Point,
+void ComputeVisitPointsWithCellsConnectivity(
+  VisitPointsWithCells& cell2Point,
   const ConnectivityExplicitInternals<
     ShapeStorageTag,
     vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag, // nIndices
@@ -309,7 +309,7 @@ void ComputeCellToPointConnectivity(
               rConnSize,
               Device());
 
-  // Set the CellToPoint information
+  // Set the VisitPointsWithCells information
   cell2Point.Shapes = vtkm::cont::make_ArrayHandleConstant(
     static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
   cell2Point.ElementsValid = true;

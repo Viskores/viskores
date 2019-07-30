@@ -46,7 +46,7 @@ public:
   {
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
-    using SchedulingRangeType = typename WorkletType::ToTopologyType;
+    using SchedulingRangeType = typename WorkletType::VisitTopologyType;
 
     // If you get a compile error on this line, then you have tried to use
     // something that is not a vtkm::cont::CellSet as the input domain to a

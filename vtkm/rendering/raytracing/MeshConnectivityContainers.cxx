@@ -69,10 +69,10 @@ UnstructuredContainer::UnstructuredContainer(const vtkm::cont::CellSetExplicit<>
   // Grab the cell arrays
   //
   CellConn =
-    Cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    Cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
   CellOffsets =
-    Cellset.GetIndexOffsetArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
-  Shapes = Cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    Cellset.GetIndexOffsetArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+  Shapes = Cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   Intersector.SetData(Coords, Triangles);
 }
@@ -160,9 +160,9 @@ UnstructuredSingleContainer::UnstructuredSingleContainer(
   this->Intersector.SetUseWaterTight(true);
 
   CellConnectivity =
-    Cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    Cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
   vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
-    Cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    Cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   ShapeId = shapes.GetPortalConstControl().Get(0);
   CellTables tables;

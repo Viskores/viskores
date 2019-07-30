@@ -33,7 +33,7 @@ namespace rendering
 class Triangulator
 {
 public:
-  class CountTriangles : public vtkm::worklet::WorkletMapPointToCell
+  class CountTriangles : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -79,12 +79,12 @@ public:
   }; //class CountTriangles
 
   template <int DIM>
-  class TrianglulateStructured : public vtkm::worklet::WorkletMapPointToCell
+  class TrianglulateStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:
-    using ControlSignature = void(CellSetIn cellset, FieldInTo, WholeArrayOut);
-    using ExecutionSignature = void(FromIndices, _2, _3);
+    using ControlSignature = void(CellSetIn cellset, FieldInCell, WholeArrayOut);
+    using ExecutionSignature = void(IncidentElementIndices, _2, _3);
     VTKM_CONT
     TrianglulateStructured() {}
 
@@ -267,7 +267,7 @@ public:
     }
   }; //class UniqueTriangles
 
-  class Trianglulate : public vtkm::worklet::WorkletMapPointToCell
+  class Trianglulate : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:

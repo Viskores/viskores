@@ -31,11 +31,9 @@ template <typename DeviceAdapter>
 class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid final : public vtkm::exec::CellLocator
 {
 private:
-  using FromType = vtkm::TopologyElementTagPoint;
-  using ToType = vtkm::TopologyElementTagCell;
-  using CellSetPortal = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                           vtkm::TopologyElementTagCell,
-                                                           3>;
+  using VisitType = vtkm::TopologyElementTagCell;
+  using IncidentType = vtkm::TopologyElementTagPoint;
+  using CellSetPortal = vtkm::exec::ConnectivityStructured<VisitType, IncidentType, 3>;
   using CoordsPortal = typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
     DeviceAdapter>::PortalConst;
 
@@ -52,7 +50,7 @@ public:
     , CellDims(cellDims)
     , PlaneSize(cellDims[0] * cellDims[1])
     , RowSize(cellDims[0])
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType()))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType()))
     , Coords(coords.PrepareForInput(DeviceAdapter()))
   {
   }

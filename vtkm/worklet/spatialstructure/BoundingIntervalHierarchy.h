@@ -72,7 +72,7 @@ struct SplitProperties
   }
 }; // struct SplitProperties
 
-struct CellRangesExtracter : public vtkm::worklet::WorkletMapPointToCell
+struct CellRangesExtracter : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   typedef void ControlSignature(CellSetIn,
                                 WholeArrayIn,

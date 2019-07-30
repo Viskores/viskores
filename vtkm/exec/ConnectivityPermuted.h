@@ -22,28 +22,29 @@ namespace exec
 {
 
 template <typename PermutationPortal, typename OriginalConnectivity>
-class ConnectivityPermutedPointToCell
+class ConnectivityPermutedVisitCellsWithPoints
 {
 public:
   using SchedulingRangeType = typename OriginalConnectivity::SchedulingRangeType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ConnectivityPermutedPointToCell()
+  ConnectivityPermutedVisitCellsWithPoints()
     : Portal()
     , Connectivity()
   {
   }
 
   VTKM_EXEC_CONT
-  ConnectivityPermutedPointToCell(const PermutationPortal& portal, const OriginalConnectivity& src)
+  ConnectivityPermutedVisitCellsWithPoints(const PermutationPortal& portal,
+                                           const OriginalConnectivity& src)
     : Portal(portal)
     , Connectivity(src)
   {
   }
 
   VTKM_EXEC_CONT
-  ConnectivityPermutedPointToCell(const ConnectivityPermutedPointToCell& src)
+  ConnectivityPermutedVisitCellsWithPoints(const ConnectivityPermutedVisitCellsWithPoints& src)
     : Portal(src.Portal)
     , Connectivity(src.Connectivity)
   {
@@ -82,18 +83,18 @@ public:
 template <typename ConnectivityPortalType,
           typename NumIndicesPortalType,
           typename IndexOffsetPortalType>
-class ConnectivityPermutedCellToPoint
+class ConnectivityPermutedVisitPointsWithCells
 {
 public:
   using SchedulingRangeType = vtkm::Id;
   using IndicesType = vtkm::VecFromPortal<ConnectivityPortalType>;
   using CellShapeTag = vtkm::CellShapeTagVertex;
 
-  ConnectivityPermutedCellToPoint() = default;
+  ConnectivityPermutedVisitPointsWithCells() = default;
 
-  ConnectivityPermutedCellToPoint(const ConnectivityPortalType& connectivity,
-                                  const NumIndicesPortalType& numIndices,
-                                  const IndexOffsetPortalType& indexOffset)
+  ConnectivityPermutedVisitPointsWithCells(const ConnectivityPortalType& connectivity,
+                                           const NumIndicesPortalType& numIndices,
+                                           const IndexOffsetPortalType& indexOffset)
     : Connectivity(connectivity)
     , NumIndices(numIndices)
     , IndexOffset(indexOffset)
