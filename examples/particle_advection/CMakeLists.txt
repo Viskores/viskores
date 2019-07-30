@@ -15,11 +15,9 @@ find_package(VTKm REQUIRED QUIET)
 
 add_executable(Particle_Advection ParticleAdvection.cxx)
 target_link_libraries(Particle_Advection PRIVATE vtkm_filter)
-
+vtkm_add_target_information(Particle_Advection
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES ParticleAdvection.cxx)
 if(TARGET vtkm::tbb)
   target_compile_definitions(Particle_Advection PRIVATE BUILDING_TBB_VERSION)
-endif()
-
-if(TARGET vtkm::cuda)
-  set_source_files_properties(ParticleAdvection.cxx PROPERTIES LANGUAGE "CUDA")
 endif()

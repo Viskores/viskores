@@ -56,7 +56,6 @@ struct TemplatedTests
 
   using ValueType = typename StorageType::ValueType;
   using PortalType = typename StorageType::PortalType;
-  using IteratorType = typename PortalType::IteratorType;
 
   void BasicAllocation()
   {

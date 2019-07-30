@@ -80,10 +80,16 @@ public:
 
     // TODO: This might stop looking before the absolute nearest neighbor is found.
     vtkm::Id maxLevel = vtkm::Max(vtkm::Max(this->Dims[0], this->Dims[1]), this->Dims[2]);
-    for (vtkm::Id level = 1; (nearestNeighborId < 0) && (level < maxLevel); ++level)
+    vtkm::Id level;
+    for (level = 1; (nearestNeighborId < 0) && (level < maxLevel); ++level)
     {
       this->FindInBox(queryPoint, ijk, level, nearestNeighborId, distance2);
     }
+
+    // Search one more level out. This is still not guaranteed to find the closest point
+    // in all cases (past level 2), but it will catch most cases where the closest point
+    // is just on the other side of a cell boundary.
+    this->FindInBox(queryPoint, ijk, level, nearestNeighborId, distance2);
   }
 
 private:
@@ -143,7 +149,7 @@ private:
     if ((boxCenter[1] + level) < this->Dims[1])
     {
       this->FindInYPlane(
-        queryPoint, boxCenter - vtkm::Id3(0, level, 0), level, nearestNeighborId, nearestDistance2);
+        queryPoint, boxCenter + vtkm::Id3(0, level, 0), level, nearestNeighborId, nearestDistance2);
     }
 
     if ((boxCenter[2] - level) >= 0)
@@ -154,7 +160,7 @@ private:
     if ((boxCenter[2] + level) < this->Dims[2])
     {
       this->FindInZPlane(
-        queryPoint, boxCenter - vtkm::Id3(0, 0, level), level, nearestNeighborId, nearestDistance2);
+        queryPoint, boxCenter + vtkm::Id3(0, 0, level), level, nearestNeighborId, nearestDistance2);
     }
   }
 

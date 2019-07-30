@@ -63,9 +63,10 @@ VTK-m Requires:
       + XCode 5.0+
       + MSVC 2015+
   + [CMake](http://www.cmake.org/download/)
-      + CMake 3.8+ (for any build)
-      + CMake 3.9+ (for CUDA build or OpenMP build)
+      + CMake 3.8+
+      + CMake 3.9+  (for OpenMP support)
       + CMake 3.11+ (for Visual Studio generator)
+      + CMake 3.13+ (for CUDA support)
 
 Optional dependencies are:
 

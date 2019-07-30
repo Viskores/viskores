@@ -77,40 +77,58 @@ endif()
 set(vec_levels none native)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  #for now we presume gcc > 4.6
-  list(APPEND vec_levels avx)
+  #for now we presume gcc >= 4.8
+  list(APPEND vec_levels avx avx2)
 
-  #common flags for the avx instructions for the gcc compiler
+  #common flags for the avx and avx2 instructions for the gcc compiler
   set(native_flags -march=native)
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64le")
+    #GCC PowerPC font end doesn't support the march flag
+    set(native_flags -mcpu=native -mtune=native)
+  endif()
+
   set(avx_flags -mavx)
   set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.7 OR
-  CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.7)
-  #if GNU is less than 4.9 you get avx, avx2
-  list(APPEND vec_levels avx2)
-elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
-  #if GNU is less than 5.1 you get avx, avx2, and some avx512
-  list(APPEND vec_levels avx2 avx512-knl)
-  set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
-else()
-  #if GNU is 5.1+ you get avx, avx2, and more avx512
-  list(APPEND vec_levels avx2 avx512-skx avx512-knl)
-  set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
-  set(skylake_flags ${avx2_flags} -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl)
-endif()
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
+    #if GNU is less than 5.1 you get avx, avx2, and some avx512
+    list(APPEND vec_levels avx512-knl)
+    set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
+  elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
+    #if GNU is 5.1+ to 8.0 we explicit set the flags as they
+    #only have the concept of knl architecture and not skylake
+    list(APPEND vec_levels avx512-skx avx512-knl)
+    set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
+    set(skylake_flags ${avx2_flags} -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl)
+  else()
+    #if GNU is 8+ has architecture names
+    list(APPEND vec_levels avx512-skx avx512-knl)
+    set(knl_flags -march=knl)
+    set(skylake_flags -march=skylake-avx512)
+  endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   list(APPEND vec_levels avx avx2 avx512-skx avx512-knl)
   set(native_flags -march=native)
   set(avx_flags -mavx)
   set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
-  set(knl_flags ${avx2_flags} -avx512f -avx512cd -avx512dq -avx512bw -avx512vl)
-  set(skylake_flags ${avx2_flags} -avx512f -avx512cd -avx512er -avx512pf)
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
+    set(knl_flags ${avx2_flags} -avx512f -avx512cd -avx512dq -avx512bw -avx512vl)
+    set(skylake_flags ${avx2_flags} -avx512f -avx512cd -avx512er -avx512pf)
+  else()
+    # Clang 4+ introduced skylake-avx512  and knl platforms
+    set(knl_flags -march=knl)
+    set(skylake_flags -march=skylake-avx512)
+  endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  #While Clang support AVX512, no version of AppleClang has that support yet
   list(APPEND vec_levels avx avx2)
   set(native_flags -march=native)
   set(avx_flags -mavx)
   set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0)
+    # Manually verified that skylake-avx512 exists in XCode 9.1. Could exist
+    # in older versions that we dont have access to.
+    list(APPEND vec_levels avx512-skx)
+    set(skylake_flags -march=skylake-avx512)
+  endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
   #I can't find documentation to explicitly state the level of vectorization
   #support I want from the PGI compiler
@@ -132,8 +150,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     list(APPEND vec_levels avx avx2)
   else()
     list(APPEND vec_levels avx avx2 avx512-skx avx512-knl)
-    set(knl_flags ${knl_flags} -xMIC-AVX512)
-    set(skylake_flags ${skylake_flags} -xCORE-AVX512)
+    set(knl_flags -xMIC-AVX512)
+    set(skylake_flags -xCORE-AVX512)
   endif()
 endif()
 

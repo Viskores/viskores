@@ -30,6 +30,7 @@ vtkm::UInt32 DecodePNG(std::vector<unsigned char>& out_image,
                        const unsigned char* in_png,
                        std::size_t in_size)
 {
+  using namespace vtkm::png;
   constexpr std::size_t bitdepth = 8;
   vtkm::UInt32 iw = 0;
   vtkm::UInt32 ih = 0;

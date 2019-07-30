@@ -53,13 +53,9 @@ public:
   using ValueType = typename ArrayPortalType::ValueType;
   using PortalConstType = ArrayPortalType;
 
-  // This is meant to be invalid. Because implicit arrays are read only, you
-  // should only be able to use the const version.
-  struct PortalType
-  {
-    using ValueType = void*;
-    using IteratorType = void*;
-  };
+  // Note that this portal is likely to be read-only, so you will probably get an error
+  // if you try to write to it.
+  using PortalType = ArrayPortalType;
 
   VTKM_CONT
   Storage(const PortalConstType& portal = PortalConstType())

@@ -15,8 +15,7 @@ find_package(VTKm REQUIRED QUIET)
 if (VTKm_ENABLE_MPI)
   add_executable(Histogram Histogram.cxx HistogramMPI.h HistogramMPI.hxx)
   target_link_libraries(Histogram PRIVATE vtkm_filter)
-
-  if(TARGET vtkm::cuda)
-    set_source_files_properties(Histogram.cxx PROPERTIES LANGUAGE "CUDA")
-  endif()
+  vtkm_add_target_information(Histogram
+                              MODIFY_CUDA_FLAGS
+                              DEVICE_SOURCES Histogram.cxx)
 endif()

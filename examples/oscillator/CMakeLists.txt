@@ -13,9 +13,8 @@ project(Oscillator CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if (TARGET vtkm::cuda)
-  set_source_files_properties(Oscillator.cxx PROPERTIES LANGUAGE "CUDA")
-endif()
-
 add_executable(Oscillator Oscillator.cxx)
 target_link_libraries(Oscillator PRIVATE vtkm_filter)
+vtkm_add_target_information(Oscillator
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES Oscillator.cxx)

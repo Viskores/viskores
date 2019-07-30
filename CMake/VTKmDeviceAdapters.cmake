@@ -107,18 +107,12 @@ if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
 endif()
 
 if(VTKm_ENABLE_CUDA)
-  cmake_minimum_required(VERSION 3.9...3.14 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.13...3.14 FATAL_ERROR)
   enable_language(CUDA)
 
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
     CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 9.2)
     message(FATAL_ERROR "VTK-m CUDA support requires version 9.2+")
-  endif()
-
-  #To work around https://gitlab.kitware.com/cmake/cmake/issues/17512
-  #we need to fix the CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES variable
-  if(${CMAKE_VERSION} VERSION_LESS 3.10 AND CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
-    list(APPEND CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
   endif()
 
   if (NOT TARGET vtkm_cuda OR NOT TARGET vtkm::cuda)
@@ -222,13 +216,11 @@ if(VTKm_ENABLE_CUDA)
           set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
                   "device type(s) for cuda[native]")
         else()
-          set(VTKm_CUDA_Architecture "kepler")
+          message(FATAL_ERROR "Error detecting architecture flags for CUDA. Please set VTKm_CUDA_Architecture manually.")
         endif()
       endif()
     endif()
 
-    #since when we are native we can fail, and fall back to "kepler" these have
-    #to happen after, and separately of the native check
     if(VTKm_CUDA_Architecture STREQUAL "fermi")
       set(arch_flags --generate-code=arch=compute_20,code=sm_20)
     elseif(VTKm_CUDA_Architecture STREQUAL "kepler")

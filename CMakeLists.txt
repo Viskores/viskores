@@ -143,6 +143,9 @@ include(VTKmCompilerFlags)
 
 
 #-----------------------------------------------------------------------------
+# We include the wrappers unconditionally as VTK-m expects the function to
+# always exist (and early terminate when testing is disabled).
+include(testing/VTKmTestWrappers)
 if (VTKm_ENABLE_TESTING)
   enable_testing()
   # Only include CTest if it has not been included by a superproject. The
@@ -154,6 +157,7 @@ if (VTKm_ENABLE_TESTING)
     # VTKm_ENABLE_TESTING.
     mark_as_advanced(BUILD_TESTING)
   endif()
+
 
   configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
@@ -187,7 +191,7 @@ add_subdirectory(vtkm)
 #-----------------------------------------------------------------------------
 # Build documentation
 if (VTKm_ENABLE_DOCUMENTATION)
-  include(CMake/VTKmBuildDocumentation.cmake)
+  include(VTKmBuildDocumentation)
 endif()
 
 #-----------------------------------------------------------------------------

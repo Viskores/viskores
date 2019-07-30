@@ -27,6 +27,12 @@ namespace cont
 struct VTKM_ALWAYS_EXPORT StorageListTagBasic : vtkm::ListTagBase<vtkm::cont::StorageTagBasic>
 {
 };
+
+// If we want to compile VTK-m with support of memory layouts other than the basic layout, then
+// add the appropriate storage tags here.
+struct VTKM_ALWAYS_EXPORT StorageListTagSupported : vtkm::ListTagBase<vtkm::cont::StorageTagBasic>
+{
+};
 }
 } // namespace vtkm::cont
 

@@ -59,6 +59,7 @@ set(unit_tests
   UnitTestSplitSharpEdges.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
+  UnitTestStreamSurface.cxx
   UnitTestSurfaceNormals.cxx
   UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx

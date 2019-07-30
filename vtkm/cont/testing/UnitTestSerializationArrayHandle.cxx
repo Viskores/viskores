@@ -109,6 +109,15 @@ struct TestArrayHandleCast
     RunTest(array);
     RunTest(MakeTestVariantArrayHandle(array));
   }
+
+  template <typename T, vtkm::IdComponent N>
+  void operator()(vtkm::Vec<T, N>) const
+  {
+    auto array = vtkm::cont::make_ArrayHandleCast<vtkm::Vec<T, N>>(
+      RandomArrayHandle<vtkm::Vec<vtkm::Int8, N>>::Make(ArraySize));
+    RunTest(array);
+    RunTest(MakeTestVariantArrayHandle(array));
+  }
 };
 
 struct TestArrayHandleCompositeVector

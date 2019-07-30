@@ -27,6 +27,7 @@ set(headers
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
+  ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
   ArrayHandleStreaming.h
@@ -183,7 +184,7 @@ vtkm_library( NAME vtkm_cont
               SOURCES ${sources}
               TEMPLATE_SOURCES ${template_sources}
               HEADERS ${headers}
-              WRAP_FOR_CUDA ${device_sources}
+              DEVICE_SOURCES ${device_sources}
             )
 
 add_subdirectory(internal)

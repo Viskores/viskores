@@ -96,8 +96,8 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
 if(VTKm_ENABLE_CUDA)
-  if (CMAKE_VERSION VERSION_LESS "3.9")
-    message(FATAL_ERROR "VTK-m with CUDA requires CMake 3.9+")
+  if (CMAKE_VERSION VERSION_LESS 3.13)
+    message(FATAL_ERROR "VTK-m with CUDA requires CMake 3.13+")
   endif()
 endif()
 
