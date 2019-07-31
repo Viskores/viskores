@@ -102,9 +102,9 @@ public:
                      const vtkm::cont::CoordinateSystem& coords,
                      const vtkm::cont::Field& emission);
 
-  void SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor);
+  void SetBackgroundColor(const vtkm::Vec4f_32& backgroundColor);
   void SetSampleDistance(const vtkm::Float32& distance);
-  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
+  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap);
 
   MeshConnContainer* GetMeshContainer() { return MeshContainer; }
 
@@ -183,9 +183,9 @@ protected:
   vtkm::Range ScalarBounds;
   vtkm::Float32 BoundingBox[6];
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
+  vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;
 
-  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
+  vtkm::Vec4f_32 BackgroundColor;
   vtkm::Float32 SampleDistance;
   vtkm::Id RaysLost;
   IntegrationMode Integrator;

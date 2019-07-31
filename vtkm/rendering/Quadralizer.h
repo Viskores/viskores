@@ -92,7 +92,7 @@ public:
 #pragma warning(disable : 4127) //conditional expression is constant
 #endif
     template <typename CellNodeVecType, typename OutIndicesPortal>
-    VTKM_EXEC void cell2quad(vtkm::Vec<vtkm::Id, 4> idx,
+    VTKM_EXEC void cell2quad(vtkm::Id4 idx,
                              vtkm::Vec<Id, 5>& quad,
                              const vtkm::Id offset,
                              const CellNodeVecType& cellIndices,
@@ -120,7 +120,7 @@ public:
         vtkm::Id offset = cellIndex * QUAD_PER_CSS;
         vtkm::Vec<vtkm::Id, 5> quad;
         quad[0] = cellIndex;
-        vtkm::Vec<vtkm::Id, 4> idx;
+        vtkm::Id4 idx;
         idx[0] = 0;
         idx[1] = 1;
         idx[2] = 5, idx[3] = 4;

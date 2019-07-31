@@ -30,7 +30,7 @@ void TestPointGradientUniform2D()
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
 
-  vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10, 30, 0 }, { 10, 30, 0 } };
+  vtkm::Vec3f_32 expected[2] = { { 10, 30, 0 }, { 10, 30, 0 } };
   for (int i = 0; i < 2; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
@@ -51,7 +51,7 @@ void TestPointGradientUniform3D()
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
 
-  vtkm::Vec<vtkm::Float32, 3> expected[4] = {
+  vtkm::Vec3f_32 expected[4] = {
     { 10.0f, 30.f, 60.1f },
     { 10.0f, 30.1f, 60.1f },
     { 10.0f, 30.1f, 60.2f },
@@ -75,18 +75,18 @@ void TestPointGradientUniform3DWithVectorField()
   const int nVerts = 18;
   vtkm::Float64 vars[nVerts] = { 10.1,  20.1,  30.1,  40.1,  50.2,  60.2,  70.2,  80.2,  90.3,
                                  100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5 };
-  std::vector<vtkm::Vec<vtkm::Float64, 3>> vec(18);
+  std::vector<vtkm::Vec3f_64> vec(18);
   for (std::size_t i = 0; i < vec.size(); ++i)
   {
     vec[i] = vtkm::make_Vec(vars[i], vars[i], vars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> input = vtkm::cont::make_ArrayHandle(vec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input = vtkm::cont::make_ArrayHandle(vec);
 
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);
 
 
-  vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> expected[4] = {
+  vtkm::Vec<vtkm::Vec3f_64, 3> expected[4] = {
     { { 10.0, 10.0, 10.0 }, { 30.0, 30.0, 30.0 }, { 60.1, 60.1, 60.1 } },
     { { 10.0, 10.0, 10.0 }, { 30.1, 30.1, 30.1 }, { 60.1, 60.1, 60.1 } },
     { { 10.0, 10.0, 10.0 }, { 30.1, 30.1, 30.1 }, { 60.2, 60.2, 60.2 } },
@@ -94,8 +94,8 @@ void TestPointGradientUniform3DWithVectorField()
   };
   for (int i = 0; i < 4; ++i)
   {
-    vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> e = expected[i];
-    vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> r = result.GetPortalConstControl().Get(i);
+    vtkm::Vec<vtkm::Vec3f_64, 3> e = expected[i];
+    vtkm::Vec<vtkm::Vec3f_64, 3> r = result.GetPortalConstControl().Get(i);
 
     VTKM_TEST_ASSERT(test_equal(e[0], r[0]),
                      "Wrong result for vec field PointGradient worklet on 3D uniform data");
@@ -119,14 +119,14 @@ void TestPointGradientUniform3DWithVectorField2()
   const int nVerts = 18;
   vtkm::Float64 vars[nVerts] = { 10.1,  20.1,  30.1,  40.1,  50.2,  60.2,  70.2,  80.2,  90.3,
                                  100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5 };
-  std::vector<vtkm::Vec<vtkm::Float64, 3>> vec(18);
+  std::vector<vtkm::Vec3f_64> vec(18);
   for (std::size_t i = 0; i < vec.size(); ++i)
   {
     vec[i] = vtkm::make_Vec(vars[i], vars[i], vars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> input = vtkm::cont::make_ArrayHandle(vec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input = vtkm::cont::make_ArrayHandle(vec);
 
-  vtkm::worklet::GradientOutputFields<vtkm::Vec<vtkm::Float64, 3>> extraOutput;
+  vtkm::worklet::GradientOutputFields<vtkm::Vec3f_64> extraOutput;
   extraOutput.SetComputeGradient(false);
   extraOutput.SetComputeDivergence(true);
   extraOutput.SetComputeVorticity(true);
@@ -148,7 +148,7 @@ void TestPointGradientUniform3DWithVectorField2()
   VTKM_TEST_ASSERT((extraOutput.QCriterion.GetNumberOfValues() == nVerts),
                    "QCriterion field should be generated");
 
-  vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> expected_gradients[4] = {
+  vtkm::Vec<vtkm::Vec3f_64, 3> expected_gradients[4] = {
     { { 10.0, 10.0, 10.0 }, { 30.0, 30.0, 30.0 }, { 60.1, 60.1, 60.1 } },
     { { 10.0, 10.0, 10.0 }, { 30.1, 30.1, 30.1 }, { 60.1, 60.1, 60.1 } },
     { { 10.0, 10.0, 10.0 }, { 30.1, 30.1, 30.1 }, { 60.2, 60.2, 60.2 } },
@@ -156,20 +156,19 @@ void TestPointGradientUniform3DWithVectorField2()
   };
   for (int i = 0; i < 4; ++i)
   {
-    vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> eg = expected_gradients[i];
+    vtkm::Vec<vtkm::Vec3f_64, 3> eg = expected_gradients[i];
 
     vtkm::Float64 d = extraOutput.Divergence.GetPortalConstControl().Get(i);
 
     VTKM_TEST_ASSERT(test_equal((eg[0][0] + eg[1][1] + eg[2][2]), d),
                      "Wrong result for Divergence on 3D uniform data");
 
-    vtkm::Vec<vtkm::Float64, 3> ev(eg[1][2] - eg[2][1], eg[2][0] - eg[0][2], eg[0][1] - eg[1][0]);
-    vtkm::Vec<vtkm::Float64, 3> v = extraOutput.Vorticity.GetPortalConstControl().Get(i);
+    vtkm::Vec3f_64 ev(eg[1][2] - eg[2][1], eg[2][0] - eg[0][2], eg[0][1] - eg[1][0]);
+    vtkm::Vec3f_64 v = extraOutput.Vorticity.GetPortalConstControl().Get(i);
     VTKM_TEST_ASSERT(test_equal(ev, v), "Wrong result for Vorticity on 3D uniform data");
 
-    const vtkm::Vec<vtkm::Float64, 3> es(
-      eg[1][2] + eg[2][1], eg[2][0] + eg[0][2], eg[0][1] + eg[1][0]);
-    const vtkm::Vec<vtkm::Float64, 3> ed(eg[0][0], eg[1][1], eg[2][2]);
+    const vtkm::Vec3f_64 es(eg[1][2] + eg[2][1], eg[2][0] + eg[0][2], eg[0][1] + eg[1][0]);
+    const vtkm::Vec3f_64 ed(eg[0][0], eg[1][1], eg[2][2]);
 
     //compute QCriterion
     vtkm::Float64 qcriterion =
@@ -196,7 +195,7 @@ void TestPointGradientExplicit()
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
 
-  vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
+  vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
   for (int i = 0; i < 2; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),

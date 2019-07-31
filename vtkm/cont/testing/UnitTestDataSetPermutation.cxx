@@ -46,7 +46,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
 
 inline vtkm::cont::DataSet make_SingleTypeDataSet()
 {
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coordinates;
   coordinates.push_back(CoordType(0, 0, 0));
   coordinates.push_back(CoordType(1, 0, 0));

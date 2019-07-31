@@ -21,9 +21,9 @@
 namespace
 {
 
-using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
-const vtkm::Vec<vtkm::FloatDefault, 3> expectedCoords[24] = {
+const vtkm::Vec3f expectedCoords[24] = {
   { 0.0, 0.0, 0.0 }, { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 }, { 0.0, 1.0, 0.0 },
   { 1.0, 1.0, 0.0 }, { 1.0, 1.0, 1.0 }, { 0.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 },
   { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 1.0 }, { 1.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 },
@@ -46,7 +46,7 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
 
   const int nVerts = 8;
   const int nCells = 6;
-  using CoordType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using CoordType = vtkm::Vec3f;
   std::vector<CoordType> coords = {
     CoordType(0, 0, 0), // 0
     CoordType(1, 0, 0), // 1
@@ -229,7 +229,7 @@ struct SplitSharpTestPolicy : public vtkm::filter::PolicyBase<SplitSharpTestPoli
   using StructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
   using UnstructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetSingleType<>>;
   using AllCellSetList = vtkm::ListTagJoin<StructuredCellSetList, UnstructuredCellSetList>;
-  using FieldTypeList = vtkm::ListTagBase<vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
+  using FieldTypeList = vtkm::ListTagBase<vtkm::FloatDefault, vtkm::Vec3f>;
 };
 
 

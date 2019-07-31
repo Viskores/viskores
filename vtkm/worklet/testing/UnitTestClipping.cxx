@@ -24,7 +24,7 @@
 
 #include <vector>
 
-using Coord3D = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Coord3D = vtkm::Vec3f;
 
 const vtkm::Float32 clipValue = 0.5;
 
@@ -228,7 +228,7 @@ void TestClippingStructured()
 
 void TestClippingWithImplicitFunction()
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
@@ -287,7 +287,7 @@ void TestClippingWithImplicitFunction()
 
 void TestClippingWithImplicitFunctionInverted()
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();

@@ -78,7 +78,7 @@ public:
   }
 
   VTKM_EXEC
-  inline bool IsInside(const vtkm::Vec<vtkm::FloatDefault, 3>& point) const
+  inline bool IsInside(const vtkm::Vec3f& point) const
   {
     bool inside = true;
     if (point[0] < this->MinPoint[0] || point[0] > this->MaxPoint[0])
@@ -91,9 +91,9 @@ public:
   }
 
   VTKM_EXEC
-  void FindCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+  void FindCell(const vtkm::Vec3f& point,
                 vtkm::Id& cellId,
-                vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
+                vtkm::Vec3f& parametric,
                 const vtkm::exec::FunctorBase& worklet) const override
   {
     if (!IsInside(point))
@@ -103,7 +103,7 @@ public:
     }
 
     // Get the Cell Id from the point.
-    vtkm::Vec<vtkm::Id, 3> logicalCell(0, 0, 0);
+    vtkm::Id3 logicalCell(0, 0, 0);
     for (vtkm::Int32 dim = 0; dim < 3; ++dim)
     {
       //
@@ -168,8 +168,8 @@ private:
   RectilinearPortalType Coords;
   AxisPortalType AxisPortals[3];
   vtkm::Id3 PointDimensions;
-  vtkm::Vec<vtkm::FloatDefault, 3> MinPoint;
-  vtkm::Vec<vtkm::FloatDefault, 3> MaxPoint;
+  vtkm::Vec3f MinPoint;
+  vtkm::Vec3f MaxPoint;
 };
 } //namespace exec
 } //namespace vtkm

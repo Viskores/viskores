@@ -23,9 +23,9 @@ struct IndicesExtrude
   IndicesExtrude() = default;
 
   VTKM_EXEC
-  IndicesExtrude(vtkm::Vec<vtkm::Int32, 3> pointIds1,
+  IndicesExtrude(vtkm::Vec3i_32 pointIds1,
                  vtkm::Int32 plane1,
-                 vtkm::Vec<vtkm::Int32, 3> pointIds2,
+                 vtkm::Vec3i_32 pointIds2,
                  vtkm::Int32 plane2,
                  vtkm::Int32 numberOfPointsPerPlane)
     : PointIds{ pointIds1, pointIds2 }
@@ -62,7 +62,7 @@ struct IndicesExtrude
     }
   }
 
-  vtkm::Vec<vtkm::Int32, 3> PointIds[2];
+  vtkm::Vec3i_32 PointIds[2];
   vtkm::Int32 Planes[2];
   vtkm::Int32 NumberOfPointsPerPlane;
 };

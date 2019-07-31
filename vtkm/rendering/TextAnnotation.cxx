@@ -39,7 +39,7 @@ const std::string& TextAnnotation::GetText() const
   return this->Text;
 }
 
-void TextAnnotation::SetRawAnchor(const vtkm::Vec<vtkm::Float32, 2>& anchor)
+void TextAnnotation::SetRawAnchor(const vtkm::Vec2f_32& anchor)
 {
   this->Anchor = anchor;
 }

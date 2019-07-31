@@ -38,7 +38,7 @@ void CellLocatorRectilinearGrid::Build()
   if (!cellSet.IsSameType(StructuredType()))
     throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
 
-  vtkm::Vec<vtkm::Id, 3> celldims =
+  vtkm::Id3 celldims =
     cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
 
   this->PlaneSize = celldims[0] * celldims[1];

@@ -22,7 +22,7 @@ namespace twolevelgrid
 {
 using DimensionType = vtkm::Int16;
 using DimVec3 = vtkm::Vec<DimensionType, 3>;
-using FloatVec3 = vtkm::Vec<vtkm::FloatDefault, 3>;
+using FloatVec3 = vtkm::Vec3f;
 
 struct Grid
 {

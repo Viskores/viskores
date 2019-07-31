@@ -76,7 +76,7 @@ public:
 class VTKM_ALWAYS_EXPORT MeshConnStructured : public MeshConnectivityBase
 {
 protected:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::Id4> Id4Handle;
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
 

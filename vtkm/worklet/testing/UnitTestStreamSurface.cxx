@@ -17,7 +17,7 @@
 namespace
 {
 void appendPts(vtkm::cont::DataSetBuilderExplicitIterative& dsb,
-               const vtkm::Vec<vtkm::FloatDefault, 3>& pt,
+               const vtkm::Vec3f& pt,
                std::vector<vtkm::Id>& ids)
 {
   vtkm::Id pid = dsb.AddPoint(pt);
@@ -26,7 +26,7 @@ void appendPts(vtkm::cont::DataSetBuilderExplicitIterative& dsb,
 
 void TestSameNumPolylines()
 {
-  using VecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using VecType = vtkm::Vec3f;
 
   vtkm::cont::DataSetBuilderExplicitIterative dsb;
   std::vector<vtkm::Id> ids;
@@ -54,7 +54,7 @@ void TestSameNumPolylines()
 
   vtkm::cont::DataSet ds = dsb.Create();
   vtkm::worklet::StreamSurface streamSurfaceWorklet;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newPoints;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
   streamSurfaceWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), newPoints, newCells);
 
@@ -73,7 +73,7 @@ void TestSameNumPolylines()
 
 void TestUnequalNumPolylines(int unequalType)
 {
-  using VecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using VecType = vtkm::Vec3f;
 
   vtkm::cont::DataSetBuilderExplicitIterative dsb;
   std::vector<vtkm::Id> ids;
@@ -119,7 +119,7 @@ void TestUnequalNumPolylines(int unequalType)
 
   vtkm::cont::DataSet ds = dsb.Create();
   vtkm::worklet::StreamSurface streamSurfaceWorklet;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newPoints;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
   streamSurfaceWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), newPoints, newCells);
 

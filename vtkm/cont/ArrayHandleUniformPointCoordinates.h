@@ -26,14 +26,14 @@ namespace cont
 ///
 class VTKM_ALWAYS_EXPORT ArrayHandleUniformPointCoordinates
   : public vtkm::cont::ArrayHandle<
-      vtkm::Vec<vtkm::FloatDefault, 3>,
+      vtkm::Vec3f,
       vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS_NT(
     ArrayHandleUniformPointCoordinates,
     (vtkm::cont::ArrayHandle<
-      vtkm::Vec<vtkm::FloatDefault, 3>,
+      vtkm::Vec3f,
       vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>));
 
 private:
@@ -67,7 +67,7 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
 
 template <>
 struct SerializableTypeString<vtkm::cont::ArrayHandle<
-  vtkm::Vec<vtkm::FloatDefault, 3>,
+  vtkm::Vec3f,
   vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>>
   : SerializableTypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
 {
@@ -109,7 +109,7 @@ public:
 
 template <>
 struct Serialization<vtkm::cont::ArrayHandle<
-  vtkm::Vec<vtkm::FloatDefault, 3>,
+  vtkm::Vec3f,
   vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>>
   : Serialization<vtkm::cont::ArrayHandleUniformPointCoordinates>
 {

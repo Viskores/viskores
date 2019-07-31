@@ -140,21 +140,21 @@ struct BenchmarkValueTypeFunctor
   bool operator()(DeviceAdapter id)
   {
     BenchmarkValueType<vtkm::UInt8, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec<vtkm::UInt8, 2>, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec<vtkm::UInt8, 3>, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec<vtkm::UInt8, 4>, DeviceAdapter>(id);
+    BenchmarkValueType<vtkm::Vec2ui_8, DeviceAdapter>(id);
+    BenchmarkValueType<vtkm::Vec3ui_8, DeviceAdapter>(id);
+    BenchmarkValueType<vtkm::Vec4ui_8, DeviceAdapter>(id);
 
     BenchmarkValueType<vtkm::UInt32, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec<vtkm::UInt32, 2>, DeviceAdapter>(id);
+    BenchmarkValueType<vtkm::Vec2ui_32, DeviceAdapter>(id);
 
     BenchmarkValueType<vtkm::UInt64, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec<vtkm::UInt64, 2>, DeviceAdapter>(id);
+    BenchmarkValueType<vtkm::Vec2ui_64, DeviceAdapter>(id);
 
     BenchmarkValueType<vtkm::Float32, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec<vtkm::Float32, 2>, DeviceAdapter>(id);
+    BenchmarkValueType<vtkm::Vec2f_32, DeviceAdapter>(id);
 
     BenchmarkValueType<vtkm::Float64, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec<vtkm::Float64, 2>, DeviceAdapter>(id);
+    BenchmarkValueType<vtkm::Vec2f_64, DeviceAdapter>(id);
 
     BenchmarkValueType<vtkm::Pair<vtkm::UInt32, vtkm::Float32>, DeviceAdapter>(id);
     BenchmarkValueType<vtkm::Pair<vtkm::UInt32, vtkm::Float64>, DeviceAdapter>(id);

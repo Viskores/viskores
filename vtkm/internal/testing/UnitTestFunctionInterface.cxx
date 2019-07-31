@@ -33,7 +33,7 @@ const Type2 Arg2 = 5678.125;
 using Type3 = std::string;
 const Type3 Arg3("Third argument");
 
-using Type4 = vtkm::Vec<vtkm::Float32, 3>;
+using Type4 = vtkm::Vec3f_32;
 const Type4 Arg4(1.2f, 3.4f, 5.6f);
 
 using Type5 = vtkm::Id3;

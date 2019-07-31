@@ -146,12 +146,12 @@ static void TestFieldRangeCompute()
 
   TryRangeComputeDS<vtkm::Float64>(0, 1000);
   TryRangeComputeDS<vtkm::Int32>(-1024, 1024);
-  TryRangeComputeDS<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                 vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeComputeDS<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                    vtkm::make_Vec(2048, 2048, 2048));
   TryRangeComputeMB<vtkm::Float64>(0, 1000);
   TryRangeComputeMB<vtkm::Int32>(-1024, 1024);
-  TryRangeComputeMB<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                 vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeComputeMB<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                    vtkm::make_Vec(2048, 2048, 2048));
 };
 
 int UnitTestFieldRangeCompute(int argc, char* argv[])

@@ -44,15 +44,15 @@ vtkm::cont::DataSet make3DRectilinearDataSet(double time)
   double zdiff = (zmax - zmin) / (dims[2] - 1);
 
   vtkm::Id3 DIMS(dims[0], dims[1], dims[2]);
-  vtkm::Vec<vtkm::Float64, 3> ORIGIN(0, 0, 0);
-  vtkm::Vec<vtkm::Float64, 3> SPACING(xdiff, ydiff, zdiff);
+  vtkm::Vec3f_64 ORIGIN(0, 0, 0);
+  vtkm::Vec3f_64 SPACING(xdiff, ydiff, zdiff);
 
   vtkm::cont::DataSet dataset = dsb.Create(DIMS, ORIGIN, SPACING);
   vtkm::cont::DataSetFieldAdd dsf;
 
   int numPoints = dims[0] * dims[1] * dims[2];
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> velocityField;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> velocityField;
   velocityField.Allocate(numPoints);
 
   int count = 0;
@@ -65,8 +65,7 @@ vtkm::cont::DataSet make3DRectilinearDataSet(double time)
         double vec[3];
         double loc[3] = { i * xdiff + xmin, j * ydiff + ymax, k * zdiff + zmin };
         field.calculateVelocity(loc, time, vec);
-        velocityField.GetPortalControl().Set(count,
-                                             vtkm::Vec<vtkm::Float64, 3>(vec[0], vec[1], vec[2]));
+        velocityField.GetPortalControl().Set(count, vtkm::Vec3f_64(vec[0], vec[1], vec[2]));
         count++;
       }
     }

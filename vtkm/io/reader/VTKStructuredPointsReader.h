@@ -41,7 +41,7 @@ private:
 
     // Read structured points specific meta-data
     vtkm::Id3 dim;
-    vtkm::Vec<vtkm::Float32, 3> origin, spacing;
+    vtkm::Vec3f_32 origin, spacing;
 
     //Two ways the file can describe the dimensions. The proper way is by
     //using the DIMENSIONS keyword, but VisIt written VTK files spicify data

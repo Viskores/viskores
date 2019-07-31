@@ -32,7 +32,7 @@ class CalcDistance : public vtkm::worklet::WorkletMapField
 {
 public:
   VTKM_CONT
-  CalcDistance(const vtkm::Vec<vtkm::Float32, 3>& _eye_pos)
+  CalcDistance(const vtkm::Vec3f_32& _eye_pos)
     : eye_pos(_eye_pos)
   {
   }
@@ -45,7 +45,7 @@ public:
     out = static_cast<OutType>(vtkm::Sqrt(vtkm::dot(tmp, tmp)));
   }
 
-  const vtkm::Vec<vtkm::Float32, 3> eye_pos;
+  const vtkm::Vec3f_32 eye_pos;
 }; //class CalcDistance
 
 struct MapperCylinder::InternalsType

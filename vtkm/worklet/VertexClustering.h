@@ -127,10 +127,10 @@ struct VertexClustering
 
   struct GridInfo
   {
-    vtkm::Vec<vtkm::Id, 3> dim;
-    vtkm::Vec<vtkm::Float64, 3> origin;
-    vtkm::Vec<vtkm::Float64, 3> bin_size;
-    vtkm::Vec<vtkm::Float64, 3> inv_bin_size;
+    vtkm::Id3 dim;
+    vtkm::Vec3f_64 origin;
+    vtkm::Vec3f_64 bin_size;
+    vtkm::Vec3f_64 inv_bin_size;
   };
 
   // input: points  output: cid of the points

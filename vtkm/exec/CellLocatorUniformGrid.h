@@ -42,8 +42,8 @@ private:
 public:
   VTKM_CONT
   CellLocatorUniformGrid(const vtkm::Bounds& bounds,
-                         const vtkm::Vec<vtkm::FloatDefault, 3> rangeTransform,
-                         const vtkm::Vec<vtkm::Id, 3> cellDims,
+                         const vtkm::Vec3f rangeTransform,
+                         const vtkm::Id3 cellDims,
                          const vtkm::cont::CellSetStructured<3>& cellSet,
                          const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
                          DeviceAdapter)
@@ -64,9 +64,9 @@ public:
   }
 
   VTKM_EXEC
-  void FindCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+  void FindCell(const vtkm::Vec3f& point,
                 vtkm::Id& cellId,
-                vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
+                vtkm::Vec3f& parametric,
                 const vtkm::exec::FunctorBase& worklet) const override
   {
     if (!Bounds.Contains(point))
@@ -75,7 +75,7 @@ public:
       return;
     }
     // Get the Cell Id from the point.
-    vtkm::Vec<vtkm::Id, 3> logicalCell;
+    vtkm::Id3 logicalCell;
     logicalCell[0] = (point[0] == Bounds.X.Max)
       ? CellDims[0] - 1
       : static_cast<vtkm::Id>(vtkm::Floor((point[0] - Bounds.X.Min) * RangeTransform[0]));
@@ -101,8 +101,8 @@ public:
 
 private:
   vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
-  vtkm::Vec<vtkm::Id, 3> CellDims;
+  vtkm::Vec3f RangeTransform;
+  vtkm::Id3 CellDims;
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;
   CellSetPortal CellSet;

@@ -294,8 +294,7 @@ void DoTest()
   // on some compilers. Since we want to test these operators, just remove the short types from
   // the list to avoid the warning.
   vtkm::testing::Testing::TryTypes(
-    DoTestForType(),
-    vtkm::ListTagBase<vtkm::Id, vtkm::FloatDefault, vtkm::Vec<vtkm::Float64, 3>>());
+    DoTestForType(), vtkm::ListTagBase<vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>());
 }
 
 } // anonymous namespace

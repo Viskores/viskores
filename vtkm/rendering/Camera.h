@@ -49,9 +49,9 @@ class VTKM_RENDERING_EXPORT Camera
                                                              vtkm::Float32 nearPlane,
                                                              vtkm::Float32 farPlane) const;
 
-    vtkm::Vec<vtkm::Float32, 3> LookAt;
-    vtkm::Vec<vtkm::Float32, 3> Position;
-    vtkm::Vec<vtkm::Float32, 3> ViewUp;
+    vtkm::Vec3f_32 LookAt;
+    vtkm::Vec3f_32 Position;
+    vtkm::Vec3f_32 ViewUp;
     vtkm::Float32 FieldOfView;
     vtkm::Float32 XPan;
     vtkm::Float32 YPan;
@@ -234,9 +234,9 @@ public:
   /// position. If \c LookAt is set, the mode is changed to 3D mode.
   ///
   VTKM_CONT
-  const vtkm::Vec<vtkm::Float32, 3>& GetLookAt() const { return this->Camera3D.LookAt; }
+  const vtkm::Vec3f_32& GetLookAt() const { return this->Camera3D.LookAt; }
   VTKM_CONT
-  void SetLookAt(const vtkm::Vec<vtkm::Float32, 3>& lookAt)
+  void SetLookAt(const vtkm::Vec3f_32& lookAt)
   {
     this->SetModeTo3D();
     this->Camera3D.LookAt = lookAt;
@@ -253,18 +253,15 @@ public:
   /// \c Position is set, the mode is changed to 3D mode.
   ///
   VTKM_CONT
-  const vtkm::Vec<vtkm::Float32, 3>& GetPosition() const { return this->Camera3D.Position; }
+  const vtkm::Vec3f_32& GetPosition() const { return this->Camera3D.Position; }
   VTKM_CONT
-  void SetPosition(const vtkm::Vec<vtkm::Float32, 3>& position)
+  void SetPosition(const vtkm::Vec3f_32& position)
   {
     this->SetModeTo3D();
     this->Camera3D.Position = position;
   }
   VTKM_CONT
-  void SetPosition(const vtkm::Vec<vtkm::Float64, 3>& position)
-  {
-    this->SetPosition(vtkm::Vec<vtkm::Float32, 3>(position));
-  }
+  void SetPosition(const vtkm::Vec3f_64& position) { this->SetPosition(vtkm::Vec3f_32(position)); }
 
   /// \brief The up orientation of the camera in 3D mode
   ///
@@ -274,18 +271,15 @@ public:
   /// view up. If \c ViewUp is set, the mode is changed to 3D mode.
   ///
   VTKM_CONT
-  const vtkm::Vec<vtkm::Float32, 3>& GetViewUp() const { return this->Camera3D.ViewUp; }
+  const vtkm::Vec3f_32& GetViewUp() const { return this->Camera3D.ViewUp; }
   VTKM_CONT
-  void SetViewUp(const vtkm::Vec<vtkm::Float32, 3>& viewUp)
+  void SetViewUp(const vtkm::Vec3f_32& viewUp)
   {
     this->SetModeTo3D();
     this->Camera3D.ViewUp = viewUp;
   }
   VTKM_CONT
-  void SetViewUp(const vtkm::Vec<vtkm::Float64, 3>& viewUp)
-  {
-    this->SetViewUp(vtkm::Vec<vtkm::Float32, 3>(viewUp));
-  }
+  void SetViewUp(const vtkm::Vec3f_64& viewUp) { this->SetViewUp(vtkm::Vec3f_32(viewUp)); }
 
   /// \brief The xscale of the camera
   ///
@@ -334,15 +328,15 @@ public:
     this->Pan(static_cast<vtkm::Float32>(dx), static_cast<vtkm::Float32>(dy));
   }
   VTKM_CONT
-  void Pan(vtkm::Vec<vtkm::Float32, 2> direction) { this->Pan(direction[0], direction[1]); }
+  void Pan(vtkm::Vec2f_32 direction) { this->Pan(direction[0], direction[1]); }
 
   VTKM_CONT
-  void Pan(vtkm::Vec<vtkm::Float64, 2> direction) { this->Pan(direction[0], direction[1]); }
+  void Pan(vtkm::Vec2f_64 direction) { this->Pan(direction[0], direction[1]); }
 
   VTKM_CONT
-  vtkm::Vec<vtkm::Float32, 2> GetPan() const
+  vtkm::Vec2f_32 GetPan() const
   {
-    vtkm::Vec<vtkm::Float32, 2> pan;
+    vtkm::Vec2f_32 pan;
     pan[0] = this->Camera3D.XPan;
     pan[1] = this->Camera3D.YPan;
     return pan;

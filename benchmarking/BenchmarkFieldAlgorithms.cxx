@@ -344,7 +344,7 @@ struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>
 {
 };
 
-struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Vec<vtkm::Float32, 3>>
+struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Vec3f_32>
 {
 };
 
@@ -876,7 +876,7 @@ private:
 
   struct ImplicitFunctionBenchData
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Points;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> Points;
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Result;
     vtkm::Sphere Sphere1, Sphere2;
   };

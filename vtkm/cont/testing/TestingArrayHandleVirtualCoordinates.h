@@ -80,7 +80,7 @@ private:
 
   static void TestAll()
   {
-    using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
+    using PointType = vtkm::Vec3f;
     static constexpr vtkm::Id length = 64;
 
     vtkm::cont::ArrayHandle<PointType> out;

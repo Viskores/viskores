@@ -172,7 +172,7 @@ void TryVector3(vtkm::cont::ArrayHandle<T1, StorageTag> array1,
   std::cout << "        Fourth component from Scalar." << std::endl;
   TryVector4(array1, array2, array3, MakeInputArray<vtkm::FloatDefault>(3));
   std::cout << "        Fourth component from Vector4." << std::endl;
-  TryVector4(array1, array2, array3, MakeInputArray<vtkm::Vec<vtkm::FloatDefault, 4>>(3));
+  TryVector4(array1, array2, array3, MakeInputArray<vtkm::Vec4f>(3));
 }
 
 template <typename T1, typename T2>
@@ -197,7 +197,7 @@ void TryVector2(vtkm::cont::ArrayHandle<T1, StorageTag> array1,
   std::cout << "      Third component from Scalar." << std::endl;
   TryVector3(array1, array2, MakeInputArray<vtkm::FloatDefault>(2));
   std::cout << "      Third component from Vector2." << std::endl;
-  TryVector3(array1, array2, MakeInputArray<vtkm::Vec<vtkm::FloatDefault, 2>>(2));
+  TryVector3(array1, array2, MakeInputArray<vtkm::Vec2f>(2));
 }
 
 template <typename T1>
@@ -216,7 +216,7 @@ void TryVector1(vtkm::cont::ArrayHandle<T1, StorageTag> array1)
   std::cout << "    Second component from Scalar." << std::endl;
   TryVector2(array1, MakeInputArray<vtkm::FloatDefault>(1));
   std::cout << "    Second component from Vector4." << std::endl;
-  TryVector2(array1, MakeInputArray<vtkm::Vec<vtkm::FloatDefault, 4>>(1));
+  TryVector2(array1, MakeInputArray<vtkm::Vec4f>(1));
 }
 
 void TryVector()
@@ -226,7 +226,7 @@ void TryVector()
   std::cout << "  First component from Scalar." << std::endl;
   TryVector1(MakeInputArray<vtkm::FloatDefault>(0));
   std::cout << "  First component from Vector3." << std::endl;
-  TryVector1(MakeInputArray<vtkm::Vec<vtkm::FloatDefault, 3>>(0));
+  TryVector1(MakeInputArray<vtkm::Vec3f>(0));
 }
 
 void TrySpecialArrays()

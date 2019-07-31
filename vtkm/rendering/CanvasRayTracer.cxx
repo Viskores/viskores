@@ -52,13 +52,13 @@ public:
                             const vtkm::Id& index) const
   {
     vtkm::Vec<Precision, 3> intersection = origin + inDepth * dir;
-    vtkm::Vec<vtkm::Float32, 4> point;
+    vtkm::Vec4f_32 point;
     point[0] = static_cast<vtkm::Float32>(intersection[0]);
     point[1] = static_cast<vtkm::Float32>(intersection[1]);
     point[2] = static_cast<vtkm::Float32>(intersection[2]);
     point[3] = 1.f;
 
-    vtkm::Vec<vtkm::Float32, 4> newpoint;
+    vtkm::Vec4f_32 newpoint;
     newpoint = vtkm::MatrixMultiply(this->ViewProjMat, point);
     newpoint[0] = newpoint[0] / newpoint[3];
     newpoint[1] = newpoint[1] / newpoint[3];
@@ -67,13 +67,13 @@ public:
     vtkm::Float32 depth = newpoint[2];
 
     depth = 0.5f * (depth) + 0.5f;
-    vtkm::Vec<vtkm::Float32, 4> color;
+    vtkm::Vec4f_32 color;
     color[0] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 0));
     color[1] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 1));
     color[2] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 2));
     color[3] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 3));
     // blend the mapped color with existing canvas color
-    vtkm::Vec<vtkm::Float32, 4> inColor = colorBuffer.Get(pixelIndex);
+    vtkm::Vec4f_32 inColor = colorBuffer.Get(pixelIndex);
 
     // if transparency exists, all alphas have been pre-multiplied
     vtkm::Float32 alpha = (1.f - color[3]);

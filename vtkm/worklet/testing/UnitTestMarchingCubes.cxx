@@ -94,10 +94,10 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numCells),
                         cellFieldArray);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
+  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
@@ -124,21 +124,21 @@ public:
   {
   }
   VTKM_EXEC_CONT
-  EuclideanNorm(vtkm::Vec<vtkm::Float32, 3> reference)
+  EuclideanNorm(vtkm::Vec3f_32 reference)
     : Reference(reference)
   {
   }
 
   VTKM_EXEC_CONT
-  vtkm::Float32 operator()(vtkm::Vec<vtkm::Float32, 3> v) const
+  vtkm::Float32 operator()(vtkm::Vec3f_32 v) const
   {
-    vtkm::Vec<vtkm::Float32, 3> d(
+    vtkm::Vec3f_32 d(
       v[0] - this->Reference[0], v[1] - this->Reference[1], v[2] - this->Reference[2]);
     return vtkm::Magnitude(d);
   }
 
 private:
-  vtkm::Vec<vtkm::Float32, 3> Reference;
+  vtkm::Vec3f_32 Reference;
 };
 
 class CubeGridConnectivity
@@ -232,7 +232,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   using HexTag = vtkm::CellShapeTagHexahedron;
   using HexTraits = vtkm::CellTraits<HexTag>;
 
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
 
   const vtkm::IdComponent nCells = dim * dim * dim;
 
@@ -292,8 +292,8 @@ void TestMarchingCubesUniformGrid()
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
   vtkm::Float32 contourValue = 0.5f;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verticesArray;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> normalsArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 
   auto result = isosurfaceFilter.Run(&contourValue,
@@ -334,7 +334,7 @@ void TestMarchingCubesExplicit()
   std::cout << "Testing MarchingCubes worklet on explicit data" << std::endl;
 
   using DataSetGenerator = vtkm_ut_mc_worklet::MakeRadiantDataSet;
-  using Vec3Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
+  using Vec3Handle = vtkm::cont::ArrayHandle<vtkm::Vec3f_32>;
   using DataHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
 
   DataSetGenerator dataSetGenerator;

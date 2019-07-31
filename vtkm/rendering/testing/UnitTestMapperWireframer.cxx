@@ -25,8 +25,8 @@ vtkm::cont::DataSet Make3DUniformDataSet(vtkm::Id size = 64)
   vtkm::Float32 center = static_cast<vtkm::Float32>(-size) / 2.0f;
   vtkm::cont::DataSetBuilderUniform builder;
   vtkm::cont::DataSet dataSet = builder.Create(vtkm::Id3(size, size, size),
-                                               vtkm::Vec<vtkm::Float32, 3>(center, center, center),
-                                               vtkm::Vec<vtkm::Float32, 3>(1.0f, 1.0f, 1.0f));
+                                               vtkm::Vec3f_32(center, center, center),
+                                               vtkm::Vec3f_32(1.0f, 1.0f, 1.0f));
   const char* fieldName = "pointvar";
   vtkm::Id numValues = dataSet.GetCoordinateSystem().GetNumberOfPoints();
   vtkm::cont::ArrayHandleCounting<vtkm::Float32> fieldValues(
@@ -42,7 +42,7 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetBuilderExplicit dsb;
   const int nVerts = 5;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords(nVerts);
   CoordType coordinates[nVerts] = { CoordType(0.f, 0.f, 0.f),
                                     CoordType(1.f, .5f, 0.f),

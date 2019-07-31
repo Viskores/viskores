@@ -170,7 +170,7 @@ void ConnectivityTracer::Init()
     BackgroundColor[3] = 1.f;
     const vtkm::Float32 defaultSampleRate = 200.f;
     // We need to set some default sample distance
-    vtkm::Vec<vtkm::Float32, 3> extent;
+    vtkm::Vec3f_32 extent;
     extent[0] = BoundingBox[1] - BoundingBox[0];
     extent[1] = BoundingBox[3] - BoundingBox[2];
     extent[2] = BoundingBox[5] - BoundingBox[4];
@@ -183,8 +183,7 @@ vtkm::Id ConnectivityTracer::GetNumberOfMeshCells() const
   return CellSet.GetNumberOfCells();
 }
 
-void ConnectivityTracer::SetColorMap(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap)
+void ConnectivityTracer::SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap)
 {
   ColorMap = colorMap;
 }
@@ -282,7 +281,7 @@ void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
   MeshContainer = builder.BuildConnectivity(cellSet, coords);
 }
 
-void ConnectivityTracer::SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
+void ConnectivityTracer::SetBackgroundColor(const vtkm::Vec4f_32& backgroundColor)
 {
   BackgroundColor = backgroundColor;
 }
@@ -786,10 +785,8 @@ class IdentifyMissedRay : public vtkm::worklet::WorkletMapField
 public:
   vtkm::Id Width;
   vtkm::Id Height;
-  vtkm::Vec<vtkm::Float32, 4> BGColor;
-  IdentifyMissedRay(const vtkm::Id width,
-                    const vtkm::Id height,
-                    vtkm::Vec<vtkm::Float32, 4> bgcolor)
+  vtkm::Vec4f_32 BGColor;
+  IdentifyMissedRay(const vtkm::Id width, const vtkm::Id height, vtkm::Vec4f_32 bgcolor)
     : Width(width)
     , Height(height)
     , BGColor(bgcolor)
@@ -799,7 +796,7 @@ public:
   using ExecutionSignature = void(_1, _2);
 
 
-  VTKM_EXEC inline bool IsBGColor(const vtkm::Vec<vtkm::Float32, 4> color) const
+  VTKM_EXEC inline bool IsBGColor(const vtkm::Vec4f_32 color) const
   {
     bool isBG = false;
 
@@ -820,7 +817,7 @@ public:
       return;
     if (x >= Width - 1 || y >= Height - 1)
       return;
-    vtkm::Vec<vtkm::Float32, 4> pixel;
+    vtkm::Vec4f_32 pixel;
     pixel[0] = static_cast<vtkm::Float32>(buffer.Get(pixelId * 4 + 0));
     pixel[1] = static_cast<vtkm::Float32>(buffer.Get(pixelId * 4 + 1));
     pixel[2] = static_cast<vtkm::Float32>(buffer.Get(pixelId * 4 + 2));
@@ -905,7 +902,7 @@ public:
     if (rayStatus != RAY_ACTIVE)
       return;
 
-    vtkm::Vec<vtkm::Float32, 4> color;
+    vtkm::Vec4f_32 color;
     BOUNDS_CHECK(frameBuffer, pixelIndex * 4 + 0);
     color[0] = static_cast<vtkm::Float32>(frameBuffer.Get(pixelIndex * 4 + 0));
     BOUNDS_CHECK(frameBuffer, pixelIndex * 4 + 1);
@@ -936,7 +933,7 @@ public:
     if (colorIndex >= colorMapSize)
       colorIndex = colorMapSize - 1;
     BOUNDS_CHECK(colorMap, colorIndex);
-    vtkm::Vec<vtkm::Float32, 4> sampleColor = colorMap.Get(colorIndex);
+    vtkm::Vec4f_32 sampleColor = colorMap.Get(colorIndex);
 
     while (enterDistance <= currentDistance && currentDistance <= exitDistance)
     {
@@ -1010,7 +1007,7 @@ public:
                                    const FloatType& enterDistance,
                                    const FloatType& exitDistance,
                                    FloatType& currentDistance,
-                                   const vtkm::Vec<vtkm::Float32, 3>& dir,
+                                   const vtkm::Vec3f_32& dir,
                                    vtkm::UInt8& rayStatus,
                                    const vtkm::Id& pixelIndex,
                                    const vtkm::Vec<FloatType, 3>& origin,
@@ -1022,7 +1019,7 @@ public:
     if (rayStatus != RAY_ACTIVE)
       return;
 
-    vtkm::Vec<vtkm::Float32, 4> color;
+    vtkm::Vec4f_32 color;
     BOUNDS_CHECK(frameBuffer, pixelIndex * 4 + 0);
     color[0] = static_cast<vtkm::Float32>(frameBuffer.Get(pixelIndex * 4 + 0));
     BOUNDS_CHECK(frameBuffer, pixelIndex * 4 + 1);
@@ -1093,7 +1090,7 @@ public:
 
       colorIndex = vtkm::Min(vtkm::Max(colorIndex, vtkm::Id(0)), colorMapSize - 1);
       BOUNDS_CHECK(colorMap, colorIndex);
-      vtkm::Vec<vtkm::Float32, 4> sampleColor = colorMap.Get(colorIndex);
+      vtkm::Vec4f_32 sampleColor = colorMap.Get(colorIndex);
       //composite
       sampleColor[3] *= (1.f - color[3]);
       color[0] = color[0] + sampleColor[0] * sampleColor[3];

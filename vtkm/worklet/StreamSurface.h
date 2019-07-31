@@ -215,10 +215,10 @@ public:
   VTKM_CONT
   void Run(const vtkm::cont::CoordinateSystem& coords,
            const vtkm::cont::DynamicCellSet& cellset,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& newPoints,
+           vtkm::cont::ArrayHandle<vtkm::Vec3f>& newPoints,
            vtkm::cont::CellSetSingleType<>& newCells)
   {
-    using ExplCoordsType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+    using ExplCoordsType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
     if (!(coords.GetData().IsType<ExplCoordsType>() &&
           (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()) ||

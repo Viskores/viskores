@@ -24,11 +24,10 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 
-vtkm::Vec<vtkm::FloatDefault, 3> ArchimedeanSpiralToCartesian(
-  vtkm::Vec<vtkm::FloatDefault, 3> const& p)
+vtkm::Vec3f ArchimedeanSpiralToCartesian(vtkm::Vec3f const& p)
 {
   // p[0] = r, p[1] = theta, p[2] = z:
-  vtkm::Vec<vtkm::FloatDefault, 3> xyz;
+  vtkm::Vec3f xyz;
   auto c = std::polar(p[0], p[1]);
   xyz[0] = c.real();
   xyz[1] = c.imag();
@@ -51,9 +50,8 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
       numLineSegments; // roughly two spins around. Doesn't need to be perfect.
     vtkm::FloatDefault r = a + b * t;
     vtkm::FloatDefault theta = t;
-    vtkm::Vec<vtkm::FloatDefault, 3> cylindricalCoordinate{ r, theta, t };
-    vtkm::Vec<vtkm::FloatDefault, 3> spiralSample =
-      ArchimedeanSpiralToCartesian(cylindricalCoordinate);
+    vtkm::Vec3f cylindricalCoordinate{ r, theta, t };
+    vtkm::Vec3f spiralSample = ArchimedeanSpiralToCartesian(cylindricalCoordinate);
     vtkm::Id pid = dsb.AddPoint(spiralSample);
     ids.push_back(pid);
   }
@@ -68,7 +66,7 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
 
   // You added lines, but you need to extend it to a tube.
   // This generates a new pointset, and new cell set.
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> tubePoints;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> tubePoints;
   vtkm::cont::CellSetSingleType<> tubeCells;
   tubeWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), tubePoints, tubeCells);
 
@@ -78,7 +76,7 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
 
   vtkm::Bounds coordsBounds = tubeDataset.GetCoordinateSystem().GetBounds();
 
-  vtkm::Vec<vtkm::Float64, 3> totalExtent(
+  vtkm::Vec3f_64 totalExtent(
     coordsBounds.X.Length(), coordsBounds.Y.Length(), coordsBounds.Z.Length());
   vtkm::Float64 mag = vtkm::Magnitude(totalExtent);
   vtkm::Normalize(totalExtent);

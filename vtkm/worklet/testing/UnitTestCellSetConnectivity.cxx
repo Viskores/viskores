@@ -89,10 +89,10 @@ static vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numCells),
                         cellFieldArray);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
+  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));

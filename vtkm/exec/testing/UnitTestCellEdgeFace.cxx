@@ -24,7 +24,7 @@
 namespace
 {
 
-using EdgeType = vtkm::Vec<vtkm::IdComponent, 2>;
+using EdgeType = vtkm::IdComponent2;
 
 void MakeEdgeCanonical(EdgeType& edge)
 {

@@ -98,7 +98,7 @@ public:
     vtkm::Int32 nTrainingPoints = 5;
     vtkm::Int32 nTestingPoint = 1;
 
-    std::vector<vtkm::Vec<vtkm::Float32, 3>> coordi;
+    std::vector<vtkm::Vec3f_32> coordi;
 
     ///// randomly generate training points/////
     std::default_random_engine dre;
@@ -131,7 +131,7 @@ public:
     locator->Update();
 
     ///// randomly generate testing points/////
-    std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
+    std::vector<vtkm::Vec3f_32> qcVec;
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
     {
       qcVec.push_back(vtkm::make_Vec(dr(dre), dr(dre), dr(dre)));

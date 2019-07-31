@@ -73,7 +73,7 @@ struct TestInterpolateFunctor
     std::cout << "  Test interpolated value at each cell node." << std::endl;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec<vtkm::FloatDefault, 3> pcoord =
+      vtkm::Vec3f pcoord =
         vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
       FieldType interpolatedValue =
@@ -87,8 +87,7 @@ struct TestInterpolateFunctor
     if (numPoints > 0)
     {
       std::cout << "  Test interpolated value at cell center." << std::endl;
-      vtkm::Vec<vtkm::FloatDefault, 3> pcoord =
-        vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, workletProxy);
+      vtkm::Vec3f pcoord = vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
       FieldType interpolatedValue =
         vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, workletProxy);
@@ -145,13 +144,13 @@ void TestInterpolate()
   std::cout << "======== Float64 ==========================" << std::endl;
   vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Float64>());
   std::cout << "======== Vec<Float32,3> ===================" << std::endl;
-  vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec<vtkm::Float32, 3>>());
+  vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec3f_32>());
   std::cout << "======== Vec<Float64,3> ===================" << std::endl;
-  vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec<vtkm::Float64, 3>>());
+  vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec3f_64>());
 
-  TestInterpolateFunctor<vtkm::Vec<vtkm::FloatDefault, 3>> testFunctor;
-  vtkm::Vec<vtkm::FloatDefault, 3> origin = TestValue(0, vtkm::Vec<vtkm::FloatDefault, 3>());
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing = TestValue(1, vtkm::Vec<vtkm::FloatDefault, 3>());
+  TestInterpolateFunctor<vtkm::Vec3f> testFunctor;
+  vtkm::Vec3f origin = TestValue(0, vtkm::Vec3f());
+  vtkm::Vec3f spacing = TestValue(1, vtkm::Vec3f());
   std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
   testFunctor.DoTestWithField(vtkm::CellShapeTagLine(),
                               vtkm::VecAxisAlignedPointCoordinates<1>(origin, spacing));
