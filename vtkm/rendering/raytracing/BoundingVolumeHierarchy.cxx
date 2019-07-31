@@ -16,6 +16,7 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 
@@ -27,7 +28,6 @@
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
 
-#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #define AABB_EPSILON 0.00001f

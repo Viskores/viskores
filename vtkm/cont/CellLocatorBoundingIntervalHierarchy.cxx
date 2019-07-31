@@ -22,9 +22,8 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/Invoker.h>
+
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -87,7 +86,7 @@ void CalculatePlaneSplitCost(vtkm::IdComponent planeIndex,
                              vtkm::IdComponent index,
                              vtkm::IdComponent numTotalPlanes)
 {
-  vtkm::worklet::Invoker invoker;
+  vtkm::cont::Invoker invoker;
 
   // Make candidate split plane array
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> splitPlanes;
@@ -182,7 +181,7 @@ IdArrayHandle CalculateSplitScatterIndices(const IdArrayHandle& cellIds,
                                            const IdArrayHandle& leqFlags,
                                            const IdArrayHandle& segmentIds)
 {
-  vtkm::worklet::Invoker invoker;
+  vtkm::cont::Invoker invoker;
 
   // Count total number of true flags preceding in segment
   IdArrayHandle trueFlagCounts;
@@ -230,7 +229,7 @@ CellLocatorBoundingIntervalHierarchy::~CellLocatorBoundingIntervalHierarchy() = 
 
 void CellLocatorBoundingIntervalHierarchy::Build()
 {
-  vtkm::worklet::Invoker invoker;
+  vtkm::cont::Invoker invoker;
 
   vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
   vtkm::Id numCells = cellSet.GetNumberOfCells();

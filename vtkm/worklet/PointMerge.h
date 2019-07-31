@@ -13,7 +13,6 @@
 #include <vtkm/worklet/AverageByKey.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
-#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/RemoveUnusedPoints.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -25,6 +24,7 @@
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
+#include <vtkm/cont/Invoker.h>
 
 #include <vtkm/Bounds.h>
 #include <vtkm/Hash.h>
@@ -336,7 +336,7 @@ private:
     vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& points, // coordinates, modified to merge close
     vtkm::cont::ArrayHandle<vtkm::Id> indexNeighborMap) // identifies each neighbor group, updated
   {
-    Invoker invoker;
+    vtkm::cont::Invoker invoker;
 
     vtkm::cont::ArrayHandle<vtkm::HashType> hashes;
     invoker(CoordsToHash(), points, binLocator, hashes);
@@ -358,7 +358,7 @@ public:
     const vtkm::Bounds& bounds,                       // Bounds of points
     vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& points) // coordinates, modified to merge close
   {
-    Invoker invoker;
+    vtkm::cont::Invoker invoker;
 
     BinLocator binLocator(bounds, delta);
 

@@ -19,8 +19,8 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/Invoker.h>
 
-#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/ScatterUniform.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -375,7 +375,7 @@ public:
     // Worklet to make the streamlines
     streamline::MakeStreamLines<FieldType> makeStreamLines(timeStep, streamMode, maxSteps, vdims);
 
-    vtkm::worklet::Invoker{}(
+    vtkm::cont::Invoker{}(
       makeStreamLines, fieldArray, seedIdArray, seedPosArray, numIndices, validPoint, streamArray);
 
     // Size of connectivity based on size of returned streamlines
