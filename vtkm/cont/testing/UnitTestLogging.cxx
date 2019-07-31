@@ -59,6 +59,25 @@ void ErrorContext()
   std::cerr << vtkm::cont::GetLogErrorContext() << "\n";
 }
 
+void UserDefined()
+{
+  VTKM_DEFINE_USER_LOG_LEVEL(CustomLevel, 0);
+  VTKM_DEFINE_USER_LOG_LEVEL(CustomLevel2, 2);
+  VTKM_DEFINE_USER_LOG_LEVEL(AnotherCustomLevel2, 2);
+  VTKM_DEFINE_USER_LOG_LEVEL(BigLevel, 300);
+
+  vtkm::cont::SetStderrLogLevel(vtkm::cont::LogLevel::UserLast);
+  VTKM_LOG_S(CustomLevel, "CustomLevel");
+  VTKM_LOG_S(CustomLevel2, "CustomLevel2");
+  VTKM_LOG_S(AnotherCustomLevel2, "AnotherCustomLevel2");
+
+  vtkm::cont::SetStderrLogLevel(vtkm::cont::LogLevel::UserFirst);
+  VTKM_LOG_S(BigLevel, "BigLevel"); // should log nothing
+
+  vtkm::cont::SetStderrLogLevel(vtkm::cont::LogLevel::UserLast);
+  VTKM_LOG_S(BigLevel, "BigLevel");
+}
+
 void RunTests()
 {
   VTKM_LOG_F(vtkm::cont::LogLevel::Info, "Running tests.");
@@ -68,6 +87,9 @@ void RunTests()
 
   VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Running ErrorContext test...");
   ErrorContext();
+
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Running UserDefined test...");
+  UserDefined();
 }
 
 } // end anon namespace
