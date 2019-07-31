@@ -339,7 +339,7 @@ void ValidateIntegrator(const IntegratorType& integrator,
   {
     Status status = statusPortal.Get(index);
     vtkm::Vec<ScalarType, 3> result = resultsPortal.Get(index);
-    VTKM_TEST_ASSERT(status != Status::ERROR, "Error in evaluator for " + msg);
+    VTKM_TEST_ASSERT(status != Status::FAIL, "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
                      "Error in evaluator result for " + msg);
   }

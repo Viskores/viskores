@@ -28,10 +28,10 @@ namespace particleadvection
 {
 enum class IntegratorStatus
 {
-  OK = 0,
+  SUCCESS = 0,
   OUTSIDE_SPATIAL_BOUNDS,
   OUTSIDE_TEMPORAL_BOUNDS,
-  ERROR
+  FAIL
 };
 
 class Integrator : public vtkm::cont::ExecutionObjectBase
@@ -129,7 +129,7 @@ protected:
 
       vtkm::Vec<ScalarType, 3> velocity;
       IntegratorStatus status = CheckStep(inpos, this->StepLength, time, velocity);
-      if (status == IntegratorStatus::OK)
+      if (status == IntegratorStatus::SUCCESS)
       {
         outpos = inpos + StepLength * velocity;
         time += StepLength;
@@ -151,7 +151,7 @@ protected:
       vtkm::Vec<ScalarType, 3> currentVelocity = { 0.0f, 0.0f, 0.0f };
       CheckStep(inpos, 0.0f, time, currentVelocity);
       numSteps = numSteps == 0 ? 1 : numSteps;
-      IntegratorStatus status = IntegratorStatus::OK;
+      IntegratorStatus status = IntegratorStatus::SUCCESS;
       if (MinimizeError)
       {
         //Take short steps and minimize error
@@ -160,7 +160,7 @@ protected:
         {
           stepLength /= static_cast<ScalarType>(2.0);
           status = CheckStep(inpos, stepLength, time, velocity);
-          if (status == IntegratorStatus::OK)
+          if (status == IntegratorStatus::SUCCESS)
           {
             outpos = inpos + stepLength * velocity;
             inpos = outpos;
@@ -304,7 +304,7 @@ public:
           this->Evaluator.Evaluate(inpos + stepLength * k3, var3, k4))
       {
         velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
-        return IntegratorStatus::OK;
+        return IntegratorStatus::SUCCESS;
       }
       else
         return IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS;
@@ -377,7 +377,7 @@ public:
     {
       bool result = this->Evaluator.Evaluate(inpos, time, velocity);
       if (result)
-        return IntegratorStatus::OK;
+        return IntegratorStatus::SUCCESS;
       else
         return IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS;
     }

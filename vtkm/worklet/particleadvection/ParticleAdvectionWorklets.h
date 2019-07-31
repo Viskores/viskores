@@ -53,7 +53,7 @@ public:
       status = integrator->Step(inpos, time, outpos);
       // If the status is OK, we only need to check if the particle
       // has completed the maximum steps required.
-      if (status == IntegratorStatus::OK)
+      if (status == IntegratorStatus::SUCCESS)
       {
         integralCurve.TakeStep(idx, outpos);
         // This is to keep track of the particle's time.
