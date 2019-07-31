@@ -46,6 +46,7 @@ public:
     vtkm::Vec<ScalarType, 3> outpos;
     ScalarType time = integralCurve.GetTime(idx);
     ParticleStatus status;
+    bool tookAnySteps = false;
     while (!integralCurve.Done(idx))
     {
       status = integrator->Step(inpos, time, outpos);
@@ -53,12 +54,13 @@ public:
       // has completed the maximum steps required.
       if (status == ParticleStatus::STATUS_OK)
       {
-        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.TakeStep(idx, outpos);
         // This is to keep track of the particle's time.
         // This is what the Evaluator uses to determine if the particle
         // has exited temporal boundary.
         integralCurve.SetTime(idx, time);
         inpos = outpos;
+        tookAnySteps = true;
       }
       // If the particle is at spatial or temporal  boundary, take steps to just
       // push it a little out of the boundary so that it will start advection in
@@ -69,7 +71,7 @@ public:
       {
         vtkm::Id numSteps = integralCurve.GetStep(idx);
         status = integrator->PushOutOfBoundary(inpos, numSteps, time, status, outpos);
-        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.TakeStep(idx, outpos);
         integralCurve.SetTime(idx, time);
         if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
           integralCurve.SetExitedSpatialBoundary(idx);
@@ -79,16 +81,17 @@ public:
       // If the particle has exited spatial boundary, set corresponding status.
       else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
       {
-        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.TakeStep(idx, outpos);
         integralCurve.SetExitedSpatialBoundary(idx);
       }
       // If the particle has exited temporal boundary, set corresponding status.
       else if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
       {
-        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.TakeStep(idx, outpos);
         integralCurve.SetExitedTemporalBoundary(idx);
       }
     }
+    integralCurve.SetTookAnySteps(idx, tookAnySteps);
   }
 };
 
