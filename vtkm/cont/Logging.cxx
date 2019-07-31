@@ -108,7 +108,7 @@ void InitLogging(int& argc, char* argv[])
 {
   SetLogLevelName(vtkm::cont::LogLevel::Off, "Off");
   SetLogLevelName(vtkm::cont::LogLevel::Fatal, "FATL");
-  SetLogLevelNamj(vtkm::cont::LogLevel::Error, "ERR");
+  SetLogLevelName(vtkm::cont::LogLevel::Error, "ERR");
   SetLogLevelName(vtkm::cont::LogLevel::Warn, "WARN");
   SetLogLevelName(vtkm::cont::LogLevel::Info, "Info");
   SetLogLevelName(vtkm::cont::LogLevel::Perf, "Perf");
