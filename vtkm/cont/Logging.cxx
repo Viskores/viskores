@@ -108,7 +108,7 @@ void InitLogging(int& argc, char* argv[])
 {
   SetLogLevelName(vtkm::cont::LogLevel::Off, "Off");
   SetLogLevelName(vtkm::cont::LogLevel::Fatal, "FATL");
-  SetLogLevelName(vtkm::cont::LogLevel::Error, "ERR");
+  SetLogLevelNamj(vtkm::cont::LogLevel::Error, "ERR");
   SetLogLevelName(vtkm::cont::LogLevel::Warn, "WARN");
   SetLogLevelName(vtkm::cont::LogLevel::Info, "Info");
   SetLogLevelName(vtkm::cont::LogLevel::Perf, "Perf");
@@ -123,6 +123,8 @@ void InitLogging(int& argc, char* argv[])
   loguru::set_verbosity_to_name_callback(&verbosityToNameCallback);
   loguru::set_name_to_verbosity_callback(&nameToVerbosityCallback);
 
+  // Set the Default verbosity level to WARNING
+  loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
   loguru::init(argc, argv);
 
   LOG_F(INFO, "Logging initialized.");
