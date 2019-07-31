@@ -44,7 +44,6 @@ public:
   {
     vtkm::Vec<ScalarType, 3> inpos = integralCurve.GetPos(idx);
     vtkm::Vec<ScalarType, 3> outpos;
-    vtkm::Id smallStepCounter = 0;
     ScalarType time = integralCurve.GetTime(idx);
     ParticleStatus status;
     while (!integralCurve.Done(idx))
@@ -72,8 +71,7 @@ public:
       }
       else if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
       {
-        ScalarType fraction = static_cast<ScalarType>(1 << ++smallStepCounter);
-        status = integrator->SmallStep(inpos, time, outpos, fraction);
+        status = integrator->SmallStep(inpos, time, outpos);
         integralCurve.TakeStep(idx, outpos, status);
         integralCurve.SetTime(idx, time);
         if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)

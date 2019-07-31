@@ -142,6 +142,10 @@ public:
   VTKM_EXEC
   bool Terminated(const vtkm::Id& idx) { return CheckBit(idx, TERMINATED); }
   VTKM_EXEC
+  bool AtSpatialBoundary(const vtkm::Id& idx) { return CheckBit(idx, AT_SPATIAL_BOUNDARY); }
+  VTKM_EXEC
+  bool AtTemporalBoundary(const vtkm::Id& idx) { return CheckBit(idx, AT_TEMPORAL_BOUNDARY); }
+  VTKM_EXEC
   bool ExitedSpatialBoundary(const vtkm::Id& idx) { return CheckBit(idx, EXITED_SPATIAL_BOUNDARY); }
   VTKM_EXEC
   bool ExitedTemporalBoundary(const vtkm::Id& idx)
@@ -153,8 +157,7 @@ public:
   VTKM_EXEC
   bool Integrateable(const vtkm::Id& idx)
   {
-    return OK(idx) &&
-      !(Terminated(idx) || ExitedSpatialBoundary(idx) || ExitedTemporalBoundary(idx));
+    return OK(idx) && !(Terminated(idx) || AtSpatialBoundary(idx) || AtTemporalBoundary(idx));
   }
   VTKM_EXEC
   bool Done(const vtkm::Id& idx) { return !Integrateable(idx); }
@@ -328,6 +331,18 @@ public:
     SetBit(idx, TERMINATED);
   }
   VTKM_EXEC
+  void SetAtSpatialBoundary(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, AT_SPATIAL_BOUNDARY);
+  }
+  VTKM_EXEC
+  void SetAtTemporalBoundary(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, AT_TEMPORAL_BOUNDARY);
+  }
+  VTKM_EXEC
   void SetExitedSpatialBoundary(const vtkm::Id& idx)
   {
     ClearBit(idx, STATUS_OK);
@@ -352,6 +367,10 @@ public:
   VTKM_EXEC
   bool Terminated(const vtkm::Id& idx) { return CheckBit(idx, TERMINATED); }
   VTKM_EXEC
+  bool AtSpatialBoundary(const vtkm::Id& idx) { return CheckBit(idx, AT_SPATIAL_BOUNDARY); }
+  VTKM_EXEC
+  bool AtTemporalBoundary(const vtkm::Id& idx) { return CheckBit(idx, AT_TEMPORAL_BOUNDARY); }
+  VTKM_EXEC
   bool ExitedSpatialBoundary(const vtkm::Id& idx) { return CheckBit(idx, EXITED_SPATIAL_BOUNDARY); }
   VTKM_EXEC
   bool ExitedTemporalBoundary(const vtkm::Id& idx)
@@ -363,8 +382,7 @@ public:
   VTKM_EXEC
   bool Integrateable(const vtkm::Id& idx)
   {
-    return OK(idx) &&
-      !(Terminated(idx) || ExitedSpatialBoundary(idx) || ExitedTemporalBoundary(idx));
+    return OK(idx) && !(Terminated(idx) || AtSpatialBoundary(idx) || AtTemporalBoundary(idx));
   }
   VTKM_EXEC
   bool Done(const vtkm::Id& idx) { return !Integrateable(idx); }

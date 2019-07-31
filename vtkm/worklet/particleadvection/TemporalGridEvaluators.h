@@ -74,23 +74,23 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC bool Evaluate(const Point& pos, vtkm::FloatDefault time, Point& out) const
+  VTKM_EXEC ParticleStatus Evaluate(const Point& pos, vtkm::FloatDefault time, Point& out) const
   {
     // Validate time is in bounds for the current two slices.
     if (!(time >= TimeOne && time <= TimeTwo))
-      return false;
-    bool eval;
+      return ParticleStatus::AT_TEMPORAL_BOUNDARY;
+    ParticleStatus eval;
     Point one, two;
     eval = this->EvaluatorOne.Evaluate(pos, one);
     if (!eval)
-      return false;
+      return eval;
     eval = this->EvaluatorTwo.Evaluate(pos, two);
     if (!eval)
-      return false;
+      return eval;
     // LERP between the two values of calculated fields to obtain the new value
     ScalarType proportion = (time - this->TimeOne) / this->TimeDiff;
     out = vtkm::Lerp(one, two, proportion);
-    return true;
+    return ParticleStatus::STATUS_OK;
   }
 
 private:
