@@ -556,7 +556,6 @@ void TestParticleStatus()
   vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
   const vtkm::Id3 dims(5, 5, 5);
   vtkm::cont::DataSet ds = CreateUniformDataSet<ScalarType>(bounds, dims);
-  ds.PrintSummary(std::cout);
 
   vtkm::Id nElements = dims[0] * dims[1] * dims[2];
 
@@ -582,7 +581,6 @@ void TestParticleStatus()
   pts.push_back(vtkm::Vec<ScalarType, 3>(-1, -1, -1));
   auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
   auto res = pa.Run(rk4, seedsArray, maxSteps);
-  vtkm::cont::printSummary_ArrayHandle(res.status, std::cout);
   auto statusPortal = res.status.GetPortalConstControl();
 
   bool tookStep0 =
