@@ -33,8 +33,8 @@ protected:
 
 private:
   vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
-  vtkm::Vec<vtkm::Id, 3> CellDims;
+  vtkm::Vec3f RangeTransform;
+  vtkm::Id3 CellDims;
 
   mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
 };

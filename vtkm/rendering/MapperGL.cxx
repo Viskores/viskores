@@ -68,14 +68,14 @@ public:
                             OutputArrayPortalType& c_array,
                             OutputArrayPortalType& v_array) const
   {
-    vtkm::Vec<vtkm::Id, 4> idx = indices.Get(i);
+    vtkm::Id4 idx = indices.Get(i);
     vtkm::Id i1 = idx[1];
     vtkm::Id i2 = idx[2];
     vtkm::Id i3 = idx[3];
 
-    vtkm::Vec<vtkm::Float32, 3> p1 = verts.Get(idx[1]);
-    vtkm::Vec<vtkm::Float32, 3> p2 = verts.Get(idx[2]);
-    vtkm::Vec<vtkm::Float32, 3> p3 = verts.Get(idx[3]);
+    vtkm::Vec3f_32 p1 = verts.Get(idx[1]);
+    vtkm::Vec3f_32 p2 = verts.Get(idx[2]);
+    vtkm::Vec3f_32 p3 = verts.Get(idx[3]);
 
     vtkm::Float32 s;
     vtkm::Vec<float, 3> color1;
@@ -132,7 +132,7 @@ public:
 template <typename PtType>
 struct MapColorAndVerticesInvokeFunctor
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> TriangleIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id4> TriangleIndices;
   vtkm::cont::ColorTable ColorTable;
   const vtkm::cont::ArrayHandle<vtkm::Float32> Scalar;
   const vtkm::Range ScalarRange;
@@ -143,7 +143,7 @@ struct MapColorAndVerticesInvokeFunctor
   vtkm::cont::ArrayHandle<vtkm::Float32> OutVertices;
 
   VTKM_CONT
-  MapColorAndVerticesInvokeFunctor(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
+  MapColorAndVerticesInvokeFunctor(const vtkm::cont::ArrayHandle<vtkm::Id4>& indices,
                                    const vtkm::cont::ColorTable& colorTable,
                                    const vtkm::cont::ArrayHandle<Float32>& scalar,
                                    const vtkm::Range& scalarRange,
@@ -212,7 +212,7 @@ VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
-    vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
+    vtkm::Vec3f_32 pt = verts.GetPortalConstControl().Get(i);
     vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
     if (logY)
       s = vtkm::Float32(log10(s));
@@ -247,7 +247,7 @@ VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts,
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
-    vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
+    vtkm::Vec3f_32 pt = verts.GetPortalConstControl().Get(i);
     vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
     if (logY)
       s = vtkm::Float32(log10(s));
@@ -260,7 +260,7 @@ template <typename PtType>
 VTKM_CONT void RenderTriangles(MapperGL& mapper,
                                vtkm::Id numTri,
                                const PtType& verts,
-                               const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
+                               const vtkm::cont::ArrayHandle<vtkm::Id4>& indices,
                                const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
                                const vtkm::cont::ColorTable& ct,
                                const vtkm::Range& scalarRange,
@@ -460,27 +460,27 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
            cellset.Cast<vtkm::cont::CellSetSingleType<>>().GetCellShapeAsId() ==
              vtkm::CELL_SHAPE_LINE)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verts;
-    verts = dcoords.Cast<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>();
+    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verts;
+    verts = dcoords.Cast<vtkm::cont::ArrayHandle<vtkm::Vec3f_32>>();
     RenderExplicitLineSegments(numVerts, verts, sf, colorTable, this->LogarithmY);
   }
   else
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> indices;
+    vtkm::cont::ArrayHandle<vtkm::Id4> indices;
     vtkm::Id numTri;
     vtkm::rendering::internal::RunTriangulator(cellset, indices, numTri);
 
     vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> eVerts;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> eVerts;
 
     if (dcoords.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
     {
       uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       RenderTriangles(*this, numTri, uVerts, indices, sf, colorTable, scalarRange, camera);
     }
-    else if (dcoords.IsType<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>())
+    else if (dcoords.IsType<vtkm::cont::ArrayHandle<vtkm::Vec3f_32>>())
     {
-      eVerts = dcoords.Cast<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>();
+      eVerts = dcoords.Cast<vtkm::cont::ArrayHandle<vtkm::Vec3f_32>>();
       RenderTriangles(*this, numTri, eVerts, indices, sf, colorTable, scalarRange, camera);
     }
     else if (dcoords.IsType<vtkm::cont::ArrayHandleCartesianProduct<

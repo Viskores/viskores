@@ -25,7 +25,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
 {
   vtkm::cont::DataSet dataSet;
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> coordinates;
+  std::vector<vtkm::Vec3f_32> coordinates;
   const vtkm::Id dim = 5;
   for (vtkm::Id j = 0; j < dim; ++j)
   {

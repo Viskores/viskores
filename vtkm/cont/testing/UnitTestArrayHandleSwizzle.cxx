@@ -317,7 +317,7 @@ void TestArrayHandleSwizzle()
 
 void TestComponentMapValidator()
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> dummy;
+  vtkm::cont::ArrayHandle<vtkm::Id4> dummy;
 
   // Repeat components:
   bool error = false;

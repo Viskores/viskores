@@ -50,12 +50,11 @@ vtkm::cont::DataSet DataSetBuilderUniform::Create(const vtkm::Id3& dimensions,
 }
 
 VTKM_CONT
-vtkm::cont::DataSet DataSetBuilderUniform::CreateDataSet(
-  const vtkm::Id3& dimensions,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
-  std::string coordNm,
-  std::string cellNm)
+vtkm::cont::DataSet DataSetBuilderUniform::CreateDataSet(const vtkm::Id3& dimensions,
+                                                         const vtkm::Vec3f& origin,
+                                                         const vtkm::Vec3f& spacing,
+                                                         std::string coordNm,
+                                                         std::string cellNm)
 {
   vtkm::Id dims[3] = { 1, 1, 1 };
   int ndims = 0;

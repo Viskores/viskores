@@ -41,7 +41,7 @@
 template <typename T>
 struct HelloVTKMInterop
 {
-  vtkm::Vec<vtkm::Int32, 2> Dims;
+  vtkm::Vec2i_32 Dims;
 
   GLuint ProgramId;
   GLuint VAOId;
@@ -54,7 +54,7 @@ struct HelloVTKMInterop
   std::vector<vtkm::Vec<T, 3>> InputData;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> InHandle;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> OutCoords;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> OutColors;
+  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> OutColors;
 
   HelloVTKMInterop(vtkm::Int32 width, vtkm::Int32 height)
     : Dims(256, 256)
@@ -82,7 +82,7 @@ struct HelloVTKMInterop
       }
     }
 
-    this->Dims = vtkm::Vec<vtkm::Int32, 2>(dim, dim);
+    this->Dims = vtkm::Vec2i_32(dim, dim);
     this->InHandle = vtkm::cont::make_ArrayHandle(this->InputData);
 
     glGenVertexArrays(1, &this->VAOId);
@@ -136,7 +136,7 @@ struct HelloVTKMInterop
     VTKM_EXEC
     void operator()(const vtkm::Vec<T, 3>& input,
                     vtkm::Vec<T, 3>& output,
-                    vtkm::Vec<vtkm::UInt8, 4>& color) const
+                    vtkm::Vec4ui_8& color) const
     {
       output[0] = input[0];
       output[1] = 0.25f * vtkm::Sin(input[0] * 10.f + t) * vtkm::Cos(input[2] * 10.f + t);

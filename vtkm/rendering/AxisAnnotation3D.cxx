@@ -70,22 +70,18 @@ void AxisAnnotation3D::Render(const Camera& camera,
   unsigned int nmajor = (unsigned int)proportions.size();
   while (this->Labels.size() < nmajor)
   {
-    this->Labels.push_back(std::unique_ptr<TextAnnotationBillboard>(
-      new vtkm::rendering::TextAnnotationBillboard("test",
-                                                   this->Color,
-                                                   vtkm::Float32(this->FontScale),
-                                                   vtkm::Vec<vtkm::Float32, 3>(0, 0, 0),
-                                                   0)));
+    this->Labels.push_back(
+      std::unique_ptr<TextAnnotationBillboard>(new vtkm::rendering::TextAnnotationBillboard(
+        "test", this->Color, vtkm::Float32(this->FontScale), vtkm::Vec3f_32(0, 0, 0), 0)));
   }
 
   std::stringstream numberToString;
   for (unsigned int i = 0; i < nmajor; ++i)
   {
-    vtkm::Vec<vtkm::Float64, 3> tickPos =
-      proportions[i] * (this->Point1 - this->Point0) + this->Point0;
+    vtkm::Vec3f_64 tickPos = proportions[i] * (this->Point1 - this->Point0) + this->Point0;
     for (int pass = 0; pass <= 1; pass++)
     {
-      vtkm::Vec<vtkm::Float64, 3> tickSize(0);
+      vtkm::Vec3f_64 tickSize(0);
       if (pass == 0)
       {
         switch (this->Axis)
@@ -117,13 +113,13 @@ void AxisAnnotation3D::Render(const Camera& camera,
         }
       }
       tickSize = tickSize * this->Invert;
-      vtkm::Vec<vtkm::Float64, 3> start = tickPos - tickSize * this->TickMajorOffset;
-      vtkm::Vec<vtkm::Float64, 3> end = tickPos - tickSize * (1.0 - this->TickMajorOffset);
+      vtkm::Vec3f_64 start = tickPos - tickSize * this->TickMajorOffset;
+      vtkm::Vec3f_64 end = tickPos - tickSize * (1.0 - this->TickMajorOffset);
 
       worldAnnotator.AddLine(start, end, this->LineWidth, this->Color, infront);
     }
 
-    vtkm::Vec<vtkm::Float32, 3> tickSize(0);
+    vtkm::Vec3f_32 tickSize(0);
     vtkm::Float32 s = 0.4f * this->FontOffset;
     switch (this->Axis)
     {
@@ -150,9 +146,9 @@ void AxisAnnotation3D::Render(const Camera& camera,
     this->Labels[i]->SetPosition(vtkm::Float32(tickPos[0] - tickSize[0]),
                                  vtkm::Float32(tickPos[1] - tickSize[1]),
                                  vtkm::Float32(tickPos[2] - tickSize[2]));
-    vtkm::Vec<vtkm::Float32, 3> pp(vtkm::Float32(tickPos[0] - tickSize[0]),
-                                   vtkm::Float32(tickPos[1] - tickSize[1]),
-                                   vtkm::Float32(tickPos[2] - tickSize[2]));
+    vtkm::Vec3f_32 pp(vtkm::Float32(tickPos[0] - tickSize[0]),
+                      vtkm::Float32(tickPos[1] - tickSize[1]),
+                      vtkm::Float32(tickPos[2] - tickSize[2]));
     this->Labels[i]->SetAlignment(TextAnnotation::HCenter, TextAnnotation::VCenter);
   }
 
@@ -161,11 +157,10 @@ void AxisAnnotation3D::Render(const Camera& camera,
   unsigned int nminor = (unsigned int)proportions.size();
   for (unsigned int i = 0; i < nminor; ++i)
   {
-    vtkm::Vec<vtkm::Float64, 3> tickPos =
-      proportions[i] * (this->Point1 - this->Point0) + this->Point0;
+    vtkm::Vec3f_64 tickPos = proportions[i] * (this->Point1 - this->Point0) + this->Point0;
     for (int pass = 0; pass <= 1; pass++)
     {
-      vtkm::Vec<vtkm::Float64, 3> tickSize(0);
+      vtkm::Vec3f_64 tickSize(0);
       if (pass == 0)
       {
         switch (this->Axis)
@@ -197,8 +192,8 @@ void AxisAnnotation3D::Render(const Camera& camera,
         }
       }
       tickSize = tickSize * this->Invert;
-      vtkm::Vec<vtkm::Float64, 3> start = tickPos - tickSize * this->TickMinorOffset;
-      vtkm::Vec<vtkm::Float64, 3> end = tickPos - tickSize * (1.0 - this->TickMinorOffset);
+      vtkm::Vec3f_64 start = tickPos - tickSize * this->TickMinorOffset;
+      vtkm::Vec3f_64 end = tickPos - tickSize * (1.0 - this->TickMinorOffset);
 
       worldAnnotator.AddLine(start, end, this->LineWidth, this->Color, infront);
     }

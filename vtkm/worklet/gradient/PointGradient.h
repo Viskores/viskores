@@ -100,7 +100,7 @@ private:
                                         const FieldInVecType& field,
                                         vtkm::Vec<OutValueType, 3>& gradient) const
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> pCoords;
+    vtkm::Vec3f pCoords;
     vtkm::exec::ParametricCoordinatesPoint(
       wCoords.GetNumberOfComponents(), pointIndexForCell, pCoords, cellShape, *this);
 

@@ -37,9 +37,9 @@ public:
 
   PointLocatorUniformGrid() = default;
 
-  PointLocatorUniformGrid(const vtkm::Vec<vtkm::FloatDefault, 3>& min,
-                          const vtkm::Vec<vtkm::FloatDefault, 3>& max,
-                          const vtkm::Vec<vtkm::Id, 3>& dims,
+  PointLocatorUniformGrid(const vtkm::Vec3f& min,
+                          const vtkm::Vec3f& max,
+                          const vtkm::Id3& dims,
                           const CoordPortalType& coords,
                           const IdPortalType& pointIds,
                           const IdPortalType& cellLower,
@@ -64,7 +64,7 @@ public:
   /// \param nearestNeighborId Neareast neighbor in the training dataset for each points in
   ///                            the test set
   /// \param distance2 Squared distance between query points and their nearest neighbors.
-  VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+  VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec3f& queryPoint,
                                              vtkm::Id& nearestNeighborId,
                                              vtkm::FloatDefault& distance2) const override
   {
@@ -93,9 +93,9 @@ public:
   }
 
 private:
-  vtkm::Vec<vtkm::FloatDefault, 3> Min;
-  vtkm::Vec<vtkm::Id, 3> Dims;
-  vtkm::Vec<vtkm::FloatDefault, 3> Dxdydz;
+  vtkm::Vec3f Min;
+  vtkm::Id3 Dims;
+  vtkm::Vec3f Dxdydz;
 
   CoordPortalType Coords;
 
@@ -103,7 +103,7 @@ private:
   IdPortalType CellLower;
   IdPortalType CellUpper;
 
-  VTKM_EXEC void FindInCell(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+  VTKM_EXEC void FindInCell(const vtkm::Vec3f& queryPoint,
                             const vtkm::Id3& ijk,
                             vtkm::Id& nearestNeighborId,
                             vtkm::FloatDefault& nearestDistance2) const
@@ -114,7 +114,7 @@ private:
     for (vtkm::Id index = lower; index < upper; index++)
     {
       vtkm::Id pointid = this->PointIds.Get(index);
-      vtkm::Vec<vtkm::FloatDefault, 3> point = this->Coords.Get(pointid);
+      vtkm::Vec3f point = this->Coords.Get(pointid);
       vtkm::FloatDefault distance2 = vtkm::MagnitudeSquared(point - queryPoint);
       if (distance2 < nearestDistance2)
       {
@@ -124,7 +124,7 @@ private:
     }
   }
 
-  VTKM_EXEC void FindInBox(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+  VTKM_EXEC void FindInBox(const vtkm::Vec3f& queryPoint,
                            const vtkm::Id3& boxCenter,
                            vtkm::Id level,
                            vtkm::Id& nearestNeighborId,
@@ -164,7 +164,7 @@ private:
     }
   }
 
-  VTKM_EXEC void FindInPlane(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+  VTKM_EXEC void FindInPlane(const vtkm::Vec3f& queryPoint,
                              const vtkm::Id3& planeCenter,
                              const vtkm::Id3& div,
                              const vtkm::Id3& mod,
@@ -185,7 +185,7 @@ private:
     }
   }
 
-  VTKM_EXEC void FindInXPlane(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+  VTKM_EXEC void FindInXPlane(const vtkm::Vec3f& queryPoint,
                               const vtkm::Id3& planeCenter,
                               vtkm::Id level,
                               vtkm::Id& nearestNeighborId,
@@ -201,7 +201,7 @@ private:
       queryPoint, planeCenter, div, mod, origin, numInPlane, nearestNeighborId, nearestDistance2);
   }
 
-  VTKM_EXEC void FindInYPlane(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+  VTKM_EXEC void FindInYPlane(const vtkm::Vec3f& queryPoint,
                               vtkm::Id3 planeCenter,
                               vtkm::Id level,
                               vtkm::Id& nearestNeighborId,
@@ -217,7 +217,7 @@ private:
       queryPoint, planeCenter, div, mod, origin, numInPlane, nearestNeighborId, nearestDistance2);
   }
 
-  VTKM_EXEC void FindInZPlane(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+  VTKM_EXEC void FindInZPlane(const vtkm::Vec3f& queryPoint,
                               vtkm::Id3 planeCenter,
                               vtkm::Id level,
                               vtkm::Id& nearestNeighborId,

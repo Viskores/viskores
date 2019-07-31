@@ -89,8 +89,7 @@ static void TwoDimRectilinearTest()
   vtkm::Id cells[2][4] = { { 0, 1, 4, 3 }, { 1, 2, 5, 4 } };
   for (vtkm::Id cellIndex = 0; cellIndex < 2; cellIndex++)
   {
-    vtkm::Vec<vtkm::Id, 4> pointIds =
-      pointToCell.GetIndices(pointToCell.FlatToLogicalToIndex(cellIndex));
+    vtkm::Id4 pointIds = pointToCell.GetIndices(pointToCell.FlatToLogicalToIndex(cellIndex));
     for (vtkm::IdComponent localPointIndex = 0; localPointIndex < 4; localPointIndex++)
     {
       VTKM_TEST_ASSERT(pointIds[localPointIndex] == cells[cellIndex][localPointIndex],

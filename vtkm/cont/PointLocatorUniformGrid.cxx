@@ -35,9 +35,7 @@ public:
   using ExecutionSignature = void(_1, _2);
 
   VTKM_CONT
-  BinPointsWorklet(vtkm::Vec<vtkm::FloatDefault, 3> min,
-                   vtkm::Vec<vtkm::FloatDefault, 3> max,
-                   vtkm::Vec<vtkm::Id, 3> dims)
+  BinPointsWorklet(vtkm::Vec3f min, vtkm::Vec3f max, vtkm::Id3 dims)
     : Min(min)
     , Dims(dims)
     , Dxdydz((max - Min) / Dims)
@@ -47,16 +45,16 @@ public:
   template <typename CoordVecType, typename IdType>
   VTKM_EXEC void operator()(const CoordVecType& coord, IdType& label) const
   {
-    vtkm::Vec<vtkm::Id, 3> ijk = (coord - Min) / Dxdydz;
+    vtkm::Id3 ijk = (coord - Min) / Dxdydz;
     ijk = vtkm::Max(ijk, vtkm::Id3(0));
     ijk = vtkm::Min(ijk, this->Dims - vtkm::Id3(1));
     label = ijk[0] + ijk[1] * Dims[0] + ijk[2] * Dims[0] * Dims[1];
   }
 
 private:
-  vtkm::Vec<vtkm::FloatDefault, 3> Min;
-  vtkm::Vec<vtkm::Id, 3> Dims;
-  vtkm::Vec<vtkm::FloatDefault, 3> Dxdydz;
+  vtkm::Vec3f Min;
+  vtkm::Id3 Dims;
+  vtkm::Vec3f Dxdydz;
 };
 
 } // internal

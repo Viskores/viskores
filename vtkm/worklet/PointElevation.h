@@ -46,10 +46,10 @@ public:
   }
 
   VTKM_CONT
-  void SetLowPoint(const vtkm::Vec<vtkm::Float64, 3>& point) { this->LowPoint = point; }
+  void SetLowPoint(const vtkm::Vec3f_64& point) { this->LowPoint = point; }
 
   VTKM_CONT
-  void SetHighPoint(const vtkm::Vec<vtkm::Float64, 3>& point) { this->HighPoint = point; }
+  void SetHighPoint(const vtkm::Vec3f_64& point) { this->HighPoint = point; }
 
   VTKM_CONT
   void SetRange(vtkm::Float64 low, vtkm::Float64 high)
@@ -59,9 +59,9 @@ public:
   }
 
   VTKM_EXEC
-  vtkm::Float64 operator()(const vtkm::Vec<vtkm::Float64, 3>& vec) const
+  vtkm::Float64 operator()(const vtkm::Vec3f_64& vec) const
   {
-    vtkm::Vec<vtkm::Float64, 3> direction = this->HighPoint - this->LowPoint;
+    vtkm::Vec3f_64 direction = this->HighPoint - this->LowPoint;
     vtkm::Float64 lengthSqr = vtkm::Dot(direction, direction);
     vtkm::Float64 rangeLength = this->RangeHigh - this->RangeLow;
     vtkm::Float64 s = vtkm::Dot(vec - this->LowPoint, direction) / lengthSqr;
@@ -78,7 +78,7 @@ public:
   }
 
 private:
-  vtkm::Vec<vtkm::Float64, 3> LowPoint, HighPoint;
+  vtkm::Vec3f_64 LowPoint, HighPoint;
   vtkm::Float64 RangeLow, RangeHigh;
 };
 }

@@ -142,8 +142,8 @@ struct KernelSplatterFilterUniformGrid
   using VecHandleType = vtkm::cont::ArrayHandle<vtkm::Id3>;
   using IdHandleType = vtkm::cont::ArrayHandle<vtkm::Id>;
   //
-  using FloatVec = vtkm::Vec<vtkm::Float32, 3>;
-  using PointType = vtkm::Vec<vtkm::Float64, 3>;
+  using FloatVec = vtkm::Vec3f_32;
+  using PointType = vtkm::Vec3f_64;
   using PointHandleType = vtkm::cont::ArrayHandle<PointType>;
   //
   using VecPermType = vtkm::cont::ArrayHandlePermutation<IdHandleType, VecHandleType>;
@@ -183,8 +183,8 @@ struct KernelSplatterFilterUniformGrid
   class GetFootprint : public vtkm::worklet::WorkletMapField
   {
   private:
-    vtkm::Vec<vtkm::Float64, 3> origin_;
-    vtkm::Vec<vtkm::Float64, 3> spacing_;
+    vtkm::Vec3f_64 origin_;
+    vtkm::Vec3f_64 spacing_;
     vtkm::Id3 VolumeDimensions;
     Kernel kernel_;
 
@@ -194,8 +194,8 @@ struct KernelSplatterFilterUniformGrid
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
-    GetFootprint(const vtkm::Vec<vtkm::Float64, 3>& o,
-                 const vtkm::Vec<vtkm::Float64, 3>& s,
+    GetFootprint(const vtkm::Vec3f_64& o,
+                 const vtkm::Vec3f_64& s,
                  const vtkm::Id3& dim,
                  const Kernel& kernel)
       : origin_(o)
@@ -210,13 +210,13 @@ struct KernelSplatterFilterUniformGrid
                                    const T& y,
                                    const T& z,
                                    const T2& h,
-                                   vtkm::Vec<vtkm::Float64, 3>& splatPoint,
+                                   vtkm::Vec3f_64& splatPoint,
                                    vtkm::Id3& minFootprint,
                                    vtkm::Id3& maxFootprint,
                                    vtkm::Id& footprintSize) const
     {
       PointType splat, min, max;
-      vtkm::Vec<vtkm::Float64, 3> sample = vtkm::make_Vec(x, y, z);
+      vtkm::Vec3f_64 sample = vtkm::make_Vec(x, y, z);
       vtkm::Id size = 1;
       double cutoff = kernel_.maxDistance(h);
       for (int i = 0; i < 3; i++)
@@ -272,8 +272,8 @@ struct KernelSplatterFilterUniformGrid
   class GetSplatValue : public vtkm::worklet::WorkletMapField
   {
   private:
-    vtkm::Vec<vtkm::Float64, 3> spacing_;
-    vtkm::Vec<vtkm::Float64, 3> origin_;
+    vtkm::Vec3f_64 spacing_;
+    vtkm::Vec3f_64 origin_;
     vtkm::Id3 VolumeDim;
     vtkm::Float64 Radius2;
     vtkm::Float64 ExponentFactor;
@@ -286,8 +286,8 @@ struct KernelSplatterFilterUniformGrid
     using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
-    GetSplatValue(const vtkm::Vec<vtkm::Float64, 3>& orig,
-                  const vtkm::Vec<vtkm::Float64, 3>& s,
+    GetSplatValue(const vtkm::Vec3f_64& orig,
+                  const vtkm::Vec3f_64& s,
                   const vtkm::Id3& dim,
                   const Kernel& k)
       : spacing_(s)
@@ -362,8 +362,8 @@ struct KernelSplatterFilterUniformGrid
   // instead of requiring them to be passed as parameters.
   //-----------------------------------------------------------------------
   KernelSplatterFilterUniformGrid(const vtkm::Id3& dims,
-                                  vtkm::Vec<vtkm::FloatDefault, 3> origin,
-                                  vtkm::Vec<vtkm::FloatDefault, 3> spacing,
+                                  vtkm::Vec3f origin,
+                                  vtkm::Vec3f spacing,
                                   const vtkm::cont::DataSet& dataset,
                                   const Kernel& kernel)
     : dims_(dims)

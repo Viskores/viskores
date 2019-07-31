@@ -23,7 +23,7 @@ namespace internal
 class VTKM_ALWAYS_EXPORT ArrayPortalUniformPointCoordinates
 {
 public:
-  using ValueType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using ValueType = vtkm::Vec3f;
 
   VTKM_EXEC_CONT
   ArrayPortalUniformPointCoordinates()

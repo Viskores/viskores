@@ -50,40 +50,40 @@ template <> struct UseScalarTextureLoad<const vtkm::Float64> : std::true_type {}
 
 //CUDA needs vec types converted to CUDA types ( float2, uint2), so we have a special
 //case for these vec texture loads.
-template <> struct UseVecTextureLoads<const vtkm::Vec<vtkm::Int32, 2>> : std::true_type {};
-template <> struct UseVecTextureLoads<const vtkm::Vec<vtkm::UInt32, 2>> : std::true_type {};
-template <> struct UseVecTextureLoads<const vtkm::Vec<vtkm::Float32, 2>> : std::true_type {};
-template <> struct UseVecTextureLoads<const vtkm::Vec<vtkm::Float64, 2>> : std::true_type {};
+template <> struct UseVecTextureLoads<const vtkm::Vec2i_32> : std::true_type {};
+template <> struct UseVecTextureLoads<const vtkm::Vec2ui_32> : std::true_type {};
+template <> struct UseVecTextureLoads<const vtkm::Vec2f_32> : std::true_type {};
+template <> struct UseVecTextureLoads<const vtkm::Vec2f_64> : std::true_type {};
 
-template <> struct UseVecTextureLoads<const vtkm::Vec<vtkm::Int32, 4>> : std::true_type {};
-template <> struct UseVecTextureLoads<const vtkm::Vec<vtkm::UInt32, 4>> : std::true_type {};
-template <> struct UseVecTextureLoads<const vtkm::Vec<vtkm::Float32, 4>> : std::true_type {};
+template <> struct UseVecTextureLoads<const vtkm::Vec4i_32> : std::true_type {};
+template <> struct UseVecTextureLoads<const vtkm::Vec4ui_32> : std::true_type {};
+template <> struct UseVecTextureLoads<const vtkm::Vec4f_32> : std::true_type {};
 
 //CUDA doesn't support loading 3 wide values through a texture unit by default,
 //so instead we fetch through texture three times and store the result
 //currently CUDA doesn't support texture loading of signed char's so that is why
 //you don't see vtkm::Int8 in any of the lists.
 
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::UInt8, 2>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Int16, 2>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::UInt16, 2>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Int64, 2>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::UInt64, 2>> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec2ui_8> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec2i_16> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec2ui_16> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec2i_64> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec2ui_64> : std::true_type {};
 
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::UInt8, 3>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Int16, 3>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::UInt16, 3>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Int32, 3>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::UInt32, 3>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Float32, 3>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Float64, 3>> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec3ui_8> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec3i_16> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec3ui_16> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec3i_32> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec3ui_32> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec3f_32> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec3f_64> : std::true_type {};
 
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::UInt8, 4>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Int16, 4>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::UInt16, 4>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Int64, 4>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::UInt64, 4>> : std::true_type {};
-template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Float64, 4>> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec4ui_8> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec4i_16> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec4ui_16> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec4i_64> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec4ui_64> : std::true_type {};
+template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec4f_64> : std::true_type {};
 // clang-format on
 
 //this T type is not one that is valid to be loaded through texture memory
@@ -131,46 +131,46 @@ struct load_through_texture<T, typename std::enable_if<UseVecTextureLoads<const 
 #endif
   }
 
-  __device__ static vtkm::Vec<vtkm::Int32, 2> getAs(const vtkm::Vec<vtkm::Int32, 2>* const data)
+  __device__ static vtkm::Vec2i_32 getAs(const vtkm::Vec2i_32* const data)
   {
     const int2 temp = __ldg((const int2*)data);
-    return vtkm::Vec<vtkm::Int32, 2>(temp.x, temp.y);
+    return vtkm::Vec2i_32(temp.x, temp.y);
   }
 
-  __device__ static vtkm::Vec<vtkm::UInt32, 2> getAs(const vtkm::Vec<vtkm::UInt32, 2>* const data)
+  __device__ static vtkm::Vec2ui_32 getAs(const vtkm::Vec2ui_32* const data)
   {
     const uint2 temp = __ldg((const uint2*)data);
-    return vtkm::Vec<vtkm::UInt32, 2>(temp.x, temp.y);
+    return vtkm::Vec2ui_32(temp.x, temp.y);
   }
 
-  __device__ static vtkm::Vec<vtkm::Int32, 4> getAs(const vtkm::Vec<vtkm::Int32, 4>* const data)
+  __device__ static vtkm::Vec4i_32 getAs(const vtkm::Vec4i_32* const data)
   {
     const int4 temp = __ldg((const int4*)data);
-    return vtkm::Vec<vtkm::Int32, 4>(temp.x, temp.y, temp.z, temp.w);
+    return vtkm::Vec4i_32(temp.x, temp.y, temp.z, temp.w);
   }
 
-  __device__ static vtkm::Vec<vtkm::UInt32, 4> getAs(const vtkm::Vec<vtkm::UInt32, 4>* const data)
+  __device__ static vtkm::Vec4ui_32 getAs(const vtkm::Vec4ui_32* const data)
   {
     const uint4 temp = __ldg((const uint4*)data);
-    return vtkm::Vec<vtkm::UInt32, 4>(temp.x, temp.y, temp.z, temp.w);
+    return vtkm::Vec4ui_32(temp.x, temp.y, temp.z, temp.w);
   }
 
-  __device__ static vtkm::Vec<vtkm::Float32, 2> getAs(const vtkm::Vec<vtkm::Float32, 2>* const data)
+  __device__ static vtkm::Vec2f_32 getAs(const vtkm::Vec2f_32* const data)
   {
     const float2 temp = __ldg((const float2*)data);
-    return vtkm::Vec<vtkm::Float32, 2>(temp.x, temp.y);
+    return vtkm::Vec2f_32(temp.x, temp.y);
   }
 
-  __device__ static vtkm::Vec<vtkm::Float32, 4> getAs(const vtkm::Vec<vtkm::Float32, 4>* const data)
+  __device__ static vtkm::Vec4f_32 getAs(const vtkm::Vec4f_32* const data)
   {
     const float4 temp = __ldg((const float4*)data);
-    return vtkm::Vec<vtkm::Float32, 4>(temp.x, temp.y, temp.z, temp.w);
+    return vtkm::Vec4f_32(temp.x, temp.y, temp.z, temp.w);
   }
 
-  __device__ static vtkm::Vec<vtkm::Float64, 2> getAs(const vtkm::Vec<vtkm::Float64, 2>* const data)
+  __device__ static vtkm::Vec2f_64 getAs(const vtkm::Vec2f_64* const data)
   {
     const double2 temp = __ldg((const double2*)data);
-    return vtkm::Vec<vtkm::Float64, 2>(temp.x, temp.y);
+    return vtkm::Vec2f_64(temp.x, temp.y);
   }
 };
 

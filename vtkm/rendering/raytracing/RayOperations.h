@@ -51,14 +51,14 @@ protected:
   vtkm::Id Width;
   vtkm::Float32 DoubleInvHeight;
   vtkm::Float32 DoubleInvWidth;
-  vtkm::Vec<vtkm::Float32, 3> Origin;
+  vtkm::Vec3f_32 Origin;
 
 public:
   VTKM_CONT
   RayMapCanvas(const vtkm::Matrix<vtkm::Float32, 4, 4>& inverseProjView,
                const vtkm::Id width,
                const vtkm::Id height,
-               const vtkm::Vec<vtkm::Float32, 3>& origin)
+               const vtkm::Vec3f_32& origin)
     : InverseProjView(inverseProjView)
     , Width(width)
     , Origin(origin)
@@ -77,7 +77,7 @@ public:
                             Precision& maxDistance,
                             const DepthPortalType& depths) const
   {
-    vtkm::Vec<vtkm::Float32, 4> position;
+    vtkm::Vec4f_32 position;
     position[0] = static_cast<vtkm::Float32>(pixelId % Width);
     position[1] = static_cast<vtkm::Float32>(pixelId / Width);
     position[2] = static_cast<vtkm::Float32>(depths.Get(pixelId));
@@ -89,7 +89,7 @@ public:
     // offset so we don't go all the way to the same point
     position[2] -= 0.00001f;
     position = vtkm::MatrixMultiply(InverseProjView, position);
-    vtkm::Vec<vtkm::Float32, 3> p;
+    vtkm::Vec3f_32 p;
     p[0] = position[0] / position[3];
     p[1] = position[1] / position[3];
     p[2] = position[2] / position[3];

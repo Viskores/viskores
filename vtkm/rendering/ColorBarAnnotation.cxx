@@ -87,7 +87,7 @@ void ColorBarAnnotation::Render(const vtkm::rendering::Camera& camera,
 
   if (FieldName != "")
   {
-    vtkm::Vec<vtkm::Float32, 2> labelPos;
+    vtkm::Vec2f_32 labelPos;
     if (Horizontal)
     {
       labelPos[0] = vtkm::Float32(Position.X.Min);

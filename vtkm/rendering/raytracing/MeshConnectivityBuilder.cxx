@@ -118,7 +118,7 @@ public:
 
   VTKM_EXEC
   inline bool IsIn(const vtkm::Id& needle,
-                   const vtkm::Vec<vtkm::Id, 4>& heystack,
+                   const vtkm::Id4& heystack,
                    const vtkm::Int32& numIndices) const
   {
     bool isIn = false;
@@ -188,8 +188,8 @@ public:
 
 
         //TODO: we can do better than this
-        vtkm::Vec<vtkm::Id, 4> indices1;
-        vtkm::Vec<vtkm::Id, 4> indices2;
+        vtkm::Id4 indices1;
+        vtkm::Id4 indices2;
 
         const auto faceLength = tables.ShapesFaceList(shape1Offset, 0);
         for (vtkm::Int32 i = 1; i <= faceLength; ++i)
@@ -230,7 +230,7 @@ public:
     if (isInternal)
     {
       BOUNDS_CHECK(faceIdPairs, index);
-      vtkm::Vec<vtkm::Id, 3> facePair = faceIdPairs.Get(index);
+      vtkm::Id3 facePair = faceIdPairs.Get(index);
       vtkm::Id myCell = facePair[0];
       facePair[2] = connectedCell;
       BOUNDS_CHECK(faceIdPairs, index);
@@ -265,7 +265,7 @@ public:
             typename InIndicesPortalType,
             typename OutIndicesPortalType,
             typename ShapeOffsetsPortal>
-  VTKM_EXEC inline void operator()(const vtkm::Vec<vtkm::Id, 3>& faceIdPair,
+  VTKM_EXEC inline void operator()(const vtkm::Id3& faceIdPair,
                                    const ShapePortalType& shapes,
                                    const ShapeOffsetsPortal& shapeOffsets,
                                    const InIndicesPortalType& indices,
@@ -286,7 +286,7 @@ public:
       return;
     }
 
-    vtkm::Vec<vtkm::Id, 4> faceIndices(-1, -1, -1, -1);
+    vtkm::Id4 faceIndices(-1, -1, -1, -1);
     vtkm::Int32 tableIndex = static_cast<vtkm::Int32>(shapesFaceOffset + faceIdPair[1]);
     const vtkm::Int32 numIndices = tables.ShapesFaceList(tableIndex, 0);
 
@@ -295,7 +295,7 @@ public:
       BOUNDS_CHECK(indices, offset + tables.ShapesFaceList(tableIndex, i));
       faceIndices[i - 1] = indices.Get(offset + tables.ShapesFaceList(tableIndex, i));
     }
-    vtkm::Vec<vtkm::Id, 4> triangle;
+    vtkm::Id4 triangle;
     triangle[0] = cellId;
     triangle[1] = faceIndices[0];
     triangle[2] = faceIndices[1];
@@ -328,7 +328,7 @@ public:
   WriteFaceConn() {}
 
   template <typename FaceOffsetsPortalType, typename FaceConnectivityPortalType>
-  VTKM_EXEC inline void operator()(const vtkm::Vec<vtkm::Id, 3>& faceIdPair,
+  VTKM_EXEC inline void operator()(const vtkm::Id3& faceIdPair,
                                    const FaceOffsetsPortalType& faceOffsets,
                                    FaceConnectivityPortalType& faceConn) const
   {
@@ -448,7 +448,7 @@ public:
     vtkm::Int32 shapesFaceOffset =
       tables.FaceLookUp(tables.CellTypeLookUp(CELL_SHAPE_HEXAHEDRON), 0);
 
-    vtkm::Vec<vtkm::Id, 4> faceIndices;
+    vtkm::Id4 faceIndices;
     vtkm::Int32 tableIndex = shapesFaceOffset + cellFace;
 
     // Load the face
@@ -457,7 +457,7 @@ public:
       faceIndices[i - 1] = cellIndices[tables.ShapesFaceList(tableIndex, i)];
     }
     const vtkm::Id outputOffset = index * 2;
-    vtkm::Vec<vtkm::Id, 4> triangle;
+    vtkm::Id4 triangle;
     triangle[0] = cellId;
     triangle[1] = faceIndices[0];
     triangle[2] = faceIndices[1];
@@ -482,7 +482,7 @@ public:
   using ControlSignature = void(FieldIn, WholeArrayIn, FieldOut);
   using ExecutionSignature = void(_1, _2, _3);
   template <typename ShapePortalType>
-  VTKM_EXEC inline void operator()(const vtkm::Vec<vtkm::Id, 3>& faceIdPair,
+  VTKM_EXEC inline void operator()(const vtkm::Id3& faceIdPair,
                                    const ShapePortalType& shapes,
                                    vtkm::Id& triangleCount) const
   {
@@ -510,17 +510,16 @@ template <typename CellSetType,
           typename ShapeHandleType,
           typename ConnHandleType,
           typename OffsetsHandleType>
-VTKM_CONT void GenerateFaceConnnectivity(
-  const CellSetType cellSet,
-  const ShapeHandleType shapes,
-  const ConnHandleType conn,
-  const OffsetsHandleType shapeOffsets,
-  const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
-  vtkm::cont::ArrayHandle<vtkm::Id>& faceConnectivity,
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>>& cellFaceId,
-  vtkm::Float32 BoundingBox[6],
-  vtkm::cont::ArrayHandle<vtkm::Id>& faceOffsets,
-  vtkm::cont::ArrayHandle<vtkm::Int32>& uniqueFaces)
+VTKM_CONT void GenerateFaceConnnectivity(const CellSetType cellSet,
+                                         const ShapeHandleType shapes,
+                                         const ConnHandleType conn,
+                                         const OffsetsHandleType shapeOffsets,
+                                         const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
+                                         vtkm::cont::ArrayHandle<vtkm::Id>& faceConnectivity,
+                                         vtkm::cont::ArrayHandle<vtkm::Id3>& cellFaceId,
+                                         vtkm::Float32 BoundingBox[6],
+                                         vtkm::cont::ArrayHandle<vtkm::Id>& faceOffsets,
+                                         vtkm::cont::ArrayHandle<vtkm::Int32>& uniqueFaces)
 {
 
   vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
@@ -528,7 +527,7 @@ VTKM_CONT void GenerateFaceConnnectivity(
 
   vtkm::Id numCells = shapes.GetNumberOfValues();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> coordinates;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> coordinates;
   vtkm::cont::Algorithm::Copy(coords, coordinates);
 
   /*-----------------------------------------------------------------*/
@@ -560,11 +559,11 @@ VTKM_CONT void GenerateFaceConnnectivity(
   // to the same morton code. We check for this.
 
   // set up everything we need to gen morton codes
-  vtkm::Vec<vtkm::Float32, 3> inverseExtent;
+  vtkm::Vec3f_32 inverseExtent;
   inverseExtent[0] = 1.f / (BoundingBox[1] - BoundingBox[0]);
   inverseExtent[1] = 1.f / (BoundingBox[3] - BoundingBox[2]);
   inverseExtent[2] = 1.f / (BoundingBox[5] - BoundingBox[4]);
-  vtkm::Vec<vtkm::Float32, 3> minPoint;
+  vtkm::Vec3f_32 minPoint;
   minPoint[0] = BoundingBox[0];
   minPoint[1] = BoundingBox[2];
   minPoint[2] = BoundingBox[4];
@@ -605,8 +604,7 @@ VTKM_CONT void GenerateFaceConnnectivity(
 
 template <typename ShapeHandleType, typename OffsetsHandleType, typename ConnHandleType>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractFaces(
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>>
-    cellFaceId,                                     // Map of cell, face, and connecting cell
+  vtkm::cont::ArrayHandle<vtkm::Id3> cellFaceId,    // Map of cell, face, and connecting cell
   vtkm::cont::ArrayHandle<vtkm::Int32> uniqueFaces, // -1 if the face is unique
   const ShapeHandleType& shapes,
   const ConnHandleType& conn,
@@ -615,7 +613,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractFaces(
 
   vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
   timer.Start();
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>> externalFacePairs;
+  vtkm::cont::ArrayHandle<vtkm::Id3> externalFacePairs;
   vtkm::cont::Algorithm::CopyIf(cellFaceId, uniqueFaces, externalFacePairs, IsUnique());
 
   // We need to count the number of triangle per external face
@@ -638,7 +636,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractFaces(
 
   vtkm::Id totalExternalTriangles;
   totalExternalTriangles = vtkm::cont::Algorithm::Reduce(trianglesPerExternalFace, vtkm::Id(0));
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> externalTriangles;
+  vtkm::cont::ArrayHandle<vtkm::Id4> externalTriangles;
   //externalTriangles.PrepareForOutput(totalExternalTriangles, DeviceAdapter());
   externalTriangles.Allocate(totalExternalTriangles);
   //count the number triangles in the external faces
@@ -692,7 +690,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
                                             vtkm::TopologyElementTagCell());
 
   vtkm::cont::ArrayHandle<vtkm::Id> faceConnectivity;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>> cellFaceId;
+  vtkm::cont::ArrayHandle<vtkm::Id3> cellFaceId;
   vtkm::cont::ArrayHandle<vtkm::Int32> uniqueFaces;
 
   GenerateFaceConnnectivity(cellSetUnstructured,
@@ -706,7 +704,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
                             FaceOffsets,
                             uniqueFaces);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles;
+  vtkm::cont::ArrayHandle<vtkm::Id4> triangles;
   //Faces
 
   triangles = ExtractFaces(cellFaceId, uniqueFaces, shapes, conn, shapeOffsets);
@@ -752,7 +750,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
     vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
   vtkm::cont::ArrayHandle<vtkm::Id> faceConnectivity;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>> cellFaceId;
+  vtkm::cont::ArrayHandle<vtkm::Id3> cellFaceId;
   vtkm::cont::ArrayHandle<vtkm::Int32> uniqueFaces;
 
   GenerateFaceConnnectivity(cellSetUnstructured,
@@ -766,7 +764,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
                             FaceOffsets,
                             uniqueFaces);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles;
+  vtkm::cont::ArrayHandle<vtkm::Id4> triangles;
   //
   //Faces
   triangles = ExtractFaces(cellFaceId, uniqueFaces, shapes, conn, shapeOffsets);
@@ -787,7 +785,7 @@ struct StructuredTrianglesFunctor
   template <typename Device>
   VTKM_CONT bool operator()(Device,
                             vtkm::cont::ArrayHandleCounting<vtkm::Id>& counting,
-                            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& triangles,
+                            vtkm::cont::ArrayHandle<vtkm::Id4>& triangles,
                             vtkm::cont::CellSetStructured<3>& cellSet) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
@@ -803,9 +801,8 @@ struct StructuredTrianglesFunctor
 
 // Should we just make this name BuildConnectivity?
 VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>
-  MeshConnectivityBuilder::ExternalTrianglesStructured(
-    vtkm::cont::CellSetStructured<3>& cellSetStructured)
+vtkm::cont::ArrayHandle<vtkm::Id4> MeshConnectivityBuilder::ExternalTrianglesStructured(
+  vtkm::cont::CellSetStructured<3>& cellSetStructured)
 {
   vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
   timer.Start();
@@ -814,7 +811,7 @@ vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>
   vtkm::Id numFaces =
     cellDims[0] * cellDims[1] * 2 + cellDims[1] * cellDims[2] * 2 + cellDims[2] * cellDims[0] * 2;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles;
+  vtkm::cont::ArrayHandle<vtkm::Id4> triangles;
   triangles.Allocate(numFaces * 2);
   vtkm::cont::ArrayHandleCounting<vtkm::Id> counting(0, 1, numFaces);
 
@@ -836,7 +833,7 @@ vtkm::cont::ArrayHandle<vtkm::Id> MeshConnectivityBuilder::GetFaceOffsets()
   return FaceOffsets;
 }
 
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> MeshConnectivityBuilder::GetTriangles()
+vtkm::cont::ArrayHandle<vtkm::Id4> MeshConnectivityBuilder::GetTriangles()
 {
   return Triangles;
 }

@@ -42,9 +42,7 @@ public:
     }
 
     VTKM_EXEC
-    vtkm::Vec<vtkm::FloatDefault, 3> operator()(
-      const vtkm::Vec<vtkm::FloatDefault, 3>& point,
-      const vtkm::Vec<vtkm::FloatDefault, 3>& vector) const
+    vtkm::Vec3f operator()(const vtkm::Vec3f& point, const vtkm::Vec3f& vector) const
     {
       return point + this->Scale * vector;
     }

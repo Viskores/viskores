@@ -64,8 +64,8 @@ static void TestHash()
   DoHashTest(vtkm::Id2());
   DoHashTest(vtkm::Id3());
   DoHashTest(vtkm::Vec<vtkm::Id, 10>());
-  DoHashTest(vtkm::Vec<vtkm::IdComponent, 2>());
-  DoHashTest(vtkm::Vec<vtkm::IdComponent, 3>());
+  DoHashTest(vtkm::IdComponent2());
+  DoHashTest(vtkm::IdComponent3());
   DoHashTest(vtkm::Vec<vtkm::IdComponent, 10>());
 }
 

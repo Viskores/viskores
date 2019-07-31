@@ -253,7 +253,7 @@ template <typename FieldType, typename LUType, typename ParametricCoordType, typ
 VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor2DCellFinish(
   const vtkm::Vec<FieldType, 4>& field,
   const vtkm::Matrix<LUType, 2, 2>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 2>& LUPermutation,
+  const vtkm::IdComponent2& LUPermutation,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   const vtkm::exec::internal::Space2D<LUType>& space,
   CellShapeTag,
@@ -274,7 +274,7 @@ template <typename FieldType, typename LUType, typename ParametricCoordType, typ
 VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor2DCellFinish(
   const vtkm::Vec<FieldType, 4>& field,
   const vtkm::Matrix<LUType, 2, 2>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 2>& LUPermutation,
+  const vtkm::IdComponent2& LUPermutation,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   const vtkm::exec::internal::Space2D<LUType>& space,
   CellShapeTag,
@@ -315,7 +315,7 @@ template <typename FieldType, typename LUType, typename ParametricCoordType, typ
 VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor2DCellFinish(
   const vtkm::Vec<FieldType, 4>& field,
   const vtkm::Matrix<LUType, 2, 2>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 2>& LUPermutation,
+  const vtkm::IdComponent2& LUPermutation,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   const vtkm::exec::internal::Space2D<LUType>& space,
   CellShapeTag,
@@ -382,7 +382,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor2D
   // field, the factorization can be reused for each component of the vector
   // field. Thus, we are going to call the internals of SolveLinearSystem
   // ourselves to do the factorization and then apply it to all components.
-  vtkm::Vec<vtkm::IdComponent, 2> permutation;
+  vtkm::IdComponent2 permutation;
   BaseFieldType inversionParity; // Unused
   vtkm::detail::MatrixLUPFactor(jacobianTranspose, permutation, inversionParity, valid);
   // MatrixLUPFactor does in place factorization. jacobianTranspose is now the
@@ -631,7 +631,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivativeFinish(
   const vtkm::Vec<ValueType, 3>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsScalarTag)
 {
   // Finish solving linear equation. See TriangleDerivative implementation
@@ -645,7 +645,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivativeFinish(
   const vtkm::Vec<ValueType, 3>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsVectorTag)
 {
   using FieldTraits = vtkm::VecTraits<ValueType>;
@@ -679,7 +679,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivativeFinish(
   const vtkm::Vec<ValueType, 3>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsMatrixTag)
 {
   return TriangleDerivativeFinish(
@@ -738,7 +738,7 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivative(const vtkm::Vec<ValueType, 
   // field, the factorization can be reused for each component of the vector
   // field. Thus, we are going to call the internals of SolveLinearSystem
   // ourselves to do the factorization and then apply it to all components.
-  vtkm::Vec<vtkm::IdComponent, 3> permutation;
+  vtkm::IdComponent3 permutation;
   BaseComponentType inversionParity; // Unused
   vtkm::detail::MatrixLUPFactor(A, permutation, inversionParity, valid);
   // MatrixLUPFactor does in place factorization. A is now the LU factorization.
@@ -935,7 +935,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivativeFinish(
   const vtkm::Vec<ValueType, 4>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsScalarTag)
 {
   // Finish solving linear equation. See TriangleDerivative implementation
@@ -949,7 +949,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivativeFinish(
   const vtkm::Vec<ValueType, 4>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsVectorTag)
 {
   using FieldTraits = vtkm::VecTraits<ValueType>;
@@ -984,7 +984,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivativeFinish(
   const vtkm::Vec<ValueType, 4>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsMatrixTag)
 {
   return TetraDerivativeFinish(field, LUFactorization, LUPermutation, vtkm::TypeTraitsVectorTag());
@@ -1041,7 +1041,7 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivative(const vtkm::Vec<ValueType, 4>&
   // field, the factorization can be reused for each component of the vector
   // field. Thus, we are going to call the internals of SolveLinearSystem
   // ourselves to do the factorization and then apply it to all components.
-  vtkm::Vec<vtkm::IdComponent, 3> permutation;
+  vtkm::IdComponent3 permutation;
   BaseComponentType inversionParity; // Unused
   vtkm::detail::MatrixLUPFactor(A, permutation, inversionParity, valid);
   // MatrixLUPFactor does in place factorization. A is now the LU factorization.

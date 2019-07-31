@@ -35,9 +35,9 @@ VTKM_EXEC inline bool IntersectAABB(const BVHPortalType& bvh,
                                     bool& hitRightChild,
                                     const Precision& minDistance) //Find hit after this distance
 {
-  vtkm::Vec<vtkm::Float32, 4> first4 = bvh.Get(currentNode);
-  vtkm::Vec<vtkm::Float32, 4> second4 = bvh.Get(currentNode + 1);
-  vtkm::Vec<vtkm::Float32, 4> third4 = bvh.Get(currentNode + 2);
+  vtkm::Vec4f_32 first4 = bvh.Get(currentNode);
+  vtkm::Vec4f_32 second4 = bvh.Get(currentNode + 1);
+  vtkm::Vec4f_32 third4 = bvh.Get(currentNode + 2);
 
   Precision xmin0 = first4[0] * invDir[0] - originDir[0];
   Precision ymin0 = first4[1] * invDir[1] - originDir[1];
@@ -170,8 +170,7 @@ public:
           }
           else
           {
-            vtkm::Vec<vtkm::Float32, 4> children =
-              flatBVH.Get(currentNode + 3); //Children.Get(currentNode);
+            vtkm::Vec4f_32 children = flatBVH.Get(currentNode + 3); //Children.Get(currentNode);
             vtkm::Int32 leftChild;
             memcpy(&leftChild, &children[0], 4);
             vtkm::Int32 rightChild;

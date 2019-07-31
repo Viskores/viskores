@@ -23,11 +23,11 @@ namespace raytracing
 class VTKM_RENDERING_EXPORT TriangleExtractor
 {
 protected:
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Triangles; // (cellid, v0, v1, v2)
+  vtkm::cont::ArrayHandle<vtkm::Id4> Triangles; // (cellid, v0, v1, v2)
 public:
   void ExtractCells(const vtkm::cont::DynamicCellSet& cells);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> GetTriangles();
+  vtkm::cont::ArrayHandle<vtkm::Id4> GetTriangles();
   vtkm::Id GetNumberOfTriangles() const;
 }; // class TriangleExtractor
 }

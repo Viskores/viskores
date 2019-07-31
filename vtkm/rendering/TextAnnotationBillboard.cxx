@@ -20,7 +20,7 @@ namespace rendering
 TextAnnotationBillboard::TextAnnotationBillboard(const std::string& text,
                                                  const vtkm::rendering::Color& color,
                                                  vtkm::Float32 scalar,
-                                                 const vtkm::Vec<vtkm::Float32, 3>& position,
+                                                 const vtkm::Vec3f_32& position,
                                                  vtkm::Float32 angleDegrees)
   : TextAnnotation(text, color, scalar)
   , Position(position)
@@ -32,7 +32,7 @@ TextAnnotationBillboard::~TextAnnotationBillboard()
 {
 }
 
-void TextAnnotationBillboard::SetPosition(const vtkm::Vec<vtkm::Float32, 3>& position)
+void TextAnnotationBillboard::SetPosition(const vtkm::Vec3f_32& position)
 {
   this->Position = position;
 }
@@ -49,7 +49,7 @@ void TextAnnotationBillboard::Render(const vtkm::rendering::Camera& camera,
                                      vtkm::rendering::Canvas& canvas) const
 {
   using MatrixType = vtkm::Matrix<vtkm::Float32, 4, 4>;
-  using VectorType = vtkm::Vec<vtkm::Float32, 3>;
+  using VectorType = vtkm::Vec3f_32;
 
   MatrixType viewMatrix = camera.CreateViewMatrix();
   MatrixType projectionMatrix =

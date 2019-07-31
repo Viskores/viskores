@@ -27,7 +27,7 @@
 class LocatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Vec<vtkm::Id, 3>& cellDims)
+  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Id3& cellDims)
     : Bounds(bounds)
     , CellDims(cellDims)
   {
@@ -44,7 +44,7 @@ public:
     if (!Bounds.Contains(point))
       return -1;
 
-    vtkm::Vec<vtkm::Id, 3> logical;
+    vtkm::Id3 logical;
     logical[0] = (point[0] == Bounds.X.Max)
       ? CellDims[0] - 1
       : static_cast<vtkm::Id>(vtkm::Floor((point[0] / Bounds.X.Length()) *
@@ -75,7 +75,7 @@ public:
 
 private:
   vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::Id, 3> CellDims;
+  vtkm::Id3 CellDims;
 };
 
 template <typename DeviceAdapter>
@@ -96,7 +96,7 @@ public:
     std::cout << "Z bounds : " << bounds.Z.Min << " to " << bounds.Z.Max << std::endl;
 
     using StructuredType = vtkm::cont::CellSetStructured<3>;
-    vtkm::Vec<vtkm::Id, 3> cellDims =
+    vtkm::Id3 cellDims =
       cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
     std::cout << "Dimensions of dataset : " << cellDims << std::endl;
 
@@ -107,7 +107,7 @@ public:
     locator.Update();
 
     // Generate some sample points.
-    using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
+    using PointType = vtkm::Vec3f;
     std::vector<PointType> pointsVec;
     std::default_random_engine dre;
     std::uniform_real_distribution<vtkm::Float32> inBounds(0.0f, 4.0f);

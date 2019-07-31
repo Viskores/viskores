@@ -31,9 +31,8 @@ public:
   VTKM_CONT
   CoordinateSystem();
 
-  VTKM_CONT CoordinateSystem(
-    std::string name,
-    const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>& data);
+  VTKM_CONT CoordinateSystem(std::string name,
+                             const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& data);
 
   template <typename TypeList>
   VTKM_CONT CoordinateSystem(std::string name,
@@ -45,11 +44,10 @@ public:
   /// This constructor of coordinate system sets up a regular grid of points.
   ///
   VTKM_CONT
-  CoordinateSystem(
-    std::string name,
-    vtkm::Id3 dimensions,
-    vtkm::Vec<vtkm::FloatDefault, 3> origin = vtkm::Vec<vtkm::FloatDefault, 3>(0.0f, 0.0f, 0.0f),
-    vtkm::Vec<vtkm::FloatDefault, 3> spacing = vtkm::Vec<vtkm::FloatDefault, 3>(1.0f, 1.0f, 1.0f));
+  CoordinateSystem(std::string name,
+                   vtkm::Id3 dimensions,
+                   vtkm::Vec3f origin = vtkm::Vec3f(0.0f, 0.0f, 0.0f),
+                   vtkm::Vec3f spacing = vtkm::Vec3f(1.0f, 1.0f, 1.0f));
 
   VTKM_CONT
   vtkm::Id GetNumberOfPoints() const { return this->GetNumberOfValues(); }
@@ -57,8 +55,7 @@ public:
   VTKM_CONT
   vtkm::cont::ArrayHandleVirtualCoordinates GetData() const;
 
-  VTKM_CONT void SetData(
-    const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>& newdata);
+  VTKM_CONT void SetData(const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& newdata);
 
   template <typename T, typename Storage>
   VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, Storage>& newdata);

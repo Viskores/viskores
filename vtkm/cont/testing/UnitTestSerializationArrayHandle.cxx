@@ -64,8 +64,7 @@ inline void RunTest(const T& obj)
 //-----------------------------------------------------------------------------
 constexpr vtkm::Id ArraySize = 10;
 
-using TestTypesList =
-  vtkm::ListTagBase<vtkm::Int8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
+using TestTypesList = vtkm::ListTagBase<vtkm::Int8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f>;
 
 template <typename T, typename S>
 inline vtkm::cont::VariantArrayHandleBase<vtkm::ListTagAppendUnique<TestTypesList, T>>
@@ -314,11 +313,10 @@ struct TestArrayHandleSwizzle
   template <typename T>
   void operator()(T) const
   {
-    static const vtkm::Vec<vtkm::IdComponent, 2> map2s[6] = { { 0, 1 }, { 0, 2 }, { 1, 0 },
-                                                              { 1, 2 }, { 2, 0 }, { 2, 1 } };
-    static const vtkm::Vec<vtkm::IdComponent, 3> map3s[6] = {
-      { 0, 1, 2 }, { 0, 2, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 }
-    };
+    static const vtkm::IdComponent2 map2s[6] = { { 0, 1 }, { 0, 2 }, { 1, 0 },
+                                                 { 1, 2 }, { 2, 0 }, { 2, 1 } };
+    static const vtkm::IdComponent3 map3s[6] = { { 0, 1, 2 }, { 0, 2, 1 }, { 1, 0, 2 },
+                                                 { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
 
     auto numOutComps = RandomValue<vtkm::IdComponent>::Make(2, 3);
     switch (numOutComps)
@@ -394,8 +392,8 @@ struct TestArrayHandleTransform
 vtkm::cont::ArrayHandleUniformPointCoordinates MakeRandomArrayHandleUniformPointCoordinates()
 {
   auto dimensions = RandomValue<vtkm::Id3>::Make(1, 3);
-  auto origin = RandomValue<vtkm::Vec<vtkm::FloatDefault, 3>>::Make();
-  auto spacing = RandomValue<vtkm::Vec<vtkm::FloatDefault, 3>>::Make(0.1f, 10.0f);
+  auto origin = RandomValue<vtkm::Vec3f>::Make();
+  auto spacing = RandomValue<vtkm::Vec3f>::Make(0.1f, 10.0f);
   return vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing);
 }
 
@@ -425,8 +423,8 @@ void TestArrayHandleVirtualCoordinates()
           RandomArrayHandle<vtkm::FloatDefault>::Make(ArraySize)));
       break;
     default:
-      array = vtkm::cont::ArrayHandleVirtualCoordinates(
-        RandomArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>::Make(ArraySize));
+      array =
+        vtkm::cont::ArrayHandleVirtualCoordinates(RandomArrayHandle<vtkm::Vec3f>::Make(ArraySize));
       break;
   }
 

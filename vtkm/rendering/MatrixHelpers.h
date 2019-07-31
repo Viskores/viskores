@@ -41,14 +41,13 @@ struct MatrixHelpers
     oglM[15] = mtx[3][3];
   }
 
-  static VTKM_CONT vtkm::Matrix<vtkm::Float32, 4, 4> ViewMatrix(
-    const vtkm::Vec<vtkm::Float32, 3>& position,
-    const vtkm::Vec<vtkm::Float32, 3>& lookAt,
-    const vtkm::Vec<vtkm::Float32, 3>& up)
+  static VTKM_CONT vtkm::Matrix<vtkm::Float32, 4, 4> ViewMatrix(const vtkm::Vec3f_32& position,
+                                                                const vtkm::Vec3f_32& lookAt,
+                                                                const vtkm::Vec3f_32& up)
   {
-    vtkm::Vec<vtkm::Float32, 3> viewDir = position - lookAt;
-    vtkm::Vec<vtkm::Float32, 3> right = vtkm::Cross(up, viewDir);
-    vtkm::Vec<vtkm::Float32, 3> ru = vtkm::Cross(viewDir, right);
+    vtkm::Vec3f_32 viewDir = position - lookAt;
+    vtkm::Vec3f_32 right = vtkm::Cross(up, viewDir);
+    vtkm::Vec3f_32 ru = vtkm::Cross(viewDir, right);
 
     vtkm::Normalize(viewDir);
     vtkm::Normalize(right);
@@ -74,11 +73,10 @@ struct MatrixHelpers
     return matrix;
   }
 
-  static VTKM_CONT vtkm::Matrix<vtkm::Float32, 4, 4> WorldMatrix(
-    const vtkm::Vec<vtkm::Float32, 3>& neworigin,
-    const vtkm::Vec<vtkm::Float32, 3>& newx,
-    const vtkm::Vec<vtkm::Float32, 3>& newy,
-    const vtkm::Vec<vtkm::Float32, 3>& newz)
+  static VTKM_CONT vtkm::Matrix<vtkm::Float32, 4, 4> WorldMatrix(const vtkm::Vec3f_32& neworigin,
+                                                                 const vtkm::Vec3f_32& newx,
+                                                                 const vtkm::Vec3f_32& newy,
+                                                                 const vtkm::Vec3f_32& newz)
   {
     vtkm::Matrix<vtkm::Float32, 4, 4> matrix;
     vtkm::MatrixIdentity(matrix);
@@ -130,11 +128,11 @@ struct MatrixHelpers
       return matrix;
     }
 
-    vtkm::Vec<vtkm::Float32, 3> p1(p1x, p1y, AR3 / ((p1x * p1x + p1y * p1y) * COMPRESSION + AR3));
-    vtkm::Vec<vtkm::Float32, 3> p2(p2x, p2y, AR3 / ((p2x * p2x + p2y * p2y) * COMPRESSION + AR3));
-    vtkm::Vec<vtkm::Float32, 3> axis = vtkm::Normal(vtkm::Cross(p2, p1));
+    vtkm::Vec3f_32 p1(p1x, p1y, AR3 / ((p1x * p1x + p1y * p1y) * COMPRESSION + AR3));
+    vtkm::Vec3f_32 p2(p2x, p2y, AR3 / ((p2x * p2x + p2y * p2y) * COMPRESSION + AR3));
+    vtkm::Vec3f_32 axis = vtkm::Normal(vtkm::Cross(p2, p1));
 
-    vtkm::Vec<vtkm::Float32, 3> p2_p1(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]);
+    vtkm::Vec3f_32 p2_p1(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]);
     vtkm::Float32 t = vtkm::Magnitude(p2_p1);
     t = vtkm::Min(vtkm::Max(t, -1.0f), 1.0f);
     vtkm::Float32 phi = static_cast<vtkm::Float32>(-2.0f * asin(t / (2.0f * RADIUS)));

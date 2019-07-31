@@ -58,7 +58,7 @@ void CheckResult(const vtkm::filter::WarpScalar& filter, const vtkm::cont::DataS
 {
   VTKM_TEST_ASSERT(result.HasField("warpscalar", vtkm::cont::Field::Association::POINTS),
                    "Output filed warpscalar is missing");
-  using vecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
   result.GetField("warpscalar", vtkm::cont::Field::Association::POINTS)
     .GetData()

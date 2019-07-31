@@ -371,7 +371,7 @@ public:
   }
 
   struct TypeListTagExemplarTypes
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec<vtkm::Float64, 3>>
+    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>
   {
   };
 

@@ -62,10 +62,8 @@ template <>
 class FilterTraits<MultiDeviceGradient>
 {
 public:
-  struct TypeListTagGradientInputs : vtkm::ListTagBase<vtkm::Float32,
-                                                       vtkm::Float64,
-                                                       vtkm::Vec<vtkm::Float32, 3>,
-                                                       vtkm::Vec<vtkm::Float64, 3>>
+  struct TypeListTagGradientInputs
+    : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>
   {
   };
 

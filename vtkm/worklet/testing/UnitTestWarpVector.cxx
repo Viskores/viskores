@@ -63,7 +63,7 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
 void TestWarpVector()
 {
   std::cout << "Testing WarpVector Worklet" << std::endl;
-  using vecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using vecType = vtkm::Vec3f;
 
   vtkm::cont::DataSet ds = MakeWarpVectorTestDataSet<vtkm::FloatDefault>();
   vtkm::cont::ArrayHandle<vecType> result;

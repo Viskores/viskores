@@ -150,9 +150,8 @@ void test_ArrayHandleCartesianProduct()
 
 void test_ArrayHandleCast()
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> handle =
-    makeArray(100000, vtkm::Vec<vtkm::Float64, 3>());
-  auto castArray = vtkm::cont::make_ArrayHandleCast(handle, vtkm::Vec<vtkm::Float32, 3>());
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> handle = makeArray(100000, vtkm::Vec3f_64());
+  auto castArray = vtkm::cont::make_ArrayHandleCast(handle, vtkm::Vec3f_32());
 
   vtkm::interop::BufferState state;
   vtkm::interop::TransferToOpenGL(castArray, state);
@@ -161,8 +160,8 @@ void test_ArrayHandleCast()
   validate(castArray, state);
 
   //resize down
-  handle = makeArray(1000, vtkm::Vec<vtkm::Float64, 3>());
-  castArray = vtkm::cont::make_ArrayHandleCast(handle, vtkm::Vec<vtkm::Float32, 3>());
+  handle = makeArray(1000, vtkm::Vec3f_64());
+  castArray = vtkm::cont::make_ArrayHandleCast(handle, vtkm::Vec3f_32());
   vtkm::interop::TransferToOpenGL(castArray, state);
   validate(castArray, state);
 }

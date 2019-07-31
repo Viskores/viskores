@@ -89,15 +89,15 @@ class MortonCodeFace : public vtkm::worklet::WorkletMapPointToCell
 {
 private:
   // (1.f / dx),(1.f / dy), (1.f, / dz)
-  vtkm::Vec<vtkm::Float32, 3> InverseExtent;
-  vtkm::Vec<vtkm::Float32, 3> MinCoordinate;
+  vtkm::Vec3f_32 InverseExtent;
+  vtkm::Vec3f_32 MinCoordinate;
 
-  VTKM_EXEC inline void Normalize(vtkm::Vec<vtkm::Float32, 3>& point) const
+  VTKM_EXEC inline void Normalize(vtkm::Vec3f_32& point) const
   {
     point = (point - MinCoordinate) * InverseExtent;
   }
 
-  VTKM_EXEC inline void Sort4(vtkm::Vec<vtkm::Id, 4>& indices) const
+  VTKM_EXEC inline void Sort4(vtkm::Id4& indices) const
   {
     if (indices[0] < indices[1])
     {
@@ -133,8 +133,7 @@ private:
 
 public:
   VTKM_CONT
-  MortonCodeFace(const vtkm::Vec<vtkm::Float32, 3>& inverseExtent,
-                 const vtkm::Vec<vtkm::Float32, 3>& minCoordinate)
+  MortonCodeFace(const vtkm::Vec3f_32& inverseExtent, const vtkm::Vec3f_32& minCoordinate)
     : InverseExtent(inverseExtent)
     , MinCoordinate(minCoordinate)
   {
@@ -191,9 +190,9 @@ public:
     //calc the morton code at the center of each face
     for (vtkm::Int32 i = 0; i < faceCount; ++i)
     {
-      vtkm::Vec<vtkm::Float32, 3> center;
+      vtkm::Vec3f_32 center;
       vtkm::UInt32 code;
-      vtkm::Vec<vtkm::Id, 3> cellFace;
+      vtkm::Id3 cellFace;
       cellFace[0] = cellId;
 
       // We must be sure that this calculation is the same for all faces. If we didn't
@@ -201,7 +200,7 @@ public:
       // the wonders of floating point math. This is bad. If we calculate in the same order
       // for all faces, then at worst, two different faces can enter the same bucket, which
       // we currently check for.
-      vtkm::Vec<vtkm::Id, 4> faceIndices(-1);
+      vtkm::Id4 faceIndices(-1);
       //Number of indices this face has
       const vtkm::Int32 indiceCount = tables.ShapesFaceList(tableOffset + i, 0);
       for (vtkm::Int32 j = 1; j <= indiceCount; j++)
@@ -240,13 +239,12 @@ class MortonCodeAABB : public vtkm::worklet::WorkletMapField
 {
 private:
   // (1.f / dx),(1.f / dy), (1.f, / dz)
-  vtkm::Vec<vtkm::Float32, 3> InverseExtent;
-  vtkm::Vec<vtkm::Float32, 3> MinCoordinate;
+  vtkm::Vec3f_32 InverseExtent;
+  vtkm::Vec3f_32 MinCoordinate;
 
 public:
   VTKM_CONT
-  MortonCodeAABB(const vtkm::Vec<vtkm::Float32, 3>& inverseExtent,
-                 const vtkm::Vec<vtkm::Float32, 3>& minCoordinate)
+  MortonCodeAABB(const vtkm::Vec3f_32& inverseExtent, const vtkm::Vec3f_32& minCoordinate)
     : InverseExtent(inverseExtent)
     , MinCoordinate(minCoordinate)
   {
@@ -265,7 +263,7 @@ public:
                   const vtkm::Float32& zmax,
                   vtkm::UInt32& mortonCode) const
   {
-    vtkm::Vec<vtkm::Float32, 3> direction(xmax - xmin, ymax - ymin, zmax - zmin);
+    vtkm::Vec3f_32 direction(xmax - xmin, ymax - ymin, zmax - zmin);
     vtkm::Float32 halfDistance = sqrtf(vtkm::Dot(direction, direction)) * 0.5f;
     vtkm::Normalize(direction);
     vtkm::Float32 centroidx = xmin + halfDistance * direction[0] - MinCoordinate[0];

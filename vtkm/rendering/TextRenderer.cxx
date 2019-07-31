@@ -36,7 +36,7 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
   RenderBitmapFont() {}
 
   VTKM_CONT
-  RenderBitmapFont(const vtkm::Vec<vtkm::Float32, 4>& color,
+  RenderBitmapFont(const vtkm::Vec4f_32& color,
                    vtkm::Id width,
                    vtkm::Id height,
                    vtkm::Float32 depth)
@@ -48,8 +48,8 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
   }
 
   template <typename ColorBufferPortal, typename FontTexture, typename DepthBufferPortal>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 4>& screenCoords,
-                            const vtkm::Vec<vtkm::Float32, 4>& textureCoords,
+  VTKM_EXEC void operator()(const vtkm::Vec4f_32& screenCoords,
+                            const vtkm::Vec4f_32& textureCoords,
                             const FontTexture& fontTexture,
                             ColorBufferPortal& colorBuffer,
                             DepthBufferPortal& depthBuffer) const
@@ -84,15 +84,15 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
   {
     vtkm::Id index =
       static_cast<vtkm::Id>(vtkm::Round(y)) * Width + static_cast<vtkm::Id>(vtkm::Round(x));
-    vtkm::Vec<vtkm::Float32, 4> srcColor = colorBuffer.Get(index);
+    vtkm::Vec4f_32 srcColor = colorBuffer.Get(index);
     vtkm::Float32 currentDepth = depthBuffer.Get(index);
     bool swap = Depth > currentDepth;
 
     intensity = intensity * Color[3];
-    vtkm::Vec<vtkm::Float32, 4> color = intensity * Color;
+    vtkm::Vec4f_32 color = intensity * Color;
     color[3] = intensity;
-    vtkm::Vec<vtkm::Float32, 4> front = color;
-    vtkm::Vec<vtkm::Float32, 4> back = srcColor;
+    vtkm::Vec4f_32 front = color;
+    vtkm::Vec4f_32 back = srcColor;
 
     if (swap)
     {
@@ -100,7 +100,7 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
       back = color;
     }
 
-    vtkm::Vec<vtkm::Float32, 4> blendedColor;
+    vtkm::Vec4f_32 blendedColor;
     vtkm::Float32 alpha = (1.f - front[3]);
     blendedColor[0] = front[0] + back[0] * alpha;
     blendedColor[1] = front[1] + back[1] * alpha;
@@ -116,7 +116,7 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
     return vtkm::Min(vtkm::Max(v, min), max);
   }
 
-  vtkm::Vec<vtkm::Float32, 4> Color;
+  vtkm::Vec4f_32 Color;
   vtkm::Id Width;
   vtkm::Id Height;
   vtkm::Float32 Depth;
@@ -127,14 +127,14 @@ struct RenderBitmapFontExecutor
   using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
   using DepthBufferType = vtkm::rendering::Canvas::DepthBufferType;
   using FontTextureType = vtkm::rendering::Canvas::FontTextureType;
-  using ScreenCoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
-  using TextureCoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using ScreenCoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id4>;
+  using TextureCoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
 
   VTKM_CONT
   RenderBitmapFontExecutor(const ScreenCoordsArrayHandle& screenCoords,
                            const TextureCoordsArrayHandle& textureCoords,
                            const FontTextureType& fontTexture,
-                           const vtkm::Vec<vtkm::Float32, 4>& color,
+                           const vtkm::Vec4f_32& color,
                            const ColorBufferType& colorBuffer,
                            const DepthBufferType& depthBuffer,
                            vtkm::Id width,
@@ -179,33 +179,33 @@ TextRenderer::TextRenderer(const vtkm::rendering::Canvas* canvas,
 {
 }
 
-void TextRenderer::RenderText(const vtkm::Vec<vtkm::Float32, 2>& position,
+void TextRenderer::RenderText(const vtkm::Vec2f_32& position,
                               vtkm::Float32 scale,
                               vtkm::Float32 angle,
                               vtkm::Float32 windowAspect,
-                              const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                              const vtkm::Vec2f_32& anchor,
                               const vtkm::rendering::Color& color,
                               const std::string& text)
 {
   vtkm::Matrix<vtkm::Float32, 4, 4> translationMatrix =
     Transform3DTranslate(position[0], position[1], 0.f);
   vtkm::Matrix<vtkm::Float32, 4, 4> scaleMatrix = Transform3DScale(1.0f / windowAspect, 1.0f, 1.0f);
-  vtkm::Vec<vtkm::Float32, 3> rotationAxis(0.0f, 0.0f, 1.0f);
+  vtkm::Vec3f_32 rotationAxis(0.0f, 0.0f, 1.0f);
   vtkm::Matrix<vtkm::Float32, 4, 4> rotationMatrix = Transform3DRotate(angle, rotationAxis);
   vtkm::Matrix<vtkm::Float32, 4, 4> transform =
     vtkm::MatrixMultiply(translationMatrix, vtkm::MatrixMultiply(scaleMatrix, rotationMatrix));
   RenderText(transform, scale, anchor, color, text);
 }
 
-void TextRenderer::RenderText(const vtkm::Vec<vtkm::Float32, 3>& origin,
-                              const vtkm::Vec<vtkm::Float32, 3>& right,
-                              const vtkm::Vec<vtkm::Float32, 3>& up,
+void TextRenderer::RenderText(const vtkm::Vec3f_32& origin,
+                              const vtkm::Vec3f_32& right,
+                              const vtkm::Vec3f_32& up,
                               vtkm::Float32 scale,
-                              const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                              const vtkm::Vec2f_32& anchor,
                               const vtkm::rendering::Color& color,
                               const std::string& text)
 {
-  vtkm::Vec<vtkm::Float32, 3> n = vtkm::Cross(right, up);
+  vtkm::Vec3f_32 n = vtkm::Cross(right, up);
   vtkm::Normalize(n);
 
   vtkm::Matrix<vtkm::Float32, 4, 4> transform = MatrixHelpers::WorldMatrix(origin, right, up, n);
@@ -216,7 +216,7 @@ void TextRenderer::RenderText(const vtkm::Vec<vtkm::Float32, 3>& origin,
 
 void TextRenderer::RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
                               vtkm::Float32 scale,
-                              const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                              const vtkm::Vec2f_32& anchor,
                               const vtkm::rendering::Color& color,
                               const std::string& text,
                               const vtkm::Float32& depth)
@@ -234,7 +234,7 @@ void TextRenderer::RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform
   textureCoords.Allocate(static_cast<vtkm::Id>(text.length()));
   ScreenCoordsArrayHandle::PortalControl screenCoordsPortal = screenCoords.GetPortalControl();
   TextureCoordsArrayHandle::PortalControl textureCoordsPortal = textureCoords.GetPortalControl();
-  vtkm::Vec<vtkm::Float32, 4> charVertices, charUVs, charCoords;
+  vtkm::Vec4f_32 charVertices, charUVs, charCoords;
   for (std::size_t i = 0; i < text.length(); ++i)
   {
     char c = text[i];
@@ -254,7 +254,7 @@ void TextRenderer::RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform
     charVertices = charVertices * scale;
     vtkm::Id2 p0 = Canvas->GetScreenPoint(charVertices[0], charVertices[3], fz, transform);
     vtkm::Id2 p1 = Canvas->GetScreenPoint(charVertices[2], charVertices[1], fz, transform);
-    charCoords = vtkm::Vec<vtkm::Id, 4>(p0[0], p1[1], p1[0], p0[1]);
+    charCoords = vtkm::Id4(p0[0], p1[1], p1[0], p0[1]);
     screenCoordsPortal.Set(static_cast<vtkm::Id>(i), charCoords);
     textureCoordsPortal.Set(static_cast<vtkm::Id>(i), charUVs);
   }

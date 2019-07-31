@@ -31,14 +31,14 @@ public:
                                        const vtkm::cont::CoordinateSystem& coordinates);
 
   VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> ExternalTrianglesStructured(
+  vtkm::cont::ArrayHandle<vtkm::Id4> ExternalTrianglesStructured(
     vtkm::cont::CellSetStructured<3>& cellSetStructured);
 
   vtkm::cont::ArrayHandle<vtkm::Id> GetFaceConnectivity();
 
   vtkm::cont::ArrayHandle<vtkm::Id> GetFaceOffsets();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> GetTriangles();
+  vtkm::cont::ArrayHandle<vtkm::Id4> GetTriangles();
 
 protected:
   VTKM_CONT
@@ -53,7 +53,7 @@ protected:
 
   vtkm::cont::ArrayHandle<vtkm::Id> FaceConnectivity;
   vtkm::cont::ArrayHandle<vtkm::Id> FaceOffsets;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Triangles;
+  vtkm::cont::ArrayHandle<vtkm::Id4> Triangles;
 };
 }
 }

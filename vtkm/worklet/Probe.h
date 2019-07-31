@@ -43,10 +43,10 @@ public:
     using ExecutionSignature = void(_1, _2, _3, _4);
 
     template <typename LocatorType>
-    VTKM_EXEC void operator()(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+    VTKM_EXEC void operator()(const vtkm::Vec3f& point,
                               const LocatorType& locator,
                               vtkm::Id& cellId,
-                              vtkm::Vec<vtkm::FloatDefault, 3>& pcoords) const
+                              vtkm::Vec3f& pcoords) const
     {
       locator->FindCell(point, cellId, pcoords, *this);
     }
@@ -315,7 +315,7 @@ private:
   static constexpr vtkm::UInt8 HIDDEN = 2; // from vtk
 
   vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> ParametricCoordinates;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> ParametricCoordinates;
   vtkm::cont::DynamicCellSet InputCellSet;
 };
 }

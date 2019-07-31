@@ -89,44 +89,42 @@ struct FetchArrayTopologyMapInImplementation
 };
 
 static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<1> make_VecAxisAlignedPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
+  const vtkm::Vec3f& origin,
+  const vtkm::Vec3f& spacing,
   const vtkm::Vec<vtkm::Id, 1>& logicalId)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
+  vtkm::Vec3f offsetOrigin(
     origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]), origin[1], origin[2]);
   return vtkm::VecAxisAlignedPointCoordinates<1>(offsetOrigin, spacing);
 }
 
 static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<1> make_VecAxisAlignedPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
+  const vtkm::Vec3f& origin,
+  const vtkm::Vec3f& spacing,
   vtkm::Id logicalId)
 {
   return make_VecAxisAlignedPointCoordinates(origin, spacing, vtkm::Vec<vtkm::Id, 1>(logicalId));
 }
 
 static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<2> make_VecAxisAlignedPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
-  const vtkm::Vec<vtkm::Id, 2>& logicalId)
+  const vtkm::Vec3f& origin,
+  const vtkm::Vec3f& spacing,
+  const vtkm::Id2& logicalId)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
-    origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
-    origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
-    origin[2]);
+  vtkm::Vec3f offsetOrigin(origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
+                           origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
+                           origin[2]);
   return vtkm::VecAxisAlignedPointCoordinates<2>(offsetOrigin, spacing);
 }
 
 static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<3> make_VecAxisAlignedPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
-  const vtkm::Vec<vtkm::Id, 3>& logicalId)
+  const vtkm::Vec3f& origin,
+  const vtkm::Vec3f& spacing,
+  const vtkm::Id3& logicalId)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
-    origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
-    origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
-    origin[2] + spacing[2] * static_cast<vtkm::FloatDefault>(logicalId[2]));
+  vtkm::Vec3f offsetOrigin(origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
+                           origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
+                           origin[2] + spacing[2] * static_cast<vtkm::FloatDefault>(logicalId[2]));
   return vtkm::VecAxisAlignedPointCoordinates<3>(offsetOrigin, spacing);
 }
 

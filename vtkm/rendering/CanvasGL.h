@@ -51,8 +51,8 @@ public:
   vtkm::rendering::WorldAnnotator* CreateWorldAnnotator() const override;
 
 protected:
-  void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
-               const vtkm::Vec<vtkm::Float64, 2>& point1,
+  void AddLine(const vtkm::Vec2f_64& point0,
+               const vtkm::Vec2f_64& point1,
                vtkm::Float32 linewidth,
                const vtkm::rendering::Color& color) const override;
 
@@ -60,17 +60,17 @@ protected:
                    const vtkm::cont::ColorTable& colorTable,
                    bool horizontal) const override;
 
-  void AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                      const vtkm::Vec<vtkm::Float64, 2>& point1,
-                      const vtkm::Vec<vtkm::Float64, 2>& point2,
-                      const vtkm::Vec<vtkm::Float64, 2>& point3,
+  void AddColorSwatch(const vtkm::Vec2f_64& point0,
+                      const vtkm::Vec2f_64& point1,
+                      const vtkm::Vec2f_64& point2,
+                      const vtkm::Vec2f_64& point3,
                       const vtkm::rendering::Color& color) const override;
 
-  void AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
+  void AddText(const vtkm::Vec2f_32& position,
                vtkm::Float32 scale,
                vtkm::Float32 angle,
                vtkm::Float32 windowAspect,
-               const vtkm::Vec<vtkm::Float32, 2>& anchor,
+               const vtkm::Vec2f_32& anchor,
                const vtkm::rendering::Color& color,
                const std::string& text) const override;
 
@@ -78,9 +78,7 @@ private:
   vtkm::rendering::BitmapFont Font;
   vtkm::rendering::TextureGL FontTexture;
 
-  void RenderText(vtkm::Float32 scale,
-                  const vtkm::Vec<vtkm::Float32, 2>& anchor,
-                  const std::string& text) const;
+  void RenderText(vtkm::Float32 scale, const vtkm::Vec2f_32& anchor, const std::string& text) const;
 };
 }
 } //namespace vtkm::rendering

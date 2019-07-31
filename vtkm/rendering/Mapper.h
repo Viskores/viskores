@@ -49,7 +49,7 @@ public:
   virtual void SetLogarithmY(bool l);
 
 protected:
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
+  vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;
   bool LogarithmX = false;
   bool LogarithmY = false;
 };

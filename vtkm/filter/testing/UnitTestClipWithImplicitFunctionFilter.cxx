@@ -16,7 +16,7 @@
 namespace
 {
 
-using Coord3D = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Coord3D = vtkm::Vec3f;
 
 vtkm::cont::DataSet MakeTestDatasetStructured()
 {
@@ -47,7 +47,7 @@ void TestClipStructured()
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::filter::ClipWithImplicitFunction clip;
@@ -86,7 +86,7 @@ void TestClipStructuredInverted()
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::filter::ClipWithImplicitFunction clip;

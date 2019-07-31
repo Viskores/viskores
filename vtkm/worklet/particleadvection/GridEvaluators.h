@@ -67,8 +67,7 @@ public:
   VTKM_EXEC
   bool IsWithinTemporalBoundary(const vtkm::FloatDefault vtkmNotUsed(time)) const { return true; }
   VTKM_EXEC
-  void GetSpatialBoundary(vtkm::Vec<vtkm::FloatDefault, 3>& dir,
-                          vtkm::Vec<ScalarType, 3>& boundary) const
+  void GetSpatialBoundary(vtkm::Vec3f& dir, vtkm::Vec<ScalarType, 3>& boundary) const
   {
     // Based on the direction of the velocity we need to be able to tell where
     // the particle will exit the domain from to actually push it out of domain.
@@ -102,7 +101,7 @@ public:
     vtkm::UInt8 cellShape;
     vtkm::IdComponent nVerts;
     vtkm::VecVariable<vtkm::Id, 8> ptIndices;
-    vtkm::VecVariable<vtkm::Vec<vtkm::FloatDefault, 3>, 8> fieldValues;
+    vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
     InterpolationHelper->GetCellInfo(cellId, cellShape, nVerts, ptIndices);
 
     for (vtkm::IdComponent i = 0; i < nVerts; i++)

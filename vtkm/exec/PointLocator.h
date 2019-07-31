@@ -26,7 +26,7 @@ public:
     // troublesome with CUDA __host__ __device__ markup.
   }
 
-  VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec<vtkm::FloatDefault, 3>& queryPoint,
+  VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec3f& queryPoint,
                                              vtkm::Id& pointId,
                                              vtkm::FloatDefault& distanceSquared) const = 0;
 };

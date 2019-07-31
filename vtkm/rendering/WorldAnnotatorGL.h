@@ -28,17 +28,17 @@ public:
 
   ~WorldAnnotatorGL();
 
-  void AddLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
-               const vtkm::Vec<vtkm::Float64, 3>& point1,
+  void AddLine(const vtkm::Vec3f_64& point0,
+               const vtkm::Vec3f_64& point1,
                vtkm::Float32 lineWidth,
                const vtkm::rendering::Color& color,
                bool inFront) const override;
 
-  void AddText(const vtkm::Vec<vtkm::Float32, 3>& origin,
-               const vtkm::Vec<vtkm::Float32, 3>& right,
-               const vtkm::Vec<vtkm::Float32, 3>& up,
+  void AddText(const vtkm::Vec3f_32& origin,
+               const vtkm::Vec3f_32& right,
+               const vtkm::Vec3f_32& up,
                vtkm::Float32 scale,
-               const vtkm::Vec<vtkm::Float32, 2>& anchor,
+               const vtkm::Vec2f_32& anchor,
                const vtkm::rendering::Color& color,
                const std::string& text,
                const vtkm::Float32 depth = 0.f) const override;

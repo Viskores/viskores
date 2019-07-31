@@ -96,8 +96,7 @@ template <>
 class FilterTraits<Lagrangian>
 {
 public:
-  struct TypeListTagLagrangian
-    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
+  struct TypeListTagLagrangian : vtkm::ListTagBase<vtkm::Vec3f_32, vtkm::Vec3f_64>
   {
   };
   using InputFieldTypeList = TypeListTagLagrangian;

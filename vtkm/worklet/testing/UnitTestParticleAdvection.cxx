@@ -475,7 +475,7 @@ void TestParticleWorklets()
   const vtkm::Id3 dims(5, 5, 5);
   vtkm::Id nElements = dims[0] * dims[1] * dims[2] * 3;
 
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> field;
+  std::vector<vtkm::Vec3f> field;
   for (vtkm::Id i = 0; i < nElements; i++)
   {
     ScalarType x = vecData[i];
