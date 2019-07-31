@@ -74,7 +74,7 @@ public:
       else if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
       {
         status = integrator->SmallStep(inpos, time, outpos);
-        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.TakeStep(idx, outpos);
         integralCurve.SetTime(idx, time);
         if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
         {
