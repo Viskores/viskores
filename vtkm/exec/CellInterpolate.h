@@ -182,13 +182,12 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 }
 
 template <typename ParametricCoordType>
-VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecAxisAlignedPointCoordinates<1>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagLine,
-  const vtkm::exec::FunctorBase&)
+VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates<1>& field,
+                                      const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                      vtkm::CellShapeTagLine,
+                                      const vtkm::exec::FunctorBase&)
 {
-  using T = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using T = vtkm::Vec3f;
 
   const T& origin = field.GetOrigin();
   const T& spacing = field.GetSpacing();
@@ -229,11 +228,10 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 }
 
 template <typename ParametricCoordType>
-VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecAxisAlignedPointCoordinates<1>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagPolyLine,
-  const vtkm::exec::FunctorBase& worklet)
+VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates<1>& field,
+                                      const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                      vtkm::CellShapeTagPolyLine,
+                                      const vtkm::exec::FunctorBase& worklet)
 {
   const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   VTKM_ASSERT(numPoints >= 1);
@@ -246,7 +244,7 @@ VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
       return CellInterpolate(field, pcoords, vtkm::CellShapeTagLine(), worklet);
   }
 
-  using T = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using T = vtkm::Vec3f;
   const T& origin = field.GetOrigin();
   const T& spacing = field.GetSpacing();
 
@@ -381,13 +379,12 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 }
 
 template <typename ParametricCoordType>
-VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecAxisAlignedPointCoordinates<2>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagQuad,
-  const vtkm::exec::FunctorBase&)
+VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates<2>& field,
+                                      const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                      vtkm::CellShapeTagQuad,
+                                      const vtkm::exec::FunctorBase&)
 {
-  using T = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using T = vtkm::Vec3f;
 
   const T& origin = field.GetOrigin();
   const T& spacing = field.GetSpacing();
@@ -436,15 +433,14 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 }
 
 template <typename ParametricCoordType>
-VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecAxisAlignedPointCoordinates<3>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagHexahedron,
-  const vtkm::exec::FunctorBase&)
+VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates<3>& field,
+                                      const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                      vtkm::CellShapeTagHexahedron,
+                                      const vtkm::exec::FunctorBase&)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> pcoordsCast(static_cast<vtkm::FloatDefault>(pcoords[0]),
-                                               static_cast<vtkm::FloatDefault>(pcoords[1]),
-                                               static_cast<vtkm::FloatDefault>(pcoords[2]));
+  vtkm::Vec3f pcoordsCast(static_cast<vtkm::FloatDefault>(pcoords[0]),
+                          static_cast<vtkm::FloatDefault>(pcoords[1]),
+                          static_cast<vtkm::FloatDefault>(pcoords[2]));
 
   return field.GetOrigin() + pcoordsCast * field.GetSpacing();
 }

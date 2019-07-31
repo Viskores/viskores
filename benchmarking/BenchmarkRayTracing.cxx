@@ -42,7 +42,7 @@ struct BenchRayTracing
 {
   vtkm::rendering::raytracing::RayTracer Tracer;
   vtkm::rendering::raytracing::Camera RayCamera;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
+  vtkm::cont::ArrayHandle<vtkm::Id4> Indices;
   vtkm::rendering::raytracing::Ray<Precision> Rays;
   vtkm::cont::CoordinateSystem Coords;
   vtkm::cont::DataSet Data;
@@ -82,11 +82,11 @@ struct BenchRayTracing
 
     Tracer.SetField(field, range);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> temp;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> temp;
     vtkm::cont::ColorTable table("cool to warm");
     table.Sample(100, temp);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec4f_32> colors;
     colors.Allocate(100);
     auto portal = colors.GetPortalControl();
     auto colorPortal = temp.GetPortalConstControl();
@@ -94,10 +94,10 @@ struct BenchRayTracing
     for (vtkm::Id i = 0; i < 100; ++i)
     {
       auto color = colorPortal.Get(i);
-      vtkm::Vec<vtkm::Float32, 4> t(color[0] * conversionToFloatSpace,
-                                    color[1] * conversionToFloatSpace,
-                                    color[2] * conversionToFloatSpace,
-                                    color[3] * conversionToFloatSpace);
+      vtkm::Vec4f_32 t(color[0] * conversionToFloatSpace,
+                       color[1] * conversionToFloatSpace,
+                       color[2] * conversionToFloatSpace,
+                       color[3] * conversionToFloatSpace);
       portal.Set(i, t);
     }
 

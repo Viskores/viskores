@@ -15,7 +15,7 @@
 namespace
 {
 
-using Vec3 = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Vec3 = vtkm::Vec3f;
 
 static const Vec3 g_Origin = Vec3(1.0f, 2.0f, 3.0f);
 static const Vec3 g_Spacing = Vec3(4.0f, 5.0f, 6.0f);
@@ -90,11 +90,11 @@ void TryVecAxisAlignedPointCoordinates(
   CheckCoordsValues(coords);
 
   std::cout << "Check CopyInto." << std::endl;
-  vtkm::Vec<vtkm::Vec<vtkm::FloatDefault, 3>, VecCoordsType::NUM_COMPONENTS> copy1;
+  vtkm::Vec<vtkm::Vec3f, VecCoordsType::NUM_COMPONENTS> copy1;
   coords.CopyInto(copy1);
   CheckCoordsValues(copy1);
 
-  vtkm::Vec<vtkm::Vec<vtkm::FloatDefault, 3>, VecCoordsType::NUM_COMPONENTS> copy2;
+  vtkm::Vec<vtkm::Vec3f, VecCoordsType::NUM_COMPONENTS> copy2;
   VTraits::CopyInto(coords, copy2);
   CheckCoordsValues(copy2);
 

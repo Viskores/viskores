@@ -29,8 +29,7 @@ inline VTKM_CONT Pathline::Pathline()
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void Pathline::SetSeeds(
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& seeds)
+inline VTKM_CONT void Pathline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds)
 {
   this->Seeds = seeds;
 }

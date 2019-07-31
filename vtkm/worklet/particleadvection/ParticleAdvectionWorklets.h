@@ -46,6 +46,7 @@ public:
     vtkm::Vec<ScalarType, 3> outpos;
     ScalarType time = integralCurve.GetTime(idx);
     ParticleStatus status;
+    bool tookAnySteps = false;
     while (!integralCurve.Done(idx))
     {
       status = integrator->Step(inpos, time, outpos);
@@ -53,12 +54,13 @@ public:
       // has completed the maximum steps required.
       if (status == ParticleStatus::STATUS_OK)
       {
-        integralCurve.TakeStep(idx, outpos, status);
+        integralCurve.TakeStep(idx, outpos);
         // This is to keep track of the particle's time.
         // This is what the Evaluator uses to determine if the particle
         // has exited temporal boundary.
         integralCurve.SetTime(idx, time);
         inpos = outpos;
+        tookAnySteps = true;
       }
       // If the particle is at spatial or temporal  boundary, take steps to just
       // push it a little out of the boundary so that it will start advection in
@@ -91,6 +93,7 @@ public:
         }
       }
     }
+    integralCurve.SetTookAnySteps(idx, tookAnySteps);
   }
 };
 

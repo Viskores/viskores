@@ -182,7 +182,7 @@ private:
     std::cout << "Testing vtkm::Frustum on "
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
-    vtkm::Vec<vtkm::FloatDefault, 3> points[8] = {
+    vtkm::Vec3f points[8] = {
       { 0.0f, 0.0f, 0.0f }, // 0
       { 1.0f, 0.0f, 0.0f }, // 1
       { 1.0f, 0.0f, 1.0f }, // 2

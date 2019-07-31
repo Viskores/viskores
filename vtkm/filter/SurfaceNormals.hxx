@@ -78,7 +78,7 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
 
   const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> faceNormals;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> faceNormals;
   vtkm::worklet::FacetedSurfaceNormals faceted;
   faceted.SetNormalize(this->NormalizeCellNormals);
   faceted.Run(vtkm::filter::ApplyPolicy(cellset, policy), points, faceNormals);
@@ -86,7 +86,7 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
   vtkm::cont::DataSet result;
   if (this->GeneratePointNormals)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> pointNormals;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> pointNormals;
     vtkm::worklet::SmoothSurfaceNormals smooth;
     smooth.Run(vtkm::filter::ApplyPolicy(cellset, policy), faceNormals, pointNormals);
 

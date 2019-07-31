@@ -502,13 +502,14 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
     VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(i) <= maxSteps,
                      "Too many steps taken in streamline");
 
+  /*
   vtkm::cont::DataSet ds;
   ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", res.positions));
   ds.AddCellSet(res.polyLines);
   ds.PrintSummary(std::cout);
   vtkm::io::writer::VTKDataSetWriter writer1("ds.vtk");
   writer1.WriteDataSet(ds);
-  exit(0);
+  */
 }
 
 void TestParticleWorklets()
@@ -522,7 +523,7 @@ void TestParticleWorklets()
   const vtkm::Id3 dims(5, 5, 5);
   vtkm::Id nElements = dims[0] * dims[1] * dims[2] * 3;
 
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> field;
+  std::vector<vtkm::Vec3f> field;
   for (vtkm::Id i = 0; i < nElements; i++)
   {
     ScalarType x = vecData[i];
@@ -596,10 +597,53 @@ void TestParticleWorklets()
   }
 }
 
+void TestParticleStatus()
+{
+  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
+
+  vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
+  const vtkm::Id3 dims(5, 5, 5);
+  vtkm::cont::DataSet ds = CreateUniformDataSet<ScalarType>(bounds, dims);
+
+  vtkm::Id nElements = dims[0] * dims[1] * dims[2];
+
+  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> field;
+  for (vtkm::Id i = 0; i < nElements; i++)
+    field.push_back(vtkm::Vec<ScalarType, 3>(1, 0, 0));
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> fieldArray;
+  fieldArray = vtkm::cont::make_ArrayHandle(field);
+
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  vtkm::Id maxSteps = 1000;
+  ScalarType stepSize = 0.01f;
+
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+  RK4Type rk4(eval, stepSize);
+
+  vtkm::worklet::ParticleAdvection pa;
+  std::vector<vtkm::Vec<ScalarType, 3>> pts;
+  pts.push_back(vtkm::Vec<ScalarType, 3>(.5, .5, .5));
+  pts.push_back(vtkm::Vec<ScalarType, 3>(-1, -1, -1));
+  auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
+  auto res = pa.Run(rk4, seedsArray, maxSteps);
+  auto statusPortal = res.status.GetPortalConstControl();
+
+  vtkm::Id tookStep0 =
+    statusPortal.Get(0) & vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS;
+  vtkm::Id tookStep1 =
+    statusPortal.Get(1) & vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS;
+  VTKM_TEST_ASSERT(tookStep0 != 0, "Particle failed to take any steps");
+  VTKM_TEST_ASSERT(tookStep1 == 0, "Particle took a step when it should not have.");
+}
+
 void TestParticleAdvection()
 {
   TestEvaluators();
   TestParticleWorklets();
+  TestParticleStatus();
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])

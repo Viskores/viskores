@@ -41,7 +41,7 @@ struct ClearBuffers : public vtkm::worklet::WorkletMapField
   ClearBuffers() {}
 
   VTKM_EXEC
-  void operator()(vtkm::Vec<vtkm::Float32, 4>& color, vtkm::Float32& depth) const
+  void operator()(vtkm::Vec4f_32& color, vtkm::Float32& depth) const
   {
     color[0] = 0.f;
     color[1] = 0.f;
@@ -55,10 +55,10 @@ struct ClearBuffers : public vtkm::worklet::WorkletMapField
 
 struct BlendBackground : public vtkm::worklet::WorkletMapField
 {
-  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
+  vtkm::Vec4f_32 BackgroundColor;
 
   VTKM_CONT
-  BlendBackground(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
+  BlendBackground(const vtkm::Vec4f_32& backgroundColor)
     : BackgroundColor(backgroundColor)
   {
   }
@@ -66,7 +66,7 @@ struct BlendBackground : public vtkm::worklet::WorkletMapField
   using ControlSignature = void(FieldInOut);
   using ExecutionSignature = void(_1);
 
-  VTKM_EXEC void operator()(vtkm::Vec<vtkm::Float32, 4>& color) const
+  VTKM_EXEC void operator()(vtkm::Vec4f_32& color) const
   {
     if (color[3] >= 1.f)
       return;
@@ -85,10 +85,7 @@ struct DrawColorSwatch : public vtkm::worklet::WorkletMapField
   using ExecutionSignature = void(_1, _2);
 
   VTKM_CONT
-  DrawColorSwatch(vtkm::Id2 dims,
-                  vtkm::Id2 xBounds,
-                  vtkm::Id2 yBounds,
-                  const vtkm::Vec<vtkm::Float32, 4> color)
+  DrawColorSwatch(vtkm::Id2 dims, vtkm::Id2 xBounds, vtkm::Id2 yBounds, const vtkm::Vec4f_32 color)
     : Color(color)
   {
     ImageWidth = dims[0];
@@ -119,7 +116,7 @@ struct DrawColorSwatch : public vtkm::worklet::WorkletMapField
   vtkm::Id2 SwatchBottomLeft;
   vtkm::Id SwatchWidth;
   vtkm::Id SwatchHeight;
-  const vtkm::Vec<vtkm::Float32, 4> Color;
+  const vtkm::Vec4f_32 Color;
 }; // struct DrawColorSwatch
 
 struct DrawColorBar : public vtkm::worklet::WorkletMapField
@@ -150,7 +147,7 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
     vtkm::Id sample = Horizontal ? x : y;
 
 
-    const vtkm::Vec<vtkm::UInt8, 4> color = colorMap.Get(sample);
+    const vtkm::Vec4ui_8 color = colorMap.Get(sample);
 
     vtkm::Float32 normalizedHeight = Horizontal
       ? static_cast<vtkm::Float32>(y) / static_cast<vtkm::Float32>(BarHeight)
@@ -170,20 +167,19 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
       constexpr vtkm::Float32 intensity = 0.4f;
       constexpr vtkm::Float32 inverseIntensity = (1.0f - intensity);
       alpha *= inverseIntensity;
-      vtkm::Vec<vtkm::Float32, 4> blendedColor(
-        1.0f * intensity + (color[0] * conversionToFloatSpace) * alpha,
-        1.0f * intensity + (color[1] * conversionToFloatSpace) * alpha,
-        1.0f * intensity + (color[2] * conversionToFloatSpace) * alpha,
-        1.0f);
+      vtkm::Vec4f_32 blendedColor(1.0f * intensity + (color[0] * conversionToFloatSpace) * alpha,
+                                  1.0f * intensity + (color[1] * conversionToFloatSpace) * alpha,
+                                  1.0f * intensity + (color[2] * conversionToFloatSpace) * alpha,
+                                  1.0f);
       frameBuffer.Set(offset, blendedColor);
     }
     else
     {
       // make sure this is opaque
-      vtkm::Vec<vtkm::Float32, 4> fColor((color[0] * conversionToFloatSpace),
-                                         (color[1] * conversionToFloatSpace),
-                                         (color[2] * conversionToFloatSpace),
-                                         1.0f);
+      vtkm::Vec4f_32 fColor((color[0] * conversionToFloatSpace),
+                            (color[1] * conversionToFloatSpace),
+                            (color[2] * conversionToFloatSpace),
+                            1.0f);
       frameBuffer.Set(offset, fColor);
     }
   }
@@ -340,10 +336,10 @@ void Canvas::ResizeBuffers(vtkm::Id width, vtkm::Id height)
   Internals->Height = height;
 }
 
-void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                            const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point1),
-                            const vtkm::Vec<vtkm::Float64, 2>& point2,
-                            const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point3),
+void Canvas::AddColorSwatch(const vtkm::Vec2f_64& point0,
+                            const vtkm::Vec2f_64& vtkmNotUsed(point1),
+                            const vtkm::Vec2f_64& point2,
+                            const vtkm::Vec2f_64& vtkmNotUsed(point3),
                             const vtkm::rendering::Color& color) const
 {
   vtkm::Float64 width = static_cast<vtkm::Float64>(this->GetWidth());
@@ -381,8 +377,8 @@ void Canvas::AddColorSwatch(const vtkm::Float64 x0,
                        color);
 }
 
-void Canvas::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                     const vtkm::Vec<vtkm::Float64, 2>& point1,
+void Canvas::AddLine(const vtkm::Vec2f_64& point0,
+                     const vtkm::Vec2f_64& point1,
                      vtkm::Float32 linewidth,
                      const vtkm::rendering::Color& color) const
 {
@@ -417,7 +413,7 @@ void Canvas::AddColorBar(const vtkm::Bounds& bounds,
   vtkm::Id barHeight = y[1] - y[0];
 
   vtkm::Id numSamples = horizontal ? barWidth : barHeight;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colorMap;
+  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colorMap;
 
   {
     vtkm::cont::ScopedRuntimeDeviceTracker tracker(vtkm::cont::DeviceAdapterTagSerial{});
@@ -451,7 +447,7 @@ vtkm::Id2 Canvas::GetScreenPoint(vtkm::Float32 x,
                                  vtkm::Float32 z,
                                  const vtkm::Matrix<vtkm::Float32, 4, 4>& transform) const
 {
-  vtkm::Vec<vtkm::Float32, 4> point(x, y, z, 1.0f);
+  vtkm::Vec4f_32 point(x, y, z, 1.0f);
   point = vtkm::MatrixMultiply(transform, point);
 
   vtkm::Id2 pixelPos;
@@ -464,7 +460,7 @@ vtkm::Id2 Canvas::GetScreenPoint(vtkm::Float32 x,
 
 void Canvas::AddText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
                      vtkm::Float32 scale,
-                     const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                     const vtkm::Vec2f_32& anchor,
                      const vtkm::rendering::Color& color,
                      const std::string& text,
                      const vtkm::Float32& depth) const
@@ -482,18 +478,18 @@ void Canvas::AddText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
   fontRenderer.RenderText(transform, scale, anchor, color, text, depth);
 }
 
-void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
+void Canvas::AddText(const vtkm::Vec2f_32& position,
                      vtkm::Float32 scale,
                      vtkm::Float32 angle,
                      vtkm::Float32 windowAspect,
-                     const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                     const vtkm::Vec2f_32& anchor,
                      const vtkm::rendering::Color& color,
                      const std::string& text) const
 {
   vtkm::Matrix<vtkm::Float32, 4, 4> translationMatrix =
     Transform3DTranslate(position[0], position[1], 0.f);
   vtkm::Matrix<vtkm::Float32, 4, 4> scaleMatrix = Transform3DScale(1.0f / windowAspect, 1.0f, 1.0f);
-  vtkm::Vec<vtkm::Float32, 3> rotationAxis(0.0f, 0.0f, 1.0f);
+  vtkm::Vec3f_32 rotationAxis(0.0f, 0.0f, 1.0f);
   vtkm::Matrix<vtkm::Float32, 4, 4> rotationMatrix = Transform3DRotate(angle, rotationAxis);
   vtkm::Matrix<vtkm::Float32, 4, 4> transform =
     vtkm::MatrixMultiply(translationMatrix, vtkm::MatrixMultiply(scaleMatrix, rotationMatrix));
@@ -581,7 +577,7 @@ void Canvas::SaveAs(const std::string& fileName) const
   {
     for (vtkm::Id xIndex = 0; xIndex < width; xIndex++)
     {
-      vtkm::Vec<vtkm::Float32, 4> tuple = colorPortal.Get(yIndex * width + xIndex);
+      vtkm::Vec4f_32 tuple = colorPortal.Get(yIndex * width + xIndex);
       of << (unsigned char)(tuple[0] * 255);
       of << (unsigned char)(tuple[1] * 255);
       of << (unsigned char)(tuple[2] * 255);

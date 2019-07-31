@@ -17,9 +17,9 @@
 namespace
 {
 
-using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
-const vtkm::Vec<vtkm::FloatDefault, 3> expectedCoords[24] = {
+const vtkm::Vec3f expectedCoords[24] = {
   { 0.0, 0.0, 0.0 }, { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 }, { 0.0, 1.0, 0.0 },
   { 1.0, 1.0, 0.0 }, { 1.0, 1.0, 1.0 }, { 0.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 },
   { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 1.0 }, { 1.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 },
@@ -42,7 +42,7 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
 
   const int nVerts = 8;
   const int nCells = 6;
-  using CoordType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using CoordType = vtkm::Vec3f;
   std::vector<CoordType> coords = {
     CoordType(0, 0, 0), // 0
     CoordType(1, 0, 0), // 1
@@ -116,7 +116,7 @@ void TestSplitSharpEdgesSplitEveryEdge(vtkm::cont::DataSet& simpleCube,
 { // Split every edge
   vtkm::FloatDefault featureAngle = 89.0;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newCoords;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newCoords;
   vtkm::cont::CellSetExplicit<> newCellset;
 
   splitSharpEdges.Run(simpleCube.GetCellSet(),
@@ -161,7 +161,7 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
 { // Do nothing
   vtkm::FloatDefault featureAngle = 91.0;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newCoords;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newCoords;
   vtkm::cont::CellSetExplicit<> newCellset;
 
   splitSharpEdges.Run(simpleCube.GetCellSet(),

@@ -72,9 +72,9 @@ void CheckOutput(const vtkm::cont::CellSetExplicit<>& copiedCells)
                      "Bad number of points in cell");
 
     // Only checking 3 points. All cells should have at least 3
-    vtkm::Vec<vtkm::Id, 3> cellPoints;
+    vtkm::Id3 cellPoints;
     copiedCells.GetIndices(cellIndex, cellPoints);
-    vtkm::Vec<vtkm::Id, 3> oCellPoints;
+    vtkm::Id3 oCellPoints;
     originalCells.GetIndices(oCellIndex, oCellPoints);
     VTKM_TEST_ASSERT(cellPoints == oCellPoints, "Point indices not copied correctly");
   }

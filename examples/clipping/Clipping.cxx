@@ -23,7 +23,7 @@
 #include <stdexcept>
 #include <string>
 
-using FloatVec3 = vtkm::Vec<vtkm::Float32, 3>;
+using FloatVec3 = vtkm::Vec3f_32;
 
 namespace
 {

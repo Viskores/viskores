@@ -201,7 +201,7 @@ typename ConnectivityExtrude<Device>::IndicesType ConnectivityExtrude<Device>::G
   vtkm::Id p0 = index[1];
   vtkm::Id p1 = (p0 < (this->NumberOfPlanes - 1)) ? (p0 + 1) : 0;
 
-  vtkm::Vec<vtkm::Int32, 3> pointIds1, pointIds2;
+  vtkm::Vec3i_32 pointIds1, pointIds2;
   for (int i = 0; i < 3; ++i)
   {
     pointIds1[i] = this->Connectivity.Get((tr * 3) + i);

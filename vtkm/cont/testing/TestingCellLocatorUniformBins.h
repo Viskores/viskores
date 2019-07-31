@@ -33,7 +33,7 @@
 namespace
 {
 
-using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
+using PointType = vtkm::Vec3f;
 
 std::default_random_engine RandomGenerator;
 
@@ -187,10 +187,10 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename LocatorType>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+  VTKM_EXEC void operator()(const vtkm::Vec3f& point,
                             const LocatorType& locator,
                             vtkm::Id& cellId,
-                            vtkm::Vec<vtkm::FloatDefault, 3>& pcoords) const
+                            vtkm::Vec3f& pcoords) const
   {
     locator->FindCell(point, cellId, pcoords, *this);
   }

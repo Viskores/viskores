@@ -26,8 +26,8 @@ WorldAnnotator::~WorldAnnotator()
 {
 }
 
-void WorldAnnotator::AddLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
-                             const vtkm::Vec<vtkm::Float64, 3>& point1,
+void WorldAnnotator::AddLine(const vtkm::Vec3f_64& point0,
+                             const vtkm::Vec3f_64& point1,
                              vtkm::Float32 lineWidth,
                              const vtkm::rendering::Color& color,
                              bool vtkmNotUsed(inFront)) const
@@ -38,16 +38,16 @@ void WorldAnnotator::AddLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
   renderer.RenderLine(point0, point1, lineWidth, color);
 }
 
-void WorldAnnotator::AddText(const vtkm::Vec<vtkm::Float32, 3>& origin,
-                             const vtkm::Vec<vtkm::Float32, 3>& right,
-                             const vtkm::Vec<vtkm::Float32, 3>& up,
+void WorldAnnotator::AddText(const vtkm::Vec3f_32& origin,
+                             const vtkm::Vec3f_32& right,
+                             const vtkm::Vec3f_32& up,
                              vtkm::Float32 scale,
-                             const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                             const vtkm::Vec2f_32& anchor,
                              const vtkm::rendering::Color& color,
                              const std::string& text,
                              const vtkm::Float32 depth) const
 {
-  vtkm::Vec<vtkm::Float32, 3> n = vtkm::Cross(right, up);
+  vtkm::Vec3f_32 n = vtkm::Cross(right, up);
   vtkm::Normalize(n);
 
   vtkm::Matrix<vtkm::Float32, 4, 4> transform = MatrixHelpers::WorldMatrix(origin, right, up, n);

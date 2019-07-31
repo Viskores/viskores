@@ -17,7 +17,7 @@ namespace
 
 void TestBounds()
 {
-  using Vec3 = vtkm::Vec<vtkm::Float64, 3>;
+  using Vec3 = vtkm::Vec3f_64;
 
   std::cout << "Empty bounds." << std::endl;
   vtkm::Bounds emptyBounds;

@@ -20,19 +20,19 @@ namespace rendering
 class VTKM_RENDERING_EXPORT TextAnnotationBillboard : public TextAnnotation
 {
 protected:
-  vtkm::Vec<vtkm::Float32, 3> Position;
+  vtkm::Vec3f_32 Position;
   vtkm::Float32 Angle;
 
 public:
   TextAnnotationBillboard(const std::string& text,
                           const vtkm::rendering::Color& color,
                           vtkm::Float32 scalar,
-                          const vtkm::Vec<vtkm::Float32, 3>& position,
+                          const vtkm::Vec3f_32& position,
                           vtkm::Float32 angleDegrees = 0);
 
   ~TextAnnotationBillboard();
 
-  void SetPosition(const vtkm::Vec<vtkm::Float32, 3>& position);
+  void SetPosition(const vtkm::Vec3f_32& position);
 
   void SetPosition(vtkm::Float32 posx, vtkm::Float32 posy, vtkm::Float32 posz);
 

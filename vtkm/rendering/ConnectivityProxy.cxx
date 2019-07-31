@@ -23,7 +23,7 @@ namespace rendering
 struct ConnectivityProxy::InternalsType
 {
 protected:
-  using ColorMapType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using ColorMapType = vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
   using TracerType = vtkm::rendering::raytracing::ConnectivityTracer;
 
   TracerType Tracer;
@@ -86,7 +86,7 @@ public:
   }
 
   VTKM_CONT
-  void SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colormap)
+  void SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colormap)
   {
     Tracer.SetColorMap(colormap);
   }
@@ -285,7 +285,7 @@ void ConnectivityProxy::SetScalarField(const std::string& fieldName)
 }
 
 VTKM_CONT
-void ConnectivityProxy::SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colormap)
+void ConnectivityProxy::SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colormap)
 {
   Internals->SetColorMap(colormap);
 }

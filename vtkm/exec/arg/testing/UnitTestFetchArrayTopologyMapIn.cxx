@@ -149,8 +149,8 @@ void TryStructuredPointCoordinatesInvocation(const Invocation& invocation)
                          vtkm::internal::ArrayPortalUniformPointCoordinates>
     fetch;
 
-  vtkm::Vec<vtkm::FloatDefault, 3> origin = TestValue(0, vtkm::Vec<vtkm::FloatDefault, 3>());
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing = TestValue(1, vtkm::Vec<vtkm::FloatDefault, 3>());
+  vtkm::Vec3f origin = TestValue(0, vtkm::Vec3f());
+  vtkm::Vec3f spacing = TestValue(1, vtkm::Vec3f());
 
   {
     const vtkm::Id threadIndex = 0;
@@ -216,9 +216,7 @@ void TryStructuredPointCoordinates()
   std::cout << "*** Fetching special case of uniform point coordinates. *****" << std::endl;
 
   vtkm::internal::ArrayPortalUniformPointCoordinates coordinates(
-    vtkm::Id3(3, 2, 2),
-    TestValue(0, vtkm::Vec<vtkm::FloatDefault, 3>()),
-    TestValue(1, vtkm::Vec<vtkm::FloatDefault, 3>()));
+    vtkm::Id3(3, 2, 2), TestValue(0, vtkm::Vec3f()), TestValue(1, vtkm::Vec3f()));
 
   std::cout << "3D" << std::endl;
   vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals3d;

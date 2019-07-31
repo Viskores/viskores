@@ -36,8 +36,8 @@ protected:
   vtkm::Float64 TickMajorSize, TickMajorOffset;
   vtkm::Float64 TickMinorSize, TickMinorOffset;
   int Axis;
-  vtkm::Vec<vtkm::Float32, 3> Invert;
-  vtkm::Vec<vtkm::Float64, 3> Point0, Point1;
+  vtkm::Vec3f_32 Invert;
+  vtkm::Vec3f_64 Point0, Point1;
   vtkm::Range Range;
   vtkm::Float64 FontScale;
   vtkm::Float32 FontOffset;
@@ -83,8 +83,7 @@ public:
   }
 
   VTKM_CONT
-  void SetWorldPosition(const vtkm::Vec<vtkm::Float64, 3>& point0,
-                        const vtkm::Vec<vtkm::Float64, 3>& point1)
+  void SetWorldPosition(const vtkm::Vec3f_64& point0, const vtkm::Vec3f_64& point1)
   {
     this->Point0 = point0;
     this->Point1 = point1;

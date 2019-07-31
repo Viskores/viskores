@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 
   camera.ResetToBounds(coordsBounds);
 
-  vtkm::Vec<vtkm::Float32, 3> totalExtent;
+  vtkm::Vec3f_32 totalExtent;
   totalExtent[0] = vtkm::Float32(coordsBounds.X.Max - coordsBounds.X.Min);
   totalExtent[1] = vtkm::Float32(coordsBounds.Y.Max - coordsBounds.Y.Min);
   totalExtent[2] = vtkm::Float32(coordsBounds.Z.Max - coordsBounds.Z.Min);

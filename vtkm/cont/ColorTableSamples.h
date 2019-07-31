@@ -34,7 +34,7 @@ class ColorTableSamplesRGBA
 public:
   vtkm::Range SampleRange = { 1.0, 0.0 };
   vtkm::Int32 NumberOfSamples = 0; // this will not include end padding, NaN, Below or Above Range
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> Samples;
+  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> Samples;
 };
 
 /// \brief Color Sample Table used with vtkm::cont::ColorTable for fast coloring
@@ -53,7 +53,7 @@ class ColorTableSamplesRGB
 public:
   vtkm::Range SampleRange = { 1.0, 0.0 };
   vtkm::Int32 NumberOfSamples = 0; // this will not include end padding, NaN, Below or Above Range
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> Samples;
+  vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> Samples;
 };
 }
 }

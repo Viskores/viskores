@@ -111,10 +111,9 @@ public:
   }
 
   template <typename CellShape>
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> GetIndices(CellShape shape,
-                                                       vtkm::IdComponent triangleIndex) const
+  VTKM_EXEC vtkm::IdComponent3 GetIndices(CellShape shape, vtkm::IdComponent triangleIndex) const
   {
-    vtkm::Vec<vtkm::IdComponent, 3> triIndices;
+    vtkm::IdComponent3 triIndices;
     if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
     {
       triIndices[0] = 0;
@@ -316,10 +315,9 @@ public:
   }
 
   template <typename CellShape>
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 4> GetIndices(CellShape shape,
-                                                       vtkm::IdComponent tetrahedronIndex) const
+  VTKM_EXEC vtkm::IdComponent4 GetIndices(CellShape shape, vtkm::IdComponent tetrahedronIndex) const
   {
-    vtkm::Vec<vtkm::IdComponent, 4> tetIndices;
+    vtkm::IdComponent4 tetIndices;
     vtkm::IdComponent offset = 4 * (this->Offsets.Get(shape.Id) + tetrahedronIndex);
     tetIndices[0] = this->Indices.Get(offset + 0);
     tetIndices[1] = this->Indices.Get(offset + 1);

@@ -43,8 +43,8 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dim)
 
   // Place uniform grid on a set physical space so OpenGL drawing is easier
   const vtkm::Id3 vdims(dim[0] + 1, dim[1] + 1, 1);
-  const vtkm::Vec<vtkm::Float32, 3> origin = vtkm::make_Vec(0.0f, 0.0f, 0.0f);
-  const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(
+  const vtkm::Vec3f_32 origin = vtkm::make_Vec(0.0f, 0.0f, 0.0f);
+  const vtkm::Vec3f_32 spacing = vtkm::make_Vec(
     1.0f / static_cast<vtkm::Float32>(dim[0]), 1.0f / static_cast<vtkm::Float32>(dim[1]), 0.0f);
 
   // Generate coordinate system
@@ -98,13 +98,13 @@ void displayCall()
       glColor3f(color[indx][0], color[indx][1], color[indx][2]);
 
       // Get the indices of the vertices that make up this triangle
-      vtkm::Vec<vtkm::Id, 3> triIndices;
+      vtkm::Id3 triIndices;
       cellSet.GetIndices(triangle, triIndices);
 
       // Get the vertex points for this triangle
-      vtkm::Vec<vtkm::Float64, 3> pt0 = vertexArray.GetPortalConstControl().Get(triIndices[0]);
-      vtkm::Vec<vtkm::Float64, 3> pt1 = vertexArray.GetPortalConstControl().Get(triIndices[1]);
-      vtkm::Vec<vtkm::Float64, 3> pt2 = vertexArray.GetPortalConstControl().Get(triIndices[2]);
+      vtkm::Vec3f_64 pt0 = vertexArray.GetPortalConstControl().Get(triIndices[0]);
+      vtkm::Vec3f_64 pt1 = vertexArray.GetPortalConstControl().Get(triIndices[1]);
+      vtkm::Vec3f_64 pt2 = vertexArray.GetPortalConstControl().Get(triIndices[2]);
 
       // Draw the triangle filled with alternating colors
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

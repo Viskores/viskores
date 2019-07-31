@@ -20,7 +20,7 @@ namespace cont
 
 class VTKM_CONT_EXPORT DataSetBuilderUniform
 {
-  using VecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using VecType = vtkm::Vec3f;
 
 public:
   VTKM_CONT
@@ -99,8 +99,8 @@ public:
 private:
   VTKM_CONT
   static vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dimensions,
-                                           const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-                                           const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
+                                           const vtkm::Vec3f& origin,
+                                           const vtkm::Vec3f& spacing,
                                            std::string coordNm,
                                            std::string cellNm);
 };

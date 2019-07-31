@@ -41,7 +41,7 @@ protected:
   std::string Text;
   Color TextColor;
   vtkm::Float32 Scale;
-  vtkm::Vec<vtkm::Float32, 2> Anchor;
+  vtkm::Vec2f_32 Anchor;
 
 public:
   TextAnnotation(const std::string& text,
@@ -58,7 +58,7 @@ public:
   /// is scaled in both directions to the range [-1,1] with -1 at the lower
   /// left and 1 at the upper right.
   ///
-  void SetRawAnchor(const vtkm::Vec<vtkm::Float32, 2>& anchor);
+  void SetRawAnchor(const vtkm::Vec2f_32& anchor);
 
   void SetRawAnchor(vtkm::Float32 h, vtkm::Float32 v);
 

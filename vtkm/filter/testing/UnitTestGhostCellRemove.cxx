@@ -175,7 +175,7 @@ static void MakeExplicitCells(const CellSetType& cellSet,
 
 static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK, int numLayers)
 {
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
 
   vtkm::cont::DataSet dsUniform = MakeUniform(numI, numJ, numK, numLayers);
 
@@ -198,14 +198,14 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
 
   if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
   {
-    vtkm::Vec<vtkm::Id, 2> dims(numI, numJ);
+    vtkm::Id2 dims(numI, numJ);
     MakeExplicitCells(
       cellSet.Cast<vtkm::cont::CellSetStructured<2>>(), dims, numIndices, shapes, conn);
     ds = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates", "cells");
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
   {
-    vtkm::Vec<vtkm::Id, 3> dims(numI, numJ, numK);
+    vtkm::Id3 dims(numI, numJ, numK);
     MakeExplicitCells(
       cellSet.Cast<vtkm::cont::CellSetStructured<3>>(), dims, numIndices, shapes, conn);
     ds = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates", "cells");

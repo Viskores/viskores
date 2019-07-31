@@ -373,8 +373,7 @@ public:
               NumberOfOldPoints + newPointStartingIndex + visitedCellsRegionIndex[i] - 1;
             vtkm::Id globalCellId = incidentCells[static_cast<vtkm::IdComponent>(i)];
             // (cellGlobalIndex, oldPointId, replacementPointId)
-            vtkm::Vec<vtkm::Id, 3> tuple =
-              vtkm::make_Vec(globalCellId, pointIndex, replacementPointId);
+            vtkm::Id3 tuple = vtkm::make_Vec(globalCellId, pointIndex, replacementPointId);
             cellTopologyUpdateTuples.Set(cellTopologyUpdateTuplesIndex, tuple);
             cellTopologyUpdateTuplesIndex++;
           }

@@ -147,12 +147,11 @@ void PairTest()
   PairTestOrdering<T, U>();
 }
 
-struct PairTypesToTry
-  : vtkm::ListTagBase<vtkm::Int8,                                          // Integer types
-                      vtkm::FloatDefault,                                  // Float types
-                      vtkm::Id3,                                           // Vec types
-                      vtkm::Pair<vtkm::Vec<vtkm::Float32, 3>, vtkm::Int64> // Recursive Pairs
-                      >
+struct PairTypesToTry : vtkm::ListTagBase<vtkm::Int8,                             // Integer types
+                                          vtkm::FloatDefault,                     // Float types
+                                          vtkm::Id3,                              // Vec types
+                                          vtkm::Pair<vtkm::Vec3f_32, vtkm::Int64> // Recursive Pairs
+                                          >
 {
 };
 

@@ -48,7 +48,7 @@ public:
   void SetEmissionField(const std::string& fieldName);
   void SetCamera(const vtkm::rendering::Camera& camera);
   void SetScalarRange(const vtkm::Range& range);
-  void SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colormap);
+  void SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colormap);
   void SetCompositeBackground(bool on);
   void SetDebugPrints(bool on);
   void SetUnitScalar(vtkm::Float32 unitScalar);

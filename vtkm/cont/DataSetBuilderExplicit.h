@@ -317,7 +317,7 @@ public:
   vtkm::cont::DataSet Create();
 
   VTKM_CONT
-  vtkm::Id AddPoint(const vtkm::Vec<vtkm::Float32, 3>& pt);
+  vtkm::Id AddPoint(const vtkm::Vec3f_32& pt);
 
   VTKM_CONT
   vtkm::Id AddPoint(const vtkm::Float32& x, const vtkm::Float32& y, const vtkm::Float32& z = 0);
@@ -332,7 +332,7 @@ public:
   template <typename T>
   VTKM_CONT vtkm::Id AddPoint(const vtkm::Vec<T, 3>& pt)
   {
-    return AddPoint(static_cast<vtkm::Vec<vtkm::Float32, 3>>(pt));
+    return AddPoint(static_cast<vtkm::Vec3f_32>(pt));
   }
 
   //Define cells.
@@ -351,7 +351,7 @@ public:
 private:
   std::string coordNm, cellNm;
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> points;
+  std::vector<vtkm::Vec3f_32> points;
   std::vector<vtkm::UInt8> shapes;
   std::vector<vtkm::IdComponent> numIdx;
   std::vector<vtkm::Id> connectivity;

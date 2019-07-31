@@ -243,17 +243,15 @@ struct GradientOutput : public GradientScalarOutput<T>
 };
 
 template <>
-struct GradientOutput<vtkm::Vec<vtkm::Float32, 3>>
-  : public GradientVecOutput<vtkm::Vec<vtkm::Float32, 3>>
+struct GradientOutput<vtkm::Vec3f_32> : public GradientVecOutput<vtkm::Vec3f_32>
 {
-  using GradientVecOutput<vtkm::Vec<vtkm::Float32, 3>>::GradientVecOutput;
+  using GradientVecOutput<vtkm::Vec3f_32>::GradientVecOutput;
 };
 
 template <>
-struct GradientOutput<vtkm::Vec<vtkm::Float64, 3>>
-  : public GradientVecOutput<vtkm::Vec<vtkm::Float64, 3>>
+struct GradientOutput<vtkm::Vec3f_64> : public GradientVecOutput<vtkm::Vec3f_64>
 {
-  using GradientVecOutput<vtkm::Vec<vtkm::Float64, 3>>::GradientVecOutput;
+  using GradientVecOutput<vtkm::Vec3f_64>::GradientVecOutput;
 };
 }
 } // namespace vtkm::exec

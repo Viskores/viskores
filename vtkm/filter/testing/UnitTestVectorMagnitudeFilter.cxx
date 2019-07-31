@@ -28,12 +28,12 @@ void TestVectorMagnitude()
   vtkm::Float64 fvars[nVerts] = { 10.1,  20.1,  30.1,  40.1,  50.2,  60.2,  70.2,  80.2,  90.3,
                                   100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5 };
 
-  std::vector<vtkm::Vec<vtkm::Float64, 3>> fvec(nVerts);
+  std::vector<vtkm::Vec3f_64> fvec(nVerts);
   for (std::size_t i = 0; i < fvec.size(); ++i)
   {
     fvec[i] = vtkm::make_Vec(fvars[i], fvars[i], fvars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> finput = vtkm::cont::make_ArrayHandle(fvec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> finput = vtkm::cont::make_ArrayHandle(fvec);
 
   vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "double_vec_pointvar", finput);
 

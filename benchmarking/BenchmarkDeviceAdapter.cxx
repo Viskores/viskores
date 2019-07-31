@@ -147,14 +147,14 @@ struct BaseTypes : vtkm::ListTagBase<vtkm::UInt8,
                                      vtkm::Int64,
                                      vtkm::Pair<vtkm::Id, vtkm::Float32>,
                                      vtkm::Float32,
-                                     vtkm::Vec<vtkm::Float32, 3>,
+                                     vtkm::Vec3f_32,
                                      vtkm::Float64,
-                                     vtkm::Vec<vtkm::Float64, 3>>
+                                     vtkm::Vec3f_64>
 {
 };
 
 struct ExtendedTypes : vtkm::ListTagBase<vtkm::UInt8,
-                                         vtkm::Vec<vtkm::UInt8, 4>,
+                                         vtkm::Vec4ui_8,
                                          vtkm::Int32,
                                          vtkm::Int64,
                                          vtkm::Pair<vtkm::Int32, vtkm::Float32>,
@@ -162,9 +162,9 @@ struct ExtendedTypes : vtkm::ListTagBase<vtkm::UInt8,
                                          vtkm::Pair<vtkm::Int64, vtkm::Float64>,
                                          vtkm::Pair<vtkm::Int64, vtkm::Float64>,
                                          vtkm::Float32,
-                                         vtkm::Vec<vtkm::Float32, 3>,
+                                         vtkm::Vec3f_32,
                                          vtkm::Float64,
-                                         vtkm::Vec<vtkm::Float64, 3>>
+                                         vtkm::Vec3f_64>
 {
 };
 

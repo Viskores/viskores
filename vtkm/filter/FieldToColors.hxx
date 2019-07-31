@@ -164,7 +164,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
   using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
   if (this->OutputMode == RGBA)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> output;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> output;
 
     bool ran = false;
     switch (this->InputMode)
@@ -212,7 +212,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
   }
   else
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> output;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> output;
 
     bool ran = false;
     switch (this->InputMode)

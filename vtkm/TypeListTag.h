@@ -62,7 +62,7 @@ struct VTKM_ALWAYS_EXPORT TypeListTagFieldScalar : vtkm::ListTagBase<vtkm::Float
 /// vectors.
 ///
 struct VTKM_ALWAYS_EXPORT TypeListTagFieldVec2
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 2>, vtkm::Vec<vtkm::Float64, 2>>
+  : vtkm::ListTagBase<vtkm::Vec2f_32, vtkm::Vec2f_64>
 {
 };
 
@@ -70,7 +70,7 @@ struct VTKM_ALWAYS_EXPORT TypeListTagFieldVec2
 /// vectors.
 ///
 struct VTKM_ALWAYS_EXPORT TypeListTagFieldVec3
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
+  : vtkm::ListTagBase<vtkm::Vec3f_32, vtkm::Vec3f_64>
 {
 };
 
@@ -78,7 +78,7 @@ struct VTKM_ALWAYS_EXPORT TypeListTagFieldVec3
 /// vectors.
 ///
 struct VTKM_ALWAYS_EXPORT TypeListTagFieldVec4
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 4>, vtkm::Vec<vtkm::Float64, 4>>
+  : vtkm::ListTagBase<vtkm::Vec4f_32, vtkm::Vec4f_64>
 {
 };
 
@@ -87,12 +87,12 @@ struct VTKM_ALWAYS_EXPORT TypeListTagFieldVec4
 /// Scalars are not included.
 ///
 struct VTKM_ALWAYS_EXPORT TypeListTagFloatVec
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 2>,
-                      vtkm::Vec<vtkm::Float64, 2>,
-                      vtkm::Vec<vtkm::Float32, 3>,
-                      vtkm::Vec<vtkm::Float64, 3>,
-                      vtkm::Vec<vtkm::Float32, 4>,
-                      vtkm::Vec<vtkm::Float64, 4>>
+  : vtkm::ListTagBase<vtkm::Vec2f_32,
+                      vtkm::Vec2f_64,
+                      vtkm::Vec3f_32,
+                      vtkm::Vec3f_64,
+                      vtkm::Vec4f_32,
+                      vtkm::Vec4f_64>
 {
 };
 
@@ -103,12 +103,12 @@ struct VTKM_ALWAYS_EXPORT TypeListTagFloatVec
 struct VTKM_ALWAYS_EXPORT TypeListTagField
   : vtkm::ListTagBase<vtkm::Float32,
                       vtkm::Float64,
-                      vtkm::Vec<vtkm::Float32, 2>,
-                      vtkm::Vec<vtkm::Float64, 2>,
-                      vtkm::Vec<vtkm::Float32, 3>,
-                      vtkm::Vec<vtkm::Float64, 3>,
-                      vtkm::Vec<vtkm::Float32, 4>,
-                      vtkm::Vec<vtkm::Float64, 4>>
+                      vtkm::Vec2f_32,
+                      vtkm::Vec2f_64,
+                      vtkm::Vec3f_32,
+                      vtkm::Vec3f_64,
+                      vtkm::Vec4f_32,
+                      vtkm::Vec4f_64>
 {
 };
 
@@ -134,21 +134,21 @@ struct VTKM_ALWAYS_EXPORT TypeListTagScalarAll
 /// integers of 32 or 64 bits, or floating point values of 32 or 64 bits.
 ///
 struct VTKM_ALWAYS_EXPORT TypeListTagVecCommon
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::UInt8, 2>,
-                      vtkm::Vec<vtkm::Int32, 2>,
-                      vtkm::Vec<vtkm::Int64, 2>,
-                      vtkm::Vec<vtkm::Float32, 2>,
-                      vtkm::Vec<vtkm::Float64, 2>,
-                      vtkm::Vec<vtkm::UInt8, 3>,
-                      vtkm::Vec<vtkm::Int32, 3>,
-                      vtkm::Vec<vtkm::Int64, 3>,
-                      vtkm::Vec<vtkm::Float32, 3>,
-                      vtkm::Vec<vtkm::Float64, 3>,
-                      vtkm::Vec<vtkm::UInt8, 4>,
-                      vtkm::Vec<vtkm::Int32, 4>,
-                      vtkm::Vec<vtkm::Int64, 4>,
-                      vtkm::Vec<vtkm::Float32, 4>,
-                      vtkm::Vec<vtkm::Float64, 4>>
+  : vtkm::ListTagBase<vtkm::Vec2ui_8,
+                      vtkm::Vec2i_32,
+                      vtkm::Vec2i_64,
+                      vtkm::Vec2f_32,
+                      vtkm::Vec2f_64,
+                      vtkm::Vec3ui_8,
+                      vtkm::Vec3i_32,
+                      vtkm::Vec3i_64,
+                      vtkm::Vec3f_32,
+                      vtkm::Vec3f_64,
+                      vtkm::Vec4ui_8,
+                      vtkm::Vec4i_32,
+                      vtkm::Vec4i_64,
+                      vtkm::Vec4f_32,
+                      vtkm::Vec4f_64>
 {
 };
 
@@ -160,21 +160,21 @@ namespace internal
 /// to get a list of all vectors up to size 4.
 ///
 struct VTKM_ALWAYS_EXPORT TypeListTagVecUncommon
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Int8, 2>,
-                      vtkm::Vec<vtkm::Int16, 2>,
-                      vtkm::Vec<vtkm::UInt16, 2>,
-                      vtkm::Vec<vtkm::UInt32, 2>,
-                      vtkm::Vec<vtkm::UInt64, 2>,
-                      vtkm::Vec<vtkm::Int8, 3>,
-                      vtkm::Vec<vtkm::Int16, 3>,
-                      vtkm::Vec<vtkm::UInt16, 3>,
-                      vtkm::Vec<vtkm::UInt32, 3>,
-                      vtkm::Vec<vtkm::UInt64, 3>,
-                      vtkm::Vec<vtkm::Int8, 4>,
-                      vtkm::Vec<vtkm::Int16, 4>,
-                      vtkm::Vec<vtkm::UInt16, 4>,
-                      vtkm::Vec<vtkm::UInt32, 4>,
-                      vtkm::Vec<vtkm::UInt64, 4>>
+  : vtkm::ListTagBase<vtkm::Vec2i_8,
+                      vtkm::Vec2i_16,
+                      vtkm::Vec2ui_16,
+                      vtkm::Vec2ui_32,
+                      vtkm::Vec2ui_64,
+                      vtkm::Vec3i_8,
+                      vtkm::Vec3i_16,
+                      vtkm::Vec3ui_16,
+                      vtkm::Vec3ui_32,
+                      vtkm::Vec3ui_64,
+                      vtkm::Vec4i_8,
+                      vtkm::Vec4i_16,
+                      vtkm::Vec4ui_16,
+                      vtkm::Vec4ui_32,
+                      vtkm::Vec4ui_64>
 {
 };
 
@@ -206,8 +206,8 @@ struct VTKM_ALWAYS_EXPORT TypeListTagCommon
                       vtkm::Int64,
                       vtkm::Float32,
                       vtkm::Float64,
-                      vtkm::Vec<vtkm::Float32, 3>,
-                      vtkm::Vec<vtkm::Float64, 3>>
+                      vtkm::Vec3f_32,
+                      vtkm::Vec3f_64>
 {
 };
 

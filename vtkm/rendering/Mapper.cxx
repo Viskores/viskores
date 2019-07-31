@@ -26,7 +26,7 @@ void Mapper::SetActiveColorTable(const vtkm::cont::ColorTable& colorTable)
 
   constexpr vtkm::Float32 conversionToFloatSpace = (1.0f / 255.0f);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> temp;
+  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> temp;
 
   {
     vtkm::cont::ScopedRuntimeDeviceTracker tracker(vtkm::cont::DeviceAdapterTagSerial{});
@@ -39,10 +39,10 @@ void Mapper::SetActiveColorTable(const vtkm::cont::ColorTable& colorTable)
   for (vtkm::Id i = 0; i < 1024; ++i)
   {
     auto color = colorPortal.Get(i);
-    vtkm::Vec<vtkm::Float32, 4> t(color[0] * conversionToFloatSpace,
-                                  color[1] * conversionToFloatSpace,
-                                  color[2] * conversionToFloatSpace,
-                                  color[3] * conversionToFloatSpace);
+    vtkm::Vec4f_32 t(color[0] * conversionToFloatSpace,
+                     color[1] * conversionToFloatSpace,
+                     color[2] * conversionToFloatSpace,
+                     color[3] * conversionToFloatSpace);
     portal.Set(i, t);
   }
 }

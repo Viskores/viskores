@@ -107,7 +107,7 @@ public:
     vtkm::UInt8 cellShape;
     vtkm::IdComponent nVerts;
     vtkm::VecVariable<vtkm::Id, 8> ptIndices;
-    vtkm::VecVariable<vtkm::Vec<vtkm::FloatDefault, 3>, 8> fieldValues;
+    vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
     InterpolationHelper->GetCellInfo(cellId, cellShape, nVerts, ptIndices);
 
     for (vtkm::IdComponent i = 0; i < nVerts; i++)

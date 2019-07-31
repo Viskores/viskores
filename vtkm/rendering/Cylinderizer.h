@@ -126,7 +126,7 @@ public:
       else if (DIM == 3)
       {
         vtkm::Id offset = cellIndex * TRI_PER_CSS * SEG_PER_TRI;
-        vtkm::Vec<vtkm::Id, 3> segment;
+        vtkm::Id3 segment;
         segment[0] = cellIndex;
         vtkm::Id3 idx;
         idx[0] = 0;
@@ -409,7 +409,7 @@ public:
 
   VTKM_CONT
   void Run(const vtkm::cont::DynamicCellSet& cellset,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>>& outputIndices,
+           vtkm::cont::ArrayHandle<vtkm::Id3>& outputIndices,
            vtkm::Id& output)
   {
     if (cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))

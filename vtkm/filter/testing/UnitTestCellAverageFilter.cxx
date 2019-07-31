@@ -51,7 +51,7 @@ void TestCellAverageRegular3D()
   VTKM_TEST_ASSERT(result.HasField("avgpos", vtkm::cont::Field::Association::CELL_SET),
                    "Result field not present.");
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> resultPointArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> resultPointArray;
   vtkm::cont::Field resultPointField =
     result.GetField("avgpos", vtkm::cont::Field::Association::CELL_SET);
   resultPointField.GetData().CopyTo(resultPointArray);
@@ -61,8 +61,8 @@ void TestCellAverageRegular3D()
     };
     for (vtkm::Id i = 0; i < 4; ++i)
     {
-      vtkm::Vec<vtkm::FloatDefault, 3> expectedVec(expected[i][0], expected[i][1], expected[i][2]);
-      vtkm::Vec<vtkm::FloatDefault, 3> computedVec(resultPointArray.GetPortalConstControl().Get(i));
+      vtkm::Vec3f expectedVec(expected[i][0], expected[i][1], expected[i][2]);
+      vtkm::Vec3f computedVec(resultPointArray.GetPortalConstControl().Get(i));
       VTKM_TEST_ASSERT(test_equal(computedVec, expectedVec),
                        "Wrong result for CellAverage worklet on 3D regular data");
     }

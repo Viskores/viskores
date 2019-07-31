@@ -193,12 +193,12 @@ static void TestFieldRangeGlobalCompute()
 
   TryRangeGlobalComputeDS<vtkm::Float64>(0, 1000);
   TryRangeGlobalComputeDS<vtkm::Int32>(-1024, 1024);
-  TryRangeGlobalComputeDS<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                       vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeGlobalComputeDS<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                          vtkm::make_Vec(2048, 2048, 2048));
   TryRangeGlobalComputeMB<vtkm::Float64>(0, 1000);
   TryRangeGlobalComputeMB<vtkm::Int32>(-1024, 1024);
-  TryRangeGlobalComputeMB<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                       vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeGlobalComputeMB<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                          vtkm::make_Vec(2048, 2048, 2048));
 };
 }
 
