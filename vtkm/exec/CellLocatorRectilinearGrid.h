@@ -171,15 +171,9 @@ private:
   CellSetPortal CellSet;
   RectilinearPortalType Coords;
   AxisPortalType AxisPortals[3];
-<<<<<<< HEAD
-  vtkm::Vec<vtkm::Id, dimensions> PointDimensions;
-  vtkm::Vec<vtkm::FloatDefault, 3> MinPoint;
-  vtkm::Vec<vtkm::FloatDefault, 3> MaxPoint;
-=======
   vtkm::Id3 PointDimensions;
   vtkm::Vec3f MinPoint;
   vtkm::Vec3f MaxPoint;
->>>>>>> 57440239efe51fbcced830488cdf80b683f3d9ea
 };
 } //namespace exec
 } //namespace vtkm
