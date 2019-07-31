@@ -583,12 +583,12 @@ void TestParticleStatus()
   auto res = pa.Run(rk4, seedsArray, maxSteps);
   auto statusPortal = res.status.GetPortalConstControl();
 
-  bool tookStep0 =
+  vtkm::Id tookStep0 =
     statusPortal.Get(0) & vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS;
-  bool tookStep1 =
+  vtkm::Id tookStep1 =
     statusPortal.Get(1) & vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS;
-  VTKM_TEST_ASSERT(tookStep0 == true, "Particle failed to take any steps");
-  VTKM_TEST_ASSERT(tookStep1 == false, "Particle took a step when it should not have.");
+  VTKM_TEST_ASSERT(tookStep0 != 0, "Particle failed to take any steps");
+  VTKM_TEST_ASSERT(tookStep1 == 0, "Particle took a step when it should not have.");
 }
 
 void TestParticleAdvection()
