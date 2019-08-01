@@ -62,6 +62,7 @@ VTK-m Requires:
       + Clang 3.3+
       + XCode 5.0+
       + MSVC 2015+
+      + Intel 17.0.4+
   + [CMake](http://www.cmake.org/download/)
       + CMake 3.8+
       + CMake 3.9+  (for OpenMP support)
@@ -98,7 +99,7 @@ Optional dependencies are:
 
 VTK-m has been tested on the following configurations:c
   + On Linux
-      + GCC 4.8.5, 5.4.0, 6.4.0, 7.3.0, Clang 5.0, 6.0, 7.0, Intel 17.0.4
+      + GCC 4.8.5, 5.4.0, 6.4.0, 7.3.0, Clang 5.0, 6.0, 7.0, Intel 17.0.4, Intel 19.0.0
       + CMake 3.13.3, 3.14.1
       + CUDA 9.2.148, 10.0.130, 10.1.105
       + TBB 4.4 U2, 2017 U7
