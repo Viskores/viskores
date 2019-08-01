@@ -154,7 +154,7 @@ protected:
       while (iteration < maxIterations)
       {
         iteration = iteration << 1;
-        ScalarType length = optimalLength + (this->StepLength / iteration);
+        ScalarType length = optimalLength + (this->StepLength / static_cast<ScalarType>(iteration));
         ParticleStatus status = this->CheckStep(inpos, length, time, velocity);
         if (status == ParticleStatus::STATUS_OK &&
             this->Evaluator.IsWithinSpatialBoundary(inpos + velocity * length))
