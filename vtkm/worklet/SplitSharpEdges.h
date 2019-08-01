@@ -11,12 +11,12 @@
 #define vtk_m_worklet_SplitSharpEdges_h
 
 #include <vtkm/worklet/CellDeepCopy.h>
-#include <vtkm/worklet/Invoker.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/exec/CellEdge.h>
 
 #include <vtkm/Bitset.h>
@@ -400,7 +400,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec<CoordsComType, 3>, CoordsOutStorageType>& newCoords,
     NewCellSetType& newCellset)
   {
-    vtkm::worklet::Invoker invoke;
+    vtkm::cont::Invoker invoke;
 
     const vtkm::FloatDefault featureAngleR =
       featureAngle / static_cast<vtkm::FloatDefault>(180.0) * vtkm::Pi<vtkm::FloatDefault>();

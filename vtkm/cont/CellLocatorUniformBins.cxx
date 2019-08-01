@@ -14,7 +14,7 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 
-#include <vtkm/worklet/Invoker.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -346,7 +346,7 @@ namespace cont
 ///
 VTKM_CONT void CellLocatorUniformBins::Build()
 {
-  vtkm::worklet::Invoker invoke;
+  vtkm::cont::Invoker invoke;
 
   auto cellset = this->GetCellSet();
   const auto& coords = this->GetCoordinates();

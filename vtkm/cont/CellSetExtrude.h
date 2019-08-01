@@ -16,9 +16,9 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleExtrudeCoords.h>
 #include <vtkm/cont/CellSet.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/exec/ConnectivityExtrude.h>
 #include <vtkm/exec/arg/ThreadIndicesExtrude.h>
-#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm

@@ -50,7 +50,7 @@ namespace cont
 template <typename Device>
 VTKM_CONT void CellSetExtrude::BuildReverseConnectivity(Device)
 {
-  vtkm::worklet::Invoker invoke(Device{});
+  vtkm::cont::Invoker invoke(Device{});
 
   // create a mapping of where each key is the point id and the value
   // is the cell id. We
