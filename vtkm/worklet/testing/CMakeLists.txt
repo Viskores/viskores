@@ -45,6 +45,7 @@ set(unit_tests
   UnitTestNDimsEntropy.cxx
   UnitTestNDimsHistogram.cxx
   UnitTestNDimsHistMarginalization.cxx
+  UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx
@@ -65,6 +66,7 @@ set(unit_tests
   UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
   UnitTestThresholdPoints.cxx
+  UnitTestTriangleWinding.cxx
   UnitTestTriangulate.cxx
   UnitTestTube.cxx
   UnitTestWholeCellSetIn.cxx
