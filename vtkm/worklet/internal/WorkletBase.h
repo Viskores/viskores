@@ -61,7 +61,7 @@ namespace internal
 /// operator() const is added to implement an algorithm in VTK-m. Different
 /// worklets have different calling semantics.
 ///
-class VTKM_NEVER_EXPORT WorkletBase : public vtkm::exec::FunctorBase
+class VTKM_ALWAYS_EXPORT WorkletBase : public vtkm::exec::FunctorBase
 {
 public:
   using _1 = vtkm::placeholders::Arg<1>;
