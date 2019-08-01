@@ -170,10 +170,13 @@ protected:
       vtkm::Bounds bounds = this->Evaluator.GetSpatialBoundary();
       vtkm::Vec<ScalarType, 3> direction = velocity / vtkm::Magnitude(velocity);
 
-      const vtkm::Float64 eps = 1e-6;
-      ScalarType xStepLength = vtkm::Abs(direction[0] * eps * bounds.X.Length());
-      ScalarType yStepLength = vtkm::Abs(direction[1] * eps * bounds.Y.Length());
-      ScalarType zStepLength = vtkm::Abs(direction[2] * eps * bounds.Z.Length());
+      const ScalarType eps = vtkm::Epsilon<ScalarType>();
+      ScalarType xStepLength =
+        vtkm::Abs(direction[0] * eps * static_cast<ScalarType>(bounds.X.Length()));
+      ScalarType yStepLength =
+        vtkm::Abs(direction[1] * eps * static_cast<ScalarType>(bounds.Y.Length()));
+      ScalarType zStepLength =
+        vtkm::Abs(direction[2] * eps * static_cast<ScalarType>(bounds.Z.Length()));
       ScalarType minLength = vtkm::Min(xStepLength, vtkm::Min(yStepLength, zStepLength));
 
       outpos = workpos + minLength * velocity;
