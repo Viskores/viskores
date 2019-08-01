@@ -69,21 +69,14 @@ public:
   bool IsWithinTemporalBoundary(const vtkm::FloatDefault vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC
-  void GetSpatialBoundary(vtkm::Bounds& bounds) const
-  {
-    // Based on the direction of the velocity we need to be able to tell where
-    // the particle will exit the domain from to actually push it out of domain.
-    /*boundary[0] = static_cast<ScalarType>(dir[0] > 0 ? this->Bounds.X.Max : this->Bounds.X.Min);
-    boundary[1] = static_cast<ScalarType>(dir[1] > 0 ? this->Bounds.Y.Max : this->Bounds.Y.Min);
-    boundary[2] = static_cast<ScalarType>(dir[2] > 0 ? this->Bounds.Z.Max : this->Bounds.Z.Min);*/
-    bounds = this->Bounds;
-  }
+  vtkm::Bounds GetSpatialBoundary() const { return this->Bounds; }
 
   VTKM_EXEC_CONT
-  void GetTemporalBoundary(vtkm::FloatDefault& boundary) const
+  vtkm::FloatDefault GetTemporalBoundary(vtkm::Id direction) const
   {
     // Return the time of the newest time slice
-    boundary = 0;
+    return direction > 0 ? vtkm::Infinity<vtkm::FloatDefault>()
+                         : vtkm::NegativeInfinity<vtkm::FloatDefault>();
   }
 
   template <typename Point>

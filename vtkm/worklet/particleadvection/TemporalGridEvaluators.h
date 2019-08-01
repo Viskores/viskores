@@ -59,18 +59,12 @@ public:
   }
 
   VTKM_EXEC
-  void GetSpatialBoundary(vtkm::Bounds& bounds) const
-  {
-    // Based on the direction of the velocity we need to be able to tell where
-    // the particle will exit the domain from to actually push it out of domain.
-    return this->EvaluatorTwo.GetSpatialBoundary(bounds);
-  }
+  vtkm::Bounds GetSpatialBoundary() const { return this->EvaluatorTwo.GetSpatialBoundary(); }
 
   VTKM_EXEC_CONT
-  void GetTemporalBoundary(vtkm::FloatDefault& boundary) const
+  vtkm::FloatDefault GetTemporalBoundary(vtkm::Id direction) const
   {
-    // Return the time of the newest time slice
-    boundary = TimeTwo;
+    return direction > 0 ? this->TimeTwo : this->TimeOne;
   }
 
   template <typename Point>

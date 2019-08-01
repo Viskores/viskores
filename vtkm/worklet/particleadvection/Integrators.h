@@ -109,8 +109,8 @@ protected:
                         ScalarType& time,
                         vtkm::Vec<ScalarType, 3>& outpos) const override
     {
-      // If without taking the step the particle is out of either spatial
-      // or temporal boundary, then return the corresponding status.
+      // If particle is out of either spatial or temporal boundary to begin with,
+      // then return the corresponding status.
       if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
         return ParticleStatus::AT_SPATIAL_BOUNDARY;
       if (!this->Evaluator.IsWithinTemporalBoundary(time))
@@ -139,7 +139,6 @@ protected:
         return ParticleStatus::AT_SPATIAL_BOUNDARY;
       if (!this->Evaluator.IsWithinTemporalBoundary(time))
         return ParticleStatus::AT_TEMPORAL_BOUNDARY;
-      const vtkm::Float64 eps = 1e-6;
       ScalarType optimalLength = static_cast<ScalarType>(0);
       vtkm::Id iteration = static_cast<vtkm::Id>(1);
       vtkm::Id maxIterations = static_cast<vtkm::Id>(1 << 20);
@@ -168,9 +167,10 @@ protected:
       // using the higher order evaluator, take a step using that evaluator.
       // Take one final step, which should be an Euler step just to push the
       // particle out of the domain boundary
-      vtkm::Bounds bounds;
-      this->Evaluator.GetSpatialBoundary(bounds);
+      vtkm::Bounds bounds = this->Evaluator.GetSpatialBoundary();
       vtkm::Vec<ScalarType, 3> direction = velocity / vtkm::Magnitude(velocity);
+
+      const vtkm::Float64 eps = 1e-6;
       ScalarType xStepLength = vtkm::Abs(direction[0] * eps * bounds.X.Length());
       ScalarType yStepLength = vtkm::Abs(direction[1] * eps * bounds.Y.Length());
       ScalarType zStepLength = vtkm::Abs(direction[2] * eps * bounds.Z.Length());
@@ -260,6 +260,10 @@ public:
                              ScalarType time,
                              vtkm::Vec<ScalarType, 3>& velocity) const
     {
+      ScalarType boundary = this->Evaluator.GetTemporalBoundary(static_cast<vtkm::Id>(1));
+      if ((time + stepLength + vtkm::Epsilon<ScalarType>() - boundary) > 0.0)
+        stepLength = boundary - time;
+
       ScalarType var1 = (stepLength / static_cast<ScalarType>(2));
       ScalarType var2 = time + var1;
       ScalarType var3 = time + stepLength;
@@ -345,11 +349,7 @@ public:
                              ScalarType time,
                              vtkm::Vec<ScalarType, 3>& velocity) const
     {
-      bool result = this->Evaluator.Evaluate(inpos, time, velocity);
-      if (result)
-        return ParticleStatus::STATUS_OK;
-      else
-        return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
+      return this->Evaluator.Evaluate(inpos, time, velocity);
     }
   };
 
