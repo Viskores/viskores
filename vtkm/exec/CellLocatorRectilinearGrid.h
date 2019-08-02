@@ -67,10 +67,13 @@ public:
       coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
     if (dimensions == 2)
       return;
-
-    this->AxisPortals[2] = Coords.GetThirdPortal();
-    this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
-    this->MaxPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
+    else
+    {
+      this->AxisPortals[2] = Coords.GetThirdPortal();
+      this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
+      this->MaxPoint[2] =
+        coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
+    }
   }
 
   VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept

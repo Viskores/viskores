@@ -86,7 +86,7 @@ private:
 
 protected:
   ScalarType StepLength;
-  ScalarType Tolerance = std::numeric_limits<double>::epsilon() * 100.0;
+  ScalarType Tolerance = std::numeric_limits<ScalarType>::epsilon() * 100.0;
 
   VTKM_CONT virtual void PrepareForExecutionImpl(
     vtkm::cont::DeviceAdapterId device,
