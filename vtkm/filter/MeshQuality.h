@@ -66,6 +66,8 @@ enum class CellMetric
 class MeshQuality : public vtkm::filter::FilterCell<MeshQuality>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   using ShapeMetricsVecType = std::vector<vtkm::Pair<vtkm::UInt8, CellMetric>>;
 
   VTKM_CONT MeshQuality(const ShapeMetricsVecType& metrics);
@@ -83,15 +85,6 @@ private:
   //Length of vector is the number of different VTK-m cell types
   std::vector<CellMetric> CellTypeMetrics;
 };
-
-
-template <>
-class FilterTraits<vtkm::filter::MeshQuality>
-{
-public:
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
-};
-
 
 } // namespace filter
 } // namespace vtkm

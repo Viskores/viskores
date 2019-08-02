@@ -10,9 +10,7 @@
 #ifndef vtk_m_examples_multibackend_MultiDeviceGradient_h
 #define vtk_m_examples_multibackend_MultiDeviceGradient_h
 
-
 #include <vtkm/filter/FilterField.h>
-#include <vtkm/filter/FilterTraits.h>
 
 #include "TaskQueue.h"
 
@@ -27,6 +25,9 @@ using RuntimeTaskQueue = TaskQueue<std::function<void()>>;
 class MultiDeviceGradient : public vtkm::filter::FilterField<MultiDeviceGradient>
 {
 public:
+  using SupportedTypes =
+    vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
+
   //Construct a MultiDeviceGradient and worker pool
   VTKM_CONT
   MultiDeviceGradient();
@@ -53,25 +54,6 @@ private:
   RuntimeTaskQueue Queue;
   std::vector<std::thread> Workers;
 };
-
-namespace vtkm
-{
-namespace filter
-{
-template <>
-class FilterTraits<MultiDeviceGradient>
-{
-public:
-  struct TypeListTagGradientInputs
-    : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>
-  {
-  };
-
-  using InputFieldTypeList = TypeListTagGradientInputs;
-};
-}
-} // namespace vtkm::filter
-
 
 #ifndef vtk_m_examples_multibackend_MultiDeviceGradient_cxx
 extern template vtkm::cont::MultiBlock MultiDeviceGradient::PrepareForExecution<

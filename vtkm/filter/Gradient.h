@@ -30,6 +30,9 @@ namespace filter
 class Gradient : public vtkm::filter::FilterCell<Gradient>
 {
 public:
+  using SupportedTypes =
+    vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
+
   /// When this flag is on (default is off), the gradient filter will provide a
   /// point based gradients, which are significantly more costly since for each
   /// point we need to compute the gradient of each cell that uses it.
@@ -103,18 +106,6 @@ private:
   std::string GradientsName = "Gradients";
   std::string QCriterionName = "QCriterion";
   std::string VorticityName = "Vorticity";
-};
-
-template <>
-class FilterTraits<Gradient>
-{
-public:
-  struct TypeListTagGradientInputs
-    : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>
-  {
-  };
-
-  using InputFieldTypeList = TypeListTagGradientInputs;
 };
 }
 } // namespace vtkm::filter

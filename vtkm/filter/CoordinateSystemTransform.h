@@ -25,6 +25,8 @@ class CylindricalCoordinateTransform
   : public vtkm::filter::FilterField<CylindricalCoordinateTransform>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   CylindricalCoordinateTransform();
 
@@ -41,17 +43,11 @@ private:
   vtkm::worklet::CylindricalCoordinateTransform Worklet;
 };
 
-template <>
-class FilterTraits<CylindricalCoordinateTransform>
-{
-public:
-  //Point Elevation can only convert Float and Double Vec3 arrays
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
-};
-
 class SphericalCoordinateTransform : public vtkm::filter::FilterField<SphericalCoordinateTransform>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   SphericalCoordinateTransform();
 
@@ -67,14 +63,6 @@ public:
 
 private:
   vtkm::worklet::SphericalCoordinateTransform Worklet;
-};
-
-template <>
-class FilterTraits<SphericalCoordinateTransform>
-{
-public:
-  //CoordinateSystemTransformation can only convert Float and Double Vec3 arrays
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 } // namespace vtkm::filter

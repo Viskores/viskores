@@ -26,6 +26,8 @@ namespace filter
 class SurfaceNormals : public vtkm::filter::FilterCell<SurfaceNormals>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   /// Create SurfaceNormals filter. This calls
   /// this->SetUseCoordinateSystemAsField(true) since that is the most common
   /// use-case for surface normals.
@@ -107,13 +109,6 @@ private:
 
   std::string CellNormalsName;
   std::string PointNormalsName;
-};
-
-template <>
-class FilterTraits<SurfaceNormals>
-{
-public:
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 } // vtkm::filter

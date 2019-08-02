@@ -49,15 +49,30 @@ VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename DerivedPolicy::FieldTypeLi
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename FilterType, typename FieldTag>
-VTKM_CONT vtkm::cont::VariantArrayHandleBase<
-  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList>
+template <typename DerivedPolicy, typename FilterType>
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename vtkm::filter::DeduceFilterFieldTypes<
+  DerivedPolicy,
+  typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList>::TypeList>
 ApplyPolicy(const vtkm::cont::Field& field,
             const vtkm::filter::PolicyBase<DerivedPolicy>&,
-            const vtkm::filter::FilterTraits<FilterType, FieldTag>&)
+            const vtkm::filter::FilterTraits<FilterType>&)
+{
+  using FilterTypes = typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList;
+  using TypeList =
+    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterTypes>::TypeList;
+  return field.GetData().ResetTypes(TypeList());
+}
+
+//-----------------------------------------------------------------------------
+template <typename DerivedPolicy, typename ListOfTypes>
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<
+  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, ListOfTypes>::TypeList>
+ApplyPolicy(const vtkm::cont::Field& field,
+            const vtkm::filter::PolicyBase<DerivedPolicy>&,
+            const ListOfTypes&)
 {
   using TypeList =
-    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType, FieldTag>::TypeList;
+    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, ListOfTypes>::TypeList;
   return field.GetData().ResetTypes(TypeList());
 }
 
