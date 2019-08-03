@@ -21,6 +21,7 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm
@@ -45,14 +46,14 @@ public:
     vtkm::Vec<ScalarType, 3> inpos = integralCurve.GetPos(idx);
     vtkm::Vec<ScalarType, 3> outpos;
     ScalarType time = integralCurve.GetTime(idx);
-    ParticleStatus status;
+    IntegratorStatus status;
     bool tookAnySteps = false;
     while (!integralCurve.Done(idx))
     {
       status = integrator->Step(inpos, time, outpos);
       // If the status is OK, we only need to check if the particle
       // has completed the maximum steps required.
-      if (status == ParticleStatus::STATUS_OK)
+      if (status == IntegratorStatus::SUCCESS)
       {
         integralCurve.TakeStep(idx, outpos);
         // This is to keep track of the particle's time.
@@ -66,27 +67,27 @@ public:
       // push it a little out of the boundary so that it will start advection in
       // another domain, or in another time slice. Taking small steps enables
       // reducing the error introduced at spatial or temporal boundaries.
-      else if (status == ParticleStatus::AT_TEMPORAL_BOUNDARY)
+      else if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
       {
-        integralCurve.SetAtTemporalBoundary(idx);
+        integralCurve.SetExitTemporalBoundary(idx);
         break;
       }
-      else if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
+      else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
       {
         status = integrator->SmallStep(inpos, time, outpos);
         integralCurve.TakeStep(idx, outpos);
         integralCurve.SetTime(idx, time);
-        if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
+        if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
         {
-          integralCurve.SetAtSpatialBoundary(idx);
+          integralCurve.SetExitTemporalBoundary(idx);
           break;
         }
-        else if (status == ParticleStatus::AT_TEMPORAL_BOUNDARY)
+        else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
         {
-          integralCurve.SetAtTemporalBoundary(idx);
+          integralCurve.SetExitSpatialBoundary(idx);
           break;
         }
-        else if (status == ParticleStatus::STATUS_ERROR)
+        else if (status == IntegratorStatus::ERROR)
         {
           integralCurve.SetError(idx);
           break;
