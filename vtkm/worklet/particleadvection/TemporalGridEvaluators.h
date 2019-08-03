@@ -68,7 +68,7 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC ParticleStatus Evaluate(const Point& pos, vtkm::FloatDefault time, Point& out) const
+  VTKM_EXEC EvaluatorStatus Evaluate(const Point& pos, vtkm::FloatDefault time, Point& out) const
   {
     // Validate time is in bounds for the current two slices.
     if (!(time >= TimeOne && time <= TimeTwo))
@@ -84,7 +84,7 @@ public:
     // LERP between the two values of calculated fields to obtain the new value
     ScalarType proportion = (time - this->TimeOne) / this->TimeDiff;
     out = vtkm::Lerp(one, two, proportion);
-    return ParticleStatus::STATUS_OK;
+    return EvaluatorStatus::SUCCESS;
   }
 
 private:

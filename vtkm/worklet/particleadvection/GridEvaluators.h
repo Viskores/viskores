@@ -31,6 +31,12 @@ namespace worklet
 {
 namespace particleadvection
 {
+enum class EvaluatorStatus
+{
+  SUCCESS = 0,
+  OUTSIDE_SPATIAL_BOUNDS,
+  OUTSIDE_TEMPORAL_BOUNDS
+};
 
 template <typename DeviceAdapter, typename FieldArrayType>
 class ExecutionGridEvaluator
@@ -80,15 +86,15 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC ParticleStatus Evaluate(const Point& pos,
-                                    vtkm::FloatDefault vtkmNotUsed(time),
-                                    Point& out) const
+  VTKM_EXEC EvaluatorStatus Evaluate(const Point& pos,
+                                     vtkm::FloatDefault vtkmNotUsed(time),
+                                     Point& out) const
   {
     return this->Evaluate(pos, out);
   }
 
   template <typename Point>
-  VTKM_EXEC ParticleStatus Evaluate(const Point point, Point& out) const
+  VTKM_EXEC EvaluatorStatus Evaluate(const Point point, Point& out) const
   {
     vtkm::Id cellId;
     Point parametric;
@@ -107,7 +113,7 @@ public:
       fieldValues.Append(Field.Get(ptIndices[i]));
     out = vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, tmp);
 
-    return ParticleStatus::STATUS_OK;
+    return EvaluatorStatus::SUCCESS;
   }
 
 private:
