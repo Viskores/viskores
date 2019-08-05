@@ -69,7 +69,7 @@ void TestVertexClustering()
   vtkm::cont::printSummary_ArrayHandle(pointvar, std::cerr, true);
   vtkm::cont::printSummary_ArrayHandle(cellvar, std::cerr, true);
 
-  using PointType = vtkm::Vec<vtkm::Float64, 3>;
+  using PointType = vtkm::Vec3f_64;
   auto pointArray = output.GetCoordinateSystem(0).GetData();
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
                    "Number of output points mismatch");

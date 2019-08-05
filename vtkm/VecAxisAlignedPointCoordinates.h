@@ -78,7 +78,7 @@ template <vtkm::IdComponent NumDimensions>
 class VecAxisAlignedPointCoordinates
 {
 public:
-  using ComponentType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using ComponentType = vtkm::Vec3f;
 
   static constexpr vtkm::IdComponent NUM_COMPONENTS =
     detail::VecAxisAlignedPointCoordinatesNumComponents<NumDimensions>::NUM_COMPONENTS;
@@ -136,8 +136,8 @@ struct TypeTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
   VTKM_EXEC_CONT
   static vtkm::VecAxisAlignedPointCoordinates<NumDimensions> ZeroInitialization()
   {
-    return vtkm::VecAxisAlignedPointCoordinates<NumDimensions>(
-      vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 0), vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 0));
+    return vtkm::VecAxisAlignedPointCoordinates<NumDimensions>(vtkm::Vec3f(0, 0, 0),
+                                                               vtkm::Vec3f(0, 0, 0));
   }
 };
 
@@ -146,7 +146,7 @@ struct VecTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
 {
   using VecType = vtkm::VecAxisAlignedPointCoordinates<NumDimensions>;
 
-  using ComponentType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using ComponentType = vtkm::Vec3f;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 

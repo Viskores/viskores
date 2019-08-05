@@ -34,7 +34,7 @@
 #include <vector>
 
 static vtkm::Id3 dims(256, 256, 256);
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verticesArray, normalsArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray, normalsArray;
 static vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 static Quaternion qrot;
 static int lastx, lasty;
@@ -107,10 +107,10 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
     TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
+  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
@@ -177,8 +177,8 @@ void displayCall()
   glBegin(GL_TRIANGLES);
   for (vtkm::IdComponent i = 0; i < verticesArray.GetNumberOfValues(); i++)
   {
-    vtkm::Vec<vtkm::Float32, 3> curNormal = normalsArray.GetPortalConstControl().Get(i);
-    vtkm::Vec<vtkm::Float32, 3> curVertex = verticesArray.GetPortalConstControl().Get(i);
+    vtkm::Vec3f_32 curNormal = normalsArray.GetPortalConstControl().Get(i);
+    vtkm::Vec3f_32 curVertex = verticesArray.GetPortalConstControl().Get(i);
     glNormal3f(curNormal[0], curNormal[1], curNormal[2]);
     glVertex3f(curVertex[0], curVertex[1], curVertex[2]);
   }
@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet outputData = filter.Execute(dataSet);
 
   //need to extract vertices, normals, and scalars
-  using VertType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
+  using VertType = vtkm::cont::ArrayHandle<vtkm::Vec3f_32>;
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
 
   verticesArray = coords.GetData().Cast<VertType>();

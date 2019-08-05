@@ -39,10 +39,10 @@ private:
   vtkm::Float32 Zoom;
   bool IsViewDirty;
 
-  vtkm::Vec<vtkm::Float32, 3> Look;
-  vtkm::Vec<vtkm::Float32, 3> Up;
-  vtkm::Vec<vtkm::Float32, 3> LookAt;
-  vtkm::Vec<vtkm::Float32, 3> Position;
+  vtkm::Vec3f_32 Look;
+  vtkm::Vec3f_32 Up;
+  vtkm::Vec3f_32 LookAt;
+  vtkm::Vec3f_32 Position;
   vtkm::rendering::Camera CameraView;
   vtkm::Matrix<vtkm::Float32, 4, 4> ViewProjectionMat;
 
@@ -98,22 +98,22 @@ public:
   vtkm::Float32 GetFieldOfView() const;
 
   VTKM_CONT
-  void SetUp(const vtkm::Vec<vtkm::Float32, 3>& up);
+  void SetUp(const vtkm::Vec3f_32& up);
 
   VTKM_CONT
-  void SetPosition(const vtkm::Vec<vtkm::Float32, 3>& position);
+  void SetPosition(const vtkm::Vec3f_32& position);
 
   VTKM_CONT
-  vtkm::Vec<vtkm::Float32, 3> GetPosition() const;
+  vtkm::Vec3f_32 GetPosition() const;
 
   VTKM_CONT
-  vtkm::Vec<vtkm::Float32, 3> GetUp() const;
+  vtkm::Vec3f_32 GetUp() const;
 
   VTKM_CONT
-  void SetLookAt(const vtkm::Vec<vtkm::Float32, 3>& lookAt);
+  void SetLookAt(const vtkm::Vec3f_32& lookAt);
 
   VTKM_CONT
-  vtkm::Vec<vtkm::Float32, 3> GetLookAt() const;
+  vtkm::Vec3f_32 GetLookAt() const;
 
   VTKM_CONT
   void ResetIsViewDirty();
@@ -135,15 +135,15 @@ public:
   template <typename Precision>
   VTKM_CONT void CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds boundingBox);
 
-  void CreateDebugRay(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<vtkm::Float32>& rays);
+  void CreateDebugRay(vtkm::Vec2i_32 pixel, Ray<vtkm::Float32>& rays);
 
-  void CreateDebugRay(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<vtkm::Float64>& rays);
+  void CreateDebugRay(vtkm::Vec2i_32 pixel, Ray<vtkm::Float64>& rays);
 
   bool operator==(const Camera& other) const;
 
 private:
   template <typename Precision>
-  void CreateDebugRayImp(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<Precision>& rays);
+  void CreateDebugRayImp(vtkm::Vec2i_32 pixel, Ray<Precision>& rays);
   VTKM_CONT
   void FindSubset(const vtkm::Bounds& bounds);
 

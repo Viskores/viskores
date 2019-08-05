@@ -59,39 +59,32 @@ public:
   }
 
   VTKM_EXEC
-  void GetSpatialBoundary(vtkm::Vec<vtkm::FloatDefault, 3>& dir,
-                          vtkm::Vec<ScalarType, 3>& boundary) const
-  {
-    // Based on the direction of the velocity we need to be able to tell where
-    // the particle will exit the domain from to actually push it out of domain.
-    return this->EvaluatorTwo.GetSpatialBoundary(dir, boundary);
-  }
+  vtkm::Bounds GetSpatialBoundary() const { return this->EvaluatorTwo.GetSpatialBoundary(); }
 
   VTKM_EXEC_CONT
-  void GetTemporalBoundary(vtkm::FloatDefault& boundary) const
+  vtkm::FloatDefault GetTemporalBoundary(vtkm::Id direction) const
   {
-    // Return the time of the newest time slice
-    boundary = TimeTwo;
+    return direction > 0 ? this->TimeTwo : this->TimeOne;
   }
 
   template <typename Point>
-  VTKM_EXEC bool Evaluate(const Point& pos, vtkm::FloatDefault time, Point& out) const
+  VTKM_EXEC ParticleStatus Evaluate(const Point& pos, vtkm::FloatDefault time, Point& out) const
   {
     // Validate time is in bounds for the current two slices.
     if (!(time >= TimeOne && time <= TimeTwo))
-      return false;
-    bool eval;
+      return ParticleStatus::AT_TEMPORAL_BOUNDARY;
+    ParticleStatus eval;
     Point one, two;
     eval = this->EvaluatorOne.Evaluate(pos, one);
     if (!eval)
-      return false;
+      return eval;
     eval = this->EvaluatorTwo.Evaluate(pos, two);
     if (!eval)
-      return false;
+      return eval;
     // LERP between the two values of calculated fields to obtain the new value
     ScalarType proportion = (time - this->TimeOne) / this->TimeDiff;
     out = vtkm::Lerp(one, two, proportion);
-    return true;
+    return ParticleStatus::STATUS_OK;
   }
 
 private:

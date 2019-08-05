@@ -35,7 +35,7 @@ public:
   using RectilinearPortalType =
     typename RectilinearType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Vec<vtkm::Id, 3>& dims, const RectilinearType& coords)
+  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Id3& dims, const RectilinearType& coords)
     : Bounds(bounds)
     , Dims(dims)
   {
@@ -55,7 +55,7 @@ public:
   {
     if (!Bounds.Contains(point))
       return -1;
-    vtkm::Vec<vtkm::Id, 3> logical(-1, -1, -1);
+    vtkm::Id3 logical(-1, -1, -1);
     // Linear search in the coordinates.
     vtkm::Id index;
     /*Get floor X location*/
@@ -98,7 +98,7 @@ public:
 
 private:
   vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::Id, 3> Dims;
+  vtkm::Id3 Dims;
   AxisPortalType xAxis;
   AxisPortalType yAxis;
   AxisPortalType zAxis;
@@ -139,12 +139,12 @@ public:
     std::cout << "X bounds : " << bounds.X.Min << " to " << bounds.X.Max << std::endl;
     std::cout << "Y bounds : " << bounds.Y.Min << " to " << bounds.Y.Max << std::endl;
     std::cout << "Z bounds : " << bounds.Z.Min << " to " << bounds.Z.Max << std::endl;
-    vtkm::Vec<vtkm::Id, 3> dims =
+    vtkm::Id3 dims =
       cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
     std::cout << "Dimensions of dataset : " << dims << std::endl;
 
     // Generate some sample points.
-    using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
+    using PointType = vtkm::Vec3f;
     std::vector<PointType> pointsVec;
     std::default_random_engine dre;
     std::uniform_real_distribution<vtkm::Float32> xCoords(0.0f, 4.0f);

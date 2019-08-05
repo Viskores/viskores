@@ -86,63 +86,7 @@ class TestingArrayHandleMultiplexer
     CheckArray(multiplexer, array3);
   }
 
-  static void DefaultScalar()
-  {
-    std::cout << std::endl << "--- Default list for scalars" << std::endl;
-
-    using ValueType = vtkm::FloatDefault;
-
-    vtkm::cont::ArrayHandleMultiplexer<ValueType> multiplexer;
-
-    std::cout << "Basic array type." << std::endl;
-    vtkm::cont::ArrayHandle<ValueType> baseArray;
-    baseArray.Allocate(ARRAY_SIZE);
-    SetPortal(baseArray.GetPortalControl());
-    multiplexer = baseArray;
-    CheckArray(multiplexer, baseArray);
-
-    std::cout << "Cast array type." << std::endl;
-    vtkm::cont::ArrayHandle<vtkm::UInt8> castArray;
-    castArray.Allocate(ARRAY_SIZE);
-    SetPortal(castArray.GetPortalControl());
-    multiplexer = vtkm::cont::make_ArrayHandleCast<ValueType>(castArray);
-    CheckArray(multiplexer, castArray);
-  }
-
-  static void DefaultVec3()
-  {
-    std::cout << std::endl << "--- Default list for Vec3" << std::endl;
-
-    using ValueType = vtkm::Vec<vtkm::FloatDefault, 3>;
-
-    vtkm::cont::ArrayHandleMultiplexer<ValueType> multiplexer;
-
-    std::cout << "Basic array type." << std::endl;
-    vtkm::cont::ArrayHandle<ValueType> baseArray;
-    baseArray.Allocate(ARRAY_SIZE);
-    SetPortal(baseArray.GetPortalControl());
-    multiplexer = baseArray;
-    CheckArray(multiplexer, baseArray);
-
-    std::cout << "Cast array type." << std::endl;
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> castArray;
-    castArray.Allocate(ARRAY_SIZE);
-    SetPortal(castArray.GetPortalControl());
-    multiplexer = vtkm::cont::make_ArrayHandleCast<ValueType>(castArray);
-    CheckArray(multiplexer, castArray);
-
-    std::cout << "Uniform point coordinates" << std::endl;
-    vtkm::cont::ArrayHandleUniformPointCoordinates uniformCoords(vtkm::Id3(3));
-    multiplexer = uniformCoords;
-    CheckArray(multiplexer, uniformCoords);
-  }
-
-  static void TestAll()
-  {
-    BasicSwitch();
-    DefaultScalar();
-    DefaultVec3();
-  }
+  static void TestAll() { BasicSwitch(); }
 
 public:
   static int Run(int argc, char* argv[])

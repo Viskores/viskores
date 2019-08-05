@@ -93,7 +93,7 @@ public:
       ConnectivityOutVec& connectivityOut,
       vtkm::IdComponent visitIndex) const
     {
-      vtkm::Vec<vtkm::IdComponent, 4> tetIndices = tables.GetIndices(shape, visitIndex);
+      vtkm::IdComponent4 tetIndices = tables.GetIndices(shape, visitIndex);
       connectivityOut[0] = connectivityIn[tetIndices[0]];
       connectivityOut[1] = connectivityIn[tetIndices[1]];
       connectivityOut[2] = connectivityIn[tetIndices[2]];

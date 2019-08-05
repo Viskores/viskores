@@ -38,11 +38,11 @@ void TestUniformGrid(vtkm::filter::CleanGrid clean)
                    outCellSet.GetNumberOfPoints());
   VTKM_TEST_ASSERT(
     outCellSet.GetNumberOfCells() == 2, "Wrong number of cells: ", outCellSet.GetNumberOfCells());
-  vtkm::Vec<vtkm::Id, 4> cellIds;
+  vtkm::Id4 cellIds;
   outCellSet.GetIndices(0, cellIds);
-  VTKM_TEST_ASSERT((cellIds == vtkm::Vec<vtkm::Id, 4>(0, 1, 4, 3)), "Bad cell ids: ", cellIds);
+  VTKM_TEST_ASSERT((cellIds == vtkm::Id4(0, 1, 4, 3)), "Bad cell ids: ", cellIds);
   outCellSet.GetIndices(1, cellIds);
-  VTKM_TEST_ASSERT((cellIds == vtkm::Vec<vtkm::Id, 4>(1, 2, 5, 4)), "Bad cell ids: ", cellIds);
+  VTKM_TEST_ASSERT((cellIds == vtkm::Id4(1, 2, 5, 4)), "Bad cell ids: ", cellIds);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outPointField;
   outData.GetField("pointvar").GetData().CopyTo(outPointField);

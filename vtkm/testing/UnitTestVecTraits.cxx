@@ -67,8 +67,8 @@ void TestVecTraits()
   ExpectFalseType(vtkm::HasVecTraits<TypeWithoutVecTraits>());
 
   vtkm::testing::TestVecComponentsTag<vtkm::Id3>();
-  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault, 3>>();
-  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault, 4>>();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec3f>();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec4f>();
   vtkm::testing::TestVecComponentsTag<vtkm::VecC<vtkm::FloatDefault>>();
   vtkm::testing::TestVecComponentsTag<vtkm::VecCConst<vtkm::Id>>();
   vtkm::testing::TestScalarComponentsTag<vtkm::Id>();

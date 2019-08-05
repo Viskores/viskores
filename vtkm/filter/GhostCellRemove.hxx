@@ -55,14 +55,12 @@ private:
 };
 
 template <int DIMS>
-VTKM_EXEC_CONT vtkm::Vec<vtkm::Id, 3> getLogical(const vtkm::Id& index,
-                                                 const vtkm::Vec<vtkm::Id, 3>& cellDims);
+VTKM_EXEC_CONT vtkm::Id3 getLogical(const vtkm::Id& index, const vtkm::Id3& cellDims);
 
 template <>
-VTKM_EXEC_CONT vtkm::Vec<vtkm::Id, 3> getLogical<3>(const vtkm::Id& index,
-                                                    const vtkm::Vec<vtkm::Id, 3>& cellDims)
+VTKM_EXEC_CONT vtkm::Id3 getLogical<3>(const vtkm::Id& index, const vtkm::Id3& cellDims)
 {
-  vtkm::Vec<vtkm::Id, 3> res(0, 0, 0);
+  vtkm::Id3 res(0, 0, 0);
   res[0] = index % cellDims[0];
   res[1] = (index / (cellDims[0])) % (cellDims[1]);
   res[2] = index / ((cellDims[0]) * (cellDims[1]));
@@ -70,20 +68,18 @@ VTKM_EXEC_CONT vtkm::Vec<vtkm::Id, 3> getLogical<3>(const vtkm::Id& index,
 }
 
 template <>
-VTKM_EXEC_CONT vtkm::Vec<vtkm::Id, 3> getLogical<2>(const vtkm::Id& index,
-                                                    const vtkm::Vec<vtkm::Id, 3>& cellDims)
+VTKM_EXEC_CONT vtkm::Id3 getLogical<2>(const vtkm::Id& index, const vtkm::Id3& cellDims)
 {
-  vtkm::Vec<vtkm::Id, 3> res(0, 0, 0);
+  vtkm::Id3 res(0, 0, 0);
   res[0] = index % cellDims[0];
   res[1] = index / cellDims[0];
   return res;
 }
 
 template <>
-VTKM_EXEC_CONT vtkm::Vec<vtkm::Id, 3> getLogical<1>(const vtkm::Id& index,
-                                                    const vtkm::Vec<vtkm::Id, 3>&)
+VTKM_EXEC_CONT vtkm::Id3 getLogical<1>(const vtkm::Id& index, const vtkm::Id3&)
 {
-  vtkm::Vec<vtkm::Id, 3> res(0, 0, 0);
+  vtkm::Id3 res(0, 0, 0);
   res[0] = index;
   return res;
 }
@@ -93,7 +89,7 @@ class RealMinMax : public vtkm::worklet::WorkletMapField
 {
 public:
   VTKM_CONT
-  RealMinMax(vtkm::Vec<vtkm::Id, 3> cellDims, bool removeAllGhost, vtkm::UInt8 removeType)
+  RealMinMax(vtkm::Id3 cellDims, bool removeAllGhost, vtkm::UInt8 removeType)
     : CellDims(cellDims)
     , RemoveAllGhost(removeAllGhost)
     , RemoveType(removeType)
@@ -130,7 +126,7 @@ public:
     if ((RemoveAllGhost && value != 0) || (!RemoveAllGhost && (value != 0 && value | RemoveType)))
       return;
 
-    vtkm::Vec<vtkm::Id, 3> logical = getLogical<DIMS>(index, CellDims);
+    vtkm::Id3 logical = getLogical<DIMS>(index, CellDims);
 
     Min(atom, logical[0], 0);
     Min(atom, logical[1], 1);
@@ -142,26 +138,26 @@ public:
   }
 
 private:
-  vtkm::Vec<vtkm::Id, 3> CellDims;
+  vtkm::Id3 CellDims;
   bool RemoveAllGhost;
   vtkm::UInt8 RemoveType;
 };
 
 template <int DIMS>
-VTKM_EXEC_CONT bool checkRange(const vtkm::RangeId3& range, const vtkm::Vec<vtkm::Id, 3>& p);
+VTKM_EXEC_CONT bool checkRange(const vtkm::RangeId3& range, const vtkm::Id3& p);
 
 template <>
-VTKM_EXEC_CONT bool checkRange<1>(const vtkm::RangeId3& range, const vtkm::Vec<vtkm::Id, 3>& p)
+VTKM_EXEC_CONT bool checkRange<1>(const vtkm::RangeId3& range, const vtkm::Id3& p)
 {
   return p[0] >= range.X.Min && p[0] <= range.X.Max;
 }
 template <>
-VTKM_EXEC_CONT bool checkRange<2>(const vtkm::RangeId3& range, const vtkm::Vec<vtkm::Id, 3>& p)
+VTKM_EXEC_CONT bool checkRange<2>(const vtkm::RangeId3& range, const vtkm::Id3& p)
 {
   return p[0] >= range.X.Min && p[0] <= range.X.Max && p[1] >= range.Y.Min && p[1] <= range.Y.Max;
 }
 template <>
-VTKM_EXEC_CONT bool checkRange<3>(const vtkm::RangeId3& range, const vtkm::Vec<vtkm::Id, 3>& p)
+VTKM_EXEC_CONT bool checkRange<3>(const vtkm::RangeId3& range, const vtkm::Id3& p)
 {
   return p[0] >= range.X.Min && p[0] <= range.X.Max && p[1] >= range.Y.Min && p[1] <= range.Y.Max &&
     p[2] >= range.Z.Min && p[2] <= range.Z.Max;
@@ -172,7 +168,7 @@ class Validate : public vtkm::worklet::WorkletMapField
 {
 public:
   VTKM_CONT
-  Validate(const vtkm::Vec<vtkm::Id, 3>& cellDims,
+  Validate(const vtkm::Id3& cellDims,
            bool removeAllGhost,
            vtkm::UInt8 removeType,
            const vtkm::RangeId3& range)
@@ -200,7 +196,7 @@ public:
   }
 
 private:
-  vtkm::Vec<vtkm::Id, 3> CellDims;
+  vtkm::Id3 CellDims;
   bool RemoveAll;
   vtkm::UInt8 RemoveVal;
   vtkm::RangeId3 Range;
@@ -211,7 +207,7 @@ bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
               bool removeAllGhost,
               vtkm::UInt8 removeType,
               vtkm::RangeId3& range,
-              const vtkm::Vec<vtkm::Id, 3>& cellDims,
+              const vtkm::Id3& cellDims,
               vtkm::Id size)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> minmax;

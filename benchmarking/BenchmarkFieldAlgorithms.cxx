@@ -306,12 +306,25 @@ template <typename ArrayHandleType>
 using ArrayHandlePassThrough =
   vtkm::cont::ArrayHandleTransform<ArrayHandleType, PassThroughFunctor, PassThroughFunctor>;
 
+template <typename ValueType, vtkm::IdComponent>
+struct JunkArrayHandle : vtkm::cont::ArrayHandle<ValueType>
+{
+};
+
 template <typename ArrayHandleType>
 using BMArrayHandleMultiplexer =
-  vtkm::ListTagApply<vtkm::ListTagAppend<vtkm::cont::internal::ArrayHandleMultiplexerDefaultArrays<
-                                           typename ArrayHandleType::ValueType>,
-                                         ArrayHandlePassThrough<ArrayHandleType>>,
-                     vtkm::cont::ArrayHandleMultiplexer>;
+  vtkm::cont::ArrayHandleMultiplexer<ArrayHandleType,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 0>,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 1>,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 2>,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 3>,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 4>,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 5>,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 6>,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 7>,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 8>,
+                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 9>,
+                                     ArrayHandlePassThrough<ArrayHandleType>>;
 
 template <typename ArrayHandleType>
 BMArrayHandleMultiplexer<ArrayHandleType> make_ArrayHandleMultiplexer0(const ArrayHandleType& array)
@@ -331,7 +344,7 @@ struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>
 {
 };
 
-struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Vec<vtkm::Float32, 3>>
+struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Vec3f_32>
 {
 };
 
@@ -863,7 +876,7 @@ private:
 
   struct ImplicitFunctionBenchData
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Points;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> Points;
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Result;
     vtkm::Sphere Sphere1, Sphere2;
   };

@@ -55,8 +55,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.f, 3.f, 3.f);
+    vtkm::Vec3f minPoint(1.f, 1.f, 1.f);
+    vtkm::Vec3f maxPoint(3.f, 3.f, 3.f);
     bool extractInside = true;
 
     // Output dataset contains input coordinate system and point data
@@ -86,8 +86,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.f, 3.f, 3.f);
+    vtkm::Vec3f minPoint(1.f, 1.f, 1.f);
+    vtkm::Vec3f maxPoint(3.f, 3.f, 3.f);
     bool extractInside = false;
 
     // Output dataset contains input coordinate system and point data
@@ -117,7 +117,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
+    vtkm::Vec3f center(2.f, 2.f, 2.f);
     vtkm::FloatDefault radius(1.8f);
     bool extractInside = true;
 
@@ -148,8 +148,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.f, 0.f, 0.f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(1.f, 1.f, 1.f);
+    vtkm::Vec3f minPoint(0.f, 0.f, 0.f);
+    vtkm::Vec3f maxPoint(1.f, 1.f, 1.f);
     bool extractInside = true;
 
     // Output dataset contains input coordinate system and point data
@@ -179,8 +179,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.f, 0.f, 0.f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(1.f, 1.f, 1.f);
+    vtkm::Vec3f minPoint(0.f, 0.f, 0.f);
+    vtkm::Vec3f maxPoint(1.f, 1.f, 1.f);
     bool extractInside = false;
 
     // Output dataset contains input coordinate system and point data

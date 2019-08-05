@@ -30,14 +30,14 @@ struct ConvertToRGBA : public vtkm::worklet::WorkletMapField
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 4> operator()(const T& in) const
+  VTKM_EXEC vtkm::Vec4ui_8 operator()(const T& in) const
   { //vtkScalarsToColorsLuminanceToRGBA
     const vtkm::UInt8 l = colorconversion::ColorToUChar(in);
     return vtkm::Vec<UInt8, 4>(l, l, l, colorconversion::ColorToUChar(this->Alpha));
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 4> operator()(const vtkm::Vec<T, 2>& in) const
+  VTKM_EXEC vtkm::Vec4ui_8 operator()(const vtkm::Vec<T, 2>& in) const
   { //vtkScalarsToColorsLuminanceAlphaToRGBA
     const vtkm::UInt8 l = colorconversion::ColorToUChar(in[0]);
     const vtkm::UInt8 a = colorconversion::ColorToUChar(in[1]);
@@ -45,7 +45,7 @@ struct ConvertToRGBA : public vtkm::worklet::WorkletMapField
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 4> operator()(const vtkm::Vec<T, 3>& in) const
+  VTKM_EXEC vtkm::Vec4ui_8 operator()(const vtkm::Vec<T, 3>& in) const
   { //vtkScalarsToColorsRGBToRGBA
     return vtkm::Vec<UInt8, 4>(colorconversion::ColorToUChar(in[0]),
                                colorconversion::ColorToUChar(in[1]),
@@ -54,7 +54,7 @@ struct ConvertToRGBA : public vtkm::worklet::WorkletMapField
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 4> operator()(const vtkm::Vec<T, 4>& in) const
+  VTKM_EXEC vtkm::Vec4ui_8 operator()(const vtkm::Vec<T, 4>& in) const
   { //vtkScalarsToColorsRGBAToRGBA
     const vtkm::UInt8 a = colorconversion::ColorToUChar(in[3]);
     return vtkm::Vec<UInt8, 4>(colorconversion::ColorToUChar(in[0]),

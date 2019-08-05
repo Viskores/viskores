@@ -39,7 +39,7 @@ public:
   void FindEntry(Ray<vtkm::Float64>& rays);
 
 protected:
-  using Id4Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using Id4Handle = typename vtkm::cont::ArrayHandle<vtkm::Id4>;
   // Mesh Boundary
   Id4Handle Triangles;
   TriangleIntersector Intersector;
@@ -50,7 +50,7 @@ class UnstructuredContainer : public MeshConnContainer
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandle;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
+  typedef vtkm::cont::ArrayHandle<vtkm::Id4> Id4Handle;
   typedef vtkm::cont::ArrayHandle<vtkm::UInt8> UCharHandle;
   // Control Environment Handles
   // FaceConn
@@ -85,7 +85,7 @@ public:
 class StructuredContainer : public MeshConnContainer
 {
 protected:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
+  typedef vtkm::cont::ArrayHandle<vtkm::Id4> Id4Handle;
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
   vtkm::Bounds CoordinateBounds;
@@ -110,7 +110,7 @@ class UnstructuredSingleContainer : public MeshConnContainer
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandle;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
+  typedef vtkm::cont::ArrayHandle<vtkm::Id4> Id4Handle;
   typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> CountingHandle;
   typedef vtkm::cont::ArrayHandleConstant<vtkm::UInt8> ShapesHandle;
   typedef vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> NumIndicesHandle;

@@ -1239,17 +1239,14 @@ private:
   {
   };
 
-  struct ZipTypesToTest
-    : vtkm::ListTagBase<vtkm::Pair<vtkm::UInt8, vtkm::Id>,
-                        vtkm::Pair<vtkm::Float64, vtkm::Vec<vtkm::UInt8, 4>>,
-                        vtkm::Pair<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Int8, 4>>>
+  struct ZipTypesToTest : vtkm::ListTagBase<vtkm::Pair<vtkm::UInt8, vtkm::Id>,
+                                            vtkm::Pair<vtkm::Float64, vtkm::Vec4ui_8>,
+                                            vtkm::Pair<vtkm::Vec3f_32, vtkm::Vec4i_8>>
   {
   };
 
-  struct HandleTypesToTest : vtkm::ListTagBase<vtkm::Id,
-                                               vtkm::Vec<vtkm::Int32, 2>,
-                                               vtkm::FloatDefault,
-                                               vtkm::Vec<vtkm::Float64, 3>>
+  struct HandleTypesToTest
+    : vtkm::ListTagBase<vtkm::Id, vtkm::Vec2i_32, vtkm::FloatDefault, vtkm::Vec3f_64>
   {
   };
 

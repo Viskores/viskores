@@ -23,7 +23,7 @@ void TestMagnitude()
   vtkm::worklet::Magnitude magnitudeWorklet;
 
   using ArrayReturnType = vtkm::cont::ArrayHandle<vtkm::Float64>;
-  using ArrayVectorType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
+  using ArrayVectorType = vtkm::cont::ArrayHandle<vtkm::Vec4i_32>;
   using PortalType = ArrayVectorType::PortalControl;
 
   ArrayVectorType pythagoreanTriples;

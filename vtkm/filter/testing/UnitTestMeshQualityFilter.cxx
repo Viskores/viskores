@@ -36,7 +36,7 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetBuilderExplicit dsb;
 
-  using CoordType = vtkm::Vec<vtkm::Float64, 3>;
+  using CoordType = vtkm::Vec3f_64;
 
   std::vector<CoordType> coords = {
     { 0.00, 0.00, 0.00 }, { 1.00, 0.00, 0.00 }, { 2.00, 0.00, 0.00 }, { 0.00, 0.00, 1.00 },

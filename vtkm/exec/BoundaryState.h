@@ -103,7 +103,7 @@ struct BoundaryState
   /// within the bounds of the cell set. Returns false if the neighbor falls
   /// outside of the boundary of the data.
   ///
-  VTKM_EXEC bool IsNeighborInBoundary(const vtkm::Vec<vtkm::IdComponent, 3>& neighbor) const
+  VTKM_EXEC bool IsNeighborInBoundary(const vtkm::IdComponent3& neighbor) const
   {
     return this->IsNeighborInXBoundary(neighbor[0]) && this->IsNeighborInYBoundary(neighbor[1]) &&
       this->IsNeighborInZBoundary(neighbor[2]);
@@ -111,10 +111,10 @@ struct BoundaryState
 
   /// Returns the minimum neighborhood indices that are within the bounds of the data.
   ///
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> MinNeighborIndices(vtkm::IdComponent radius) const
+  VTKM_EXEC vtkm::IdComponent3 MinNeighborIndices(vtkm::IdComponent radius) const
   {
     VTKM_ASSERT(radius >= 0);
-    vtkm::Vec<vtkm::IdComponent, 3> minIndices;
+    vtkm::IdComponent3 minIndices;
 
     for (vtkm::IdComponent component = 0; component < 3; ++component)
     {
@@ -133,10 +133,10 @@ struct BoundaryState
 
   /// Returns the minimum neighborhood indices that are within the bounds of the data.
   ///
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> MaxNeighborIndices(vtkm::IdComponent radius) const
+  VTKM_EXEC vtkm::IdComponent3 MaxNeighborIndices(vtkm::IdComponent radius) const
   {
     VTKM_ASSERT(radius >= 0);
-    vtkm::Vec<vtkm::IdComponent, 3> maxIndices;
+    vtkm::IdComponent3 maxIndices;
 
     for (vtkm::IdComponent component = 0; component < 3; ++component)
     {
@@ -161,8 +161,7 @@ struct BoundaryState
   /// index that is past the minimum x range of the data, the index at the minimum x boundary is
   /// returned.
   ///
-  VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndexClamp(
-    const vtkm::Vec<vtkm::IdComponent, 3>& neighbor) const
+  VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndexClamp(const vtkm::IdComponent3& neighbor) const
   {
     vtkm::Id3 fullIndex = this->IJK + neighbor;
 
@@ -184,18 +183,17 @@ struct BoundaryState
   /// the minimum x range of the data, the neighbor index of the minimum x
   /// boundary is returned.
   ///
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> ClampNeighborIndex(
-    const vtkm::Vec<vtkm::IdComponent, 3>& neighbor) const
+  VTKM_EXEC vtkm::IdComponent3 ClampNeighborIndex(const vtkm::IdComponent3& neighbor) const
   {
     const vtkm::Id3 fullIndex = this->IJK + neighbor;
     const vtkm::Id3 clampedFullIndex =
       vtkm::Max(vtkm::Id3(0), vtkm::Min(this->PointDimensions - vtkm::Id3(1), fullIndex));
-    return vtkm::Vec<vtkm::IdComponent, 3>{ clampedFullIndex - this->IJK };
+    return vtkm::IdComponent3{ clampedFullIndex - this->IJK };
   }
 
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> ClampNeighborIndex(vtkm::IdComponent neighborI,
-                                                               vtkm::IdComponent neighborJ,
-                                                               vtkm::IdComponent neighborK) const
+  VTKM_EXEC vtkm::IdComponent3 ClampNeighborIndex(vtkm::IdComponent neighborI,
+                                                  vtkm::IdComponent neighborJ,
+                                                  vtkm::IdComponent neighborK) const
   {
     return this->ClampNeighborIndex(vtkm::make_Vec(neighborI, neighborJ, neighborK));
   }
@@ -208,8 +206,7 @@ struct BoundaryState
   /// neighbor index that is past the minimum x range of the data, the index at the minimum x
   /// boundary is returned.
   ///
-  VTKM_EXEC vtkm::Id NeighborIndexToFlatIndexClamp(
-    const vtkm::Vec<vtkm::IdComponent, 3>& neighbor) const
+  VTKM_EXEC vtkm::Id NeighborIndexToFlatIndexClamp(const vtkm::IdComponent3& neighbor) const
   {
     vtkm::Id3 full = this->NeighborIndexToFullIndexClamp(neighbor);
 

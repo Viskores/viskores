@@ -26,6 +26,8 @@
 namespace
 {
 
+
+
 vtkm::FloatDefault vecData[125 * 3] = {
   -0.00603248f, -0.0966396f,  -0.000732792f, 0.000530014f,  -0.0986189f,  -0.000806706f,
   0.00684929f,  -0.100098f,   -0.000876566f, 0.0129235f,    -0.101102f,   -0.000942341f,
@@ -340,10 +342,48 @@ void ValidateIntegrator(const IntegratorType& integrator,
     Status status = statusPortal.Get(index);
     vtkm::Vec<ScalarType, 3> result = resultsPortal.Get(index);
     VTKM_TEST_ASSERT(status == Status::STATUS_OK || status == Status::TERMINATED ||
-                       status == Status::EXITED_SPATIAL_BOUNDARY,
+                       status == Status::AT_SPATIAL_BOUNDARY,
                      "Error in evaluator for " + msg);
-    VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
-                     "Error in evaluator result for " + msg);
+    if (status != Status::AT_SPATIAL_BOUNDARY)
+      VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
+                       "Error in evaluator result for " + msg);
+  }
+  pointsHandle.ReleaseResources();
+  stepStatus.ReleaseResources();
+  stepResults.ReleaseResources();
+}
+
+template <typename IntegratorType, typename ScalarType>
+void ValidateIntegratorForBoundary(const vtkm::Vec<ScalarType, 3>& vector,
+                                   const vtkm::Bounds& bounds,
+                                   const IntegratorType& integrator,
+                                   const std::vector<vtkm::Vec<ScalarType, 3>>& pointIns,
+                                   const std::string& msg)
+{
+  ScalarType tolerance = vtkm::Epsilon<ScalarType>() * 100;
+  using IntegratorTester = TestIntegratorWorklet<ScalarType>;
+  using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
+  using Status = vtkm::worklet::particleadvection::ParticleStatus;
+  IntegratorTesterDispatcher integratorTesterDispatcher;
+  vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
+    vtkm::cont::make_ArrayHandle(pointIns);
+  vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
+  vtkm::cont::ArrayHandle<Status> stepStatus;
+  vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> stepResults;
+  integratorTesterDispatcher.Invoke(pointsHandle, integrator, stepStatus, stepResults);
+  auto statusPortal = stepStatus.GetPortalConstControl();
+  auto resultsPortal = stepResults.GetPortalConstControl();
+  for (vtkm::Id index = 0; index < numPoints; index++)
+  {
+    Status status = statusPortal.Get(index);
+    vtkm::Vec<ScalarType, 3> result = resultsPortal.Get(index);
+    if (vector[0] == 1.)
+      VTKM_TEST_ASSERT((bounds.X.Max - result[0]) < tolerance, "X Tolerance not satisfied.");
+    if (vector[1] == 1.)
+      VTKM_TEST_ASSERT((bounds.Y.Max - result[1]) < tolerance, "Y Tolerance not satisfied.");
+    if (vector[2] == 1.)
+      VTKM_TEST_ASSERT((bounds.Z.Max - result[2]) < tolerance, "Z Tolerance not satisfied.");
+    VTKM_TEST_ASSERT(status == Status::AT_SPATIAL_BOUNDARY, "Error in evaluator for " + msg);
   }
   pointsHandle.ReleaseResources();
   stepStatus.ReleaseResources();
@@ -385,9 +425,6 @@ void TestEvaluators()
         std::vector<vtkm::cont::DataSet> dataSets;
         dataSets.push_back(CreateUniformDataSet<ScalarType>(bound, dim));
         dataSets.push_back(CreateRectilinearDataSet<ScalarType>(bound, dim));
-        //Create an explicit dataset.
-        //        auto expDS = CreateExplicitFromStructuredDataSet<ScalarType>(dataSets[0], false);
-        //        dataSets.push_back(expDS);
 
         vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
@@ -397,33 +434,44 @@ void TestEvaluators()
         std::vector<vtkm::Vec<ScalarType, 3>> stepResult;
         //Create a bunch of random points in the bounds.
         srand(314);
+        //Generate points 2 steps inside the bounding box.
+        vtkm::Bounds interiorBounds = bound;
+        interiorBounds.X.Min += 2 * stepSize;
+        interiorBounds.Y.Min += 2 * stepSize;
+        interiorBounds.Z.Min += 2 * stepSize;
+        interiorBounds.X.Max -= 2 * stepSize;
+        interiorBounds.Y.Max -= 2 * stepSize;
+        interiorBounds.Z.Max -= 2 * stepSize;
         for (int k = 0; k < 38; k++)
         {
-          //Generate points 2 steps inside the bounding box.
-          vtkm::Bounds interiorBounds = bound;
-          interiorBounds.X.Min += 2 * stepSize;
-          interiorBounds.Y.Min += 2 * stepSize;
-          interiorBounds.Z.Min += 2 * stepSize;
-          interiorBounds.X.Max -= 2 * stepSize;
-          interiorBounds.Y.Max -= 2 * stepSize;
-          interiorBounds.Z.Max -= 2 * stepSize;
-
           auto p = RandomPoint<ScalarType>(interiorBounds);
           pointIns.push_back(p);
           stepResult.push_back(p + vec * stepSize);
         }
 
+        std::vector<vtkm::Vec<ScalarType, 3>> boundaryPoints;
+        const vtkm::Range xRange(bound.X.Max - stepSize / 2., bound.X.Max);
+        const vtkm::Range yRange(bound.Y.Max - stepSize / 2., bound.Y.Max);
+        const vtkm::Range zRange(bound.Z.Max - stepSize / 2., bound.Z.Max);
+        vtkm::Bounds forBoundary(xRange, yRange, zRange);
+        for (int k = 0; k < 10; k++)
+        {
+          // Generate bunch of boundary points towards the face of the direction
+          // of the velocity field
+          // All velocites are in the +ve direction.
+          auto p = RandomPoint<ScalarType>(forBoundary);
+          pointIns.push_back(p);
+        }
+
         for (auto& ds : dataSets)
         {
-          //          ds.PrintSummary(std::cout);
-          //          vtkm::io::writer::VTKDataSetWriter writer1("ds.vtk");
-          //          writer1.WriteDataSet(ds);
-
           GridEvalType gridEval(ds.GetCoordinateSystem(), ds.GetCellSet(), vecField);
           ValidateEvaluator(gridEval, pointIns, vec, "grid evaluator");
 
           RK4Type rk4(gridEval, stepSize);
           ValidateIntegrator(rk4, pointIns, stepResult, "constant vector RK4");
+
+          ValidateIntegratorForBoundary(vec, bound, rk4, boundaryPoints, "constant vector RK4");
         }
       }
     }
@@ -454,13 +502,14 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
     VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(i) <= maxSteps,
                      "Too many steps taken in streamline");
 
+  /*
   vtkm::cont::DataSet ds;
   ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", res.positions));
   ds.AddCellSet(res.polyLines);
   ds.PrintSummary(std::cout);
   vtkm::io::writer::VTKDataSetWriter writer1("ds.vtk");
   writer1.WriteDataSet(ds);
-  exit(0);
+  */
 }
 
 void TestParticleWorklets()
@@ -474,7 +523,7 @@ void TestParticleWorklets()
   const vtkm::Id3 dims(5, 5, 5);
   vtkm::Id nElements = dims[0] * dims[1] * dims[2] * 3;
 
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> field;
+  std::vector<vtkm::Vec3f> field;
   for (vtkm::Id i = 0; i < nElements; i++)
   {
     ScalarType x = vecData[i];
@@ -548,10 +597,53 @@ void TestParticleWorklets()
   }
 }
 
+void TestParticleStatus()
+{
+  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
+
+  vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
+  const vtkm::Id3 dims(5, 5, 5);
+  vtkm::cont::DataSet ds = CreateUniformDataSet<ScalarType>(bounds, dims);
+
+  vtkm::Id nElements = dims[0] * dims[1] * dims[2];
+
+  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> field;
+  for (vtkm::Id i = 0; i < nElements; i++)
+    field.push_back(vtkm::Vec<ScalarType, 3>(1, 0, 0));
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> fieldArray;
+  fieldArray = vtkm::cont::make_ArrayHandle(field);
+
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  vtkm::Id maxSteps = 1000;
+  ScalarType stepSize = 0.01f;
+
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+  RK4Type rk4(eval, stepSize);
+
+  vtkm::worklet::ParticleAdvection pa;
+  std::vector<vtkm::Vec<ScalarType, 3>> pts;
+  pts.push_back(vtkm::Vec<ScalarType, 3>(.5, .5, .5));
+  pts.push_back(vtkm::Vec<ScalarType, 3>(-1, -1, -1));
+  auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
+  auto res = pa.Run(rk4, seedsArray, maxSteps);
+  auto statusPortal = res.status.GetPortalConstControl();
+
+  vtkm::Id tookStep0 =
+    statusPortal.Get(0) & vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS;
+  vtkm::Id tookStep1 =
+    statusPortal.Get(1) & vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS;
+  VTKM_TEST_ASSERT(tookStep0 != 0, "Particle failed to take any steps");
+  VTKM_TEST_ASSERT(tookStep1 == 0, "Particle took a step when it should not have.");
+}
+
 void TestParticleAdvection()
 {
   TestEvaluators();
   TestParticleWorklets();
+  TestParticleStatus();
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])

@@ -31,8 +31,8 @@
 #include <string.h>
 
 static vtkm::Id cycle = 0;
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> BasisParticles;
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> BasisParticlesOriginal;
+static vtkm::cont::ArrayHandle<vtkm::Vec3f_64> BasisParticles;
+static vtkm::cont::ArrayHandle<vtkm::Vec3f_64> BasisParticlesOriginal;
 static vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
 
 class ValidityCheck : public vtkm::worklet::WorkletMapField
@@ -181,9 +181,9 @@ inline void Lagrangian::InitializeUniformSeeds(const vtkm::cont::DataSet& input)
       for (int z = 0; z < this->SeedRes[2]; z++)
       {
         portal1.Set(count,
-                    vtkm::Vec<vtkm::Float64, 3>(bounds.X.Min + (x * x_spacing),
-                                                bounds.Y.Min + (y * y_spacing),
-                                                bounds.Z.Min + (z * z_spacing)));
+                    vtkm::Vec3f_64(bounds.X.Min + (x * x_spacing),
+                                   bounds.Y.Min + (y * y_spacing),
+                                   bounds.Z.Min + (z * z_spacing)));
         portal2.Set(count, 1);
         count++;
       }

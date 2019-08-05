@@ -51,7 +51,7 @@ vtkm::cont::DataSet MakeWarpScalarTestDataSet()
 void TestWarpScalar()
 {
   std::cout << "Testing WarpScalar Worklet" << std::endl;
-  using vecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using vecType = vtkm::Vec3f;
 
   vtkm::cont::DataSet ds = MakeWarpScalarTestDataSet<vtkm::FloatDefault>();
 

@@ -20,19 +20,19 @@ namespace rendering
 class VTKM_RENDERING_EXPORT TextAnnotationScreen : public TextAnnotation
 {
 protected:
-  vtkm::Vec<vtkm::Float32, 2> Position;
+  vtkm::Vec2f_32 Position;
   vtkm::Float32 Angle;
 
 public:
   TextAnnotationScreen(const std::string& text,
                        const vtkm::rendering::Color& color,
                        vtkm::Float32 scale,
-                       const vtkm::Vec<vtkm::Float32, 2>& position,
+                       const vtkm::Vec2f_32& position,
                        vtkm::Float32 angleDegrees = 0);
 
   ~TextAnnotationScreen();
 
-  void SetPosition(const vtkm::Vec<vtkm::Float32, 2>& position);
+  void SetPosition(const vtkm::Vec2f_32& position);
 
   void SetPosition(vtkm::Float32 posx, vtkm::Float32 posy);
 

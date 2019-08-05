@@ -41,10 +41,10 @@ public:
     }
 
     VTKM_EXEC
-    void operator()(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
-                    const vtkm::Vec<vtkm::FloatDefault, 3>& normal,
+    void operator()(const vtkm::Vec3f& point,
+                    const vtkm::Vec3f& normal,
                     const vtkm::FloatDefault& scaleFactor,
-                    vtkm::Vec<vtkm::FloatDefault, 3>& result) const
+                    vtkm::Vec3f& result) const
     {
       result = point + this->ScaleAmount * scaleFactor * normal;
     }

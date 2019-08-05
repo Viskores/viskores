@@ -29,9 +29,9 @@ public:
   }
 
   VTKM_EXEC
-  virtual void FindCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+  virtual void FindCell(const vtkm::Vec3f& point,
                         vtkm::Id& cellId,
-                        vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
+                        vtkm::Vec3f& parametric,
                         const vtkm::exec::FunctorBase& worklet) const = 0;
 };
 

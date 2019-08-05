@@ -30,8 +30,8 @@ namespace rendering
 namespace
 {
 
-using ColorMapHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
-using IndicesHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>>;
+using ColorMapHandle = vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
+using IndicesHandle = vtkm::cont::ArrayHandle<vtkm::Id2>;
 using PackedFrameBufferHandle = vtkm::cont::ArrayHandle<vtkm::Int64>;
 
 // Depth value of 1.0f
@@ -68,7 +68,7 @@ VTKM_EXEC_CONT
 vtkm::UInt32 PackColor(vtkm::Float32 r, vtkm::Float32 g, vtkm::Float32 b, vtkm::Float32 a);
 
 VTKM_EXEC_CONT
-vtkm::UInt32 PackColor(const vtkm::Vec<vtkm::Float32, 4>& color)
+vtkm::UInt32 PackColor(const vtkm::Vec4f_32& color)
 {
   return PackColor(color[0], color[1], color[2], color[3]);
 }
@@ -91,7 +91,7 @@ void UnpackColor(vtkm::UInt32 color,
                  vtkm::Float32& a);
 
 VTKM_EXEC_CONT
-void UnpackColor(vtkm::UInt32 packedColor, vtkm::Vec<vtkm::Float32, 4>& color)
+void UnpackColor(vtkm::UInt32 packedColor, vtkm::Vec4f_32& color)
 {
   UnpackColor(packedColor, color[0], color[1], color[2], color[3]);
 }
@@ -132,7 +132,7 @@ struct CopyIntoFrameBuffer : public vtkm::worklet::WorkletMapField
   CopyIntoFrameBuffer() {}
 
   VTKM_EXEC
-  void operator()(const vtkm::Vec<vtkm::Float32, 4>& color,
+  void operator()(const vtkm::Vec4f_32& color,
                   const vtkm::Float32& depth,
                   vtkm::Int64& outValue) const
   {
@@ -186,15 +186,15 @@ public:
   }
 
   template <typename CoordinatesPortalType, typename ScalarFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 2>& edgeIndices,
+  VTKM_EXEC void operator()(const vtkm::Id2& edgeIndices,
                             const CoordinatesPortalType& coordsPortal,
                             const ScalarFieldPortalType& fieldPortal) const
   {
     vtkm::Id point1Idx = edgeIndices[0];
     vtkm::Id point2Idx = edgeIndices[1];
 
-    vtkm::Vec<vtkm::Float32, 3> point1 = coordsPortal.Get(edgeIndices[0]);
-    vtkm::Vec<vtkm::Float32, 3> point2 = coordsPortal.Get(edgeIndices[1]);
+    vtkm::Vec3f_32 point1 = coordsPortal.Get(edgeIndices[0]);
+    vtkm::Vec3f_32 point2 = coordsPortal.Get(edgeIndices[1]);
 
     TransformWorldToViewport(point1);
     TransformWorldToViewport(point2);
@@ -244,7 +244,7 @@ public:
     }
 
     // Plot first endpoint
-    vtkm::Vec<vtkm::Float32, 4> color = GetColor(point1Field);
+    vtkm::Vec4f_32 color = GetColor(point1Field);
     if (transposed)
     {
       Plot(yPxl1, xPxl1, zPxl1, color, 1.0f);
@@ -306,9 +306,9 @@ private:
   using ColorMapPortalConst = typename ColorMapHandle::ExecutionTypes<DeviceTag>::PortalConst;
 
   VTKM_EXEC
-  void TransformWorldToViewport(vtkm::Vec<vtkm::Float32, 3>& point) const
+  void TransformWorldToViewport(vtkm::Vec3f_32& point) const
   {
-    vtkm::Vec<vtkm::Float32, 4> temp(point[0], point[1], point[2], 1.0f);
+    vtkm::Vec4f_32 temp(point[0], point[1], point[2], 1.0f);
     temp = vtkm::MatrixMultiply(WorldToProjection, temp);
     for (vtkm::IdComponent i = 0; i < 3; ++i)
     {
@@ -325,7 +325,7 @@ private:
     point[2] -= Offset;
   }
 
-  VTKM_EXEC vtkm::Vec<vtkm::Float32, 4> GetColor(vtkm::Float64 fieldValue) const
+  VTKM_EXEC vtkm::Vec4f_32 GetColor(vtkm::Float64 fieldValue) const
   {
     vtkm::Int32 colorIdx =
       vtkm::Int32((vtkm::Float32(fieldValue) - FieldMin) * ColorMapSize * InverseFieldDelta);
@@ -337,7 +337,7 @@ private:
   void Plot(vtkm::Float32 x,
             vtkm::Float32 y,
             vtkm::Float32 depth,
-            const vtkm::Vec<vtkm::Float32, 4>& color,
+            const vtkm::Vec4f_32& color,
             vtkm::Float32 intensity) const
   {
     vtkm::Id xi = static_cast<vtkm::Id>(x), yi = static_cast<vtkm::Id>(y);
@@ -349,8 +349,8 @@ private:
     PackedValue current, next;
     current.Raw = ClearValue;
     next.Floats.Depth = depth;
-    vtkm::Vec<vtkm::Float32, 4> blendedColor;
-    vtkm::Vec<vtkm::Float32, 4> srcColor;
+    vtkm::Vec4f_32 blendedColor;
+    vtkm::Vec4f_32 srcColor;
     do
     {
       UnpackColor(current.Ints.Color, srcColor);
@@ -401,7 +401,7 @@ public:
     float depth = packed.Floats.Depth;
     if (depth <= depthBuffer.Get(index))
     {
-      vtkm::Vec<vtkm::Float32, 4> color;
+      vtkm::Vec4f_32 color;
       UnpackColor(packed.Ints.Color, color);
       colorBuffer.Set(index, color);
       depthBuffer.Set(index, depth);

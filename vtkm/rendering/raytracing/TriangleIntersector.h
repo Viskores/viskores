@@ -25,7 +25,7 @@ namespace raytracing
 class VTKM_RENDERING_EXPORT TriangleIntersector : public ShapeIntersector
 {
 protected:
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Triangles;
+  vtkm::cont::ArrayHandle<vtkm::Id4> Triangles;
   bool UseWaterTight;
 
 public:
@@ -34,9 +34,9 @@ public:
   void SetUseWaterTight(bool useIt);
 
   void SetData(const vtkm::cont::CoordinateSystem& coords,
-               vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles);
+               vtkm::cont::ArrayHandle<vtkm::Id4> triangles);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> GetTriangles();
+  vtkm::cont::ArrayHandle<vtkm::Id4> GetTriangles();
   vtkm::Id GetNumberOfShapes() const override;
 
 

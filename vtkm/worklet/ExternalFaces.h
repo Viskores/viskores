@@ -56,8 +56,8 @@ struct ExternalFaces
     using InputDomain = _1;
 
     VTKM_CONT
-    NumExternalFacesPerStructuredCell(const vtkm::Vec<vtkm::Float64, 3>& min_point,
-                                      const vtkm::Vec<vtkm::Float64, 3>& max_point)
+    NumExternalFacesPerStructuredCell(const vtkm::Vec3f_64& min_point,
+                                      const vtkm::Vec3f_64& max_point)
       : MinPoint(min_point)
       , MaxPoint(max_point)
     {
@@ -112,8 +112,8 @@ struct ExternalFaces
     }
 
   private:
-    vtkm::Vec<vtkm::Float64, 3> MinPoint;
-    vtkm::Vec<vtkm::Float64, 3> MaxPoint;
+    vtkm::Vec3f_64 MinPoint;
+    vtkm::Vec3f_64 MaxPoint;
   };
 
 
@@ -140,8 +140,7 @@ struct ExternalFaces
     }
 
     VTKM_CONT
-    BuildConnectivityStructured(const vtkm::Vec<vtkm::Float64, 3>& min_point,
-                                const vtkm::Vec<vtkm::Float64, 3>& max_point)
+    BuildConnectivityStructured(const vtkm::Vec3f_64& min_point, const vtkm::Vec3f_64& max_point)
       : MinPoint(min_point)
       , MaxPoint(max_point)
     {
@@ -304,8 +303,8 @@ struct ExternalFaces
     }
 
   private:
-    vtkm::Vec<vtkm::Float64, 3> MinPoint;
-    vtkm::Vec<vtkm::Float64, 3> MaxPoint;
+    vtkm::Vec3f_64 MinPoint;
+    vtkm::Vec3f_64 MaxPoint;
   };
 
   //Worklet that returns the number of faces for each cell/shape
@@ -679,8 +678,8 @@ public:
                                                  ConnectivityStorage,
                                                  OffsetsStorage>& outCellSet)
   {
-    vtkm::Vec<vtkm::Float64, 3> MinPoint;
-    vtkm::Vec<vtkm::Float64, 3> MaxPoint;
+    vtkm::Vec3f_64 MinPoint;
+    vtkm::Vec3f_64 MaxPoint;
 
     vtkm::Id3 PointDimensions = inCellSet.GetPointDimensions();
 
@@ -713,9 +712,9 @@ public:
       auto Coordinates = vertices.GetPortalConstControl();
 
       MinPoint = Coordinates.GetOrigin();
-      vtkm::Vec<vtkm::Float64, 3> spacing = Coordinates.GetSpacing();
+      vtkm::Vec3f_64 spacing = Coordinates.GetSpacing();
 
-      vtkm::Vec<vtkm::Float64, 3> unitLength;
+      vtkm::Vec3f_64 unitLength;
       unitLength[0] = static_cast<vtkm::Float64>(PointDimensions[0] - 1);
       unitLength[1] = static_cast<vtkm::Float64>(PointDimensions[1] - 1);
       unitLength[2] = static_cast<vtkm::Float64>(PointDimensions[2] - 1);

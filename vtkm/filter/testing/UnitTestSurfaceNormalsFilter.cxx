@@ -17,14 +17,13 @@ namespace
 
 void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
   ds.GetField("Normals", vtkm::cont::Field::Association::CELL_SET).GetData().CopyTo(normals);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
-    { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f }, { 0.707f, 0.500f, -0.500f },
-    { 0.000f, -0.707f, -0.707f }, { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
-    { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f }
-  };
+  vtkm::Vec3f expected[8] = { { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f },
+                              { 0.707f, 0.500f, -0.500f },  { 0.000f, -0.707f, -0.707f },
+                              { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
+                              { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f } };
 
   auto portal = normals.GetPortalConstControl();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
@@ -37,15 +36,13 @@ void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
 
 void VerifyPointNormalValues(const vtkm::cont::DataSet& ds)
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
   ds.GetField("Normals", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(normals);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
-    { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
-    { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
-    { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
-    { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f }
-  };
+  vtkm::Vec3f expected[8] = { { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
+                              { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
+                              { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
+                              { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f } };
 
   auto portal = normals.GetPortalConstControl();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");

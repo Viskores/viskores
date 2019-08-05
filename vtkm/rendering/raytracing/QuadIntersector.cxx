@@ -50,12 +50,12 @@ public:
                             const PointPortalType& points) const
   {
     // cast to Float32
-    vtkm::Vec<vtkm::Float32, 3> q, r, s, t;
+    vtkm::Vec3f_32 q, r, s, t;
 
-    q = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(quadId[1]));
-    r = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(quadId[2]));
-    s = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(quadId[3]));
-    t = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(quadId[4]));
+    q = static_cast<vtkm::Vec3f_32>(points.Get(quadId[1]));
+    r = static_cast<vtkm::Vec3f_32>(points.Get(quadId[2]));
+    s = static_cast<vtkm::Vec3f_32>(points.Get(quadId[3]));
+    t = static_cast<vtkm::Vec3f_32>(points.Get(quadId[4]));
 
     xmin = q[0];
     ymin = q[1];

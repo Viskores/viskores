@@ -48,7 +48,7 @@ const vtkm::Float32 tStep = 0.5f;
 const vtkm::Id direction = vtkm::worklet::streamline::BOTH;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertexArray;
 
 // OpenGL display variables
 Quaternion qrot;
@@ -124,7 +124,7 @@ void displayCall()
     glBegin(GL_LINE_STRIP);
     for (vtkm::IdComponent i = 0; i < numIndices; i++)
     {
-      vtkm::Vec<vtkm::Float32, 3> pt = vertexArray.GetPortalConstControl().Get(polylineIndices[i]);
+      vtkm::Vec3f_32 pt = vertexArray.GetPortalConstControl().Get(polylineIndices[i]);
       glVertex3f(pt[0], pt[1], pt[2]);
     }
     glEnd();
@@ -229,16 +229,16 @@ int main(int argc, char* argv[])
   //We are done with the file now, so release the file descriptor
   fclose(pFile);
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> field;
+  std::vector<vtkm::Vec3f_32> field;
   for (vtkm::Id i = 0; i < nElements; i++)
   {
     vtkm::Float32 x = data[i];
     vtkm::Float32 y = data[++i];
     vtkm::Float32 z = data[++i];
-    vtkm::Vec<vtkm::Float32, 3> vecData(x, y, z);
+    vtkm::Vec3f_32 vecData(x, y, z);
     field.push_back(Normalize(vecData));
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> fieldArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> fieldArray;
   fieldArray = vtkm::cont::make_ArrayHandle(field);
 
   // Construct the input dataset (uniform) to hold the input and set vector data

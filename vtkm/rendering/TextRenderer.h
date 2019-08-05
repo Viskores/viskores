@@ -32,27 +32,27 @@ public:
                const vtkm::rendering::Canvas::FontTextureType& fontTexture);
 
   VTKM_CONT
-  void RenderText(const vtkm::Vec<vtkm::Float32, 2>& position,
+  void RenderText(const vtkm::Vec2f_32& position,
                   vtkm::Float32 scale,
                   vtkm::Float32 angle,
                   vtkm::Float32 windowAspect,
-                  const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                  const vtkm::Vec2f_32& anchor,
                   const vtkm::rendering::Color& color,
                   const std::string& text);
 
   VTKM_CONT
-  void RenderText(const vtkm::Vec<vtkm::Float32, 3>& origin,
-                  const vtkm::Vec<vtkm::Float32, 3>& right,
-                  const vtkm::Vec<vtkm::Float32, 3>& up,
+  void RenderText(const vtkm::Vec3f_32& origin,
+                  const vtkm::Vec3f_32& right,
+                  const vtkm::Vec3f_32& up,
                   vtkm::Float32 scale,
-                  const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                  const vtkm::Vec2f_32& anchor,
                   const vtkm::rendering::Color& color,
                   const std::string& text);
 
   VTKM_CONT
   void RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
                   vtkm::Float32 scale,
-                  const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                  const vtkm::Vec2f_32& anchor,
                   const vtkm::rendering::Color& color,
                   const std::string& text,
                   const vtkm::Float32& depth = 0.f);

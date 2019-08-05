@@ -25,33 +25,33 @@ struct ConvertToRGB : public vtkm::worklet::WorkletMapField
   using ExecutionSignature = _2(_1);
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const T& in) const
+  VTKM_EXEC vtkm::Vec3ui_8 operator()(const T& in) const
   { //vtkScalarsToColorsLuminanceToRGB
     const vtkm::UInt8 la = colorconversion::ColorToUChar(in);
     return vtkm::Vec<UInt8, 3>(la, la, la);
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const vtkm::Vec<T, 2>& in) const
+  VTKM_EXEC vtkm::Vec3ui_8 operator()(const vtkm::Vec<T, 2>& in) const
   { //vtkScalarsToColorsLuminanceAlphaToRGB (which actually doesn't exist in vtk)
     return this->operator()(in[0]);
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const vtkm::Vec<T, 3>& in) const
+  VTKM_EXEC vtkm::Vec3ui_8 operator()(const vtkm::Vec<T, 3>& in) const
   { //vtkScalarsToColorsRGBToRGB
     return vtkm::Vec<UInt8, 3>(colorconversion::ColorToUChar(in[0]),
                                colorconversion::ColorToUChar(in[1]),
                                colorconversion::ColorToUChar(in[2]));
   }
 
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const vtkm::Vec<vtkm::UInt8, 3>& in) const
+  VTKM_EXEC vtkm::Vec3ui_8 operator()(const vtkm::Vec3ui_8& in) const
   { //vtkScalarsToColorsRGBToRGB
     return in;
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const vtkm::Vec<T, 4>& in) const
+  VTKM_EXEC vtkm::Vec3ui_8 operator()(const vtkm::Vec<T, 4>& in) const
   { //vtkScalarsToColorsRGBAToRGB
     return vtkm::Vec<UInt8, 3>(colorconversion::ColorToUChar(in[0]),
                                colorconversion::ColorToUChar(in[1]),

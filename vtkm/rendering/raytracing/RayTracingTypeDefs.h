@@ -116,14 +116,14 @@ inline std::string GetDeviceString()
   return functor.result;
 }
 
-using ColorBuffer4f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
-using ColorBuffer4b = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>;
+using ColorBuffer4f = vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
+using ColorBuffer4b = vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>;
 
 //Defining types supported by the rendering
 
 //vec3s
-using Vec3F = vtkm::Vec<vtkm::Float32, 3>;
-using Vec3D = vtkm::Vec<vtkm::Float64, 3>;
+using Vec3F = vtkm::Vec3f_32;
+using Vec3D = vtkm::Vec3f_64;
 struct Vec3RenderingTypes : vtkm::ListTagBase<Vec3F, Vec3D>
 {
 };

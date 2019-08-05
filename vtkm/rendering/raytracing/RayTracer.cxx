@@ -38,19 +38,19 @@ public:
   class Shade : public vtkm::worklet::WorkletMapField
   {
   private:
-    vtkm::Vec<vtkm::Float32, 3> LightPosition;
-    vtkm::Vec<vtkm::Float32, 3> LightAbmient;
-    vtkm::Vec<vtkm::Float32, 3> LightDiffuse;
-    vtkm::Vec<vtkm::Float32, 3> LightSpecular;
+    vtkm::Vec3f_32 LightPosition;
+    vtkm::Vec3f_32 LightAbmient;
+    vtkm::Vec3f_32 LightDiffuse;
+    vtkm::Vec3f_32 LightSpecular;
     vtkm::Float32 SpecularExponent;
-    vtkm::Vec<vtkm::Float32, 3> CameraPosition;
-    vtkm::Vec<vtkm::Float32, 3> LookAt;
+    vtkm::Vec3f_32 CameraPosition;
+    vtkm::Vec3f_32 LookAt;
 
   public:
     VTKM_CONT
-    Shade(const vtkm::Vec<vtkm::Float32, 3>& lightPosition,
-          const vtkm::Vec<vtkm::Float32, 3>& cameraPosition,
-          const vtkm::Vec<vtkm::Float32, 3>& lookAt)
+    Shade(const vtkm::Vec3f_32& lightPosition,
+          const vtkm::Vec3f_32& cameraPosition,
+          const vtkm::Vec3f_32& lookAt)
       : LightPosition(lightPosition)
       , CameraPosition(cameraPosition)
       , LookAt(lookAt)
@@ -176,15 +176,15 @@ public:
 
   template <typename Precision>
   VTKM_CONT void run(Ray<Precision>& rays,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap,
+                     vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap,
                      const vtkm::rendering::raytracing::Camera& camera,
                      bool shade)
   {
     if (shade)
     {
       // TODO: support light positions
-      vtkm::Vec<vtkm::Float32, 3> scale(2, 2, 2);
-      vtkm::Vec<vtkm::Float32, 3> lightPosition = camera.GetPosition() + scale * camera.GetUp();
+      vtkm::Vec3f_32 scale(2, 2, 2);
+      vtkm::Vec3f_32 lightPosition = camera.GetPosition() + scale * camera.GetUp();
       vtkm::worklet::DispatcherMapField<Shade>(
         Shade(lightPosition, camera.GetPosition(), camera.GetLookAt()))
         .Invoke(rays.HitIdx,
@@ -233,7 +233,7 @@ void RayTracer::SetField(const vtkm::cont::Field& scalarField, const vtkm::Range
   ScalarRange = scalarRange;
 }
 
-void RayTracer::SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap)
+void RayTracer::SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap)
 {
   ColorMap = colorMap;
 }

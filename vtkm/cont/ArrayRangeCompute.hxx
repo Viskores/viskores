@@ -96,7 +96,7 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
 
 VTKM_CONT
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>& input,
+  const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& input,
   vtkm::cont::DeviceAdapterId device)
 {
   using UniformHandleType = ArrayHandleUniformPointCoordinates;

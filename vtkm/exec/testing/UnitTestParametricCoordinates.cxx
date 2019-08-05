@@ -137,11 +137,11 @@ void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
   for (vtkm::IdComponent trial = 0; trial < 5; trial++)
   {
     // Generate a random pcoords that we know is in the cell.
-    vtkm::Vec<vtkm::FloatDefault, 3> pcoords(0);
+    vtkm::Vec3f pcoords(0);
     vtkm::FloatDefault totalWeight = 0;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec<vtkm::FloatDefault, 3> pointPcoords =
+      vtkm::Vec3f pointPcoords =
         vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
       vtkm::FloatDefault weight = randomDist(g_RandomGenerator);
@@ -250,9 +250,9 @@ void TestAllPCoords()
 
   std::cout << "======== Rectilinear Shapes ===============" << std::endl;
   std::uniform_real_distribution<vtkm::FloatDefault> randomDist(0.01f, 1.0f);
-  vtkm::Vec<vtkm::FloatDefault, 3> origin(
+  vtkm::Vec3f origin(
     randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), randomDist(g_RandomGenerator));
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing(
+  vtkm::Vec3f spacing(
     randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), randomDist(g_RandomGenerator));
 
   TestPCoords(vtkm::VecAxisAlignedPointCoordinates<3>(origin, spacing),

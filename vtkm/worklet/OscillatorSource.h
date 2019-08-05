@@ -39,7 +39,7 @@ struct Oscillator
     this->Zeta = zeta;
   }
 
-  vtkm::Vec<vtkm::Float64, 3> Center;
+  vtkm::Vec3f_64 Center;
   vtkm::Float64 Radius;
   vtkm::Float64 Omega;
   vtkm::Float64 Zeta;
@@ -109,7 +109,7 @@ public:
   void SetTime(vtkm::Float64 time) { this->Time = time; }
 
   VTKM_EXEC
-  vtkm::Float64 operator()(const vtkm::Vec<vtkm::Float64, 3>& vec) const
+  vtkm::Float64 operator()(const vtkm::Vec3f_64& vec) const
   {
     vtkm::UInt8 oIdx;
     vtkm::Float64 t0, t, result = 0;
@@ -123,7 +123,7 @@ public:
     {
       oscillator = &this->DampedOscillators[oIdx];
 
-      vtkm::Vec<vtkm::Float64, 3> delta = oscillator->Center - vec;
+      vtkm::Vec3f_64 delta = oscillator->Center - vec;
       vtkm::Float64 dist2 = dot(delta, delta);
       vtkm::Float64 dist_damp = vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
       vtkm::Float64 phi = vtkm::ACos(oscillator->Zeta);
@@ -140,7 +140,7 @@ public:
     {
       oscillator = &this->DecayingOscillators[oIdx];
       t = t0 + 1 / oscillator->Omega;
-      vtkm::Vec<vtkm::Float64, 3> delta = oscillator->Center - vec;
+      vtkm::Vec3f_64 delta = oscillator->Center - vec;
       vtkm::Float64 dist2 = dot(delta, delta);
       vtkm::Float64 dist_damp = vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
       vtkm::Float64 val = vtkm::Sin(t / oscillator->Omega) / (oscillator->Omega * t);
@@ -152,7 +152,7 @@ public:
     {
       oscillator = &this->PeriodicOscillators[oIdx];
       t = t0 + 1 / oscillator->Omega;
-      vtkm::Vec<vtkm::Float64, 3> delta = oscillator->Center - vec;
+      vtkm::Vec3f_64 delta = oscillator->Center - vec;
       vtkm::Float64 dist2 = dot(delta, delta);
       vtkm::Float64 dist_damp = vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
       vtkm::Float64 val = vtkm::Sin(t / oscillator->Omega);

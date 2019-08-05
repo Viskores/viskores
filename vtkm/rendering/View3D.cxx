@@ -80,8 +80,8 @@ void View3D::RenderWorldAnnotations()
   this->BoxAnnotation.SetExtents(this->GetScene().GetSpatialBounds());
   this->BoxAnnotation.Render(this->GetCamera(), this->GetWorldAnnotator());
 
-  vtkm::Vec<vtkm::Float32, 3> lookAt = this->GetCamera().GetLookAt();
-  vtkm::Vec<vtkm::Float32, 3> position = this->GetCamera().GetPosition();
+  vtkm::Vec3f_32 lookAt = this->GetCamera().GetLookAt();
+  vtkm::Vec3f_32 position = this->GetCamera().GetPosition();
   bool xtest = lookAt[0] > position[0];
   bool ytest = lookAt[1] > position[1];
   bool ztest = lookAt[2] > position[2];

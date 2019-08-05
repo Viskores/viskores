@@ -172,7 +172,7 @@ void displayCall()
     glColor3f(color[indx][0], color[indx][1], color[indx][2]);
 
     // Get the indices of the vertices that make up this tetrahedron
-    vtkm::Vec<vtkm::Id, 4> tetIndices;
+    vtkm::Id4 tetIndices;
     cellSet.GetIndices(tetra, tetIndices);
 
     // Get the vertex points for this tetrahedron

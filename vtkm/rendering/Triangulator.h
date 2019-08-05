@@ -97,7 +97,7 @@ public:
                               const vtkm::Id& cellIndex,
                               OutIndicesPortal& outputIndices) const
     {
-      vtkm::Vec<vtkm::Id, 4> triangle;
+      vtkm::Id4 triangle;
       if (DIM == 2)
       {
         const vtkm::Id triangleOffset = cellIndex * 2;
@@ -191,7 +191,7 @@ public:
     using ControlSignature = void(FieldInOut);
     using ExecutionSignature = void(_1);
     VTKM_EXEC
-    void operator()(vtkm::Vec<vtkm::Id, 4>& triangleIndices) const
+    void operator()(vtkm::Id4& triangleIndices) const
     {
       // first field contains the id of the cell the
       // trianlge belongs to
@@ -220,7 +220,7 @@ public:
   struct IndicesLessThan
   {
     VTKM_EXEC_CONT
-    bool operator()(const vtkm::Vec<vtkm::Id, 4>& a, const vtkm::Vec<vtkm::Id, 4>& b) const
+    bool operator()(const vtkm::Id4& a, const vtkm::Id4& b) const
     {
       if (a[1] < b[1])
         return true;
@@ -246,7 +246,7 @@ public:
     using ExecutionSignature = void(_1, _2, WorkIndex);
 
     VTKM_EXEC
-    bool IsTwin(const vtkm::Vec<vtkm::Id, 4>& a, const vtkm::Vec<vtkm::Id, 4>& b) const
+    bool IsTwin(const vtkm::Id4& a, const vtkm::Id4& b) const
     {
       return (a[1] == b[1] && a[2] == b[2] && a[3] == b[3]);
     }
@@ -283,7 +283,7 @@ public:
                               const vtkm::Id& cellId,
                               OutputPortal& outputIndices) const
     {
-      vtkm::Vec<vtkm::Id, 4> triangle;
+      vtkm::Id4 triangle;
 
       triangle[1] = cellIndices[0];
       triangle[2] = cellIndices[1];
@@ -333,7 +333,7 @@ public:
                               const vtkm::Id& cellId,
                               OutputPortal& outputIndices) const
     {
-      vtkm::Vec<vtkm::Id, 4> triangle;
+      vtkm::Id4 triangle;
 
 
       triangle[1] = cellIndices[0];
@@ -353,7 +353,7 @@ public:
                               const vtkm::Id& cellId,
                               OutputPortal& outputIndices) const
     {
-      vtkm::Vec<vtkm::Id, 4> triangle;
+      vtkm::Id4 triangle;
 
       triangle[1] = cellIndices[0];
       triangle[2] = cellIndices[1];
@@ -424,7 +424,7 @@ public:
                               const vtkm::Id& cellId,
                               OutputPortal& outputIndices) const
     {
-      vtkm::Vec<vtkm::Id, 4> triangle;
+      vtkm::Id4 triangle;
 
       if (shapeType.Id == vtkm::CELL_SHAPE_TRIANGLE)
       {
@@ -617,7 +617,7 @@ public:
   Triangulator() {}
 
   VTKM_CONT
-  void ExternalTrianlges(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& outputIndices,
+  void ExternalTrianlges(vtkm::cont::ArrayHandle<vtkm::Id4>& outputIndices,
                          vtkm::Id& outputTriangles)
   {
     //Eliminate unseen triangles
@@ -633,7 +633,7 @@ public:
     //Unique triangles will have a flag = 1
     vtkm::worklet::DispatcherMapField<UniqueTriangles>().Invoke(outputIndices, flags);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> subset;
+    vtkm::cont::ArrayHandle<vtkm::Id4> subset;
     vtkm::cont::Algorithm::CopyIf(outputIndices, flags, subset);
     outputIndices = subset;
     outputTriangles = subset.GetNumberOfValues();
@@ -641,7 +641,7 @@ public:
 
   VTKM_CONT
   void Run(const vtkm::cont::DynamicCellSet& cellset,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& outputIndices,
+           vtkm::cont::ArrayHandle<vtkm::Id4>& outputIndices,
            vtkm::Id& outputTriangles)
   {
     bool fastPath = false;

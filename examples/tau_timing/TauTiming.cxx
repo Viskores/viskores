@@ -116,10 +116,10 @@ vtkm::cont::DataSet CreateTestDataSet(vtkm::Id3 dims)
   cellSet.SetPointDimensions(vdims);
   dataSet.AddCellSet(cellSet);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
+  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
@@ -175,7 +175,7 @@ void TestStreamlineUniformGrid(int d)
     std::cout<<"Streamline with gridsize = "<<dims<<std::endl;
     vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > result;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> result;
 
     PointGrad<vtkm::Float32> func(dataSet, "nodevar", result);
     vtkm::cont::CastAndCall(dataSet.GetCellSet(), func);
@@ -417,17 +417,17 @@ int main(int argc, char** argv)
     ret_code = fread(data, sizeof(float), static_cast<std::size_t>(nElements), pFile);
     fclose(pFile);
 
-    std::vector<vtkm::Vec<vtkm::Float32, 3>> field;
+    std::vector<vtkm::Vec3f_32> field;
     for (vtkm::Id i = 0; i < nElements; i++)
     {
       vtkm::Float32 x = data[i];
       vtkm::Float32 y = data[++i];
       vtkm::Float32 z = data[++i];
-      vtkm::Vec<vtkm::Float32, 3> vecData(x, y, z);
+      vtkm::Vec3f_32 vecData(x, y, z);
       field.push_back(Normalize(vecData));
     }
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> fieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> fieldArray;
     fieldArray = vtkm::cont::make_ArrayHandle(field);
 
     // Construct the input dataset (uniform) to hold the input and set vector data
