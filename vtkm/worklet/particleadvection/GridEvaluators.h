@@ -101,7 +101,7 @@ public:
     vtkm::exec::FunctorBase tmp;
     Locator->FindCell(point, cellId, parametric, tmp);
     if (cellId == -1)
-      return ParticleStatus::AT_SPATIAL_BOUNDARY;
+      return EvaluatorStatus::OUTSIDE_SPATIAL_BOUNDS;
 
     vtkm::UInt8 cellShape;
     vtkm::IdComponent nVerts;

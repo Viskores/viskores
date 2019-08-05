@@ -87,7 +87,7 @@ public:
           integralCurve.SetExitSpatialBoundary(idx);
           break;
         }
-        else if (status == IntegratorStatus::ERROR)
+        else if (status == IntegratorStatus::FAIL)
         {
           integralCurve.SetError(idx);
           break;

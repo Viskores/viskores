@@ -96,18 +96,6 @@ public:
     SetBit(idx, ParticleStatus::TERMINATED);
   }
   VTKM_EXEC
-  void SetAtSpatialBoundary(const vtkm::Id& idx)
-  {
-    ClearBit(idx, STATUS_OK);
-    SetBit(idx, AT_SPATIAL_BOUNDARY);
-  }
-  VTKM_EXEC
-  void SetAtTemporalBoundary(const vtkm::Id& idx)
-  {
-    ClearBit(idx, STATUS_OK);
-    SetBit(idx, AT_TEMPORAL_BOUNDARY);
-  }
-  VTKM_EXEC
   void SetTookAnySteps(const vtkm::Id& idx, const bool& val)
   {
     if (val)

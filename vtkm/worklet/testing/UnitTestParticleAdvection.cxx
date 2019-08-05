@@ -259,10 +259,10 @@ public:
   template <typename EvaluatorType>
   VTKM_EXEC void operator()(vtkm::Vec<ScalarType, 3>& pointIn,
                             const EvaluatorType& evaluator,
-                            bool& validity,
+                            vtkm::worklet::particleadvection::EvaluatorStatus& status,
                             vtkm::Vec<ScalarType, 3>& pointOut) const
   {
-    validity = evaluator.Evaluate(pointIn, pointOut);
+    status = evaluator.Evaluate(pointIn, pointOut);
   }
 };
 
@@ -274,21 +274,22 @@ void ValidateEvaluator(const EvalType& eval,
 {
   using EvalTester = TestEvaluatorWorklet<ScalarType>;
   using EvalTesterDispatcher = vtkm::worklet::DispatcherMapField<EvalTester>;
+  using Status = vtkm::worklet::particleadvection::EvaluatorStatus;
   EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
-  vtkm::cont::ArrayHandle<bool> evalStatus;
+  vtkm::cont::ArrayHandle<Status> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> evalResults;
   evalTesterDispatcher.Invoke(pointsHandle, eval, evalStatus, evalResults);
   auto statusPortal = evalStatus.GetPortalConstControl();
   auto resultsPortal = evalResults.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
-    bool status = statusPortal.Get(index);
+    Status status = statusPortal.Get(index);
     vtkm::Vec<ScalarType, 3> result = resultsPortal.Get(index);
-    VTKM_TEST_ASSERT(status, "Error in evaluator for " + msg);
+    VTKM_TEST_ASSERT(status == Status::SUCCESS, "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == vec, "Error in evaluator result for " + msg);
   }
   pointsHandle.ReleaseResources();
@@ -357,10 +358,11 @@ void ValidateIntegratorForBoundary(const vtkm::Vec<ScalarType, 3>& vector,
                                    const std::vector<vtkm::Vec<ScalarType, 3>>& pointIns,
                                    const std::string& msg)
 {
-  ScalarType tolerance = vtkm::Epsilon<ScalarType>() * 100;
   using IntegratorTester = TestIntegratorWorklet<ScalarType>;
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
-  using Status = vtkm::worklet::particleadvection::ParticleStatus;
+  using Status = vtkm::worklet::particleadvection::IntegratorStatus;
+
+  ScalarType tolerance = vtkm::Epsilon<ScalarType>() * 100;
   IntegratorTesterDispatcher integratorTesterDispatcher;
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
