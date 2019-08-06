@@ -53,10 +53,10 @@ public:
   template <typename EvaluatorType>
   VTKM_EXEC void operator()(vtkm::Vec<ScalarType, 3>& pointIn,
                             const EvaluatorType& evaluator,
-                            bool& validity,
+                            vtkm::worklet::particleadvection::EvaluatorStatus& status,
                             vtkm::Vec<ScalarType, 3>& pointOut) const
   {
-    validity = evaluator.Evaluate(pointIn, 0.5f, pointOut);
+    status = evaluator.Evaluate(pointIn, 0.5f, pointOut);
   }
 };
 
@@ -68,10 +68,11 @@ void ValidateEvaluator(const EvalType& eval,
 {
   using EvalTester = TestEvaluatorWorklet<ScalarType>;
   using EvalTesterDispatcher = vtkm::worklet::DispatcherMapField<EvalTester>;
+  using Status = vtkm::worklet::particleadvection::EvaluatorStatus;
   EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
   vtkm::Id numPoints = pointIns.GetNumberOfValues();
-  vtkm::cont::ArrayHandle<bool> evalStatus;
+  vtkm::cont::ArrayHandle<Status> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> evalResults;
   evalTesterDispatcher.Invoke(pointIns, eval, evalStatus, evalResults);
   auto statusPortal = evalStatus.GetPortalConstControl();
@@ -79,10 +80,10 @@ void ValidateEvaluator(const EvalType& eval,
   auto validityPortal = validity.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
-    bool status = statusPortal.Get(index);
+    Status status = statusPortal.Get(index);
     vtkm::Vec<ScalarType, 3> result = resultsPortal.Get(index);
     vtkm::Vec<ScalarType, 3> expected = validityPortal.Get(index);
-    VTKM_TEST_ASSERT(status, "Error in evaluator for " + msg);
+    VTKM_TEST_ASSERT(status == Status::SUCCESS, "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == expected, "Error in evaluator result for " + msg);
   }
   evalStatus.ReleaseResources();

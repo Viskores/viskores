@@ -259,10 +259,10 @@ public:
   template <typename EvaluatorType>
   VTKM_EXEC void operator()(vtkm::Vec<ScalarType, 3>& pointIn,
                             const EvaluatorType& evaluator,
-                            bool& validity,
+                            vtkm::worklet::particleadvection::EvaluatorStatus& status,
                             vtkm::Vec<ScalarType, 3>& pointOut) const
   {
-    validity = evaluator.Evaluate(pointIn, pointOut);
+    status = evaluator.Evaluate(pointIn, pointOut);
   }
 };
 
@@ -274,21 +274,22 @@ void ValidateEvaluator(const EvalType& eval,
 {
   using EvalTester = TestEvaluatorWorklet<ScalarType>;
   using EvalTesterDispatcher = vtkm::worklet::DispatcherMapField<EvalTester>;
+  using Status = vtkm::worklet::particleadvection::EvaluatorStatus;
   EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
-  vtkm::cont::ArrayHandle<bool> evalStatus;
+  vtkm::cont::ArrayHandle<Status> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> evalResults;
   evalTesterDispatcher.Invoke(pointsHandle, eval, evalStatus, evalResults);
   auto statusPortal = evalStatus.GetPortalConstControl();
   auto resultsPortal = evalResults.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
-    bool status = statusPortal.Get(index);
+    Status status = statusPortal.Get(index);
     vtkm::Vec<ScalarType, 3> result = resultsPortal.Get(index);
-    VTKM_TEST_ASSERT(status, "Error in evaluator for " + msg);
+    VTKM_TEST_ASSERT(status == Status::SUCCESS, "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == vec, "Error in evaluator result for " + msg);
   }
   pointsHandle.ReleaseResources();
@@ -310,7 +311,7 @@ public:
   template <typename IntegratorType>
   VTKM_EXEC void operator()(vtkm::Vec<ScalarType, 3>& pointIn,
                             const IntegratorType* integrator,
-                            vtkm::worklet::particleadvection::ParticleStatus& status,
+                            vtkm::worklet::particleadvection::IntegratorStatus& status,
                             vtkm::Vec<ScalarType, 3>& pointOut) const
   {
     ScalarType time = 0;
@@ -327,7 +328,7 @@ void ValidateIntegrator(const IntegratorType& integrator,
 {
   using IntegratorTester = TestIntegratorWorklet<ScalarType>;
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
-  using Status = vtkm::worklet::particleadvection::ParticleStatus;
+  using Status = vtkm::worklet::particleadvection::IntegratorStatus;
   IntegratorTesterDispatcher integratorTesterDispatcher;
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
@@ -336,15 +337,17 @@ void ValidateIntegrator(const IntegratorType& integrator,
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> stepResults;
   integratorTesterDispatcher.Invoke(pointsHandle, integrator, stepStatus, stepResults);
   auto statusPortal = stepStatus.GetPortalConstControl();
+  auto pointsPortal = pointsHandle.GetPortalConstControl();
   auto resultsPortal = stepResults.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
     vtkm::Vec<ScalarType, 3> result = resultsPortal.Get(index);
-    VTKM_TEST_ASSERT(status == Status::STATUS_OK || status == Status::TERMINATED ||
-                       status == Status::AT_SPATIAL_BOUNDARY,
-                     "Error in evaluator for " + msg);
-    if (status != Status::AT_SPATIAL_BOUNDARY)
+    VTKM_TEST_ASSERT(status != Status::FAIL, "Error in evaluator for " + msg);
+    if (status == Status::OUTSIDE_SPATIAL_BOUNDS)
+      VTKM_TEST_ASSERT(result == pointsPortal.Get(index),
+                       "Error in evaluator result for [OUTSIDE SPATIAL]" + msg);
+    else
       VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
                        "Error in evaluator result for " + msg);
   }
@@ -360,10 +363,11 @@ void ValidateIntegratorForBoundary(const vtkm::Vec<ScalarType, 3>& vector,
                                    const std::vector<vtkm::Vec<ScalarType, 3>>& pointIns,
                                    const std::string& msg)
 {
-  ScalarType tolerance = vtkm::Epsilon<ScalarType>() * 100;
   using IntegratorTester = TestIntegratorWorklet<ScalarType>;
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
-  using Status = vtkm::worklet::particleadvection::ParticleStatus;
+  using Status = vtkm::worklet::particleadvection::IntegratorStatus;
+
+  ScalarType tolerance = vtkm::Epsilon<ScalarType>() * 100;
   IntegratorTesterDispatcher integratorTesterDispatcher;
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
@@ -383,7 +387,7 @@ void ValidateIntegratorForBoundary(const vtkm::Vec<ScalarType, 3>& vector,
       VTKM_TEST_ASSERT((bounds.Y.Max - result[1]) < tolerance, "Y Tolerance not satisfied.");
     if (vector[2] == 1.)
       VTKM_TEST_ASSERT((bounds.Z.Max - result[2]) < tolerance, "Z Tolerance not satisfied.");
-    VTKM_TEST_ASSERT(status == Status::AT_SPATIAL_BOUNDARY, "Error in evaluator for " + msg);
+    VTKM_TEST_ASSERT(status == Status::OUTSIDE_SPATIAL_BOUNDS, "Error in evaluator for " + msg);
   }
   pointsHandle.ReleaseResources();
   stepStatus.ReleaseResources();
@@ -631,10 +635,10 @@ void TestParticleStatus()
   auto res = pa.Run(rk4, seedsArray, maxSteps);
   auto statusPortal = res.status.GetPortalConstControl();
 
-  vtkm::Id tookStep0 =
-    statusPortal.Get(0) & vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS;
-  vtkm::Id tookStep1 =
-    statusPortal.Get(1) & vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS;
+  vtkm::Id tookStep0 = statusPortal.Get(0) &
+    static_cast<vtkm::Id>(vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS);
+  vtkm::Id tookStep1 = statusPortal.Get(1) &
+    static_cast<vtkm::Id>(vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS);
   VTKM_TEST_ASSERT(tookStep0 != 0, "Particle failed to take any steps");
   VTKM_TEST_ASSERT(tookStep1 == 0, "Particle took a step when it should not have.");
 }
