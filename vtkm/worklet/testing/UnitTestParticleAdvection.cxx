@@ -337,14 +337,19 @@ void ValidateIntegrator(const IntegratorType& integrator,
   vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> stepResults;
   integratorTesterDispatcher.Invoke(pointsHandle, integrator, stepStatus, stepResults);
   auto statusPortal = stepStatus.GetPortalConstControl();
+  auto pointsPortal = pointsHandle.GetPortalConstControl();
   auto resultsPortal = stepResults.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
     vtkm::Vec<ScalarType, 3> result = resultsPortal.Get(index);
     VTKM_TEST_ASSERT(status != Status::FAIL, "Error in evaluator for " + msg);
-    VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
-                     "Error in evaluator result for " + msg);
+    if (status == Status::OUTSIDE_SPATIAL_BOUNDS)
+      VTKM_TEST_ASSERT(result == pointsPortal.Get(index),
+                       "Error in evaluator result for [OUTSIDE SPATIAL]" + msg);
+    else
+      VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
+                       "Error in evaluator result for " + msg);
   }
   pointsHandle.ReleaseResources();
   stepStatus.ReleaseResources();
