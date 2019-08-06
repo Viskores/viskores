@@ -245,7 +245,7 @@ public:
 
 // Deprecated signatures for legacy support. These will be removed at some
 // point.
-using WorkletMapCellsToPoint = WorkletVisitPointsWithCells;
+using WorkletMapCellToPoint = WorkletVisitPointsWithCells;
 using WorkletMapPointToCell = WorkletVisitCellsWithPoints;
 }
 } // namespace vtkm::worklet
