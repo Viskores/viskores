@@ -65,25 +65,30 @@ public:
     vtkm::Id3 logicalCellId;
     logicalCellId[0] = cellId % CellDims[0];
     logicalCellId[1] = (cellId / CellDims[0]) % CellDims[1];
-    logicalCellId[2] = cellId / (CellDims[0] * CellDims[1]);
-
-    indices.Append((logicalCellId[2] * PointDims[1] + logicalCellId[1]) * PointDims[0] +
-                   logicalCellId[0]);
-    indices.Append(indices[0] + 1);
-    indices.Append(indices[1] + PointDims[0]);
-    indices.Append(indices[2] - 1);
-    if (!this->Is3D)
+    if (this->Is3D)
     {
+      logicalCellId[2] = cellId / (CellDims[0] * CellDims[1]);
+      indices.Append((logicalCellId[2] * PointDims[1] + logicalCellId[1]) * PointDims[0] +
+                     logicalCellId[0]);
+      indices.Append(indices[0] + 1);
+      indices.Append(indices[1] + PointDims[0]);
+      indices.Append(indices[2] - 1);
+      indices.Append(indices[0] + PointDims[0] * PointDims[1]);
+      indices.Append(indices[4] + 1);
+      indices.Append(indices[5] + PointDims[0]);
+      indices.Append(indices[6] - 1);
+      cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON);
+      numVerts = 8;
+    }
+    else
+    {
+      indices.Append(logicalCellId[1] * PointDims[0] + logicalCellId[0]);
+      indices.Append(indices[0] + 1);
+      indices.Append(indices[1] + PointDims[0]);
+      indices.Append(indices[2] - 1);
       cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_QUAD);
       numVerts = 4;
-      return;
     }
-    indices.Append(indices[0] + PointDims[0] * PointDims[1]);
-    indices.Append(indices[4] + 1);
-    indices.Append(indices[5] + PointDims[0]);
-    indices.Append(indices[6] - 1);
-    cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON);
-    numVerts = 8;
   }
 
 private:
