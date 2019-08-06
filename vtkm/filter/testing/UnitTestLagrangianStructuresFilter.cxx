@@ -14,93 +14,216 @@
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/Lagrangian.h>
+#include <vtkm/filter/LagrangianStructures.h>
 
-vtkm::cont::DataSet MakeTestUniformDataSet()
+namespace auxiliary
 {
-  vtkm::Float64 xmin, xmax, ymin, ymax, zmin, zmax;
-  xmin = 0.0;
-  ymin = 0.0;
-  zmin = 0.0;
+vtkm::FloatDefault vecData[200 * 3] = {
+  0.000000f,  0.000000f,  0.000000f,  -0.032369f, 0.000000f,  0.000000f,  -0.061107f, 0.000000f,
+  0.000000f,  -0.083145f, 0.000000f,  0.000000f,  -0.096136f, 0.000000f,  0.000000f,  -0.098712f,
+  0.000000f,  0.000000f,  -0.090620f, 0.000000f,  0.000000f,  -0.072751f, -0.000000f, 0.000000f,
+  -0.047041f, 0.000000f,  0.000000f,  -0.016264f, 0.000000f,  0.000000f,  0.016263f,  0.000000f,
+  0.000000f,  0.047040f,  0.000000f,  0.000000f,  0.072750f,  0.000000f,  0.000000f,  0.090620f,
+  0.000000f,  0.000000f,  0.098712f,  -0.000000f, 0.000000f,  0.096136f,  0.000000f,  0.000000f,
+  0.083145f,  -0.000000f, 0.000000f,  0.061108f,  0.000000f,  0.000000f,  0.032369f,  0.000000f,
+  0.000000f,  0.000000f,  0.000000f,  0.000000f,  0.000000f,  0.106811f,  0.000000f,  -0.030274f,
+  0.100785f,  0.000000f,  -0.057152f, 0.083925f,  0.000000f,  -0.077763f, 0.058081f,  0.000000f,
+  -0.089914f, 0.026058f,  0.000000f,  -0.092323f, -0.008686f, 0.000000f,  -0.084755f, -0.042409f,
+  0.000000f,  -0.068042f, -0.071488f, 0.000000f,  -0.043996f, -0.092800f, 0.000000f,  -0.015211f,
+  -0.104060f, 0.000000f,  0.015210f,  -0.104060f, 0.000000f,  0.043995f,  -0.092801f, 0.000000f,
+  0.068042f,  -0.071489f, 0.000000f,  0.084754f,  -0.042410f, 0.000000f,  0.092323f,  -0.008687f,
+  0.000000f,  0.089914f,  0.026057f,  0.000000f,  0.077763f,  0.058080f,  0.000000f,  0.057152f,
+  0.083925f,  0.000000f,  0.030274f,  0.100785f,  0.000000f,  0.000000f,  0.106811f,  0.000000f,
+  0.000000f,  0.200103f,  0.000000f,  -0.024596f, 0.188813f,  0.000000f,  -0.046433f, 0.157227f,
+  0.000000f,  -0.063178f, 0.108809f,  0.000000f,  -0.073050f, 0.048817f,  0.000000f,  -0.075007f,
+  -0.016272f, 0.000000f,  -0.068858f, -0.079450f, 0.000000f,  -0.055280f, -0.133927f, 0.000000f,
+  -0.035744f, -0.173854f, 0.000000f,  -0.012358f, -0.194948f, 0.000000f,  0.012357f,  -0.194949f,
+  0.000000f,  0.035743f,  -0.173855f, 0.000000f,  0.055280f,  -0.133929f, 0.000000f,  0.068858f,
+  -0.079452f, 0.000000f,  0.075007f,  -0.016274f, 0.000000f,  0.073050f,  0.048816f,  0.000000f,
+  0.063178f,  0.108809f,  0.000000f,  0.046433f,  0.157227f,  0.000000f,  0.024596f,  0.188813f,
+  0.000000f,  0.000000f,  0.200103f,  0.000000f,  0.000000f,  0.269034f,  0.000000f,  -0.016018f,
+  0.253856f,  0.000000f,  -0.030240f, 0.211388f,  0.000000f,  -0.041145f, 0.146292f,  0.000000f,
+  -0.047574f, 0.065633f,  0.000000f,  -0.048849f, -0.021878f, 0.000000f,  -0.044845f, -0.106820f,
+  0.000000f,  -0.036002f, -0.180062f, 0.000000f,  -0.023279f, -0.233744f, 0.000000f,  -0.008049f,
+  -0.262104f, 0.000000f,  0.008048f,  -0.262105f, 0.000000f,  0.023278f,  -0.233745f, 0.000000f,
+  0.036001f,  -0.180065f, 0.000000f,  0.044844f,  -0.106822f, 0.000000f,  0.048849f,  -0.021880f,
+  0.000000f,  0.047574f,  0.065632f,  0.000000f,  0.041145f,  0.146291f,  0.000000f,  0.030240f,
+  0.211388f,  0.000000f,  0.016018f,  0.253856f,  0.000000f,  0.000000f,  0.269034f,  0.000000f,
+  0.000000f,  0.305617f,  0.000000f,  -0.005557f, 0.288374f,  0.000000f,  -0.010491f, 0.240132f,
+  0.000000f,  -0.014274f, 0.166185f,  0.000000f,  -0.016504f, 0.074558f,  0.000000f,  -0.016947f,
+  -0.024852f, 0.000000f,  -0.015557f, -0.121345f, 0.000000f,  -0.012490f, -0.204547f, 0.000000f,
+  -0.008076f, -0.265527f, 0.000000f,  -0.002792f, -0.297744f, 0.000000f,  0.002792f,  -0.297745f,
+  0.000000f,  0.008076f,  -0.265529f, 0.000000f,  0.012490f,  -0.204549f, 0.000000f,  0.015557f,
+  -0.121348f, 0.000000f,  0.016947f,  -0.024855f, 0.000000f,  0.016504f,  0.074557f,  0.000000f,
+  0.014274f,  0.166184f,  0.000000f,  0.010491f,  0.240132f,  0.000000f,  0.005557f,  0.288374f,
+  0.000000f,  0.000000f,  0.305617f,  0.000000f,  0.000000f,  0.305617f,  0.000000f,  0.005557f,
+  0.288374f,  0.000000f,  0.010491f,  0.240132f,  0.000000f,  0.014274f,  0.166185f,  0.000000f,
+  0.016504f,  0.074558f,  0.000000f,  0.016947f,  -0.024852f, 0.000000f,  0.015557f,  -0.121345f,
+  0.000000f,  0.012490f,  -0.204547f, 0.000000f,  0.008076f,  -0.265527f, 0.000000f,  0.002792f,
+  -0.297744f, 0.000000f,  -0.002792f, -0.297745f, 0.000000f,  -0.008076f, -0.265529f, 0.000000f,
+  -0.012490f, -0.204549f, 0.000000f,  -0.015557f, -0.121348f, 0.000000f,  -0.016947f, -0.024855f,
+  0.000000f,  -0.016504f, 0.074557f,  0.000000f,  -0.014274f, 0.166184f,  0.000000f,  -0.010491f,
+  0.240132f,  0.000000f,  -0.005557f, 0.288374f,  0.000000f,  -0.000000f, 0.305617f,  0.000000f,
+  0.000000f,  0.269034f,  0.000000f,  0.016018f,  0.253856f,  0.000000f,  0.030240f,  0.211388f,
+  0.000000f,  0.041145f,  0.146292f,  0.000000f,  0.047574f,  0.065633f,  0.000000f,  0.048849f,
+  -0.021878f, 0.000000f,  0.044845f,  -0.106820f, 0.000000f,  0.036002f,  -0.180062f, 0.000000f,
+  0.023279f,  -0.233744f, 0.000000f,  0.008049f,  -0.262104f, 0.000000f,  -0.008048f, -0.262105f,
+  0.000000f,  -0.023278f, -0.233745f, 0.000000f,  -0.036001f, -0.180065f, 0.000000f,  -0.044844f,
+  -0.106822f, 0.000000f,  -0.048849f, -0.021880f, 0.000000f,  -0.047574f, 0.065632f,  0.000000f,
+  -0.041145f, 0.146291f,  0.000000f,  -0.030240f, 0.211388f,  0.000000f,  -0.016018f, 0.253856f,
+  0.000000f,  -0.000000f, 0.269034f,  0.000000f,  0.000000f,  0.200103f,  0.000000f,  0.024596f,
+  0.188813f,  0.000000f,  0.046433f,  0.157227f,  0.000000f,  0.063178f,  0.108809f,  0.000000f,
+  0.073050f,  0.048817f,  0.000000f,  0.075007f,  -0.016272f, 0.000000f,  0.068858f,  -0.079450f,
+  0.000000f,  0.055280f,  -0.133927f, 0.000000f,  0.035744f,  -0.173854f, 0.000000f,  0.012358f,
+  -0.194948f, 0.000000f,  -0.012357f, -0.194949f, 0.000000f,  -0.035743f, -0.173855f, 0.000000f,
+  -0.055280f, -0.133929f, 0.000000f,  -0.068858f, -0.079452f, 0.000000f,  -0.075007f, -0.016274f,
+  0.000000f,  -0.073050f, 0.048816f,  0.000000f,  -0.063178f, 0.108809f,  0.000000f,  -0.046433f,
+  0.157227f,  0.000000f,  -0.024596f, 0.188813f,  0.000000f,  -0.000000f, 0.200103f,  0.000000f,
+  0.000000f,  0.106811f,  0.000000f,  0.030274f,  0.100785f,  0.000000f,  0.057152f,  0.083925f,
+  0.000000f,  0.077763f,  0.058081f,  0.000000f,  0.089914f,  0.026058f,  0.000000f,  0.092323f,
+  -0.008686f, 0.000000f,  0.084755f,  -0.042409f, 0.000000f,  0.068042f,  -0.071488f, 0.000000f,
+  0.043996f,  -0.092800f, 0.000000f,  0.015211f,  -0.104060f, 0.000000f,  -0.015210f, -0.104060f,
+  0.000000f,  -0.043995f, -0.092801f, 0.000000f,  -0.068042f, -0.071489f, 0.000000f,  -0.084754f,
+  -0.042410f, 0.000000f,  -0.092323f, -0.008687f, 0.000000f,  -0.089914f, 0.026057f,  0.000000f,
+  -0.077763f, 0.058080f,  0.000000f,  -0.057152f, 0.083925f,  0.000000f,  -0.030274f, 0.100785f,
+  0.000000f,  -0.000000f, 0.106811f,  0.000000f,  0.000000f,  0.000000f,  0.000000f,  0.032369f,
+  0.000000f,  0.000000f,  0.061107f,  0.000000f,  0.000000f,  0.083145f,  0.000000f,  0.000000f,
+  0.096136f,  0.000000f,  0.000000f,  0.098712f,  -0.000000f, 0.000000f,  0.090620f,  -0.000000f,
+  0.000000f,  0.072751f,  -0.000000f, 0.000000f,  0.047041f,  -0.000000f, 0.000000f,  0.016264f,
+  -0.000000f, 0.000000f,  -0.016263f, -0.000000f, 0.000000f,  -0.047040f, -0.000000f, 0.000000f,
+  -0.072750f, -0.000000f, 0.000000f,  -0.090620f, -0.000000f, 0.000000f,  -0.098712f, -0.000000f,
+  0.000000f,  -0.096136f, 0.000000f,  0.000000f,  -0.083145f, 0.000000f,  0.000000f,  -0.061108f,
+  0.000000f,  0.000000f,  -0.032369f, 0.000000f,  0.000000f,  -0.000000f, 0.000000f,  0.000000f
+};
 
-  xmax = 10.0;
-  ymax = 10.0;
-  zmax = 10.0;
+vtkm::FloatDefault visitData[200] = {
+  0.175776f, 0.193068f, 0.184354f, 0.162709f, 0.156567f, 0.165079f, 0.183523f, 0.176101f, 0.182635f,
+  0.150985f, 0.127186f, 0.173021f, 0.173493f, 0.160812f, 0.124465f, 0.110838f, 0.135879f, 0.184853f,
+  0.193068f, 0.000007f, 0.157161f, 0.144306f, 0.108385f, 0.086895f, 0.073086f, 0.092054f, 0.109178f,
+  0.115175f, 0.144648f, 0.179178f, 0.177300f, 0.143649f, 0.113350f, 0.097418f, 0.081223f, 0.011488f,
+  0.067968f, 0.108383f, 0.161194f, 0.191896f, 0.165629f, 0.133326f, 0.127635f, 0.058606f, 0.025823f,
+  0.059042f, 0.100954f, 0.089389f, 0.124448f, 0.174170f, 0.174172f, 0.124446f, 0.089387f, 0.100955f,
+  0.059041f, 0.025821f, 0.058604f, 0.127634f, 0.106871f, 0.188216f, 0.169607f, 0.135035f, 0.109767f,
+  0.052501f, 0.029647f, 0.016691f, 0.076807f, 0.086811f, 0.121697f, 0.172919f, 0.172921f, 0.121695f,
+  0.086809f, 0.076809f, 0.016692f, 0.029643f, 0.052500f, 0.109766f, 0.100262f, 0.181406f, 0.172943f,
+  0.133487f, 0.098476f, 0.063748f, 0.031703f, 0.007183f, 0.062060f, 0.078550f, 0.119979f, 0.172034f,
+  0.172036f, 0.119977f, 0.078548f, 0.062062f, 0.007186f, 0.031700f, 0.063747f, 0.098476f, 0.099140f,
+  0.175363f, 0.175794f, 0.132061f, 0.090747f, 0.073996f, 0.033685f, 0.007585f, 0.053561f, 0.068431f,
+  0.120009f, 0.171078f, 0.171080f, 0.120008f, 0.068429f, 0.053560f, 0.007588f, 0.033684f, 0.073997f,
+  0.090747f, 0.132058f, 0.176183f, 0.177344f, 0.132153f, 0.091405f, 0.085764f, 0.052348f, 0.010314f,
+  0.042262f, 0.064794f, 0.124248f, 0.168788f, 0.168789f, 0.124248f, 0.064795f, 0.042261f, 0.010313f,
+  0.052345f, 0.085766f, 0.091405f, 0.132151f, 0.177345f, 0.177002f, 0.134660f, 0.101316f, 0.096766f,
+  0.089878f, 0.029814f, 0.039441f, 0.096341f, 0.128119f, 0.162818f, 0.162820f, 0.128117f, 0.096345f,
+  0.039441f, 0.029812f, 0.089876f, 0.096768f, 0.101316f, 0.134658f, 0.177003f, 0.174898f, 0.151468f,
+  0.135607f, 0.108288f, 0.090863f, 0.080745f, 0.075302f, 0.100106f, 0.124623f, 0.161293f, 0.161294f,
+  0.124626f, 0.100106f, 0.075302f, 0.080745f, 0.090864f, 0.108288f, 0.135607f, 0.151465f, 0.174900f,
+  0.000001f, 0.161986f, 0.181619f, 0.169865f, 0.145339f, 0.163338f, 0.157883f, 0.171822f, 0.192594f,
+  0.186741f, 0.186741f, 0.192594f, 0.171821f, 0.157882f, 0.163337f, 0.145338f, 0.169865f, 0.181618f,
+  0.161986f, 0.000001f
+};
 
-  const vtkm::Id3 DIMS(16, 16, 16);
+vtkm::FloatDefault diffData[200] = {
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000001f,
+  0.000022f, 0.000007f, 0.000008f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.175769f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000002f, 0.000001f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000001f,
+  0.000000f, 0.000000f, 0.016889f, 0.034734f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.026453f, 0.022586f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.034771f, 0.011797f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.034344f,
+  0.002418f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000001f, 0.000000f, 0.000000f, 0.000000f,
+  0.000001f, 0.000000f, 0.000387f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000001f, 0.000000f, 0.000000f, 0.000000f,
+  0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.011404f,
+  0.009266f, 0.013854f, 0.008200f, 0.000002f, 0.000002f, 0.000005f, 0.000006f, 0.000001f, 0.000001f,
+  0.000006f, 0.000005f, 0.000002f, 0.000002f, 0.008200f, 0.013854f, 0.009267f, 0.011403f, 0.000001f,
+  0.173409f, 0.040531f, 0.007484f, 0.012952f, 0.028796f, 0.004284f, 0.000002f, 0.000004f, 0.000006f,
+  0.000009f, 0.000008f, 0.000006f, 0.000003f, 0.000002f, 0.004284f, 0.028797f, 0.012952f, 0.007482f,
+  0.040533f, 0.173411f
+};
 
-  vtkm::cont::DataSetBuilderUniform dsb;
+using Scalar = vtkm::FloatDefault;
+using Field = vtkm::Vec<Scalar, 3>;
 
-  vtkm::Float64 xdiff = (xmax - xmin) / (static_cast<vtkm::Float64>(DIMS[0] - 1));
-  vtkm::Float64 ydiff = (ymax - ymin) / (static_cast<vtkm::Float64>(DIMS[1] - 1));
-  vtkm::Float64 zdiff = (zmax - zmin) / (static_cast<vtkm::Float64>(DIMS[2] - 1));
+void ValidateLCSFilterResult(const vtkm::cont::ArrayHandle<Scalar>& vtkmOutput,
+                             const vtkm::cont::ArrayHandle<Scalar>& visitOutput,
+                             const vtkm::cont::ArrayHandle<Scalar>& expDiff)
+{
+  VTKM_TEST_ASSERT(vtkmOutput.GetNumberOfValues() == 200, "Wrong number of values");
 
-  vtkm::Vec<vtkm::Float64, 3> ORIGIN(0, 0, 0);
-  vtkm::Vec<vtkm::Float64, 3> SPACING(xdiff, ydiff, zdiff);
+  auto vtkmPortal = vtkmOutput.GetPortalConstControl();
+  auto visitPortal = visitOutput.GetPortalConstControl();
+  auto diffPortal = expDiff.GetPortalConstControl();
 
-  vtkm::cont::DataSet dataset = dsb.Create(DIMS, ORIGIN, SPACING);
-  vtkm::cont::DataSetFieldAdd dsf;
-
-  vtkm::Id numPoints = DIMS[0] * DIMS[1] * DIMS[2];
-
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> velocityField;
-  velocityField.Allocate(numPoints);
-
-  vtkm::Id count = 0;
-  for (vtkm::Id i = 0; i < DIMS[0]; i++)
+  for (vtkm::Id index = 0; index < 200; index++)
   {
-    for (vtkm::Id j = 0; j < DIMS[1]; j++)
-    {
-      for (vtkm::Id k = 0; k < DIMS[2]; k++)
-      {
-        velocityField.GetPortalControl().Set(count, vtkm::Vec<vtkm::Float64, 3>(0.1, 0.1, 0.1));
-        count++;
-      }
-    }
+    auto vtkm = vtkmPortal.Get(index);
+    auto visit = visitPortal.Get(index);
+    auto diff = vtkm::Abs(vtkm - visit);
+    auto exp = diffPortal.Get(index);
+    VTKM_TEST_ASSERT(diff < (vtkm::Abs(exp) + vtkm::Epsilon<Scalar>()),
+                     "Calculated o/p is not as expected");
   }
-  dsf.AddPointField(dataset, "velocity", velocityField);
-  return dataset;
+}
 }
 
-void TestLagrangianFilterMultiStepInterval()
+void TestLagrangianStructures()
 {
-  std::cout << "Test: Lagrangian Analysis - Uniform Dataset - Write Interval > 1" << std::endl;
-  vtkm::Id maxCycles = 10;
-  vtkm::Id write_interval = 5;
-  vtkm::filter::Lagrangian lagrangianFilter2;
-  lagrangianFilter2.SetResetParticles(true);
-  lagrangianFilter2.SetStepSize(0.1f);
-  lagrangianFilter2.SetWriteFrequency(write_interval);
-  for (vtkm::Id i = 1; i <= maxCycles; i++)
+  using Scalar = vtkm::FloatDefault;
+  using Field = vtkm::Vec<Scalar, 3>;
+
+  /*Construct dataset and vector field*/
+  vtkm::cont::DataSet inputData;
+  vtkm::Id2 dims(20, 10);
+  vtkm::Vec<Scalar, 2> origin(0.0f, 0.0f);
+  vtkm::Vec<Scalar, 2> spacing;
+  spacing[0] = 2.0f / static_cast<Scalar>(dims[0] - 1);
+  spacing[0] = 1.0f / static_cast<Scalar>(dims[1] - 1);
+  vtkm::cont::DataSetBuilderUniform dataBuilder;
+  inputData = dataBuilder.Create(dims, origin, spacing);
+
+  std::vector<Scalar> diffVec;
+  std::vector<Scalar> visitVec;
+  std::vector<Field> fieldVec;
+  for (vtkm::Id index = 0; index < 200; index++)
   {
-    vtkm::cont::DataSet input = MakeTestUniformDataSet();
-    lagrangianFilter2.SetActiveField("velocity");
-    vtkm::cont::DataSet extractedBasisFlows = lagrangianFilter2.Execute(input);
-    if (i % write_interval == 0)
-    {
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCellSets() == 1,
-                       "Wrong number of cell sets in the output dataset.");
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 1,
-                       "Wrong number of coordinate systems in the output dataset.");
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetCellSet().GetNumberOfCells() == 3375,
-                       "Wrong number of basis flows extracted.");
-    }
-    else
-    {
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCellSets() == 0,
-                       "Wrong number of cell sets in the output dataset.");
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 0,
-                       "Wrong number of coordinate systems in the output dataset.");
-    }
+    vtkm::Id flatidx = index * 3;
+    Field field;
+    field[0] = auxiliary::vecData[flatidx];
+    field[1] = auxiliary::vecData[++flatidx];
+    field[2] = auxiliary::vecData[++flatidx];
+    fieldVec.push_back(field);
+    Scalar diff = auxiliary::vecData[index];
+    diffVec.push_back(diff);
+    Scalar visit = auxiliary::visitData[index];
+    visitVec.push_back(visit);
   }
+  vtkm::cont::ArrayHandle<Scalar> diffHandle = vtkm::cont::make_ArrayHandle(diffVec);
+  vtkm::cont::ArrayHandle<Scalar> visitHandle = vtkm::cont::make_ArrayHandle(visitVec);
+  vtkm::cont::ArrayHandle<Field> fieldHandle = vtkm::cont::make_ArrayHandle(fieldVec);
+  vtkm::cont::DataSetFieldAdd fieldAdder;
+  fieldAdder.AddPointField(inputData, "velocity", fieldHandle);
+
+  vtkm::filter::LagrangianStructures lagrangianStructures;
+  lagrangianStructures.SetStepSize(0.025f);
+  lagrangianStructures.SetNumberOfSteps(500);
+  lagrangianStructures.SetAdvectionTime(0.025f * 500);
+  lagrangianStructures.SetAdvectionTime(0.025f * 500);
+  lagrangianStructures.SetActiveField("velocity");
+  vtkm::cont::DataSet outputData = lagrangianStructures.Execute(inputData);
+
+  vtkm::cont::ArrayHandle<Scalar> FTLEField;
+  outputData.GetField("FTLE").GetData().CopyTo(FTLEField);
+  auxiliary::ValidateLCSFilterResult(FTLEField, visitHandle, diffHandle);
 }
 
-void TestLagrangian()
+int UnitTestLagrangianStructuresFilter(int argc, char* argv[])
 {
-  TestLagrangianFilterMultiStepInterval();
-}
-
-int UnitTestLagrangianFilter(int argc, char* argv[])
-{
-  return vtkm::cont::testing::Testing::Run(TestLagrangian, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestLagrangianStructures, argc, argv);
 }

@@ -100,8 +100,11 @@ template <>
 class LagrangianStructures<2> : public vtkm::worklet::WorkletMapField
 {
 public:
+  using Scalar = vtkm::FloatDefault;
+  ;
+
   VTKM_EXEC_CONT
-  LagrangianStructures(vtkm::FloatDefault endTime, vtkm::cont::DynamicCellSet cellSet)
+  LagrangianStructures(Scalar endTime, vtkm::cont::DynamicCellSet cellSet)
     : EndTime(endTime)
     , GridData(cellSet)
   {
@@ -119,7 +122,7 @@ public:
   void operator()(const vtkm::Id index,
                   const PointArray& input,
                   const PointArray& output,
-                  vtkm::FloatDefault& outputField) const
+                  Scalar& outputField) const
   {
     using Point = typename PointArray::ValueType;
 
@@ -132,8 +135,8 @@ public:
     Point yin1 = input.Get(neighborIndices[2]);
     Point yin2 = input.Get(neighborIndices[3]);
 
-    vtkm::FloatDefault xDiff = 1. / (xin2[0] - xin1[0]);
-    vtkm::FloatDefault yDiff = 1. / (yin2[1] - yin1[1]);
+    Scalar xDiff = 1.0f / (xin2[0] - xin1[0]);
+    Scalar yDiff = 1.0f / (yin2[1] - yin1[1]);
 
     Point xout1 = output.Get(neighborIndices[0]);
     Point xout2 = output.Get(neighborIndices[1]);
@@ -141,29 +144,29 @@ public:
     Point yout2 = output.Get(neighborIndices[3]);
 
     // Total X gradient w.r.t X, Y
-    vtkm::FloatDefault f1x = (xout2[0] - xout1[0]) * xDiff;
-    vtkm::FloatDefault f1y = (yout2[0] - yout1[0]) * yDiff;
+    Scalar f1x = (xout2[0] - xout1[0]) * xDiff;
+    Scalar f1y = (yout2[0] - yout1[0]) * yDiff;
 
     // Total Y gradient w.r.t X, Y
-    vtkm::FloatDefault f2x = (xout2[1] - xout1[1]) * xDiff;
-    vtkm::FloatDefault f2y = (yout2[1] - yout1[1]) * yDiff;
+    Scalar f2x = (xout2[1] - xout1[1]) * xDiff;
+    Scalar f2y = (yout2[1] - yout1[1]) * yDiff;
 
-    vtkm::Matrix<vtkm::FloatDefault, 2, 2> jacobian;
-    vtkm::MatrixSetRow(jacobian, 0, vtkm::Vec<vtkm::FloatDefault, 2>(f1x, f1y));
-    vtkm::MatrixSetRow(jacobian, 1, vtkm::Vec<vtkm::FloatDefault, 2>(f2x, f2y));
+    vtkm::Matrix<Scalar, 2, 2> jacobian;
+    vtkm::MatrixSetRow(jacobian, 0, vtkm::Vec<Scalar, 2>(f1x, f1y));
+    vtkm::MatrixSetRow(jacobian, 1, vtkm::Vec<Scalar, 2>(f2x, f2y));
 
     detail::ComputeLeftCauchyGreenTensor(jacobian);
 
-    vtkm::Vec<vtkm::FloatDefault, 2> eigenValues;
+    vtkm::Vec<Scalar, 2> eigenValues;
     detail::Jacobi(jacobian, eigenValues);
 
-    vtkm::FloatDefault delta = eigenValues[0];
+    Scalar delta = eigenValues[0];
     // Check if we need to clamp these values
     // Also provide options.
     // 1. FTLE
     // 2. FLLE
     // 3. Eigen Values (Min/Max)
-    //vtkm::FloatDefault delta = trace + sqrtr;
+    //Scalar delta = trace + sqrtr;
     // Given endTime is in units where start time is 0,
     // else do endTime-startTime
     // return value for computation
@@ -172,7 +175,7 @@ public:
 
 public:
   // To calculate FTLE field
-  vtkm::FloatDefault EndTime;
+  Scalar EndTime;
   // To assist in calculation of indices
   GridMetaData GridData;
 };
@@ -181,10 +184,11 @@ template <>
 class LagrangianStructures<3> : public vtkm::worklet::WorkletMapField
 {
 public:
-  using Structured3DType = vtkm::cont::CellSetStructured<3>;
+  using Scalar = vtkm::FloatDefault;
+  ;
 
   VTKM_EXEC_CONT
-  LagrangianStructures(vtkm::FloatDefault endTime, vtkm::cont::DynamicCellSet cellSet)
+  LagrangianStructures(Scalar endTime, vtkm::cont::DynamicCellSet cellSet)
     : EndTime(endTime)
     , GridData(cellSet)
   {
@@ -201,7 +205,7 @@ public:
   void operator()(const vtkm::Id index,
                   const PointArray& input,
                   const PointArray& output,
-                  vtkm::FloatDefault& outputField) const
+                  Scalar& outputField) const
   {
     using Point = typename PointArray::ValueType;
 
@@ -215,9 +219,9 @@ public:
     Point zin1 = input.Get(neighborIndices[4]);
     Point zin2 = input.Get(neighborIndices[5]);
 
-    vtkm::FloatDefault xDiff = 1. / (xin2[0] - xin1[0]);
-    vtkm::FloatDefault yDiff = 1. / (yin2[1] - yin1[1]);
-    vtkm::FloatDefault zDiff = 1. / (zin2[2] - zin1[2]);
+    Scalar xDiff = 1.0f / (xin2[0] - xin1[0]);
+    Scalar yDiff = 1.0f / (yin2[1] - yin1[1]);
+    Scalar zDiff = 1.0f / (zin2[2] - zin1[2]);
 
     Point xout1 = output.Get(neighborIndices[0]);
     Point xout2 = output.Get(neighborIndices[1]);
@@ -227,31 +231,31 @@ public:
     Point zout2 = output.Get(neighborIndices[5]);
 
     // Total X gradient w.r.t X, Y, Z
-    vtkm::FloatDefault f1x = (xout2[0] - xout1[0]) * xDiff;
-    vtkm::FloatDefault f1y = (yout2[0] - yout1[0]) * yDiff;
-    vtkm::FloatDefault f1z = (zout2[0] - zout1[0]) * zDiff;
+    Scalar f1x = (xout2[0] - xout1[0]) * xDiff;
+    Scalar f1y = (yout2[0] - yout1[0]) * yDiff;
+    Scalar f1z = (zout2[0] - zout1[0]) * zDiff;
 
     // Total Y gradient w.r.t X, Y, Z
-    vtkm::FloatDefault f2x = (xout2[1] - xout1[1]) * xDiff;
-    vtkm::FloatDefault f2y = (yout2[1] - yout1[1]) * yDiff;
-    vtkm::FloatDefault f2z = (zout2[1] - zout1[1]) * zDiff;
+    Scalar f2x = (xout2[1] - xout1[1]) * xDiff;
+    Scalar f2y = (yout2[1] - yout1[1]) * yDiff;
+    Scalar f2z = (zout2[1] - zout1[1]) * zDiff;
 
     // Total Z gradient w.r.t X, Y, Z
-    vtkm::FloatDefault f3x = (xout2[2] - xout1[2]) * xDiff;
-    vtkm::FloatDefault f3y = (yout2[2] - yout1[2]) * yDiff;
-    vtkm::FloatDefault f3z = (zout2[2] - zout1[2]) * zDiff;
+    Scalar f3x = (xout2[2] - xout1[2]) * xDiff;
+    Scalar f3y = (yout2[2] - yout1[2]) * yDiff;
+    Scalar f3z = (zout2[2] - zout1[2]) * zDiff;
 
-    vtkm::Matrix<vtkm::FloatDefault, 3, 3> jacobian;
-    vtkm::MatrixSetRow(jacobian, 0, vtkm::Vec<vtkm::FloatDefault, 3>(f1x, f1y, f1z));
-    vtkm::MatrixSetRow(jacobian, 1, vtkm::Vec<vtkm::FloatDefault, 3>(f2x, f2y, f2z));
-    vtkm::MatrixSetRow(jacobian, 2, vtkm::Vec<vtkm::FloatDefault, 3>(f3x, f3y, f3z));
+    vtkm::Matrix<Scalar, 3, 3> jacobian;
+    vtkm::MatrixSetRow(jacobian, 0, vtkm::Vec<Scalar, 3>(f1x, f1y, f1z));
+    vtkm::MatrixSetRow(jacobian, 1, vtkm::Vec<Scalar, 3>(f2x, f2y, f2z));
+    vtkm::MatrixSetRow(jacobian, 2, vtkm::Vec<Scalar, 3>(f3x, f3y, f3z));
 
     detail::ComputeLeftCauchyGreenTensor(jacobian);
 
-    vtkm::Vec<vtkm::FloatDefault, 3> eigenValues;
+    vtkm::Vec<Scalar, 3> eigenValues;
     detail::Jacobi(jacobian, eigenValues);
 
-    vtkm::FloatDefault delta = eigenValues[0];
+    Scalar delta = eigenValues[0];
     if (delta == 0.0)
     {
       outputField = 0;
@@ -263,7 +267,7 @@ public:
 
 public:
   // To calculate FTLE field
-  vtkm::FloatDefault EndTime;
+  Scalar EndTime;
   // To assist in calculation of indices
   GridMetaData GridData;
 };

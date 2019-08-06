@@ -36,6 +36,11 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
+  if (!fieldMeta.IsPointField())
+  {
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+  }
+
   using Structured2DType = vtkm::cont::CellSetStructured<2>;
   using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
@@ -54,11 +59,16 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   {
     vtkm::Id3 lcsGridDims = this->GetAuxiliaryGridDimensions();
     vtkm::Bounds inputBounds = coordinates.GetBounds();
-    Vector origin(inputBounds.X.Min, inputBounds.Y.Min, inputBounds.Z.Min);
+    Vector origin(static_cast<Scalar>(inputBounds.X.Min),
+                  static_cast<Scalar>(inputBounds.Y.Min),
+                  static_cast<Scalar>(inputBounds.Z.Min));
     Vector spacing;
-    spacing[0] = inputBounds.X.Length() / static_cast<Scalar>(lcsGridDims[0] - 1);
-    spacing[1] = inputBounds.Y.Length() / static_cast<Scalar>(lcsGridDims[1] - 1);
-    spacing[2] = inputBounds.Z.Length() / static_cast<Scalar>(lcsGridDims[2] - 1);
+    spacing[0] =
+      static_cast<Scalar>(inputBounds.X.Length()) / static_cast<Scalar>(lcsGridDims[0] - 1);
+    spacing[1] =
+      static_cast<Scalar>(inputBounds.Y.Length()) / static_cast<Scalar>(lcsGridDims[1] - 1);
+    spacing[2] =
+      static_cast<Scalar>(inputBounds.Z.Length()) / static_cast<Scalar>(lcsGridDims[2] - 1);
     vtkm::cont::DataSetBuilderUniform uniformDatasetBuilder;
     lcsInput = uniformDatasetBuilder.Create(lcsGridDims, origin, spacing);
   }

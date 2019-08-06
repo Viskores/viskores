@@ -124,7 +124,7 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 2, 2> tensor, vtkm::Vec<T, 2>& eigen)
   T b = j1[1];
   T c = j2[1];
 
-  T trace = (a + c) / 2.0;
+  T trace = (a + c) / 2.0f;
   T det = a * c - b * b;
   T sqrtr = vtkm::Sqrt(trace * trace - det);
 
@@ -151,7 +151,6 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
   T e = j2[2];
   T f = j3[2];
 
-  // Now calculate the eigen values
   T x = (a + d + f) / 3.0f; // trace
 
   a -= x;
@@ -172,7 +171,7 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
     phi = vtkm::ATan(vtkm::Sqrt(D) / q) / 3.0f;
 
     if (phi < 0)
-      phi += M_PI;
+      phi += static_cast<T>(M_PI);
   }
 
   const T sqrt3 = vtkm::Sqrt(3.0f);
@@ -183,7 +182,7 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
   cosphi = vtkm::Cos(phi);
 
   // Sorted in decreasing order.
-  T w0 = x + 2.0 * sqrtr * cosphi;
+  T w0 = x + 2.0f * sqrtr * cosphi;
   T w1 = x - sqrtr * (cosphi - sqrt3 * sinphi);
   T w2 = x - sqrtr * (cosphi + sqrt3 * sinphi);
 
@@ -237,4 +236,4 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
 } // namespace detail
 } // namespace worklet
 } // namespace vtkm
-#endif vtk_m_worklet_lcs_LagrangianStructureHelpers_h
+#endif //vtk_m_worklet_lcs_LagrangianStructureHelpers_h
