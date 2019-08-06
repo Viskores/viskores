@@ -94,7 +94,6 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   }
   else
   {
-    std::cout << "Advecting particles" << std::endl;
     GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), field);
     Integrator integrator(evaluator, stepSize);
     vtkm::worklet::ParticleAdvection particles;
@@ -102,12 +101,10 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
     vtkm::cont::ArrayHandle<Vector> advectionPoints;
     vtkm::cont::ArrayCopy(lcsInputPoints, advectionPoints);
     advectionResult = particles.Run(integrator, advectionPoints, numberOfSteps);
-    std::cout << "Advected particles" << std::endl;
     lcsOutputPoints = advectionResult.positions;
   }
   // FTLE output field
   vtkm::cont::ArrayHandle<Scalar> outputField;
-  std::cout << "Calculating FTLE field" << std::endl;
   vtkm::FloatDefault advectionTime = this->GetAdvectionTime();
 
   vtkm::cont::DynamicCellSet lcsCellSet = lcsInput.GetCellSet();
@@ -126,7 +123,6 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
     dispatcher.Invoke(lcsInputPoints, lcsOutputPoints, outputField);
   }
 
-  std::cout << "Calculated FTLE field" << std::endl;
   vtkm::cont::DataSet output;
   vtkm::cont::DataSetFieldAdd fieldAdder;
   output.AddCoordinateSystem(lcsInput.GetCoordinateSystem());
