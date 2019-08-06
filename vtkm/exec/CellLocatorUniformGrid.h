@@ -27,7 +27,7 @@ namespace vtkm
 namespace exec
 {
 
-template <typename DeviceAdapter>
+template <typename DeviceAdapter, vtkm::IdComponent dimensions>
 class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid final : public vtkm::exec::CellLocator
 {
 private:
@@ -35,7 +35,7 @@ private:
   using ToType = vtkm::TopologyElementTagCell;
   using CellSetPortal = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                                            vtkm::TopologyElementTagCell,
-                                                           3>;
+                                                           dimensions>;
   using CoordsPortal = typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
     DeviceAdapter>::PortalConst;
 
@@ -44,7 +44,7 @@ public:
   CellLocatorUniformGrid(const vtkm::Bounds& bounds,
                          const vtkm::Vec3f rangeTransform,
                          const vtkm::Id3 cellDims,
-                         const vtkm::cont::CellSetStructured<3>& cellSet,
+                         const vtkm::cont::CellSetStructured<dimensions>& cellSet,
                          const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
                          DeviceAdapter)
     : Bounds(bounds)
@@ -75,17 +75,19 @@ public:
       return;
     }
     // Get the Cell Id from the point.
-    vtkm::Id3 logicalCell;
+    vtkm::Id3 logicalCell(0, 0, 0);
     logicalCell[0] = (point[0] == Bounds.X.Max)
       ? CellDims[0] - 1
       : static_cast<vtkm::Id>(vtkm::Floor((point[0] - Bounds.X.Min) * RangeTransform[0]));
     logicalCell[1] = (point[1] == Bounds.Y.Max)
       ? CellDims[1] - 1
       : static_cast<vtkm::Id>(vtkm::Floor((point[1] - Bounds.Y.Min) * RangeTransform[1]));
-    logicalCell[2] = (point[2] == Bounds.Z.Max)
-      ? CellDims[2] - 1
-      : static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * RangeTransform[2]));
-
+    if (dimensions == 3)
+    {
+      logicalCell[2] = (point[2] == Bounds.Z.Max)
+        ? CellDims[2] - 1
+        : static_cast<vtkm::Id>(vtkm::Floor((point[2] - Bounds.Z.Min) * RangeTransform[2]));
+    }
     // Get the actual cellId, from the logical cell index of the cell
     cellId = logicalCell[2] * PlaneSize + logicalCell[1] * RowSize + logicalCell[0];
 
