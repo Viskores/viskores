@@ -47,7 +47,7 @@ void CellLocatorUniformGrid::Build()
     this->RangeTransform[1] = static_cast<vtkm::FloatDefault>(this->CellDims[1]) /
       static_cast<vtkm::FloatDefault>(this->Bounds.Y.Length());
   }
-  else if (cellSet.IsSameType(Structured2DType()))
+  else if (cellSet.IsSameType(Structured3DType()))
   {
     this->Is3D = true;
     this->Bounds = coords.GetBounds();
