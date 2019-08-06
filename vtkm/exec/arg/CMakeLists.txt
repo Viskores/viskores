@@ -25,8 +25,8 @@ set(headers
   FetchTagCellSetIn.h
   FetchTagKeysIn.h
   FetchTagWholeCellSetIn.h
-  FromCount.h
-  FromIndices.h
+  IncidentElementCount.h
+  IncidentElementIndices.h
   InputIndex.h
   OutputIndex.h
   ThreadIndices.h

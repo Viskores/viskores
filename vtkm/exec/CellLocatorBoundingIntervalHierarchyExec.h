@@ -71,7 +71,7 @@ public:
                                            DeviceAdapter)
     : Nodes(nodes.PrepareForInput(DeviceAdapter()))
     , CellIds(cellIds.PrepareForInput(DeviceAdapter()))
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType()))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType()))
     , Coords(coords.PrepareForInput(DeviceAdapter()))
   {
   }
@@ -243,13 +243,14 @@ private:
     return success && vtkm::exec::CellInside(parametric, cellShape);
   }
 
-  using FromType = vtkm::TopologyElementTagPoint;
-  using ToType = vtkm::TopologyElementTagCell;
+  using VisitType = vtkm::TopologyElementTagCell;
+  using IncidentType = vtkm::TopologyElementTagPoint;
   using NodePortal = typename NodeArrayHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
   using CellIdPortal =
     typename CellIdArrayHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using CellSetPortal =
-    typename CellSetType::template ExecutionTypes<DeviceAdapter, FromType, ToType>::ExecObjectType;
+  using CellSetPortal = typename CellSetType::template ExecutionTypes<DeviceAdapter,
+                                                                      VisitType,
+                                                                      IncidentType>::ExecObjectType;
   using CoordsPortal = typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
     DeviceAdapter>::PortalConst;
 

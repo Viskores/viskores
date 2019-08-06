@@ -130,7 +130,7 @@ public:
   // Traverses the active points (via mask) and marks the connected cells as
   // active. Set the reference point for all adjacent cells to the current
   // point.
-  class WorkletMarkActiveCells : public vtkm::worklet::WorkletMapCellToPoint
+  class WorkletMarkActiveCells : public vtkm::worklet::WorkletVisitPointsWithCells
   {
   public:
     using ControlSignature = void(CellSetIn cellSet,
@@ -166,7 +166,7 @@ public:
 
   // Traverses the active cells and mark the connected points as active,
   // propogating the reference pointId.
-  class WorkletMarkActivePoints : public vtkm::worklet::WorkletMapPointToCell
+  class WorkletMarkActivePoints : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cellSet,

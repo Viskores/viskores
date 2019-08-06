@@ -21,7 +21,7 @@
 namespace
 {
 
-class Worklet : public vtkm::worklet::WorkletMapCellToPoint
+class Worklet : public vtkm::worklet::WorkletVisitPointsWithCells
 {
 public:
   using ControlSignature = void(CellSetIn cellset,

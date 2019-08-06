@@ -53,7 +53,7 @@ void TestVertexClustering()
     CellSetType cellSet;
     output.GetCellSet(0).CopyTo(cellSet);
     auto cellArray =
-      cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+      cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     std::cerr << "output_pointIds = " << cellArray.GetNumberOfValues() << "\n";
     std::cerr << "output_pointId[] = ";
     vtkm::cont::printSummary_ArrayHandle(cellArray, std::cerr, true);

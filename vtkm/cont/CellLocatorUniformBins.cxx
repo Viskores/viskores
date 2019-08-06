@@ -135,7 +135,7 @@ private:
   bool DoneFlag;
 };
 
-class CountBinsL1 : public vtkm::worklet::WorkletMapPointToCell
+class CountBinsL1 : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset, FieldInPoint coords, FieldOutCell bincount);
@@ -158,7 +158,7 @@ private:
   Grid L1Grid;
 };
 
-class FindBinsL1 : public vtkm::worklet::WorkletMapPointToCell
+class FindBinsL1 : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
@@ -218,7 +218,7 @@ private:
   vtkm::FloatDefault Density;
 };
 
-class CountBinsL2 : public vtkm::worklet::WorkletMapPointToCell
+class CountBinsL2 : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
@@ -253,7 +253,7 @@ private:
   Grid L1Grid;
 };
 
-class FindBinsL2 : public vtkm::worklet::WorkletMapPointToCell
+class FindBinsL2 : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset,

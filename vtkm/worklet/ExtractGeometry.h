@@ -35,7 +35,7 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Worklet to identify cells within volume of interest
-  class ExtractCellsByVOI : public vtkm::worklet::WorkletMapPointToCell
+  class ExtractCellsByVOI : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cellset,

@@ -58,15 +58,15 @@ public:
   template <vtkm::IdComponent Dimension>
   VTKM_EXEC ThreadIndicesPointNeighborhood(
     const vtkm::Id3& outIndex,
-    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                             vtkm::TopologyElementTagPoint,
+    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell,
                                              Dimension>& connectivity,
     vtkm::Id globalThreadIndexOffset = 0)
     : State(outIndex, detail::To3D(connectivity.GetPointDimensions()))
     , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
-    using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                                                vtkm::TopologyElementTagPoint,
+    using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                                                vtkm::TopologyElementTagCell,
                                                                 Dimension>;
     using ConnRangeType = typename ConnectivityType::SchedulingRangeType;
     const ConnRangeType index = detail::Deflate(outIndex, ConnRangeType());
@@ -82,8 +82,8 @@ public:
     vtkm::Id inputIndex,
     vtkm::IdComponent visitIndex,
     vtkm::Id outputIndex,
-    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                             vtkm::TopologyElementTagPoint,
+    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell,
                                              Dimension>& connectivity,
     vtkm::Id globalThreadIndexOffset = 0)
     : State(detail::To3D(connectivity.FlatToLogicalToIndex(inputIndex)),

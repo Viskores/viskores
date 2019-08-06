@@ -20,16 +20,16 @@ namespace vtkm
 namespace exec
 {
 
-template <typename FromTopology, typename ToTopology, vtkm::IdComponent Dimension>
+template <typename VisitTopology, typename IncidentTopology, vtkm::IdComponent Dimension>
 class ConnectivityStructured
 {
-  VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
-  VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
+  VTKM_IS_TOPOLOGY_ELEMENT_TAG(VisitTopology);
+  VTKM_IS_TOPOLOGY_ELEMENT_TAG(IncidentTopology);
 
   using InternalsType = vtkm::internal::ConnectivityStructuredInternals<Dimension>;
 
   using Helper =
-    vtkm::internal::ConnectivityStructuredIndexHelper<FromTopology, ToTopology, Dimension>;
+    vtkm::internal::ConnectivityStructuredIndexHelper<VisitTopology, IncidentTopology, Dimension>;
 
 public:
   using SchedulingRangeType = typename InternalsType::SchedulingRangeType;
@@ -53,7 +53,8 @@ public:
   }
 
   VTKM_EXEC_CONT
-  ConnectivityStructured(const ConnectivityStructured<ToTopology, FromTopology, Dimension>& src)
+  ConnectivityStructured(
+    const ConnectivityStructured<IncidentTopology, VisitTopology, Dimension>& src)
     : Internals(src.Internals)
   {
   }
@@ -115,7 +116,7 @@ public:
     return this->Internals.GetGlobalPointIndexStart();
   }
 
-  friend class ConnectivityStructured<ToTopology, FromTopology, Dimension>;
+  friend class ConnectivityStructured<IncidentTopology, VisitTopology, Dimension>;
 
 private:
   InternalsType Internals;

@@ -29,8 +29,8 @@
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
 #include <vtkm/exec/arg/FetchTagCellSetIn.h>
-#include <vtkm/exec/arg/FromCount.h>
-#include <vtkm/exec/arg/FromIndices.h>
+#include <vtkm/exec/arg/IncidentElementCount.h>
+#include <vtkm/exec/arg/IncidentElementIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm
@@ -52,38 +52,42 @@ struct WorkletMapTopologyBase : vtkm::worklet::internal::WorkletBase
 
 } // namespace detail
 
-/// Base class for worklets that do a simple mapping of field arrays. All
-/// inputs and outputs are on the same domain. That is, all the arrays are the
-/// same size.
+/// @brief Base class for worklets that map topology elements onto each other.
 ///
-template <typename FromTopology, typename ToTopology>
+/// The template parameters for this class must be members of the
+/// TopologyElementTag group. The VisitTopology indicates the elements of a
+/// cellset that will be visited, and the IncidentTopology will be mapped onto
+/// the VisitTopology.
+///
+/// For instance,
+/// `WorkletMapTopology<TopologyElementTagPoint, TopologyElementCell>` will
+/// execute one instance per point, and provides convenience methods for
+/// gathering information about the cells incident to the current point.
+///
+template <typename VisitTopology, typename IncidentTopology>
 class WorkletMapTopology : public detail::WorkletMapTopologyBase
 {
 public:
-  using FromTopologyType = FromTopology;
-  using ToTopologyType = ToTopology;
+  using VisitTopologyType = VisitTopology;
+  using IncidentTopologyType = IncidentTopology;
 
-  /// \brief A control signature tag for input fields.
+  /// \brief A control signature tag for input fields from the \em visited
+  /// topology.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
-  ///
-  struct FieldInTo : vtkm::cont::arg::ControlSignatureTagBase
+  struct FieldInVisit : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
-    using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<ToTopologyType>;
+    using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<VisitTopologyType>;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
 
-  /// \brief A control signature tag for input connectivity.
+  /// \brief A control signature tag for input fields from the \em incident
+  /// topology.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
-  ///
-  struct FieldInFrom : vtkm::cont::arg::ControlSignatureTagBase
+  struct FieldInIncident : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
-    using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<FromTopologyType>;
+    using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<IncidentTopologyType>;
     using FetchTag = vtkm::exec::arg::FetchTagArrayTopologyMapIn;
   };
 
@@ -99,10 +103,8 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
 
-  /// \brief A control signature tag for input-output (in-place) fields.
-  ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
+  /// \brief A control signature tag for input-output (in-place) fields from
+  /// the visited topology.
   ///
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -116,37 +118,41 @@ public:
   struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagCellSet;
-    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<FromTopologyType, ToTopologyType>;
+    using TransportTag =
+      vtkm::cont::arg::TransportTagCellSetIn<VisitTopologyType, IncidentTopologyType>;
     using FetchTag = vtkm::exec::arg::FetchTagCellSetIn;
   };
 
-  /// \brief An execution signature tag for getting the cell shape.
+  /// \brief An execution signature tag for getting the cell shape. This only
+  /// makes sense when visiting cell topologies.
   ///
   struct CellShape : vtkm::exec::arg::CellShape
   {
   };
 
-  /// \brief An execution signature tag to get the number of from elements.
+  /// \brief An execution signature tag to get the number of \em incident
+  /// elements.
   ///
-  /// In a topology map, there are \em from and \em to topology elements
-  /// specified. The scheduling occurs on the \em to elements, and for each \em
-  /// to element there is some number of incident \em from elements that are
-  /// accessible. This \c ExecutionSignature tag provides the number of these
-  /// \em from elements that are accessible.
+  /// In a topology map, there are \em visited and \em incident topology
+  /// elements specified. The scheduling occurs on the \em visited elements,
+  /// and for each \em visited element there is some number of incident \em
+  /// mapped elements that are accessible. This \c ExecutionSignature tag
+  /// provides the number of these \em mapped elements that are accessible.
   ///
-  struct FromCount : vtkm::exec::arg::FromCount
+  struct IncidentElementCount : vtkm::exec::arg::IncidentElementCount
   {
   };
 
   /// \brief An execution signature tag to get the indices of from elements.
   ///
-  /// In a topology map, there are \em from and \em to topology elements
-  /// specified. The scheduling occurs on the \em to elements, and for each \em
-  /// to element there is some number of incident \em from elements that are
-  /// accessible. This \c ExecutionSignature tag provides the indices of these
-  /// \em from elements that are accessible.
+  /// In a topology map, there are \em visited and \em incident topology
+  /// elements specified. The scheduling occurs on the \em visited elements,
+  /// and for each \em visited element there is some number of incident \em
+  /// mapped elements that are accessible. This \c ExecutionSignature tag
+  /// provides the indices of the \em mapped elements that are incident to the
+  /// current \em visited element.
   ///
-  struct FromIndices : vtkm::exec::arg::FromIndices
+  struct IncidentElementIndices : vtkm::exec::arg::IncidentElementIndices
   {
   };
 
@@ -201,41 +207,46 @@ public:
 
 /// Base class for worklets that map from Points to Cells.
 ///
-class WorkletMapPointToCell
-  : public WorkletMapTopology<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
+class WorkletVisitCellsWithPoints
+  : public WorkletMapTopology<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
 {
 public:
-  using FieldInPoint = FieldInFrom;
+  using FieldInPoint = FieldInIncident;
 
-  using FieldInCell = FieldInTo;
+  using FieldInCell = FieldInVisit;
 
   using FieldOutCell = FieldOut;
 
   using FieldInOutCell = FieldInOut;
 
-  using PointCount = FromCount;
+  using PointCount = IncidentElementCount;
 
-  using PointIndices = FromIndices;
+  using PointIndices = IncidentElementIndices;
 };
 
 /// Base class for worklets that map from Cells to Points.
 ///
-class WorkletMapCellToPoint
-  : public WorkletMapTopology<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
+class WorkletVisitPointsWithCells
+  : public WorkletMapTopology<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
 {
 public:
-  using FieldInCell = FieldInFrom;
+  using FieldInCell = FieldInIncident;
 
-  using FieldInPoint = FieldInTo;
+  using FieldInPoint = FieldInVisit;
 
   using FieldOutPoint = FieldOut;
 
   using FieldInOutPoint = FieldInOut;
 
-  using CellCount = FromCount;
+  using CellCount = IncidentElementCount;
 
-  using CellIndices = FromIndices;
+  using CellIndices = IncidentElementIndices;
 };
+
+// Deprecated signatures for legacy support. These will be removed at some
+// point.
+using WorkletMapCellsToPoint = WorkletVisitPointsWithCells;
+using WorkletMapPointToCell = WorkletVisitCellsWithPoints;
 }
 } // namespace vtkm::worklet
 

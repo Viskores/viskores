@@ -28,7 +28,7 @@ class Tube
 {
 public:
   //Helper worklet to count various things in each polyline.
-  class CountSegments : public vtkm::worklet::WorkletMapPointToCell
+  class CountSegments : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -87,7 +87,7 @@ public:
   };
 
   //Helper worklet to generate normals at each point in the polyline.
-  class GenerateNormals : public vtkm::worklet::WorkletMapPointToCell
+  class GenerateNormals : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
     static constexpr vtkm::FloatDefault vecMagnitudeEps = static_cast<vtkm::FloatDefault>(1e-3);
 
@@ -100,7 +100,7 @@ public:
 
     using ControlSignature = void(CellSetIn cellset,
                                   WholeArrayIn pointCoords,
-                                  FieldInTo polylineOffset,
+                                  FieldInCell polylineOffset,
                                   WholeArrayOut newNormals);
     using ExecutionSignature = void(CellShape shapeType,
                                     PointCount numPoints,
@@ -249,7 +249,7 @@ public:
   };
 
   //Helper worklet to generate the tube points
-  class GeneratePoints : public vtkm::worklet::WorkletMapPointToCell
+  class GeneratePoints : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -264,8 +264,8 @@ public:
     using ControlSignature = void(CellSetIn cellset,
                                   WholeArrayIn pointCoords,
                                   WholeArrayIn normals,
-                                  FieldInTo tubePointOffsets,
-                                  FieldInTo polylineOffset,
+                                  FieldInCell tubePointOffsets,
+                                  FieldInCell polylineOffset,
                                   WholeArrayOut newPointCoords);
     using ExecutionSignature = void(CellShape shapeType,
                                     PointCount numPoints,
@@ -378,7 +378,7 @@ public:
   };
 
   //Helper worklet to generate the tube cells
-  class GenerateCells : public vtkm::worklet::WorkletMapPointToCell
+  class GenerateCells : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -389,8 +389,8 @@ public:
     }
 
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldInTo tubePointOffsets,
-                                  FieldInTo tubeConnOffsets,
+                                  FieldInCell tubePointOffsets,
+                                  FieldInCell tubeConnOffsets,
                                   WholeArrayOut outConnectivity);
     using ExecutionSignature = void(CellShape shapeType,
                                     PointCount numPoints,

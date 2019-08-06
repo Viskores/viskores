@@ -60,7 +60,7 @@ namespace worklet
   * Note that the integrals are signed; inverted cells will report negative values.
   */
 template <typename IntegrationTypeList>
-class CellMeasure : public vtkm::worklet::WorkletMapPointToCell
+class CellMeasure : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset,

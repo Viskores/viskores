@@ -66,7 +66,7 @@ public:
   // Worklet to turn cells into triangles
   // Vertices remain the same and each cell is processed with needing topology
   //
-  class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
+  class TriangulateCell : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
@@ -119,9 +119,9 @@ vtkm::cont::CellSetSingleType<> TriangulateExplicit::Run(
 
   // Input topology
   auto inShapes =
-    cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    cellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
   auto inNumIndices =
-    cellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    cellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   // Output topology
   vtkm::cont::ArrayHandle<vtkm::Id> outConnectivity;

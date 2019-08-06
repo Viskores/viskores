@@ -46,7 +46,7 @@ namespace worklet
 struct ExternalFaces
 {
   //Worklet that returns the number of external faces for each structured cell
-  class NumExternalFacesPerStructuredCell : public vtkm::worklet::WorkletMapPointToCell
+  class NumExternalFacesPerStructuredCell : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet,
@@ -118,7 +118,7 @@ struct ExternalFaces
 
 
   //Worklet that finds face connectivity for each structured cell
-  class BuildConnectivityStructured : public vtkm::worklet::WorkletMapPointToCell
+  class BuildConnectivityStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet,
@@ -308,7 +308,7 @@ struct ExternalFaces
   };
 
   //Worklet that returns the number of faces for each cell/shape
-  class NumFacesPerCell : public vtkm::worklet::WorkletMapPointToCell
+  class NumFacesPerCell : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet, FieldOut numFacesInCell);
@@ -323,14 +323,14 @@ struct ExternalFaces
   };
 
   //Worklet that identifies a cell face by a hash value. Not necessarily completely unique.
-  class FaceHash : public vtkm::worklet::WorkletMapPointToCell
+  class FaceHash : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
                                   FieldOut faceHashes,
                                   FieldOut originCells,
                                   FieldOut originFaces);
-    using ExecutionSignature = void(_2, _3, _4, CellShape, FromIndices, InputIndex, VisitIndex);
+    using ExecutionSignature = void(_2, _3, _4, CellShape, PointIndices, InputIndex, VisitIndex);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -558,7 +558,7 @@ public:
     }
   };
 
-  class IsPolyDataCell : public vtkm::worklet::WorkletMapPointToCell
+  class IsPolyDataCell : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet, FieldOut isPolyDataCell);
@@ -572,7 +572,7 @@ public:
     }
   };
 
-  class CountPolyDataCellPoints : public vtkm::worklet::WorkletMapPointToCell
+  class CountPolyDataCellPoints : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -584,7 +584,7 @@ public:
     VTKM_EXEC vtkm::Id operator()(vtkm::Id count) const { return count; }
   };
 
-  class PassPolyDataCells : public vtkm::worklet::WorkletMapPointToCell
+  class PassPolyDataCells : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ScatterType = vtkm::worklet::ScatterCounting;

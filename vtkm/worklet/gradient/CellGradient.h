@@ -30,7 +30,7 @@ struct CellGradientInType : vtkm::ListTagBase<T>
 };
 
 template <typename T>
-struct CellGradient : vtkm::worklet::WorkletMapPointToCell
+struct CellGradient : vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn,
                                 FieldInPoint pointCoordinates,

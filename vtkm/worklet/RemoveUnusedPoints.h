@@ -112,8 +112,8 @@ public:
     VTKM_ASSERT(this->MaskArray.GetNumberOfValues() == inCellSet.GetNumberOfPoints());
 
     vtkm::worklet::DispatcherMapField<GeneratePointMask> dispatcher;
-    dispatcher.Invoke(inCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                     vtkm::TopologyElementTagCell()),
+    dispatcher.Invoke(inCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                     vtkm::TopologyElementTagPoint()),
                       this->MaskArray);
   }
 
@@ -181,15 +181,15 @@ public:
              const vtkm::cont::ArrayHandle<vtkm::Id, MapStorage>& inputToOutputPointMap,
              vtkm::Id numberOfPoints)
   {
-    using FromTopology = vtkm::TopologyElementTagPoint;
-    using ToTopology = vtkm::TopologyElementTagCell;
+    using VisitTopology = vtkm::TopologyElementTagCell;
+    using IncidentTopology = vtkm::TopologyElementTagPoint;
 
     using NewConnectivityStorage = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG;
 
     vtkm::cont::ArrayHandle<vtkm::Id, NewConnectivityStorage> newConnectivityArray;
 
     vtkm::worklet::DispatcherMapField<TransformPointIndices> dispatcher;
-    dispatcher.Invoke(inCellSet.GetConnectivityArray(FromTopology(), ToTopology()),
+    dispatcher.Invoke(inCellSet.GetConnectivityArray(VisitTopology(), IncidentTopology()),
                       inputToOutputPointMap,
                       newConnectivityArray);
 
@@ -197,10 +197,10 @@ public:
       CellSetExplicit<ShapeStorage, NumIndicesStorage, NewConnectivityStorage, OffsetsStorage>
         outCellSet(inCellSet.GetName());
     outCellSet.Fill(numberOfPoints,
-                    inCellSet.GetShapesArray(FromTopology(), ToTopology()),
-                    inCellSet.GetNumIndicesArray(FromTopology(), ToTopology()),
+                    inCellSet.GetShapesArray(VisitTopology(), IncidentTopology()),
+                    inCellSet.GetNumIndicesArray(VisitTopology(), IncidentTopology()),
                     newConnectivityArray,
-                    inCellSet.GetIndexOffsetArray(FromTopology(), ToTopology()));
+                    inCellSet.GetIndexOffsetArray(VisitTopology(), IncidentTopology()));
 
     return outCellSet;
   }

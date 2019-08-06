@@ -21,7 +21,7 @@
 
 namespace
 {
-struct CellCentroidCalculator : public vtkm::worklet::WorkletMapPointToCell
+struct CellCentroidCalculator : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   typedef void ControlSignature(CellSetIn, FieldInPoint, FieldOut);
   typedef _3 ExecutionSignature(_1, PointCount, _2);

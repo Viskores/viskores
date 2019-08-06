@@ -115,18 +115,19 @@ public:
   template <typename TopologyElement>
   SchedulingRangeType GetSchedulingRange(TopologyElement) const;
 
-  template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
+  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
   struct ExecutionTypes
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
-    using ExecObjectType = vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>;
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(VisitTopology);
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(IncidentTopology);
+    using ExecObjectType =
+      vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
   };
 
-  template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
-  typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType
-    PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const;
+  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
+  typename ExecutionTypes<DeviceAdapter, VisitTopology, IncidentTopology>::ExecObjectType
+    PrepareForInput(DeviceAdapter, VisitTopology, IncidentTopology) const;
 
   void PrintSummary(std::ostream& out) const override;
 

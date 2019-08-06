@@ -251,15 +251,15 @@ public:
     {
       SingleExplicitType CellSet = cellSet.Cast<SingleExplicitType>();
       CellShape =
-        CellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())
+        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
           .GetPortalConstControl()
           .Get(0);
       PointsPerCell =
-        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())
+        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
           .GetPortalConstControl()
           .Get(0);
-      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                  vtkm::TopologyElementTagCell());
+      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                  vtkm::TopologyElementTagPoint());
     }
     else
       throw vtkm::cont::ErrorBadType("Cell set is not CellSetSingleType");
@@ -313,13 +313,13 @@ public:
     {
       vtkm::cont::CellSetExplicit<> CellSet = cellSet.Cast<vtkm::cont::CellSetExplicit<>>();
       Shape =
-        CellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
       NumIdx =
-        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
-      Offset = CellSet.GetIndexOffsetArray(vtkm::TopologyElementTagPoint(),
-                                           vtkm::TopologyElementTagCell());
-      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                  vtkm::TopologyElementTagCell());
+        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      Offset = CellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell(),
+                                           vtkm::TopologyElementTagPoint());
+      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                  vtkm::TopologyElementTagPoint());
     }
     else
       throw vtkm::cont::ErrorBadType("Cell set is not CellSetSingleType");

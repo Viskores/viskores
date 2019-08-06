@@ -187,7 +187,7 @@ public:
   }
 };
 
-class GenerateEdges : public vtkm::worklet::WorkletMapPointToCell
+class GenerateEdges : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset, WholeArrayOut edgeIds);

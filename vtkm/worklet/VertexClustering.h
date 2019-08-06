@@ -175,7 +175,7 @@ struct VertexClustering
     }
   };
 
-  class MapCellsWorklet : public vtkm::worklet::WorkletMapPointToCell
+  class MapCellsWorklet : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cellset,

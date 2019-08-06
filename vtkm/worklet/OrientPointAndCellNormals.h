@@ -128,7 +128,7 @@ public:
 
   // Mark each incident cell as active and visited.
   // Marks the current point as inactive.
-  class WorkletMarkActiveCells : public vtkm::worklet::WorkletMapCellToPoint
+  class WorkletMarkActiveCells : public vtkm::worklet::WorkletVisitPointsWithCells
   {
   public:
     using ControlSignature = void(CellSetIn cell,
@@ -160,7 +160,7 @@ public:
   };
 
   // Align the current cell's normals to an adjacent visited point's normal.
-  class WorkletProcessCellNormals : public vtkm::worklet::WorkletMapPointToCell
+  class WorkletProcessCellNormals : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cells,
@@ -213,7 +213,7 @@ public:
 
   // Mark each incident point as active and visited.
   // Marks the current cell as inactive.
-  class WorkletMarkActivePoints : public vtkm::worklet::WorkletMapPointToCell
+  class WorkletMarkActivePoints : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cell,
@@ -245,7 +245,7 @@ public:
   };
 
   // Align the current point's normals to an adjacent visited cell's normal.
-  class WorkletProcessPointNormals : public vtkm::worklet::WorkletMapCellToPoint
+  class WorkletProcessPointNormals : public vtkm::worklet::WorkletVisitPointsWithCells
   {
   public:
     using ControlSignature = void(CellSetIn cells,

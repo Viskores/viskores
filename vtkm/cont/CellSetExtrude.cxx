@@ -95,8 +95,8 @@ vtkm::IdComponent CellSetExtrude::GetNumberOfPointsInCell(vtkm::Id) const
 void CellSetExtrude::GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const
 {
   auto conn = this->PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
-                                    vtkm::TopologyElementTagPoint{},
-                                    vtkm::TopologyElementTagCell{});
+                                    vtkm::TopologyElementTagCell{},
+                                    vtkm::TopologyElementTagPoint{});
   auto indices = conn.GetIndices(id);
   for (int i = 0; i < 6; ++i)
   {

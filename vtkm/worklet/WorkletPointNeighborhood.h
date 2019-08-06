@@ -145,8 +145,8 @@ public:
   struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagCellSetStructured;
-    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<vtkm::TopologyElementTagCell,
-                                                                vtkm::TopologyElementTagPoint>;
+    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<vtkm::TopologyElementTagPoint,
+                                                                vtkm::TopologyElementTagCell>;
     using FetchTag = vtkm::exec::arg::FetchTagCellSetIn;
   };
 };
@@ -184,8 +184,8 @@ public:
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                             vtkm::TopologyElementTagPoint,
+    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell,
                                              Dimension>& inputDomain, //this should be explicitly
     vtkm::Id globalThreadIndexOffset = 0) const
   {

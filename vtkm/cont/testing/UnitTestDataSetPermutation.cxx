@@ -105,13 +105,13 @@ void TestDataSet_Explicit()
   subset.PrintSummary(std::cout);
 
   using ExecObjectType = SubsetType::ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial,
-                                                    vtkm::TopologyElementTagPoint,
-                                                    vtkm::TopologyElementTagCell>::ExecObjectType;
+                                                    vtkm::TopologyElementTagCell,
+                                                    vtkm::TopologyElementTagPoint>::ExecObjectType;
 
   ExecObjectType execConnectivity;
   execConnectivity = subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                                            vtkm::TopologyElementTagPoint(),
-                                            vtkm::TopologyElementTagCell());
+                                            vtkm::TopologyElementTagCell(),
+                                            vtkm::TopologyElementTagPoint());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
@@ -154,7 +154,7 @@ void TestDataSet_Structured2D()
 
   //verify that PrepareForInput exists
   subset.PrepareForInput(
-    DeviceAdapterTag(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    DeviceAdapterTag(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
@@ -193,8 +193,8 @@ void TestDataSet_Structured3D()
 
   //verify that PrepareForInput exists
   subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                         vtkm::TopologyElementTagPoint(),
-                         vtkm::TopologyElementTagCell());
+                         vtkm::TopologyElementTagCell(),
+                         vtkm::TopologyElementTagPoint());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;

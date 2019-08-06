@@ -150,8 +150,8 @@ void TestClippingExplicit()
                    "Wrong number of points in cell set.");
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                       vtkm::TopologyElementTagCell()),
+    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint()),
                     expectedConnectivity,
                     connectivitySize),
     "Got incorrect conectivity");
@@ -212,8 +212,8 @@ void TestClippingStructured()
                    "Wrong number of points in cell set.");
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                       vtkm::TopologyElementTagCell()),
+    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint()),
                     expectedConnectivity,
                     connectivitySize),
     "Got incorrect conectivity");
@@ -271,8 +271,8 @@ void TestClippingWithImplicitFunction()
                                                  30.f,   30.f,   -30.f, -30.f };
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                       vtkm::TopologyElementTagCell()),
+    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint()),
                     expectedConnectivity,
                     connectivitySize),
     "Got incorrect conectivity");
@@ -326,8 +326,8 @@ void TestClippingWithImplicitFunctionInverted()
   std::vector<vtkm::Float32> expectedCellvar = { -100.f, 100.f, 30.f, -30.f };
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                       vtkm::TopologyElementTagCell()),
+    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint()),
                     expectedConnectivity,
                     connectivitySize),
     "Got incorrect conectivity");

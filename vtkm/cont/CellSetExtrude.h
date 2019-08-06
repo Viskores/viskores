@@ -68,30 +68,30 @@ public:
   template <typename DeviceAdapter>
   using ConnectivityC2P = vtkm::exec::ReverseConnectivityExtrude<DeviceAdapter>;
 
-  template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
+  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
   struct ExecutionTypes;
 
   template <typename DeviceAdapter>
-  struct ExecutionTypes<DeviceAdapter, vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
+  struct ExecutionTypes<DeviceAdapter, vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
   {
     using ExecObjectType = ConnectivityP2C<DeviceAdapter>;
   };
 
   template <typename DeviceAdapter>
-  struct ExecutionTypes<DeviceAdapter, vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
+  struct ExecutionTypes<DeviceAdapter, vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
   {
     using ExecObjectType = ConnectivityC2P<DeviceAdapter>;
   };
 
   template <typename Device>
   ConnectivityP2C<Device> PrepareForInput(Device,
-                                          vtkm::TopologyElementTagPoint,
-                                          vtkm::TopologyElementTagCell) const;
+                                          vtkm::TopologyElementTagCell,
+                                          vtkm::TopologyElementTagPoint) const;
 
   template <typename Device>
   ConnectivityC2P<Device> PrepareForInput(Device,
-                                          vtkm::TopologyElementTagCell,
-                                          vtkm::TopologyElementTagPoint) const;
+                                          vtkm::TopologyElementTagPoint,
+                                          vtkm::TopologyElementTagCell) const;
 
 private:
   template <typename Device>

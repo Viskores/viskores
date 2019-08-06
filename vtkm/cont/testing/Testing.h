@@ -235,8 +235,8 @@ struct TestEqualCellSet
     const vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>& cs2,
     TestEqualResult& result) const
   {
-    vtkm::TopologyElementTagPoint p2cFrom{};
-    vtkm::TopologyElementTagCell p2cTo{};
+    vtkm::TopologyElementTagCell visitTopo{};
+    vtkm::TopologyElementTagPoint incidentTopo{};
 
     if (cs1.GetName() != cs2.GetName())
     {
@@ -249,30 +249,30 @@ struct TestEqualCellSet
       return;
     }
 
-    result = test_equal_ArrayHandles(cs1.GetShapesArray(p2cFrom, p2cTo),
-                                     cs2.GetShapesArray(p2cFrom, p2cTo));
+    result = test_equal_ArrayHandles(cs1.GetShapesArray(visitTopo, incidentTopo),
+                                     cs2.GetShapesArray(visitTopo, incidentTopo));
     if (!result)
     {
       result.PushMessage("shapes arrays don't match");
       return;
     }
 
-    result = test_equal_ArrayHandles(cs1.GetNumIndicesArray(p2cFrom, p2cTo),
-                                     cs2.GetNumIndicesArray(p2cFrom, p2cTo));
+    result = test_equal_ArrayHandles(cs1.GetNumIndicesArray(visitTopo, incidentTopo),
+                                     cs2.GetNumIndicesArray(visitTopo, incidentTopo));
     if (!result)
     {
       result.PushMessage("counts arrays don't match");
       return;
     }
-    result = test_equal_ArrayHandles(cs1.GetConnectivityArray(p2cFrom, p2cTo),
-                                     cs2.GetConnectivityArray(p2cFrom, p2cTo));
+    result = test_equal_ArrayHandles(cs1.GetConnectivityArray(visitTopo, incidentTopo),
+                                     cs2.GetConnectivityArray(visitTopo, incidentTopo));
     if (!result)
     {
       result.PushMessage("connectivity arrays don't match");
       return;
     }
-    result = test_equal_ArrayHandles(cs1.GetIndexOffsetArray(p2cFrom, p2cTo),
-                                     cs2.GetIndexOffsetArray(p2cFrom, p2cTo));
+    result = test_equal_ArrayHandles(cs1.GetIndexOffsetArray(visitTopo, incidentTopo),
+                                     cs2.GetIndexOffsetArray(visitTopo, incidentTopo));
     if (!result)
     {
       result.PushMessage("offsets arrays don't match");
