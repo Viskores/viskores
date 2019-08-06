@@ -24,7 +24,8 @@ CellLocatorUniformGrid::CellLocatorUniformGrid() = default;
 CellLocatorUniformGrid::~CellLocatorUniformGrid() = default;
 
 using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
-using StructuredType = vtkm::cont::CellSetStructured<3>;
+using Structured2DType = vtkm::cont::CellSetStructured<2>;
+using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
 void CellLocatorUniformGrid::Build()
 {
@@ -32,24 +33,42 @@ void CellLocatorUniformGrid::Build()
   vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
 
   if (!coords.GetData().IsType<UniformType>())
-    throw vtkm::cont::ErrorBadType("Coordinate system is not uniform type");
-  if (!cellSet.IsSameType(StructuredType()))
-    throw vtkm::cont::ErrorBadType("Cell set is not 3D structured type");
+    throw vtkm::cont::ErrorInternal("Coordinates are not uniform.");
 
-  this->Bounds = coords.GetBounds();
-  this->CellDims =
-    cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-
-  this->RangeTransform[0] = static_cast<vtkm::FloatDefault>(this->CellDims[0]) /
-    static_cast<vtkm::FloatDefault>(this->Bounds.X.Length());
-  this->RangeTransform[1] = static_cast<vtkm::FloatDefault>(this->CellDims[1]) /
-    static_cast<vtkm::FloatDefault>(this->Bounds.Y.Length());
-  this->RangeTransform[2] = static_cast<vtkm::FloatDefault>(this->CellDims[2]) /
-    static_cast<vtkm::FloatDefault>(this->Bounds.Z.Length());
+  if (cellSet.IsSameType(Structured2DType()))
+  {
+    this->Is3D = false;
+    this->Bounds = coords.GetBounds();
+    vtkm::Id2 cellDims =
+      cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+    this->CellDims = vtkm::Id3(cellDims[0], cellDims[1], 0);
+    this->RangeTransform[0] = static_cast<vtkm::FloatDefault>(this->CellDims[0]) /
+      static_cast<vtkm::FloatDefault>(this->Bounds.X.Length());
+    this->RangeTransform[1] = static_cast<vtkm::FloatDefault>(this->CellDims[1]) /
+      static_cast<vtkm::FloatDefault>(this->Bounds.Y.Length());
+  }
+  else if (cellSet.IsSameType(Structured2DType()))
+  {
+    this->Is3D = true;
+    this->Bounds = coords.GetBounds();
+    this->CellDims =
+      cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+    this->RangeTransform[0] = static_cast<vtkm::FloatDefault>(this->CellDims[0]) /
+      static_cast<vtkm::FloatDefault>(this->Bounds.X.Length());
+    this->RangeTransform[1] = static_cast<vtkm::FloatDefault>(this->CellDims[1]) /
+      static_cast<vtkm::FloatDefault>(this->Bounds.Y.Length());
+    this->RangeTransform[2] = static_cast<vtkm::FloatDefault>(this->CellDims[2]) /
+      static_cast<vtkm::FloatDefault>(this->Bounds.Z.Length());
+  }
+  else
+  {
+    throw vtkm::cont::ErrorInternal("Cells are not structured.");
+  }
 }
 
 namespace
 {
+template <vtkm::IdComponent dimensions>
 struct CellLocatorUniformGridPrepareForExecutionFunctor
 {
   template <typename DeviceAdapter, typename... Args>
@@ -57,7 +76,7 @@ struct CellLocatorUniformGridPrepareForExecutionFunctor
                             vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& execLocator,
                             Args&&... args) const
   {
-    using ExecutionType = vtkm::exec::CellLocatorUniformGrid<DeviceAdapter>;
+    using ExecutionType = vtkm::exec::CellLocatorUniformGrid<DeviceAdapter, dimensions>;
     ExecutionType* execObject = new ExecutionType(std::forward<Args>(args)..., DeviceAdapter());
     execLocator.Reset(execObject);
     return true;
@@ -68,15 +87,29 @@ struct CellLocatorUniformGridPrepareForExecutionFunctor
 const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device) const
 {
-  const bool success =
-    vtkm::cont::TryExecuteOnDevice(device,
-                                   CellLocatorUniformGridPrepareForExecutionFunctor(),
-                                   this->ExecutionObjectHandle,
-                                   this->Bounds,
-                                   this->RangeTransform,
-                                   this->CellDims,
-                                   this->GetCellSet().template Cast<StructuredType>(),
-                                   this->GetCoordinates().GetData());
+  bool success = true;
+  if (this->Is3D)
+  {
+    success = vtkm::cont::TryExecuteOnDevice(device,
+                                             CellLocatorUniformGridPrepareForExecutionFunctor<3>(),
+                                             this->ExecutionObjectHandle,
+                                             this->Bounds,
+                                             this->RangeTransform,
+                                             this->CellDims,
+                                             this->GetCellSet().template Cast<Structured3DType>(),
+                                             this->GetCoordinates().GetData());
+  }
+  else
+  {
+    success = vtkm::cont::TryExecuteOnDevice(device,
+                                             CellLocatorUniformGridPrepareForExecutionFunctor<2>(),
+                                             this->ExecutionObjectHandle,
+                                             this->Bounds,
+                                             this->RangeTransform,
+                                             this->CellDims,
+                                             this->GetCellSet().template Cast<Structured2DType>(),
+                                             this->GetCoordinates().GetData());
+  }
   if (!success)
   {
     throwFailedRuntimeDeviceTransfer("CellLocatorUniformGrid", device);
