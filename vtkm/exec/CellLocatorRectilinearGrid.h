@@ -111,7 +111,7 @@ public:
 
     // Get the Cell Id from the point.
     vtkm::Id3 logicalCell(0, 0, 0);
-    for (vtkm::Int32 dim = 0; dim < 3; ++dim)
+    for (vtkm::Int32 dim = 0; dim < dimensions; ++dim)
     {
       //
       // When searching for points, we consider the max value of the cell
