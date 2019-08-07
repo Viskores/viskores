@@ -38,32 +38,38 @@ void CellLocatorUniformGrid::Build()
   if (cellSet.IsSameType(Structured2DType()))
   {
     this->Is3D = false;
-    this->Bounds = coords.GetBounds();
-    vtkm::Id2 cellDims =
-      cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-    this->CellDims = vtkm::Id3(cellDims[0], cellDims[1], 0);
-    this->RangeTransform[0] = static_cast<vtkm::FloatDefault>(this->CellDims[0]) /
-      static_cast<vtkm::FloatDefault>(this->Bounds.X.Length());
-    this->RangeTransform[1] = static_cast<vtkm::FloatDefault>(this->CellDims[1]) /
-      static_cast<vtkm::FloatDefault>(this->Bounds.Y.Length());
+    Structured2DType structuredCellSet = cellSet.Cast<Structured2DType>();
+    vtkm::Id2 pointDims = structuredCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
+    this->PointDims = vtkm::Id3(pointDims[0], pointDims[1], 1);
   }
   else if (cellSet.IsSameType(Structured3DType()))
   {
     this->Is3D = true;
-    this->Bounds = coords.GetBounds();
-    this->CellDims =
-      cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-    this->RangeTransform[0] = static_cast<vtkm::FloatDefault>(this->CellDims[0]) /
-      static_cast<vtkm::FloatDefault>(this->Bounds.X.Length());
-    this->RangeTransform[1] = static_cast<vtkm::FloatDefault>(this->CellDims[1]) /
-      static_cast<vtkm::FloatDefault>(this->Bounds.Y.Length());
-    this->RangeTransform[2] = static_cast<vtkm::FloatDefault>(this->CellDims[2]) /
-      static_cast<vtkm::FloatDefault>(this->Bounds.Z.Length());
+    Structured3DType structuredCellSet = cellSet.Cast<Structured3DType>();
+    this->PointDims = structuredCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
   }
   else
   {
     throw vtkm::cont::ErrorInternal("Cells are not structured.");
   }
+
+  UniformType uniformCoords = coords.GetData().Cast<UniformType>();
+  this->Origin = uniformCoords.GetPortalConstControl().GetOrigin();
+
+  vtkm::Vec<vtkm::FloatDefault, 3> spacing = uniformCoords.GetPortalConstControl().GetSpacing();
+  vtkm::Vec<vtkm::FloatDefault, 3> unitLength;
+  unitLength[0] = static_cast<vtkm::FloatDefault>(PointDims[0] - 1);
+  unitLength[1] = static_cast<vtkm::FloatDefault>(PointDims[1] - 1);
+  unitLength[2] = static_cast<vtkm::FloatDefault>(PointDims[2] - 1);
+
+  this->MaxPoint = Origin + spacing * unitLength;
+  this->InvSpacing[0] = 1.f / spacing[0];
+  this->InvSpacing[1] = 1.f / spacing[1];
+  this->InvSpacing[2] = 1.f / spacing[2];
+
+  this->CellDims[0] = PointDims[0] - 1;
+  this->CellDims[1] = PointDims[1] - 1;
+  this->CellDims[2] = PointDims[2] - 1;
 }
 
 namespace
@@ -93,10 +99,11 @@ const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
     success = vtkm::cont::TryExecuteOnDevice(device,
                                              CellLocatorUniformGridPrepareForExecutionFunctor<3>(),
                                              this->ExecutionObjectHandle,
-                                             this->Bounds,
-                                             this->RangeTransform,
                                              this->CellDims,
-                                             this->GetCellSet().template Cast<Structured3DType>(),
+                                             this->PointDims,
+                                             this->Origin,
+                                             this->InvSpacing,
+                                             this->MaxPoint,
                                              this->GetCoordinates().GetData());
   }
   else
@@ -104,10 +111,11 @@ const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
     success = vtkm::cont::TryExecuteOnDevice(device,
                                              CellLocatorUniformGridPrepareForExecutionFunctor<2>(),
                                              this->ExecutionObjectHandle,
-                                             this->Bounds,
-                                             this->RangeTransform,
                                              this->CellDims,
-                                             this->GetCellSet().template Cast<Structured2DType>(),
+                                             this->PointDims,
+                                             this->Origin,
+                                             this->InvSpacing,
+                                             this->MaxPoint,
                                              this->GetCoordinates().GetData());
   }
   if (!success)
