@@ -48,6 +48,9 @@ namespace filter
 class HelloField : public vtkm::filter::FilterField<HelloField>
 {
 public:
+  // Specify that this filter operates on 3-vectors
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   template <typename FieldType, typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet,
                                           const FieldType& inField,
@@ -77,12 +80,6 @@ public:
                                                 fieldMetadata.GetAssociation(),
                                                 fieldMetadata.GetCellSetName());
   }
-};
-
-template <>
-struct FilterTraits<vtkm::filter::HelloField>
-{
-  using InputFieldTypeList = vtkm::ListTagBase<vtkm::Vec3f>;
 };
 }
 } // vtkm::filter
