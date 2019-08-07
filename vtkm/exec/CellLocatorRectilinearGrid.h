@@ -32,11 +32,10 @@ template <typename DeviceAdapter, vtkm::IdComponent dimensions>
 class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid final : public vtkm::exec::CellLocator
 {
 private:
-  using FromType = vtkm::TopologyElementTagPoint;
-  using ToType = vtkm::TopologyElementTagCell;
-  using CellSetPortal = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                           vtkm::TopologyElementTagCell,
-                                                           dimensions>;
+  using VisitType = vtkm::TopologyElementTagCell;
+  using IncidentType = vtkm::TopologyElementTagPoint;
+  using CellSetPortal = vtkm::exec::ConnectivityStructured<VisitType, IncidentType, dimensions>;
+
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
@@ -53,7 +52,7 @@ public:
                              DeviceAdapter)
     : PlaneSize(planeSize)
     , RowSize(rowSize)
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType()))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType()))
     , Coords(coords.PrepareForInput(DeviceAdapter()))
     , PointDimensions(cellSet.GetPointDimensions())
   {

@@ -343,8 +343,8 @@ public:
 class StructuredExternalTriangles : public vtkm::worklet::WorkletMapField
 {
 protected:
-  using ConnType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                      vtkm::TopologyElementTagCell,
+  using ConnType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                                      vtkm::TopologyElementTagPoint,
                                                       3>;
   ConnType Connectivity;
   vtkm::Id Segments[7];
@@ -680,14 +680,14 @@ void MeshConnectivityBuilder::BuildConnectivity(
   BoundingBox[5] = vtkm::Float32(coordsBounds.Z.Max);
 
   const vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes = cellSetUnstructured.GetShapesArray(
-    vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   const vtkm::cont::ArrayHandle<vtkm::Id> conn = cellSetUnstructured.GetConnectivityArray(
-    vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   const vtkm::cont::ArrayHandleCounting<vtkm::Id> shapeOffsets =
-    cellSetUnstructured.GetIndexOffsetArray(vtkm::TopologyElementTagPoint(),
-                                            vtkm::TopologyElementTagCell());
+    cellSetUnstructured.GetIndexOffsetArray(vtkm::TopologyElementTagCell(),
+                                            vtkm::TopologyElementTagPoint());
 
   vtkm::cont::ArrayHandle<vtkm::Id> faceConnectivity;
   vtkm::cont::ArrayHandle<vtkm::Id3> cellFaceId;
@@ -741,13 +741,13 @@ void MeshConnectivityBuilder::BuildConnectivity(
   BoundingBox[5] = vtkm::Float32(coordsBounds.Z.Max);
 
   const vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = cellSetUnstructured.GetShapesArray(
-    vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   const vtkm::cont::ArrayHandle<vtkm::Id> conn = cellSetUnstructured.GetConnectivityArray(
-    vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   const vtkm::cont::ArrayHandle<vtkm::Id> shapeOffsets = cellSetUnstructured.GetIndexOffsetArray(
-    vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   vtkm::cont::ArrayHandle<vtkm::Id> faceConnectivity;
   vtkm::cont::ArrayHandle<vtkm::Id3> cellFaceId;
@@ -791,7 +791,7 @@ struct StructuredTrianglesFunctor
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
     vtkm::worklet::DispatcherMapField<StructuredExternalTriangles> dispatch(
       StructuredExternalTriangles(cellSet.PrepareForInput(
-        Device(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())));
+        Device(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())));
 
     dispatch.SetDevice(Device());
     dispatch.Invoke(counting, triangles);
@@ -866,7 +866,7 @@ MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
     // Now we need to determine what type of cells this holds
     //
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
-      singleType.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+      singleType.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     vtkm::UInt8 shapeType = shapes.GetPortalConstControl().Get(0);
     if (shapeType == CELL_SHAPE_HEXAHEDRON)
       type = UnstructuredSingle;

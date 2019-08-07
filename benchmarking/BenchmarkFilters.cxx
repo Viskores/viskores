@@ -655,14 +655,14 @@ class BenchmarkFilters
         { // Why does CastAndCall insist on making the cellset const?
           using CellSetT = vtkm::cont::CellSetExplicit<T1, T2, T3, T4>;
           CellSetT& mcellSet = const_cast<CellSetT&>(cellSet);
-          mcellSet.ResetConnectivity(vtkm::TopologyElementTagCell{},
-                                     vtkm::TopologyElementTagPoint{});
+          mcellSet.ResetConnectivity(vtkm::TopologyElementTagPoint{},
+                                     vtkm::TopologyElementTagCell{});
         }
 
         Timer timer{ DeviceAdapter() };
         timer.Start();
         cellSet.PrepareForInput(
-          DeviceAdapter(), vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
+          DeviceAdapter(), vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
         this->Time = timer.GetElapsedTime();
       }
     };

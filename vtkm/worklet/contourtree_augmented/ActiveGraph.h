@@ -97,7 +97,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/worklet/Invoker.h>
+#include <vtkm/cont/Invoker.h>
 
 
 namespace active_graph_inc_ns = vtkm::worklet::contourtree_augmented::active_graph_inc;
@@ -114,7 +114,7 @@ namespace contourtree_augmented
 class ActiveGraph
 { // class ActiveGraph
 public:
-  vtkm::worklet::Invoker Invoke;
+  vtkm::cont::Invoker Invoke;
 
   // we also need the orientation of the edges (i.e. is it join or split)
   bool isJoinGraph;

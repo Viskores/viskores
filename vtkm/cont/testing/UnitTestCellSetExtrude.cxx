@@ -25,7 +25,7 @@ std::vector<int> topology = { 0, 2, 1 };
 std::vector<int> nextNode = { 0, 1, 2 };
 
 
-struct CopyTopo : public vtkm::worklet::WorkletMapPointToCell
+struct CopyTopo : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   typedef void ControlSignature(CellSetIn, FieldOutCell);
   typedef _2 ExecutionSignature(CellShape, PointIndices);
@@ -36,7 +36,7 @@ struct CopyTopo : public vtkm::worklet::WorkletMapPointToCell
   }
 };
 
-struct CopyReverseCellCount : public vtkm::worklet::WorkletMapCellToPoint
+struct CopyReverseCellCount : public vtkm::worklet::WorkletVisitPointsWithCells
 {
   typedef void ControlSignature(CellSetIn, FieldOutPoint);
   typedef _2 ExecutionSignature(CellShape, CellCount, CellIndices);

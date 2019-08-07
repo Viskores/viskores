@@ -32,7 +32,7 @@ namespace rendering
 class Cylinderizer
 {
 public:
-  class CountSegments : public vtkm::worklet::WorkletMapPointToCell
+  class CountSegments : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -80,12 +80,12 @@ public:
   }; //class CountSegments
 
   template <int DIM>
-  class SegmentedStructured : public vtkm::worklet::WorkletMapPointToCell
+  class SegmentedStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInTo, WholeArrayOut);
-    typedef void ExecutionSignature(FromIndices, _2, _3);
+    typedef void ControlSignature(CellSetIn cellset, FieldInCell, WholeArrayOut);
+    typedef void ExecutionSignature(IncidentElementIndices, _2, _3);
     //typedef _1 InputDomain;
     VTKM_CONT
     SegmentedStructured() {}
@@ -196,7 +196,7 @@ public:
   };
 
 
-  class Cylinderize : public vtkm::worklet::WorkletMapPointToCell
+  class Cylinderize : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:

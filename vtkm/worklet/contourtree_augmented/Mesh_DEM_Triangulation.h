@@ -78,7 +78,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/worklet/Invoker.h>
+#include <vtkm/cont/Invoker.h>
 
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -244,7 +244,7 @@ void Mesh_DEM_Triangulation<T, StorageType>::SortData(
   //  for (indexType vertex = 0; vertex < nVertices; vertex++)
   //            sortIndices[sortOrder[vertex]] = vertex;
   mesh_dem_worklets::SortIndices sortIndicesWorklet;
-  vtkm::worklet::Invoker invoke;
+  vtkm::cont::Invoker invoke;
   invoke(sortIndicesWorklet, sortOrder, sortIndices);
 
   // Debug print statement

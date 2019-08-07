@@ -72,6 +72,7 @@ namespace filter
 class ContourTreePPP2 : public vtkm::filter::FilterField<ContourTreePPP2>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
   VTKM_CONT
   ContourTreePPP2(bool useMarchingCubes = false, bool computeRegularStructure = true);
 
@@ -100,12 +101,6 @@ private:
     MeshSortOrder; // Array with the sorted order of the mesh vertices
 };
 
-template <>
-class FilterTraits<ContourTreePPP2>
-{
-public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
-};
 
 // Helper struct to collect sizing information from the dataset
 struct GetRowsColsSlices

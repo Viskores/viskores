@@ -85,7 +85,7 @@ VTKM_EXEC inline vtkm::UInt64 Morton3D64(vtkm::Float32& x, vtkm::Float32& y, vtk
   return (zz << 2 | yy << 1 | xx);
 }
 
-class MortonCodeFace : public vtkm::worklet::WorkletMapPointToCell
+class MortonCodeFace : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 private:
   // (1.f / dx),(1.f / dy), (1.f, / dz)
@@ -140,9 +140,9 @@ public:
   }
 
   using ControlSignature =
-    void(CellSetIn cellset, WholeArrayIn, FieldInTo, WholeArrayOut, WholeArrayOut);
+    void(CellSetIn cellset, WholeArrayIn, FieldInCell, WholeArrayOut, WholeArrayOut);
 
-  using ExecutionSignature = void(CellShape, FromIndices, WorkIndex, _2, _3, _4, _5);
+  using ExecutionSignature = void(CellShape, IncidentElementIndices, WorkIndex, _2, _3, _4, _5);
 
   template <typename CellShape,
             typename CellNodeVecType,

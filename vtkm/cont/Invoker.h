@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_worklet_Invoker_h
-#define vtk_m_worklet_Invoker_h
+#ifndef vtk_m_cont_Invoker_h
+#define vtk_m_cont_Invoker_h
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -19,7 +19,7 @@
 
 namespace vtkm
 {
-namespace worklet
+namespace cont
 {
 
 
@@ -56,15 +56,16 @@ struct Invoker
   /// Optional second parameter is the scatter type associated with the worklet.
   /// Any additional parameters are the ControlSignature arguments for the worklet.
   ///
-  template <typename Worklet,
-            typename T,
-            typename... Args,
-            typename std::enable_if<
-              std::is_base_of<internal::ScatterBase, internal::detail::remove_cvref<T>>::value,
-              int>::type* = nullptr>
+  template <
+    typename Worklet,
+    typename T,
+    typename... Args,
+    typename std::enable_if<std::is_base_of<worklet::internal::ScatterBase,
+                                            worklet::internal::detail::remove_cvref<T>>::value,
+                            int>::type* = nullptr>
   inline void operator()(Worklet&& worklet, T&& scatter, Args&&... args) const
   {
-    using WorkletType = internal::detail::remove_cvref<Worklet>;
+    using WorkletType = worklet::internal::detail::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet, scatter);
@@ -76,15 +77,16 @@ struct Invoker
   /// Optional second parameter is the scatter type associated with the worklet.
   /// Any additional parameters are the ControlSignature arguments for the worklet.
   ///
-  template <typename Worklet,
-            typename T,
-            typename... Args,
-            typename std::enable_if<
-              !std::is_base_of<internal::ScatterBase, internal::detail::remove_cvref<T>>::value,
-              int>::type* = nullptr>
+  template <
+    typename Worklet,
+    typename T,
+    typename... Args,
+    typename std::enable_if<!std::is_base_of<worklet::internal::ScatterBase,
+                                             worklet::internal::detail::remove_cvref<T>>::value,
+                            int>::type* = nullptr>
   inline void operator()(Worklet&& worklet, T&& t, Args&&... args) const
   {
-    using WorkletType = internal::detail::remove_cvref<Worklet>;
+    using WorkletType = worklet::internal::detail::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet);

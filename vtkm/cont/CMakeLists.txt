@@ -89,6 +89,7 @@ set(headers
   FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
   Initialize.h
+  Invoker.h
   Logging.h
   MultiBlock.h
   PointLocator.h

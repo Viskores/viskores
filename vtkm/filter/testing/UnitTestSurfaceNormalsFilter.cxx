@@ -74,6 +74,7 @@ void TestSurfaceNormals()
 
   std::cout << "generate both cell and point normals:\n";
   filter.SetGeneratePointNormals(true);
+  filter.SetAutoOrientNormals(true);
   result = filter.Execute(ds);
   VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::Association::POINTS),
                    "Point normals missing.");

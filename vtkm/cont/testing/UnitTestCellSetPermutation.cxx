@@ -20,7 +20,7 @@
 namespace
 {
 
-struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
+struct WorkletPointToCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn cellset, FieldOutCell numPoints);
   using ExecutionSignature = void(PointIndices, _2);
@@ -33,7 +33,7 @@ struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
   }
 };
 
-struct WorkletCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
+struct WorkletCellToPoint : public vtkm::worklet::WorkletVisitPointsWithCells
 {
   using ControlSignature = void(CellSetIn cellset, FieldOutPoint numCells);
   using ExecutionSignature = void(CellIndices, _2);
@@ -46,7 +46,7 @@ struct WorkletCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
   }
 };
 
-struct CellsOfPoint : public vtkm::worklet::WorkletMapCellToPoint
+struct CellsOfPoint : public vtkm::worklet::WorkletVisitPointsWithCells
 {
   using ControlSignature = void(CellSetIn cellset, FieldInPoint offset, WholeArrayOut cellIds);
   using ExecutionSignature = void(CellIndices, _2, _3);

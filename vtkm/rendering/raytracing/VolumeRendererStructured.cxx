@@ -49,7 +49,7 @@ protected:
 
   DefaultConstHandle CoordPortals[3];
   CartesianConstPortal Coordinates;
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
     Conn;
   vtkm::Id3 PointDimensions;
   vtkm::Vec3f_32 MinPoint;
@@ -60,8 +60,8 @@ public:
                      vtkm::cont::CellSetStructured<3>& cellset)
     : Coordinates(coordinates.PrepareForInput(Device()))
     , Conn(cellset.PrepareForInput(Device(),
-                                   vtkm::TopologyElementTagPoint(),
-                                   vtkm::TopologyElementTagCell()))
+                                   vtkm::TopologyElementTagCell(),
+                                   vtkm::TopologyElementTagPoint()))
   {
     CoordPortals[0] = Coordinates.GetFirstPortal();
     CoordPortals[1] = Coordinates.GetSecondPortal();
@@ -195,15 +195,15 @@ protected:
   vtkm::Vec3f_32 InvSpacing;
   vtkm::Vec3f_32 MaxPoint;
   UniformConstPortal Coordinates;
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
     Conn;
 
 public:
   UniformLocator(const UniformArrayHandle& coordinates, vtkm::cont::CellSetStructured<3>& cellset)
     : Coordinates(coordinates.PrepareForInput(Device()))
     , Conn(cellset.PrepareForInput(Device(),
-                                   vtkm::TopologyElementTagPoint(),
-                                   vtkm::TopologyElementTagCell()))
+                                   vtkm::TopologyElementTagCell(),
+                                   vtkm::TopologyElementTagPoint()))
   {
     Origin = Coordinates.GetOrigin();
     PointDimensions = Conn.GetPointDimensions();

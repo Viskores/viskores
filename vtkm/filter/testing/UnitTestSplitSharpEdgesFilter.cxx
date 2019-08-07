@@ -186,8 +186,8 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
                      "result value does not match expected value");
   }
 
-  const auto& connectivityArray = newCellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                                  vtkm::TopologyElementTagCell());
+  const auto& connectivityArray = newCellset.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                                  vtkm::TopologyElementTagPoint());
   auto connectivityArrayPortal = connectivityArray.GetPortalConstControl();
   for (vtkm::IdComponent i = 0; i < connectivityArray.GetNumberOfValues(); i++)
   {

@@ -12,16 +12,16 @@
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/worklet/Invoker.h>
 
 namespace
 {
-struct CellCentroidCalculator : public vtkm::worklet::WorkletMapPointToCell
+struct CellCentroidCalculator : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   typedef void ControlSignature(CellSetIn, FieldInPoint, FieldOut);
   typedef _3 ExecutionSignature(_1, PointCount, _2);

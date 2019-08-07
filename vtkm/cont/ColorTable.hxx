@@ -15,7 +15,7 @@
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
 
-#include <vtkm/worklet/Invoker.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/colorconversion/LookupTable.h>
 #include <vtkm/worklet/colorconversion/Portals.h>
 #include <vtkm/worklet/colorconversion/TransferFunction.h>
@@ -79,7 +79,7 @@ struct map_color_table
   inline bool operator()(DeviceAdapter device, ColorTable&& colors, Args&&... args) const
   {
     vtkm::worklet::colorconversion::TransferFunction transfer(colors->PrepareForExecution(device));
-    vtkm::worklet::Invoker invoke(device);
+    vtkm::cont::Invoker invoke(device);
     invoke(transfer, std::forward<Args>(args)...);
     return true;
   }
@@ -97,7 +97,7 @@ bool ColorTable::Map(const vtkm::cont::ArrayHandle<T, S>& values,
     return false;
   }
   vtkm::worklet::colorconversion::LookupTable lookupTable(samples);
-  vtkm::worklet::Invoker invoke(vtkm::cont::DeviceAdapterTagAny{});
+  vtkm::cont::Invoker invoke(vtkm::cont::DeviceAdapterTagAny{});
   invoke(lookupTable, values, samples.Samples, rgbaOut);
   return true;
 }
@@ -112,7 +112,7 @@ bool ColorTable::Map(const vtkm::cont::ArrayHandle<T, S>& values,
     return false;
   }
   vtkm::worklet::colorconversion::LookupTable lookupTable(samples);
-  vtkm::worklet::Invoker invoke(vtkm::cont::DeviceAdapterTagAny{});
+  vtkm::cont::Invoker invoke(vtkm::cont::DeviceAdapterTagAny{});
   invoke(lookupTable, values, samples.Samples, rgbOut);
   return true;
 }
