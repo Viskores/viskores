@@ -252,10 +252,12 @@ private:
     {
       constexpr vtkm::IdComponent NUM_COMPONENTS = 4;
       using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
+      using ComponentArrayType = vtkm::cont::ArrayHandle<ComponentType>;
+      using SOAPortalType =
+        vtkm::internal::ArrayPortalSOA<ValueType, typename ComponentArrayType::PortalControl>;
 
-      vtkm::internal::ArrayPortalSOA<ValueType,
-                                     typename vtkm::cont::ArrayHandle<ComponentType>::PortalControl>
-        soaPortal(ARRAY_SIZE);
+      std::cout << "Test SOA portal reflects data in component portals." << std::endl;
+      SOAPortalType soaPortalIn(ARRAY_SIZE);
 
       std::array<vtkm::cont::ArrayHandle<ComponentType>, NUM_COMPONENTS> implArrays;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
@@ -265,27 +267,30 @@ private:
         auto portal = array.GetPortalControl();
         for (vtkm::IdComponent valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
         {
-          portal.Set(valueIndex,
-                     TestValue(valueIndex, ComponentType{}) + ComponentType(componentIndex));
+          portal.Set(valueIndex, TestValue(valueIndex, ValueType{})[componentIndex]);
         }
 
-        soaPortal.SetPortal(componentIndex, portal);
+        soaPortalIn.SetPortal(componentIndex, portal);
 
         implArrays[static_cast<std::size_t>(componentIndex)] = array;
       }
 
-      for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+      VTKM_TEST_ASSERT(soaPortalIn.GetNumberOfValues() == ARRAY_SIZE);
+      CheckPortal(soaPortalIn);
+
+      std::cout << "Test data set in SOA portal gets set in component portals." << std::endl;
+      SOAPortalType soaPortalOut(ARRAY_SIZE);
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
       {
-        ValueType v = soaPortal.Get(valueIndex);
-        for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
-             ++componentIndex)
-        {
-          VTKM_TEST_ASSERT(
-            test_equal(v[componentIndex], TestValue(valueIndex, ComponentType{}) + componentIndex));
-        }
+        vtkm::cont::ArrayHandle<ComponentType> array;
+        array.Allocate(ARRAY_SIZE);
+        auto portal = array.GetPortalControl();
+        soaPortalOut.SetPortal(componentIndex, portal);
+
+        implArrays[static_cast<std::size_t>(componentIndex)] = array;
       }
 
-      SetPortal(soaPortal);
+      SetPortal(soaPortalOut);
 
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
       {
