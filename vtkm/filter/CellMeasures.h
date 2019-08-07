@@ -30,6 +30,8 @@ template <typename IntegrationType>
 class CellMeasures : public vtkm::filter::FilterCell<CellMeasures<IntegrationType>>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   CellMeasures();
 
@@ -43,13 +45,6 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
     const vtkm::filter::FieldMetadata& fieldMeta,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-};
-
-template <typename IntegrationType>
-class FilterTraits<CellMeasures<IntegrationType>>
-{
-public:
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 } // namespace vtkm::filter

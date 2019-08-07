@@ -46,8 +46,7 @@ inline VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(
   this->Worklet.Run(
     field,
     vtkm::filter::ApplyPolicy(normalF, policy, vtkm::filter::FilterTraits<WarpScalar>()),
-    vtkm::filter::ApplyPolicy(
-      sfF, policy, vtkm::filter::FilterTraits<WarpScalar, WarpScalarScalarFieldTag>()),
+    vtkm::filter::ApplyPolicy(sfF, policy, vtkm::TypeListTagFieldScalar{}),
     this->ScaleAmount,
     result);
 

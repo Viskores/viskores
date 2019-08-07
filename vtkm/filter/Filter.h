@@ -174,6 +174,14 @@ public:
   ~Filter();
 
   //@{
+  /// \brief Specify which subset of types a filter supports.
+  ///
+  /// A filter is able to state what subset of types it supports
+  /// by default. By default we use ListTagUniversal to represent that the
+  /// filter accepts all types specified by the users provided policy
+  using SupportedTypes = vtkm::ListTagUniversal;
+
+  //@{
   /// \brief Specify which fields get passed from input to output.
   ///
   /// After a filter successfully executes and returns a new data set, fields are mapped from

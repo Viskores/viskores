@@ -27,6 +27,8 @@ namespace filter
 class Streamline : public vtkm::filter::FilterDataSetWithField<Streamline>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   Streamline();
 
@@ -59,16 +61,6 @@ private:
   vtkm::worklet::particleadvection::ScalarType StepSize;
   vtkm::Id NumberOfSteps;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
-};
-
-template <>
-class FilterTraits<Streamline>
-{
-public:
-  struct TypeListTagStreamline : vtkm::ListTagBase<vtkm::Vec3f_32, vtkm::Vec3f_64>
-  {
-  };
-  using InputFieldTypeList = TypeListTagStreamline;
 };
 }
 } // namespace vtkm::filter

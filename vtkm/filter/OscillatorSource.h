@@ -27,6 +27,8 @@ namespace filter
 class OscillatorSource : public vtkm::filter::FilterField<OscillatorSource>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   OscillatorSource();
 
@@ -65,14 +67,6 @@ public:
 
 private:
   vtkm::worklet::OscillatorSource Worklet;
-};
-
-template <>
-class FilterTraits<OscillatorSource>
-{
-public:
-  //Point Oscillator can only convert Float and Double Vec3 arrays
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 }

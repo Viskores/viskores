@@ -22,6 +22,7 @@ namespace filter
 class CellSetConnectivity : public vtkm::filter::FilterCell<CellSetConnectivity>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
   VTKM_CONT CellSetConnectivity();
 
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -29,15 +30,6 @@ public:
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMetadata,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>&);
-};
-
-template <>
-class FilterTraits<vtkm::filter::CellSetConnectivity>
-{
-public:
-  struct InputFieldTypeList : vtkm::TypeListTagScalarAll
-  {
-  };
 };
 }
 }
