@@ -99,7 +99,7 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
 
 
   vtkm::cont::DataSetFieldAdd dsfa;
-  std::vector<vtkm::FloatDefault> v(tubePoints.GetNumberOfValues());
+  std::vector<vtkm::FloatDefault> v(static_cast<std::size_t>(tubePoints.GetNumberOfValues()));
   // The first value is a cap:
   v[0] = 0;
   for (vtkm::Id i = 1; i < vtkm::Id(v.size()); i += numSides)
@@ -108,7 +108,7 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
     vtkm::FloatDefault r = a + b * t;
     for (vtkm::Id j = i; j < i + numSides && j < vtkm::Id(v.size()); ++j)
     {
-      v[j] = r;
+      v[static_cast<std::size_t>(j)] = r;
     }
   }
   // Point at the end cap should be the same color as the surroundings:

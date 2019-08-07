@@ -13,20 +13,18 @@
 
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
-#include <vtkm/filter/ClipWithField.h>
+#include <vtkm/filter/Triangulate.h>
 
 int main(int argc, char* argv[])
 {
   vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::Strict);
 
-  vtkm::cont::DataSet input = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetCowNose();
+  vtkm::cont::DataSet input = vtkm::cont::testing::MakeTestDataSet().Make2DUniformDataSet2();
 
-  vtkm::filter::ClipWithField clipFilter;
-  clipFilter.SetActiveField("pointvar");
-  clipFilter.SetClipValue(20.0);
-  vtkm::cont::DataSet output = clipFilter.Execute(input);
+  vtkm::filter::Triangulate triangulateFilter;
+  vtkm::cont::DataSet output = triangulateFilter.Execute(input);
 
-  vtkm::io::writer::VTKDataSetWriter writer("out_data.vtk");
+  vtkm::io::writer::VTKDataSetWriter writer("out_tris.vtk");
   writer.WriteDataSet(output);
 
   return 0;

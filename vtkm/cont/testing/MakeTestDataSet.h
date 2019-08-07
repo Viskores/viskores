@@ -18,6 +18,8 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 
+#include <vtkm/cont/testing/Testing.h>
+
 #include <numeric>
 
 namespace vtkm
@@ -1551,9 +1553,19 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetCowNose()
   std::vector<vtkm::Float32> cellvar(connectivitySize / 3);
   std::iota(cellvar.begin(), cellvar.end(), 132.f);
 
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> pointvec;
+  pointvec.Allocate(nVerts);
+  SetPortal(pointvec.GetPortalControl());
+
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> cellvec;
+  cellvec.Allocate(connectivitySize / 3);
+  SetPortal(cellvec.GetPortalControl());
+
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddPointField(dataSet, "pointvar", pointvar);
   dsf.AddCellField(dataSet, "cellvar", cellvar, "cells");
+  dsf.AddPointField(dataSet, "point_vectors", pointvec);
+  dsf.AddCellField(dataSet, "cell_vectors", cellvec, "cells");
 
   return dataSet;
 }
