@@ -73,11 +73,9 @@ inline VTKM_CONT vtkm::cont::DataSet OscillatorSource::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::OscillatorSource> dispatcher(this->Worklet);
-
   //todo, we need to use the policy to determine the valid conversions
   //that the dispatcher should do
-  dispatcher.Invoke(field, outArray);
+  this->Invoke(this->Worklet, field, outArray);
 
   return internal::CreateResult(inDataSet,
                                 outArray,

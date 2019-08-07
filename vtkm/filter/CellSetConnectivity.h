@@ -11,9 +11,7 @@
 #ifndef vtkm_m_filter_CellSetConnectivity_h
 #define vtkm_m_filter_CellSetConnectivity_h
 
-
 #include <vtkm/filter/FilterCell.h>
-#include <vtkm/worklet/connectivities/CellSetConnectivity.h>
 
 namespace vtkm
 {

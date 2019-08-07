@@ -9,7 +9,6 @@
 //============================================================================
 
 #include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/Math.h>
 
@@ -37,9 +36,7 @@ inline VTKM_CONT vtkm::cont::DataSet VectorMagnitude::DoExecute(
   using ReturnType = typename ::vtkm::detail::FloatingPointReturnType<T>::Type;
   vtkm::cont::ArrayHandle<ReturnType> outArray;
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude> dispatcher(this->Worklet);
-
-  dispatcher.Invoke(field, outArray);
+  this->Invoke(this->Worklet, field, outArray);
 
   return internal::CreateResult(inDataSet,
                                 outArray,

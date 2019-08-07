@@ -20,18 +20,23 @@ namespace filter
 namespace detail
 {
 
-template <typename T>
 struct CrossProductFunctor
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> OutArray;
-
-  template <typename PrimaryFieldType, typename SecondaryFieldType>
-  void operator()(const SecondaryFieldType& secondaryField, const PrimaryFieldType& primaryField)
+  vtkm::cont::Invoker& Invoke;
+  CrossProductFunctor(vtkm::cont::Invoker& invoke)
+    : Invoke(invoke)
   {
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::CrossProduct> dispatcher;
-    dispatcher.Invoke(primaryField,
-                      vtkm::cont::make_ArrayHandleCast<vtkm::Vec<T, 3>>(secondaryField),
-                      this->OutArray);
+  }
+
+  template <typename SecondaryFieldType, typename StorageType, typename T>
+  void operator()(const SecondaryFieldType& secondaryField,
+                  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& primaryField,
+                  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& output) const
+  {
+    this->Invoke(vtkm::worklet::CrossProduct{},
+                 primaryField,
+                 vtkm::cont::make_ArrayHandleCast<vtkm::Vec<T, 3>>(secondaryField),
+                 output);
   }
 };
 
@@ -56,13 +61,18 @@ inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
   const vtkm::filter::FieldMetadata& fieldMetadata,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  detail::CrossProductFunctor<T> functor;
+
+  detail::CrossProductFunctor functor(this->Invoke);
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> output;
   try
   {
     if (this->UseCoordinateSystemAsSecondaryField)
     {
       vtkm::cont::CastAndCall(
-        inDataSet.GetCoordinateSystem(this->GetSecondaryCoordinateSystemIndex()), functor, field);
+        inDataSet.GetCoordinateSystem(this->GetSecondaryCoordinateSystemIndex()),
+        functor,
+        field,
+        output);
     }
     else
     {
@@ -73,7 +83,7 @@ inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
         policy,
         Traits())
         .ResetTypes(TypeList())
-        .CastAndCall(functor, field);
+        .CastAndCall(functor, field, output);
     }
   }
   catch (const vtkm::cont::Error&)
@@ -83,7 +93,7 @@ inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
 
 
   return internal::CreateResult(inDataSet,
-                                functor.OutArray,
+                                output,
                                 this->GetOutputFieldName(),
                                 fieldMetadata.GetAssociation(),
                                 fieldMetadata.GetCellSetName());

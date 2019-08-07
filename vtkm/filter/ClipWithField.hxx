@@ -13,7 +13,6 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm
 {

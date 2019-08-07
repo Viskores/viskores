@@ -11,9 +11,8 @@
 #ifndef vtkm_m_filter_CellSetConnectivity_hxx
 #define vtkm_m_filter_CellSetConnectivity_hxx
 
-#include <vtkm/filter/CellSetConnectivity.h>
 #include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/connectivities/CellSetConnectivity.h>
 
 namespace vtkm
 {

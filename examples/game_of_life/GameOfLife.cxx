@@ -27,7 +27,6 @@
 #include <vtkm/interop/TransferToOpenGL.h>
 
 #include <vtkm/filter/FilterDataSet.h>
-#include <vtkm/worklet/DispatcherPointNeighborhood.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 #include <vtkm/cont/TryExecute.h>
@@ -111,9 +110,6 @@ public:
                                           vtkm::filter::PolicyBase<Policy> policy)
 
   {
-    using DispatcherType = vtkm::worklet::DispatcherPointNeighborhood<UpdateLifeState>;
-
-
     vtkm::cont::ArrayHandle<vtkm::UInt8> state;
     vtkm::cont::ArrayHandle<vtkm::UInt8> prevstate;
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
@@ -125,8 +121,7 @@ public:
     input.GetField("state", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(prevstate);
 
     //Update the game state
-    DispatcherType dispatcher;
-    dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
+    this->Invoke(vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
 
     //save the results
     vtkm::cont::DataSet output;

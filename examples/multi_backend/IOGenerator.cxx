@@ -13,8 +13,8 @@
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/Invoker.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -43,8 +43,8 @@ vtkm::cont::DataSet make_test3DImageData(vtkm::Id3 dims)
   vtkm::cont::DataSet ds = Builder::Create(dims);
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> field;
-  vtkm::worklet::DispatcherMapField<WaveField> dispatcher;
-  dispatcher.Invoke(ds.GetCoordinateSystem(), field);
+  vtkm::cont::Invoker invoke;
+  invoke(WaveField{}, ds.GetCoordinateSystem(), field);
 
   FieldAdd::AddPointField(ds, "vec_field", field);
   return ds;

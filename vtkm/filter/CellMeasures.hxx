@@ -11,7 +11,6 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm
 {
@@ -39,8 +38,10 @@ inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
   const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
   vtkm::cont::ArrayHandle<T> outArray;
 
-  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<IntegrationType>> dispatcher;
-  dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellset, policy), points, outArray);
+  this->Invoke(vtkm::worklet::CellMeasure<IntegrationType>{},
+               vtkm::filter::ApplyPolicy(cellset, policy),
+               points,
+               outArray);
 
   vtkm::cont::DataSet result;
   std::string outputName = this->GetCellMeasureName();
