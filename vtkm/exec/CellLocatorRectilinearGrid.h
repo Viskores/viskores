@@ -57,24 +57,21 @@ public:
     , Coords(coords.PrepareForInput(DeviceAdapter()))
     , PointDimensions(cellSet.GetPointDimensions())
   {
-    this->AxisPortals[0] = Coords.GetFirstPortal();
-    this->MinPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(0);
-    this->MaxPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1);
-
-    this->AxisPortals[1] = Coords.GetSecondPortal();
-    this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
-    this->MaxPoint[1] =
-      coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
-    if (dimensions == 2)
-      return;
-    else
+    auto contPortal = coords.GetPortalConstControl();
+    for (vtkm::IdComponent dim = 0; dim < dimensions; dim++)
     {
-      this->AxisPortals[2] = Coords.GetThirdPortal();
-      this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
-      this->MaxPoint[2] =
-        coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
+      auto componentContPortal = (dim == 0) ? contPortal.GetFirstPortal() : (dim == 1)
+          ? contPortal.GetSecondPortal()
+          : contPortal.GetThirdPortal();
+      auto componentExecPortal = (dim == 0) ? Coords.GetFirstPortal() : (dim == 1)
+          ? Coords.GetSecondPortal()
+          : Coords.GetThirdPortal();
+      this->AxisPortals[dim] = componentExecPortal;
+      this->MinPoint[dim] = componentContPortal.Get(0);
+      this->MaxPoint[dim] = componentContPortal.Get(PointDimensions[0] - 1);
     }
   }
+
 
   VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept
   {
