@@ -57,21 +57,22 @@ public:
     , Coords(coords.PrepareForInput(DeviceAdapter()))
     , PointDimensions(cellSet.GetPointDimensions())
   {
-    auto contPortal = coords.GetPortalConstControl();
-    for (vtkm::IdComponent dim = 0; dim < dimensions; dim++)
+    this->AxisPortals[0] = Coords.GetFirstPortal();
+    this->MinPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(0);
+    this->MaxPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1);
+
+    this->AxisPortals[1] = Coords.GetSecondPortal();
+    this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
+    this->MaxPoint[1] =
+      coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
+    if (dimensions == 3)
     {
-      auto componentContPortal = (dim == 0) ? contPortal.GetFirstPortal() : (dim == 1)
-          ? contPortal.GetSecondPortal()
-          : contPortal.GetThirdPortal();
-      auto componentExecPortal = (dim == 0) ? Coords.GetFirstPortal() : (dim == 1)
-          ? Coords.GetSecondPortal()
-          : Coords.GetThirdPortal();
-      this->AxisPortals[dim] = componentExecPortal;
-      this->MinPoint[dim] = componentContPortal.Get(0);
-      this->MaxPoint[dim] = componentContPortal.Get(PointDimensions[0] - 1);
+      this->AxisPortals[2] = Coords.GetThirdPortal();
+      this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
+      this->MaxPoint[2] =
+        coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
     }
   }
-
 
   VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept
   {
@@ -100,6 +101,7 @@ public:
                 vtkm::Vec3f& parametric,
                 const vtkm::exec::FunctorBase& worklet) const override
   {
+    (void)worklet; //suppress unused warning
     if (!IsInside(point))
     {
       cellId = -1;
@@ -121,47 +123,35 @@ public:
         continue;
       }
 
-      bool found = false;
-      vtkm::FloatDefault minVal = this->AxisPortals[dim].Get(logicalCell[dim]);
-      const vtkm::Id searchDir = (point[dim] - minVal >= 0.f) ? 1 : -1;
-      vtkm::FloatDefault maxVal = this->AxisPortals[dim].Get(logicalCell[dim] + 1);
-
-      while (!found)
+      vtkm::Id minIndex = 0;
+      vtkm::Id maxIndex = PointDimensions[dim] - 1;
+      vtkm::FloatDefault minVal;
+      vtkm::FloatDefault maxVal;
+      minVal = this->AxisPortals[dim].Get(minIndex);
+      maxVal = this->AxisPortals[dim].Get(maxIndex);
+      while (maxIndex > minIndex + 1)
       {
-        if (point[dim] >= minVal && point[dim] < maxVal)
+        vtkm::Id midIndex = (minIndex + maxIndex) / 2;
+        vtkm::FloatDefault midVal = this->AxisPortals[dim].Get(midIndex);
+        if (point[dim] <= midVal)
         {
-          found = true;
-          continue;
-        }
-
-        logicalCell[dim] += searchDir;
-        vtkm::Id nextCellId = searchDir == 1 ? logicalCell[dim] + 1 : logicalCell[dim];
-        vtkm::FloatDefault next = this->AxisPortals[dim].Get(nextCellId);
-        if (searchDir == 1)
-        {
-          minVal = maxVal;
-          maxVal = next;
+          maxIndex = midIndex;
+          maxVal = midVal;
         }
         else
         {
-          maxVal = minVal;
-          minVal = next;
+          minIndex = midIndex;
+          minVal = midVal;
         }
       }
+      logicalCell[dim] = minIndex;
+      //printf("Min Index [%d] : %lld\n", dim, minIndex);
+      //printf("Max Index [%d] : %lld\n", dim, maxIndex);
+      //printf("Logical [%d] : %lld\n", dim, logicalCell[dim]);
+      parametric[dim] = (point[dim] - minVal) / (maxVal - minVal);
     }
-
     // Get the actual cellId, from the logical cell index of the cell
     cellId = logicalCell[2] * this->PlaneSize + logicalCell[1] * this->RowSize + logicalCell[0];
-
-    bool success = false;
-    using IndicesType = typename CellSetPortal::IndicesType;
-    IndicesType cellPointIndices = this->CellSet.GetIndices(cellId);
-    vtkm::VecFromPortalPermute<IndicesType, RectilinearPortalType> cellPoints(&cellPointIndices,
-                                                                              Coords);
-    auto cellShape = this->CellSet.GetCellShape(cellId);
-    // Get Parametric Coordinates from the cell, for the point.
-    parametric = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-      cellPoints, point, cellShape, success, worklet);
   }
 
 private:
