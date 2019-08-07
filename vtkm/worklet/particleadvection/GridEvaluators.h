@@ -94,7 +94,7 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC EvaluatorStatus Evaluate(const Point point, Point& out) const
+  VTKM_EXEC EvaluatorStatus Evaluate(const Point& point, Point& out) const
   {
     vtkm::Id cellId;
     Point parametric;
