@@ -144,9 +144,6 @@ public:
         }
       }
       logicalCell[dim] = minIndex;
-      //printf("Min Index [%d] : %lld\n", dim, minIndex);
-      //printf("Max Index [%d] : %lld\n", dim, maxIndex);
-      //printf("Logical [%d] : %lld\n", dim, logicalCell[dim]);
       parametric[dim] = (point[dim] - minVal) / (maxVal - minVal);
     }
     // Get the actual cellId, from the logical cell index of the cell
