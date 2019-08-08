@@ -49,9 +49,10 @@ public:
   StructuredCellInterpolationHelper() = default;
 
   VTKM_CONT
-  StructuredCellInterpolationHelper(vtkm::Id3 cellDims, vtkm::Id3 pointDims)
+  StructuredCellInterpolationHelper(vtkm::Id3 cellDims, vtkm::Id3 pointDims, bool is3D)
     : CellDims(cellDims)
     , PointDims(pointDims)
+    , Is3D(is3D)
   {
   }
 
@@ -62,27 +63,39 @@ public:
                    vtkm::VecVariable<vtkm::Id, 8>& indices) const override
   {
     vtkm::Id3 logicalCellId;
-    logicalCellId[0] = cellId % CellDims[0];
-    logicalCellId[1] = (cellId / CellDims[0]) % CellDims[1];
-    logicalCellId[2] = cellId / (CellDims[0] * CellDims[1]);
-
-    indices.Append((logicalCellId[2] * PointDims[1] + logicalCellId[1]) * PointDims[0] +
-                   logicalCellId[0]);
-    indices.Append(indices[0] + 1);
-    indices.Append(indices[1] + PointDims[0]);
-    indices.Append(indices[2] - 1);
-    indices.Append(indices[0] + PointDims[0] * PointDims[1]);
-    indices.Append(indices[4] + 1);
-    indices.Append(indices[5] + PointDims[0]);
-    indices.Append(indices[6] - 1);
-
-    cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON);
-    numVerts = 8;
+    logicalCellId[0] = cellId % this->CellDims[0];
+    logicalCellId[1] = (cellId / this->CellDims[0]) % this->CellDims[1];
+    if (this->Is3D)
+    {
+      logicalCellId[2] = cellId / (this->CellDims[0] * this->CellDims[1]);
+      indices.Append((logicalCellId[2] * this->PointDims[1] + logicalCellId[1]) *
+                       this->PointDims[0] +
+                     logicalCellId[0]);
+      indices.Append(indices[0] + 1);
+      indices.Append(indices[1] + this->PointDims[0]);
+      indices.Append(indices[2] - 1);
+      indices.Append(indices[0] + this->PointDims[0] * this->PointDims[1]);
+      indices.Append(indices[4] + 1);
+      indices.Append(indices[5] + this->PointDims[0]);
+      indices.Append(indices[6] - 1);
+      cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON);
+      numVerts = 8;
+    }
+    else
+    {
+      indices.Append(logicalCellId[1] * this->PointDims[0] + logicalCellId[0]);
+      indices.Append(indices[0] + 1);
+      indices.Append(indices[1] + this->PointDims[0]);
+      indices.Append(indices[2] - 1);
+      cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_QUAD);
+      numVerts = 4;
+    }
   }
 
 private:
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
+  bool Is3D = true;
 };
 
 template <typename DeviceAdapter>
@@ -196,21 +209,34 @@ public:
 class StructuredCellInterpolationHelper : public vtkm::cont::CellInterpolationHelper
 {
 public:
-  using StructuredType = vtkm::cont::CellSetStructured<3>;
+  using Structured2DType = vtkm::cont::CellSetStructured<2>;
+  using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
   StructuredCellInterpolationHelper() = default;
 
   VTKM_CONT
   StructuredCellInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
   {
-    if (cellSet.IsSameType(StructuredType()))
+    if (cellSet.IsSameType(Structured2DType()))
     {
-      CellDims = cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-      PointDims =
-        cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+      this->Is3D = false;
+      vtkm::Id2 cellDims =
+        cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      vtkm::Id2 pointDims =
+        cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+      this->CellDims = vtkm::Id3(cellDims[0], cellDims[1], 0);
+      this->PointDims = vtkm::Id3(pointDims[0], pointDims[1], 1);
+    }
+    else if (cellSet.IsSameType(Structured3DType()))
+    {
+      this->Is3D = true;
+      this->CellDims =
+        cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      this->PointDims =
+        cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
     }
     else
-      throw vtkm::cont::ErrorBadType("Cell set is not 3D structured type");
+      throw vtkm::cont::ErrorBadType("Cell set is not structured type");
   }
 
   VTKM_CONT
@@ -225,7 +251,7 @@ public:
     }
 
     using ExecutionType = vtkm::exec::StructuredCellInterpolationHelper;
-    ExecutionType* execObject = new ExecutionType(this->CellDims, this->PointDims);
+    ExecutionType* execObject = new ExecutionType(this->CellDims, this->PointDims, this->Is3D);
     this->ExecHandle.Reset(execObject);
 
     return this->ExecHandle.PrepareForExecution(deviceId);
@@ -234,6 +260,7 @@ public:
 private:
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
+  bool Is3D = true;
   mutable HandleType ExecHandle;
 };
 

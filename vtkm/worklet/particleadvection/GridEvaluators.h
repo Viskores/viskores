@@ -31,6 +31,12 @@ namespace worklet
 {
 namespace particleadvection
 {
+enum class EvaluatorStatus
+{
+  SUCCESS = 0,
+  OUTSIDE_SPATIAL_BOUNDS,
+  OUTSIDE_TEMPORAL_BOUNDS
+};
 
 template <typename DeviceAdapter, typename FieldArrayType>
 class ExecutionGridEvaluator
@@ -64,39 +70,38 @@ public:
     Locator->FindCell(point, cellId, parametric, tmp);
     return cellId != -1;
   }
+
   VTKM_EXEC
   bool IsWithinTemporalBoundary(const vtkm::FloatDefault vtkmNotUsed(time)) const { return true; }
+
   VTKM_EXEC
-  void GetSpatialBoundary(vtkm::Vec3f& dir, vtkm::Vec<ScalarType, 3>& boundary) const
-  {
-    // Based on the direction of the velocity we need to be able to tell where
-    // the particle will exit the domain from to actually push it out of domain.
-    boundary[0] = static_cast<ScalarType>(dir[0] > 0 ? this->Bounds.X.Max : this->Bounds.X.Min);
-    boundary[1] = static_cast<ScalarType>(dir[1] > 0 ? this->Bounds.Y.Max : this->Bounds.Y.Min);
-    boundary[2] = static_cast<ScalarType>(dir[2] > 0 ? this->Bounds.Z.Max : this->Bounds.Z.Min);
-  }
+  vtkm::Bounds GetSpatialBoundary() const { return this->Bounds; }
+
   VTKM_EXEC_CONT
-  void GetTemporalBoundary(vtkm::FloatDefault& boundary) const
+  vtkm::FloatDefault GetTemporalBoundary(vtkm::Id direction) const
   {
     // Return the time of the newest time slice
-    boundary = 0;
+    return direction > 0 ? vtkm::Infinity<vtkm::FloatDefault>()
+                         : vtkm::NegativeInfinity<vtkm::FloatDefault>();
   }
 
   template <typename Point>
-  VTKM_EXEC bool Evaluate(const Point& pos, vtkm::FloatDefault vtkmNotUsed(time), Point& out) const
+  VTKM_EXEC EvaluatorStatus Evaluate(const Point& pos,
+                                     vtkm::FloatDefault vtkmNotUsed(time),
+                                     Point& out) const
   {
     return this->Evaluate(pos, out);
   }
 
   template <typename Point>
-  VTKM_EXEC bool Evaluate(const Point point, Point& out) const
+  VTKM_EXEC EvaluatorStatus Evaluate(const Point& point, Point& out) const
   {
     vtkm::Id cellId;
     Point parametric;
     vtkm::exec::FunctorBase tmp;
     Locator->FindCell(point, cellId, parametric, tmp);
     if (cellId == -1)
-      return false;
+      return EvaluatorStatus::OUTSIDE_SPATIAL_BOUNDS;
 
     vtkm::UInt8 cellShape;
     vtkm::IdComponent nVerts;
@@ -108,7 +113,7 @@ public:
       fieldValues.Append(Field.Get(ptIndices[i]));
     out = vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, tmp);
 
-    return true;
+    return EvaluatorStatus::SUCCESS;
   }
 
 private:
@@ -126,7 +131,8 @@ public:
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using StructuredType = vtkm::cont::CellSetStructured<3>;
+  using Structured2DType = vtkm::cont::CellSetStructured<2>;
+  using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
   VTKM_CONT
   GridEvaluator() = default;
@@ -138,7 +144,7 @@ public:
     : Vectors(field)
     , Bounds(coordinates.GetBounds())
   {
-    if (cellset.IsSameType(StructuredType()))
+    if (cellset.IsSameType(Structured2DType()) || cellset.IsSameType(Structured3DType()))
     {
       if (coordinates.GetData().IsType<UniformType>())
       {
@@ -148,8 +154,7 @@ public:
         locator.Update();
         this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformGrid>(locator);
       }
-      else if (coordinates.GetData().IsType<RectilinearType>() &&
-               cellset.IsSameType(StructuredType()))
+      else if (coordinates.GetData().IsType<RectilinearType>())
       {
         vtkm::cont::CellLocatorRectilinearGrid locator;
         locator.SetCoordinates(coordinates);
