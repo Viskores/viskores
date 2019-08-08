@@ -55,7 +55,6 @@
 //  (LDAV), October 2016, Baltimore, Maryland.
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
 
 #include <vtkm/worklet/ContourTreeUniform.h>
 
@@ -99,11 +98,11 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   vtkm::worklet::ContourTreeMesh2D worklet;
   worklet.Run(field, nRows, nCols, saddlePeak);
 
-  return internal::CreateResult(input,
-                                saddlePeak,
-                                this->GetOutputFieldName(),
-                                fieldMeta.GetAssociation(),
-                                fieldMeta.GetCellSetName());
+  return CreateResult(input,
+                      saddlePeak,
+                      this->GetOutputFieldName(),
+                      fieldMeta.GetAssociation(),
+                      fieldMeta.GetCellSetName());
 }
 //-----------------------------------------------------------------------------
 ContourTreeMesh3D::ContourTreeMesh3D()
@@ -141,11 +140,11 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
   vtkm::worklet::ContourTreeMesh3D worklet;
   worklet.Run(field, nRows, nCols, nSlices, saddlePeak);
 
-  return internal::CreateResult(input,
-                                saddlePeak,
-                                this->GetOutputFieldName(),
-                                fieldMeta.GetAssociation(),
-                                fieldMeta.GetCellSetName());
+  return CreateResult(input,
+                      saddlePeak,
+                      this->GetOutputFieldName(),
+                      fieldMeta.GetAssociation(),
+                      fieldMeta.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

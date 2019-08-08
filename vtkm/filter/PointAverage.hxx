@@ -10,7 +10,6 @@
 
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
 
 namespace vtkm
 {
@@ -51,7 +50,7 @@ inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
     outputName = fieldMetadata.GetName();
   }
 
-  return internal::CreateResult(
+  return CreateResult(
     input, outArray, outputName, vtkm::cont::Field::Association::POINTS, cellSet.GetName());
 }
 }

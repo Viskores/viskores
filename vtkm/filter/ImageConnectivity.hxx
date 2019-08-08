@@ -8,12 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ImageConnectivity_hxx
-#define vtk_m_filter_ImageConnectivity_hxx
-
-#include <vtkm/filter/ImageConnectivity.h>
-#include <vtkm/filter/internal/CreateResult.h>
-
 namespace vtkm
 {
 namespace filter
@@ -43,14 +37,12 @@ inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
     field,
     component);
 
-  auto result = internal::CreateResult(input,
-                                       component,
-                                       this->GetOutputFieldName(),
-                                       vtkm::cont::Field::Association::POINTS,
-                                       fieldMetadata.GetCellSetName());
+  auto result = CreateResult(input,
+                             component,
+                             this->GetOutputFieldName(),
+                             vtkm::cont::Field::Association::POINTS,
+                             fieldMetadata.GetCellSetName());
   return result;
 }
 }
 }
-
-#endif //vtk_m_filter_ImageConnectivity_hxx

@@ -17,7 +17,6 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
 #include <vtkm/cont/Serialization.h>
-#include <vtkm/filter/internal/CreateResult.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 

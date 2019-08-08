@@ -8,8 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/internal/CreateResult.h>
-
 namespace vtkm
 {
 namespace filter
@@ -43,11 +41,11 @@ inline VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(
     this->Scale,
     result);
 
-  return internal::CreateResult(inDataSet,
-                                result,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet,
+                      result,
+                      this->GetOutputFieldName(),
+                      fieldMetadata.GetAssociation(),
+                      fieldMetadata.GetCellSetName());
 }
 }
 }

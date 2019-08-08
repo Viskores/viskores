@@ -8,16 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Field_to_Colors_hxx
-#define vtk_m_filter_Field_to_Colors_hxx
-
-#include <vtkm/filter/FieldToColors.h>
-
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ColorTable.hxx>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
-
 
 namespace vtkm
 {
@@ -260,9 +253,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
   }
 
 
-  return internal::CreateResult(input, outField);
+  return CreateResult(input, outField);
 }
 }
 } // namespace vtkm::filter
-
-#endif //vtk_m_filter_Field_to_Colors_hxx

@@ -10,7 +10,6 @@
 
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
 
 namespace vtkm
 {
@@ -50,8 +49,7 @@ inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
     // Default name is name of input.
     outputName = "measure";
   }
-  result =
-    internal::CreateResult(input, outArray, outputName, vtkm::cont::Field::Association::CELL_SET);
+  result = CreateResult(input, outArray, outputName, vtkm::cont::Field::Association::CELL_SET);
 
   return result;
 }

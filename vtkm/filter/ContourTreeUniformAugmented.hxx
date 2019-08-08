@@ -53,7 +53,7 @@
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
-#include <vtkm/filter/internal/CreateResult.h>
+
 #include <vtkm/worklet/ContourTreeUniformAugmented.h>
 
 namespace vtkm
@@ -134,11 +134,11 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
   // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(ContourTreeData, MeshSortOrder, saddlePeak);
 
   // Create the vtkm result object
-  auto result = internal::CreateResult(input,
-                                       ContourTreeData.arcs,
-                                       this->GetOutputFieldName(),
-                                       fieldMeta.GetAssociation(),
-                                       fieldMeta.GetCellSetName());
+  auto result = CreateResult(input,
+                             ContourTreeData.arcs,
+                             this->GetOutputFieldName(),
+                             fieldMeta.GetAssociation(),
+                             fieldMeta.GetCellSetName());
 
   // Update the total timings
   vtkm::Float64 totalTimeWorklet = 0;

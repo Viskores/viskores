@@ -8,8 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/internal/CreateResult.h>
-
 #include <vtkm/Math.h>
 
 namespace vtkm
@@ -38,11 +36,11 @@ inline VTKM_CONT vtkm::cont::DataSet VectorMagnitude::DoExecute(
 
   this->Invoke(this->Worklet, field, outArray);
 
-  return internal::CreateResult(inDataSet,
-                                outArray,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet,
+                      outArray,
+                      this->GetOutputFieldName(),
+                      fieldMetadata.GetAssociation(),
+                      fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

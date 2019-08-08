@@ -9,7 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleCast.h>
-#include <vtkm/filter/internal/CreateResult.h>
+
 #include <vtkm/worklet/DispatcherMapField.h>
 
 namespace vtkm
@@ -92,11 +92,11 @@ inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
   }
 
 
-  return internal::CreateResult(inDataSet,
-                                output,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet,
+                      output,
+                      this->GetOutputFieldName(),
+                      fieldMetadata.GetAssociation(),
+                      fieldMetadata.GetCellSetName());
 }
 
 //-----------------------------------------------------------------------------

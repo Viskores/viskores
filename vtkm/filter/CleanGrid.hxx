@@ -8,9 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_CleanGrid_hxx
-#define vtk_m_filter_CleanGrid_hxx
-
 #include <vtkm/filter/CleanGrid.h>
 
 #include <vtkm/worklet/CellDeepCopy.h>
@@ -192,5 +189,3 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
 }
 }
 }
-
-#endif //vtk_m_filter_CleanGrid_hxx

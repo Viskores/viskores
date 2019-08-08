@@ -10,8 +10,6 @@
 
 #include <vtkm/worklet/FieldEntropy.h>
 
-#include <vtkm/filter/internal/CreateResult.h>
-
 namespace vtkm
 {
 namespace filter
@@ -41,11 +39,11 @@ inline VTKM_CONT vtkm::cont::DataSet Entropy::DoExecute(
   entropy.Allocate(1);
   entropy.GetPortalControl().Set(0, e);
 
-  return internal::CreateResult(inDataSet,
-                                entropy,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet,
+                      entropy,
+                      this->GetOutputFieldName(),
+                      fieldMetadata.GetAssociation(),
+                      fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter
