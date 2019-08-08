@@ -34,9 +34,9 @@ protected:
 private:
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
-  vtkm::Vec<vtkm::FloatDefault, 3> Origin;
-  vtkm::Vec<vtkm::FloatDefault, 3> InvSpacing;
-  vtkm::Vec<vtkm::FloatDefault, 3> MaxPoint;
+  vtkm::Vec3f Origin;
+  vtkm::Vec3f InvSpacing;
+  vtkm::Vec3f MaxPoint;
   bool Is3D = true;
 
   mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;

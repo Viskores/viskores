@@ -56,20 +56,21 @@ public:
     , Coords(coords.PrepareForInput(DeviceAdapter()))
     , PointDimensions(cellSet.GetPointDimensions())
   {
-    this->AxisPortals[0] = Coords.GetFirstPortal();
+    this->AxisPortals[0] = this->Coords.GetFirstPortal();
     this->MinPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(0);
-    this->MaxPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1);
+    this->MaxPoint[0] =
+      coords.GetPortalConstControl().GetFirstPortal().Get(this->PointDimensions[0] - 1);
 
-    this->AxisPortals[1] = Coords.GetSecondPortal();
+    this->AxisPortals[1] = this->Coords.GetSecondPortal();
     this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
     this->MaxPoint[1] =
-      coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
+      coords.GetPortalConstControl().GetSecondPortal().Get(this->PointDimensions[1] - 1);
     if (dimensions == 3)
     {
-      this->AxisPortals[2] = Coords.GetThirdPortal();
+      this->AxisPortals[2] = this->Coords.GetThirdPortal();
       this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
       this->MaxPoint[2] =
-        coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
+        coords.GetPortalConstControl().GetThirdPortal().Get(this->PointDimensions[2] - 1);
     }
   }
 
@@ -101,7 +102,7 @@ public:
                 const vtkm::exec::FunctorBase& worklet) const override
   {
     (void)worklet; //suppress unused warning
-    if (!IsInside(point))
+    if (!this->IsInside(point))
     {
       cellId = -1;
       return;
@@ -118,12 +119,12 @@ public:
       //
       if (point[dim] == MaxPoint[dim])
       {
-        logicalCell[dim] = PointDimensions[dim] - 2;
+        logicalCell[dim] = this->PointDimensions[dim] - 2;
         continue;
       }
 
       vtkm::Id minIndex = 0;
-      vtkm::Id maxIndex = PointDimensions[dim] - 1;
+      vtkm::Id maxIndex = this->PointDimensions[dim] - 1;
       vtkm::FloatDefault minVal;
       vtkm::FloatDefault maxVal;
       minVal = this->AxisPortals[dim].Get(minIndex);

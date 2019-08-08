@@ -35,7 +35,7 @@ void CellLocatorRectilinearGrid::Build()
   vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
 
   if (!coords.GetData().IsType<RectilinearType>())
-    throw vtkm::cont::ErrorInternal("Coordinates are not rectilinear.");
+    throw vtkm::cont::ErrorBadType("Coordinates are not rectilinear type.");
 
   if (cellSet.IsSameType(Structured2DType()))
   {
@@ -55,7 +55,7 @@ void CellLocatorRectilinearGrid::Build()
   }
   else
   {
-    throw vtkm::cont::ErrorInternal("Cells are not structured.");
+    throw vtkm::cont::ErrorBadType("Cells are not 2D or 3D structured type.");
   }
 }
 
