@@ -171,7 +171,7 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
     phi = vtkm::ATan(vtkm::Sqrt(D) / q) / 3.0f;
 
     if (phi < 0)
-      phi += static_cast<T>(M_PI);
+      phi += static_cast<T>(vtkm::Pi());
   }
 
   const T sqrt3 = vtkm::Sqrt(3.0f);
