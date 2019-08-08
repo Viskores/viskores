@@ -29,6 +29,8 @@ namespace filter
 class WarpVector : public vtkm::filter::FilterField<WarpVector>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   WarpVector(vtkm::FloatDefault scale);
 
@@ -64,14 +66,6 @@ private:
   std::string VectorFieldName;
   vtkm::cont::Field::Association VectorFieldAssociation;
   vtkm::FloatDefault Scale;
-};
-
-template <>
-class FilterTraits<WarpVector>
-{
-public:
-  // WarpVector can only applies to Float and Double Vec3 arrays
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 }

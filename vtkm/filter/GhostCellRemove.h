@@ -30,6 +30,9 @@ struct GhostCellRemovePolicy : vtkm::filter::PolicyBase<GhostCellRemovePolicy>
 class GhostCellRemove : public vtkm::filter::FilterDataSetWithField<GhostCellRemove>
 {
 public:
+  //currently the GhostCellRemove filter only works on uint8 data.
+  using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8>;
+
   VTKM_CONT
   GhostCellRemove();
 
@@ -81,13 +84,6 @@ private:
 
   VTKM_CONT vtkm::cont::CellSetExplicit<> ConvertOutputToUnstructured(
     vtkm::cont::DynamicCellSet& inCells);
-};
-
-template <>
-class FilterTraits<GhostCellRemove>
-{ //currently the GhostCellRemove filter only works on uint8 data.
-public:
-  using InputFieldTypeList = vtkm::ListTagBase<vtkm::UInt8>;
 };
 }
 } // namespace vtkm::filter

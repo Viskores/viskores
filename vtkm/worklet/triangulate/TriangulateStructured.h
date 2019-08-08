@@ -34,7 +34,7 @@ namespace triangulate
 // Worklet to turn quads into triangles
 // Vertices remain the same and each cell is processed with needing topology
 //
-class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
+class TriangulateCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset, FieldOutCell connectivityOut);

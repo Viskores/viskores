@@ -63,28 +63,29 @@ public:
                    vtkm::VecVariable<vtkm::Id, 8>& indices) const override
   {
     vtkm::Id3 logicalCellId;
-    logicalCellId[0] = cellId % CellDims[0];
-    logicalCellId[1] = (cellId / CellDims[0]) % CellDims[1];
+    logicalCellId[0] = cellId % this->CellDims[0];
+    logicalCellId[1] = (cellId / this->CellDims[0]) % this->CellDims[1];
     if (this->Is3D)
     {
-      logicalCellId[2] = cellId / (CellDims[0] * CellDims[1]);
-      indices.Append((logicalCellId[2] * PointDims[1] + logicalCellId[1]) * PointDims[0] +
+      logicalCellId[2] = cellId / (this->CellDims[0] * this->CellDims[1]);
+      indices.Append((logicalCellId[2] * this->PointDims[1] + logicalCellId[1]) *
+                       this->PointDims[0] +
                      logicalCellId[0]);
       indices.Append(indices[0] + 1);
-      indices.Append(indices[1] + PointDims[0]);
+      indices.Append(indices[1] + this->PointDims[0]);
       indices.Append(indices[2] - 1);
-      indices.Append(indices[0] + PointDims[0] * PointDims[1]);
+      indices.Append(indices[0] + this->PointDims[0] * this->PointDims[1]);
       indices.Append(indices[4] + 1);
-      indices.Append(indices[5] + PointDims[0]);
+      indices.Append(indices[5] + this->PointDims[0]);
       indices.Append(indices[6] - 1);
       cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON);
       numVerts = 8;
     }
     else
     {
-      indices.Append(logicalCellId[1] * PointDims[0] + logicalCellId[0]);
+      indices.Append(logicalCellId[1] * this->PointDims[0] + logicalCellId[0]);
       indices.Append(indices[0] + 1);
-      indices.Append(indices[1] + PointDims[0]);
+      indices.Append(indices[1] + this->PointDims[0]);
       indices.Append(indices[2] - 1);
       cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_QUAD);
       numVerts = 4;
@@ -277,15 +278,15 @@ public:
     {
       SingleExplicitType CellSet = cellSet.Cast<SingleExplicitType>();
       CellShape =
-        CellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())
+        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
           .GetPortalConstControl()
           .Get(0);
       PointsPerCell =
-        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())
+        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
           .GetPortalConstControl()
           .Get(0);
-      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                  vtkm::TopologyElementTagCell());
+      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                  vtkm::TopologyElementTagPoint());
     }
     else
       throw vtkm::cont::ErrorBadType("Cell set is not CellSetSingleType");
@@ -339,13 +340,13 @@ public:
     {
       vtkm::cont::CellSetExplicit<> CellSet = cellSet.Cast<vtkm::cont::CellSetExplicit<>>();
       Shape =
-        CellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
       NumIdx =
-        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
-      Offset = CellSet.GetIndexOffsetArray(vtkm::TopologyElementTagPoint(),
-                                           vtkm::TopologyElementTagCell());
-      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                  vtkm::TopologyElementTagCell());
+        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      Offset = CellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell(),
+                                           vtkm::TopologyElementTagPoint());
+      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                  vtkm::TopologyElementTagPoint());
     }
     else
       throw vtkm::cont::ErrorBadType("Cell set is not CellSetSingleType");

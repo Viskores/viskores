@@ -33,7 +33,7 @@ void CellLocatorUniformGrid::Build()
   vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
 
   if (!coords.GetData().IsType<UniformType>())
-    throw vtkm::cont::ErrorInternal("Coordinates are not uniform.");
+    throw vtkm::cont::ErrorBadType("Coordinates are not uniform type.");
 
   if (cellSet.IsSameType(Structured2DType()))
   {
@@ -50,26 +50,26 @@ void CellLocatorUniformGrid::Build()
   }
   else
   {
-    throw vtkm::cont::ErrorInternal("Cells are not structured.");
+    throw vtkm::cont::ErrorBadType("Cells are not 2D or 3D structured type.");
   }
 
   UniformType uniformCoords = coords.GetData().Cast<UniformType>();
   this->Origin = uniformCoords.GetPortalConstControl().GetOrigin();
 
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing = uniformCoords.GetPortalConstControl().GetSpacing();
-  vtkm::Vec<vtkm::FloatDefault, 3> unitLength;
-  unitLength[0] = static_cast<vtkm::FloatDefault>(PointDims[0] - 1);
-  unitLength[1] = static_cast<vtkm::FloatDefault>(PointDims[1] - 1);
-  unitLength[2] = static_cast<vtkm::FloatDefault>(PointDims[2] - 1);
+  vtkm::Vec3f spacing = uniformCoords.GetPortalConstControl().GetSpacing();
+  vtkm::Vec3f unitLength;
+  unitLength[0] = static_cast<vtkm::FloatDefault>(this->PointDims[0] - 1);
+  unitLength[1] = static_cast<vtkm::FloatDefault>(this->PointDims[1] - 1);
+  unitLength[2] = static_cast<vtkm::FloatDefault>(this->PointDims[2] - 1);
 
-  this->MaxPoint = Origin + spacing * unitLength;
+  this->MaxPoint = this->Origin + spacing * unitLength;
   this->InvSpacing[0] = 1.f / spacing[0];
   this->InvSpacing[1] = 1.f / spacing[1];
   this->InvSpacing[2] = 1.f / spacing[2];
 
-  this->CellDims[0] = PointDims[0] - 1;
-  this->CellDims[1] = PointDims[1] - 1;
-  this->CellDims[2] = PointDims[2] - 1;
+  this->CellDims[0] = this->PointDims[0] - 1;
+  this->CellDims[1] = this->PointDims[1] - 1;
+  this->CellDims[2] = this->PointDims[2] - 1;
 }
 
 namespace

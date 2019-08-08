@@ -97,7 +97,8 @@ void multiblock_processing(TaskQueue<vtkm::cont::MultiBlock>& queue)
       }
       catch (const vtkm::cont::ErrorBadValue& error)
       {
-        std::cerr << "gradient filter failed!" << std::endl;
+        std::cerr << "Gradient filter failed!" << std::endl;
+        std::cerr << error.GetMessage() << std::endl;
         break;
       }
     }

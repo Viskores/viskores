@@ -2483,6 +2483,17 @@ private:
     testRandomMask(0xffffffff);
     testRandomMask(0x1c0fd395);
     testRandomMask(0xdeadbeef);
+
+    // This case was causing issues on CUDA:
+    {
+      BitField bits;
+      Algorithm::Fill(bits, false, 32 * 32);
+      auto portal = bits.GetPortalControl();
+      portal.SetWord(2, 0x00100000ul);
+      portal.SetWord(8, 0x00100010ul);
+      portal.SetWord(11, 0x10000000ul);
+      testIndexArray(bits);
+    }
   }
 
   static VTKM_CONT void TestCountSetBits()
@@ -2562,6 +2573,17 @@ private:
     testRandomMask(0xffffffff);
     testRandomMask(0x1c0fd395);
     testRandomMask(0xdeadbeef);
+
+    // This case was causing issues on CUDA:
+    {
+      BitField bits;
+      Algorithm::Fill(bits, false, 32 * 32);
+      auto portal = bits.GetPortalControl();
+      portal.SetWord(2, 0x00100000ul);
+      portal.SetWord(8, 0x00100010ul);
+      portal.SetWord(11, 0x10000000ul);
+      verifyPopCount(bits);
+    }
   }
 
   template <typename WordType>

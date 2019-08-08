@@ -25,6 +25,8 @@ template <typename S>
 class PointTransform : public vtkm::filter::FilterField<PointTransform<S>>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   PointTransform();
 
@@ -58,14 +60,6 @@ public:
 
 private:
   vtkm::worklet::PointTransform<S> Worklet;
-};
-
-template <typename S>
-class FilterTraits<PointTransform<S>>
-{
-public:
-  //PointTransformation can only convert Float and Double Vec3 arrays
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 } // namespace vtkm::filter

@@ -87,7 +87,7 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
   input.GetCellSet(this->GetActiveCellSetIndex()).CopyTo(cellSet);
 
   ShapeHandle cellShapes =
-    cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    cellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   //Obtain the frequency counts of each cell type in the input dataset
   IdHandle uniqueCellCounts;

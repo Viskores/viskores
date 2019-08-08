@@ -29,7 +29,7 @@ class StreamSurface
 {
 public:
   //Helper worklet to count various things in each polyline.
-  class CountPolylines : public vtkm::worklet::WorkletMapPointToCell
+  class CountPolylines : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT

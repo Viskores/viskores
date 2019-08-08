@@ -26,7 +26,7 @@ namespace raytracing
 namespace detail
 {
 
-class CountQuads : public vtkm::worklet::WorkletMapPointToCell
+class CountQuads : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   VTKM_CONT
@@ -62,7 +62,7 @@ public:
 
 }; // ClassCountquads
 
-class Pointify : public vtkm::worklet::WorkletMapPointToCell
+class Pointify : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 
 public:

@@ -32,11 +32,10 @@ template <typename DeviceAdapter, vtkm::IdComponent dimensions>
 class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid final : public vtkm::exec::CellLocator
 {
 private:
-  using FromType = vtkm::TopologyElementTagPoint;
-  using ToType = vtkm::TopologyElementTagCell;
-  using CellSetPortal = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                           vtkm::TopologyElementTagCell,
-                                                           dimensions>;
+  using VisitType = vtkm::TopologyElementTagCell;
+  using IncidentType = vtkm::TopologyElementTagPoint;
+  using CellSetPortal = vtkm::exec::ConnectivityStructured<VisitType, IncidentType, dimensions>;
+
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
@@ -53,24 +52,25 @@ public:
                              DeviceAdapter)
     : PlaneSize(planeSize)
     , RowSize(rowSize)
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType()))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType()))
     , Coords(coords.PrepareForInput(DeviceAdapter()))
     , PointDimensions(cellSet.GetPointDimensions())
   {
-    this->AxisPortals[0] = Coords.GetFirstPortal();
+    this->AxisPortals[0] = this->Coords.GetFirstPortal();
     this->MinPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(0);
-    this->MaxPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1);
+    this->MaxPoint[0] =
+      coords.GetPortalConstControl().GetFirstPortal().Get(this->PointDimensions[0] - 1);
 
-    this->AxisPortals[1] = Coords.GetSecondPortal();
+    this->AxisPortals[1] = this->Coords.GetSecondPortal();
     this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
     this->MaxPoint[1] =
-      coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
+      coords.GetPortalConstControl().GetSecondPortal().Get(this->PointDimensions[1] - 1);
     if (dimensions == 3)
     {
-      this->AxisPortals[2] = Coords.GetThirdPortal();
+      this->AxisPortals[2] = this->Coords.GetThirdPortal();
       this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
       this->MaxPoint[2] =
-        coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
+        coords.GetPortalConstControl().GetThirdPortal().Get(this->PointDimensions[2] - 1);
     }
   }
 }
@@ -89,10 +89,11 @@ inline bool IsInside(const vtkm::Vec3f& point) const
     inside = false;
   if (point[1] < this->MinPoint[1] || point[1] > this->MaxPoint[1])
     inside = false;
-  if (dimensions == 2)
-    return inside;
-  if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
-    inside = false;
+  if (dimensions == 3)
+  {
+    if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
+      inside = false;
+  }
   return inside;
 }
 
@@ -103,7 +104,7 @@ void FindCell(const vtkm::Vec3f& point,
               const vtkm::exec::FunctorBase& worklet) const override
 {
   (void)worklet; //suppress unused warning
-  if (!IsInside(point))
+  if (!this->IsInside(point))
   {
     cellId = -1;
     return;
@@ -120,12 +121,12 @@ void FindCell(const vtkm::Vec3f& point,
     //
     if (point[dim] == MaxPoint[dim])
     {
-      logicalCell[dim] = PointDimensions[dim] - 2;
+      logicalCell[dim] = this->PointDimensions[dim] - 2;
       continue;
     }
 
     vtkm::Id minIndex = 0;
-    vtkm::Id maxIndex = PointDimensions[dim] - 1;
+    vtkm::Id maxIndex = this->PointDimensions[dim] - 1;
     vtkm::FloatDefault minVal;
     vtkm::FloatDefault maxVal;
     minVal = this->AxisPortals[dim].Get(minIndex);
@@ -146,9 +147,6 @@ void FindCell(const vtkm::Vec3f& point,
       }
     }
     logicalCell[dim] = minIndex;
-    //printf("Min Index [%d] : %lld\n", dim, minIndex);
-    //printf("Max Index [%d] : %lld\n", dim, maxIndex);
-    //printf("Logical [%d] : %lld\n", dim, logicalCell[dim]);
     parametric[dim] = (point[dim] - minVal) / (maxVal - minVal);
   }
   // Get the actual cellId, from the logical cell index of the cell

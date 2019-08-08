@@ -27,6 +27,8 @@ namespace filter
 class Pathline : public vtkm::filter::FilterDataSetWithField<Pathline>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   Pathline();
 
@@ -70,16 +72,6 @@ private:
   vtkm::cont::DataSet NextDataSet;
   vtkm::Id NumberOfSteps;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
-};
-
-template <>
-class FilterTraits<Pathline>
-{
-public:
-  struct TypeListTagPathline : vtkm::ListTagBase<vtkm::Vec3f_32, vtkm::Vec3f_64>
-  {
-  };
-  using InputFieldTypeList = TypeListTagPathline;
 };
 }
 } // namespace vtkm::filter

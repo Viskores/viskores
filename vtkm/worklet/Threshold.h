@@ -41,7 +41,7 @@ public:
   };
 
   template <typename UnaryPredicate>
-  class ThresholdByPointField : public vtkm::worklet::WorkletMapPointToCell
+  class ThresholdByPointField : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cellset, FieldInPoint scalars, FieldOutCell passFlags);
@@ -76,10 +76,10 @@ public:
   };
 
   template <typename UnaryPredicate>
-  class ThresholdByCellField : public vtkm::worklet::WorkletMapPointToCell
+  class ThresholdByCellField : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
-    using ControlSignature = void(CellSetIn cellset, FieldInTo scalars, FieldOut passFlags);
+    using ControlSignature = void(CellSetIn cellset, FieldInCell scalars, FieldOut passFlags);
 
     using ExecutionSignature = _3(_2);
 

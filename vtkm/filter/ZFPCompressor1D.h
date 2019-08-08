@@ -27,6 +27,8 @@ namespace filter
 class ZFPCompressor1D : public vtkm::filter::FilterField<ZFPCompressor1D>
 {
 public:
+  using SupportedTypes = vtkm::ListTagBase<vtkm::Int32, vtkm::Float32, vtkm::Float64>;
+
   VTKM_CONT
   ZFPCompressor1D();
 
@@ -50,16 +52,6 @@ public:
 private:
   vtkm::Float64 rate;
   vtkm::worklet::ZFP1DCompressor compressor;
-};
-
-template <>
-class FilterTraits<ZFPCompressor1D>
-{
-public:
-  struct TypeListTagMCScalars : vtkm::ListTagBase<vtkm::Int32, vtkm::Float32, vtkm::Float64>
-  {
-  };
-  using InputFieldTypeList = TypeListTagMCScalars;
 };
 }
 } // namespace vtkm::filter

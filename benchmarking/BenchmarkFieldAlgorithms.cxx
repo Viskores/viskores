@@ -17,11 +17,9 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -189,7 +187,7 @@ public:
   }
 };
 
-class GenerateEdges : public vtkm::worklet::WorkletMapPointToCell
+class GenerateEdges : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset, WholeArrayOut edgeIds);
@@ -529,7 +527,7 @@ private:
       Timer timer{ DeviceAdapter() };
       timer.Start();
 
-      vtkm::worklet::Invoker invoke(DeviceAdapter{});
+      vtkm::cont::Invoker invoke(DeviceAdapter{});
       invoke(Mag{}, this->InputHandle, tempHandle1);
       invoke(Sin{}, tempHandle1, tempHandle2);
       invoke(Square{}, tempHandle2, tempHandle1);
@@ -567,7 +565,7 @@ private:
       Timer timer{ DeviceAdapter() };
       timer.Start();
 
-      vtkm::worklet::Invoker invoke(DeviceAdapter{});
+      vtkm::cont::Invoker invoke(DeviceAdapter{});
       invoke(Mag{}, dinput, dtemp1);
       invoke(Sin{}, dtemp1, dtemp2);
       invoke(Square{}, dtemp2, dtemp1);
@@ -595,7 +593,7 @@ private:
       Timer timer{ DeviceAdapter() };
       timer.Start();
 
-      vtkm::worklet::Invoker invoke(DeviceAdapter{});
+      vtkm::cont::Invoker invoke(DeviceAdapter{});
       invoke(Mag{}, mInput, mTemp1);
       invoke(Sin{}, mTemp1, mTemp2);
       invoke(Square{}, mTemp2, mTemp1);
@@ -632,7 +630,7 @@ private:
       Timer timer{ DeviceAdapter() };
       timer.Start();
 
-      vtkm::worklet::Invoker invoke(DeviceAdapter{});
+      vtkm::cont::Invoker invoke(DeviceAdapter{});
       invoke(Mag{}, mInput, mTemp1);
       invoke(Sin{}, mTemp1, mTemp2);
       invoke(Square{}, mTemp2, mTemp1);

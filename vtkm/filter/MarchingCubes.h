@@ -28,6 +28,8 @@ namespace filter
 class MarchingCubes : public vtkm::filter::FilterDataSetWithField<MarchingCubes>
 {
 public:
+  using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
+
   VTKM_CONT
   MarchingCubes();
 
@@ -116,17 +118,6 @@ private:
   bool ComputeFastNormalsForUnstructured;
   std::string NormalArrayName;
   vtkm::worklet::MarchingCubes Worklet;
-};
-
-template <>
-class FilterTraits<MarchingCubes>
-{
-public:
-  struct TypeListTagMCScalars
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>
-  {
-  };
-  using InputFieldTypeList = TypeListTagMCScalars;
 };
 }
 } // namespace vtkm::filter

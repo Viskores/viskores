@@ -38,6 +38,9 @@ namespace filter
 class ExtractGeometry : public vtkm::filter::FilterDataSet<ExtractGeometry>
 {
 public:
+  //currently the ExtractGeometry filter only works on scalar data.
+  using SupportedTypes = TypeListTagScalarAll;
+
   VTKM_CONT
   ExtractGeometry();
 
@@ -93,13 +96,6 @@ private:
   bool ExtractOnlyBoundaryCells;
   vtkm::cont::ImplicitFunctionHandle Function;
   vtkm::worklet::ExtractGeometry Worklet;
-};
-
-template <>
-class FilterTraits<ExtractGeometry>
-{ //currently the ExtractGeometry filter only works on scalar data.
-public:
-  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

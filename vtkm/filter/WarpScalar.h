@@ -29,6 +29,9 @@ namespace filter
 class WarpScalar : public vtkm::filter::FilterField<WarpScalar>
 {
 public:
+  // WarpScalar can only applies to Float and Double Vec3 arrays
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   WarpScalar(vtkm::FloatDefault scaleAmount);
 
@@ -89,24 +92,6 @@ private:
   std::string ScalarFactorFieldName;
   vtkm::cont::Field::Association ScalarFactorFieldAssociation;
   vtkm::FloatDefault ScaleAmount;
-};
-
-template <>
-class FilterTraits<WarpScalar>
-{
-public:
-  // WarpScalar can only applies to Float and Double Vec3 arrays
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
-};
-
-struct WarpScalarScalarFieldTag
-{
-};
-
-template <>
-struct FilterTraits<WarpScalar, WarpScalarScalarFieldTag>
-{
-  using InputFieldTypeList = vtkm::TypeListTagFieldScalar;
 };
 }
 }

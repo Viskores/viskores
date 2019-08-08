@@ -30,7 +30,7 @@ public:
   };
 
   template <typename UnaryPredicate>
-  class ThresholdPointField : public vtkm::worklet::WorkletMapCellToPoint
+  class ThresholdPointField : public vtkm::worklet::WorkletVisitPointsWithCells
   {
   public:
     using ControlSignature = void(CellSetIn cellset, FieldInPoint scalars, FieldOutPoint passFlags);

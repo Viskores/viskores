@@ -99,7 +99,7 @@ public:
 #pragma warning(push)
 #pragma warning(disable : 4127) //conditional expression is constant
 #endif
-struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
+struct EdgesCounter : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn cellSet, FieldOutCell numEdges);
   using ExecutionSignature = _2(CellShape shape, PointCount numPoints);
@@ -120,7 +120,7 @@ struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
   }
 }; // struct EdgesCounter
 
-struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
+struct EdgesExtracter : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn cellSet, FieldOutCell edgeIndices);
   using ExecutionSignature = void(CellShape, PointIndices, VisitIndex, _2);

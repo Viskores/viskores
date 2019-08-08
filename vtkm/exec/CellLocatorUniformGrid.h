@@ -31,11 +31,9 @@ template <typename DeviceAdapter, vtkm::IdComponent dimensions>
 class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid final : public vtkm::exec::CellLocator
 {
 private:
-  using FromType = vtkm::TopologyElementTagPoint;
-  using ToType = vtkm::TopologyElementTagCell;
-  using CellSetPortal = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                           vtkm::TopologyElementTagCell,
-                                                           dimensions>;
+  using VisitType = vtkm::TopologyElementTagCell;
+  using IncidentType = vtkm::TopologyElementTagPoint;
+  using CellSetPortal = vtkm::exec::ConnectivityStructured<VisitType, IncidentType, dimensions>;
   using CoordsPortal = typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
     DeviceAdapter>::PortalConst;
 
@@ -43,9 +41,9 @@ public:
   VTKM_CONT
   CellLocatorUniformGrid(const vtkm::Id3 cellDims,
                          const vtkm::Id3 pointDims,
-                         const vtkm::Vec<vtkm::FloatDefault, 3> origin,
-                         const vtkm::Vec<vtkm::FloatDefault, 3> invSpacing,
-                         const vtkm::Vec<vtkm::FloatDefault, 3> maxPoint,
+                         const vtkm::Vec3f origin,
+                         const vtkm::Vec3f invSpacing,
+                         const vtkm::Vec3f maxPoint,
                          const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
                          DeviceAdapter)
     : CellDims(cellDims)
@@ -63,8 +61,7 @@ public:
     // troublesome with CUDA __host__ __device__ markup.
   }
 
-  template <typename T>
-  VTKM_EXEC inline bool IsInside(const vtkm::Vec<T, 3>& point) const
+  VTKM_EXEC inline bool IsInside(const vtkm::Vec3f& point) const
   {
     bool inside = true;
     if (point[0] < this->Origin[0] || point[0] > this->MaxPoint[0])
@@ -83,7 +80,7 @@ public:
                 const vtkm::exec::FunctorBase& worklet) const override
   {
     (void)worklet; //suppress unused warning
-    if (!IsInside(point))
+    if (!this->IsInside(point))
     {
       cellId = -1;
       return;
@@ -91,9 +88,9 @@ public:
     // Get the Cell Id from the point.
     vtkm::Id3 logicalCell(0, 0, 0);
 
-    vtkm::Vec<vtkm::FloatDefault, 3> temp;
-    temp = point - Origin;
-    temp = temp * InvSpacing;
+    vtkm::Vec3f temp;
+    temp = point - this->Origin;
+    temp = temp * this->InvSpacing;
 
     //make sure that if we border the upper edge, we sample the correct cell
     logicalCell = temp;
@@ -119,9 +116,9 @@ public:
 private:
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
-  vtkm::Vec<vtkm::FloatDefault, 3> Origin;
-  vtkm::Vec<vtkm::FloatDefault, 3> InvSpacing;
-  vtkm::Vec<vtkm::FloatDefault, 3> MaxPoint;
+  vtkm::Vec3f Origin;
+  vtkm::Vec3f InvSpacing;
+  vtkm::Vec3f MaxPoint;
   CoordsPortal Coords;
 };
 }

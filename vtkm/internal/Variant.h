@@ -18,9 +18,11 @@
 // It would make sense to put this in its own header file, but it is hard to imagine needing
 // aligned_union anywhere else.
 #if (defined(VTKM_GCC) && (__GNUC__ == 4)) || (defined(VTKM_ICC) && (__INTEL_COMPILER < 1800))
+
 #include <algorithm>
 namespace vtkmstd
 {
+
 template <std::size_t... Xs>
 struct max_size;
 template <std::size_t X>
@@ -34,23 +36,35 @@ struct max_size<X0, Xs...>
   static constexpr std::size_t other_value = max_size<Xs...>::value;
   static constexpr std::size_t value = (other_value > X0) ? other_value : X0;
 };
-// This implementation comes from https://en.cppreference.com/w/cpp/types/aligned_union
+
+// This is to get around an apparent bug in GCC 4.8 where alianas(x) does not
+// seem to work when x is a constexpr. See
+// https://stackoverflow.com/questions/29879609/g-complains-constexpr-function-is-not-a-constant-expression
+template <std::size_t Alignment, std::size_t Size>
+struct aligned_data_block
+{
+  alignas(Alignment) char _s[Size];
+};
+
 template <std::size_t Len, class... Types>
 struct aligned_union
 {
   static constexpr std::size_t alignment_value = vtkmstd::max_size<alignof(Types)...>::value;
 
-  struct type
-  {
-    alignas(alignment_value) char _s[vtkmstd::max_size<Len, sizeof(Types)...>::value];
-  };
+  using type =
+    vtkmstd::aligned_data_block<alignment_value, vtkmstd::max_size<Len, sizeof(Types)...>::value>;
 };
 } // namespace vtkmstd
-#else
+
+#else // aligned_union supported
+
 namespace vtkmstd
 {
+
 using std::aligned_union;
+
 } // namespace vtkmstd
+
 #endif
 
 namespace vtkm

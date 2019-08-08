@@ -107,8 +107,8 @@ struct FetchArrayTopologyMapInTests
 
     vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals;
     connectivityInternals.SetPointDimensions(vtkm::Id3(2, 2, 2));
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                       vtkm::TopologyElementTagCell,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                       vtkm::TopologyElementTagPoint,
                                        3>
       connectivity(connectivityInternals);
 
@@ -182,8 +182,8 @@ void TryStructuredPointCoordinatesInvocation(const Invocation& invocation)
 
 template <vtkm::IdComponent NumDimensions>
 void TryStructuredPointCoordinates(
-  const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                           vtkm::TopologyElementTagCell,
+  const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                           vtkm::TopologyElementTagPoint,
                                            NumDimensions>& connectivity,
   const vtkm::internal::ArrayPortalUniformPointCoordinates& coordinates)
 {
@@ -221,21 +221,21 @@ void TryStructuredPointCoordinates()
   std::cout << "3D" << std::endl;
   vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals3d;
   connectivityInternals3d.SetPointDimensions(vtkm::Id3(3, 2, 2));
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
     connectivity3d(connectivityInternals3d);
   TryStructuredPointCoordinates(connectivity3d, coordinates);
 
   std::cout << "2D" << std::endl;
   vtkm::internal::ConnectivityStructuredInternals<2> connectivityInternals2d;
   connectivityInternals2d.SetPointDimensions(vtkm::Id2(3, 2));
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 2>
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 2>
     connectivity2d(connectivityInternals2d);
   TryStructuredPointCoordinates(connectivity2d, coordinates);
 
   std::cout << "1D" << std::endl;
   vtkm::internal::ConnectivityStructuredInternals<1> connectivityInternals1d;
   connectivityInternals1d.SetPointDimensions(3);
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 1>
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 1>
     connectivity1d(connectivityInternals1d);
   TryStructuredPointCoordinates(connectivity1d, coordinates);
 }

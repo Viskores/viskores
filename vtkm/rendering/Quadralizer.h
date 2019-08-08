@@ -31,7 +31,7 @@ namespace rendering
 class Quadralizer
 {
 public:
-  class CountQuads : public vtkm::worklet::WorkletMapPointToCell
+  class CountQuads : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -77,12 +77,12 @@ public:
   }; //class CountQuads
 
   template <int DIM>
-  class SegmentedStructured : public vtkm::worklet::WorkletMapPointToCell
+  class SegmentedStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInTo, WholeArrayOut);
-    typedef void ExecutionSignature(FromIndices, _2, _3);
+    typedef void ControlSignature(CellSetIn cellset, FieldInCell, WholeArrayOut);
+    typedef void ExecutionSignature(IncidentElementIndices, _2, _3);
     //typedef _1 InputDomain;
     VTKM_CONT
     SegmentedStructured() {}
@@ -168,7 +168,7 @@ public:
   };
 
 
-  class Quadralize : public vtkm::worklet::WorkletMapPointToCell
+  class Quadralize : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:

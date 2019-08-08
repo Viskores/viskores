@@ -26,7 +26,7 @@ namespace connectivity
 {
 namespace detail
 {
-struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
+struct EdgeCount : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn, FieldOutCell numEdgesInCell);
 
@@ -41,7 +41,7 @@ struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
   }
 };
 
-struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
+struct EdgeExtract : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn, FieldOutCell cellIndices, FieldOutCell edgeIndices);
 

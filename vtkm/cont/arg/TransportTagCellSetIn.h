@@ -28,26 +28,29 @@ namespace arg
 /// \c TransportTagCellSetIn is a tag used with the \c Transport class to
 /// transport topology objects for input data.
 ///
-template <typename FromTopology, typename ToTopology>
+template <typename VisitTopology, typename IncidentTopology>
 struct TransportTagCellSetIn
 {
 };
 
-template <typename FromTopology, typename ToTopology, typename ContObjectType, typename Device>
-struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology, ToTopology>,
+template <typename VisitTopology,
+          typename IncidentTopology,
+          typename ContObjectType,
+          typename Device>
+struct Transport<vtkm::cont::arg::TransportTagCellSetIn<VisitTopology, IncidentTopology>,
                  ContObjectType,
                  Device>
 {
   VTKM_IS_CELL_SET(ContObjectType);
 
   using ExecObjectType = decltype(
-    std::declval<ContObjectType>().PrepareForInput(Device(), FromTopology(), ToTopology()));
+    std::declval<ContObjectType>().PrepareForInput(Device(), VisitTopology(), IncidentTopology()));
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType
   operator()(const ContObjectType& object, const InputDomainType&, vtkm::Id, vtkm::Id) const
   {
-    return object.PrepareForInput(Device(), FromTopology(), ToTopology());
+    return object.PrepareForInput(Device(), VisitTopology(), IncidentTopology());
   }
 };
 }

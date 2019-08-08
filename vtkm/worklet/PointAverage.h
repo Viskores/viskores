@@ -22,7 +22,7 @@ namespace worklet
 
 //simple functor that returns the average point value of a given
 //cell based field.
-class PointAverage : public vtkm::worklet::WorkletMapCellToPoint
+class PointAverage : public vtkm::worklet::WorkletVisitPointsWithCells
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
