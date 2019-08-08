@@ -88,10 +88,11 @@ public:
       inside = false;
     if (point[1] < this->MinPoint[1] || point[1] > this->MaxPoint[1])
       inside = false;
-    if (dimensions == 2)
-      return inside;
-    if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
-      inside = false;
+    if (dimensions == 3)
+    {
+      if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
+        inside = false;
+    }
     return inside;
   }
 
