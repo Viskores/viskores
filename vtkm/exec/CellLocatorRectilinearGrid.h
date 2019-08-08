@@ -73,96 +73,95 @@ public:
         coords.GetPortalConstControl().GetThirdPortal().Get(this->PointDimensions[2] - 1);
     }
   }
-}
 
-VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept
-{
-  // This must not be defaulted, since defaulted virtual destructors are
-  // troublesome with CUDA __host__ __device__ markup.
-}
-
-VTKM_EXEC
-inline bool IsInside(const vtkm::Vec3f& point) const
-{
-  bool inside = true;
-  if (point[0] < this->MinPoint[0] || point[0] > this->MaxPoint[0])
-    inside = false;
-  if (point[1] < this->MinPoint[1] || point[1] > this->MaxPoint[1])
-    inside = false;
-  if (dimensions == 3)
+  VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept
   {
-    if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
+  }
+
+  VTKM_EXEC
+  inline bool IsInside(const vtkm::Vec3f& point) const
+  {
+    bool inside = true;
+    if (point[0] < this->MinPoint[0] || point[0] > this->MaxPoint[0])
       inside = false;
-  }
-  return inside;
-}
-
-VTKM_EXEC
-void FindCell(const vtkm::Vec3f& point,
-              vtkm::Id& cellId,
-              vtkm::Vec3f& parametric,
-              const vtkm::exec::FunctorBase& worklet) const override
-{
-  (void)worklet; //suppress unused warning
-  if (!this->IsInside(point))
-  {
-    cellId = -1;
-    return;
-  }
-
-  // Get the Cell Id from the point.
-  vtkm::Id3 logicalCell(0, 0, 0);
-  for (vtkm::Int32 dim = 0; dim < dimensions; ++dim)
-  {
-    //
-    // When searching for points, we consider the max value of the cell
-    // to be apart of the next cell. If the point falls on the boundary of the
-    // data set, then it is technically inside a cell. This checks for that case
-    //
-    if (point[dim] == MaxPoint[dim])
+    if (point[1] < this->MinPoint[1] || point[1] > this->MaxPoint[1])
+      inside = false;
+    if (dimensions == 3)
     {
-      logicalCell[dim] = this->PointDimensions[dim] - 2;
-      continue;
+      if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
+        inside = false;
+    }
+    return inside;
+  }
+
+  VTKM_EXEC
+  void FindCell(const vtkm::Vec3f& point,
+                vtkm::Id& cellId,
+                vtkm::Vec3f& parametric,
+                const vtkm::exec::FunctorBase& worklet) const override
+  {
+    (void)worklet; //suppress unused warning
+    if (!this->IsInside(point))
+    {
+      cellId = -1;
+      return;
     }
 
-    vtkm::Id minIndex = 0;
-    vtkm::Id maxIndex = this->PointDimensions[dim] - 1;
-    vtkm::FloatDefault minVal;
-    vtkm::FloatDefault maxVal;
-    minVal = this->AxisPortals[dim].Get(minIndex);
-    maxVal = this->AxisPortals[dim].Get(maxIndex);
-    while (maxIndex > minIndex + 1)
+    // Get the Cell Id from the point.
+    vtkm::Id3 logicalCell(0, 0, 0);
+    for (vtkm::Int32 dim = 0; dim < dimensions; ++dim)
     {
-      vtkm::Id midIndex = (minIndex + maxIndex) / 2;
-      vtkm::FloatDefault midVal = this->AxisPortals[dim].Get(midIndex);
-      if (point[dim] <= midVal)
+      //
+      // When searching for points, we consider the max value of the cell
+      // to be apart of the next cell. If the point falls on the boundary of the
+      // data set, then it is technically inside a cell. This checks for that case
+      //
+      if (point[dim] == MaxPoint[dim])
       {
-        maxIndex = midIndex;
-        maxVal = midVal;
+        logicalCell[dim] = this->PointDimensions[dim] - 2;
+        continue;
       }
-      else
+
+      vtkm::Id minIndex = 0;
+      vtkm::Id maxIndex = this->PointDimensions[dim] - 1;
+      vtkm::FloatDefault minVal;
+      vtkm::FloatDefault maxVal;
+      minVal = this->AxisPortals[dim].Get(minIndex);
+      maxVal = this->AxisPortals[dim].Get(maxIndex);
+      while (maxIndex > minIndex + 1)
       {
-        minIndex = midIndex;
-        minVal = midVal;
+        vtkm::Id midIndex = (minIndex + maxIndex) / 2;
+        vtkm::FloatDefault midVal = this->AxisPortals[dim].Get(midIndex);
+        if (point[dim] <= midVal)
+        {
+          maxIndex = midIndex;
+          maxVal = midVal;
+        }
+        else
+        {
+          minIndex = midIndex;
+          minVal = midVal;
+        }
       }
+      logicalCell[dim] = minIndex;
+      parametric[dim] = (point[dim] - minVal) / (maxVal - minVal);
     }
-    logicalCell[dim] = minIndex;
-    parametric[dim] = (point[dim] - minVal) / (maxVal - minVal);
+    // Get the actual cellId, from the logical cell index of the cell
+    cellId = logicalCell[2] * this->PlaneSize + logicalCell[1] * this->RowSize + logicalCell[0];
   }
-  // Get the actual cellId, from the logical cell index of the cell
-  cellId = logicalCell[2] * this->PlaneSize + logicalCell[1] * this->RowSize + logicalCell[0];
-}
 
 private:
-vtkm::Id PlaneSize;
-vtkm::Id RowSize;
+  vtkm::Id PlaneSize;
+  vtkm::Id RowSize;
 
-CellSetPortal CellSet;
-RectilinearPortalType Coords;
-AxisPortalType AxisPortals[3];
-vtkm::Vec<vtkm::Id, dimensions> PointDimensions;
-vtkm::Vec3f MinPoint;
-vtkm::Vec3f MaxPoint;
+  CellSetPortal CellSet;
+  RectilinearPortalType Coords;
+  AxisPortalType AxisPortals[3];
+  vtkm::Vec<vtkm::Id, dimensions> PointDimensions;
+  vtkm::Vec3f MinPoint;
+  vtkm::Vec3f MaxPoint;
 };
 } //namespace exec
 } //namespace vtkm
