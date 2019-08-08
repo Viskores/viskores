@@ -71,6 +71,7 @@ public:
   /// This requires a closed manifold surface or the behavior is undefined.
   /// This option is expensive but necessary for rendering.
   /// To make the normals point inward, set FlipNormals to true.
+  /// Default is off.
   /// @{
   void SetAutoOrientNormals(bool v) { this->AutoOrientNormals = v; }
   bool GetAutoOrientNormals() const { return this->AutoOrientNormals; }
