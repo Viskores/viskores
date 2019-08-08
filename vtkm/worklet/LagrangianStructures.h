@@ -114,10 +114,6 @@ public:
 
   using ExecutionSignature = void(WorkIndex, _1, _2, _3);
 
-  //
-  // Point position arrays are the input and the output positions for the
-  // flow map.
-  //
   template <typename PointArray>
   void operator()(const vtkm::Id index,
                   const PointArray& input,
