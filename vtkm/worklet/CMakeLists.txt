@@ -36,6 +36,7 @@ set(headers
   KdTree3D.h
   KernelSplatter.h
   Keys.h
+  LagrangianStructures.h
   Magnitude.h
   MarchingCubes.h
   Mask.h
