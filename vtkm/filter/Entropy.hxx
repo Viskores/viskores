@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/FieldEntropy.h>
 
 #include <vtkm/filter/internal/CreateResult.h>

@@ -12,8 +12,6 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
-
 namespace vtkm
 {
 namespace filter

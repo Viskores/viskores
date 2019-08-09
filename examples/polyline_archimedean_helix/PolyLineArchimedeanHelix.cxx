@@ -12,7 +12,6 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/Tube.h>
 
 #include <vtkm/cont/ColorTable.h>

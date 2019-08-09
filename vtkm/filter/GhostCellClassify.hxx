@@ -19,7 +19,6 @@
 
 #include <vtkm/filter/internal/CreateResult.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 
@@ -155,8 +154,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
 
     vtkm::cont::CellSetStructured<1> cellset1d = cellset.Cast<vtkm::cont::CellSetStructured<1>>();
     SetStructuredGhostCells1D structuredGhosts1D(cellset1d.GetCellDimensions());
-    vtkm::worklet::DispatcherMapField<SetStructuredGhostCells1D> dispatcher(structuredGhosts1D);
-    dispatcher.Invoke(indexArray, ghosts);
+    this->Invoke(structuredGhosts1D, indexArray, ghosts);
   }
   else if (cellset.template IsType<vtkm::cont::CellSetStructured<2>>())
   {
@@ -165,8 +163,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
 
     vtkm::cont::CellSetStructured<2> cellset2d = cellset.Cast<vtkm::cont::CellSetStructured<2>>();
     SetStructuredGhostCells2D structuredGhosts2D(cellset2d.GetCellDimensions());
-    vtkm::worklet::DispatcherMapField<SetStructuredGhostCells2D> dispatcher(structuredGhosts2D);
-    dispatcher.Invoke(indexArray, ghosts);
+    this->Invoke(structuredGhosts2D, indexArray, ghosts);
   }
   else if (cellset.template IsType<vtkm::cont::CellSetStructured<3>>())
   {
@@ -175,11 +172,12 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
 
     vtkm::cont::CellSetStructured<3> cellset3d = cellset.Cast<vtkm::cont::CellSetStructured<3>>();
     SetStructuredGhostCells3D structuredGhosts3D(cellset3d.GetCellDimensions());
-    vtkm::worklet::DispatcherMapField<SetStructuredGhostCells3D> dispatcher(structuredGhosts3D);
-    dispatcher.Invoke(indexArray, ghosts);
+    this->Invoke(structuredGhosts3D, indexArray, ghosts);
   }
   else
+  {
     throw vtkm::cont::ErrorFilterExecution("Unsupported cellset type for GhostCellClassify.");
+  }
 
   vtkm::cont::DataSet output = internal::CreateResult(
     input, ghosts, "vtkmGhostCells", vtkm::cont::Field::Association::CELL_SET, cellset.GetName());

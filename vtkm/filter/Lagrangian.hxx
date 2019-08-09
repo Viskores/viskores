@@ -18,7 +18,6 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
@@ -35,6 +34,8 @@ static vtkm::cont::ArrayHandle<vtkm::Vec3f_64> BasisParticles;
 static vtkm::cont::ArrayHandle<vtkm::Vec3f_64> BasisParticlesOriginal;
 static vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
 
+namespace
+{
 class ValidityCheck : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -42,7 +43,10 @@ public:
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
-  inline VTKM_CONT void SetBounds(vtkm::Bounds b) { bounds = b; }
+  ValidityCheck(vtkm::Bounds b)
+    : bounds(b)
+  {
+  }
 
   template <typename PosType, typename StepType, typename ValidityType>
   VTKM_EXEC void operator()(const PosType& end_point,
@@ -71,6 +75,7 @@ public:
 private:
   vtkm::Bounds bounds;
 };
+}
 
 namespace vtkm
 {
@@ -310,10 +315,8 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   }
   else
   {
-    ValidityCheck check;
-    check.SetBounds(bounds);
-    vtkm::worklet::DispatcherMapField<ValidityCheck> dispatcher(check);
-    dispatcher.Invoke(particle_positions, particle_stepstaken, BasisParticlesValidity);
+    ValidityCheck check(bounds);
+    this->Invoke(check, particle_positions, particle_stepstaken, BasisParticlesValidity);
     vtkm::cont::ArrayCopy(particle_positions, BasisParticles);
   }
 

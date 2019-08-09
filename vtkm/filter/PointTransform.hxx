@@ -9,7 +9,6 @@
 //============================================================================
 
 #include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 
 namespace vtkm
 {
@@ -116,9 +115,7 @@ inline VTKM_CONT vtkm::cont::DataSet PointTransform<S>::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   vtkm::cont::ArrayHandle<T> outArray;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::PointTransform<S>> dispatcher(this->Worklet);
-
-  dispatcher.Invoke(field, outArray);
+  this->Invoke(this->Worklet, field, outArray);
 
   return internal::CreateResult(inDataSet,
                                 outArray,

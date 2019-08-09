@@ -14,8 +14,6 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/SurfaceNormals.h>
 
 namespace vtkm

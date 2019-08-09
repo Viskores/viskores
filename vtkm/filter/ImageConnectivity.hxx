@@ -13,7 +13,6 @@
 
 #include <vtkm/filter/ImageConnectivity.h>
 #include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 
 namespace vtkm
 {

@@ -9,9 +9,6 @@
 //============================================================================
 
 #include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-
-#include <vtkm/filter/WarpScalar.h>
 
 namespace vtkm
 {

@@ -16,7 +16,6 @@
 #include <vtkm/RangeId3.h>
 #include <vtkm/filter/ExtractStructured.h>
 #include <vtkm/worklet/CellDeepCopy.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace
 {
@@ -204,6 +203,7 @@ private:
 
 template <int DIMS, typename T, typename StorageType>
 bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
+              const vtkm::cont::Invoker& invoke,
               bool removeAllGhost,
               vtkm::UInt8 removeType,
               vtkm::RangeId3& range,
@@ -219,9 +219,7 @@ bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
   minmax.GetPortalControl().Set(4, std::numeric_limits<vtkm::Id>::min());
   minmax.GetPortalControl().Set(5, std::numeric_limits<vtkm::Id>::min());
 
-  vtkm::worklet::DispatcherMapField<RealMinMax<3>>(
-    RealMinMax<3>(cellDims, removeAllGhost, removeType))
-    .Invoke(ghostField, minmax);
+  invoke(RealMinMax<3>(cellDims, removeAllGhost, removeType), ghostField, minmax);
 
   auto portal = minmax.GetPortalConstControl();
   range = vtkm::RangeId3(
@@ -230,9 +228,7 @@ bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
   vtkm::cont::ArrayHandle<vtkm::UInt8> validFlags;
   validFlags.Allocate(size);
 
-  vtkm::worklet::DispatcherMapField<Validate<DIMS>>(
-    Validate<DIMS>(cellDims, removeAllGhost, removeType, range))
-    .Invoke(ghostField, validFlags);
+  invoke(Validate<DIMS>(cellDims, removeAllGhost, removeType, range), ghostField, validFlags);
 
   vtkm::UInt8 res = vtkm::cont::Algorithm::Reduce(validFlags, vtkm::UInt8(0), vtkm::Maximum());
   return res == 0;
@@ -241,6 +237,7 @@ bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
 template <typename T, typename StorageType>
 bool CanDoStructuredStrip(const vtkm::cont::DynamicCellSet& cells,
                           const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
+                          const vtkm::cont::Invoker& invoke,
                           bool removeAllGhost,
                           vtkm::UInt8 removeType,
                           vtkm::RangeId3& range)
@@ -255,8 +252,7 @@ bool CanDoStructuredStrip(const vtkm::cont::DynamicCellSet& cells,
     cellDims[0] = d;
     vtkm::Id sz = d;
 
-    canDo =
-      CanStrip<1, T, StorageType>(ghostField, removeAllGhost, removeType, range, cellDims, sz);
+    canDo = CanStrip<1>(ghostField, invoke, removeAllGhost, removeType, range, cellDims, sz);
   }
   else if (cells.IsSameType(vtkm::cont::CellSetStructured<2>()))
   {
@@ -265,16 +261,14 @@ bool CanDoStructuredStrip(const vtkm::cont::DynamicCellSet& cells,
     cellDims[0] = d[0];
     cellDims[1] = d[1];
     vtkm::Id sz = cellDims[0] * cellDims[1];
-    canDo =
-      CanStrip<2, T, StorageType>(ghostField, removeAllGhost, removeType, range, cellDims, sz);
+    canDo = CanStrip<2>(ghostField, invoke, removeAllGhost, removeType, range, cellDims, sz);
   }
   else if (cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
   {
     auto cells3D = cells.Cast<vtkm::cont::CellSetStructured<3>>();
     cellDims = cells3D.GetCellDimensions();
     vtkm::Id sz = cellDims[0] * cellDims[1] * cellDims[2];
-    canDo =
-      CanStrip<3, T, StorageType>(ghostField, removeAllGhost, removeType, range, cellDims, sz);
+    canDo = CanStrip<3>(ghostField, invoke, removeAllGhost, removeType, range, cellDims, sz);
   }
 
   return canDo;
@@ -317,10 +311,11 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
       cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
   {
     vtkm::RangeId3 range;
-    if (CanDoStructuredStrip<T, StorageType>(
-          cells, field, this->GetRemoveAllGhost(), this->GetRemoveType(), range))
+    if (CanDoStructuredStrip(
+          cells, field, this->Invoke, this->GetRemoveAllGhost(), this->GetRemoveType(), range))
     {
       vtkm::filter::ExtractStructured extract;
+      extract.SetInvoker(this->Invoke);
       vtkm::RangeId3 erange(
         range.X.Min, range.X.Max + 2, range.Y.Min, range.Y.Max + 2, range.Z.Min, range.Z.Max + 2);
       vtkm::Id3 sample(1, 1, 1);
