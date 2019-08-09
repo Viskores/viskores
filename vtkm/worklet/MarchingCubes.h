@@ -711,7 +711,12 @@ public:
 
     NormalType grad0 = normal;
     auto weight = weights.Get(edgeId);
-    normal = vtkm::Normal(vtkm::Lerp(grad0, grad1, weight));
+    normal = vtkm::Lerp(grad0, grad1, weight);
+    const auto mag2 = vtkm::MagnitudeSquared(normal);
+    if (mag2 > 0.)
+    {
+      normal = normal * vtkm::RSqrt(mag2);
+    }
   }
 };
 
