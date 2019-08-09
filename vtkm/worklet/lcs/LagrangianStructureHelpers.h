@@ -11,6 +11,7 @@
 #define vtk_m_worklet_lcs_LagrangianStructureHelpers_h
 
 #include <vtkm/Matrix.h>
+#include <vtkm/Swap.h>
 #include <vtkm/Types.h>
 
 namespace vtkm
@@ -134,6 +135,13 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 2, 2> tensor, vtkm::Vec<T, 2>& eigen)
 }
 
 template <typename T>
+inline void cswap(T& v1, T& v2)
+{
+  if (v2 < v1)
+    vtkm::Swap(v1, v2);
+}
+
+template <typename T>
 VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
 {
   vtkm::Vec<T, 3> j1 = vtkm::MatrixGetRow(tensor, 0);
@@ -186,51 +194,13 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
   T w1 = x - sqrtr * (cosphi - sqrt3 * sinphi);
   T w2 = x - sqrtr * (cosphi + sqrt3 * sinphi);
 
-  if (w0 >= w1 && w0 >= w2)
-  {
-    eigen[0] = w0;
+  cswap(w0, w1);
+  cswap(w0, w2);
+  cswap(w1, w2);
 
-    if (w1 >= w2)
-    {
-      eigen[1] = w1;
-      eigen[2] = w2;
-    }
-    else
-    {
-      eigen[1] = w2;
-      eigen[2] = w1;
-    }
-  }
-  else if (w1 >= w0 && w1 >= w2)
-  {
-    eigen[0] = w1;
-
-    if (w0 >= w2)
-    {
-      eigen[1] = w0;
-      eigen[2] = w2;
-    }
-    else
-    {
-      eigen[1] = w2;
-      eigen[2] = w0;
-    }
-  }
-  else if (w2 >= w0 && w2 >= w1)
-  {
-    eigen[0] = w2;
-
-    if (w0 >= w1)
-    {
-      eigen[1] = w0;
-      eigen[2] = w1;
-    }
-    else
-    {
-      eigen[1] = w1;
-      eigen[2] = w0;
-    }
-  }
+  eigen[0] = w0;
+  eigen[1] = w1;
+  eigen[2] = w2;
 }
 
 } // namespace detail

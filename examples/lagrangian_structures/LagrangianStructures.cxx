@@ -27,9 +27,7 @@
 
 int main(int argc, char** argv)
 {
-  auto opts =
-    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
-  vtkm::cont::Initialize(argc, argv, opts);
+  vtkm::cont::Initialize(argc, argv);
 
   if (argc < 3)
   {
