@@ -28,10 +28,7 @@ public:
   using Structured2DType = vtkm::cont::CellSetStructured<2>;
   using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
-  VTKM_EXEC_CONT
-  GridMetaData() {}
-
-  VTKM_EXEC_CONT
+  VTKM_CONT
   GridMetaData(const vtkm::cont::DynamicCellSet cellSet)
   {
     if (cellSet.IsType<Structured2DType>())
@@ -102,9 +99,8 @@ class LagrangianStructures<2> : public vtkm::worklet::WorkletMapField
 {
 public:
   using Scalar = vtkm::FloatDefault;
-  ;
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   LagrangianStructures(Scalar endTime, vtkm::cont::DynamicCellSet cellSet)
     : EndTime(endTime)
     , GridData(cellSet)
@@ -116,10 +112,10 @@ public:
   using ExecutionSignature = void(WorkIndex, _1, _2, _3);
 
   template <typename PointArray>
-  void operator()(const vtkm::Id index,
-                  const PointArray& input,
-                  const PointArray& output,
-                  Scalar& outputField) const
+  VTKM_EXEC void operator()(const vtkm::Id index,
+                            const PointArray& input,
+                            const PointArray& output,
+                            Scalar& outputField) const
   {
     using Point = typename PointArray::ValueType;
 
@@ -181,9 +177,8 @@ class LagrangianStructures<3> : public vtkm::worklet::WorkletMapField
 {
 public:
   using Scalar = vtkm::FloatDefault;
-  ;
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   LagrangianStructures(Scalar endTime, vtkm::cont::DynamicCellSet cellSet)
     : EndTime(endTime)
     , GridData(cellSet)
@@ -198,10 +193,10 @@ public:
    * Point position arrays are the input and the output positions of the particle advection.
    */
   template <typename PointArray>
-  void operator()(const vtkm::Id index,
-                  const PointArray& input,
-                  const PointArray& output,
-                  Scalar& outputField) const
+  VTKM_EXEC void operator()(const vtkm::Id index,
+                            const PointArray& input,
+                            const PointArray& output,
+                            Scalar& outputField) const
   {
     using Point = typename PointArray::ValueType;
 

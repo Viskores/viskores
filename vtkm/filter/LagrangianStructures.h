@@ -24,6 +24,8 @@ namespace filter
 class LagrangianStructures : public vtkm::filter::FilterDataSetWithField<LagrangianStructures>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   using Scalar = vtkm::worklet::particleadvection::ScalarType;
   using Vector = vtkm::Vec<Scalar, 3>;
 
@@ -78,18 +80,8 @@ private:
   vtkm::cont::ArrayHandle<Vector> FlowMapOutput;
 };
 
-template <>
-class FilterTraits<LagrangianStructures>
-{
-public:
-  struct TypeListTagLagrangianStructures
-    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
-  {
-  };
-  using InputFieldTypeList = TypeListTagLagrangianStructures;
-};
-}
-} // namespace vtkm::filter
+} // namespace filter
+} // namespace vtkm
 
 #include <vtkm/filter/LagrangianStructures.hxx>
 
