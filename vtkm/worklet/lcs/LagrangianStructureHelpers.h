@@ -135,7 +135,7 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 2, 2> tensor, vtkm::Vec<T, 2>& eigen)
 }
 
 template <typename T>
-inline void cswap(T& v1, T& v2)
+VTKM_EXEC_CONT inline void cswap(T& v1, T& v2)
 {
   if (v2 < v1)
     vtkm::Swap(v1, v2);
