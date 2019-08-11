@@ -313,28 +313,81 @@ private:
       using ComponentType = typename VTraits::ComponentType;
       constexpr vtkm::IdComponent NUM_COMPONENTS = VTraits::NUM_COMPONENTS;
 
-      vtkm::cont::ArrayHandleSOA<ValueType> soaArray;
-      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
       {
-        vtkm::cont::ArrayHandle<ComponentType> componentArray;
-        componentArray.Allocate(ARRAY_SIZE);
-        auto componentPortal = componentArray.GetPortalControl();
-        for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+        vtkm::cont::ArrayHandleSOA<ValueType> soaArray;
+        for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+             ++componentIndex)
         {
-          componentPortal.Set(
-            valueIndex, VTraits::GetComponent(TestValue(valueIndex, ValueType{}), componentIndex));
+          vtkm::cont::ArrayHandle<ComponentType> componentArray;
+          componentArray.Allocate(ARRAY_SIZE);
+          auto componentPortal = componentArray.GetPortalControl();
+          for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+          {
+            componentPortal.Set(
+              valueIndex,
+              VTraits::GetComponent(TestValue(valueIndex, ValueType{}), componentIndex));
+          }
+          soaArray.SetArray(componentIndex, componentArray);
         }
-        soaArray.SetArray(componentIndex, componentArray);
+
+        VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+        VTKM_TEST_ASSERT(soaArray.GetPortalConstControl().GetNumberOfValues() == ARRAY_SIZE);
+        CheckPortal(soaArray.GetPortalConstControl());
+
+        vtkm::cont::ArrayHandle<ValueType> basicArray;
+        vtkm::cont::ArrayCopy(soaArray, basicArray);
+        VTKM_TEST_ASSERT(basicArray.GetNumberOfValues() == ARRAY_SIZE);
+        CheckPortal(basicArray.GetPortalConstControl());
       }
 
-      VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-      VTKM_TEST_ASSERT(soaArray.GetPortalConstControl().GetNumberOfValues() == ARRAY_SIZE);
-      CheckPortal(soaArray.GetPortalConstControl());
+      {
+        // Check constructors
+        using Vec3 = vtkm::Vec<ComponentType, 3>;
+        std::vector<ComponentType> vector0;
+        std::vector<ComponentType> vector1;
+        std::vector<ComponentType> vector2;
+        for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+        {
+          Vec3 value = TestValue(valueIndex, Vec3{});
+          vector0.push_back(value[0]);
+          vector1.push_back(value[1]);
+          vector2.push_back(value[2]);
+        }
 
-      vtkm::cont::ArrayHandle<ValueType> basicArray;
-      vtkm::cont::ArrayCopy(soaArray, basicArray);
-      VTKM_TEST_ASSERT(basicArray.GetNumberOfValues() == ARRAY_SIZE);
-      CheckPortal(basicArray.GetPortalConstControl());
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray = { vector0, vector1, vector2 };
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray =
+            vtkm::cont::make_ArrayHandleSOA<Vec3>({ vector0, vector1, vector2 });
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray =
+            vtkm::cont::make_ArrayHandleSOA(vector0, vector1, vector2);
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA<Vec3>(
+            { &vector0.front(), &vector1.front(), &vector2.front() }, ARRAY_SIZE);
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA(
+            ARRAY_SIZE, &vector0.front(), &vector1.front(), &vector2.front());
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+      }
     }
   };
 

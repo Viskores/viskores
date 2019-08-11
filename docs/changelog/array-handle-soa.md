@@ -32,3 +32,30 @@ vtkm::cont::ArrayHandle<vtkm::Float32> accelHandle2 = vtkm::cont::make_ArrayHand
 
 vtkm::cont::ArrayHandleSOA<vtkm::Vec3f_32> accel = { accelHandle0, accelHandle1, accelHandle2 };
 ```
+
+Also provided are constructors and versions of `make_ArrayHandleSOA` that
+take `std::vector` or C arrays as either initializer lists or variable
+arguments.
+
+``` cpp
+std::vector<vtkm::Float32> accel0;
+std::vector<vtkm::Float32> accel1;
+std::vector<vtkm::Float32> accel2;
+
+// Let's say accel arrays are set to some field of acceleration vectors by
+// some other software.
+
+vtkm::cont::ArrayHandleSOA<vtkm::Vec3f_32> accel = { accel0, accel1, accel2 };
+```
+
+However, setting arrays is a little awkward because you also have to
+specify the length. This is done either outside the initializer list or as
+the first argument.
+
+``` cpp
+vtkm::cont::make_ArrayHandleSOA({ array0, array1, array2 }, ARRAY_SIZE);
+```
+
+``` cpp
+vtkm::cont::make_ArrayHandleSOA(ARRAY_SIZE, array0, array1, array2);
+```
