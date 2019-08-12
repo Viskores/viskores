@@ -36,12 +36,7 @@ inline VTKM_CONT vtkm::cont::DataSet CellSetConnectivity::DoExecute(
   vtkm::worklet::connectivity::CellSetConnectivity().Run(
     vtkm::filter::ApplyPolicy(input.GetCellSet(this->GetActiveCellSetIndex()), policy), component);
 
-  auto result = CreateResult(input,
-                             component,
-                             this->GetOutputFieldName(),
-                             vtkm::cont::Field::Association::CELL_SET,
-                             fieldMetadata.GetCellSetName());
-  return result;
+  return CreateResult(input, component, this->GetOutputFieldName(), fieldMetadata);
 }
 }
 }

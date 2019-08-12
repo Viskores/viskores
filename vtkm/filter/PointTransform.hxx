@@ -115,11 +115,7 @@ inline VTKM_CONT vtkm::cont::DataSet PointTransform<S>::DoExecute(
   vtkm::cont::ArrayHandle<T> outArray;
   this->Invoke(this->Worklet, field, outArray);
 
-  return CreateResult(inDataSet,
-                      outArray,
-                      this->GetOutputFieldName(),
-                      fieldMetadata.GetAssociation(),
-                      fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet, outArray, this->GetOutputFieldName(), fieldMetadata);
 }
 }
 } // namespace vtkm::filter

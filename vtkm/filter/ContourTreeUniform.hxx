@@ -65,6 +65,7 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 ContourTreeMesh2D::ContourTreeMesh2D()
+  : vtkm::filter::FilterCell<ContourTreeMesh2D>()
 {
   this->SetOutputFieldName("saddlePeak");
 }
@@ -75,19 +76,17 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   if (fieldMeta.IsPointField() == false)
   {
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+    throw vtkm::cont::ErrorFilterExecution("ContourTreeMesh2D expects point field input.");
   }
 
   // Collect sizing information from the dataset
+  const auto& dynamicCellSet = input.GetCellSet(this->GetActiveCellSetIndex());
   vtkm::cont::CellSetStructured<2> cellSet;
-  input.GetCellSet(this->GetActiveCoordinateSystemIndex()).CopyTo(cellSet);
-
-  // How should policy be used?
-  vtkm::filter::ApplyPolicy(cellSet, policy);
+  dynamicCellSet.CopyTo(cellSet);
 
   vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
   vtkm::Id nRows = pointDimensions[0];
@@ -98,14 +97,11 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   vtkm::worklet::ContourTreeMesh2D worklet;
   worklet.Run(field, nRows, nCols, saddlePeak);
 
-  return CreateResult(input,
-                      saddlePeak,
-                      this->GetOutputFieldName(),
-                      fieldMeta.GetAssociation(),
-                      fieldMeta.GetCellSetName());
+  return CreateResultFieldCell(input, saddlePeak, this->GetOutputFieldName(), dynamicCellSet);
 }
 //-----------------------------------------------------------------------------
 ContourTreeMesh3D::ContourTreeMesh3D()
+  : vtkm::filter::FilterCell<ContourTreeMesh3D>()
 {
   this->SetOutputFieldName("saddlePeak");
 }
@@ -116,7 +112,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -125,10 +121,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
 
   // Collect sizing information from the dataset
   vtkm::cont::CellSetStructured<3> cellSet;
-  input.GetCellSet(this->GetActiveCoordinateSystemIndex()).CopyTo(cellSet);
-
-  // How should policy be used?
-  vtkm::filter::ApplyPolicy(cellSet, policy);
+  input.GetCellSet(this->GetActiveCellSetIndex()).CopyTo(cellSet);
 
   vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
   vtkm::Id nRows = pointDimensions[0];
@@ -140,11 +133,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
   vtkm::worklet::ContourTreeMesh3D worklet;
   worklet.Run(field, nRows, nCols, nSlices, saddlePeak);
 
-  return CreateResult(input,
-                      saddlePeak,
-                      this->GetOutputFieldName(),
-                      fieldMeta.GetAssociation(),
-                      fieldMeta.GetCellSetName());
+  return CreateResult(input, saddlePeak, this->GetOutputFieldName(), fieldMeta);
 }
 }
 } // namespace vtkm::filter

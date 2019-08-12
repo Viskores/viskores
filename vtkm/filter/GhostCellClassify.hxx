@@ -176,9 +176,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     throw vtkm::cont::ErrorFilterExecution("Unsupported cellset type for GhostCellClassify.");
   }
 
-  vtkm::cont::DataSet output = CreateResult(
-    input, ghosts, "vtkmGhostCells", vtkm::cont::Field::Association::CELL_SET, cellset.GetName());
-  return output;
+  return CreateResultFieldCell(input, ghosts, "vtkmGhostCells", cellset);
 }
 
 template <typename ValueType, typename Storage, typename Policy>

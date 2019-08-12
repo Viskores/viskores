@@ -37,11 +37,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
     field,
     component);
 
-  auto result = CreateResult(input,
-                             component,
-                             this->GetOutputFieldName(),
-                             vtkm::cont::Field::Association::POINTS,
-                             fieldMetadata.GetCellSetName());
+  auto result = CreateResult(input, component, this->GetOutputFieldName(), fieldMetadata);
   return result;
 }
 }

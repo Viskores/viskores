@@ -61,7 +61,7 @@
 
 #include <utility>
 #include <vector>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/FilterCell.h>
 
 namespace vtkm
 {
@@ -69,7 +69,7 @@ namespace filter
 {
 
 
-class ContourTreePPP2 : public vtkm::filter::FilterField<ContourTreePPP2>
+class ContourTreePPP2 : public vtkm::filter::FilterCell<ContourTreePPP2>
 {
 public:
   using SupportedTypes = vtkm::TypeListTagScalarAll;
@@ -93,8 +93,6 @@ private:
   bool ComputeRegularStructure;
   std::vector<std::pair<std::string, vtkm::Float64>> Timings;
 
-  // TODO Should the additional fields below be add to the vtkm::filter::ResultField and what is the best way to represent them
-  // Additional result fields not included in the vtkm::filter::ResultField returned by DoExecute
   vtkm::worklet::contourtree_augmented::ContourTree ContourTreeData; // The contour tree
   vtkm::Id NumIterations; // Number of iterations used to compute the contour tree
   vtkm::worklet::contourtree_augmented::IdArrayType
