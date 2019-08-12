@@ -131,6 +131,9 @@ ALIGN_RE_T(vtkm::Int16);
 ALIGN_RE_T(vtkm::UInt16);
 ALIGN_RE_T(vtkm::Int32);
 ALIGN_RE_T(vtkm::UInt32);
+// Need these for vtk. don't need long long, since those are used for [U]Int64.
+ALIGN_RE_T(long);
+ALIGN_RE_T(unsigned long);
 ALIGN_RE_T(vtkm::Int64);
 ALIGN_RE_T(vtkm::UInt64);
 ALIGN_RE_T(vtkm::Float32);
@@ -144,6 +147,9 @@ ALIGN_RE_VEC(vtkm::Int16);
 ALIGN_RE_VEC(vtkm::UInt16);
 ALIGN_RE_VEC(vtkm::Int32);
 ALIGN_RE_VEC(vtkm::UInt32);
+// Need these for vtk. don't need long long, since those are used for [U]Int64.
+ALIGN_RE_VEC(long);
+ALIGN_RE_VEC(unsigned long);
 ALIGN_RE_VEC(vtkm::Int64);
 ALIGN_RE_VEC(vtkm::UInt64);
 ALIGN_RE_VEC(vtkm::Float32);
