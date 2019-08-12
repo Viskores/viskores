@@ -162,7 +162,7 @@ public:
     // Given endTime is in units where start time is 0,
     // else do endTime-startTime
     // return value for computation
-    outputField = log(delta) / (2 * EndTime);
+    outputField = log(delta) / (static_cast<Scalar>(2.0f) * EndTime);
   }
 
 public:
@@ -252,7 +252,7 @@ public:
     }
     // Given endTime is in units where start time is 0. else do endTime-startTime
     // return value for ftle computation
-    outputField = log(delta) / (2 * EndTime);
+    outputField = log(delta) / (static_cast<Scalar>(2.0f) * EndTime);
   }
 
 public:
