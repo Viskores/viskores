@@ -74,14 +74,6 @@ public:
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const { return this->Functor(index); }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
-  {
-#if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
-    VTKM_ASSERT(false && "Cannot write to read-only implicit array.");
-#endif
-  }
-
   using IteratorType =
     vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalImplicit<FunctorType>>;
 
