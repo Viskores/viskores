@@ -34,8 +34,6 @@ public:
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_ImageConnectivity_hxx
 #include <vtkm/filter/ImageConnectivity.hxx>
-#endif
 
 #endif //vtk_m_filter_ImageConnectivity_h

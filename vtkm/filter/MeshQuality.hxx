@@ -18,10 +18,10 @@
 //  this software.
 //=========================================================================
 
-#include "vtkm/cont/DynamicCellSet.h"
-#include "vtkm/cont/ErrorFilterExecution.h"
-#include "vtkm/cont/Field.h"
-#include "vtkm/filter/internal/CreateResult.h"
+#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/Field.h>
+#include <vtkm/filter/CreateResult.h>
 
 // #define DEBUG_PRINT
 

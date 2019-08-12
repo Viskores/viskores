@@ -17,10 +17,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 
-#include <vtkm/filter/internal/CreateResult.h>
-
 #include <vtkm/worklet/WorkletMapField.h>
-
 
 namespace
 {
@@ -179,7 +176,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     throw vtkm::cont::ErrorFilterExecution("Unsupported cellset type for GhostCellClassify.");
   }
 
-  vtkm::cont::DataSet output = internal::CreateResult(
+  vtkm::cont::DataSet output = CreateResult(
     input, ghosts, "vtkmGhostCells", vtkm::cont::Field::Association::CELL_SET, cellset.GetName());
   return output;
 }

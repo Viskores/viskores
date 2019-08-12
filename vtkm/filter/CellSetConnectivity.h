@@ -32,8 +32,6 @@ public:
 }
 }
 
-#ifndef vtkm_m_filter_CellSetConnectivity_hxx
 #include <vtkm/filter/CellSetConnectivity.hxx>
-#endif
 
 #endif //vtkm_m_filter_CellSetConnectivity_h

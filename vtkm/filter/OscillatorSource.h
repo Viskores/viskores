@@ -71,6 +71,6 @@ private:
 }
 }
 
-#include "vtkm/filter/OscillatorSource.hxx"
+#include <vtkm/filter/OscillatorSource.hxx>
 
 #endif // vtk_m_filter_OscillatorSource_h

@@ -8,8 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/internal/CreateResult.h>
-
 namespace vtkm
 {
 namespace filter
@@ -56,11 +54,11 @@ inline VTKM_CONT vtkm::cont::DataSet PointElevation::DoExecute(
   //that the dispatcher should do
   this->Invoke(this->Worklet, field, outArray);
 
-  return internal::CreateResult(inDataSet,
-                                outArray,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet,
+                      outArray,
+                      this->GetOutputFieldName(),
+                      fieldMetadata.GetAssociation(),
+                      fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

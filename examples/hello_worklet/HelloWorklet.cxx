@@ -10,13 +10,12 @@
 
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/FilterField.h>
-#include <vtkm/filter/internal/CreateResult.h>
 
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
 #include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Invoker.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
@@ -63,9 +62,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> outField;
 
     //construct our invoker to launch worklets
-    vtkm::cont::Invoker invoker;
     vtkm::worklet::HelloWorklet mag;
-    invoker(mag, inField, outField); //launch mag worklets
+    this->Invoke(mag, inField, outField); //launch mag worklets
 
     //construct output field information
     if (this->GetOutputFieldName().empty())
@@ -74,11 +72,11 @@ public:
     }
 
     //return the result, which is the input data with the computed field added to it
-    return vtkm::filter::internal::CreateResult(inDataSet,
-                                                outField,
-                                                this->GetOutputFieldName(),
-                                                fieldMetadata.GetAssociation(),
-                                                fieldMetadata.GetCellSetName());
+    return vtkm::filter::CreateResult(inDataSet,
+                                      outField,
+                                      this->GetOutputFieldName(),
+                                      fieldMetadata.GetAssociation(),
+                                      fieldMetadata.GetCellSetName());
   }
 };
 }

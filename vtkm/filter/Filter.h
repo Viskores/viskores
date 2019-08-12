@@ -16,9 +16,11 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/MultiBlock.h>
 
+#include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/FilterTraits.h>
 #include <vtkm/filter/PolicyBase.h>
+
 
 namespace vtkm
 {

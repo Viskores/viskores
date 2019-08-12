@@ -9,8 +9,6 @@
 //============================================================================
 #include <vtkm/worklet/DispatcherMapField.h>
 
-#include <vtkm/filter/internal/CreateResult.h>
-
 namespace vtkm
 {
 namespace filter
@@ -77,11 +75,11 @@ inline VTKM_CONT vtkm::cont::DataSet OscillatorSource::DoExecute(
   //that the dispatcher should do
   this->Invoke(this->Worklet, field, outArray);
 
-  return internal::CreateResult(inDataSet,
-                                outArray,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet,
+                      outArray,
+                      this->GetOutputFieldName(),
+                      fieldMetadata.GetAssociation(),
+                      fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_internal_CreateResult_h
-#define vtk_m_filter_internal_CreateResult_h
+#ifndef vtk_m_filter_CreateResult_h
+#define vtk_m_filter_CreateResult_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorBadValue.h>
@@ -18,9 +18,6 @@ namespace vtkm
 {
 namespace filter
 {
-namespace internal
-{
-
 //@{
 /// These are utility functions defined to use in filters when creating an
 /// output dataset to return from `DoExecute` methods. The various overloads
@@ -135,7 +132,6 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inD
 }
 
 //@}
-} // namespace vtkm::filter::internal
 } // namespace vtkm::filter
 } // namespace vtkm
 

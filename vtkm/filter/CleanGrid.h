@@ -110,8 +110,6 @@ private:
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_CleanGrid_hxx
 #include <vtkm/filter/CleanGrid.hxx>
-#endif
 
 #endif //vtk_m_filter_CleanGrid_h

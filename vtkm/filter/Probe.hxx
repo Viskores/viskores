@@ -7,8 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Probe_hxx
-#define vtk_m_filter_Probe_hxx
 
 namespace vtkm
 {
@@ -69,5 +67,3 @@ VTKM_CONT inline bool Probe::DoMapField(vtkm::cont::DataSet& result,
 }
 }
 } // vtkm::filter
-
-#endif // vtk_m_filter_Probe_hxx

@@ -21,10 +21,10 @@
 #ifndef vtk_m_filter_MeshQuality_h
 #define vtk_m_filter_MeshQuality_h
 
-#include "vtkm/CellShape.h"
-#include "vtkm/filter/FilterCell.h"
-#include "vtkm/worklet/MeshQuality.h"
+#include <vtkm/CellShape.h>
+#include <vtkm/filter/FilterCell.h>
 #include <vtkm/worklet/FieldStatistics.h>
+#include <vtkm/worklet/MeshQuality.h>
 
 namespace vtkm
 {

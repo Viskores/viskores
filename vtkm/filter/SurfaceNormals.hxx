@@ -11,7 +11,7 @@
 #include <vtkm/filter/SurfaceNormals.h>
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
+
 #include <vtkm/worklet/OrientNormals.h>
 #include <vtkm/worklet/SurfaceNormals.h>
 #include <vtkm/worklet/TriangleWinding.h>
@@ -100,10 +100,10 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
     smooth.Run(cellset, faceNormals, pointNormals);
 
 
-    result = internal::CreateResult(input,
-                                    pointNormals,
-                                    internal::ComputePointNormalsName(this),
-                                    vtkm::cont::Field::Association::POINTS);
+    result = CreateResult(input,
+                          pointNormals,
+                          internal::ComputePointNormalsName(this),
+                          vtkm::cont::Field::Association::POINTS);
     if (this->GenerateCellNormals)
     {
       result.AddField(vtkm::cont::Field(internal::ComputeCellNormalsName(this),
@@ -114,11 +114,11 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
   }
   else
   {
-    result = internal::CreateResult(input,
-                                    faceNormals,
-                                    internal::ComputeCellNormalsName(this),
-                                    vtkm::cont::Field::Association::CELL_SET,
-                                    cellset.GetName());
+    result = CreateResult(input,
+                          faceNormals,
+                          internal::ComputeCellNormalsName(this),
+                          vtkm::cont::Field::Association::CELL_SET,
+                          cellset.GetName());
   }
 
   if (this->AutoOrientNormals)

@@ -8,8 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/internal/CreateResult.h>
-
 namespace vtkm
 {
 namespace filter
@@ -32,11 +30,11 @@ inline VTKM_CONT vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(
 {
   vtkm::cont::ArrayHandle<T> outArray;
   this->Worklet.Run(field, outArray);
-  return internal::CreateResult(inDataSet,
-                                outArray,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet,
+                      outArray,
+                      this->GetOutputFieldName(),
+                      fieldMetadata.GetAssociation(),
+                      fieldMetadata.GetCellSetName());
 }
 
 //-----------------------------------------------------------------------------
@@ -56,11 +54,11 @@ inline VTKM_CONT vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(
 {
   vtkm::cont::ArrayHandle<T> outArray;
   Worklet.Run(field, outArray);
-  return internal::CreateResult(inDataSet,
-                                outArray,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet,
+                      outArray,
+                      this->GetOutputFieldName(),
+                      fieldMetadata.GetAssociation(),
+                      fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
+
 #include <vtkm/worklet/Gradient.h>
 
 namespace
@@ -111,7 +111,7 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
                                                     ? vtkm::cont::Field::Association::POINTS
                                                     : vtkm::cont::Field::Association::CELL_SET);
   vtkm::cont::DataSet result =
-    internal::CreateResult(input, outArray, outputName, fieldAssociation, cells.GetName());
+    CreateResult(input, outArray, outputName, fieldAssociation, cells.GetName());
 
   if (this->GetComputeDivergence() && isVector)
   {

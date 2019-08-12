@@ -121,7 +121,8 @@ public:
     input.GetField("state", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(prevstate);
 
     //Update the game state
-    this->Invoke(vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
+    this->Invoke(
+      UpdateLifeState{}, vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
 
     //save the results
     vtkm::cont::DataSet output;
