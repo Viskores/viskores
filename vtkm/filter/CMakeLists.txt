@@ -15,6 +15,7 @@ set(headers
   CleanGrid.h
   ClipWithField.h
   ClipWithImplicitFunction.h
+  ComputeMoments.h
   ContourTreeUniform.h
   ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
@@ -83,6 +84,7 @@ set(header_template_sources
   CleanGrid.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
+  ComputeMoments.hxx
   ContourTreeUniform.hxx
   ContourTreeUniformAugmented.hxx
   CoordinateSystemTransform.hxx
