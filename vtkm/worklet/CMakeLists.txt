@@ -36,6 +36,7 @@ set(headers
   KdTree3D.h
   KernelSplatter.h
   Keys.h
+  LagrangianStructures.h
   Magnitude.h
   MarchingCubes.h
   Mask.h
@@ -125,6 +126,7 @@ add_subdirectory(contourtree_augmented)
 add_subdirectory(cosmotools)
 add_subdirectory(gradient)
 add_subdirectory(histogram)
+add_subdirectory(lcs)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
 add_subdirectory(tetrahedralize)

@@ -34,6 +34,7 @@ set(unit_tests
   UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
   UnitTestLagrangianFilter.cxx
+  UnitTestLagrangianStructuresFilter.cxx
   UnitTestMarchingCubesFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
