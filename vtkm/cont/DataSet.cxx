@@ -18,13 +18,27 @@ void DataSet::Clear()
 {
   this->CoordSystems.clear();
   this->Fields.clear();
-  this->CellSets.clear();
+  this->CellSet = this->CellSet.NewInstance();
+}
+
+vtkm::Id DataSet::GetNumberOfCells() const
+{
+  return this->CellSet.GetNumberOfCells();
+}
+
+vtkm::Id DataSet::GetNumberOfPoints() const
+{
+  if (this->CoordSystems.empty())
+  {
+    return 0;
+  }
+  return this->CoordSystems[0].GetNumberOfPoints();
 }
 
 void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
 {
   this->CoordSystems = source.CoordSystems;
-  this->CellSets = source.CellSets;
+  this->CellSet = source.CellSet;
 }
 
 const vtkm::cont::Field& DataSet::GetField(vtkm::Id index) const
@@ -111,62 +125,6 @@ vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(const std::string& na
   return this->GetCoordinateSystem(index);
 }
 
-const vtkm::cont::DynamicCellSet& DataSet::GetCellSet(vtkm::Id index) const
-{
-  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCellSets()));
-  return this->CellSets[static_cast<std::size_t>(index)];
-}
-
-vtkm::cont::DynamicCellSet& DataSet::GetCellSet(vtkm::Id index)
-{
-  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCellSets()));
-  return this->CellSets[static_cast<std::size_t>(index)];
-}
-
-vtkm::Id DataSet::GetCellSetIndex(const std::string& name) const
-{
-  vtkm::Id index = -1;
-  for (auto i = this->CellSets.begin(); i != this->CellSets.end(); ++i)
-  {
-    if (i->GetName() == name)
-    {
-      index = static_cast<vtkm::Id>(std::distance(this->CellSets.begin(), i));
-      break;
-    }
-  }
-  return index;
-}
-
-const vtkm::cont::DynamicCellSet& DataSet::GetCellSet(const std::string& name) const
-{
-  vtkm::Id index = this->GetCellSetIndex(name);
-  if (index < 0)
-  {
-    std::string error_message("No cell set with the name " + name + " valid names are: \n");
-    for (const auto& cs : this->CellSets)
-    {
-      error_message += cs.GetName() + "\n";
-    }
-    throw vtkm::cont::ErrorBadValue(error_message);
-  }
-  return this->GetCellSet(index);
-}
-
-vtkm::cont::DynamicCellSet& DataSet::GetCellSet(const std::string& name)
-{
-  vtkm::Id index = this->GetCellSetIndex(name);
-  if (index < 0)
-  {
-    std::string error_message("No cell set with the name " + name + " valid names are: \n");
-    for (const auto& cs : this->CellSets)
-    {
-      error_message += cs.GetName() + "\n";
-    }
-    throw vtkm::cont::ErrorBadValue(error_message);
-  }
-  return this->GetCellSet(index);
-}
-
 void DataSet::PrintSummary(std::ostream& out) const
 {
   out << "DataSet:\n";
@@ -176,11 +134,8 @@ void DataSet::PrintSummary(std::ostream& out) const
     this->CoordSystems[index].PrintSummary(out);
   }
 
-  out << "  CellSets[" << this->GetNumberOfCellSets() << "]\n";
-  for (vtkm::Id index = 0; index < this->GetNumberOfCellSets(); index++)
-  {
-    this->GetCellSet(index).PrintSummary(out);
-  }
+  out << "  CellSet \n";
+  this->GetCellSet().PrintSummary(out);
 
   out << "  Fields[" << this->GetNumberOfFields() << "]\n";
   for (vtkm::Id index = 0; index < this->GetNumberOfFields(); index++)

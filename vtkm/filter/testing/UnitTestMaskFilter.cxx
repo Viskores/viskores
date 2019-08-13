@@ -33,8 +33,7 @@ public:
 
     vtkm::cont::DataSet output = mask.Execute(dataset);
 
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
-                     "Wrong result for Mask");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8), "Wrong result for Mask");
 
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
@@ -56,8 +55,7 @@ public:
     mask.SetStride(stride);
 
     vtkm::cont::DataSet output = mask.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 7),
-                     "Wrong result for Mask");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 7), "Wrong result for Mask");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
@@ -78,8 +76,7 @@ public:
     mask.SetStride(stride);
 
     vtkm::cont::DataSet output = mask.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 2),
-                     "Wrong result for Mask");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 2), "Wrong result for Mask");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);

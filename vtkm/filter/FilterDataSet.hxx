@@ -23,8 +23,7 @@ namespace filter
 //----------------------------------------------------------------------------
 template <typename Derived>
 inline VTKM_CONT FilterDataSet<Derived>::FilterDataSet()
-  : CellSetIndex(0)
-  , CoordinateSystemIndex(0)
+  : CoordinateSystemIndex(0)
 {
 }
 

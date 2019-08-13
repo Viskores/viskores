@@ -40,7 +40,7 @@ inline VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::cont::CastAndCall(
@@ -48,7 +48,7 @@ inline VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(
 
   // create the output dataset
   vtkm::cont::DataSet output;
-  output.AddCellSet(outCellSet);
+  output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   return output;
 }

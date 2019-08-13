@@ -234,7 +234,7 @@ public:
     // Compile the dataset:
     vtkm::cont::DataSet dataSet;
     dataSet.AddCoordinateSystem(coords);
-    dataSet.AddCellSet(cellSet);
+    dataSet.SetCellSet(cellSet);
     dataSet.AddField(field);
 
     return dataSet;

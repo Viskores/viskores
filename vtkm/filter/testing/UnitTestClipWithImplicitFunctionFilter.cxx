@@ -56,13 +56,11 @@ void TestClipStructured()
 
   vtkm::cont::DataSet outputData = clip.Execute(ds);
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 8,
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 8,
                    "Wrong number of cells in the output dataset");
 
   vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
@@ -96,13 +94,9 @@ void TestClipStructuredInverted()
   clip.SetFieldsToPass("scalars");
   auto outputData = clip.Execute(ds);
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 4,
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 4,
                    "Wrong number of cells in the output dataset");
 
   vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();

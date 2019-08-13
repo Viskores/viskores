@@ -94,7 +94,7 @@ private:
     vtkm::cont::CoordinateSystem coordSys("coordinates", coords);
     this->DataSet.AddCoordinateSystem(coordSys);
 
-    this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
+    this->DataSet.SetCellSet(internal::CreateCellSetStructured(dim));
 
     // Read points and cell attributes
     this->ReadAttributes();

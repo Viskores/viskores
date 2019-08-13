@@ -86,7 +86,7 @@ private:
     internal::parseAssert(tag == "POINTS");
     this->ReadPoints();
 
-    vtkm::Id numPoints = this->DataSet.GetCoordinateSystem().GetNumberOfPoints();
+    vtkm::Id numPoints = this->DataSet.GetNumberOfPoints();
 
     // Read the cellset
     std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> connectivityArrays;
@@ -150,13 +150,13 @@ private:
                    shapes.GetPortalConstControl().Get(0),
                    numIndices.GetPortalConstControl().Get(0),
                    connectivity);
-      this->DataSet.AddCellSet(cellSet);
+      this->DataSet.SetCellSet(cellSet);
     }
     else
     {
       vtkm::cont::CellSetExplicit<> cellSet("cells");
       cellSet.Fill(numPoints, shapes, numIndices, connectivity);
-      this->DataSet.AddCellSet(cellSet);
+      this->DataSet.SetCellSet(cellSet);
     }
 
     // Read points and cell attributes

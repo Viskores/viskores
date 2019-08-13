@@ -1,6 +1,6 @@
-# DataSet queries for CellSet and Coordinate System Indices don't throw
+# DataSet queries for CoordinateSystem Indices don't throw
 
-Asking for the index of a `vtkm::cont::CellSet` or `vtkm::cont::CoordinateSystem` by
+Asking for the index of a `vtkm::cont::CoordinateSystem` by
 name now returns a `-1` when no matching item has been found instead of throwing
 an exception.
 

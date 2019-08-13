@@ -558,7 +558,7 @@ private:
           this->DataSet.AddField(vtkm::cont::Field(name, association, data));
           break;
         case vtkm::cont::Field::Association::CELL_SET:
-          this->DataSet.AddField(vtkm::cont::Field(name, association, "cells", data));
+          this->DataSet.AddField(vtkm::cont::Field(name, association, data));
           break;
         default:
           VTKM_LOG_S(vtkm::cont::LogLevel::Warn,

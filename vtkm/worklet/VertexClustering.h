@@ -517,7 +517,7 @@ public:
                    vtkm::CellShapeTagTriangle::Id,
                    3,
                    internal::copyFromVec(pointId3Array));
-    output.AddCellSet(triangles);
+    output.SetCellSet(triangles);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Wrap-up (s): " << timer.GetElapsedTime() << std::endl;
