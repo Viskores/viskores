@@ -33,8 +33,7 @@ void TestCellGradientUniform3D()
 
   vtkm::cont::DataSet result = gradient.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.HasField("Gradient", vtkm::cont::Field::Association::CELL_SET),
-                   "Field missing.");
+  VTKM_TEST_ASSERT(result.HasCellField("Gradient"), "Field missing.");
 
   //verify that the vorticity and qcriterion fields don't exist
   VTKM_TEST_ASSERT(result.HasField("Vorticity") == false,
@@ -84,8 +83,7 @@ void TestCellGradientUniform3DWithVectorField()
 
   vtkm::cont::DataSet result = gradient.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.HasField("vec_gradient", vtkm::cont::Field::Association::CELL_SET),
-                   "Result field missing.");
+  VTKM_TEST_ASSERT(result.HasCellField("vec_gradient"), "Result field missing.");
 
   //verify that the vorticity and qcriterion fields DO exist
   VTKM_TEST_ASSERT(result.HasField("Vorticity") == true, "vec gradients should generate vorticity");
@@ -93,9 +91,7 @@ void TestCellGradientUniform3DWithVectorField()
                    "vec gradients should generate qcriterion");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>> resultArrayHandle;
-  result.GetField("vec_gradient", vtkm::cont::Field::Association::CELL_SET)
-    .GetData()
-    .CopyTo(resultArrayHandle);
+  result.GetCellField("vec_gradient").GetData().CopyTo(resultArrayHandle);
   vtkm::Vec<vtkm::Vec3f_64, 3> expected[4] = {
     { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
     { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
@@ -129,13 +125,10 @@ void TestCellGradientExplicit()
 
   vtkm::cont::DataSet result = gradient.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.HasField("gradient", vtkm::cont::Field::Association::CELL_SET),
-                   "Result field missing.");
+  VTKM_TEST_ASSERT(result.HasCellField("gradient"), "Result field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> resultArrayHandle;
-  result.GetField("gradient", vtkm::cont::Field::Association::CELL_SET)
-    .GetData()
-    .CopyTo(resultArrayHandle);
+  result.GetCellField("gradient").GetData().CopyTo(resultArrayHandle);
   vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, -0.0f } };
   for (int i = 0; i < 2; ++i)
   {
@@ -170,13 +163,10 @@ void TestPointGradientUniform3DWithVectorField()
   gradient.SetActiveField("vec_pointvar");
   vtkm::cont::DataSet result = gradient.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.HasField("vec_gradient", vtkm::cont::Field::Association::POINTS),
-                   "Result field missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("vec_gradient"), "Result field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>> resultArrayHandle;
-  result.GetField("vec_gradient", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(resultArrayHandle);
+  result.GetPointField("vec_gradient").GetData().CopyTo(resultArrayHandle);
   vtkm::Vec<vtkm::Vec3f_64, 3> expected[4] = {
     { { 10.0, 10.0, 10.0 }, { 30.0, 30.0, 30.0 }, { 60.1, 60.1, 60.1 } },
     { { 10.0, 10.0, 10.0 }, { 30.1, 30.1, 30.1 }, { 60.1, 60.1, 60.1 } },
@@ -211,13 +201,10 @@ void TestPointGradientExplicit()
 
   vtkm::cont::DataSet result = gradient.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.HasField("gradient", vtkm::cont::Field::Association::POINTS),
-                   "Result field missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("gradient"), "Result field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> resultArrayHandle;
-  result.GetField("gradient", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(resultArrayHandle);
+  result.GetPointField("gradient").GetData().CopyTo(resultArrayHandle);
 
   vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
   for (int i = 0; i < 2; ++i)

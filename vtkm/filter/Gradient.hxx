@@ -16,26 +16,6 @@
 namespace
 {
 //-----------------------------------------------------------------------------
-template <typename HandleType>
-inline void add_field(vtkm::cont::DataSet& result,
-                      const HandleType& handle,
-                      const std::string name,
-                      vtkm::cont::Field::Association assoc,
-                      const std::string& cellsetname)
-{
-  if (assoc == vtkm::cont::Field::Association::POINTS)
-  {
-    vtkm::cont::Field field(name, assoc, handle);
-    result.AddField(field);
-  }
-  else
-  {
-    vtkm::cont::Field field(name, assoc, cellsetname, handle);
-    result.AddField(field);
-  }
-}
-
-//-----------------------------------------------------------------------------
 template <typename T, typename S>
 inline void transpose_3x3(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& field)
 {
@@ -111,31 +91,22 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
                                                     : vtkm::cont::Field::Association::CELL_SET);
   vtkm::cont::DataSet result;
   result.CopyStructure(input);
-  add_field(result, outArray, outputName, fieldAssociation, cells.GetName());
+  result.AddField(vtkm::cont::make_Field(outputName, fieldAssociation, cells.GetName(), outArray));
 
   if (this->GetComputeDivergence() && isVector)
   {
-    add_field(result,
-              gradientfields.Divergence,
-              this->GetDivergenceName(),
-              fieldAssociation,
-              cells.GetName());
+    result.AddField(vtkm::cont::make_Field(
+      this->GetDivergenceName(), fieldAssociation, cells.GetName(), gradientfields.Divergence));
   }
   if (this->GetComputeVorticity() && isVector)
   {
-    add_field(result,
-              gradientfields.Vorticity,
-              this->GetVorticityName(),
-              fieldAssociation,
-              cells.GetName());
+    result.AddField(vtkm::cont::make_Field(
+      this->GetVorticityName(), fieldAssociation, cells.GetName(), gradientfields.Vorticity));
   }
   if (this->GetComputeQCriterion() && isVector)
   {
-    add_field(result,
-              gradientfields.QCriterion,
-              this->GetQCriterionName(),
-              fieldAssociation,
-              cells.GetName());
+    result.AddField(vtkm::cont::make_Field(
+      this->GetQCriterionName(), fieldAssociation, cells.GetName(), gradientfields.QCriterion));
   }
   return result;
 }

@@ -211,10 +211,8 @@ void TestWithExplicitData()
   vtkm::filter::SurfaceNormals surfaceNormalsFilter;
   surfaceNormalsFilter.SetGenerateCellNormals(true);
   vtkm::cont::DataSet simpleCubeWithSN = surfaceNormalsFilter.Execute(simpleCube);
-  VTKM_TEST_ASSERT(simpleCubeWithSN.HasField("Normals", vtkm::cont::Field::Association::CELL_SET),
-                   "Cell normals missing.");
-  VTKM_TEST_ASSERT(simpleCubeWithSN.HasField("pointvar", vtkm::cont::Field::Association::POINTS),
-                   "point field pointvar missing.");
+  VTKM_TEST_ASSERT(simpleCubeWithSN.HasCellField("Normals"), "Cell normals missing.");
+  VTKM_TEST_ASSERT(simpleCubeWithSN.HasPointField("pointvar"), "point field pointvar missing.");
 
 
   vtkm::filter::SplitSharpEdges splitSharpEdgesFilter;

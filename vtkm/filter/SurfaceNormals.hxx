@@ -103,10 +103,8 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
     result = CreateResultFieldPoint(input, pointNormals, internal::ComputePointNormalsName(this));
     if (this->GenerateCellNormals)
     {
-      result.AddField(vtkm::cont::Field(internal::ComputeCellNormalsName(this),
-                                        vtkm::cont::Field::Association::CELL_SET,
-                                        cellset.GetName(),
-                                        faceNormals));
+      result.AddField(vtkm::cont::make_FieldCell(
+        internal::ComputeCellNormalsName(this), cellset.GetName(), faceNormals));
     }
   }
   else

@@ -217,16 +217,19 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 
     //Retrieve summary stats from the output stats struct.
     //These stats define the mesh quality with respect to this shape type.
-    std::vector<T> shapeMeshQuality = {
-      T(cellCount), statinfo.mean, statinfo.variance, statinfo.minimum, statinfo.maximum
-    };
+    vtkm::cont::ArrayHandle<T> shapeMeshQuality;
+    shapeMeshQuality.Allocate(5);
+    {
+      auto portal = shapeMeshQuality.GetPortalControl();
+      portal.Set(0, T(cellCount));
+      portal.Set(1, statinfo.mean);
+      portal.Set(2, statinfo.variance);
+      portal.Set(3, statinfo.minimum);
+      portal.Set(4, statinfo.maximum);
+    }
 
     //Append the summary stats into the output dataset as a new field
-    result.AddField(vtkm::cont::make_Field(fieldName,
-                                           vtkm::cont::Field::Association::CELL_SET,
-                                           "cells",
-                                           shapeMeshQuality,
-                                           vtkm::CopyFlag::On));
+    result.AddField(vtkm::cont::make_FieldCell(fieldName, "cells", shapeMeshQuality));
 
 #ifdef DEBUG_PRINT
     std::cout << "-----------------------------------------------------\n"
@@ -251,9 +254,8 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 
   //Append the metric values of all cells into the output
   //dataset as a new field
-  std::string s = "allCells-metricValues";
-  result.AddField(
-    vtkm::cont::Field(s, vtkm::cont::Field::Association::CELL_SET, "cells", outArray));
+  const std::string s = "allCells-metricValues";
+  result.AddField(vtkm::cont::make_FieldCell(s, "cells", outArray));
 
   return result;
 }

@@ -62,9 +62,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
   decompressor.Decompress(field, decompress, rate, field.GetNumberOfValues());
 
   vtkm::cont::DataSet dataset;
-  vtkm::cont::Field decompressField(
-    "decompressed", vtkm::cont::Field::Association::POINTS, decompress);
-  dataset.AddField(decompressField);
+  dataset.AddField(vtkm::cont::make_FieldPoint("decompressed", decompress));
   return dataset;
 }
 

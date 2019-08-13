@@ -56,17 +56,14 @@ vtkm::cont::DataSet MakeWarpScalarTestDataSet()
 
 void CheckResult(const vtkm::filter::WarpScalar& filter, const vtkm::cont::DataSet& result)
 {
-  VTKM_TEST_ASSERT(result.HasField("warpscalar", vtkm::cont::Field::Association::POINTS),
-                   "Output filed warpscalar is missing");
+  VTKM_TEST_ASSERT(result.HasPointField("warpscalar"), "Output filed warpscalar is missing");
   using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
-  result.GetField("warpscalar", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(outputArray);
+  result.GetPointField("warpscalar").GetData().CopyTo(outputArray);
   auto outPortal = outputArray.GetPortalConstControl();
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> sfArray;
-  result.GetField("scalarfactor", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(sfArray);
+  result.GetPointField("scalarfactor").GetData().CopyTo(sfArray);
   auto sfPortal = sfArray.GetPortalConstControl();
 
   for (vtkm::Id j = 0; j < dim; ++j)

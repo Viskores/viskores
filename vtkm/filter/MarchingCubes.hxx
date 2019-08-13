@@ -114,10 +114,7 @@ inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
   for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
   {
     auto f = input.GetField(fieldIdx);
-    if (f.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
-    {
-      hasCellFields = true;
-    }
+    hasCellFields = f.IsFieldCell();
   }
 
   //get the cells and coordinates of the dataset
@@ -179,9 +176,7 @@ inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
       smooth.Run(outputCells, faceNormals, normals);
     }
 
-    vtkm::cont::Field normalField(
-      this->NormalArrayName, vtkm::cont::Field::Association::POINTS, normals);
-    output.AddField(normalField);
+    output.AddField(vtkm::cont::make_FieldPoint(this->NormalArrayName, normals));
   }
 
   //assign the connectivity to the cell set

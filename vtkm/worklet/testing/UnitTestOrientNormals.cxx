@@ -133,11 +133,11 @@ struct ValidateNormals
 
     if (checkPoints)
     {
-      pointNormals = dataset.GetField(normalsName, vtkm::cont::Field::Association::POINTS);
+      pointNormals = dataset.GetPointField(normalsName);
     }
     if (checkCells)
     {
-      cellNormals = dataset.GetField(normalsName, vtkm::cont::Field::Association::CELL_SET);
+      cellNormals = dataset.GetCellField(normalsName);
     }
 
     ValidateNormals obj{ dataset, checkPoints, checkCells, pointNormals, cellNormals };
@@ -358,10 +358,8 @@ void TestOrientNormals(bool testPoints, bool testCells)
   {
     std::cerr << "Testing point and cell normals...\n";
 
-    const auto pointNormalField =
-      dataset.GetField("normals", vtkm::cont::Field::Association::POINTS);
-    const auto cellNormalField =
-      dataset.GetField("normals", vtkm::cont::Field::Association::CELL_SET);
+    const auto pointNormalField = dataset.GetPointField("normals");
+    const auto cellNormalField = dataset.GetCellField("normals");
     auto pointNormals = pointNormalField.GetData().Cast<NormalArrayT>();
     auto cellNormals = cellNormalField.GetData().Cast<NormalArrayT>();
 
@@ -370,8 +368,7 @@ void TestOrientNormals(bool testPoints, bool testCells)
   else if (testPoints)
   {
     std::cerr << "Testing point normals...\n";
-    const auto pointNormalField =
-      dataset.GetField("normals", vtkm::cont::Field::Association::POINTS);
+    const auto pointNormalField = dataset.GetPointField("normals");
     auto pointNormals = pointNormalField.GetData().Cast<NormalArrayT>();
 
     vtkm::worklet::OrientNormals::RunPointNormals(cells, coords, pointNormals);
@@ -379,8 +376,7 @@ void TestOrientNormals(bool testPoints, bool testCells)
   else if (testCells)
   {
     std::cerr << "Testing cell normals...\n";
-    const auto cellNormalField =
-      dataset.GetField("normals", vtkm::cont::Field::Association::CELL_SET);
+    const auto cellNormalField = dataset.GetCellField("normals");
     auto cellNormals = cellNormalField.GetData().Cast<NormalArrayT>();
 
     vtkm::worklet::OrientNormals::RunCellNormals(cells, coords, cellNormals);

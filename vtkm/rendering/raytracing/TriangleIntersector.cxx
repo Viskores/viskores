@@ -333,12 +333,12 @@ public:
                      const vtkm::cont::Field scalarField,
                      const vtkm::Range& scalarRange)
   {
-    bool isSupportedField =
-      (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-       scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+    const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
     if (!isSupportedField)
+    {
       throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
-    bool isAssocPoints = scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
+    }
+    const bool isAssocPoints = scalarField.IsFieldPoint();
 
     // Find the triangle normal
     vtkm::worklet::DispatcherMapField<CalculateNormals>(CalculateNormals())

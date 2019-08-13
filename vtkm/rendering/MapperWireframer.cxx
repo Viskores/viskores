@@ -253,8 +253,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   if (is1D)
   {
 
-    bool isSupportedField =
-      inScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
+    const bool isSupportedField = inScalarField.IsFieldPoint();
     if (!isSupportedField)
     {
       throw vtkm::cont::ErrorBadValue(
