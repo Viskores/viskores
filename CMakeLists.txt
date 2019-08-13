@@ -82,13 +82,17 @@ vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
-vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" OFF)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
-
 vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
 vtkm_option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
+if (NOT DEFINED VTKm_ENABLE_TESTING)
+    vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" OFF)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+        set(VTKm_ENABLE_TESTING ON)
+    endif()
+endif()
 
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
@@ -110,11 +114,7 @@ vtkm_option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no hea
 # VTK does.
 vtkm_option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
 
-vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
-# Shared libs and CUDA are not compatibile:
-if (VTKm_ENABLE_CUDA)
-    set(BUILD_SHARED_LIBS OFF)
-endif()
+vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" OFF)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 # This flag can be used to prevent VTK-m from exporting its warning flags in its
