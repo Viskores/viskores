@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(headers
+  GridMetaData.h
   LagrangianStructureHelpers.h
   )
 
