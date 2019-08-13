@@ -43,9 +43,10 @@ int main(int argc, char** argv)
   std::cout << "Read input dataset" << std::endl;
 
   vtkm::filter::LagrangianStructures lcsFilter;
-  lcsFilter.SetStepSize(0.025);
+  lcsFilter.SetStepSize(0.025f);
   lcsFilter.SetNumberOfSteps(500);
-  lcsFilter.SetAdvectionTime(0.025 * 500);
+  lcsFilter.SetAdvectionTime(0.025f * 500);
+  lcsFilter.SetOutputFieldName("gradient");
   lcsFilter.SetActiveField(variableName);
 
   vtkm::cont::DataSet output = lcsFilter.Execute(input);

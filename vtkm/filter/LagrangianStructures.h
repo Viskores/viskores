@@ -49,6 +49,9 @@ public:
   void SetUseFlowMapOutput(bool useFlowMapOutput) { this->UseFlowMapOutput = useFlowMapOutput; }
   bool GetUseFlowMapOutput() { return this->UseFlowMapOutput; }
 
+  void SetOutputFieldName(std::string outputFieldName) { this->OutputFieldName = outputFieldName; }
+  std::string GetOutputFieldName() { return this->OutputFieldName; }
+
   inline void SetFlowMapOutput(vtkm::cont::ArrayHandle<Vector>& flowMap)
   {
     this->FlowMapOutput = flowMap;
@@ -77,6 +80,7 @@ private:
   bool UseAuxiliaryGrid = false;
   vtkm::Id3 AuxiliaryDims;
   bool UseFlowMapOutput = false;
+  std::string OutputFieldName;
   vtkm::cont::ArrayHandle<Vector> FlowMapOutput;
 };
 

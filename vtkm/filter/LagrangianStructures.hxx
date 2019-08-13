@@ -26,6 +26,7 @@ namespace filter
 inline VTKM_CONT LagrangianStructures::LagrangianStructures()
   : vtkm::filter::FilterDataSetWithField<LagrangianStructures>()
 {
+  OutputFieldName = std::string("FTLE");
 }
 
 //-----------------------------------------------------------------------------
@@ -127,7 +128,7 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   vtkm::cont::DataSetFieldAdd fieldAdder;
   output.AddCoordinateSystem(lcsInput.GetCoordinateSystem());
   output.AddCellSet(lcsInput.GetCellSet());
-  fieldAdder.AddPointField(output, "FTLE", outputField);
+  fieldAdder.AddPointField(output, this->GetOutputFieldName(), outputField);
   return output;
 }
 
