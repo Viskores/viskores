@@ -133,7 +133,7 @@ void TestStreamLineUniformGrid()
   inDataSet.AddField(
     vtkm::cont::Field("vecData", vtkm::cont::Field::Association::POINTS, fieldArray));
 
-  vtkm::cont::CellSetStructured<3> inCellSet("cells");
+  vtkm::cont::CellSetStructured<3> inCellSet;
   inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));
   inDataSet.SetCellSet(inCellSet);
 

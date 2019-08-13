@@ -67,22 +67,21 @@ vtkm::cont::DataSet DataSetBuilderUniform::CreateDataSet(const vtkm::Id3& dimens
   vtkm::cont::CoordinateSystem cs(coordNm, coords);
   dataSet.AddCoordinateSystem(cs);
 
-  const std::string cellNm("cells");
   if (ndims == 1)
   {
-    vtkm::cont::CellSetStructured<1> cellSet(cellNm);
+    vtkm::cont::CellSetStructured<1> cellSet;
     cellSet.SetPointDimensions(dims[0]);
     dataSet.SetCellSet(cellSet);
   }
   else if (ndims == 2)
   {
-    vtkm::cont::CellSetStructured<2> cellSet(cellNm);
+    vtkm::cont::CellSetStructured<2> cellSet;
     cellSet.SetPointDimensions(vtkm::Id2(dims[0], dims[1]));
     dataSet.SetCellSet(cellSet);
   }
   else if (ndims == 3)
   {
-    vtkm::cont::CellSetStructured<3> cellSet(cellNm);
+    vtkm::cont::CellSetStructured<3> cellSet;
     cellSet.SetPointDimensions(vtkm::Id3(dims[0], dims[1], dims[2]));
     dataSet.SetCellSet(cellSet);
   }

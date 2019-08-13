@@ -126,8 +126,7 @@ struct RemoveDegenerateCells
     vtkm::cont::Algorithm::CopyIf(
       vtkm::cont::ArrayHandleIndex(passFlags.GetNumberOfValues()), passFlags, this->ValidCellIds);
 
-    vtkm::cont::CellSetPermutation<CellSetType> permutation(
-      this->ValidCellIds, cellSet, cellSet.GetName());
+    vtkm::cont::CellSetPermutation<CellSetType> permutation(this->ValidCellIds, cellSet);
     vtkm::cont::CellSetExplicit<> output;
     vtkm::worklet::CellDeepCopy::Run(permutation, output);
     return output;

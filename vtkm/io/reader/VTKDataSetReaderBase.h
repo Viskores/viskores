@@ -248,19 +248,19 @@ inline vtkm::cont::DynamicCellSet CreateCellSetStructured(const vtkm::Id3& dim)
 {
   if (dim[0] > 1 && dim[1] > 1 && dim[2] > 1)
   {
-    vtkm::cont::CellSetStructured<3> cs("cells");
+    vtkm::cont::CellSetStructured<3> cs;
     cs.SetPointDimensions(vtkm::make_Vec(dim[0], dim[1], dim[2]));
     return cs;
   }
   else if (dim[0] > 1 && dim[1] > 1 && dim[2] <= 1)
   {
-    vtkm::cont::CellSetStructured<2> cs("cells");
+    vtkm::cont::CellSetStructured<2> cs;
     cs.SetPointDimensions(vtkm::make_Vec(dim[0], dim[1]));
     return cs;
   }
   else if (dim[0] > 1 && dim[1] <= 1 && dim[2] <= 1)
   {
-    vtkm::cont::CellSetStructured<1> cs("cells");
+    vtkm::cont::CellSetStructured<1> cs;
     cs.SetPointDimensions(dim[0]);
     return cs;
   }

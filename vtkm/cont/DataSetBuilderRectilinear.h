@@ -178,7 +178,6 @@ private:
                                                     const vtkm::cont::ArrayHandle<T>& Z,
                                                     const std::string& coordNm)
   {
-    const std::string cellNm("cells");
     vtkm::cont::DataSet dataSet;
 
     //Convert all coordinates to floatDefault.
@@ -215,19 +214,19 @@ private:
 
     if (ndims == 1)
     {
-      vtkm::cont::CellSetStructured<1> cellSet(cellNm);
+      vtkm::cont::CellSetStructured<1> cellSet;
       cellSet.SetPointDimensions(dims[0]);
       dataSet.SetCellSet(cellSet);
     }
     else if (ndims == 2)
     {
-      vtkm::cont::CellSetStructured<2> cellSet(cellNm);
+      vtkm::cont::CellSetStructured<2> cellSet;
       cellSet.SetPointDimensions(vtkm::make_Vec(dims[0], dims[1]));
       dataSet.SetCellSet(cellSet);
     }
     else if (ndims == 3)
     {
-      vtkm::cont::CellSetStructured<3> cellSet(cellNm);
+      vtkm::cont::CellSetStructured<3> cellSet;
       cellSet.SetPointDimensions(vtkm::make_Vec(dims[0], dims[1], dims[2]));
       dataSet.SetCellSet(cellSet);
     }

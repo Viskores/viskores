@@ -29,14 +29,21 @@ namespace cont
 class VTKM_CONT_EXPORT CellSetExtrude : public CellSet
 {
 public:
-  VTKM_CONT CellSetExtrude(const std::string& name = "extrude");
+  VTKM_CONT CellSetExtrude();
 
   VTKM_CONT CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
                            vtkm::Int32 numberOfPointsPerPlane,
                            vtkm::Int32 numberOfPlanes,
                            const vtkm::cont::ArrayHandle<vtkm::Int32>& nextNode,
-                           bool periodic,
-                           const std::string& name = "extrude");
+                           bool periodic);
+
+  VTKM_CONT CellSetExtrude(const CellSetExtrude& src);
+  VTKM_CONT CellSetExtrude(CellSetExtrude&& src) noexcept;
+
+  VTKM_CONT CellSetExtrude& operator=(const CellSetExtrude& src);
+  VTKM_CONT CellSetExtrude& operator=(CellSetExtrude&& src) noexcept;
+
+  virtual ~CellSetExtrude();
 
   vtkm::Int32 GetNumberOfPlanes() const;
 
@@ -126,11 +133,10 @@ template <typename T>
 CellSetExtrude make_CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
                                    const vtkm::cont::ArrayHandleExtrudeCoords<T>& coords,
                                    const vtkm::cont::ArrayHandle<vtkm::Int32>& nextNode,
-                                   bool periodic = true,
-                                   const std::string name = "extrude")
+                                   bool periodic = true)
 {
   return CellSetExtrude{
-    conn, coords.GetNumberOfPointsPerPlane(), coords.GetNumberOfPlanes(), nextNode, periodic, name
+    conn, coords.GetNumberOfPointsPerPlane(), coords.GetNumberOfPlanes(), nextNode, periodic
   };
 }
 
@@ -138,15 +144,13 @@ template <typename T>
 CellSetExtrude make_CellSetExtrude(const std::vector<vtkm::Int32>& conn,
                                    const vtkm::cont::ArrayHandleExtrudeCoords<T>& coords,
                                    const std::vector<vtkm::Int32>& nextNode,
-                                   bool periodic = true,
-                                   const std::string name = "extrude")
+                                   bool periodic = true)
 {
   return CellSetExtrude{ vtkm::cont::make_ArrayHandle(conn),
                          static_cast<vtkm::Int32>(coords.GetNumberOfPointsPerPlane()),
                          coords.GetNumberOfPlanes(),
                          vtkm::cont::make_ArrayHandle(nextNode),
-                         periodic,
-                         name };
+                         periodic };
 }
 }
 } // vtkm::cont
@@ -183,7 +187,6 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    vtkmdiy::save(bb, cs.GetName());
     vtkmdiy::save(bb, cs.GetNumberOfPointsPerPlane());
     vtkmdiy::save(bb, cs.GetNumberOfPlanes());
     vtkmdiy::save(bb, cs.GetIsPeriodic());
@@ -193,21 +196,19 @@ public:
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
-    std::string name;
     vtkm::Int32 numberOfPointsPerPlane;
     vtkm::Int32 numberOfPlanes;
     bool isPeriodic;
     vtkm::cont::ArrayHandle<vtkm::Int32> conn;
     vtkm::cont::ArrayHandle<vtkm::Int32> nextNode;
 
-    vtkmdiy::load(bb, name);
     vtkmdiy::load(bb, numberOfPointsPerPlane);
     vtkmdiy::load(bb, numberOfPlanes);
     vtkmdiy::load(bb, isPeriodic);
     vtkmdiy::load(bb, conn);
     vtkmdiy::load(bb, nextNode);
 
-    cs = Type{ conn, numberOfPointsPerPlane, numberOfPlanes, nextNode, isPeriodic, name };
+    cs = Type{ conn, numberOfPointsPerPlane, numberOfPlanes, nextNode, isPeriodic };
   }
 };
 

@@ -98,7 +98,7 @@ public:
     typename VisitCellsWithPointsConnectivityType::ConnectivityArrayType;
   using IndexOffsetArrayType = typename VisitCellsWithPointsConnectivityType::IndexOffsetArrayType;
 
-  VTKM_CONT CellSetExplicit(const std::string& name = std::string());
+  VTKM_CONT CellSetExplicit();
   VTKM_CONT CellSetExplicit(const Thisclass& src);
   VTKM_CONT CellSetExplicit(Thisclass&& src) noexcept;
 
@@ -377,7 +377,6 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    vtkmdiy::save(bb, cs.GetName());
     vtkmdiy::save(bb, cs.GetNumberOfPoints());
     vtkmdiy::save(
       bb, cs.GetShapesArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{}));
@@ -391,8 +390,6 @@ public:
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
-    std::string name;
-    vtkmdiy::load(bb, name);
     vtkm::Id numberOfPoints = 0;
     vtkmdiy::load(bb, numberOfPoints);
     vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST> shapes;
@@ -404,7 +401,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id, OffsetST> offsets;
     vtkmdiy::load(bb, offsets);
 
-    cs = Type(name);
+    cs = Type{};
     cs.Fill(numberOfPoints, shapes, counts, connectivity, offsets);
   }
 };

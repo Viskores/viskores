@@ -67,7 +67,7 @@ public:
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
 
   {
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    vtkm::cont::CellSetSingleType<> outCellSet;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
     vtkm::worklet::DispatcherMapTopology<triangulate::TriangulateCell> dispatcher;

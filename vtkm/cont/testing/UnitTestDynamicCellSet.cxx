@@ -45,7 +45,6 @@ void CheckEmptyDynamicCellSet()
 {
   vtkm::cont::DynamicCellSet empty;
 
-  VTKM_TEST_ASSERT(empty.GetName() == std::string{}, "DynamicCellSet should have no name");
   VTKM_TEST_ASSERT(empty.GetNumberOfCells() == 0, "DynamicCellSet should have no cells");
   VTKM_TEST_ASSERT(empty.GetNumberOfFaces() == 0, "DynamicCellSet should have no faces");
   VTKM_TEST_ASSERT(empty.GetNumberOfEdges() == 0, "DynamicCellSet should have no edges");

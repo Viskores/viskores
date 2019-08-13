@@ -98,7 +98,7 @@ static vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   static constexpr vtkm::IdComponent ndim = 3;
-  vtkm::cont::CellSetStructured<ndim> cellSet("cells");
+  vtkm::cont::CellSetStructured<ndim> cellSet;
   cellSet.SetPointDimensions(vdims);
   dataSet.SetCellSet(cellSet);
 

@@ -42,7 +42,7 @@ vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& u
 {
   vtkm::cont::DataSet eds;
 
-  vtkm::cont::CellSetExplicit<> cs(uds.GetCellSet().GetName());
+  vtkm::cont::CellSetExplicit<> cs;
   vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs);
   eds.SetCellSet(cs);
 

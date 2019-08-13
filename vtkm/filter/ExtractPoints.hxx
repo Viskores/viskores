@@ -53,7 +53,7 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   // run the worklet on the cell set
-  vtkm::cont::CellSetSingleType<> outCellSet(cells.GetName());
+  vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::ExtractPoints worklet;
 
   outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),

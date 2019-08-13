@@ -198,7 +198,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   dataSet.AddCoordinateSystem(
     vtkm::cont::CoordinateSystem(coordsNm, make_ArrayHandleCompositeVector(X, Y, Z)));
   vtkm::Id nPts = X.GetNumberOfValues();
-  vtkm::cont::CellSetExplicit<> cellSet("cells");
+  vtkm::cont::CellSetExplicit<> cellSet;
 
   cellSet.Fill(nPts, shapes, numIndices, connectivity);
   dataSet.SetCellSet(cellSet);
@@ -239,7 +239,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
 
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordsNm, coords));
   vtkm::Id nPts = static_cast<vtkm::Id>(coords.GetNumberOfValues());
-  vtkm::cont::CellSetExplicit<> cellSet("cells");
+  vtkm::cont::CellSetExplicit<> cellSet;
 
   cellSet.Fill(nPts, shapes, numIndices, connectivity);
   dataSet.SetCellSet(cellSet);
@@ -276,7 +276,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   vtkm::cont::DataSet dataSet;
 
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordsNm, coords));
-  vtkm::cont::CellSetSingleType<> cellSet("cells");
+  vtkm::cont::CellSetSingleType<> cellSet;
 
   cellSet.Fill(coords.GetNumberOfValues(), tag.Id, numberOfPointsPerCell, connectivity);
   dataSet.SetCellSet(cellSet);

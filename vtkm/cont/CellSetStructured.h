@@ -35,18 +35,6 @@ public:
 
   using SchedulingRangeType = typename InternalsType::SchedulingRangeType;
 
-  CellSetStructured(const std::string& name = std::string())
-    : CellSet(name)
-    , Structure()
-  {
-  }
-
-  CellSetStructured(const Thisclass& src);
-  CellSetStructured(Thisclass&& src) noexcept;
-
-  Thisclass& operator=(const Thisclass& src);
-  Thisclass& operator=(Thisclass&& src) noexcept;
-
   vtkm::Id GetNumberOfCells() const override { return this->Structure.GetNumberOfCells(); }
 
   vtkm::Id GetNumberOfPoints() const override { return this->Structure.GetNumberOfPoints(); }
@@ -174,20 +162,17 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    vtkmdiy::save(bb, cs.GetName());
     vtkmdiy::save(bb, cs.GetPointDimensions());
     vtkmdiy::save(bb, cs.GetGlobalPointIndexStart());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
-    std::string name;
-    vtkmdiy::load(bb, name);
     typename Type::SchedulingRangeType dims, start;
     vtkmdiy::load(bb, dims);
     vtkmdiy::load(bb, start);
 
-    cs = Type(name);
+    cs = Type{};
     cs.SetPointDimensions(dims);
     cs.SetGlobalPointIndexStart(start);
   }

@@ -175,9 +175,6 @@ public:
   const vtkm::cont::CellSet* GetCellSetBase() const { return this->CellSet.get(); }
 
   VTKM_CONT
-  std::string GetName() const { return this->CellSet ? this->CellSet->GetName() : std::string{}; }
-
-  VTKM_CONT
   vtkm::Id GetNumberOfCells() const
   {
     return this->CellSet ? this->CellSet->GetNumberOfCells() : 0;
