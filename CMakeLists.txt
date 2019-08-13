@@ -82,7 +82,7 @@ vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
-vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
+vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" OFF)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
@@ -111,6 +111,10 @@ vtkm_option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no hea
 vtkm_option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
 
 vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
+# Shared libs and CUDA are not compatibile:
+if (VTKm_ENABLE_CUDA)
+    set(BUILD_SHARED_LIBS OFF)
+endif()
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 # This flag can be used to prevent VTK-m from exporting its warning flags in its
