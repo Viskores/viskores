@@ -38,7 +38,6 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
     throw vtkm::cont::ErrorBadValue("Active field for ComputeMoments must be a point field.");
   }
 
-  vtkm::worklet::Invoker invoke;
   vtkm::cont::DataSet output = internal::CreateResult(input);
 
   auto worklet = vtkm::worklet::moments::ComputeMoments(this->Radius);
