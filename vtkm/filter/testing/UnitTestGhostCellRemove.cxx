@@ -201,14 +201,14 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
     vtkm::Id2 dims(numI, numJ);
     MakeExplicitCells(
       cellSet.Cast<vtkm::cont::CellSetStructured<2>>(), dims, numIndices, shapes, conn);
-    ds = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates", "cells");
+    ds = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
   {
     vtkm::Id3 dims(numI, numJ, numK);
     MakeExplicitCells(
       cellSet.Cast<vtkm::cont::CellSetStructured<3>>(), dims, numIndices, shapes, conn);
-    ds = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates", "cells");
+    ds = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
   }
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers);

@@ -156,7 +156,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DExplicitDataSet0()
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetBuilderExplicit dsb;
 
-  dataSet = dsb.Create(coords, vtkm::CellShapeTagLine(), 2, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, vtkm::CellShapeTagLine(), 2, conn, "coordinates");
 
   vtkm::cont::DataSetFieldAdd dsf;
   constexpr vtkm::Float32 var[nVerts] = { -1.0f, .5f, -.2f, 1.7f, .8f };
@@ -585,7 +585,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make2DExplicitDataSet0()
   conn.push_back(15);
   conn.push_back(14);
   conn.push_back(12);
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 94.0f, 71.0f, 47.0f, 33.0f,
@@ -633,7 +633,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(4);
 
   //Create the dataset.
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
   vtkm::Float32 cellvar[2] = { 100.1f, 100.2f };
@@ -987,7 +987,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet6()
   conn.push_back(0);
   conn.push_back(7);
 
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 94.0f, 71.0f, 47.0f, 57.0f };
@@ -1228,7 +1228,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetZoo()
   conn.push_back(7);
   conn.push_back(16);
 
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 pointvar[nVerts] =
@@ -1302,7 +1302,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet7()
   conn.push_back(7);
 
 
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 10.f, 20.f, 33.f, 52.f };
@@ -1382,7 +1382,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet8()
   conn.push_back(5);
   conn.push_back(6);
 
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 94.0f, 71.0f, 47.0f, 57.0f };
@@ -1465,7 +1465,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetPolygonal()
   conn.push_back(6);
   conn.push_back(2);
 
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 94.0f, 71.0f, 47.0f, 33.0f };
