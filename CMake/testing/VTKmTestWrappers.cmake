@@ -99,8 +99,7 @@ function(vtkm_unit_tests)
 
   # For Testing Purposes, we will set the default logging level to INFO
   if(VTKm_UT_TEST_ARGS)
-    if(test_name AND "x${test_name}" MATCHES "^x([^,]*),(.*)$")
-    list(FIND VTKm_UT_TEST_ARGS "-v" index) 
+    list(FIND VTKm_UT_TEST_ARGS "-v" index)
     if(index EQUAL -1)
       list(APPEND VTKm_UT_TEST_ARGS "-v" "0")
     else()

@@ -68,6 +68,7 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDynamicCellSet.cxx
+  UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx
   UnitTestInitialize.cxx
   UnitTestLogging.cxx
