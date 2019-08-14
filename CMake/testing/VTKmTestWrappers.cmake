@@ -97,6 +97,19 @@ function(vtkm_unit_tests)
     set(test_prog "UnitTests_${kit}")
   endif()
 
+  # For Testing Purposes, we will set the default logging level to INFO
+  if(VTKm_UT_TEST_ARGS)
+    if(test_name AND "x${test_name}" MATCHES "^x([^,]*),(.*)$")
+    list(FIND VTKm_UT_TEST_ARGS "-v" index) 
+    if(index EQUAL -1)
+      list(APPEND VTKm_UT_TEST_ARGS "-v" "0")
+    else()
+      message(STATUS "Test manually supplied the logging level, not overriding")
+    endif()
+  else()
+    list(APPEND VTKm_UT_TEST_ARGS "-v" "0")
+  endif()
+
   if(VTKm_UT_MPI)
     # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
     set(test_prog "${test_prog}_mpi")
