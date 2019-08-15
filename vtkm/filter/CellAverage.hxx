@@ -45,14 +45,13 @@ inline VTKM_CONT vtkm::cont::DataSet CellAverage::DoExecute(
   this->Invoke(this->Worklet, vtkm::filter::ApplyPolicy(cellSet, policy), inField, outArray);
 
   std::string outputName = this->GetOutputFieldName();
-  if (outputName == "")
+  if (outputName.empty())
   {
     // Default name is name of input.
     outputName = fieldMetadata.GetName();
   }
 
-  return CreateResult(
-    input, outArray, outputName, vtkm::cont::Field::Association::CELL_SET, cellSet.GetName());
+  return CreateResultFieldCell(input, outArray, outputName, cellSet);
 }
 }
 } // namespace vtkm::filter

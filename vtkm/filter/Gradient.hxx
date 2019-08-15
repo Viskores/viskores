@@ -23,8 +23,7 @@ inline void add_field(vtkm::cont::DataSet& result,
                       vtkm::cont::Field::Association assoc,
                       const std::string& cellsetname)
 {
-  if ((assoc == vtkm::cont::Field::Association::WHOLE_MESH) ||
-      (assoc == vtkm::cont::Field::Association::POINTS))
+  if (assoc == vtkm::cont::Field::Association::POINTS)
   {
     vtkm::cont::Field field(name, assoc, handle);
     result.AddField(field);
@@ -110,8 +109,9 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
   vtkm::cont::Field::Association fieldAssociation(this->ComputePointGradient
                                                     ? vtkm::cont::Field::Association::POINTS
                                                     : vtkm::cont::Field::Association::CELL_SET);
-  vtkm::cont::DataSet result =
-    CreateResult(input, outArray, outputName, fieldAssociation, cells.GetName());
+  vtkm::cont::DataSet result;
+  result.CopyStructure(input);
+  add_field(result, outArray, outputName, fieldAssociation, cells.GetName());
 
   if (this->GetComputeDivergence() && isVector)
   {

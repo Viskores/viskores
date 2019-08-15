@@ -14,6 +14,8 @@
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 
+#include <vtkm/filter/FieldMetadata.h>
+
 namespace vtkm
 {
 namespace filter
@@ -22,28 +24,7 @@ namespace filter
 /// These are utility functions defined to use in filters when creating an
 /// output dataset to return from `DoExecute` methods. The various overloads
 /// provides different ways of creating the output dataset (copying the input
-/// without any of the fields) and optionally adding additional field(s).
-
-/// Use this for DataSet filters (not Field filters).
-inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& dataSet)
-{
-  vtkm::cont::DataSet clone;
-  clone.CopyStructure(dataSet);
-  return clone;
-}
-
-/// Use this if the field has already been added to the data set.
-/// In this case, just tell us what the field name is (and optionally its
-/// association).
-inline VTKM_CONT vtkm::cont::DataSet CreateResult(
-  const vtkm::cont::DataSet& dataSet,
-  const std::string& fieldName,
-  vtkm::cont::Field::Association fieldAssociation = vtkm::cont::Field::Association::ANY)
-{
-  VTKM_ASSERT(fieldName != "");
-  VTKM_ASSERT(dataSet.HasField(fieldName, fieldAssociation));
-  return dataSet;
-}
+/// without any of the fields) and adding additional field(s).
 
 /// Use this if you have built a \c Field object. An output
 /// \c DataSet will be created by adding the field to the input.
@@ -53,81 +34,125 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inD
   vtkm::cont::DataSet clone;
   clone.CopyStructure(inDataSet);
   clone.AddField(field);
-  VTKM_ASSERT(field.GetName() != "");
+  VTKM_ASSERT(!field.GetName().empty());
   VTKM_ASSERT(clone.HasField(field.GetName(), field.GetAssociation()));
   return clone;
 }
 
 /// Use this function if you have an ArrayHandle that holds the data for
-/// the field. You also need to specify a name and an association for the
-/// field. If the field is associated with a particular element set (for
-/// example, a cell association is associated with a cell set), the name of
-/// that associated set must also be given. The element set name is ignored
-/// for \c Association::WHOLE_MESH and \c Association::POINTS associations.
+/// the field. You also need to specify a name for the field.
 template <typename T, typename Storage>
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
   const std::string& fieldName,
-  vtkm::cont::Field::Association fieldAssociation,
-  const std::string& elementSetName = "")
+  const vtkm::filter::FieldMetadata& metaData)
 {
-  VTKM_ASSERT(fieldName != "");
-  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::Association::ANY);
-  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::Association::LOGICAL_DIM);
+  VTKM_ASSERT(!fieldName.empty());
 
   vtkm::cont::DataSet clone;
   clone.CopyStructure(inDataSet);
-  if ((fieldAssociation == vtkm::cont::Field::Association::WHOLE_MESH) ||
-      (fieldAssociation == vtkm::cont::Field::Association::POINTS))
-  {
-    vtkm::cont::Field field(fieldName, fieldAssociation, fieldArray);
-    clone.AddField(field);
-  }
-  else
-  {
-    vtkm::cont::Field field(fieldName, fieldAssociation, elementSetName, fieldArray);
-    clone.AddField(field);
-  }
+  clone.AddField(metaData.AsField(fieldName, fieldArray));
 
   // Sanity check.
-  VTKM_ASSERT(clone.HasField(fieldName, fieldAssociation));
+  VTKM_ASSERT(clone.HasField(fieldName, metaData.GetAssociation()));
   return clone;
 }
 
 /// Use this function if you have a VariantArrayHandle that holds the data
-/// for the field. You also need to specify a name and an association for the
-/// field. If the field is associated with a particular element set (for
-/// example, a cell association is associated with a cell set), the name of
-/// that associated set must also be given. The element set name is ignored
-/// for \c Association::WHOLE_MESH and \c Association::POINTS associations.
-///
+/// for the field.
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
                                                   const vtkm::cont::VariantArrayHandle& fieldArray,
                                                   const std::string& fieldName,
-                                                  vtkm::cont::Field::Association fieldAssociation,
-                                                  const std::string& elementSetName = "")
+                                                  const vtkm::filter::FieldMetadata& metaData)
 {
-  VTKM_ASSERT(fieldName != "");
-  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::Association::ANY);
-  VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::Association::LOGICAL_DIM);
+  VTKM_ASSERT(!fieldName.empty());
 
   vtkm::cont::DataSet clone;
   clone.CopyStructure(inDataSet);
-  if ((fieldAssociation == vtkm::cont::Field::Association::WHOLE_MESH) ||
-      (fieldAssociation == vtkm::cont::Field::Association::POINTS))
-  {
-    vtkm::cont::Field field(fieldName, fieldAssociation, fieldArray);
-    clone.AddField(field);
-  }
-  else
-  {
-    vtkm::cont::Field field(fieldName, fieldAssociation, elementSetName, fieldArray);
-    clone.AddField(field);
-  }
+  clone.AddField(metaData.AsField(fieldName, fieldArray));
 
   // Sanity check.
-  VTKM_ASSERT(clone.HasField(fieldName, fieldAssociation));
+  VTKM_ASSERT(clone.HasField(fieldName, metaData.GetAssociation()));
+  return clone;
+}
+
+/// Use this function if you want to explicit construct a Cell field and have a ArrayHandle
+/// that holds the data for the field.
+template <typename T, typename Storage, typename CellSetTags>
+inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
+  const vtkm::cont::DataSet& inDataSet,
+  const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
+  const std::string& fieldName,
+  const vtkm::cont::DynamicCellSetBase<CellSetTags>& cellSet)
+{
+  VTKM_ASSERT(!fieldName.empty());
+
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
+  clone.AddField(vtkm::cont::Field(
+    fieldName, vtkm::cont::Field::Association::CELL_SET, cellSet.GetName(), fieldArray));
+
+  // Sanity check.
+  VTKM_ASSERT(clone.HasField(fieldName, vtkm::cont::Field::Association::CELL_SET));
+  return clone;
+}
+
+/// Use this function if you want to explicit construct a Cell field and have a VariantArrayHandle
+/// that holds the data for the field.
+template <typename CellSetTags>
+inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
+  const vtkm::cont::DataSet& inDataSet,
+  const vtkm::cont::VariantArrayHandle& fieldArray,
+  const std::string& fieldName,
+  const vtkm::cont::DynamicCellSetBase<CellSetTags>& cellSet)
+{
+  VTKM_ASSERT(!fieldName.empty());
+
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
+  clone.AddField(vtkm::cont::Field(
+    fieldName, vtkm::cont::Field::Association::CELL_SET, cellSet.GetName(), fieldArray));
+
+  // Sanity check.
+  VTKM_ASSERT(clone.HasField(fieldName, vtkm::cont::Field::Association::CELL_SET));
+  return clone;
+}
+
+/// Use this function if you want to explicit construct a Point field and have a ArrayHandle
+/// that holds the data for the field.
+template <typename T, typename Storage>
+inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
+  const vtkm::cont::DataSet& inDataSet,
+  const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
+  const std::string& fieldName)
+{
+  VTKM_ASSERT(!fieldName.empty());
+
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
+  clone.AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::POINTS, fieldArray));
+
+  // Sanity check.
+  VTKM_ASSERT(clone.HasField(fieldName, vtkm::cont::Field::Association::POINTS));
+  return clone;
+}
+
+/// Use this function if you want to explicit construct a Point field and have a VariantArrayHandle
+/// that holds the data for the field.
+inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
+  const vtkm::cont::DataSet& inDataSet,
+  const vtkm::cont::VariantArrayHandle& fieldArray,
+  const std::string& fieldName)
+{
+  VTKM_ASSERT(!fieldName.empty());
+
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
+  clone.AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::POINTS, fieldArray));
+
+  // Sanity check.
+  VTKM_ASSERT(clone.HasField(fieldName, vtkm::cont::Field::Association::POINTS));
   return clone;
 }
 

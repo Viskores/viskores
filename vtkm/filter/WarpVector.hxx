@@ -41,11 +41,7 @@ inline VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(
     this->Scale,
     result);
 
-  return CreateResult(inDataSet,
-                      result,
-                      this->GetOutputFieldName(),
-                      fieldMetadata.GetAssociation(),
-                      fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet, result, this->GetOutputFieldName(), fieldMetadata);
 }
 }
 }

@@ -50,8 +50,7 @@ inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
     outputName = fieldMetadata.GetName();
   }
 
-  return CreateResult(
-    input, outArray, outputName, vtkm::cont::Field::Association::POINTS, cellSet.GetName());
+  return CreateResultFieldPoint(input, outArray, outputName);
 }
 }
 } // namespace vtkm::filter

@@ -145,7 +145,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
 
 
   std::string outputName = this->GetOutputFieldName();
-  if (outputName == "")
+  if (outputName.empty())
   {
     // Default name is name of input_colors.
     outputName = fieldMetadata.GetName() + "_colors";

@@ -75,11 +75,7 @@ inline VTKM_CONT vtkm::cont::DataSet OscillatorSource::DoExecute(
   //that the dispatcher should do
   this->Invoke(this->Worklet, field, outArray);
 
-  return CreateResult(inDataSet,
-                      outArray,
-                      this->GetOutputFieldName(),
-                      fieldMetadata.GetAssociation(),
-                      fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet, outArray, this->GetOutputFieldName(), fieldMetadata);
 }
 }
 } // namespace vtkm::filter

@@ -72,11 +72,8 @@ public:
     }
 
     //return the result, which is the input data with the computed field added to it
-    return vtkm::filter::CreateResult(inDataSet,
-                                      outField,
-                                      this->GetOutputFieldName(),
-                                      fieldMetadata.GetAssociation(),
-                                      fieldMetadata.GetCellSetName());
+    return vtkm::filter::CreateResult(
+      inDataSet, outField, this->GetOutputFieldName(), fieldMetadata);
   }
 };
 }

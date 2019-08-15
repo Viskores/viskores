@@ -63,7 +63,8 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 ContourTreePPP2::ContourTreePPP2(bool useMarchingCubes, bool computeRegularStructure)
-  : UseMarchingCubes(useMarchingCubes)
+  : vtkm::filter::FilterCell<ContourTreePPP2>()
+  , UseMarchingCubes(useMarchingCubes)
   , ComputeRegularStructure(computeRegularStructure)
   , Timings()
 {
@@ -133,13 +134,6 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
   // vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > saddlePeak;
   // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(ContourTreeData, MeshSortOrder, saddlePeak);
 
-  // Create the vtkm result object
-  auto result = CreateResult(input,
-                             ContourTreeData.arcs,
-                             this->GetOutputFieldName(),
-                             fieldMeta.GetAssociation(),
-                             fieldMeta.GetCellSetName());
-
   // Update the total timings
   vtkm::Float64 totalTimeWorklet = 0;
   for (std::vector<std::pair<std::string, vtkm::Float64>>::size_type i = 0; i < Timings.size(); i++)
@@ -148,8 +142,9 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
   Timings.push_back(std::pair<std::string, vtkm::Float64>(
     "Others (ContourTreePPP2 Filter): ", timer.GetElapsedTime() - totalTimeWorklet));
 
-  // Return the result
-  return result;
+
+  return CreateResult(input, ContourTreeData.arcs, this->GetOutputFieldName(), fieldMeta);
+
 } // ContourTreePPP2::DoExecute
 
 

@@ -202,6 +202,15 @@ public:
   }
 
   VTKM_CONT
+  void ReleaseResourcesExecution()
+  {
+    if (this->CellSet)
+    {
+      this->CellSet->ReleaseResourcesExecution();
+    }
+  }
+
+  VTKM_CONT
   void PrintSummary(std::ostream& stream) const
   {
     if (this->CellSet)

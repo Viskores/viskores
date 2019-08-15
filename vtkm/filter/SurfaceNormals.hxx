@@ -100,10 +100,7 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
     smooth.Run(cellset, faceNormals, pointNormals);
 
 
-    result = CreateResult(input,
-                          pointNormals,
-                          internal::ComputePointNormalsName(this),
-                          vtkm::cont::Field::Association::POINTS);
+    result = CreateResultFieldPoint(input, pointNormals, internal::ComputePointNormalsName(this));
     if (this->GenerateCellNormals)
     {
       result.AddField(vtkm::cont::Field(internal::ComputeCellNormalsName(this),
@@ -114,11 +111,8 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
   }
   else
   {
-    result = CreateResult(input,
-                          faceNormals,
-                          internal::ComputeCellNormalsName(this),
-                          vtkm::cont::Field::Association::CELL_SET,
-                          cellset.GetName());
+    result =
+      CreateResultFieldCell(input, faceNormals, internal::ComputeCellNormalsName(this), cellset);
   }
 
   if (this->AutoOrientNormals)

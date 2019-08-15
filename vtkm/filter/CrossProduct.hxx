@@ -92,11 +92,7 @@ inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
   }
 
 
-  return CreateResult(inDataSet,
-                      output,
-                      this->GetOutputFieldName(),
-                      fieldMetadata.GetAssociation(),
-                      fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet, output, this->GetOutputFieldName(), fieldMetadata);
 }
 
 //-----------------------------------------------------------------------------
