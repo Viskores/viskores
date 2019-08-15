@@ -30,9 +30,11 @@ namespace filter
 template <typename Derived>
 inline VTKM_CONT FilterField<Derived>::FilterField()
   : OutputFieldName()
+  , CellSetIndex(0)
   , CoordinateSystemIndex(0)
   , ActiveFieldName()
   , ActiveFieldAssociation(vtkm::cont::Field::Association::ANY)
+  , DeduceCellSetIndex(true)
   , UseCoordinateSystemAsField(false)
 {
 }
@@ -72,6 +74,17 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   const vtkm::cont::Field& field,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
+
+  //If the user hasn't specified a field, try and deduce
+  //one based on the field. Once we are done executing we
+  //need to rollback the CellSetIndex so this isn't used on
+  //a subsequent execution by a non-cell field
+  if (this->DeduceCellSetIndex && field.IsFieldCell())
+  {
+    //If no cellset is found that matches the name, default to the first
+    //cellset
+    this->CellSetIndex = std::max(vtkm::Id{ 0 }, input.GetCellSetIndex(field.GetAssocCellSet()));
+  }
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
 
@@ -83,6 +96,10 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
     metaData,
     policy,
     result);
+  if (this->DeduceCellSetIndex)
+  {
+    this->CellSetIndex = 0;
+  }
   return result;
 }
 
@@ -96,7 +113,6 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
 {
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems
-
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
 
