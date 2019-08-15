@@ -11,7 +11,11 @@
 #ifndef vtk_m_filter_LagrangianStructures_h
 #define vtk_m_filter_LagrangianStructures_h
 
+#include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
+
 #include <vtkm/filter/FilterDataSetWithField.h>
+
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
