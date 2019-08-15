@@ -269,7 +269,7 @@ public:
                                    dims,
                                    this->MaximumValue,
                                    temp2);
-    return vtkm::cont::Field(name, vtkm::cont::Field::Association::POINTS, output);
+    return vtkm::cont::make_FieldPoint(name, output);
   }
 
 private:

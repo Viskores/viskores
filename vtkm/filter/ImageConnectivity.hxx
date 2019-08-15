@@ -25,9 +25,9 @@ inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
   const vtkm::filter::FieldMetadata& fieldMetadata,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  if (fieldMetadata.GetAssociation() != vtkm::cont::Field::Association::POINTS)
+  if (!fieldMetadata.IsPointField())
   {
-    throw vtkm::cont::ErrorBadValue("Active field for ImageConnectivity must be a cell field.");
+    throw vtkm::cont::ErrorBadValue("Active field for ImageConnectivity must be a point field.");
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id> component;

@@ -39,8 +39,24 @@ public:
   bool HasField(const std::string& name,
                 vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const
   {
-    bool found;
+    bool found = false;
     this->FindFieldIndex(name, assoc, found);
+    return found;
+  }
+
+  VTKM_CONT
+  bool HasCellField(const std::string& name) const
+  {
+    bool found = false;
+    this->FindFieldIndex(name, vtkm::cont::Field::Association::CELL_SET, found);
+    return found;
+  }
+
+  VTKM_CONT
+  bool HasPointField(const std::string& name) const
+  {
+    bool found = false;
+    this->FindFieldIndex(name, vtkm::cont::Field::Association::POINTS, found);
     return found;
   }
 

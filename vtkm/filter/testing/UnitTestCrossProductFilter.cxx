@@ -77,13 +77,10 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field1,
                  const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field2,
                  const vtkm::cont::DataSet& result)
 {
-  VTKM_TEST_ASSERT(result.HasField("crossproduct", vtkm::cont::Field::Association::POINTS),
-                   "Output field is missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("crossproduct"), "Output field is missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> outputArray;
-  result.GetField("crossproduct", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(outputArray);
+  result.GetPointField("crossproduct").GetData().CopyTo(outputArray);
 
   auto v1Portal = field1.GetPortalConstControl();
   auto v2Portal = field2.GetPortalConstControl();

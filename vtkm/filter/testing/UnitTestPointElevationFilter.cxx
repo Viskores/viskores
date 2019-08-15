@@ -72,13 +72,10 @@ void TestPointElevationNoPolicy()
   auto result = filter.Execute(inputData);
 
   //verify the result
-  VTKM_TEST_ASSERT(result.HasField("height", vtkm::cont::Field::Association::POINTS),
-                   "Output field missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("height"), "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetField("height", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(resultArrayHandle);
+  result.GetPointField("height").GetData().CopyTo(resultArrayHandle);
   auto coordinates = inputData.GetCoordinateSystem().GetData();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
@@ -106,13 +103,10 @@ void TestPointElevationWithPolicy()
   auto result = filter.Execute(inputData, p);
 
   //verify the result
-  VTKM_TEST_ASSERT(result.HasField("elevation", vtkm::cont::Field::Association::POINTS),
-                   "Output field has wrong association");
+  VTKM_TEST_ASSERT(result.HasPointField("elevation"), "Output field has wrong association");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetField("elevation", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(resultArrayHandle);
+  result.GetPointField("elevation").GetData().CopyTo(resultArrayHandle);
   auto coordinates = inputData.GetCoordinateSystem().GetData();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {

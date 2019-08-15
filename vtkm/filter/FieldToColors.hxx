@@ -201,7 +201,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
     {
       throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
     }
-    outField = vtkm::cont::Field(outputName, vtkm::cont::Field::Association::POINTS, output);
+    outField = vtkm::cont::make_FieldPoint(outputName, output);
   }
   else
   {
@@ -249,7 +249,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
     {
       throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
     }
-    outField = vtkm::cont::Field(outputName, vtkm::cont::Field::Association::POINTS, output);
+    outField = vtkm::cont::make_FieldPoint(outputName, output);
   }
 
 

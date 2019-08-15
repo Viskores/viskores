@@ -41,13 +41,10 @@ void TestVectorMagnitude()
   vm.SetActiveField("double_vec_pointvar");
   auto result = vm.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.HasField("magnitude", vtkm::cont::Field::Association::POINTS),
-                   "Output field missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("magnitude"), "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetField("magnitude", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(resultArrayHandle);
+  result.GetPointField("magnitude").GetData().CopyTo(resultArrayHandle);
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
     VTKM_TEST_ASSERT(test_equal(std::sqrt(3 * fvars[i] * fvars[i]),

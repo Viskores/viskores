@@ -68,8 +68,7 @@ private:
                      "Association of 'pointvar' was not Association::POINTS");
     try
     {
-      //const vtkm::cont::Field &f2 =
-      ds.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
+      ds.GetCellField("cellvar");
     }
     catch (...)
     {
@@ -78,8 +77,7 @@ private:
 
     try
     {
-      //const vtkm::cont::Field &f3 =
-      ds.GetField("cellvar", vtkm::cont::Field::Association::POINTS);
+      ds.GetPointField("cellvar");
       VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
     }
     catch (vtkm::cont::ErrorBadValue& error)

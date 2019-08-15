@@ -65,9 +65,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor1D::DoExecute(
   auto compressed = compressor.Compress(field, rate, field.GetNumberOfValues());
 
   vtkm::cont::DataSet dataset;
-  vtkm::cont::Field compressedField(
-    "compressed", vtkm::cont::Field::Association::POINTS, compressed);
-  dataset.AddField(compressedField);
+  dataset.AddField(vtkm::cont::make_FieldPoint("compressed", compressed));
   return dataset;
 }
 

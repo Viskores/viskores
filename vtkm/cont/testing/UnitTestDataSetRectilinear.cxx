@@ -52,7 +52,7 @@ static void TwoDimRectilinearTest()
   // test various field-getting methods and associations
   try
   {
-    dataSet.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
+    dataSet.GetCellField("cellvar");
   }
   catch (...)
   {
@@ -61,7 +61,7 @@ static void TwoDimRectilinearTest()
 
   try
   {
-    dataSet.GetField("pointvar", vtkm::cont::Field::Association::POINTS);
+    dataSet.GetPointField("pointvar");
   }
   catch (...)
   {
@@ -138,7 +138,7 @@ static void ThreeDimRectilinearTest()
 
   try
   {
-    dataSet.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
+    dataSet.GetCellField("cellvar");
   }
   catch (...)
   {
@@ -147,7 +147,7 @@ static void ThreeDimRectilinearTest()
 
   try
   {
-    dataSet.GetField("pointvar", vtkm::cont::Field::Association::POINTS);
+    dataSet.GetPointField("pointvar");
   }
   catch (...)
   {

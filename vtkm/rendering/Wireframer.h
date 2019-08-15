@@ -520,12 +520,12 @@ private:
       xOffset = static_cast<vtkm::Id>(_x);
     }
 
-    bool isSupportedField =
-      (ScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-       ScalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+    const bool isSupportedField = ScalarField.IsFieldCell() || ScalarField.IsFieldPoint();
     if (!isSupportedField)
+    {
       throw vtkm::cont::ErrorBadValue("Field not associated with cell set or points");
-    bool isAssocPoints = ScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
+    }
+    const bool isAssocPoints = ScalarField.IsFieldPoint();
 
     EdgePlotter<DeviceTag> plotter(WorldToProjection,
                                    width,

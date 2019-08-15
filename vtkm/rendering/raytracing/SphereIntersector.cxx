@@ -340,12 +340,12 @@ void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
 {
   ShapeIntersector::IntersectionPoint(rays);
 
-  bool isSupportedField =
-    (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-     scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+  const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
   if (!isSupportedField)
+  {
     throw vtkm::cont::ErrorBadValue(
       "SphereIntersector: Field not accociated with a cell set or field");
+  }
 
   vtkm::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())
     .Invoke(rays.HitIdx,

@@ -465,11 +465,11 @@ void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
   ShapeIntersector::IntersectionPoint(rays);
 
   // TODO: if this is nodes of a mesh, support points
-  bool isSupportedField =
-    (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-     scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+  const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
   if (!isSupportedField)
+  {
     throw vtkm::cont::ErrorBadValue("Field not accociated with a cell set");
+  }
 
   vtkm::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())
     .Invoke(rays.HitIdx,

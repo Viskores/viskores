@@ -90,11 +90,10 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
 
   vtkm::cont::DataSet clone;
   clone.CopyStructure(inDataSet);
-  clone.AddField(vtkm::cont::Field(
-    fieldName, vtkm::cont::Field::Association::CELL_SET, cellSet.GetName(), fieldArray));
+  clone.AddField(vtkm::cont::make_FieldCell(fieldName, cellSet.GetName(), fieldArray));
 
   // Sanity check.
-  VTKM_ASSERT(clone.HasField(fieldName, vtkm::cont::Field::Association::CELL_SET));
+  VTKM_ASSERT(clone.HasCellField(fieldName));
   return clone;
 }
 
@@ -111,11 +110,10 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
 
   vtkm::cont::DataSet clone;
   clone.CopyStructure(inDataSet);
-  clone.AddField(vtkm::cont::Field(
-    fieldName, vtkm::cont::Field::Association::CELL_SET, cellSet.GetName(), fieldArray));
+  clone.AddField(vtkm::cont::make_FieldCell(fieldName, cellSet.GetName(), fieldArray));
 
   // Sanity check.
-  VTKM_ASSERT(clone.HasField(fieldName, vtkm::cont::Field::Association::CELL_SET));
+  VTKM_ASSERT(clone.HasCellField(fieldName));
   return clone;
 }
 
@@ -131,10 +129,10 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
 
   vtkm::cont::DataSet clone;
   clone.CopyStructure(inDataSet);
-  clone.AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::POINTS, fieldArray));
+  clone.AddField(vtkm::cont::make_FieldPoint(fieldName, fieldArray));
 
   // Sanity check.
-  VTKM_ASSERT(clone.HasField(fieldName, vtkm::cont::Field::Association::POINTS));
+  VTKM_ASSERT(clone.HasPointField(fieldName));
   return clone;
 }
 
@@ -149,10 +147,10 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
 
   vtkm::cont::DataSet clone;
   clone.CopyStructure(inDataSet);
-  clone.AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::POINTS, fieldArray));
+  clone.AddField(vtkm::cont::make_FieldPoint(fieldName, fieldArray));
 
   // Sanity check.
-  VTKM_ASSERT(clone.HasField(fieldName, vtkm::cont::Field::Association::POINTS));
+  VTKM_ASSERT(clone.HasPointField(fieldName));
   return clone;
 }
 

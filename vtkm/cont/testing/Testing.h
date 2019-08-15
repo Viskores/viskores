@@ -356,14 +356,6 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
       return result;
     }
   }
-  else if (f1.GetAssociation() == vtkm::cont::Field::Association::LOGICAL_DIM)
-  {
-    if (f1.GetAssocLogicalDim() != f2.GetAssocLogicalDim())
-    {
-      result.PushMessage("associated logical dims don't match");
-      return result;
-    }
-  }
 
   result =
     test_equal_ArrayHandles(f1.GetData().ResetTypes(fTtypes), f2.GetData().ResetTypes(fTtypes));

@@ -46,8 +46,7 @@ vtkm::cont::DataSet GenerateDataSet()
   vtkm::cont::ArrayHandle<NormalType> cellNormals;
   vtkm::cont::Algorithm::Fill(cellNormals, NormalType{ 1., 0., 0. }, numCells);
 
-  ds.AddField(vtkm::cont::Field{
-    "normals", vtkm::cont::Field::Association::CELL_SET, ds.GetCellSet().GetName(), cellNormals });
+  ds.AddField(vtkm::cont::make_FieldCell("normals", ds.GetCellSet().GetName(), cellNormals));
   return ds;
 }
 
@@ -60,8 +59,7 @@ void Validate(vtkm::cont::DataSet dataSet)
   const auto offsets =
     cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
   const auto cellArray = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
-  const auto cellNormalsVar =
-    dataSet.GetField("normals", vtkm::cont::Field::Association::CELL_SET).GetData();
+  const auto cellNormalsVar = dataSet.GetCellField("normals").GetData();
   const auto cellNormalsArray = cellNormalsVar.Cast<vtkm::cont::ArrayHandle<NormalType>>();
 
   const auto cellPortal = cellArray.GetPortalConstControl();
@@ -113,8 +111,7 @@ void DoTest()
 
   auto cellSet = ds.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
   const auto coords = ds.GetCoordinateSystem().GetData();
-  const auto cellNormalsVar =
-    ds.GetField("normals", vtkm::cont::Field::Association::CELL_SET).GetData();
+  const auto cellNormalsVar = ds.GetCellField("normals").GetData();
   const auto cellNormals = cellNormalsVar.Cast<vtkm::cont::ArrayHandle<NormalType>>();
 
 
