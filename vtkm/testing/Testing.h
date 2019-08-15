@@ -22,7 +22,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
-#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/Initialize.h>
 
 #include <exception>
 #include <iostream>
@@ -317,7 +317,7 @@ public:
   static VTKM_CONT int Run(Func function, int argc, char* argv[])
   {
 
-    vtkm::cont::InitLogging(argc, argv);
+    vtkm::cont::Initialize(argc, argv);
 
     try
     {

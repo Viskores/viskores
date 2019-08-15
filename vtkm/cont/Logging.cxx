@@ -103,6 +103,9 @@ namespace vtkm
 namespace cont
 {
 
+static bool logSet = false;
+
+
 VTKM_CONT
 void InitLogging(int& argc, char* argv[])
 {
@@ -124,7 +127,10 @@ void InitLogging(int& argc, char* argv[])
   loguru::set_name_to_verbosity_callback(&nameToVerbosityCallback);
 
   // Set the Default verbosity level to WARNING
-  loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+  if (!logSet)
+  {
+    SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
+  }
   loguru::init(argc, argv);
 
   LOG_F(INFO, "Logging initialized.");
@@ -150,6 +156,7 @@ void SetStderrLogLevel(LogLevel level)
 {
 #ifdef VTKM_ENABLE_LOGGING
   loguru::g_stderr_verbosity = static_cast<loguru::Verbosity>(level);
+  logSet = true;
 #else  // VTKM_ENABLE_LOGGING
   (void)level;
 #endif // VTKM_ENABLE_LOGGING

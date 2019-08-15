@@ -101,12 +101,12 @@ function(vtkm_unit_tests)
   if(VTKm_UT_TEST_ARGS)
     list(FIND VTKm_UT_TEST_ARGS "-v" index)
     if(index EQUAL -1)
-      list(APPEND VTKm_UT_TEST_ARGS "-v" "0")
+      list(APPEND VTKm_UT_TEST_ARGS "-v" "INFO")
     else()
       message(STATUS "Test manually supplied the logging level, not overriding")
     endif()
   else()
-    list(APPEND VTKm_UT_TEST_ARGS "-v" "0")
+    list(APPEND VTKm_UT_TEST_ARGS "-v" "INFO")
   endif()
 
   if(VTKm_UT_MPI)
@@ -115,8 +115,13 @@ function(vtkm_unit_tests)
     set(extraArgs EXTRA_INCLUDE "vtkm/cont/testing/Testing.h"
                   FUNCTION "vtkm::cont::testing::Environment env")
   else()
-    set(extraArgs)
+    set(extraArgs EXTRA_INCLUDE "vtkm/cont/Logging.h")
   endif()
+
+  # Logging is turned on by default now to Warning levels
+  # To get tests to correctly output info level logs we need to set
+  # the StderrLogLevel 
+  set(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "vtkm::cont::SetStderrLogLevel(vtkm::cont::LogLevel::Info);")
 
   #the creation of the test source list needs to occur before the labeling as
   #cuda. This is so that we get the correctly named entry points generated

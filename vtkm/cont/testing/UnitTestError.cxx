@@ -9,6 +9,9 @@
 //============================================================================
 
 #include <vtkm/cont/Error.h>
+#include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
@@ -18,28 +21,28 @@ void RecursiveFunction(int recurse)
 {
   if (recurse < 5)
   {
-    RecursiveFunction(recurse++);
+    RecursiveFunction(++recurse);
   }
   else
   {
-    throw vtkm::cont::Error("Too much recursion");
+    throw vtkm::cont::ErrorBadValue("Too much recursion");
   }
 }
 
 void ValidateError(const vtkm::cont::Error& error)
 {
   std::cout << error.what() << std::endl;
-  std::string stackTrace = "";
   std::string message = "Too much recursion";
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "stack trace: " << error.GetStackTrace());
   VTKM_TEST_ASSERT(test_equal(message, error.GetMessage()), "Message was incorrect");
   VTKM_TEST_ASSERT(test_equal(stackTrace, error.GetStackTrace()), "StackTrace was incorrect");
-  VTKM_TEST_ASSERT(test_equal((message + "\n" + stackTrace).c_str(), error.what()),
+  VTKM_TEST_ASSERT(test_equal(message + "\n" + error.GetStackTrace(), std::string(error.what())),
                    "what() was incorrect");
 }
 
 void DoErrorTest()
 {
-  std::cout << "Check base error msgs" << std::endl;
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Check base error mesgs");
   try
   {
     RecursiveFunction(0);
