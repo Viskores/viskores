@@ -802,6 +802,12 @@ public:
   }
 
   //----------------------------------------------------------------------------
+  vtkm::cont::ArrayHandle<vtkm::Id2> GetInterpolationEdgeIds() const
+  {
+    return this->InterpolationEdgeIds;
+  }
+
+  //----------------------------------------------------------------------------
   void SetMergeDuplicatePoints(bool merge) { this->MergeDuplicatePoints = merge; }
 
   //----------------------------------------------------------------------------

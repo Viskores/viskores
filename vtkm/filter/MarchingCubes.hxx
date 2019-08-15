@@ -42,9 +42,11 @@ inline VTKM_CONT MarchingCubes::MarchingCubes()
   : vtkm::filter::FilterDataSetWithField<MarchingCubes>()
   , IsoValues()
   , GenerateNormals(false)
+  , AddInterpolationEdgeIds(false)
   , ComputeFastNormalsForStructured(false)
   , ComputeFastNormalsForUnstructured(true)
   , NormalArrayName("normals")
+  , InterpolationEdgeIdsArrayName("edgeIds")
   , Worklet()
 {
   // todo: keep an instance of marching cubes worklet as a member variable
@@ -177,6 +179,14 @@ inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
     }
 
     output.AddField(vtkm::cont::make_FieldPoint(this->NormalArrayName, normals));
+  }
+
+  if (this->AddInterpolationEdgeIds)
+  {
+    vtkm::cont::Field interpolationEdgeIdsField(InterpolationEdgeIdsArrayName,
+                                                vtkm::cont::Field::Association::POINTS,
+                                                this->Worklet.GetInterpolationEdgeIds());
+    output.AddField(interpolationEdgeIdsField);
   }
 
   //assign the connectivity to the cell set
