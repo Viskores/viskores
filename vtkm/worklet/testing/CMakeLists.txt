@@ -36,7 +36,7 @@ set(unit_tests
 #  UnitTestKdTreeBuildNNS.cxx
 #  UnitTestKeys.cxx
 #  UnitTestMagnitude.cxx
-#  UnitTestMarchingCubes.cxx
+  UnitTestMarchingCubes.cxx
 #  UnitTestMarchingSquares.cxx
   UnitTestMarchingTetrahedra.cxx
 #  UnitTestMask.cxx

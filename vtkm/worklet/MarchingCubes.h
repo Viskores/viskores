@@ -41,6 +41,7 @@
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
 
+#include <vtkm/worklet/contour/CellClassifiyTable.h>
 #include <vtkm/worklet/contour/DataTables.h>
 #include <vtkm/worklet/gradient/PointGradient.h>
 #include <vtkm/worklet/gradient/StructuredPointGradient.h>
@@ -100,13 +101,62 @@ make_ScalarField(const vtkm::cont::ArrayHandle<vtkm::Int8, S>& ah)
 
 // ---------------------------------------------------------------------------
 template <typename T>
+class NewClassifyCell : public vtkm::worklet::WorkletMapPointToCell
+{
+public:
+  // TODO: is this necessary?
+  struct ClassifyCellTagType : vtkm::ListTagBase<T>
+  {
+  };
+
+  using ControlSignature = void(WholeArrayIn isoValues,
+                                FieldInPoint fieldIn,
+                                CellSetIn cellset,
+                                FieldOutCell outNumTriangles,
+                                ExecObject classifyTable);
+  using ExecutionSignature = void(CellShape, _1, _2, _4, _5);
+  using InputDomain = _3;
+
+  template <typename CellShapeType,
+            typename IsoValuesType,
+            typename FieldInType,
+            typename ClassifyTableType>
+  VTKM_EXEC void operator()(CellShapeType shape,
+                            const IsoValuesType& isovalues,
+                            const FieldInType& fieldIn,
+                            vtkm::IdComponent& numTriangles,
+                            const ClassifyTableType& classifyTable) const
+  {
+    std::cout << "cell shape: " << int(shape.Id)
+              << ", numVerticesPerCells: " << classifyTable.GetNumVerticesPerCell(shape.Id)
+              << std::endl;
+
+    vtkm::IdComponent numVerticesPerCell = classifyTable.GetNumVerticesPerCell(shape.Id);
+    vtkm::IdComponent caseNumber = 0;
+    vtkm::IdComponent sum = 0;
+    for (vtkm::Id i = 0; i < isovalues.GetNumberOfValues(); ++i)
+    {
+      for (vtkm::Id j = 0; j < numVerticesPerCell; ++j)
+      {
+        caseNumber |= (fieldIn[j] > isovalues[i]) << j;
+      }
+
+      sum += classifyTable.GetNumTriangle(shape.Id, caseNumber);
+    }
+    numTriangles = sum;
+    std::cout << "case: " << caseNumber << ", num triangles: " << numTriangles << std::endl;
+  }
+};
+
+template <typename T>
 class ClassifyCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
   struct ClassifyCellTagType : vtkm::ListTagBase<T>
   {
   };
-
+  //TODO: extract the logic of numTrianglesTable and make it a ExecObject, also dispatch/select
+  // an entry based on the CellShape
   using ControlSignature = void(WholeArrayIn isoValues,
                                 FieldInPoint fieldIn,
                                 CellSetIn cellset,
@@ -1148,12 +1198,20 @@ private:
     // for each cell, and the number of vertices to be generated
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutputTrisPerCell;
-
+#if 0
     {
       ClassifyCell<ValueType> classifyCell;
       ClassifyDispatcher classifyCellDispatcher(classifyCell);
       classifyCellDispatcher.Invoke(
         isoValuesHandle, inputField, cells, numOutputTrisPerCell, this->NumTrianglesTable);
+    }
+#endif
+    {
+      marchingcubes::NewClassifyCell<ValueType> classifyCell;
+      vtkm::worklet::internal::CellClassTable table;
+      vtkm::worklet::DispatcherMapTopology<marchingcubes::NewClassifyCell<ValueType>> dispatcher(
+        classifyCell);
+      dispatcher.Invoke(isoValuesHandle, inputField, cells, numOutputTrisPerCell, table);
     }
 
     //Pass 2 Generate the edges
