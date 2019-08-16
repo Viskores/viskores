@@ -127,6 +127,16 @@ public:
       this->operator()(
         vtkm::CellShapeTagHexahedron(), isovalues, fieldIn, numTriangles, numTrianglesTable);
     }
+    else if (shape.Id == CELL_SHAPE_QUAD)
+    {
+      this->operator()(
+        vtkm::CellShapeTagQuad(), isovalues, fieldIn, numTriangles, numTrianglesTable);
+    }
+    else if (shape.Id == CELL_SHAPE_TETRA)
+    {
+      this->operator()(
+        vtkm::CellShapeTagTetra(), isovalues, fieldIn, numTriangles, numTrianglesTable);
+    }
     else
     {
       numTriangles = 0;
@@ -135,11 +145,44 @@ public:
 
   template <typename IsoValuesType, typename FieldInType, typename NumTrianglesTablePortalType>
   VTKM_EXEC void operator()(vtkm::CellShapeTagQuad vtkmNotUsed(shape),
-                            const IsoValuesType& vtkmNotUsed(isovalues),
-                            const FieldInType& vtkmNotUsed(fieldIn),
-                            vtkm::IdComponent& vtkmNotUsed(numTriangles),
+                            const IsoValuesType& isovalues,
+                            const FieldInType& fieldIn,
+                            vtkm::IdComponent& numTriangles,
                             const NumTrianglesTablePortalType& vtkmNotUsed(numTrianglesTable)) const
   {
+    static vtkm::IdComponent numLinesTable[16] = { 0, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 0 };
+
+    vtkm::IdComponent sum = 0;
+    for (vtkm::Id i = 0; i < isovalues.GetNumberOfValues(); ++i)
+    {
+      const vtkm::IdComponent caseNumber =
+        ((fieldIn[0] > isovalues[i]) | (fieldIn[1] > isovalues[i]) << 1 |
+         (fieldIn[2] > isovalues[i]) << 2 | (fieldIn[3] > isovalues[i]) << 3);
+      sum += numLinesTable[caseNumber];
+    }
+    numTriangles = sum;
+    std::cout << "num lines: " << sum << std::endl;
+  }
+
+  template <typename IsoValuesType, typename FieldInType, typename NumTrianglesTablePortalType>
+  VTKM_EXEC void operator()(vtkm::CellShapeTagTetra vtkmNotUsed(shape),
+                            const IsoValuesType& isovalues,
+                            const FieldInType& fieldIn,
+                            vtkm::IdComponent& numTriangles,
+                            const NumTrianglesTablePortalType& vtkmNotUsed(numTrianglesTable)) const
+  {
+    static vtkm::IdComponent numTrianglesTable[16] = { 0, 1, 1, 2, 1, 2, 2, 1,
+                                                       1, 2, 2, 1, 2, 1, 1, 0 };
+    vtkm::IdComponent caseNumber;
+    vtkm::IdComponent sum = 0;
+    for (vtkm::Id i = 0; i < isovalues.GetNumberOfValues(); ++i)
+    {
+      caseNumber = ((fieldIn[0] > isovalues[i]) | (fieldIn[1] > isovalues[i]) << 1 |
+                    (fieldIn[2] > isovalues[i]) << 2 | (fieldIn[3] > isovalues[i]) << 3);
+      sum += numTrianglesTable[caseNumber];
+    }
+    numTriangles = sum;
+    std::cout << "tetra, case: " << caseNumber << ", num triangles: " << numTriangles << std::endl;
   }
 
   template <typename IsoValuesType, typename FieldInType, typename NumTrianglesTablePortalType>
@@ -321,6 +364,28 @@ public:
                        visitIndex,
                        indices);
     }
+    else if (shape.Id == CELL_SHAPE_QUAD)
+    {
+      this->operator()(vtkm::CellShapeTagQuad(),
+                       isovalues,
+                       fieldIn,
+                       metaData,
+                       inputCellId,
+                       outputCellId,
+                       visitIndex,
+                       indices);
+    }
+    else if (shape.Id == CELL_SHAPE_TETRA)
+    {
+      this->operator()(vtkm::CellShapeTagTetra(),
+                       isovalues,
+                       fieldIn,
+                       metaData,
+                       inputCellId,
+                       outputCellId,
+                       visitIndex,
+                       indices);
+    }
   }
 
   template <typename IsoValuesType,
@@ -343,6 +408,96 @@ public:
             typename FieldInType, // Vec-like, one per input point
             typename IndicesVecType,
             typename DeviceAdapter>
+  VTKM_EXEC void operator()(CellShapeTagTetra vtkmNotUsed(shape),
+                            const IsoValuesType& isovalues,
+                            const FieldInType& fieldIn, // Input point field defining the contour
+                            EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& metaData,
+                            vtkm::Id inputCellId,
+                            vtkm::Id outputCellId,
+                            vtkm::IdComponent visitIndex,
+                            const IndicesVecType& indices) const
+  { //covers when we have tetra coming from 3d structured data
+    const vtkm::Id outputPointId = 3 * outputCellId;
+    using FieldType = typename vtkm::VecTraits<FieldInType>::ComponentType;
+
+    static vtkm::IdComponent numTrianglesTable[16] = { 0, 1, 1, 2, 1, 2, 2, 1,
+                                                       1, 2, 2, 1, 2, 1, 1, 0 };
+    // TODO: I don't fully understand the following logic about multiple isovalues
+    vtkm::IdComponent sum = 0, caseNumber = 0;
+    vtkm::IdComponent i = 0, size = static_cast<vtkm::IdComponent>(isovalues.GetNumberOfValues());
+    for (i = 0; i < size; ++i)
+    {
+      const FieldType ivalue = isovalues[i];
+      // Compute the Marching Cubes case number for this cell. We need to iterate
+      // the isovalues until the sum >= our visit index. But we need to make
+      // sure the caseNumber is correct before stopping
+      caseNumber = ((fieldIn[0] > ivalue) | (fieldIn[1] > ivalue) << 1 |
+                    (fieldIn[2] > ivalue) << 2 | (fieldIn[3] > ivalue) << 3);
+      sum += numTrianglesTable[caseNumber];
+      if (sum > visitIndex)
+      {
+        break;
+      }
+    }
+    //visitIndex = sum - visitIndex - 1;
+
+    static const vtkm::IdComponent triTable[16][7] = {
+      { -1, -1, -1, -1, -1, -1, -1 }, { 0, 3, 2, -1, -1, -1, -1 },
+      { 0, 1, 4, -1, -1, -1, -1 },    { 1, 4, 2, 2, 4, 3, -1 },
+
+      { 1, 2, 5, -1, -1, -1, -1 },    { 0, 3, 5, 0, 5, 1, -1 },
+      { 0, 2, 5, 0, 5, 4, -1 },       { 5, 4, 3, -1, -1, -1, -1 },
+
+      { 3, 4, 5, -1, -1, -1, -1 },    { 4, 5, 0, 5, 2, 0, -1 },
+      { 1, 5, 0, 5, 3, 0, -1 },       { 5, 2, 1, -1, -1, -1, -1 },
+
+      { 3, 4, 2, 2, 4, 1, -1 },       { 4, 1, 0, -1, -1, -1, -1 },
+      { 2, 3, 0, -1, -1, -1, -1 },    { -1, -1, -1, -1, -1, -1, -1 },
+    };
+
+    const vtkm::IdComponent* triTableEntry = &triTable[caseNumber][visitIndex * 3];
+
+    std::cout << "caseNumber: " << caseNumber << ", visitIndex: " << visitIndex << std::endl;
+
+    const int EdgeTable[] = {
+      0, 1, // edge 0 : vertex 0 -> vertex 1
+      1, 2, // edge 1 : vertex 1 -> vertex 2
+      0, 2, // edge 2 : vertex 0 -> vertex 2
+      0, 3, // edge 3 : vertex 0 -> vertex 3
+      1, 3, // edge 4 : vertex 1 -> vertex 3
+      2, 3  // edge 5 : vertex 2 -> vertex 3
+    };
+#if 1
+    // Interpolate for vertex positions and associated scalar values
+    for (vtkm::IdComponent triVertex = 0; triVertex < 3; triVertex++)
+    {
+      const vtkm::IdComponent edgeIndex = triTableEntry[triVertex];
+      const vtkm::IdComponent edgeVertex0 = EdgeTable[2 * edgeIndex + 0];
+      const vtkm::IdComponent edgeVertex1 = EdgeTable[2 * edgeIndex + 1];
+      const FieldType fieldValue0 = fieldIn[edgeVertex0];
+      const FieldType fieldValue1 = fieldIn[edgeVertex1];
+
+      // Store the input cell id so that we can properly generate the normals
+      // in a subsequent call, after we have merged duplicate points
+      metaData.InterpCellIdPortal.Set(outputPointId + triVertex, inputCellId);
+
+      metaData.InterpContourPortal.Set(outputPointId + triVertex, static_cast<vtkm::UInt8>(i));
+
+      metaData.InterpIdPortal.Set(outputPointId + triVertex,
+                                  vtkm::Id2(indices[edgeVertex0], indices[edgeVertex1]));
+
+      vtkm::FloatDefault interpolant = static_cast<vtkm::FloatDefault>(isovalues[i] - fieldValue0) /
+        static_cast<vtkm::FloatDefault>(fieldValue1 - fieldValue0);
+
+      metaData.InterpWeightsPortal.Set(outputPointId + triVertex, interpolant);
+    }
+#endif
+  }
+
+  template <typename IsoValuesType,
+            typename FieldInType, // Vec-like, one per input point
+            typename IndicesVecType,
+            typename DeviceAdapter>
   VTKM_EXEC void operator()(
     CellShapeTagWedge vtkmNotUsed(shape),
     const IsoValuesType& vtkmNotUsed(isovalues),
@@ -354,6 +509,7 @@ public:
     const IndicesVecType& vtkmNotUsed(indices)) const
   { //covers when we have quads coming from 2d structured data
   }
+
   template <typename IsoValuesType,
             typename FieldInType, // Vec-like, one per input point
             typename IndicesVecType,
