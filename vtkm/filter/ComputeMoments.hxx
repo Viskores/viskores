@@ -12,8 +12,7 @@
 #define vtk_m_filter_ComputeMoments_hxx
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/Invoker.h>
+#include <vtkm/filter/CreateResult.h>
 #include <vtkm/worklet/moments/ComputeMoments.h>
 
 namespace vtkm
@@ -38,7 +37,7 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
     throw vtkm::cont::ErrorBadValue("Active field for ComputeMoments must be a point field.");
   }
 
-  vtkm::cont::DataSet output = internal::CreateResult(input);
+  vtkm::cont::DataSet output = vtkm::filter::CreateResult(input);
 
   auto worklet = vtkm::worklet::moments::ComputeMoments(this->Radius);
 
