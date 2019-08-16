@@ -165,44 +165,44 @@ private:
     vtkm::Box box;
     vtkm::cont::ImplicitFunctionHandle boxHandle(&box, false);
     this->Try(boxHandle,
-              { -0.5f, 0.5f, 0.707107f, 0.5f, 0.5f, 0.707107f, 0.866025f, 0.707107f },
-              { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.707107f, 0.0f, 0.707107f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 1.0f, 0.0f },
-                vtkm::Vec3f{ 0.707107f, 0.707107f, 0.0f },
-                vtkm::Vec3f{ 0.57735f, 0.57735f, 0.57735f },
-                vtkm::Vec3f{ 0.0f, 0.707107f, 0.707107f } },
+              { { -0.5f, 0.5f, 0.707107f, 0.5f, 0.5f, 0.707107f, 0.866025f, 0.707107f } },
+              { { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.707107f, 0.0f, 0.707107f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 1.0f, 0.0f },
+                  vtkm::Vec3f{ 0.707107f, 0.707107f, 0.0f },
+                  vtkm::Vec3f{ 0.57735f, 0.57735f, 0.57735f },
+                  vtkm::Vec3f{ 0.0f, 0.707107f, 0.707107f } } },
               device);
 
     std::cout << "  Specified min/max box" << std::endl;
     box.SetMinPoint({ 0.0f, -0.5f, -0.5f });
     box.SetMaxPoint({ 1.5f, 1.5f, 0.5f });
     this->Try(boxHandle,
-              { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f },
-              { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } },
+              { { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f } },
+              { { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } } },
               device);
 
     std::cout << "  Specified bounds box" << std::endl;
     box.SetBounds({ vtkm::Range(0.0, 1.5), vtkm::Range(-0.5, 1.5), vtkm::Range(-0.5, 0.5) });
     this->Try(boxHandle,
-              { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f },
-              { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } },
+              { { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f } },
+              { { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } } },
               device);
   }
 
@@ -216,15 +216,15 @@ private:
     vtkm::Cylinder cylinder;
     vtkm::cont::ImplicitFunctionHandle cylinderHandle(&cylinder, false);
     this->Try(cylinderHandle,
-              { -0.25f, 0.75f, 1.75f, 0.75f, -0.25f, 0.75f, 1.75f, 0.75f },
-              { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f } },
+              { { -0.25f, 0.75f, 1.75f, 0.75f, -0.25f, 0.75f, 1.75f, 0.75f } },
+              { { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f } } },
               device);
 
     std::cout << "  Translated, scaled cylinder" << std::endl;
@@ -232,15 +232,15 @@ private:
     cylinder.SetAxis({ 0.0f, 1.0f, 0.0f });
     cylinder.SetRadius(1.0f);
     this->Try(cylinderHandle,
-              { 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f },
-              { vtkm::Vec3f{ 0.0f, 0.0f, -2.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, -2.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, -2.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, -2.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 0.0f } },
+              { { 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f } },
+              { { vtkm::Vec3f{ 0.0f, 0.0f, -2.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, -2.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, -2.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, -2.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 0.0f } } },
               device);
 
     std::cout << "  Non-unit axis" << std::endl;
@@ -248,15 +248,15 @@ private:
     cylinder.SetAxis({ 1.0f, 1.0f, 0.0f });
     cylinder.SetRadius(1.0f);
     this->Try(cylinderHandle,
-              { -1.0f, -0.5f, 0.5f, 0.0f, -0.5f, -1.0f, 0.0f, 0.5f },
-              { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 1.0f, -1.0f, 0.0f },
-                vtkm::Vec3f{ 1.0f, -1.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ -1.0f, 1.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ -1.0f, 1.0f, 2.0f } },
+              { { -1.0f, -0.5f, 0.5f, 0.0f, -0.5f, -1.0f, 0.0f, 0.5f } },
+              { { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 1.0f, -1.0f, 0.0f },
+                  vtkm::Vec3f{ 1.0f, -1.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ -1.0f, 1.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ -1.0f, 1.0f, 2.0f } } },
               device);
   }
 
@@ -281,15 +281,15 @@ private:
       vtkm::cont::make_ImplicitFunctionHandle<vtkm::Frustum>(cornerPoints);
     vtkm::Frustum* frustum = static_cast<vtkm::Frustum*>(frustumHandle.Get());
     this->Try(frustumHandle,
-              { 0.0f, 0.353553f, 0.5f, 0.5f, 0.0f, 0.0f, 0.5f, 0.5f },
-              { vtkm::Vec3f{ 0.0f, -1.0f, 0.0f },
-                vtkm::Vec3f{ 0.707107f, -0.707107f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 1.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 1.0f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } },
+              { { 0.0f, 0.353553f, 0.5f, 0.5f, 0.0f, 0.0f, 0.5f, 0.5f } },
+              { { vtkm::Vec3f{ 0.0f, -1.0f, 0.0f },
+                  vtkm::Vec3f{ 0.707107f, -0.707107f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 1.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 1.0f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } } },
               device);
 
     std::cout << "  With 6 planes" << std::endl;
@@ -301,15 +301,15 @@ private:
                                     { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f, 1.0f } };
     frustum->SetPlanes(planePoints, planeNormals);
     this->Try(frustumHandle,
-              { 0.0f, 0.353553f, 0.5f, 0.5f, -0.5f, 0.0f, 0.5f, 0.5f },
-              { vtkm::Vec3f{ 0.0f, -1.0f, 0.0f },
-                vtkm::Vec3f{ 0.707107f, -0.707107f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 0.707107f, 0.707107f, 0.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } },
+              { { 0.0f, 0.353553f, 0.5f, 0.5f, -0.5f, 0.0f, 0.5f, 0.5f } },
+              { { vtkm::Vec3f{ 0.0f, -1.0f, 0.0f },
+                  vtkm::Vec3f{ 0.707107f, -0.707107f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 0.707107f, 0.707107f, 0.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } } },
               device);
   }
 
@@ -324,59 +324,59 @@ private:
       vtkm::cont::make_ImplicitFunctionHandle(vtkm::Plane());
     vtkm::Plane* plane = static_cast<vtkm::Plane*>(planeHandle.Get());
     this->Try(planeHandle,
-              { 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },
-              { vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } },
+              { { 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f } },
+              { { vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 1.0f } } },
               device);
 
     std::cout << "  Normal of length 2" << std::endl;
     plane->SetOrigin({ 1.0f, 1.0f, 1.0f });
     plane->SetNormal({ 0.0f, 0.0f, 2.0f });
     this->Try(planeHandle,
-              { -2.0f, -2.0f, 0.0f, 0.0f, -2.0f, -2.0f, 0.0f, 0.0f },
-              { vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f } },
+              { { -2.0f, -2.0f, 0.0f, 0.0f, -2.0f, -2.0f, 0.0f, 0.0f } },
+              { { vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f } } },
               device);
 
     std::cout << "  Oblique plane" << std::endl;
     plane->SetOrigin({ 0.5f, 0.5f, 0.5f });
     plane->SetNormal({ 1.0f, 0.0f, 1.0f });
     this->Try(planeHandle,
-              { -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f },
-              { vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
-                vtkm::Vec3f{ 1.0f, 0.0f, 1.0f } },
+              { { -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f } },
+              { { vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
+                  vtkm::Vec3f{ 1.0f, 0.0f, 1.0f } } },
               device);
 
     std::cout << "  Another oblique plane" << std::endl;
     plane->SetNormal({ -1.0f, 0.0f, -1.0f });
     this->Try(planeHandle,
-              { 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f },
-              { vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
-                vtkm::Vec3f{ -1.0f, 0.0f, -1.0f } },
+              { { 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f } },
+              { { vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
+                  vtkm::Vec3f{ -1.0f, 0.0f, -1.0f } } },
               device);
   }
 
@@ -390,30 +390,30 @@ private:
     vtkm::Sphere sphere;
     vtkm::cont::ImplicitFunctionHandle sphereHandle(&sphere, false);
     this->Try(sphereHandle,
-              { -0.25f, 0.75f, 1.75f, 0.75f, 0.75f, 1.75f, 2.75f, 1.75f },
-              { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ 2.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 2.0f, 0.0f },
-                vtkm::Vec3f{ 2.0f, 2.0f, 0.0f },
-                vtkm::Vec3f{ 2.0f, 2.0f, 2.0f },
-                vtkm::Vec3f{ 0.0f, 2.0f, 2.0f } },
+              { { -0.25f, 0.75f, 1.75f, 0.75f, 0.75f, 1.75f, 2.75f, 1.75f } },
+              { { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ 2.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 2.0f, 0.0f },
+                  vtkm::Vec3f{ 2.0f, 2.0f, 0.0f },
+                  vtkm::Vec3f{ 2.0f, 2.0f, 2.0f },
+                  vtkm::Vec3f{ 0.0f, 2.0f, 2.0f } } },
               device);
 
     std::cout << "  Shifted and scaled sphere" << std::endl;
     sphere.SetCenter({ 1.0f, 1.0f, 1.0f });
     sphere.SetRadius(1.0f);
     this->Try(sphereHandle,
-              { 2.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f },
-              { vtkm::Vec3f{ -2.0f, -2.0f, -2.0f },
-                vtkm::Vec3f{ 0.0f, -2.0f, -2.0f },
-                vtkm::Vec3f{ 0.0f, -2.0f, 0.0f },
-                vtkm::Vec3f{ -2.0f, -2.0f, 0.0f },
-                vtkm::Vec3f{ -2.0f, 0.0f, -2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, -2.0f },
-                vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
-                vtkm::Vec3f{ -2.0f, 0.0f, 0.0f } },
+              { { 2.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f } },
+              { { vtkm::Vec3f{ -2.0f, -2.0f, -2.0f },
+                  vtkm::Vec3f{ 0.0f, -2.0f, -2.0f },
+                  vtkm::Vec3f{ 0.0f, -2.0f, 0.0f },
+                  vtkm::Vec3f{ -2.0f, -2.0f, 0.0f },
+                  vtkm::Vec3f{ -2.0f, 0.0f, -2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, -2.0f },
+                  vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
+                  vtkm::Vec3f{ -2.0f, 0.0f, 0.0f } } },
               device);
   }
 
