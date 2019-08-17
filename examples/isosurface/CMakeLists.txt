@@ -25,4 +25,9 @@ if(TARGET OpenGL::GL AND
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES IsosurfaceUniformGrid.cxx)
 
+  add_executable(IsosurfaceTetra IsosurfaceTetra.cxx quaternion.h)
+  target_link_libraries(IsosurfaceTetra PRIVATE vtkm_filter ${gl_libs})
+  vtkm_add_target_information(IsosurfaceTetra
+    MODIFY_CUDA_FLAGS
+    DEVICE_SOURCES IsosurfaceUniformGrid.cxx)
 endif()

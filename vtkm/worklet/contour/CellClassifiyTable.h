@@ -85,13 +85,13 @@ VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent NumTrianglesTable[] = {
 };
 
 VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent EdgeTable[] = {
-  // CELL_SHAPE_TETRA, 4 edge * 2 vertices/edge = 8 entries
+  // CELL_SHAPE_TETRA, 6 edge * 2 vertices/edge = 12 entries
   0, 1, // edge 0 : vertex 0 -> vertex 1
   1, 2, // edge 1 : vertex 1 -> vertex 2
   0, 2, // edge 2 : vertex 0 -> vertex 2
   0, 3, // edge 3 : vertex 0 -> vertex 3
   1, 3, // edge 4 : vertex 1 -> vertex 3
-  2, 3,  // edge 5 : vertex 2 -> vertex 3
+  2, 3, // edge 5 : vertex 2 -> vertex 3
   // CELL_SHAPE_HEXAHEDRON, 12 edges * 2 vertices/edge = 24 entries
   0, 1, // bottom layer
   1, 2,
@@ -122,9 +122,9 @@ VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent EdgeTableOffset[] = {
   0, //  CELL_SHAPE_QUAD = 9,
   0, //  CELL_SHAPE_TETRA = 10,
   0, //  CELL_SHAPE_VOXEL = 11,
-  8, //  CELL_SHAPE_HEXAHEDRON = 12,
-  8+24,    //  CELL_SHAPE_WEDGE = 13,
-  8+24+18 //  CELL_SHAPE_PYRAMID = 14,
+  12, //  CELL_SHAPE_HEXAHEDRON = 12,
+  12+24,    //  CELL_SHAPE_WEDGE = 13,
+  12+24+18 //  CELL_SHAPE_PYRAMID = 14,
 };
 
 VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent TriangleTable[] = {
