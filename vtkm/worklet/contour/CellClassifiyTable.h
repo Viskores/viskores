@@ -437,8 +437,8 @@ public:
         7,  //  CELL_SHAPE_TETRA = 10,
         0,  //  CELL_SHAPE_VOXEL = 11,
         16, //  CELL_SHAPE_HEXAHEDRON = 12,
-        0,  //  CELL_SHAPE_WEDGE = 13,
-        0,  // FIXME: put in correct number in. //  CELL_SHAPE_PYRAMID = 14,
+        13, //  CELL_SHAPE_WEDGE = 13,
+        13, //  CELL_SHAPE_PYRAMID = 14,
       };
 
       // TBD

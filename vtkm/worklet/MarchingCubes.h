@@ -122,9 +122,9 @@ public:
                             vtkm::IdComponent& numTriangles,
                             const ClassifyTableType& classifyTable) const
   {
-    std::cout << "cell shape: " << int(shape.Id)
-              << ", numVerticesPerCells: " << classifyTable.GetNumVerticesPerCell(shape.Id)
-              << std::endl;
+    //    std::cout << "cell shape: " << int(shape.Id)
+    //              << ", numVerticesPerCells: " << classifyTable.GetNumVerticesPerCell(shape.Id)
+    //              << std::endl;
 
     vtkm::IdComponent sum = 0;
     vtkm::IdComponent numIsoValues = static_cast<vtkm::IdComponent>(isovalues.GetNumberOfValues());
@@ -139,9 +139,8 @@ public:
       }
 
       sum += classifyTable.GetNumTriangles(shape.Id, caseNumber);
-      std::cout << "isovalue: " << isovalues[i] << ", case: " << caseNumber
-                << ", num triangles: " << classifyTable.GetNumTriangles(shape.Id, caseNumber)
-                << std::endl;
+      //      std::cout << "isovalue: " << isovalues[i] << ", case: " << caseNumber << ", num triangles: "
+      //                << classifyTable.GetNumTriangles(shape.Id, caseNumber) << std::endl;
     }
     numTriangles = sum;
   }
@@ -312,9 +311,8 @@ public:
       }
 
       sum += classifyTable.GetNumTriangles(shape.Id, caseNumber);
-      std::cout << "isovalue: " << isovalues[i] << ", case: " << caseNumber
-                << ", num triangles: " << classifyTable.GetNumTriangles(shape.Id, caseNumber)
-                << std::endl;
+      //      std::cout << "isovalue: " << isovalues[i] << ", case: " << caseNumber << ", num triangles: "
+      //                << classifyTable.GetNumTriangles(shape.Id, caseNumber) << std::endl;
       if (sum > visitIndex)
       {
         break;
