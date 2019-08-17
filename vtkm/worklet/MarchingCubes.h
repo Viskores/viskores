@@ -266,196 +266,55 @@ public:
                                 WholeArrayIn isoValues,
                                 FieldInPoint fieldIn, // Input point field defining the contour
                                 ExecObject metaData,  // Metadata for edge weight generation
+                                ExecObject classifyTable,
                                 ExecObject triTable);
   using ExecutionSignature =
-    void(CellShape, _2, _3, _4, _5, InputIndex, WorkIndex, VisitIndex, FromIndices);
+    void(CellShape, _2, _3, _4, _5, _6, InputIndex, WorkIndex, VisitIndex, FromIndices);
 
   using InputDomain = _1;
-#if 1
-  template <typename IsoValuesType,
-            typename FieldInType, // Vec-like, one per input point
-            typename TriTableType,
-            typename IndicesVecType,
-            typename DeviceAdapter>
-  VTKM_EXEC void operator()(vtkm::CellShapeTagGeneric shape,
-                            const IsoValuesType& isovalues,
-                            const FieldInType& fieldIn, // Input point field defining the contour
-                            EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& metaData,
-                            TriTableType& triTable,
-                            vtkm::Id inputCellId,
-                            vtkm::Id outputCellId,
-                            vtkm::IdComponent visitIndex,
-                            const IndicesVecType& indices) const
-  { //covers when we have hexs coming from unstructured data
-    if (shape.Id == CELL_SHAPE_HEXAHEDRON)
-    {
-      this->operator()(vtkm::CellShapeTagHexahedron(),
-                       isovalues,
-                       fieldIn,
-                       metaData,
-                       triTable,
-                       inputCellId,
-                       outputCellId,
-                       visitIndex,
-                       indices);
-    }
-    else if (shape.Id == CELL_SHAPE_QUAD)
-    {
-      this->operator()(vtkm::CellShapeTagQuad(),
-                       isovalues,
-                       fieldIn,
-                       metaData,
-                       triTable,
-                       inputCellId,
-                       outputCellId,
-                       visitIndex,
-                       indices);
-    }
-    else if (shape.Id == CELL_SHAPE_TETRA)
-    {
-      this->operator()(vtkm::CellShapeTagTetra(),
-                       isovalues,
-                       fieldIn,
-                       metaData,
-                       triTable,
-                       inputCellId,
-                       outputCellId,
-                       visitIndex,
-                       indices);
-    }
-  }
-#endif
-  template <typename IsoValuesType,
-            typename FieldInType, // Vec-like, one per input point
-            typename TriTableType,
-            typename IndicesVecType,
-            typename DeviceAdapter>
-  VTKM_EXEC void operator()(
-    CellShapeTagQuad vtkmNotUsed(shape),
-    const IsoValuesType& vtkmNotUsed(isovalues),
-    const FieldInType& vtkmNotUsed(fieldIn), // Input point field defining the contour
-    EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& vtkmNotUsed(metaData),
-    TriTableType&,
-    vtkm::Id vtkmNotUsed(inputCellId),
-    vtkm::Id vtkmNotUsed(outputCellId),
-    vtkm::IdComponent vtkmNotUsed(visitIndex),
-    const IndicesVecType& vtkmNotUsed(indices)) const
-  { //covers when we have quads coming from 2d structured data
-  }
 
-  template <typename IsoValuesType,
+  template <typename CellShape,
+            typename IsoValuesType,
             typename FieldInType, // Vec-like, one per input point
+            typename ClassifyTableType,
             typename TriTableType,
             typename IndicesVecType,
             typename DeviceAdapter>
-  VTKM_EXEC void operator()(CellShapeTagTetra shape,
+  VTKM_EXEC void operator()(const CellShape shape,
                             const IsoValuesType& isovalues,
                             const FieldInType& fieldIn, // Input point field defining the contour
                             EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& metaData,
+                            ClassifyTableType& classifyTable,
                             TriTableType& triTable,
                             vtkm::Id inputCellId,
                             vtkm::Id outputCellId,
                             vtkm::IdComponent visitIndex,
                             const IndicesVecType& indices) const
-  { //covers when we have tetra coming from 3d structured data
+  {
     const vtkm::Id outputPointId = 3 * outputCellId;
     using FieldType = typename vtkm::VecTraits<FieldInType>::ComponentType;
 
-
-    static vtkm::IdComponent numTrianglesTable[16] = { 0, 1, 1, 2, 1, 2, 2, 1,
-                                                       1, 2, 2, 1, 2, 1, 1, 0 };
-    // TODO: I don't fully understand the following logic about multiple isovalues
     vtkm::IdComponent sum = 0, caseNumber = 0;
-    vtkm::IdComponent i = 0, size = static_cast<vtkm::IdComponent>(isovalues.GetNumberOfValues());
-    for (i = 0; i < size; ++i)
+    vtkm::IdComponent i = 0,
+                      numIsoValues = static_cast<vtkm::IdComponent>(isovalues.GetNumberOfValues());
+    vtkm::IdComponent numVerticesPerCell = classifyTable.GetNumVerticesPerCell(shape.Id);
+
+    for (i = 0; i < numIsoValues; ++i)
     {
       const FieldType ivalue = isovalues[i];
       // Compute the Marching Cubes case number for this cell. We need to iterate
       // the isovalues until the sum >= our visit index. But we need to make
       // sure the caseNumber is correct before stopping
-      caseNumber = ((fieldIn[0] > ivalue) | (fieldIn[1] > ivalue) << 1 |
-                    (fieldIn[2] > ivalue) << 2 | (fieldIn[3] > ivalue) << 3);
-      sum += numTrianglesTable[caseNumber];
-      if (sum > visitIndex)
+      caseNumber = 0;
+      for (vtkm::Id j = 0; j < numVerticesPerCell; ++j)
       {
-        break;
+        caseNumber |= (fieldIn[j] > ivalue) << j;
       }
-    }
-    //visitIndex = sum - visitIndex - 1;
 
-    // Interpolate for vertex positions and associated scalar values
-    for (vtkm::IdComponent triVertex = 0; triVertex < 3; triVertex++)
-    {
-      auto edgeVertices = triTable.GetEdgeVertices(shape.Id, caseNumber, visitIndex, triVertex);
-      const FieldType fieldValue0 = fieldIn[edgeVertices.first];
-      const FieldType fieldValue1 = fieldIn[edgeVertices.second];
-
-      // Store the input cell id so that we can properly generate the normals
-      // in a subsequent call, after we have merged duplicate points
-      metaData.InterpCellIdPortal.Set(outputPointId + triVertex, inputCellId);
-
-      metaData.InterpContourPortal.Set(outputPointId + triVertex, static_cast<vtkm::UInt8>(i));
-
-      metaData.InterpIdPortal.Set(
-        outputPointId + triVertex,
-        vtkm::Id2(indices[edgeVertices.first], indices[edgeVertices.second]));
-
-      vtkm::FloatDefault interpolant = static_cast<vtkm::FloatDefault>(isovalues[i] - fieldValue0) /
-        static_cast<vtkm::FloatDefault>(fieldValue1 - fieldValue0);
-
-      metaData.InterpWeightsPortal.Set(outputPointId + triVertex, interpolant);
-    }
-  }
-
-  template <typename IsoValuesType,
-            typename FieldInType, // Vec-like, one per input point
-            typename TriTableType,
-            typename IndicesVecType,
-            typename DeviceAdapter>
-  VTKM_EXEC void operator()(
-    CellShapeTagWedge vtkmNotUsed(shape),
-    const IsoValuesType& vtkmNotUsed(isovalues),
-    const FieldInType& vtkmNotUsed(fieldIn), // Input point field defining the contour
-    EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& vtkmNotUsed(metaData),
-    TriTableType& triTable,
-    vtkm::Id vtkmNotUsed(inputCellId),
-    vtkm::Id vtkmNotUsed(outputCellId),
-    vtkm::IdComponent vtkmNotUsed(visitIndex),
-    const IndicesVecType& vtkmNotUsed(indices)) const
-  { //covers when we have quads coming from 2d structured data
-  }
-
-  template <typename IsoValuesType,
-            typename FieldInType, // Vec-like, one per input point
-            typename TriTableType,
-            typename IndicesVecType,
-            typename DeviceAdapter>
-  VTKM_EXEC void operator()(vtkm::CellShapeTagHexahedron shape,
-                            const IsoValuesType& isovalues,
-                            const FieldInType& fieldIn, // Input point field defining the contour
-                            EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& metaData,
-                            TriTableType& triTable,
-                            vtkm::Id inputCellId,
-                            vtkm::Id outputCellId,
-                            vtkm::IdComponent visitIndex,
-                            const IndicesVecType& indices) const
-  { //covers when we have hexs coming from 3d structured data
-    const vtkm::Id outputPointId = 3 * outputCellId;
-    using FieldType = typename vtkm::VecTraits<FieldInType>::ComponentType;
-
-    vtkm::IdComponent sum = 0, caseNumber = 0;
-    vtkm::IdComponent i = 0, size = static_cast<vtkm::IdComponent>(isovalues.GetNumberOfValues());
-    for (i = 0; i < size; ++i)
-    {
-      const FieldType ivalue = isovalues[i];
-      // Compute the Marching Cubes case number for this cell. We need to iterate
-      // the isovalues until the sum >= our visit index. But we need to make
-      // sure the caseNumber is correct before stopping
-      caseNumber =
-        ((fieldIn[0] > ivalue) | (fieldIn[1] > ivalue) << 1 | (fieldIn[2] > ivalue) << 2 |
-         (fieldIn[3] > ivalue) << 3 | (fieldIn[4] > ivalue) << 4 | (fieldIn[5] > ivalue) << 5 |
-         (fieldIn[6] > ivalue) << 6 | (fieldIn[7] > ivalue) << 7);
-      sum += metaData.NumTriTable.Get(caseNumber);
+      sum += classifyTable.GetNumTriangles(shape.Id, caseNumber);
+      std::cout << "isovalue: " << isovalues[i] << ", case: " << caseNumber
+                << ", num triangles: " << classifyTable.GetNumTriangles(shape.Id, caseNumber)
+                << std::endl;
       if (sum > visitIndex)
       {
         break;
@@ -465,7 +324,6 @@ public:
     visitIndex = sum - visitIndex - 1;
 
     // Interpolate for vertex positions and associated scalar values
-    const vtkm::Id triTableOffset = static_cast<vtkm::Id>(caseNumber * 16 + visitIndex * 3);
     for (vtkm::IdComponent triVertex = 0; triVertex < 3; triVertex++)
     {
       auto edgeVertices = triTable.GetEdgeVertices(shape.Id, caseNumber, visitIndex, triVertex);
@@ -1069,8 +927,7 @@ private:
       marchingcubes::ClassifyCell<ValueType> classifyCell;
       // TODO: move table creation to constructor.
       vtkm::worklet::internal::CellClassifyTable classTable;
-      vtkm::worklet::DispatcherMapTopology<marchingcubes::ClassifyCell<ValueType>> dispatcher(
-        classifyCell);
+      ClassifyDispatcher dispatcher(classifyCell);
       dispatcher.Invoke(isoValuesHandle, inputField, cells, numOutputTrisPerCell, classTable);
     }
 
@@ -1083,6 +940,7 @@ private:
       // Maps output cells to input cells. Store this for cell field mapping.
       this->CellIdMap = scatter.GetOutputToInputMap();
 
+      vtkm::worklet::internal::CellClassifyTable classTable;
       vtkm::worklet::internal::TriangleGenerationTable triTable;
       // TODO: split input/output depedent part and table part, move table creation to
       // constructor.
@@ -1104,6 +962,7 @@ private:
         isoValuesHandle,
         inputField,
         metaData,
+        classTable,
         triTable);
     }
 
