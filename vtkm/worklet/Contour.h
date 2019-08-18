@@ -112,7 +112,7 @@ public:
     for (vtkm::Id i = 0; i < numIsoValues; ++i)
     {
       vtkm::IdComponent caseNumber = 0;
-      for (vtkm::Id j = 0; j < numVerticesPerCell; ++j)
+      for (vtkm::IdComponent j = 0; j < numVerticesPerCell; ++j)
       {
         caseNumber |= (fieldIn[j] > isovalues[i]) << j;
       }
