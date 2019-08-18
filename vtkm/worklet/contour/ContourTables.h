@@ -549,7 +549,7 @@ public:
       vtkm::IdComponent triangleNumber,
       vtkm::IdComponent vertexNumber) const
     {
-      static const vtkm::IdComponent NumEntriesPerCase[] = {
+      VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent NumEntriesPerCase[] = {
         0,  //  CELL_SHAPE_EMPTY = 0,
         0,  //  CELL_SHAPE_VERTEX = 1,
         0,  //  CELL_SHAPE_POLY_VERTEX = 2,

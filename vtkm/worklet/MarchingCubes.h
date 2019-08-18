@@ -41,8 +41,7 @@
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
 
-#include <vtkm/worklet/contour/CellClassifiyTable.h>
-#include <vtkm/worklet/contour/DataTables.h>
+#include <vtkm/worklet/contour/ContourTables.h>
 #include <vtkm/worklet/gradient/PointGradient.h>
 #include <vtkm/worklet/gradient/StructuredPointGradient.h>
 
@@ -53,22 +52,6 @@ namespace worklet
 
 namespace marchingcubes
 {
-
-template <typename T>
-struct float_type
-{
-  using type = vtkm::FloatDefault;
-};
-template <>
-struct float_type<vtkm::Float32>
-{
-  using type = vtkm::Float32;
-};
-template <>
-struct float_type<vtkm::Float64>
-{
-  using type = vtkm::Float64;
-};
 
 // -----------------------------------------------------------------------------
 template <typename S>
@@ -169,17 +152,11 @@ public:
                vtkm::cont::ArrayHandle<vtkm::FloatDefault>& interpWeights,
                vtkm::cont::ArrayHandle<vtkm::Id2>& interpIds,
                vtkm::cont::ArrayHandle<vtkm::Id>& interpCellIds,
-               vtkm::cont::ArrayHandle<vtkm::UInt8>& interpContourId,
-               const vtkm::cont::ArrayHandle<vtkm::IdComponent>& edgeTable,
-               const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numTriTable,
-               const vtkm::cont::ArrayHandle<vtkm::IdComponent>& triTable)
+               vtkm::cont::ArrayHandle<vtkm::UInt8>& interpContourId)
       : InterpWeightsPortal(interpWeights.PrepareForOutput(3 * size, DeviceAdapter()))
       , InterpIdPortal(interpIds.PrepareForOutput(3 * size, DeviceAdapter()))
       , InterpCellIdPortal(interpCellIds.PrepareForOutput(3 * size, DeviceAdapter()))
       , InterpContourPortal(interpContourId.PrepareForOutput(3 * size, DeviceAdapter()))
-      , EdgeTable(edgeTable.PrepareForInput(DeviceAdapter()))
-      , NumTriTable(numTriTable.PrepareForInput(DeviceAdapter()))
-      , TriTable(triTable.PrepareForInput(DeviceAdapter()))
     {
       // Interp needs to be 3 times longer than size as they are per point of the
       // output triangle
@@ -188,9 +165,6 @@ public:
     typename PortalTypes<vtkm::Id2>::Portal InterpIdPortal;
     typename PortalTypes<vtkm::Id>::Portal InterpCellIdPortal;
     typename PortalTypes<vtkm::UInt8>::Portal InterpContourPortal;
-    typename PortalTypes<vtkm::IdComponent>::PortalConst EdgeTable;
-    typename PortalTypes<vtkm::IdComponent>::PortalConst NumTriTable;
-    typename PortalTypes<vtkm::IdComponent>::PortalConst TriTable;
   };
 
   VTKM_CONT
@@ -198,32 +172,20 @@ public:
                              vtkm::cont::ArrayHandle<vtkm::FloatDefault>& interpWeights,
                              vtkm::cont::ArrayHandle<vtkm::Id2>& interpIds,
                              vtkm::cont::ArrayHandle<vtkm::Id>& interpCellIds,
-                             vtkm::cont::ArrayHandle<vtkm::UInt8>& interpContourId,
-                             const vtkm::cont::ArrayHandle<vtkm::IdComponent>& edgeTable,
-                             const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numTriTable,
-                             const vtkm::cont::ArrayHandle<vtkm::IdComponent>& triTable)
+                             vtkm::cont::ArrayHandle<vtkm::UInt8>& interpContourId)
     : Size(size)
     , InterpWeights(interpWeights)
     , InterpIds(interpIds)
     , InterpCellIds(interpCellIds)
     , InterpContourId(interpContourId)
-    , EdgeTable(edgeTable)
-    , NumTriTable(numTriTable)
-    , TriTable(triTable)
   {
   }
 
   template <typename DeviceAdapter>
   VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter)
   {
-    return ExecObject<DeviceAdapter>(this->Size,
-                                     this->InterpWeights,
-                                     this->InterpIds,
-                                     this->InterpCellIds,
-                                     this->InterpContourId,
-                                     this->EdgeTable,
-                                     this->NumTriTable,
-                                     this->TriTable);
+    return ExecObject<DeviceAdapter>(
+      this->Size, this->InterpWeights, this->InterpIds, this->InterpCellIds, this->InterpContourId);
   }
 
 private:
@@ -232,9 +194,6 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id2> InterpIds;
   vtkm::cont::ArrayHandle<vtkm::Id> InterpCellIds;
   vtkm::cont::ArrayHandle<vtkm::UInt8> InterpContourId;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> EdgeTable;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> NumTriTable;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> TriTable;
 };
 
 /// \brief Compute the weights for each edge that is used to generate
@@ -277,9 +236,9 @@ public:
   VTKM_EXEC void operator()(const CellShape shape,
                             const IsoValuesType& isovalues,
                             const FieldInType& fieldIn, // Input point field defining the contour
-                            EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& metaData,
-                            ClassifyTableType& classifyTable,
-                            TriTableType& triTable,
+                            const EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& metaData,
+                            const ClassifyTableType& classifyTable,
+                            const TriTableType& triTable,
                             vtkm::Id inputCellId,
                             vtkm::Id outputCellId,
                             vtkm::IdComponent visitIndex,
@@ -701,21 +660,9 @@ public:
   //----------------------------------------------------------------------------
   MarchingCubes(bool mergeDuplicates = true)
     : MergeDuplicatePoints(mergeDuplicates)
-    , EdgeTable()
-    , NumTrianglesTable()
-    , TriangleTable()
     , InterpolationWeights()
     , InterpolationEdgeIds()
   {
-    // Set up the Marching Cubes case tables as part of the filter so that
-    // we cache these tables in the execution environment between execution runs
-    // TODO: migrate this to an ExecutionObject (possibly more than one).
-    this->EdgeTable = vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::edgeTable, 24);
-
-    this->NumTrianglesTable =
-      vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::numTrianglesTable, 256);
-
-    this->TriangleTable = vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::triTable, 256 * 16);
   }
 
   //----------------------------------------------------------------------------
@@ -916,10 +863,8 @@ private:
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutputTrisPerCell;
     {
       marchingcubes::ClassifyCell<ValueType> classifyCell;
-      // TODO: move table creation to constructor.
-      vtkm::worklet::internal::CellClassifyTable classTable;
       ClassifyDispatcher dispatcher(classifyCell);
-      dispatcher.Invoke(isoValuesHandle, inputField, cells, numOutputTrisPerCell, classTable);
+      dispatcher.Invoke(isoValuesHandle, inputField, cells, numOutputTrisPerCell, this->classTable);
     }
 
     //Pass 2 Generate the edges
@@ -931,19 +876,12 @@ private:
       // Maps output cells to input cells. Store this for cell field mapping.
       this->CellIdMap = scatter.GetOutputToInputMap();
 
-      vtkm::worklet::internal::CellClassifyTable classTable;
-      vtkm::worklet::internal::TriangleGenerationTable triTable;
-      // TODO: split input/output depedent part and table part, move table creation to
-      // constructor.
       EdgeWeightGenerateMetaData metaData(
         scatter.GetOutputRange(numOutputTrisPerCell.GetNumberOfValues()),
         this->InterpolationWeights,
         this->InterpolationEdgeIds,
         originalCellIdsForPoints,
-        contourIds,
-        this->EdgeTable,
-        this->NumTrianglesTable,
-        this->TriangleTable);
+        contourIds);
 
       EdgeWeightGenerate<ValueType> weightGenerate;
       GenerateDispatcher edgeDispatcher(weightGenerate, scatter);
@@ -953,8 +891,8 @@ private:
         isoValuesHandle,
         inputField,
         metaData,
-        classTable,
-        triTable);
+        this->classTable,
+        this->triTable);
     }
 
     if (numIsoValues <= 1 || !this->MergeDuplicatePoints)
@@ -1022,10 +960,8 @@ private:
   }
 
   bool MergeDuplicatePoints;
-
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> EdgeTable;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> NumTrianglesTable;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> TriangleTable;
+  vtkm::worklet::internal::CellClassifyTable classTable;
+  vtkm::worklet::internal::TriangleGenerationTable triTable;
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> InterpolationWeights;
   vtkm::cont::ArrayHandle<vtkm::Id2> InterpolationEdgeIds;
