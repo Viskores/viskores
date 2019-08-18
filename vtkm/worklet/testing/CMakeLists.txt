@@ -38,8 +38,7 @@ set(unit_tests
 #  UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
 #  UnitTestMarchingSquares.cxx
-  UnitTestMarchingTetrahedra.cxx
-#  UnitTestMask.cxx
+  #  UnitTestMask.cxx
 #  UnitTestMaskIndices.cxx
 #  UnitTestMaskPoints.cxx
 #  UnitTestMaskSelect.cxx
