@@ -42,7 +42,7 @@ vtkm::cont::DataSet DataSetBuilderExplicitIterative::Create()
 }
 
 VTKM_CONT
-vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Vec<vtkm::Float32, 3>& pt)
+vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Vec3f_32& pt)
 {
   points.push_back(pt);
   vtkm::Id id = static_cast<vtkm::Id>(points.size());

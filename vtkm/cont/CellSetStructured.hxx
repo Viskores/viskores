@@ -57,13 +57,16 @@ typename CellSetStructured<DIMENSION>::SchedulingRangeType
 }
 
 template <vtkm::IdComponent DIMENSION>
-template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
-typename CellSetStructured<
-  DIMENSION>::template ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType
-  CellSetStructured<DIMENSION>::PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const
+template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
+typename CellSetStructured<DIMENSION>::template ExecutionTypes<DeviceAdapter,
+                                                               VisitTopology,
+                                                               IncidentTopology>::ExecObjectType
+  CellSetStructured<DIMENSION>::PrepareForInput(DeviceAdapter,
+                                                VisitTopology,
+                                                IncidentTopology) const
 {
   using ConnectivityType =
-    typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType;
+    typename ExecutionTypes<DeviceAdapter, VisitTopology, IncidentTopology>::ExecObjectType;
   return ConnectivityType(this->Structure);
 }
 

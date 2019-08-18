@@ -18,6 +18,8 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 
+#include <vtkm/cont/testing/Testing.h>
+
 #include <numeric>
 
 namespace vtkm
@@ -135,7 +137,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet2()
 inline vtkm::cont::DataSet MakeTestDataSet::Make1DExplicitDataSet0()
 {
   const int nVerts = 5;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords(nVerts);
   coords[0] = CoordType(0.0f, 0.f, 0.f);
   coords[1] = CoordType(1.0f, 0.f, 0.f);
@@ -505,7 +507,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make2DExplicitDataSet0()
   // Coordinates
   const int nVerts = 16;
   const int nCells = 7;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords(nVerts);
 
   coords[0] = CoordType(0, 0, 0);
@@ -597,7 +599,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet0()
   vtkm::cont::DataSetBuilderExplicit dsb;
 
   const int nVerts = 5;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords(nVerts);
   coords[0] = CoordType(0, 0, 0);
   coords[1] = CoordType(1, 0, 0);
@@ -678,7 +680,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::cont::DataSetBuilderExplicit dsb;
 
   const int nVerts = 5;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords(nVerts);
 
   coords[0] = CoordType(0, 0, 0);
@@ -719,7 +721,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet2()
   vtkm::cont::DataSet dataSet;
 
   const int nVerts = 8;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   CoordType coordinates[nVerts] = {
     CoordType(0, 0, 0), // 0
     CoordType(1, 0, 0), // 1
@@ -770,7 +772,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet4()
   vtkm::cont::DataSet dataSet;
 
   const int nVerts = 12;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   CoordType coordinates[nVerts] = {
     CoordType(0, 0, 0), //0
     CoordType(1, 0, 0), //1
@@ -835,7 +837,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet3()
   vtkm::cont::DataSet dataSet;
 
   const int nVerts = 4;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   CoordType coordinates[nVerts] = {
     CoordType(0, 0, 0), CoordType(1, 0, 0), CoordType(1, 0, 1), CoordType(0, 1, 0)
   };
@@ -854,7 +856,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet3()
     "cellvar", vtkm::cont::Field::Association::CELL_SET, "cells", cellvar, 1, vtkm::CopyFlag::On));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells");
-  vtkm::Vec<vtkm::Id, 4> ids;
+  vtkm::Id4 ids;
   ids[0] = 0;
   ids[1] = 1;
   ids[2] = 2;
@@ -875,7 +877,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet5()
   vtkm::cont::DataSet dataSet;
 
   const int nVerts = 11;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   CoordType coordinates[nVerts] = {
     CoordType(0, 0, 0),     //0
     CoordType(1, 0, 0),     //1
@@ -962,7 +964,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet6()
   // Coordinates
   const int nVerts = 8;
   const int nCells = 8;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords = { { -0.707f, -0.354f, -0.354f }, { 0.000f, -0.854f, 0.146f },
                                     { 0.000f, -0.146f, 0.854f },   { -0.707f, 0.354f, 0.354f },
                                     { 10.0f, 10.0f, 10.0f },       { 5.0f, 5.0f, 5.0f },
@@ -1039,7 +1041,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetZoo()
   // Coordinates
   constexpr int nVerts = 30;
   constexpr int nCells = 25;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
 
   std::vector<CoordType> coords =
 
@@ -1288,7 +1290,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet7()
   const int nVerts = 8;
   const int nCells = 8;
 
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords = { { -0.707f, -0.354f, -0.354f }, { 0.000f, -0.854f, 0.146f },
                                     { 0.000f, -0.146f, 0.854f },   { -0.707f, 0.354f, 0.354f },
                                     { 10.0f, 10.0f, 10.0f },       { 5.0f, 5.0f, 5.0f },
@@ -1354,7 +1356,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet8()
   // Coordinates
   const int nVerts = 8;
   const int nCells = 10;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords = { { -0.707f, -0.354f, -0.354f }, { 0.000f, -0.854f, 0.146f },
                                     { 0.000f, -0.146f, 0.854f },   { -0.707f, 0.354f, 0.354f },
                                     { 10.0f, 10.0f, 10.0f },       { 5.0f, 5.0f, 5.0f },
@@ -1433,7 +1435,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetPolygonal()
   // Coordinates
   const int nVerts = 8;
   const int nCells = 8;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords = { { -0.707f, -0.354f, -0.354f }, { 0.000f, -0.854f, 0.146f },
                                     { 0.000f, -0.146f, 0.854f },   { -0.707f, 0.354f, 0.354f },
                                     { 0.000f, 0.146f, -0.854f },   { 0.000f, 0.854f, -0.146f },
@@ -1512,7 +1514,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetCowNose()
 {
   // prepare data array
   const int nVerts = 17;
-  using CoordType = vtkm::Vec<vtkm::Float64, 3>;
+  using CoordType = vtkm::Vec3f_64;
   CoordType coordinates[nVerts] = {
     CoordType(0.0480879, 0.151874, 0.107334),     CoordType(0.0293568, 0.245532, 0.125337),
     CoordType(0.0224398, 0.246495, 0.1351),       CoordType(0.0180085, 0.20436, 0.145316),
@@ -1551,9 +1553,19 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetCowNose()
   std::vector<vtkm::Float32> cellvar(connectivitySize / 3);
   std::iota(cellvar.begin(), cellvar.end(), 132.f);
 
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> pointvec;
+  pointvec.Allocate(nVerts);
+  SetPortal(pointvec.GetPortalControl());
+
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> cellvec;
+  cellvec.Allocate(connectivitySize / 3);
+  SetPortal(cellvec.GetPortalControl());
+
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddPointField(dataSet, "pointvar", pointvar);
   dsf.AddCellField(dataSet, "cellvar", cellvar, "cells");
+  dsf.AddPointField(dataSet, "point_vectors", pointvec);
+  dsf.AddCellField(dataSet, "cell_vectors", cellvec, "cells");
 
   return dataSet;
 }

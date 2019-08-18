@@ -51,11 +51,11 @@ public:
                             const PointPortalType& points) const
   {
     // cast to Float32
-    vtkm::Vec<vtkm::Float32, 3> point1, point2;
-    vtkm::Vec<vtkm::Float32, 3> temp;
+    vtkm::Vec3f_32 point1, point2;
+    vtkm::Vec3f_32 temp;
 
-    point1 = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(cylId[1]));
-    point2 = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(cylId[2]));
+    point1 = static_cast<vtkm::Vec3f_32>(points.Get(cylId[1]));
+    point2 = static_cast<vtkm::Vec3f_32>(points.Get(cylId[2]));
 
     temp[0] = radius;
     temp[1] = 0.0f;
@@ -70,7 +70,7 @@ public:
     Bounds(point2, radius, xmin, ymin, zmin, xmax, ymax, zmax);
   }
 
-  VTKM_EXEC void Bounds(const vtkm::Vec<vtkm::Float32, 3>& point,
+  VTKM_EXEC void Bounds(const vtkm::Vec3f_32& point,
                         const vtkm::Float32& radius,
                         vtkm::Float32& xmin,
                         vtkm::Float32& ymin,
@@ -79,7 +79,7 @@ public:
                         vtkm::Float32& ymax,
                         vtkm::Float32& zmax) const
   {
-    vtkm::Vec<vtkm::Float32, 3> temp, p;
+    vtkm::Vec3f_32 temp, p;
     temp[0] = radius;
     temp[1] = 0.0f;
     temp[2] = 0.0f;
@@ -277,7 +277,7 @@ public:
         bottom = vtkm::Vec<Precision, 3>(points.Get(pointIndex[1]));
         top = vtkm::Vec<Precision, 3>(points.Get(pointIndex[2]));
 
-        vtkm::Vec<vtkm::Float32, 3> ret;
+        vtkm::Vec3f_32 ret;
         ret = cylinder(origin, dir, bottom, top, radius);
         if (ret[0] > 0)
         {
@@ -465,11 +465,11 @@ void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
   ShapeIntersector::IntersectionPoint(rays);
 
   // TODO: if this is nodes of a mesh, support points
-  bool isSupportedField =
-    (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-     scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+  const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
   if (!isSupportedField)
+  {
     throw vtkm::cont::ErrorBadValue("Field not accociated with a cell set");
+  }
 
   vtkm::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())
     .Invoke(rays.HitIdx,

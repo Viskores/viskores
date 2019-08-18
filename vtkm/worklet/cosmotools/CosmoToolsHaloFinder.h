@@ -316,7 +316,7 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(vtkm::cont::ArrayHandle<
 
   // Setup the ScatterCounting worklets needed to expand the ReduceByKeyResults
   vtkm::worklet::ScatterCounting scatter(particlesPerHalo);
-  vtkm::worklet::Invoker invoke;
+  vtkm::cont::Invoker invoke;
 
   // Calculate the minimum particle index per halo id and scatter
   DeviceAlgorithm::ScanExclusive(particlesPerHalo, tempI);

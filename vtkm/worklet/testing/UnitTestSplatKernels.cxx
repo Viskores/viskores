@@ -15,7 +15,7 @@
 #include <vtkm/worklet/splatkernels/Spline3rdOrder.h>
 
 
-using Vector = vtkm::Vec<vtkm::Float64, 3>;
+using Vector = vtkm::Vec3f_64;
 
 // Simpson integradion rule
 double SimpsonIntegration(const std::vector<double>& y, const std::vector<double>& x)

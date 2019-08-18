@@ -50,12 +50,12 @@ public:
                             const PointPortalType& points) const
   {
     // cast to Float32
-    vtkm::Vec<vtkm::Float32, 3> q, r, s, t;
+    vtkm::Vec3f_32 q, r, s, t;
 
-    q = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(quadId[1]));
-    r = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(quadId[2]));
-    s = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(quadId[3]));
-    t = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(quadId[4]));
+    q = static_cast<vtkm::Vec3f_32>(points.Get(quadId[1]));
+    r = static_cast<vtkm::Vec3f_32>(points.Get(quadId[2]));
+    s = static_cast<vtkm::Vec3f_32>(points.Get(quadId[3]));
+    t = static_cast<vtkm::Vec3f_32>(points.Get(quadId[4]));
 
     xmin = q[0];
     ymin = q[1];
@@ -433,11 +433,11 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
   ShapeIntersector::IntersectionPoint(rays);
 
   // TODO: if this is nodes of a mesh, support points
-  bool isSupportedField =
-    (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-     scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+  const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
   if (!isSupportedField)
+  {
     throw vtkm::cont::ErrorBadValue("Field not accociated with a cell set");
+  }
 
   vtkm::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())
     .Invoke(rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, CoordsHandle, QuadIds);

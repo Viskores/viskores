@@ -53,15 +53,15 @@ public:
                             const PointPortalType& points) const
   {
     // cast to Float32
-    vtkm::Vec<vtkm::Float32, 3> point;
-    vtkm::Vec<vtkm::Float32, 3> temp;
-    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(pointId));
+    vtkm::Vec3f_32 point;
+    vtkm::Vec3f_32 temp;
+    point = static_cast<vtkm::Vec3f_32>(points.Get(pointId));
 
     temp[0] = radius;
     temp[1] = 0.f;
     temp[2] = 0.f;
 
-    vtkm::Vec<vtkm::Float32, 3> p = point + temp;
+    vtkm::Vec3f_32 p = point + temp;
     //set first point to max and min
     xmin = p[0];
     xmax = p[0];
@@ -340,12 +340,12 @@ void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
 {
   ShapeIntersector::IntersectionPoint(rays);
 
-  bool isSupportedField =
-    (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-     scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+  const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
   if (!isSupportedField)
+  {
     throw vtkm::cont::ErrorBadValue(
       "SphereIntersector: Field not accociated with a cell set or field");
+  }
 
   vtkm::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())
     .Invoke(rays.HitIdx,

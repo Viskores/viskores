@@ -40,18 +40,18 @@ VTKM_EXEC inline void Clamp(vtkm::Float32& val)
 {
   val = vtkm::Min(255.0f, vtkm::Max(0.0f, val));
 }
-VTKM_EXEC inline void Clamp(vtkm::Vec<vtkm::Float32, 2>& val)
+VTKM_EXEC inline void Clamp(vtkm::Vec2f_32& val)
 {
   val[0] = vtkm::Min(255.0f, vtkm::Max(0.0f, val[0]));
   val[1] = vtkm::Min(255.0f, vtkm::Max(0.0f, val[1]));
 }
-VTKM_EXEC inline void Clamp(vtkm::Vec<vtkm::Float32, 3>& val)
+VTKM_EXEC inline void Clamp(vtkm::Vec3f_32& val)
 {
   val[0] = vtkm::Min(255.0f, vtkm::Max(0.0f, val[0]));
   val[1] = vtkm::Min(255.0f, vtkm::Max(0.0f, val[1]));
   val[2] = vtkm::Min(255.0f, vtkm::Max(0.0f, val[2]));
 }
-VTKM_EXEC inline void Clamp(vtkm::Vec<vtkm::Float32, 4>& val)
+VTKM_EXEC inline void Clamp(vtkm::Vec4f_32& val)
 {
   val[0] = vtkm::Min(255.0f, vtkm::Max(0.0f, val[0]));
   val[1] = vtkm::Min(255.0f, vtkm::Max(0.0f, val[1]));

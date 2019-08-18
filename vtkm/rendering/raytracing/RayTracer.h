@@ -32,7 +32,7 @@ protected:
   vtkm::cont::Field ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Float32> Scalars;
   vtkm::Id NumberOfShapes;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
+  vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;
   vtkm::Range ScalarRange;
   bool Shade;
 
@@ -55,7 +55,7 @@ public:
   void SetField(const vtkm::cont::Field& scalarField, const vtkm::Range& scalarRange);
 
   VTKM_CONT
-  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
+  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap);
 
   VTKM_CONT
   void SetShadingOn(bool on);

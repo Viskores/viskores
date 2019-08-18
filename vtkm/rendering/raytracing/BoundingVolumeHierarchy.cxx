@@ -16,6 +16,7 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 
@@ -27,7 +28,6 @@
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
 
-#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #define AABB_EPSILON 0.00001f
@@ -122,8 +122,8 @@ template <typename DeviceAdapterTag>
 class LinearBVHBuilder::GatherVecCast : public vtkm::worklet::WorkletMapField
 {
 private:
-  using Vec4IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
-  using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
+  using Vec4IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id4>;
+  using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4i_32>;
   using PortalConst = typename Vec4IdArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
   using Portal = typename Vec4IntArrayHandle::ExecutionTypes<DeviceAdapterTag>::Portal;
 
@@ -239,7 +239,7 @@ public:
   {
     //move up into the inner nodes
     vtkm::Id currentNode = LeafCount - 1 + workIndex;
-    vtkm::Vec<vtkm::Id, 2> childVector;
+    vtkm::Id2 childVector;
     while (currentNode != 0)
     {
       currentNode = parents.Get(currentNode);
@@ -257,8 +257,7 @@ public:
         //and set it in the current node
         childVector[0] = childVector[0] - LeafCount + 1;
 
-        vtkm::Vec<vtkm::Float32, 4>
-          first4Vec; // = FlatBVH.Get(currentNode); only this one needs effects this
+        vtkm::Vec4f_32 first4Vec; // = FlatBVH.Get(currentNode); only this one needs effects this
 
         first4Vec[0] = xmin.Get(childVector[0]);
         first4Vec[1] = ymin.Get(childVector[0]);
@@ -266,7 +265,7 @@ public:
         first4Vec[3] = xmax.Get(childVector[0]);
         flatBVH.Set(currentNodeOffset, first4Vec);
 
-        vtkm::Vec<vtkm::Float32, 4> second4Vec = flatBVH.Get(currentNodeOffset + 1);
+        vtkm::Vec4f_32 second4Vec = flatBVH.Get(currentNodeOffset + 1);
         second4Vec[0] = ymax.Get(childVector[0]);
         second4Vec[1] = zmax.Get(childVector[0]);
         flatBVH.Set(currentNodeOffset + 1, second4Vec);
@@ -281,9 +280,9 @@ public:
         //the current node left AABB.
         vtkm::Id child = childVector[0] * 4;
 
-        vtkm::Vec<vtkm::Float32, 4> cFirst4Vec = flatBVH.Get(child);
-        vtkm::Vec<vtkm::Float32, 4> cSecond4Vec = flatBVH.Get(child + 1);
-        vtkm::Vec<vtkm::Float32, 4> cThird4Vec = flatBVH.Get(child + 2);
+        vtkm::Vec4f_32 cFirst4Vec = flatBVH.Get(child);
+        vtkm::Vec4f_32 cSecond4Vec = flatBVH.Get(child + 1);
+        vtkm::Vec4f_32 cThird4Vec = flatBVH.Get(child + 2);
 
         cFirst4Vec[0] = vtkm::Min(cFirst4Vec[0], cSecond4Vec[2]);
         cFirst4Vec[1] = vtkm::Min(cFirst4Vec[1], cSecond4Vec[3]);
@@ -291,7 +290,7 @@ public:
         cFirst4Vec[3] = vtkm::Max(cFirst4Vec[3], cThird4Vec[1]);
         flatBVH.Set(currentNodeOffset, cFirst4Vec);
 
-        vtkm::Vec<vtkm::Float32, 4> second4Vec = flatBVH.Get(currentNodeOffset + 1);
+        vtkm::Vec4f_32 second4Vec = flatBVH.Get(currentNodeOffset + 1);
         second4Vec[0] = vtkm::Max(cSecond4Vec[0], cThird4Vec[2]);
         second4Vec[1] = vtkm::Max(cSecond4Vec[1], cThird4Vec[3]);
 
@@ -305,13 +304,13 @@ public:
         childVector[1] = childVector[1] - LeafCount + 1;
 
 
-        vtkm::Vec<vtkm::Float32, 4> second4Vec = flatBVH.Get(currentNodeOffset + 1);
+        vtkm::Vec4f_32 second4Vec = flatBVH.Get(currentNodeOffset + 1);
 
         second4Vec[2] = xmin.Get(childVector[1]);
         second4Vec[3] = ymin.Get(childVector[1]);
         flatBVH.Set(currentNodeOffset + 1, second4Vec);
 
-        vtkm::Vec<vtkm::Float32, 4> third4Vec;
+        vtkm::Vec4f_32 third4Vec;
         third4Vec[0] = zmin.Get(childVector[1]);
         third4Vec[1] = xmax.Get(childVector[1]);
         third4Vec[2] = ymax.Get(childVector[1]);
@@ -329,11 +328,11 @@ public:
         //the current node left AABB.
         vtkm::Id child = childVector[1] * 4;
 
-        vtkm::Vec<vtkm::Float32, 4> cFirst4Vec = flatBVH.Get(child);
-        vtkm::Vec<vtkm::Float32, 4> cSecond4Vec = flatBVH.Get(child + 1);
-        vtkm::Vec<vtkm::Float32, 4> cThird4Vec = flatBVH.Get(child + 2);
+        vtkm::Vec4f_32 cFirst4Vec = flatBVH.Get(child);
+        vtkm::Vec4f_32 cSecond4Vec = flatBVH.Get(child + 1);
+        vtkm::Vec4f_32 cThird4Vec = flatBVH.Get(child + 2);
 
-        vtkm::Vec<vtkm::Float32, 4> second4Vec = flatBVH.Get(currentNodeOffset + 1);
+        vtkm::Vec4f_32 second4Vec = flatBVH.Get(currentNodeOffset + 1);
         second4Vec[2] = vtkm::Min(cFirst4Vec[0], cSecond4Vec[2]);
         second4Vec[3] = vtkm::Min(cFirst4Vec[1], cSecond4Vec[3]);
         flatBVH.Set(currentNodeOffset + 1, second4Vec);
@@ -344,7 +343,7 @@ public:
         cThird4Vec[3] = vtkm::Max(cSecond4Vec[1], cThird4Vec[3]);
         flatBVH.Set(currentNodeOffset + 2, cThird4Vec);
       }
-      vtkm::Vec<vtkm::Float32, 4> fourth4Vec;
+      vtkm::Vec4f_32 fourth4Vec;
       vtkm::Int32 leftChild =
         static_cast<vtkm::Int32>((childVector[0] >= 0) ? childVector[0] * 4 : childVector[0]);
       memcpy(&fourth4Vec[0], &leftChild, 4);
@@ -628,8 +627,8 @@ VTKM_CONT void LinearBVHBuilder::Build(LinearBVH& linearBVH)
 
 
   // Find the extent of all bounding boxes to generate normalization for morton codes
-  vtkm::Vec<vtkm::Float32, 3> minExtent(vtkm::Infinity32(), vtkm::Infinity32(), vtkm::Infinity32());
-  vtkm::Vec<vtkm::Float32, 3> maxExtent(
+  vtkm::Vec3f_32 minExtent(vtkm::Infinity32(), vtkm::Infinity32(), vtkm::Infinity32());
+  vtkm::Vec3f_32 maxExtent(
     vtkm::NegativeInfinity32(), vtkm::NegativeInfinity32(), vtkm::NegativeInfinity32());
   maxExtent[0] = vtkm::cont::Algorithm::Reduce(bvh.AABB.xmaxs, maxExtent[0], MaxValue());
   maxExtent[1] = vtkm::cont::Algorithm::Reduce(bvh.AABB.ymaxs, maxExtent[1], MaxValue());
@@ -645,8 +644,8 @@ VTKM_CONT void LinearBVHBuilder::Build(LinearBVH& linearBVH)
   linearBVH.TotalBounds.Z.Min = minExtent[2];
   linearBVH.TotalBounds.Z.Max = maxExtent[2];
 
-  vtkm::Vec<vtkm::Float32, 3> deltaExtent = maxExtent - minExtent;
-  vtkm::Vec<vtkm::Float32, 3> inverseExtent;
+  vtkm::Vec3f_32 deltaExtent = maxExtent - minExtent;
+  vtkm::Vec3f_32 inverseExtent;
   for (int i = 0; i < 3; ++i)
   {
     inverseExtent[i] = (deltaExtent[i] == 0.f) ? 0 : 1.f / deltaExtent[i];

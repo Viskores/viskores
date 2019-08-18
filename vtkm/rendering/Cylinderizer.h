@@ -32,7 +32,7 @@ namespace rendering
 class Cylinderizer
 {
 public:
-  class CountSegments : public vtkm::worklet::WorkletMapPointToCell
+  class CountSegments : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -80,12 +80,12 @@ public:
   }; //class CountSegments
 
   template <int DIM>
-  class SegmentedStructured : public vtkm::worklet::WorkletMapPointToCell
+  class SegmentedStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInTo, WholeArrayOut);
-    typedef void ExecutionSignature(FromIndices, _2, _3);
+    typedef void ControlSignature(CellSetIn cellset, FieldInCell, WholeArrayOut);
+    typedef void ExecutionSignature(IncidentElementIndices, _2, _3);
     //typedef _1 InputDomain;
     VTKM_CONT
     SegmentedStructured() {}
@@ -126,7 +126,7 @@ public:
       else if (DIM == 3)
       {
         vtkm::Id offset = cellIndex * TRI_PER_CSS * SEG_PER_TRI;
-        vtkm::Vec<vtkm::Id, 3> segment;
+        vtkm::Id3 segment;
         segment[0] = cellIndex;
         vtkm::Id3 idx;
         idx[0] = 0;
@@ -196,7 +196,7 @@ public:
   };
 
 
-  class Cylinderize : public vtkm::worklet::WorkletMapPointToCell
+  class Cylinderize : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:
@@ -409,7 +409,7 @@ public:
 
   VTKM_CONT
   void Run(const vtkm::cont::DynamicCellSet& cellset,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>>& outputIndices,
+           vtkm::cont::ArrayHandle<vtkm::Id3>& outputIndices,
            vtkm::Id& output)
   {
     if (cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))

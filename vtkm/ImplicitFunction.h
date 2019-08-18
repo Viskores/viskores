@@ -209,7 +209,7 @@ public:
     vtkm::IdComponent minAxis = 0;
     Scalar dist = 0.0;
     Scalar minDist = vtkm::Infinity32();
-    vtkm::Vec<vtkm::IdComponent, 3> location;
+    vtkm::IdComponent3 location;
     Vector normal(Scalar(0));
     Vector inside(Scalar(0));
     Vector outside(Scalar(0));

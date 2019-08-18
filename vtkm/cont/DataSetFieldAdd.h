@@ -30,7 +30,7 @@ public:
                             const std::string& fieldName,
                             const vtkm::cont::VariantArrayHandle& field)
   {
-    dataSet.AddField(Field(fieldName, vtkm::cont::Field::Association::POINTS, field));
+    dataSet.AddField(make_FieldPoint(fieldName, field));
   }
 
   template <typename T, typename Storage>
@@ -38,7 +38,7 @@ public:
                                       const std::string& fieldName,
                                       const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    dataSet.AddField(Field(fieldName, vtkm::cont::Field::Association::POINTS, field));
+    dataSet.AddField(make_FieldPoint(fieldName, field));
   }
 
   template <typename T>
@@ -67,8 +67,7 @@ public:
                            const vtkm::cont::VariantArrayHandle& field,
                            const std::string& cellSetName)
   {
-    dataSet.AddField(
-      Field(fieldName, vtkm::cont::Field::Association::CELL_SET, cellSetName, field));
+    dataSet.AddField(make_FieldCell(fieldName, cellSetName, field));
   }
 
   template <typename T, typename Storage>
@@ -77,8 +76,7 @@ public:
                                      const vtkm::cont::ArrayHandle<T, Storage>& field,
                                      const std::string& cellSetName)
   {
-    dataSet.AddField(
-      Field(fieldName, vtkm::cont::Field::Association::CELL_SET, cellSetName, field));
+    dataSet.AddField(make_FieldCell(fieldName, cellSetName, field));
   }
 
   template <typename T>

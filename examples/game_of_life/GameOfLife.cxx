@@ -27,7 +27,6 @@
 #include <vtkm/interop/TransferToOpenGL.h>
 
 #include <vtkm/filter/FilterDataSet.h>
-#include <vtkm/worklet/DispatcherPointNeighborhood.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 #include <vtkm/cont/TryExecute.h>
@@ -54,7 +53,7 @@
 
 struct GameOfLifePolicy : public vtkm::filter::PolicyBase<GameOfLifePolicy>
 {
-  using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8, vtkm::Vec<vtkm::UInt8, 4>>;
+  using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8, vtkm::Vec4ui_8>;
 };
 
 struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
@@ -71,7 +70,7 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
   template <typename NeighIn>
   VTKM_EXEC void operator()(const NeighIn& prevstate,
                             vtkm::UInt8& state,
-                            vtkm::Vec<vtkm::UInt8, 4>& color) const
+                            vtkm::Vec4ui_8& color) const
   {
     // Any live cell with fewer than two live neighbors dies, as if caused by under-population.
     // Any live cell with two or three live neighbors lives on to the next generation.
@@ -111,12 +110,9 @@ public:
                                           vtkm::filter::PolicyBase<Policy> policy)
 
   {
-    using DispatcherType = vtkm::worklet::DispatcherPointNeighborhood<UpdateLifeState>;
-
-
     vtkm::cont::ArrayHandle<vtkm::UInt8> state;
     vtkm::cont::ArrayHandle<vtkm::UInt8> prevstate;
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
 
     //get the coordinate system we are using for the 2D area
     const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -125,8 +121,8 @@ public:
     input.GetField("state", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(prevstate);
 
     //Update the game state
-    DispatcherType dispatcher;
-    dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
+    this->Invoke(
+      UpdateLifeState{}, vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
 
     //save the results
     vtkm::cont::DataSet output;
@@ -165,7 +161,7 @@ struct UploadData
   template <typename DeviceAdapterTag>
   bool operator()(DeviceAdapterTag device)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     this->Colors.GetData().CopyTo(colors);
     vtkm::interop::TransferToOpenGL(colors, *this->ColorState, device);
     return true;

@@ -8,11 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-
-#include <vtkm/filter/WarpScalar.h>
-
 namespace vtkm
 {
 namespace filter
@@ -46,16 +41,11 @@ inline VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(
   this->Worklet.Run(
     field,
     vtkm::filter::ApplyPolicy(normalF, policy, vtkm::filter::FilterTraits<WarpScalar>()),
-    vtkm::filter::ApplyPolicy(
-      sfF, policy, vtkm::filter::FilterTraits<WarpScalar, WarpScalarScalarFieldTag>()),
+    vtkm::filter::ApplyPolicy(sfF, policy, vtkm::TypeListTagFieldScalar{}),
     this->ScaleAmount,
     result);
 
-  return internal::CreateResult(inDataSet,
-                                result,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet, result, this->GetOutputFieldName(), fieldMetadata);
 }
 }
 }

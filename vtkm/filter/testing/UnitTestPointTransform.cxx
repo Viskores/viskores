@@ -23,7 +23,7 @@ vtkm::cont::DataSet MakePointTransformTestDataSet()
 {
   vtkm::cont::DataSet dataSet;
 
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> coordinates;
+  std::vector<vtkm::Vec3f> coordinates;
   const vtkm::Id dim = 5;
   for (vtkm::Id j = 0; j < dim; ++j)
   {
@@ -69,7 +69,7 @@ void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
   VTKM_TEST_ASSERT(result.HasField(fieldName, vtkm::cont::Field::Association::POINTS),
                    "Output field missing.");
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> resultArrayHandle;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> resultArrayHandle;
   result.GetField(fieldName, vtkm::cont::Field::Association::POINTS)
     .GetData()
     .CopyTo(resultArrayHandle);
@@ -88,8 +88,7 @@ void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
 }
 
 
-void TestPointTransformTranslation(const vtkm::cont::DataSet& ds,
-                                   const vtkm::Vec<vtkm::FloatDefault, 3>& trans)
+void TestPointTransformTranslation(const vtkm::cont::DataSet& ds, const vtkm::Vec3f& trans)
 {
   vtkm::filter::PointTransform<vtkm::FloatDefault> filter;
 
@@ -102,8 +101,7 @@ void TestPointTransformTranslation(const vtkm::cont::DataSet& ds,
     ds.GetCoordinateSystem(), "translation", result, Transform3DTranslate(trans));
 }
 
-void TestPointTransformScale(const vtkm::cont::DataSet& ds,
-                             const vtkm::Vec<vtkm::FloatDefault, 3>& scale)
+void TestPointTransformScale(const vtkm::cont::DataSet& ds, const vtkm::Vec3f& scale)
 {
   vtkm::filter::PointTransform<vtkm::FloatDefault> filter;
 
@@ -117,7 +115,7 @@ void TestPointTransformScale(const vtkm::cont::DataSet& ds,
 
 void TestPointTransformRotation(const vtkm::cont::DataSet& ds,
                                 const vtkm::FloatDefault& angle,
-                                const vtkm::Vec<vtkm::FloatDefault, 3>& axis)
+                                const vtkm::Vec3f& axis)
 {
   vtkm::filter::PointTransform<vtkm::FloatDefault> filter;
 
@@ -139,31 +137,29 @@ void TestPointTransform()
   int N = 41;
 
   //Test translation
-  TestPointTransformTranslation(ds, vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 0));
-  TestPointTransformTranslation(ds, vtkm::Vec<vtkm::FloatDefault, 3>(1, 1, 1));
-  TestPointTransformTranslation(ds, vtkm::Vec<vtkm::FloatDefault, 3>(-1, -1, -1));
+  TestPointTransformTranslation(ds, vtkm::Vec3f(0, 0, 0));
+  TestPointTransformTranslation(ds, vtkm::Vec3f(1, 1, 1));
+  TestPointTransformTranslation(ds, vtkm::Vec3f(-1, -1, -1));
 
   std::uniform_real_distribution<vtkm::FloatDefault> transDist(-100, 100);
   for (int i = 0; i < N; i++)
-    TestPointTransformTranslation(ds,
-                                  vtkm::Vec<vtkm::FloatDefault, 3>(transDist(randGenerator),
-                                                                   transDist(randGenerator),
-                                                                   transDist(randGenerator)));
+    TestPointTransformTranslation(
+      ds,
+      vtkm::Vec3f(transDist(randGenerator), transDist(randGenerator), transDist(randGenerator)));
 
   //Test scaling
-  TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(1, 1, 1));
-  TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(.23f, .23f, .23f));
-  TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(1, 2, 3));
-  TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(3.23f, 9.23f, 4.23f));
+  TestPointTransformScale(ds, vtkm::Vec3f(1, 1, 1));
+  TestPointTransformScale(ds, vtkm::Vec3f(.23f, .23f, .23f));
+  TestPointTransformScale(ds, vtkm::Vec3f(1, 2, 3));
+  TestPointTransformScale(ds, vtkm::Vec3f(3.23f, 9.23f, 4.23f));
 
   std::uniform_real_distribution<vtkm::FloatDefault> scaleDist(0.0001f, 100);
   for (int i = 0; i < N; i++)
   {
-    TestPointTransformScale(ds, vtkm::Vec<vtkm::FloatDefault, 3>(scaleDist(randGenerator)));
-    TestPointTransformScale(ds,
-                            vtkm::Vec<vtkm::FloatDefault, 3>(scaleDist(randGenerator),
-                                                             scaleDist(randGenerator),
-                                                             scaleDist(randGenerator)));
+    TestPointTransformScale(ds, vtkm::Vec3f(scaleDist(randGenerator)));
+    TestPointTransformScale(
+      ds,
+      vtkm::Vec3f(scaleDist(randGenerator), scaleDist(randGenerator), scaleDist(randGenerator)));
   }
 
   //Test rotation
@@ -172,11 +168,11 @@ void TestPointTransform()
   for (int i = 0; i < N; i++)
     angles.push_back(angleDist(randGenerator));
 
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> axes;
-  axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(1, 0, 0));
-  axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(0, 1, 0));
-  axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 1));
-  axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(1, 1, 1));
+  std::vector<vtkm::Vec3f> axes;
+  axes.push_back(vtkm::Vec3f(1, 0, 0));
+  axes.push_back(vtkm::Vec3f(0, 1, 0));
+  axes.push_back(vtkm::Vec3f(0, 0, 1));
+  axes.push_back(vtkm::Vec3f(1, 1, 1));
   axes.push_back(-axes[0]);
   axes.push_back(-axes[1]);
   axes.push_back(-axes[2]);
@@ -184,8 +180,8 @@ void TestPointTransform()
 
   std::uniform_real_distribution<vtkm::FloatDefault> axisDist(-1, 1);
   for (int i = 0; i < N; i++)
-    axes.push_back(vtkm::Vec<vtkm::FloatDefault, 3>(
-      axisDist(randGenerator), axisDist(randGenerator), axisDist(randGenerator)));
+    axes.push_back(
+      vtkm::Vec3f(axisDist(randGenerator), axisDist(randGenerator), axisDist(randGenerator)));
 
   for (std::size_t i = 0; i < angles.size(); i++)
     for (std::size_t j = 0; j < axes.size(); j++)

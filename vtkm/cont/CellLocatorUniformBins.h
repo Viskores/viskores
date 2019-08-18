@@ -31,7 +31,7 @@ namespace cl_uniform_bins
 
 using DimensionType = vtkm::Int16;
 using DimVec3 = vtkm::Vec<DimensionType, 3>;
-using FloatVec3 = vtkm::Vec<vtkm::FloatDefault, 3>;
+using FloatVec3 = vtkm::Vec3f;
 
 struct Grid
 {
@@ -99,8 +99,8 @@ private:
 
   using CellSetP2CExecType =
     decltype(std::declval<CellSetType>().PrepareForInput(DeviceAdapter{},
-                                                         vtkm::TopologyElementTagPoint{},
-                                                         vtkm::TopologyElementTagCell{}));
+                                                         vtkm::TopologyElementTagCell{},
+                                                         vtkm::TopologyElementTagPoint{}));
 
   // TODO: This function may return false positives for non 3D cells as the
   // tests are done on the projection of the point on the cell. Extra checks
@@ -140,8 +140,8 @@ public:
     , CellCount(cellCount.PrepareForInput(DeviceAdapter{}))
     , CellIds(cellIds.PrepareForInput(DeviceAdapter{}))
     , CellSet(cellSet.PrepareForInput(DeviceAdapter{},
-                                      vtkm::TopologyElementTagPoint{},
-                                      vtkm::TopologyElementTagCell{}))
+                                      vtkm::TopologyElementTagCell{},
+                                      vtkm::TopologyElementTagPoint{}))
     , Coords(coords.GetData().PrepareForInput(DeviceAdapter{}))
   {
   }

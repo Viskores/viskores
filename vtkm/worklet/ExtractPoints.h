@@ -34,7 +34,7 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Worklet to identify points within volume of interest
-  class ExtractPointsByVOI : public vtkm::worklet::WorkletMapCellToPoint
+  class ExtractPointsByVOI : public vtkm::worklet::WorkletVisitPointsWithCells
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
@@ -51,8 +51,7 @@ public:
     }
 
     VTKM_EXEC
-    bool operator()(const vtkm::Vec<vtkm::Float64, 3>& coordinate,
-                    const vtkm::ImplicitFunction* function) const
+    bool operator()(const vtkm::Vec3f_64& coordinate, const vtkm::ImplicitFunction* function) const
     {
       bool pass = passValue;
       vtkm::Float64 value = function->Value(coordinate);

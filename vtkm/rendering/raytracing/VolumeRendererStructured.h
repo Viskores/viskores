@@ -38,7 +38,7 @@ public:
   void DisableCompositeBackground();
 
   VTKM_CONT
-  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
+  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap);
 
   VTKM_CONT
   void SetData(const vtkm::cont::CoordinateSystem& coords,
@@ -68,7 +68,7 @@ protected:
   vtkm::cont::ArrayHandleVirtualCoordinates Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;
   const vtkm::cont::Field* ScalarField;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
+  vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;
   vtkm::Float32 SampleDistance;
   vtkm::Range ScalarRange;
 };

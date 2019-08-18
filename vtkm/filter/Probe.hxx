@@ -7,8 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Probe_hxx
-#define vtk_m_filter_Probe_hxx
 
 namespace vtkm
 {
@@ -38,9 +36,8 @@ VTKM_CONT inline vtkm::cont::DataSet Probe::DoExecute(
   auto hcf =
     this->Worklet.GetHiddenCellsField(vtkm::filter::ApplyPolicy(output.GetCellSet(), policy));
 
-  output.AddField(vtkm::cont::Field("HIDDEN", vtkm::cont::Field::Association::POINTS, hpf));
-  output.AddField(vtkm::cont::Field(
-    "HIDDEN", vtkm::cont::Field::Association::CELL_SET, output.GetCellSet().GetName(), hcf));
+  output.AddField(vtkm::cont::make_FieldPoint("HIDDEN", hpf));
+  output.AddField(vtkm::cont::make_FieldCell("HIDDEN", output.GetCellSet().GetName(), hcf));
 
   return output;
 }
@@ -69,5 +66,3 @@ VTKM_CONT inline bool Probe::DoMapField(vtkm::cont::DataSet& result,
 }
 }
 } // vtkm::filter
-
-#endif // vtk_m_filter_Probe_hxx

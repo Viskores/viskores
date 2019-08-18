@@ -519,9 +519,9 @@ void TestVariantArrayHandle()
   std::cout << "*** vtkm::Float64 *****************" << std::endl;
   TryDefaultType(vtkm::Float64());
   std::cout << "*** vtkm::Vec<Float32,3> **********" << std::endl;
-  TryDefaultType(vtkm::Vec<vtkm::Float32, 3>());
+  TryDefaultType(vtkm::Vec3f_32());
   std::cout << "*** vtkm::Vec<Float64,3> **********" << std::endl;
-  TryDefaultType(vtkm::Vec<vtkm::Float64, 3>());
+  TryDefaultType(vtkm::Vec3f_64());
 
   std::cout << "Try exemplar VTK-m types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryBasicVTKmType());

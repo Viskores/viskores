@@ -15,9 +15,12 @@ set(headers
   CleanGrid.h
   ClipWithField.h
   ClipWithImplicitFunction.h
+  ComputeMoments.h
+  Contour.h
   ContourTreeUniform.h
   ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
+  CreateResult.h
   CrossProduct.h
   DotProduct.h
   Entropy.h
@@ -40,7 +43,7 @@ set(headers
   Histogram.h
   ImageConnectivity.h
   Lagrangian.h
-  Contour.h
+  LagrangianStructures.h
   Mask.h
   MaskPoints.h
   MeshQuality.h
@@ -81,6 +84,8 @@ set(header_template_sources
   CleanGrid.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
+  ComputeMoments.hxx
+  Contour.hxx
   ContourTreeUniform.hxx
   ContourTreeUniformAugmented.hxx
   CoordinateSystemTransform.hxx
@@ -103,7 +108,7 @@ set(header_template_sources
   Histogram.hxx
   ImageConnectivity.hxx
   Lagrangian.hxx
-  Contour.hxx
+  LagrangianStructures.hxx
   Mask.hxx
   MaskPoints.hxx
   MeshQuality.hxx

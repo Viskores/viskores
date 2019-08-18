@@ -8,13 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-
-#include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm
 {
@@ -48,11 +44,6 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
   const vtkm::filter::FieldMetadata&,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  //  if (fieldMeta.IsPointField() == false)
-  //  {
-  //    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
-  //  }
-
   // Check the fields of the dataset to see what kinds of fields are present so
   // we can free the mapping arrays that won't be needed. A point field must
   // exist for this algorithm, so just check cells.
@@ -71,9 +62,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
   decompressor.Decompress(field, decompress, rate, field.GetNumberOfValues());
 
   vtkm::cont::DataSet dataset;
-  vtkm::cont::Field decompressField(
-    "decompressed", vtkm::cont::Field::Association::POINTS, decompress);
-  dataset.AddField(decompressField);
+  dataset.AddField(vtkm::cont::make_FieldPoint("decompressed", decompress));
   return dataset;
 }
 

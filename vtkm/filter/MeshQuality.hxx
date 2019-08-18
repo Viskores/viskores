@@ -18,13 +18,12 @@
 //  this software.
 //=========================================================================
 
-#include "vtkm/cont/DynamicCellSet.h"
-#include "vtkm/cont/ErrorFilterExecution.h"
-#include "vtkm/cont/Field.h"
-#include "vtkm/filter/internal/CreateResult.h"
-#include "vtkm/worklet/DispatcherMapTopology.h"
+#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/Field.h>
+#include <vtkm/filter/CreateResult.h>
 
-#define DEBUG_PRINT
+// #define DEBUG_PRINT
 
 namespace vtkm
 {
@@ -87,7 +86,7 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
   input.GetCellSet(this->GetActiveCellSetIndex()).CopyTo(cellSet);
 
   ShapeHandle cellShapes =
-    cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    cellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   //Obtain the frequency counts of each cell type in the input dataset
   IdHandle uniqueCellCounts;
@@ -101,24 +100,25 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
     uniqueCellCounts,
     vtkm::Add());
 
-  std::cout << "uniqueCellCounts: " << uniqueCellCounts.GetNumberOfValues() << "\n";
-
   const vtkm::Id numUniqueShapes = uniqueCellShapes.GetNumberOfValues();
   auto uniqueCellShapesPortal = uniqueCellShapes.GetPortalConstControl();
   auto numCellsPerShapePortal = uniqueCellCounts.GetPortalConstControl();
   std::vector<vtkm::Id> tempCounts(vtkm::NUMBER_OF_CELL_SHAPES);
   for (vtkm::Id i = 0; i < numUniqueShapes; i++)
+  {
     tempCounts[uniqueCellShapesPortal.Get(i)] = numCellsPerShapePortal.Get(i);
+  }
   IdHandle cellShapeCounts = vtkm::cont::make_ArrayHandle(tempCounts);
-  std::cout << "cellShapeCounts: " << cellShapeCounts.GetNumberOfValues() << "\n";
 
   //Invoke the MeshQuality worklet
   vtkm::cont::ArrayHandle<T> outArray;
   vtkm::cont::ArrayHandle<CellMetric> cellMetrics = vtkm::cont::make_ArrayHandle(CellTypeMetrics);
-  std::cout << "cellMetrics: " << cellMetrics.GetNumberOfValues() << "\n";
-  vtkm::worklet::DispatcherMapTopology<QualityWorklet> dispatcher;
-  dispatcher.Invoke(
-    vtkm::filter::ApplyPolicy(cellSet, policy), cellShapeCounts, cellMetrics, points, outArray);
+  this->Invoke(QualityWorklet{},
+               vtkm::filter::ApplyPolicy(cellSet, policy),
+               cellShapeCounts,
+               cellMetrics,
+               points,
+               outArray);
 
   //Build the output dataset: a separate field for each cell type that has a specified metric
   vtkm::cont::DataSet result;
@@ -217,17 +217,21 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 
     //Retrieve summary stats from the output stats struct.
     //These stats define the mesh quality with respect to this shape type.
-    std::vector<T> shapeMeshQuality = {
-      T(cellCount), statinfo.mean, statinfo.variance, statinfo.minimum, statinfo.maximum
-    };
+    vtkm::cont::ArrayHandle<T> shapeMeshQuality;
+    shapeMeshQuality.Allocate(5);
+    {
+      auto portal = shapeMeshQuality.GetPortalControl();
+      portal.Set(0, T(cellCount));
+      portal.Set(1, statinfo.mean);
+      portal.Set(2, statinfo.variance);
+      portal.Set(3, statinfo.minimum);
+      portal.Set(4, statinfo.maximum);
+    }
 
     //Append the summary stats into the output dataset as a new field
-    result.AddField(vtkm::cont::make_Field(fieldName,
-                                           vtkm::cont::Field::Association::CELL_SET,
-                                           "cells",
-                                           shapeMeshQuality,
-                                           vtkm::CopyFlag::On));
+    result.AddField(vtkm::cont::make_FieldCell(fieldName, "cells", shapeMeshQuality));
 
+#ifdef DEBUG_PRINT
     std::cout << "-----------------------------------------------------\n"
               << "Mesh quality of " << fieldName << ":\n"
               << "Number of cells: " << cellCount << "\n"
@@ -236,20 +240,22 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
               << "Minimum:         " << statinfo.minimum << "\n"
               << "Maximum:         " << statinfo.maximum << "\n"
               << "-----------------------------------------------------\n";
+#endif
   }
 
+#ifdef DEBUG_PRINT
   auto metricValsPortal = outArray.GetPortalConstControl();
   std::cout << "-----------------------------------------------------\n"
             << "Metric values - all cells:\n";
   for (vtkm::Id v = 0; v < outArray.GetNumberOfValues(); v++)
     std::cout << metricValsPortal.Get(v) << "\n";
   std::cout << "-----------------------------------------------------\n";
+#endif
 
   //Append the metric values of all cells into the output
   //dataset as a new field
-  std::string s = "allCells-metricValues";
-  result.AddField(
-    vtkm::cont::Field(s, vtkm::cont::Field::Association::CELL_SET, "cells", outArray));
+  const std::string s = "allCells-metricValues";
+  result.AddField(vtkm::cont::make_FieldCell(s, "cells", outArray));
 
   return result;
 }

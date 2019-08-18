@@ -37,8 +37,8 @@ namespace implicit_function_detail
 class EvaluateImplicitFunction : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldIn, FieldOut, FieldOut);
+  using ExecutionSignature = void(_1, _2, _3);
 
   EvaluateImplicitFunction(const vtkm::ImplicitFunction* function)
     : Function(function)
@@ -46,9 +46,10 @@ public:
   }
 
   template <typename VecType, typename ScalarType>
-  VTKM_EXEC void operator()(const VecType& point, ScalarType& val) const
+  VTKM_EXEC void operator()(const VecType& point, ScalarType& val, VecType& gradient) const
   {
     val = this->Function->Value(point);
+    gradient = this->Function->Gradient(point);
   }
 
 private:
@@ -59,6 +60,7 @@ template <typename DeviceAdapter>
 void EvaluateOnCoordinates(vtkm::cont::CoordinateSystem points,
                            const vtkm::cont::ImplicitFunctionHandle& function,
                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>& values,
+                           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& gradients,
                            DeviceAdapter device)
 {
   using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvaluateImplicitFunction>;
@@ -66,12 +68,12 @@ void EvaluateOnCoordinates(vtkm::cont::CoordinateSystem points,
   EvaluateImplicitFunction eval(function.PrepareForExecution(device));
   EvalDispatcher dispatcher(eval);
   dispatcher.SetDevice(DeviceAdapter());
-  dispatcher.Invoke(points, values);
+  dispatcher.Invoke(points, values, gradients);
 }
 
-template <std::size_t N>
-bool TestArrayEqual(const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& result,
-                    const std::array<vtkm::FloatDefault, N>& expected)
+template <typename ItemType, std::size_t N>
+bool TestArrayEqual(const vtkm::cont::ArrayHandle<ItemType>& result,
+                    const std::array<ItemType, N>& expected)
 {
   bool success = false;
   auto portal = result.GetPortalConstControl();
@@ -101,6 +103,12 @@ bool TestArrayEqual(const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& result,
       for (vtkm::Id i = 1; i < count; ++i)
       {
         std::cout << ", " << portal.Get(i);
+      }
+      std::cout << "\n";
+      std::cout << "expected: " << expected[0];
+      for (vtkm::Id i = 1; i < count; ++i)
+      {
+        std::cout << ", " << expected[static_cast<std::size_t>(i)];
       }
       std::cout << "\n";
     }
@@ -137,18 +145,32 @@ private:
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
     implicit_function_detail::EvaluateOnCoordinates(
       this->Input.GetCoordinateSystem(0),
       vtkm::cont::make_ImplicitFunctionHandle(
         vtkm::Box({ 0.0f, -0.5f, -0.5f }, { 1.5f, 1.5f, 0.5f })),
       values,
+      gradients,
       device);
 
     std::array<vtkm::FloatDefault, 8> expected = {
       { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f }
     };
+    std::array<vtkm::Vec<vtkm::FloatDefault, 3>, 8> expectedGradients = {
+      { { -1.0f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { -1.0f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f } }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
+    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(gradients, expectedGradients),
+                     "Result does not match expected gradients values");
   }
 
   template <typename DeviceAdapter>
@@ -163,17 +185,31 @@ private:
     cylinder.SetRadius(1.0f);
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
     implicit_function_detail::EvaluateOnCoordinates(
       this->Input.GetCoordinateSystem(0),
       vtkm::cont::ImplicitFunctionHandle(&cylinder, false),
       values,
+      gradients,
       device);
 
     std::array<vtkm::FloatDefault, 8> expected = {
       { 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f }
     };
+    std::array<vtkm::Vec<vtkm::FloatDefault, 3>, 8> expectedGradients = {
+      { { 0.0f, 0.0f, -2.0f },
+        { 2.0f, 0.0f, -2.0f },
+        { 2.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, -2.0f },
+        { 2.0f, 0.0f, -2.0f },
+        { 2.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 0.0f } }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
+    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(gradients, expectedGradients),
+                     "Result does not match expected gradients values");
   }
 
   template <typename DeviceAdapter>
@@ -182,7 +218,7 @@ private:
     std::cout << "Testing vtkm::Frustum on "
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
-    vtkm::Vec<vtkm::FloatDefault, 3> points[8] = {
+    vtkm::Vec3f points[8] = {
       { 0.0f, 0.0f, 0.0f }, // 0
       { 1.0f, 0.0f, 0.0f }, // 1
       { 1.0f, 0.0f, 1.0f }, // 2
@@ -196,17 +232,31 @@ private:
     frustum.CreateFromPoints(points);
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
     implicit_function_detail::EvaluateOnCoordinates(
       this->Input.GetCoordinateSystem(0),
       vtkm::cont::make_ImplicitFunctionHandle(frustum),
       values,
+      gradients,
       device);
 
     std::array<vtkm::FloatDefault, 8> expected = {
       { 0.0f, 0.0f, 0.0f, 0.0f, 0.316228f, 0.316228f, -0.316228f, 0.316228f }
     };
+    std::array<vtkm::Vec<vtkm::FloatDefault, 3>, 8> expectedGradients = {
+      { { 0.0f, -1.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f },
+        { 0.0f, 0.316228f, -0.948683f },
+        { 0.0f, 0.316228f, -0.948683f },
+        { 0.948683f, -0.316228f, 0.0f },
+        { -0.948683f, 0.316228f, 0.0f } }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
+    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(gradients, expectedGradients),
+                     "Result does not match expected gradients values");
   }
 
   template <typename DeviceAdapter>
@@ -220,22 +270,43 @@ private:
     auto plane = static_cast<vtkm::Plane*>(planeHandle.Get());
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
     implicit_function_detail::EvaluateOnCoordinates(
-      this->Input.GetCoordinateSystem(0), planeHandle, values, device);
-    std::array<vtkm::FloatDefault, 8> expected1 = {
+      this->Input.GetCoordinateSystem(0), planeHandle, values, gradients, device);
+    std::array<vtkm::FloatDefault, 8> expected = {
       { -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f }
     };
-    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected1),
+    std::array<vtkm::Vec<vtkm::FloatDefault, 3>, 8> expectedGradients = {
+      { { 1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 1.0f } }
+    };
+    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
+    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(gradients, expectedGradients),
+                     "Result does not match expected gradients values");
 
     plane->SetNormal({ -1.0f, 0.0f, -1.0f });
     implicit_function_detail::EvaluateOnCoordinates(
-      this->Input.GetCoordinateSystem(0), planeHandle, values, device);
-    std::array<vtkm::FloatDefault, 8> expected2 = {
-      { 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f }
-    };
-    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected2),
+      this->Input.GetCoordinateSystem(0), planeHandle, values, gradients, device);
+    expected = { { 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f } };
+    expectedGradients = { { { -1.0f, 0.0f, -1.0f },
+                            { -1.0f, 0.0f, -1.0f },
+                            { -1.0f, 0.0f, -1.0f },
+                            { -1.0f, 0.0f, -1.0f },
+                            { -1.0f, 0.0f, -1.0f },
+                            { -1.0f, 0.0f, -1.0f },
+                            { -1.0f, 0.0f, -1.0f },
+                            { -1.0f, 0.0f, -1.0f } } };
+    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
+    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(gradients, expectedGradients),
+                     "Result does not match expected gradients values");
   }
 
   template <typename DeviceAdapter>
@@ -245,17 +316,31 @@ private:
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
     implicit_function_detail::EvaluateOnCoordinates(
       this->Input.GetCoordinateSystem(0),
       vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(vtkm::make_Vec(0.0f, 0.0f, 0.0f), 1.0f),
       values,
+      gradients,
       device);
 
     std::array<vtkm::FloatDefault, 8> expected = {
       { -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 2.0f, 1.0f }
     };
+    std::array<vtkm::Vec<vtkm::FloatDefault, 3>, 8> expectedGradients = {
+      { { 0.0f, 0.0f, 0.0f },
+        { 2.0f, 0.0f, 0.0f },
+        { 2.0f, 0.0f, 2.0f },
+        { 0.0f, 0.0f, 2.0f },
+        { 0.0f, 2.0f, 0.0f },
+        { 2.0f, 2.0f, 0.0f },
+        { 2.0f, 2.0f, 2.0f },
+        { 0.0f, 2.0f, 2.0f } }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
+    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(gradients, expectedGradients),
+                     "Result does not match expected gradients values");
   }
 
   vtkm::cont::DataSet Input;

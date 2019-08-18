@@ -115,11 +115,12 @@ if(VTKm_ENABLE_CUDA)
     message(FATAL_ERROR "VTK-m CUDA support requires version 9.2+")
   endif()
 
-  if (NOT TARGET vtkm_cuda OR NOT TARGET vtkm::cuda)
+ if (NOT TARGET vtkm::cuda)
     add_library(vtkm_cuda INTERFACE)
+    add_library(vtkm::cuda ALIAS vtkm_cuda)
     set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME vtkm::cuda)
-    install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
 
+    install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
     # Reserve `INTERFACE_REQUIRES_STATIC_BUILDS` to potential work around issues
     # where VTK-m doesn't work when building shared as virtual functions fail
     # inside device code. We don't want to force BUILD_SHARED_LIBS to a specific
@@ -248,11 +249,6 @@ if(VTKm_ENABLE_CUDA)
 
     set_target_properties(vtkm_cuda PROPERTIES INTERFACE_CUDA_Architecture_Flags "${arch_flags}")
   endif()
-
-  if (NOT TARGET vtkm::cuda)
-    add_library(vtkm::cuda ALIAS vtkm_cuda)
-  endif()
-
 endif()
 
 if(NOT TARGET Threads::Threads)

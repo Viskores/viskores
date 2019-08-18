@@ -14,8 +14,6 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/SurfaceNormals.h>
 
 namespace vtkm
@@ -44,9 +42,11 @@ inline VTKM_CONT Contour::Contour()
   : vtkm::filter::FilterDataSetWithField<Contour>()
   , IsoValues()
   , GenerateNormals(false)
+  , AddInterpolationEdgeIds(false)
   , ComputeFastNormalsForStructured(false)
   , ComputeFastNormalsForUnstructured(true)
   , NormalArrayName("normals")
+  , InterpolationEdgeIdsArrayName("edgeIds")
   , Worklet()
 {
   // todo: keep an instance of marching cubes worklet as a member variable
@@ -116,10 +116,7 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
   {
     auto f = input.GetField(fieldIdx);
-    if (f.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
-    {
-      hasCellFields = true;
-    }
+    hasCellFields = f.IsFieldCell();
   }
 
   //get the cells and coordinates of the dataset
@@ -128,7 +125,7 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  using Vec3HandleType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+  using Vec3HandleType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
   Vec3HandleType vertices;
   Vec3HandleType normals;
 
@@ -181,9 +178,15 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
       smooth.Run(outputCells, faceNormals, normals);
     }
 
-    vtkm::cont::Field normalField(
-      this->NormalArrayName, vtkm::cont::Field::Association::POINTS, normals);
-    output.AddField(normalField);
+    output.AddField(vtkm::cont::make_FieldPoint(this->NormalArrayName, normals));
+  }
+
+  if (this->AddInterpolationEdgeIds)
+  {
+    vtkm::cont::Field interpolationEdgeIdsField(InterpolationEdgeIdsArrayName,
+                                                vtkm::cont::Field::Association::POINTS,
+                                                this->Worklet.GetInterpolationEdgeIds());
+    output.AddField(interpolationEdgeIdsField);
   }
 
   //assign the connectivity to the cell set

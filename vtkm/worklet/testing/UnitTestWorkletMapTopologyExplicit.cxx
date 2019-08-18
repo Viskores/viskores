@@ -25,7 +25,7 @@
 namespace test_explicit
 {
 
-class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
+class MaxPointOrCellValue : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(FieldInCell inCells,

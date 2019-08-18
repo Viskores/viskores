@@ -32,9 +32,12 @@ protected:
   VTKM_CONT void Build() override;
 
 private:
-  vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::FloatDefault, 3> RangeTransform;
-  vtkm::Vec<vtkm::Id, 3> CellDims;
+  vtkm::Id3 CellDims;
+  vtkm::Id3 PointDims;
+  vtkm::Vec3f Origin;
+  vtkm::Vec3f InvSpacing;
+  vtkm::Vec3f MaxPoint;
+  bool Is3D = true;
 
   mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
 };

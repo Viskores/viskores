@@ -65,7 +65,7 @@ vtkm::cont::CellSetExplicit<> MakeTestCellSet2()
   return cs;
 }
 
-struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
+struct WorkletPointToCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn cellset, FieldOutCell numPoints);
   using ExecutionSignature = void(PointIndices, _2);
@@ -78,7 +78,7 @@ struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
   }
 };
 
-struct WorkletCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
+struct WorkletCellToPoint : public vtkm::worklet::WorkletVisitPointsWithCells
 {
   using ControlSignature = void(CellSetIn cellset, FieldOutPoint numCells);
   using ExecutionSignature = void(CellIndices, _2);
@@ -159,24 +159,24 @@ void TestCellSetExplicit()
 
   std::cout << "\tTesting CellToPoint table caching\n";
   cellset = MakeTestCellSet2();
-  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(PointTag{}, CellTag{})),
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(CellTag{}, PointTag{})),
                    "PointToCell table missing.");
-  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(!cellset.HasConnectivity(CellTag{}, PointTag{})),
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(!cellset.HasConnectivity(PointTag{}, CellTag{})),
                    "CellToPoint table exists before PrepareForInput.");
 
   // Test a raw PrepareForInput call:
-  cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, CellTag{}, PointTag{});
+  cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, PointTag{}, CellTag{});
 
-  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(CellTag{}, PointTag{})),
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(PointTag{}, CellTag{})),
                    "CellToPoint table missing after PrepareForInput.");
 
-  cellset.ResetConnectivity(CellTag{}, PointTag{});
-  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(!cellset.HasConnectivity(CellTag{}, PointTag{})),
+  cellset.ResetConnectivity(PointTag{}, CellTag{});
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(!cellset.HasConnectivity(PointTag{}, CellTag{})),
                    "CellToPoint table exists after resetting.");
 
   // Test a PrepareForInput wrapped inside a dispatch (See #268)
   vtkm::worklet::DispatcherMapTopology<WorkletCellToPoint>().Invoke(cellset, result);
-  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(CellTag{}, PointTag{})),
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(PointTag{}, CellTag{})),
                    "CellToPoint table missing after CellToPoint worklet exec.");
 }
 

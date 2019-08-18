@@ -13,11 +13,14 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/MultiBlock.h>
 
+#include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/FilterTraits.h>
 #include <vtkm/filter/PolicyBase.h>
+
 
 namespace vtkm
 {
@@ -174,6 +177,14 @@ public:
   ~Filter();
 
   //@{
+  /// \brief Specify which subset of types a filter supports.
+  ///
+  /// A filter is able to state what subset of types it supports
+  /// by default. By default we use ListTagUniversal to represent that the
+  /// filter accepts all types specified by the users provided policy
+  using SupportedTypes = vtkm::ListTagUniversal;
+
+  //@{
   /// \brief Specify which fields get passed from input to output.
   ///
   /// After a filter successfully executes and returns a new data set, fields are mapped from
@@ -241,6 +252,14 @@ public:
   VTKM_CONT void MapFieldsToPass(const vtkm::cont::DataSet& input,
                                  vtkm::cont::DataSet& output,
                                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+
+  /// Specify the vtkm::cont::Invoker to be used to execute worklets by
+  /// this filter instance. Overriding the default allows callers to control
+  /// which device adapters a filter uses.
+  void SetInvoker(vtkm::cont::Invoker inv) { this->Invoke = inv; }
+
+protected:
+  vtkm::cont::Invoker Invoke;
 
 private:
   vtkm::filter::FieldSelection FieldsToPass;

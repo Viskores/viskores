@@ -16,7 +16,7 @@
 namespace
 {
 
-using Coord3D = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Coord3D = vtkm::Vec3f;
 
 vtkm::cont::DataSet MakeTestDatasetExplicit()
 {

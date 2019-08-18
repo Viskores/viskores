@@ -28,7 +28,7 @@ namespace
 
 std::default_random_engine RandomGenerator;
 
-using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
+using PointType = vtkm::Vec3f;
 
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet MakeTestDataSetUniform()
@@ -82,7 +82,7 @@ vtkm::cont::DataSet MakeTestDataSetCurvilinear()
 }
 
 //-----------------------------------------------------------------------------
-class ParametricToWorldCoordinates : public vtkm::worklet::WorkletMapPointToCell
+class ParametricToWorldCoordinates : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
@@ -150,10 +150,10 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename LocatorType>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+  VTKM_EXEC void operator()(const vtkm::Vec3f& point,
                             const LocatorType& locator,
                             vtkm::Id& cellId,
-                            vtkm::Vec<vtkm::FloatDefault, 3>& pcoords) const
+                            vtkm::Vec3f& pcoords) const
   {
     locator->FindCell(point, cellId, pcoords, *this);
   }

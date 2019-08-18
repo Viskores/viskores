@@ -291,15 +291,14 @@ public:
 }; //WaterTight
 
 template <>
-VTKM_EXEC inline void WaterTight::IntersectTri<vtkm::Float64>(
-  const vtkm::Vec<vtkm::Float64, 3>& a,
-  const vtkm::Vec<vtkm::Float64, 3>& b,
-  const vtkm::Vec<vtkm::Float64, 3>& c,
-  const vtkm::Vec<vtkm::Float64, 3>& dir,
-  vtkm::Float64& distance,
-  vtkm::Float64& u,
-  vtkm::Float64& v,
-  const vtkm::Vec<vtkm::Float64, 3>& origin) const
+VTKM_EXEC inline void WaterTight::IntersectTri<vtkm::Float64>(const vtkm::Vec3f_64& a,
+                                                              const vtkm::Vec3f_64& b,
+                                                              const vtkm::Vec3f_64& c,
+                                                              const vtkm::Vec3f_64& dir,
+                                                              vtkm::Float64& distance,
+                                                              vtkm::Float64& u,
+                                                              vtkm::Float64& v,
+                                                              const vtkm::Vec3f_64& origin) const
 {
   //Find max ray direction
   int kz = 0;
@@ -338,7 +337,7 @@ VTKM_EXEC inline void WaterTight::IntersectTri<vtkm::Float64>(
 
 
 
-  vtkm::Vec<vtkm::Float64, 3> A, B, C;
+  vtkm::Vec3f_64 A, B, C;
   A = a - origin;
   B = b - origin;
   C = c - origin;

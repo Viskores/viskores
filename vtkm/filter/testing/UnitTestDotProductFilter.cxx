@@ -73,17 +73,14 @@ void createVectors(std::size_t numPts,
   }
 }
 
-void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field1,
-                 const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field2,
+void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field1,
+                 const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field2,
                  const vtkm::cont::DataSet& result)
 {
-  VTKM_TEST_ASSERT(result.HasField("dotproduct", vtkm::cont::Field::Association::POINTS),
-                   "Output field is missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("dotproduct"), "Output field is missing.");
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputArray;
-  result.GetField("dotproduct", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(outputArray);
+  result.GetPointField("dotproduct").GetData().CopyTo(outputArray);
 
   auto v1Portal = field1.GetPortalConstControl();
   auto v2Portal = field2.GetPortalConstControl();
@@ -96,8 +93,8 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>
 
   for (vtkm::Id j = 0; j < outputArray.GetNumberOfValues(); j++)
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> v1 = v1Portal.Get(j);
-    vtkm::Vec<vtkm::FloatDefault, 3> v2 = v2Portal.Get(j);
+    vtkm::Vec3f v1 = v1Portal.Get(j);
+    vtkm::Vec3f v2 = v2Portal.Get(j);
     vtkm::FloatDefault res = outPortal.Get(j);
 
     VTKM_TEST_ASSERT(test_equal(vtkm::Dot(v1, v2), res), "Wrong result for dot product");
@@ -118,10 +115,10 @@ void TestDotProduct()
     vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
     vtkm::Id nVerts = dataSet.GetCoordinateSystem(0).GetNumberOfPoints();
 
-    std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> vecs1, vecs2;
+    std::vector<vtkm::Vec3f> vecs1, vecs2;
     createVectors(static_cast<std::size_t>(nVerts), i, vecs1, vecs2);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> field1, field2;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> field1, field2;
     field1 = vtkm::cont::make_ArrayHandle(vecs1);
     field2 = vtkm::cont::make_ArrayHandle(vecs2);
 

@@ -15,7 +15,7 @@
 namespace
 {
 
-using Vector3 = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Vector3 = vtkm::Vec3f;
 
 const vtkm::Id3 DIMENSIONS(16, 18, 5);
 const vtkm::Id NUM_POINTS = 1440;

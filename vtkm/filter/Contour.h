@@ -28,6 +28,8 @@ namespace filter
 class Contour : public vtkm::filter::FilterDataSetWithField<Contour>
 {
 public:
+  using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
+
   VTKM_CONT
   Contour();
 
@@ -68,6 +70,12 @@ public:
   void SetGenerateNormals(bool on) { this->GenerateNormals = on; }
   VTKM_CONT
   bool GetGenerateNormals() const { return this->GenerateNormals; }
+
+  /// Set/Get whether to append the ids of the intersected edges to the vertices of the isosurface triangles. Off by default.
+  VTKM_CONT
+  void SetAddInterpolationEdgeIds(bool on) { this->AddInterpolationEdgeIds = on; }
+  VTKM_CONT
+  bool GetAddInterpolationEdgeIds() const { return this->AddInterpolationEdgeIds; }
 
   /// Set/Get whether the fast path should be used for normals computation for
   /// structured datasets. Off by default.
@@ -112,21 +120,12 @@ public:
 private:
   std::vector<vtkm::Float64> IsoValues;
   bool GenerateNormals;
+  bool AddInterpolationEdgeIds;
   bool ComputeFastNormalsForStructured;
   bool ComputeFastNormalsForUnstructured;
   std::string NormalArrayName;
+  std::string InterpolationEdgeIdsArrayName;
   vtkm::worklet::Contour Worklet;
-};
-
-template <>
-class FilterTraits<Contour>
-{
-public:
-  struct TypeListTagMCScalars
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>
-  {
-  };
-  using InputFieldTypeList = TypeListTagMCScalars;
 };
 }
 } // namespace vtkm::filter

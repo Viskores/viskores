@@ -64,8 +64,8 @@ public:
     dataset.GetCellSet(0).CopyTo(cellSet);
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.0f, 0.0f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(2.0f, 2.0f, 2.0f);
+    vtkm::Vec3f minPoint(0.5f, 0.0f, 0.0f);
+    vtkm::Vec3f maxPoint(2.0f, 2.0f, 2.0f);
 
     bool extractInside = true;
     bool extractBoundaryCells = false;
@@ -172,8 +172,8 @@ public:
     dataset.GetCellSet(0).CopyTo(cellSet);
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0f, 1.0f, 1.0f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0f, 3.0f, 3.0f);
+    vtkm::Vec3f minPoint(1.0f, 1.0f, 1.0f);
+    vtkm::Vec3f maxPoint(3.0f, 3.0f, 3.0f);
 
     bool extractInside = true;
     bool extractBoundaryCells = false;
@@ -212,7 +212,7 @@ public:
     dataset.GetCellSet(0).CopyTo(cellSet);
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
+    vtkm::Vec3f center(2.f, 2.f, 2.f);
     vtkm::FloatDefault radius(1.8f);
 
     bool extractInside = true;

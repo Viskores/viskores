@@ -22,6 +22,9 @@ namespace filter
 class DotProduct : public vtkm::filter::FilterField<DotProduct>
 {
 public:
+  //currently the DotProduct filter only works on vector data.
+  using SupportedTypes = TypeListTagVecCommon;
+
   VTKM_CONT
   DotProduct();
 
@@ -137,13 +140,6 @@ private:
   vtkm::cont::Field::Association SecondaryFieldAssociation;
   bool UseCoordinateSystemAsSecondaryField;
   vtkm::Id SecondaryCoordinateSystemIndex;
-};
-
-template <>
-class FilterTraits<DotProduct>
-{ //currently the DotProduct filter only works on vector data.
-public:
-  using InputFieldTypeList = TypeListTagVecCommon;
 };
 }
 } // namespace vtkm::filter

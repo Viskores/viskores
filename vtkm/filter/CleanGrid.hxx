@@ -8,9 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_CleanGrid_hxx
-#define vtk_m_filter_CleanGrid_hxx
-
 #include <vtkm/filter/CleanGrid.h>
 
 #include <vtkm/worklet/CellDeepCopy.h>
@@ -56,9 +53,34 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
       outputCellSets[cellSetIndex] = inCellSet.Cast<CellSetType>();
     }
     else
-    {
-      vtkm::worklet::CellDeepCopy::Run(vtkm::filter::ApplyPolicy(inCellSet, policy),
-                                       outputCellSets[cellSetIndex]);
+    { // Clean the grid
+      auto deducedCellSet = vtkm::filter::ApplyPolicy(inCellSet, policy);
+      vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
+
+      this->Invoke(worklet::CellDeepCopy::CountCellPoints{}, deducedCellSet, numIndices);
+
+      vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
+      vtkm::cont::ArrayHandle<vtkm::Id> offsets;
+      vtkm::Id connectivitySize;
+      vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connectivitySize);
+      numIndices.ReleaseResourcesExecution();
+
+      vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+      connectivity.Allocate(connectivitySize);
+
+      this->Invoke(worklet::CellDeepCopy::PassCellStructure{},
+                   deducedCellSet,
+                   shapes,
+                   vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
+      shapes.ReleaseResourcesExecution();
+      offsets.ReleaseResourcesExecution();
+      connectivity.ReleaseResourcesExecution();
+
+      outputCellSets[cellSetIndex].Fill(
+        deducedCellSet.GetNumberOfPoints(), shapes, numIndices, connectivity, offsets);
+
+      //Release the input grid from the execution space
+      deducedCellSet.ReleaseResourcesExecution();
     }
   }
 
@@ -192,5 +214,3 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
 }
 }
 }
-
-#endif //vtk_m_filter_CleanGrid_hxx

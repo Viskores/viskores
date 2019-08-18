@@ -25,7 +25,7 @@
 namespace test_uniform
 {
 
-class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
+class MaxPointOrCellValue : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(FieldInCell inCells,
@@ -59,7 +59,7 @@ public:
   }
 };
 
-struct CheckStructuredUniformPointCoords : public vtkm::worklet::WorkletMapPointToCell
+struct CheckStructuredUniformPointCoords : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn topology, FieldInPoint pointCoords);
   using ExecutionSignature = void(_2);

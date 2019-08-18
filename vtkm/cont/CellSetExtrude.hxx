@@ -50,7 +50,7 @@ namespace cont
 template <typename Device>
 VTKM_CONT void CellSetExtrude::BuildReverseConnectivity(Device)
 {
-  vtkm::worklet::Invoker invoke(Device{});
+  vtkm::cont::Invoker invoke(Device{});
 
   // create a mapping of where each key is the point id and the value
   // is the cell id. We
@@ -87,8 +87,8 @@ VTKM_CONT void CellSetExtrude::BuildReverseConnectivity(Device)
 template <typename Device>
 CellSetExtrude::ConnectivityP2C<Device> CellSetExtrude::PrepareForInput(
   Device,
-  vtkm::TopologyElementTagPoint,
-  vtkm::TopologyElementTagCell) const
+  vtkm::TopologyElementTagCell,
+  vtkm::TopologyElementTagPoint) const
 {
   return ConnectivityP2C<Device>(this->Connectivity.PrepareForInput(Device{}),
                                  this->NextNode.PrepareForInput(Device{}),
@@ -102,8 +102,8 @@ CellSetExtrude::ConnectivityP2C<Device> CellSetExtrude::PrepareForInput(
 template <typename Device>
 VTKM_CONT CellSetExtrude::ConnectivityC2P<Device> CellSetExtrude::PrepareForInput(
   Device,
-  vtkm::TopologyElementTagCell,
-  vtkm::TopologyElementTagPoint) const
+  vtkm::TopologyElementTagPoint,
+  vtkm::TopologyElementTagCell) const
 {
   if (!this->ReverseConnectivityBuilt)
   {

@@ -67,11 +67,9 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::Da
   vtkm::cont::DataSet outputData;
   for (size_t i = 0; i < binIds.size(); i++)
   {
-    outputData.AddField(
-      vtkm::cont::Field(FieldNames[i], vtkm::cont::Field::Association::POINTS, binIds[i]));
+    outputData.AddField(vtkm::cont::make_FieldPoint(FieldNames[i], binIds[i]));
   }
-  outputData.AddField(
-    vtkm::cont::Field("Frequency", vtkm::cont::Field::Association::POINTS, freqs));
+  outputData.AddField(vtkm::cont::make_FieldPoint("Frequency", freqs));
 
   return outputData;
 }

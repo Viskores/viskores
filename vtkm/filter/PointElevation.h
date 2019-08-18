@@ -28,6 +28,8 @@ namespace filter
 class PointElevation : public vtkm::filter::FilterField<PointElevation>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   PointElevation();
 
@@ -48,14 +50,6 @@ public:
 
 private:
   vtkm::worklet::PointElevation Worklet;
-};
-
-template <>
-class FilterTraits<PointElevation>
-{
-public:
-  //Point Elevation can only convert Float and Double Vec3 arrays
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 } // namespace vtkm::filter

@@ -33,7 +33,7 @@ template <typename Device>
 class WaterTightLeafIntersector
 {
 public:
-  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
   using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
   Id4ArrayPortal Triangles;
 
@@ -86,7 +86,7 @@ class MollerTriLeafIntersector
 {
   //protected:
 public:
-  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
   using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
   Id4ArrayPortal Triangles;
 
@@ -138,7 +138,7 @@ public:
 class MollerExecWrapper : public vtkm::cont::ExecutionObjectBase
 {
 protected:
-  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
   Id4Handle Triangles;
 
 public:
@@ -157,7 +157,7 @@ public:
 class WaterTightExecWrapper : public vtkm::cont::ExecutionObjectBase
 {
 protected:
-  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
   Id4Handle Triangles;
 
 public:
@@ -328,17 +328,17 @@ public:
 
   template <typename Precision>
   VTKM_CONT void Run(Ray<Precision>& rays,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
+                     vtkm::cont::ArrayHandle<vtkm::Id4> triangles,
                      vtkm::cont::CoordinateSystem coordsHandle,
                      const vtkm::cont::Field scalarField,
                      const vtkm::Range& scalarRange)
   {
-    bool isSupportedField =
-      (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
-       scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
+    const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
     if (!isSupportedField)
+    {
       throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
-    bool isAssocPoints = scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
+    }
+    const bool isAssocPoints = scalarField.IsFieldPoint();
 
     // Find the triangle normal
     vtkm::worklet::DispatcherMapField<CalculateNormals>(CalculateNormals())
@@ -386,7 +386,7 @@ public:
                                 WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   template <typename PointPortalType>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 4> indices,
+  VTKM_EXEC void operator()(const vtkm::Id4 indices,
                             vtkm::Float32& xmin,
                             vtkm::Float32& ymin,
                             vtkm::Float32& zmin,
@@ -396,22 +396,22 @@ public:
                             const PointPortalType& points) const
   {
     // cast to Float32
-    vtkm::Vec<vtkm::Float32, 3> point;
-    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[1]));
+    vtkm::Vec3f_32 point;
+    point = static_cast<vtkm::Vec3f_32>(points.Get(indices[1]));
     xmin = point[0];
     ymin = point[1];
     zmin = point[2];
     xmax = xmin;
     ymax = ymin;
     zmax = zmin;
-    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[2]));
+    point = static_cast<vtkm::Vec3f_32>(points.Get(indices[2]));
     xmin = vtkm::Min(xmin, point[0]);
     ymin = vtkm::Min(ymin, point[1]);
     zmin = vtkm::Min(zmin, point[2]);
     xmax = vtkm::Max(xmax, point[0]);
     ymax = vtkm::Max(ymax, point[1]);
     zmax = vtkm::Max(zmax, point[2]);
-    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[3]));
+    point = static_cast<vtkm::Vec3f_32>(points.Get(indices[3]));
     xmin = vtkm::Min(xmin, point[0]);
     ymin = vtkm::Min(ymin, point[1]);
     zmin = vtkm::Min(zmin, point[2]);
@@ -449,7 +449,7 @@ void TriangleIntersector::SetUseWaterTight(bool useIt)
 }
 
 void TriangleIntersector::SetData(const vtkm::cont::CoordinateSystem& coords,
-                                  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles)
+                                  vtkm::cont::ArrayHandle<vtkm::Id4> triangles)
 {
 
   CoordsHandle = coords;
@@ -469,7 +469,7 @@ void TriangleIntersector::SetData(const vtkm::cont::CoordinateSystem& coords,
   this->SetAABBs(AABB);
 }
 
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> TriangleIntersector::GetTriangles()
+vtkm::cont::ArrayHandle<vtkm::Id4> TriangleIntersector::GetTriangles()
 {
   return Triangles;
 }

@@ -61,30 +61,47 @@ public:
   VTKM_CONT
   const std::string& GetCellSetName() const { return this->CellSetName; }
 
+  /// Construct a new field with the same association as stored in this FieldMetaData
+  /// but with a new name
   template <typename T, typename StorageTag>
-  VTKM_CONT vtkm::cont::Field AsField(const vtkm::cont::ArrayHandle<T, StorageTag>& handle) const
+  VTKM_CONT vtkm::cont::Field AsField(const std::string& name,
+                                      const vtkm::cont::ArrayHandle<T, StorageTag>& handle) const
   {
     if (this->IsCellField())
     {
-      return vtkm::cont::Field(this->Name, this->Association, this->CellSetName, handle);
+      return vtkm::cont::Field(name, this->Association, this->CellSetName, handle);
     }
     else
     {
-      return vtkm::cont::Field(this->Name, this->Association, handle);
+      return vtkm::cont::Field(name, this->Association, handle);
+    }
+  }
+  /// Construct a new field with the same association as stored in this FieldMetaData
+  /// but with a new name
+  VTKM_CONT
+  vtkm::cont::Field AsField(const std::string& name,
+                            const vtkm::cont::VariantArrayHandle& handle) const
+  {
+    if (this->IsCellField())
+    {
+      return vtkm::cont::Field(name, this->Association, this->CellSetName, handle);
+    }
+    else
+    {
+      return vtkm::cont::Field(name, this->Association, handle);
     }
   }
 
-  VTKM_CONT
-  vtkm::cont::Field AsField(const vtkm::cont::VariantArrayHandle& handle) const
+  /// Construct a new field with the same association and name as stored in this FieldMetaData
+  template <typename T, typename StorageTag>
+  VTKM_CONT vtkm::cont::Field AsField(const vtkm::cont::ArrayHandle<T, StorageTag>& handle) const
   {
-    if (this->IsCellField())
-    {
-      return vtkm::cont::Field(this->Name, this->Association, this->CellSetName, handle);
-    }
-    else
-    {
-      return vtkm::cont::Field(this->Name, this->Association, handle);
-    }
+    return this->AsField(this->Name, handle);
+  }
+  /// Construct a new field with the same association and name as stored in this FieldMetaData
+  VTKM_CONT vtkm::cont::Field AsField(const vtkm::cont::VariantArrayHandle& handle) const
+  {
+    return this->AsField(this->Name, handle);
   }
 
 private:

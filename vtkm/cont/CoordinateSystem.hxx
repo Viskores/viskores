@@ -22,17 +22,15 @@ namespace detail
 struct MakeArrayHandleVirtualCoordinatesFunctor
 {
   template <typename StorageTag>
-  VTKM_CONT void operator()(
-    const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>, StorageTag>& array,
-    ArrayHandleVirtualCoordinates& output) const
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<vtkm::Vec3f_32, StorageTag>& array,
+                            ArrayHandleVirtualCoordinates& output) const
   {
     output = vtkm::cont::ArrayHandleVirtualCoordinates(array);
   }
 
   template <typename StorageTag>
-  VTKM_CONT void operator()(
-    const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag>& array,
-    ArrayHandleVirtualCoordinates& output) const
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<vtkm::Vec3f_64, StorageTag>& array,
+                            ArrayHandleVirtualCoordinates& output) const
   {
     output = vtkm::cont::ArrayHandleVirtualCoordinates(array);
   }

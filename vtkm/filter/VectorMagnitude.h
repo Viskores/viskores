@@ -22,6 +22,9 @@ namespace filter
 class VectorMagnitude : public vtkm::filter::FilterField<VectorMagnitude>
 {
 public:
+  //currently the VectorMagnitude filter only works on vector data.
+  using SupportedTypes = vtkm::TypeListTagVecCommon;
+
   VTKM_CONT
   VectorMagnitude();
 
@@ -33,13 +36,6 @@ public:
 
 private:
   vtkm::worklet::Magnitude Worklet;
-};
-
-template <>
-class FilterTraits<VectorMagnitude>
-{ //currently the VectorMagnitude filter only works on vector data.
-public:
-  using InputFieldTypeList = TypeListTagVecCommon;
 };
 }
 } // namespace vtkm::filter

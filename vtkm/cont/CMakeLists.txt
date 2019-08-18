@@ -27,6 +27,7 @@ set(headers
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
+  ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
   ArrayHandleStreaming.h
@@ -88,6 +89,7 @@ set(headers
   FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
   Initialize.h
+  Invoker.h
   Logging.h
   MultiBlock.h
   PointLocator.h

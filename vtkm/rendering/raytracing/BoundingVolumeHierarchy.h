@@ -37,7 +37,7 @@ struct AABBs
 class VTKM_RENDERING_EXPORT LinearBVH
 {
 public:
-  using InnerNodesHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using InnerNodesHandle = vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
   using LeafNodesHandle = vtkm::cont::ArrayHandle<Id>;
   AABBs AABB;
   InnerNodesHandle FlatBVH;

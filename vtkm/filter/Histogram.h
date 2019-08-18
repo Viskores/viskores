@@ -25,6 +25,8 @@ namespace filter
 class Histogram : public vtkm::filter::FilterField<Histogram>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
+
   //Construct a histogram with a default of 10 bins
   VTKM_CONT
   Histogram();
@@ -81,15 +83,6 @@ private:
   vtkm::Float64 BinDelta;
   vtkm::Range ComputedRange;
   vtkm::Range Range;
-};
-
-template <>
-class FilterTraits<Histogram>
-{ //currently the Histogram filter only works on scalar data.
-  //this mainly has to do with getting the ranges for each bin
-  //would require returning a more complex value type
-public:
-  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

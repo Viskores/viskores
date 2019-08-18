@@ -27,6 +27,8 @@ namespace filter
 class Pathline : public vtkm::filter::FilterDataSetWithField<Pathline>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   Pathline();
 
@@ -45,7 +47,7 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& seeds);
+  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds);
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -69,18 +71,7 @@ private:
   vtkm::worklet::particleadvection::ScalarType NextTime;
   vtkm::cont::DataSet NextDataSet;
   vtkm::Id NumberOfSteps;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Seeds;
-};
-
-template <>
-class FilterTraits<Pathline>
-{
-public:
-  struct TypeListTagPathline
-    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
-  {
-  };
-  using InputFieldTypeList = TypeListTagPathline;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
 };
 }
 } // namespace vtkm::filter

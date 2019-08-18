@@ -21,7 +21,7 @@ namespace splatkernels
 {
 
 // Vector class used in the kernels
-using vector_type = vtkm::Vec<vtkm::Float64, 3>;
+using vector_type = vtkm::Vec3f_64;
 // Pi compatibility
 #ifndef M_PI
 #define M_PI vtkm::Pi()

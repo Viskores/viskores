@@ -22,7 +22,7 @@ struct RemoveDisabledDevice
 };
 
 /// TMP code to generate enabled device timer container
-using AllDeviceList = vtkm::cont::DeviceAdapterListTagCommon::list;
+using AllDeviceList = vtkm::internal::ListTagAsBrigandList<vtkm::cont::DeviceAdapterListTagCommon>;
 using EnabledDeviceList = brigand::fold<AllDeviceList,
                                         brigand::list<>,
                                         RemoveDisabledDevice<brigand::_state, brigand::_element>>;

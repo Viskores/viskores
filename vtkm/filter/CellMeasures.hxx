@@ -10,8 +10,6 @@
 
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm
 {
@@ -35,24 +33,26 @@ inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  VTKM_ASSERT(fieldMeta.IsPointField());
+  if (fieldMeta.IsPointField() == false)
+  {
+    throw vtkm::cont::ErrorFilterExecution("CellMeasures expects point field input.");
+  }
+
   const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
   vtkm::cont::ArrayHandle<T> outArray;
 
-  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<IntegrationType>> dispatcher;
-  dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellset, policy), points, outArray);
+  this->Invoke(vtkm::worklet::CellMeasure<IntegrationType>{},
+               vtkm::filter::ApplyPolicy(cellset, policy),
+               points,
+               outArray);
 
-  vtkm::cont::DataSet result;
   std::string outputName = this->GetCellMeasureName();
   if (outputName.empty())
   {
     // Default name is name of input.
     outputName = "measure";
   }
-  result =
-    internal::CreateResult(input, outArray, outputName, vtkm::cont::Field::Association::CELL_SET);
-
-  return result;
+  return CreateResultFieldCell(input, outArray, outputName, cellset);
 }
 }
 } // namespace vtkm::filter

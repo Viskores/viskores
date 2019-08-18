@@ -69,8 +69,8 @@ private:
     std::string bovFile, line, token, options, variableName;
     vtkm::Id numComponents = 1;
     vtkm::Id3 dim;
-    vtkm::Vec<vtkm::FloatDefault, 3> origin(0, 0, 0);
-    vtkm::Vec<vtkm::FloatDefault, 3> spacing(1, 1, 1);
+    vtkm::Vec3f origin(0, 0, 0);
+    vtkm::Vec3f spacing(1, 1, 1);
     bool spacingSet = false;
 
     while (stream.good())
@@ -210,13 +210,13 @@ private:
     {
       if (dataFormat == FloatData)
       {
-        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> var;
+        vtkm::cont::ArrayHandle<vtkm::Vec3f_32> var;
         ReadVector(fullPathDataFile, numTuples, var);
         dsf.AddPointField(this->DataSet, variableName, var);
       }
       else if (dataFormat == DoubleData)
       {
-        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> var;
+        vtkm::cont::ArrayHandle<vtkm::Vec3f_64> var;
         ReadVector(fullPathDataFile, numTuples, var);
         dsf.AddPointField(this->DataSet, variableName, var);
       }

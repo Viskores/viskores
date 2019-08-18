@@ -23,11 +23,11 @@
 
 struct TestWholeCellSetIn
 {
-  template <typename FromTopology, typename ToTopology>
+  template <typename VisitTopology, typename IncidentTopology>
   struct WholeCellSetWorklet : public vtkm::worklet::WorkletMapField
   {
     using ControlSignature = void(FieldIn indices,
-                                  WholeCellSetIn<FromTopology, ToTopology>,
+                                  WholeCellSetIn<VisitTopology, IncidentTopology>,
                                   FieldOut numberOfElements,
                                   FieldOut shapes,
                                   FieldOut numberOfindices,
@@ -70,7 +70,7 @@ struct TestWholeCellSetIn
                                  vtkm::cont::ArrayHandle<vtkm::Id> connectionSum)
   {
     using WorkletType =
-      WholeCellSetWorklet<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>;
+      WholeCellSetWorklet<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
     dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(cellSet.GetNumberOfCells()),
                       cellSet,
@@ -88,7 +88,7 @@ struct TestWholeCellSetIn
                                   vtkm::cont::ArrayHandle<vtkm::Id> connectionSum)
   {
     using WorkletType =
-      WholeCellSetWorklet<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>;
+      WholeCellSetWorklet<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
     dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(cellSet->GetNumberOfPoints()),
                       cellSet,

@@ -42,7 +42,7 @@ enum BenchmarkName
   ALL = CELL_TO_POINT | POINT_TO_CELL | MC_CLASSIFY
 };
 
-class AveragePointToCell : public vtkm::worklet::WorkletMapPointToCell
+class AveragePointToCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(FieldInPoint inPoints, CellSetIn cellset, FieldOutCell outCells);
@@ -64,7 +64,7 @@ public:
   }
 };
 
-class AverageCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
+class AverageCellToPoint : public vtkm::worklet::WorkletVisitPointsWithCells
 {
 public:
   using ControlSignature = void(FieldInCell inCells, CellSetIn topology, FieldOut outPoints);
@@ -91,7 +91,7 @@ public:
 
 // -----------------------------------------------------------------------------
 template <typename T>
-class Classification : public vtkm::worklet::WorkletMapPointToCell
+class Classification : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(FieldInPoint inNodes, CellSetIn cellset, FieldOutCell outCaseId);

@@ -226,7 +226,7 @@ public:
   {
   };
 
-  class ComputeStats : public vtkm::worklet::WorkletMapPointToCell
+  class ComputeStats : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -315,7 +315,7 @@ public:
     bool Invert;
   };
 
-  class GenerateCellSet : public vtkm::worklet::WorkletMapPointToCell
+  class GenerateCellSet : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -341,7 +341,7 @@ public:
 
     using ExecutionSignature = void(CellShape,
                                     WorkIndex,
-                                    FromIndices,
+                                    PointIndices,
                                     _2,
                                     _3,
                                     _4,

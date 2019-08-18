@@ -89,10 +89,10 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
     TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
+  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
@@ -117,21 +117,21 @@ public:
   {
   }
   VTKM_EXEC_CONT
-  EuclideanNorm(vtkm::Vec<vtkm::Float32, 3> reference)
+  EuclideanNorm(vtkm::Vec3f_32 reference)
     : Reference(reference)
   {
   }
 
   VTKM_EXEC_CONT
-  vtkm::Float32 operator()(vtkm::Vec<vtkm::Float32, 3> v) const
+  vtkm::Float32 operator()(vtkm::Vec3f_32 v) const
   {
-    vtkm::Vec<vtkm::Float32, 3> d(
+    vtkm::Vec3f_32 d(
       v[0] - this->Reference[0], v[1] - this->Reference[1], v[2] - this->Reference[2]);
     return vtkm::Magnitude(d);
   }
 
 private:
-  vtkm::Vec<vtkm::Float32, 3> Reference;
+  vtkm::Vec3f_32 Reference;
 };
 
 class CubeGridConnectivity
@@ -236,7 +236,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   using HexTag = vtkm::CellShapeTagHexahedron;
   using HexTraits = vtkm::CellTraits<HexTag>;
 
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
 
   const vtkm::IdComponent nCells = dim * dim * dim;
 
@@ -398,7 +398,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   const vtkm::Id numVerts = 16;
 
   //Calculated using PointGradient
-  const vtkm::Vec<vtkm::FloatDefault, 3> hq_ug[numVerts] = {
+  const vtkm::Vec3f hq_ug[numVerts] = {
     { 0.1510f, 0.6268f, 0.7644f },   { 0.1333f, -0.3974f, 0.9079f },
     { 0.1626f, 0.7642f, 0.6242f },   { 0.3853f, 0.6643f, 0.6405f },
     { -0.1337f, 0.7136f, 0.6876f },  { 0.7705f, -0.4212f, 0.4784f },
@@ -410,7 +410,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   };
 
   //Calculated using StructuredPointGradient
-  const vtkm::Vec<vtkm::FloatDefault, 3> hq_sg[numVerts] = {
+  const vtkm::Vec3f hq_sg[numVerts] = {
     { 0.151008f, 0.626778f, 0.764425f },   { 0.133328f, -0.397444f, 0.907889f },
     { 0.162649f, 0.764163f, 0.624180f },   { 0.385327f, 0.664323f, 0.640467f },
     { -0.133720f, 0.713645f, 0.687626f },  { 0.770536f, -0.421248f, 0.478356f },
@@ -422,7 +422,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   };
 
   //Calculated using normals of the output triangles
-  const vtkm::Vec<vtkm::FloatDefault, 3> fast[numVerts] = {
+  const vtkm::Vec3f fast[numVerts] = {
     { -0.1351f, 0.4377f, 0.8889f },  { 0.2863f, -0.1721f, 0.9426f },
     { 0.3629f, 0.8155f, 0.4509f },   { 0.8486f, 0.3560f, 0.3914f },
     { -0.8315f, 0.4727f, 0.2917f },  { 0.9395f, -0.2530f, 0.2311f },
@@ -433,7 +433,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
     { 0.2164f, -0.9401f, -0.2635f }, { -0.1589f, -0.1642f, -0.9735f }
   };
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
 
   vtkm::filter::Contour mc;
   mc.SetIsoValue(0, 200);

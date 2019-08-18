@@ -28,7 +28,7 @@ namespace rendering
 class Color
 {
 public:
-  vtkm::Vec<vtkm::Float32, 4> Components;
+  vtkm::Vec4f_32 Components;
 
   VTKM_EXEC_CONT
   Color()
@@ -43,7 +43,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  Color(const vtkm::Vec<vtkm::Float32, 4>& components)
+  Color(const vtkm::Vec4f_32& components)
     : Components(components)
   {
   }

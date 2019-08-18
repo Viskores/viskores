@@ -133,10 +133,7 @@ static bool ReducedOptions;
 
 // Limit the filter executions to only consider the following types, otherwise
 // compile times and binary sizes are nuts.
-using FieldTypes = vtkm::ListTagBase<vtkm::Float32,
-                                     vtkm::Float64,
-                                     vtkm::Vec<vtkm::Float32, 3>,
-                                     vtkm::Vec<vtkm::Float64, 3>>;
+using FieldTypes = vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
 using StructuredCellList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
 
@@ -145,7 +142,7 @@ using UnstructuredCellList =
 
 using AllCellList = vtkm::ListTagJoin<StructuredCellList, UnstructuredCellList>;
 
-using CoordinateList = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
+using CoordinateList = vtkm::ListTagBase<vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
 class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
 {
@@ -658,14 +655,14 @@ class BenchmarkFilters
         { // Why does CastAndCall insist on making the cellset const?
           using CellSetT = vtkm::cont::CellSetExplicit<T1, T2, T3, T4>;
           CellSetT& mcellSet = const_cast<CellSetT&>(cellSet);
-          mcellSet.ResetConnectivity(vtkm::TopologyElementTagCell{},
-                                     vtkm::TopologyElementTagPoint{});
+          mcellSet.ResetConnectivity(vtkm::TopologyElementTagPoint{},
+                                     vtkm::TopologyElementTagCell{});
         }
 
         Timer timer{ DeviceAdapter() };
         timer.Start();
         cellSet.PrepareForInput(
-          DeviceAdapter(), vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
+          DeviceAdapter(), vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
         this->Time = timer.GetElapsedTime();
       }
     };
@@ -816,8 +813,8 @@ public:
   using ExecutionSignature = _2(_1);
 
   vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::Float64, 3> Center;
-  vtkm::Vec<vtkm::Float64, 3> Scale;
+  vtkm::Vec3f_64 Center;
+  vtkm::Vec3f_64 Scale;
 
   VTKM_CONT
   PointVectorGenerator(const vtkm::Bounds& bounds)
@@ -833,7 +830,7 @@ public:
   VTKM_EXEC vtkm::Vec<T, 3> operator()(vtkm::Vec<T, 3> val) const
   {
     using Vec3T = vtkm::Vec<T, 3>;
-    using Vec3F64 = vtkm::Vec<vtkm::Float64, 3>;
+    using Vec3F64 = vtkm::Vec3f_64;
 
     Vec3F64 valF64{ val };
     Vec3F64 periodic = (valF64 - this->Center) * this->Scale;
@@ -933,7 +930,7 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
     auto coords = InputDataSet.GetCoordinateSystem();
     auto bounds = coords.GetBounds();
     auto points = coords.GetData();
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> pvecs;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> pvecs;
 
     PointVectorGenerator worklet(bounds);
     vtkm::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);

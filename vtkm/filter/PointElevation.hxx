@@ -8,9 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-
 namespace vtkm
 {
 namespace filter
@@ -52,17 +49,12 @@ inline VTKM_CONT vtkm::cont::DataSet PointElevation::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::PointElevation> dispatcher(this->Worklet);
 
   //todo, we need to use the policy to determine the valid conversions
   //that the dispatcher should do
-  dispatcher.Invoke(field, outArray);
+  this->Invoke(this->Worklet, field, outArray);
 
-  return internal::CreateResult(inDataSet,
-                                outArray,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet, outArray, this->GetOutputFieldName(), fieldMetadata);
 }
 }
 } // namespace vtkm::filter

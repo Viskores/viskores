@@ -13,6 +13,7 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
+  TestingArrayHandleMultiplexer.h
   TestingArrayHandleVirtualCoordinates.h
   TestingCellLocatorRectilinearGrid.h
   TestingCellLocatorUniformBins.h

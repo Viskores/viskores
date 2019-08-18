@@ -31,7 +31,7 @@ namespace rendering
 class Quadralizer
 {
 public:
-  class CountQuads : public vtkm::worklet::WorkletMapPointToCell
+  class CountQuads : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -77,12 +77,12 @@ public:
   }; //class CountQuads
 
   template <int DIM>
-  class SegmentedStructured : public vtkm::worklet::WorkletMapPointToCell
+  class SegmentedStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInTo, WholeArrayOut);
-    typedef void ExecutionSignature(FromIndices, _2, _3);
+    typedef void ControlSignature(CellSetIn cellset, FieldInCell, WholeArrayOut);
+    typedef void ExecutionSignature(IncidentElementIndices, _2, _3);
     //typedef _1 InputDomain;
     VTKM_CONT
     SegmentedStructured() {}
@@ -92,7 +92,7 @@ public:
 #pragma warning(disable : 4127) //conditional expression is constant
 #endif
     template <typename CellNodeVecType, typename OutIndicesPortal>
-    VTKM_EXEC void cell2quad(vtkm::Vec<vtkm::Id, 4> idx,
+    VTKM_EXEC void cell2quad(vtkm::Id4 idx,
                              vtkm::Vec<Id, 5>& quad,
                              const vtkm::Id offset,
                              const CellNodeVecType& cellIndices,
@@ -120,7 +120,7 @@ public:
         vtkm::Id offset = cellIndex * QUAD_PER_CSS;
         vtkm::Vec<vtkm::Id, 5> quad;
         quad[0] = cellIndex;
-        vtkm::Vec<vtkm::Id, 4> idx;
+        vtkm::Id4 idx;
         idx[0] = 0;
         idx[1] = 1;
         idx[2] = 5, idx[3] = 4;
@@ -168,7 +168,7 @@ public:
   };
 
 
-  class Quadralize : public vtkm::worklet::WorkletMapPointToCell
+  class Quadralize : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:

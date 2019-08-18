@@ -84,7 +84,7 @@ make_ScalarField(const vtkm::cont::ArrayHandle<vtkm::Int8, S>& ah)
 
 // ---------------------------------------------------------------------------
 template <typename T>
-class ClassifyCell : public vtkm::worklet::WorkletMapPointToCell
+class ClassifyCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(WholeArrayIn isoValues,
@@ -200,7 +200,7 @@ private:
 /// a point in the resulting iso-surface
 // -----------------------------------------------------------------------------
 template <typename T>
-class EdgeWeightGenerate : public vtkm::worklet::WorkletMapPointToCell
+class EdgeWeightGenerate : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   struct ClassifyCellTagType : vtkm::ListTagBase<T>
@@ -222,7 +222,7 @@ public:
                                 ExecObject classifyTable,
                                 ExecObject triTable);
   using ExecutionSignature =
-    void(CellShape, _2, _3, _4, _5, _6, InputIndex, WorkIndex, VisitIndex, FromIndices);
+    void(CellShape, _2, _3, _4, _5, _6, InputIndex, WorkIndex, VisitIndex, PointIndices);
 
   using InputDomain = _1;
 
@@ -434,7 +434,7 @@ struct EdgeVertex
   VTKM_EXEC vtkm::Id operator()(const vtkm::Id2& edge) const { return edge[Comp]; }
 };
 
-class NormalsWorkletPass1 : public vtkm::worklet::WorkletMapCellToPoint
+class NormalsWorkletPass1 : public vtkm::worklet::WorkletVisitPointsWithCells
 {
 private:
   using PointIdsArray =
@@ -442,7 +442,7 @@ private:
 
 public:
   using ControlSignature = void(CellSetIn,
-                                WholeCellSetIn<Point, Cell>,
+                                WholeCellSetIn<Cell, Point>,
                                 WholeArrayIn pointCoordinates,
                                 WholeArrayIn inputField,
                                 FieldOutPoint normals);
@@ -483,7 +483,7 @@ public:
   VTKM_EXEC void operator()(const vtkm::IdComponent& vtkmNotUsed(numCells),
                             const FromIndexType& vtkmNotUsed(cellIds),
                             vtkm::Id pointId,
-                            vtkm::exec::ConnectivityStructured<Point, Cell, 3>& geometry,
+                            vtkm::exec::ConnectivityStructured<Cell, Point, 3>& geometry,
                             const WholeCoordinatesIn& pointCoordinates,
                             const WholeFieldIn& inputField,
                             NormalType& normal) const
@@ -492,7 +492,7 @@ public:
 
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
-    vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
+    vtkm::exec::ConnectivityStructured<Point, Cell, 3> pointGeom(geometry);
     vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
@@ -506,7 +506,7 @@ public:
   }
 };
 
-class NormalsWorkletPass2 : public vtkm::worklet::WorkletMapCellToPoint
+class NormalsWorkletPass2 : public vtkm::worklet::WorkletVisitPointsWithCells
 {
 private:
   using PointIdsArray =
@@ -514,7 +514,7 @@ private:
 
 public:
   typedef void ControlSignature(CellSetIn,
-                                WholeCellSetIn<Point, Cell>,
+                                WholeCellSetIn<Cell, Point>,
                                 WholeArrayIn pointCoordinates,
                                 WholeArrayIn inputField,
                                 WholeArrayIn weights,
@@ -566,7 +566,7 @@ public:
   VTKM_EXEC void operator()(const vtkm::IdComponent& vtkmNotUsed(numCells),
                             const FromIndexType& vtkmNotUsed(cellIds),
                             vtkm::Id pointId,
-                            vtkm::exec::ConnectivityStructured<Point, Cell, 3>& geometry,
+                            vtkm::exec::ConnectivityStructured<Cell, Point, 3>& geometry,
                             const WholeCoordinatesIn& pointCoordinates,
                             const WholeFieldIn& inputField,
                             vtkm::Id edgeId,
@@ -576,7 +576,7 @@ public:
     using T = typename WholeFieldIn::ValueType;
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
-    vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
+    vtkm::exec::ConnectivityStructured<Point, Cell, 3> pointGeom(geometry);
     vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
 
     const auto& boundary = tpn.GetBoundaryState();
@@ -591,7 +591,12 @@ public:
 
     NormalType grad0 = normal;
     auto weight = weights.Get(edgeId);
-    normal = vtkm::Normal(vtkm::Lerp(grad0, grad1, weight));
+    normal = vtkm::Lerp(grad0, grad1, weight);
+    const auto mag2 = vtkm::MagnitudeSquared(normal);
+    if (mag2 > 0.)
+    {
+      normal = normal * vtkm::RSqrt(mag2);
+    }
   }
 };
 
@@ -663,6 +668,12 @@ public:
     , InterpolationWeights()
     , InterpolationEdgeIds()
   {
+  }
+
+  //----------------------------------------------------------------------------
+  vtkm::cont::ArrayHandle<vtkm::Id2> GetInterpolationEdgeIds() const
+  {
+    return this->InterpolationEdgeIds;
   }
 
   //----------------------------------------------------------------------------

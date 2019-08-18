@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/FieldHistogram.h>
 
 #include <vtkm/cont/Algorithm.h>
@@ -18,7 +17,6 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
 #include <vtkm/cont/Serialization.h>
-#include <vtkm/filter/internal/CreateResult.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 

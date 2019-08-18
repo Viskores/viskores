@@ -103,8 +103,8 @@ inline VTKM_CONT vtkm::cont::DataSet FilterDataSetWithField<Derived>::PrepareFor
 
   //determine the field type first
   using Traits = vtkm::filter::FilterTraits<Derived>;
-  constexpr bool supportsVec3 = vtkm::ListContains<typename Traits::InputFieldTypeList,
-                                                   vtkm::Vec<vtkm::FloatDefault, 3>>::value;
+  constexpr bool supportsVec3 =
+    vtkm::ListContains<typename Traits::InputFieldTypeList, vtkm::Vec3f>::value;
   using supportsCoordinateSystem = std::integral_constant<bool, supportsVec3>;
   vtkm::cont::ConditionalCastAndCall(supportsCoordinateSystem(),
                                      field,

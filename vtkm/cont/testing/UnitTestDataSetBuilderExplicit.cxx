@@ -50,7 +50,7 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
   // test various field-getting methods and associations
   try
   {
-    ds.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
+    ds.GetCellField("cellvar");
   }
   catch (...)
   {
@@ -59,7 +59,7 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
 
   try
   {
-    ds.GetField("pointvar", vtkm::cont::Field::Association::POINTS);
+    ds.GetPointField("pointvar");
   }
   catch (...)
   {

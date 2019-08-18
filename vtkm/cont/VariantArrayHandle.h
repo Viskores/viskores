@@ -373,8 +373,9 @@ template <typename TypeList, typename StorageList>
 struct ListTagDynamicTypes : vtkm::detail::ListRoot
 {
   using crossProduct = typename vtkm::ListCrossProduct<TypeList, StorageList>;
-  // using list = typename crossProduct::list;
-  using list = ::brigand::remove_if<typename crossProduct::list, IsUndefinedStorage<brigand::_1>>;
+  // using list = vtkm::internal::ListTagAsBrigandList<crossProduct>;
+  using list = ::brigand::remove_if<vtkm::internal::ListTagAsBrigandList<crossProduct>,
+                                    IsUndefinedStorage<brigand::_1>>;
 };
 
 

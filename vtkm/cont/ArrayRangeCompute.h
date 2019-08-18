@@ -89,11 +89,11 @@ VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasi
 
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandleVirtual<vtkm::Vec<vtkm::FloatDefault, 3>>& input,
+  const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& input,
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
 
 VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f,
                                 vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>& array,
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
 
@@ -101,7 +101,7 @@ VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComput
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_32,
                                 typename vtkm::cont::ArrayHandleCompositeVector<
                                   vtkm::cont::ArrayHandle<vtkm::Float32>,
                                   vtkm::cont::ArrayHandle<vtkm::Float32>,
@@ -109,7 +109,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
 
 VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_64,
                                 typename vtkm::cont::ArrayHandleCompositeVector<
                                   vtkm::cont::ArrayHandle<vtkm::Float64>,
                                   vtkm::cont::ArrayHandle<vtkm::Float64>,

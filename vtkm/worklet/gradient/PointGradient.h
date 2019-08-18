@@ -31,10 +31,10 @@ struct PointGradientInType : vtkm::ListTagBase<T>
 };
 
 template <typename T>
-struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
+struct PointGradient : public vtkm::worklet::WorkletVisitPointsWithCells
 {
   using ControlSignature = void(CellSetIn,
-                                WholeCellSetIn<Point, Cell>,
+                                WholeCellSetIn<Cell, Point>,
                                 WholeArrayIn pointCoordinates,
                                 WholeArrayIn inputField,
                                 GradientOutputs outputFields);
@@ -100,7 +100,7 @@ private:
                                         const FieldInVecType& field,
                                         vtkm::Vec<OutValueType, 3>& gradient) const
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> pCoords;
+    vtkm::Vec3f pCoords;
     vtkm::exec::ParametricCoordinatesPoint(
       wCoords.GetNumberOfComponents(), pointIndexForCell, pCoords, cellShape, *this);
 
@@ -114,7 +114,7 @@ private:
     vtkm::Id pointId) const
   {
     vtkm::IdComponent result = 0;
-    const auto& topo = indices.GetIndicesFrom();
+    const auto& topo = indices.GetIndicesIncident();
     for (vtkm::IdComponent i = 0; i < topo.GetNumberOfComponents(); ++i)
     {
       if (topo[i] == pointId)

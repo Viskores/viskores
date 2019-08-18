@@ -21,6 +21,8 @@ namespace filter
 class Lagrangian : public vtkm::filter::FilterDataSetWithField<Lagrangian>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   Lagrangian();
 
@@ -90,17 +92,6 @@ private:
   vtkm::Id cust_res;
   vtkm::Id3 SeedRes;
   vtkm::Id writeFrequency;
-};
-
-template <>
-class FilterTraits<Lagrangian>
-{
-public:
-  struct TypeListTagLagrangian
-    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
-  {
-  };
-  using InputFieldTypeList = TypeListTagLagrangian;
 };
 }
 } // namespace vtkm::filter

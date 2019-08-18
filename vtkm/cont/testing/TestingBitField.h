@@ -14,13 +14,12 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/exec/FunctorBase.h>
-
-#include <vtkm/worklet/Invoker.h>
 
 #include <cstdio>
 
@@ -599,7 +598,7 @@ struct TestingBitField
     auto falseArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(13, 2, NUM_BITS);
     vtkm::cont::ArrayHandle<vtkm::Id> output;
 
-    vtkm::worklet::Invoker invoke;
+    vtkm::cont::Invoker invoke;
     invoke(ConditionalMergeWorklet{}, condArray, trueArray, falseArray, output);
 
     auto condVals = condArray.GetPortalConstControl();
@@ -625,7 +624,7 @@ struct TestingBitField
     auto falseArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(13, 2, NUM_BITS);
     vtkm::cont::ArrayHandle<vtkm::Id> output;
 
-    vtkm::worklet::Invoker invoke;
+    vtkm::cont::Invoker invoke;
     invoke(ConditionalMergeWorklet2{}, condBits, trueArray, falseArray, output);
 
     auto condVals = condBits.GetPortalConstControl();
@@ -672,4 +671,4 @@ public:
 }
 } // namespace vtkm::cont::testing
 
-#endif //vtk_m_cont_testing_TestingArrayHandles_h
+#endif // vtk_m_cont_testing_TestingBitFields_h

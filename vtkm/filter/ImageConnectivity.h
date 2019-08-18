@@ -21,6 +21,8 @@ namespace filter
 class ImageConnectivity : public vtkm::filter::FilterCell<ImageConnectivity>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
+
   VTKM_CONT ImageConnectivity();
 
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -29,20 +31,9 @@ public:
                                           const vtkm::filter::FieldMetadata& fieldMetadata,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>&);
 };
-
-template <>
-class FilterTraits<vtkm::filter::ImageConnectivity>
-{
-public:
-  struct InputFieldTypeList : vtkm::TypeListTagScalarAll
-  {
-  };
-};
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_ImageConnectivity_hxx
 #include <vtkm/filter/ImageConnectivity.hxx>
-#endif
 
 #endif //vtk_m_filter_ImageConnectivity_h

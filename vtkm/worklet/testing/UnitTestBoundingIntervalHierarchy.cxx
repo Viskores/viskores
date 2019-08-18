@@ -12,16 +12,16 @@
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/worklet/Invoker.h>
 
 namespace
 {
-struct CellCentroidCalculator : public vtkm::worklet::WorkletMapPointToCell
+struct CellCentroidCalculator : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   typedef void ControlSignature(CellSetIn, FieldInPoint, FieldOut);
   typedef _3 ExecutionSignature(_1, PointCount, _2);
@@ -32,8 +32,7 @@ struct CellCentroidCalculator : public vtkm::worklet::WorkletMapPointToCell
     vtkm::IdComponent numPoints,
     const InputPointField& inputPointField) const
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> parametricCenter =
-      vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, *this);
+    vtkm::Vec3f parametricCenter = vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, *this);
     return vtkm::exec::CellInterpolate(inputPointField, parametricCenter, shape, *this);
   }
 }; // struct CellCentroidCalculator
@@ -48,7 +47,7 @@ struct BoundingIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
                                          const BoundingIntervalHierarchyExecObject& bih,
                                          const vtkm::Id expectedId) const
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> parametric;
+    vtkm::Vec3f parametric;
     vtkm::Id cellId;
     bih->FindCell(point, cellId, parametric, *this);
     return (1 - static_cast<vtkm::IdComponent>(expectedId == cellId));
@@ -78,7 +77,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
 
   Timer centroidsTimer;
   centroidsTimer.Start();
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> centroids;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> centroids;
   vtkm::worklet::DispatcherMapTopology<CellCentroidCalculator>().Invoke(
     cellSet, vertices, centroids);
   centroidsTimer.Stop();

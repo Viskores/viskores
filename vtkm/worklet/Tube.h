@@ -28,7 +28,7 @@ class Tube
 {
 public:
   //Helper worklet to count various things in each polyline.
-  class CountSegments : public vtkm::worklet::WorkletMapPointToCell
+  class CountSegments : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -87,7 +87,7 @@ public:
   };
 
   //Helper worklet to generate normals at each point in the polyline.
-  class GenerateNormals : public vtkm::worklet::WorkletMapPointToCell
+  class GenerateNormals : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
     static constexpr vtkm::FloatDefault vecMagnitudeEps = static_cast<vtkm::FloatDefault>(1e-3);
 
@@ -100,7 +100,7 @@ public:
 
     using ControlSignature = void(CellSetIn cellset,
                                   WholeArrayIn pointCoords,
-                                  FieldInTo polylineOffset,
+                                  FieldInCell polylineOffset,
                                   WholeArrayOut newNormals);
     using ExecutionSignature = void(CellShape shapeType,
                                     PointCount numPoints,
@@ -148,7 +148,7 @@ public:
       {
         //The following follows the VTK implementation in:
         //vtkPolyLine::GenerateSlidingNormals
-        vtkm::Vec<vtkm::FloatDefault, 3> sPrev, sNext, normal, p0, p1;
+        vtkm::Vec3f sPrev, sNext, normal, p0, p1;
         vtkm::IdComponent sNextId = FindValidSegment(inPts, ptIndices, numPoints, 0);
 
         if (sNextId != numPoints) // at least one valid segment
@@ -245,11 +245,11 @@ public:
     }
 
   private:
-    vtkm::Vec<vtkm::FloatDefault, 3> DefaultNorm;
+    vtkm::Vec3f DefaultNorm;
   };
 
   //Helper worklet to generate the tube points
-  class GeneratePoints : public vtkm::worklet::WorkletMapPointToCell
+  class GeneratePoints : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -264,8 +264,8 @@ public:
     using ControlSignature = void(CellSetIn cellset,
                                   WholeArrayIn pointCoords,
                                   WholeArrayIn normals,
-                                  FieldInTo tubePointOffsets,
-                                  FieldInTo polylineOffset,
+                                  FieldInCell tubePointOffsets,
+                                  FieldInCell polylineOffset,
                                   WholeArrayOut newPointCoords);
     using ExecutionSignature = void(CellShape shapeType,
                                     PointCount numPoints,
@@ -295,7 +295,7 @@ public:
         return;
       else
       {
-        vtkm::Vec<vtkm::FloatDefault, 3> n, p, pNext, sNext, sPrev;
+        vtkm::Vec3f n, p, pNext, sNext, sPrev;
         vtkm::Id outIdx = tubePointOffsets;
         for (vtkm::IdComponent j = 0; j < numPoints; j++)
         {
@@ -348,7 +348,7 @@ public:
           }
 
           //this only implements the 'sides share vertices' line 476
-          vtkm::Vec<vtkm::FloatDefault, 3> normal;
+          vtkm::Vec3f normal;
           for (vtkm::IdComponent k = 0; k < this->NumSides; k++)
           {
             vtkm::FloatDefault angle = static_cast<vtkm::FloatDefault>(k) * this->Theta;
@@ -378,7 +378,7 @@ public:
   };
 
   //Helper worklet to generate the tube cells
-  class GenerateCells : public vtkm::worklet::WorkletMapPointToCell
+  class GenerateCells : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
@@ -389,8 +389,8 @@ public:
     }
 
     using ControlSignature = void(CellSetIn cellset,
-                                  FieldInTo tubePointOffsets,
-                                  FieldInTo tubeConnOffsets,
+                                  FieldInCell tubePointOffsets,
+                                  FieldInCell tubeConnOffsets,
                                   WholeArrayOut outConnectivity);
     using ExecutionSignature = void(CellShape shapeType,
                                     PointCount numPoints,
@@ -476,11 +476,11 @@ public:
   VTKM_CONT
   void Run(const vtkm::cont::CoordinateSystem& coords,
            const vtkm::cont::DynamicCellSet& cellset,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& newPoints,
+           vtkm::cont::ArrayHandle<vtkm::Vec3f>& newPoints,
            vtkm::cont::CellSetSingleType<>& newCells)
   {
-    using ExplCoordsType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
-    using NormalsType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+    using ExplCoordsType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+    using NormalsType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
     if (!(coords.GetData().IsType<ExplCoordsType>() &&
           (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()) ||

@@ -8,27 +8,16 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/DispatcherMapField.h>
-
 namespace
 {
-
-class DeduceCellSet
+struct DeduceCellSet
 {
-  mutable vtkm::worklet::Tetrahedralize Worklet;
-  vtkm::cont::CellSetSingleType<>& OutCellSet;
-
-public:
-  DeduceCellSet(vtkm::worklet::Tetrahedralize worklet, vtkm::cont::CellSetSingleType<>& outCellSet)
-    : Worklet(worklet)
-    , OutCellSet(outCellSet)
-  {
-  }
-
   template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
+  void operator()(const CellSetType& cellset,
+                  vtkm::worklet::Tetrahedralize& worklet,
+                  vtkm::cont::CellSetSingleType<>& outCellSet) const
   {
-    this->OutCellSet = Worklet.Run(cellset);
+    outCellSet = worklet.Run(cellset);
   }
 };
 }
@@ -54,9 +43,8 @@ inline VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
   vtkm::cont::CellSetSingleType<> outCellSet;
-  DeduceCellSet tetrahedralize(this->Worklet, outCellSet);
-
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy), tetrahedralize);
+  vtkm::cont::CastAndCall(
+    vtkm::filter::ApplyPolicy(cells, policy), DeduceCellSet{}, this->Worklet, outCellSet);
 
   // create the output dataset
   vtkm::cont::DataSet output;

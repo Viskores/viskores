@@ -18,7 +18,7 @@ namespace rendering
 TextAnnotationScreen::TextAnnotationScreen(const std::string& text,
                                            const vtkm::rendering::Color& color,
                                            vtkm::Float32 scale,
-                                           const vtkm::Vec<vtkm::Float32, 2>& position,
+                                           const vtkm::Vec2f_32& position,
                                            vtkm::Float32 angleDegrees)
   : TextAnnotation(text, color, scale)
   , Position(position)
@@ -30,7 +30,7 @@ TextAnnotationScreen::~TextAnnotationScreen()
 {
 }
 
-void TextAnnotationScreen::SetPosition(const vtkm::Vec<vtkm::Float32, 2>& position)
+void TextAnnotationScreen::SetPosition(const vtkm::Vec2f_32& position)
 {
   this->Position = position;
 }

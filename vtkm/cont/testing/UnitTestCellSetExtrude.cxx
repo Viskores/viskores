@@ -25,7 +25,7 @@ std::vector<int> topology = { 0, 2, 1 };
 std::vector<int> nextNode = { 0, 1, 2 };
 
 
-struct CopyTopo : public vtkm::worklet::WorkletMapPointToCell
+struct CopyTopo : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   typedef void ControlSignature(CellSetIn, FieldOutCell);
   typedef _2 ExecutionSignature(CellShape, PointIndices);
@@ -36,7 +36,7 @@ struct CopyTopo : public vtkm::worklet::WorkletMapPointToCell
   }
 };
 
-struct CopyReverseCellCount : public vtkm::worklet::WorkletMapCellToPoint
+struct CopyReverseCellCount : public vtkm::worklet::WorkletVisitPointsWithCells
 {
   typedef void ControlSignature(CellSetIn, FieldOutPoint);
   typedef _2 ExecutionSignature(CellShape, CellCount, CellIndices);
@@ -135,10 +135,8 @@ int TestCellSetExtrude()
 
   // verify that a constant cell value can be accessed
   std::vector<float> cvalues(static_cast<size_t>(cells.GetNumberOfCells()), 42.0f);
-  vtkm::cont::Field cfield("cfield",
-                           vtkm::cont::Field::Association::CELL_SET,
-                           cells.GetName(),
-                           vtkm::cont::make_ArrayHandle(cvalues));
+  vtkm::cont::Field cfield =
+    vtkm::cont::make_FieldCell("cfield", cells.GetName(), vtkm::cont::make_ArrayHandle(cvalues));
   dataset.AddField(cfield);
 
   vtkm::filter::PointAverage avg;
@@ -146,8 +144,7 @@ int TestCellSetExtrude()
   {
     avg.SetActiveField("cfield");
     auto result = avg.Execute(dataset, PolicyExtrude{});
-    VTKM_TEST_ASSERT(result.HasField("cfield", vtkm::cont::Field::Association::POINTS),
-                     "filter resulting dataset should be valid");
+    VTKM_TEST_ASSERT(result.HasPointField("cfield"), "filter resulting dataset should be valid");
   }
   catch (const vtkm::cont::Error& err)
   {

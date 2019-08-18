@@ -64,7 +64,7 @@ public:
   // Worklet to turn cells into tetrahedra
   // Vertices remain the same and each cell is processed with needing topology
   //
-  class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
+  class TetrahedralizeCell : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
@@ -93,7 +93,7 @@ public:
       ConnectivityOutVec& connectivityOut,
       vtkm::IdComponent visitIndex) const
     {
-      vtkm::Vec<vtkm::IdComponent, 4> tetIndices = tables.GetIndices(shape, visitIndex);
+      vtkm::IdComponent4 tetIndices = tables.GetIndices(shape, visitIndex);
       connectivityOut[0] = connectivityIn[tetIndices[0]];
       connectivityOut[1] = connectivityIn[tetIndices[1]];
       connectivityOut[2] = connectivityIn[tetIndices[2]];
@@ -110,7 +110,6 @@ public:
 
     return outCellSet;
   }
-
 
   vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<>& cellSet,
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)

@@ -95,7 +95,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/worklet/Invoker.h>
+#include <vtkm/cont/Invoker.h>
 
 
 
@@ -113,7 +113,7 @@ namespace contourtree_augmented
 class ContourTreeMaker
 { // class MergeTree
 public:
-  vtkm::worklet::Invoker Invoke;
+  vtkm::cont::Invoker Invoke;
 
   // the contour tree, join tree & split tree to use
   ContourTree& contourTree;
