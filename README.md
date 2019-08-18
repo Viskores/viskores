@@ -153,7 +153,7 @@ inputData.GetPointField(fieldName).GetRange(&range);
 vtkm::Float64 isovalue = range.Center();
 
 // Create an isosurface filter
-vtkm::filter::MarchingCubes filter;
+vtkm::filter::Contour filter;
 filter.SetIsoValue(0, isovalue);
 filter.SetActiveField(fieldName);
 vtkm::cont::DataSet outputData = filter.Execute(inputData);

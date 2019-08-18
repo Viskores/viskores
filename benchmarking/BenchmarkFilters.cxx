@@ -30,10 +30,10 @@
 #include <vtkm/cont/internal/OptionParser.h>
 
 #include <vtkm/filter/CellAverage.h>
+#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/Gradient.h>
-#include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>

@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/Math.h>
@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
 
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-  vtkm::filter::MarchingCubes filter;
+  vtkm::filter::Contour filter;
   filter.SetGenerateNormals(true);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0, 0.1);

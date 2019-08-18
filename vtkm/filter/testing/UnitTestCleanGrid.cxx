@@ -10,7 +10,7 @@
 
 #include <vtkm/filter/CleanGrid.h>
 
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -72,7 +72,7 @@ void TestPointMerging()
   vtkm::cont::testing::MakeTestDataSet makeDataSet;
   vtkm::cont::DataSet baseData = makeDataSet.Make3DUniformDataSet3(vtkm::Id3(4, 4, 4));
 
-  vtkm::filter::MarchingCubes marchingCubes;
+  vtkm::filter::Contour marchingCubes;
   marchingCubes.SetIsoValue(0.05);
   marchingCubes.SetMergeDuplicatePoints(false);
   marchingCubes.SetActiveField("pointvar");

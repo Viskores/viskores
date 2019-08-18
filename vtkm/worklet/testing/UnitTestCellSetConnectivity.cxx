@@ -7,7 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 
 #include <vtkm/cont/ArrayCopy.h>
 

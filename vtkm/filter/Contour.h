@@ -8,11 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_MarchingCubes_h
-#define vtk_m_filter_MarchingCubes_h
+#ifndef vtk_m_filter_Contour_h
+#define vtk_m_filter_Contour_h
 
 #include <vtkm/filter/FilterDataSetWithField.h>
-#include <vtkm/worklet/MarchingCubes.h>
+#include <vtkm/worklet/Contour.h>
 
 namespace vtkm
 {
@@ -25,11 +25,11 @@ namespace filter
 /// Multiple contour values must be specified to generate the isosurfaces.
 /// @warning
 /// This filter is currently only supports 3D volumes.
-class MarchingCubes : public vtkm::filter::FilterDataSetWithField<MarchingCubes>
+class Contour : public vtkm::filter::FilterDataSetWithField<Contour>
 {
 public:
   VTKM_CONT
-  MarchingCubes();
+  Contour();
 
   VTKM_CONT
   void SetNumberOfIsoValues(vtkm::Id num);
@@ -115,11 +115,11 @@ private:
   bool ComputeFastNormalsForStructured;
   bool ComputeFastNormalsForUnstructured;
   std::string NormalArrayName;
-  vtkm::worklet::MarchingCubes Worklet;
+  vtkm::worklet::Contour Worklet;
 };
 
 template <>
-class FilterTraits<MarchingCubes>
+class FilterTraits<Contour>
 {
 public:
   struct TypeListTagMCScalars
@@ -131,6 +131,6 @@ public:
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/MarchingCubes.hxx>
+#include <vtkm/filter/Contour.hxx>
 
-#endif // vtk_m_filter_MarchingCubes_h
+#endif // vtk_m_filter_Contour_h

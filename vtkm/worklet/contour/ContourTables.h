@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_CellClassification_h
-#define vtk_m_CellClassification_h
+#ifndef vtk_m_ContourTable_h
+#define vtk_m_ContourTable_h
 
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
@@ -624,4 +624,4 @@ private:
 }
 }
 }
-#endif // vtk_m_CellClassification_h
+#endif // vtk_m_ContourTable_h

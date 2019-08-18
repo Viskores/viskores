@@ -15,8 +15,8 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/worklet/Contour.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/MarchingCubes.h>
 
 namespace vtkm_ut_mc_worklet
 {
@@ -276,7 +276,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
 void TestMarchingCubesUniformGrid()
 {
-  std::cout << "Testing MarchingCubes worklet on a uniform grid" << std::endl;
+  std::cout << "Testing Contour worklet on a uniform grid" << std::endl;
 
   vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::DataSet dataSet = vtkm_ut_mc_worklet::MakeIsosurfaceTestDataSet(dims);
@@ -288,7 +288,7 @@ void TestMarchingCubesUniformGrid()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
-  vtkm::worklet::MarchingCubes isosurfaceFilter;
+  vtkm::worklet::Contour isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
   vtkm::Float32 contourValue = 0.5f;
@@ -331,7 +331,7 @@ void TestMarchingCubesUniformGrid()
 
 void TestMarchingCubesExplicit()
 {
-  std::cout << "Testing MarchingCubes worklet on explicit data" << std::endl;
+  std::cout << "Testing Contour worklet on explicit data" << std::endl;
 
   using DataSetGenerator = vtkm_ut_mc_worklet::MakeRadiantDataSet;
   using Vec3Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
@@ -353,7 +353,7 @@ void TestMarchingCubesExplicit()
   Vec3Handle vertices;
   Vec3Handle normals;
 
-  vtkm::worklet::MarchingCubes marchingCubes;
+  vtkm::worklet::Contour marchingCubes;
   marchingCubes.SetMergeDuplicatePoints(false);
 
   auto result = marchingCubes.Run(
@@ -390,11 +390,11 @@ void TestMarchingCubesExplicit()
   VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues(),
                    "Output cell data invalid");
   VTKM_TEST_ASSERT(test_equal(vertices.GetNumberOfValues(), 2472),
-                   "Wrong vertices result for MarchingCubes worklet");
+                   "Wrong vertices result for Contour worklet");
   VTKM_TEST_ASSERT(test_equal(normals.GetNumberOfValues(), 2472),
-                   "Wrong normals result for MarchingCubes worklet");
+                   "Wrong normals result for Contour worklet");
   VTKM_TEST_ASSERT(test_equal(scalars.GetNumberOfValues(), 2472),
-                   "Wrong scalars result for MarchingCubes worklet");
+                   "Wrong scalars result for Contour worklet");
 }
 
 void TestMarchingCubes()

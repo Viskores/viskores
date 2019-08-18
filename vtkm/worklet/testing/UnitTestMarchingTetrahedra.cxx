@@ -11,7 +11,7 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -73,7 +73,7 @@ void TestMarchingTetrahedra()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 
-  vtkm::worklet::MarchingCubes isosurfaceFilter;
+  vtkm::worklet::Contour isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
   auto result = isosurfaceFilter.Run(&isoValue,

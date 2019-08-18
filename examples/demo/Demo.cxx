@@ -22,7 +22,7 @@
 #include <vtkm/io/reader/VTKDataSetReader.h>
 
 #include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 
 #include <iostream>
 
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
   }
   else
   {
-    std::cout << "using: " << argv[1] << " as MarchingCubes input file" << std::endl;
+    std::cout << "using: " << argv[1] << " as Contour input file" << std::endl;
     vtkm::io::reader::VTKDataSetReader reader(argv[1]);
     inputData = reader.ReadDataSet();
     isovalue = static_cast<vtkm::Float32>(atof(argv[2]));
@@ -110,14 +110,14 @@ int main(int argc, char* argv[])
   view.SaveAs("demo_input.pnm");
 
   // Create an isosurface filter
-  vtkm::filter::MarchingCubes filter;
+  vtkm::filter::Contour filter;
   filter.SetGenerateNormals(false);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0, isovalue);
   filter.SetActiveField(fieldName);
   vtkm::cont::DataSet outputData = filter.Execute(inputData);
   // Render a separate image with the output isosurface
-  std::cout << "about to render the results of the MarchingCubes filter" << std::endl;
+  std::cout << "about to render the results of the Contour filter" << std::endl;
   vtkm::rendering::Scene scene2;
   makeScene(outputData, colorTable, fieldName, scene2);
 

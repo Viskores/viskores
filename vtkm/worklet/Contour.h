@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_worklet_MarchingCubes_h
-#define vtk_m_worklet_MarchingCubes_h
+#ifndef vtk_m_worklet_Contour_h
+#define vtk_m_worklet_Contour_h
 
 #include <vtkm/BinaryPredicates.h>
 #include <vtkm/VectorAnalysis.h>
@@ -50,7 +50,7 @@ namespace vtkm
 namespace worklet
 {
 
-namespace marchingcubes
+namespace contour
 {
 
 // -----------------------------------------------------------------------------
@@ -420,7 +420,7 @@ void MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& origina
   //need to build the new connectivity
   auto uniqueKeys = keys.GetUniqueKeys();
   vtkm::cont::Algorithm::LowerBounds(
-    uniqueKeys, original_keys, connectivity, marchingcubes::MultiContourLess());
+    uniqueKeys, original_keys, connectivity, contour::MultiContourLess());
 
   //update the edge ids
   vtkm::worklet::DispatcherMapField<CopyEdgeIds> edgeDispatcher;
@@ -620,12 +620,12 @@ struct GenerateNormalsDeduced
     vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1> dispatcherNormalsPass1(
       NormalsWorkletPass1::MakeScatter(*edges));
     dispatcherNormalsPass1.Invoke(
-      *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *normals);
+      *cellset, *cellset, coordinates, contour::make_ScalarField(*field), *normals);
 
     vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2> dispatcherNormalsPass2(
       NormalsWorkletPass2::MakeScatter(*edges));
     dispatcherNormalsPass2.Invoke(
-      *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *weights, *normals);
+      *cellset, *cellset, coordinates, contour::make_ScalarField(*field), *weights, *normals);
   }
 };
 
@@ -654,11 +654,11 @@ void GenerateNormals(vtkm::cont::ArrayHandle<vtkm::Vec<NormalCType, 3>>& normals
 }
 
 /// \brief Compute the isosurface for a uniform grid data set
-class MarchingCubes
+class Contour
 {
 public:
   //----------------------------------------------------------------------------
-  MarchingCubes(bool mergeDuplicates = true)
+  Contour(bool mergeDuplicates = true)
     : MergeDuplicatePoints(mergeDuplicates)
     , InterpolationWeights()
     , InterpolationEdgeIds()
@@ -717,7 +717,7 @@ public:
   vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
     const vtkm::cont::ArrayHandle<ValueType, StorageType>& input) const
   {
-    using vtkm::worklet::marchingcubes::MapPointField;
+    using vtkm::worklet::contour::MapPointField;
     MapPointField applyToField;
     vtkm::worklet::DispatcherMapField<MapPointField> applyFieldDispatcher(applyToField);
 
@@ -755,7 +755,7 @@ private:
             typename NormalType>
   struct DeduceCellType
   {
-    MarchingCubes* MC = nullptr;
+    Contour* MC = nullptr;
     const ValueType* isovalues = nullptr;
     const vtkm::Id* numIsoValues = nullptr;
     const CoordinateSystem* coordinateSystem = nullptr;
@@ -845,10 +845,10 @@ private:
     vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals> normals,
     bool withNormals)
   {
-    using vtkm::worklet::marchingcubes::ClassifyCell;
-    using vtkm::worklet::marchingcubes::EdgeWeightGenerate;
-    using vtkm::worklet::marchingcubes::EdgeWeightGenerateMetaData;
-    using vtkm::worklet::marchingcubes::MapPointField;
+    using vtkm::worklet::contour::ClassifyCell;
+    using vtkm::worklet::contour::EdgeWeightGenerate;
+    using vtkm::worklet::contour::EdgeWeightGenerateMetaData;
+    using vtkm::worklet::contour::MapPointField;
 
     // Setup the Dispatcher Typedefs
     using ClassifyDispatcher = vtkm::worklet::DispatcherMapTopology<ClassifyCell<ValueType>>;
@@ -862,7 +862,7 @@ private:
     // for each cell, and the number of vertices to be generated
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutputTrisPerCell;
     {
-      marchingcubes::ClassifyCell<ValueType> classifyCell;
+      contour::ClassifyCell<ValueType> classifyCell;
       ClassifyDispatcher dispatcher(classifyCell);
       dispatcher.Invoke(isoValuesHandle, inputField, cells, numOutputTrisPerCell, this->classTable);
     }
@@ -909,15 +909,15 @@ private:
       // output. But for InterpolationEdgeIds we need to do it manually once done
       if (numIsoValues == 1)
       {
-        marchingcubes::MergeDuplicates(this->InterpolationEdgeIds, //keys
-                                       this->InterpolationWeights, //values
-                                       this->InterpolationEdgeIds, //values
-                                       originalCellIdsForPoints,   //values
-                                       connectivity);              // computed using lower bounds
+        contour::MergeDuplicates(this->InterpolationEdgeIds, //keys
+                                 this->InterpolationWeights, //values
+                                 this->InterpolationEdgeIds, //values
+                                 originalCellIdsForPoints,   //values
+                                 connectivity);              // computed using lower bounds
       }
       else if (numIsoValues > 1)
       {
-        marchingcubes::MergeDuplicates(
+        contour::MergeDuplicates(
           vtkm::cont::make_ArrayHandleZip(contourIds, this->InterpolationEdgeIds), //keys
           this->InterpolationWeights,                                              //values
           this->InterpolationEdgeIds,                                              //values
@@ -948,12 +948,12 @@ private:
     //now that the vertices have been generated we can generate the normals
     if (withNormals)
     {
-      marchingcubes::GenerateNormals(normals,
-                                     inputField,
-                                     cells,
-                                     coordinateSystem,
-                                     this->InterpolationEdgeIds,
-                                     this->InterpolationWeights);
+      contour::GenerateNormals(normals,
+                               inputField,
+                               cells,
+                               coordinateSystem,
+                               this->InterpolationEdgeIds,
+                               this->InterpolationWeights);
     }
 
     return outputCells;
@@ -971,4 +971,4 @@ private:
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_MarchingCubes_h
+#endif // vtk_m_worklet_Contour_h

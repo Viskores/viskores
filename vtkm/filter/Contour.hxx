@@ -40,8 +40,8 @@ bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cell
 } // anonymous namespace
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT MarchingCubes::MarchingCubes()
-  : vtkm::filter::FilterDataSetWithField<MarchingCubes>()
+inline VTKM_CONT Contour::Contour()
+  : vtkm::filter::FilterDataSetWithField<Contour>()
   , IsoValues()
   , GenerateNormals(false)
   , ComputeFastNormalsForStructured(false)
@@ -53,7 +53,7 @@ inline VTKM_CONT MarchingCubes::MarchingCubes()
 }
 
 //-----------------------------------------------------------------------------
-inline void MarchingCubes::SetNumberOfIsoValues(vtkm::Id num)
+inline void Contour::SetNumberOfIsoValues(vtkm::Id num)
 {
   if (num >= 0)
   {
@@ -62,13 +62,13 @@ inline void MarchingCubes::SetNumberOfIsoValues(vtkm::Id num)
 }
 
 //-----------------------------------------------------------------------------
-inline vtkm::Id MarchingCubes::GetNumberOfIsoValues() const
+inline vtkm::Id Contour::GetNumberOfIsoValues() const
 {
   return static_cast<vtkm::Id>(this->IsoValues.size());
 }
 
 //-----------------------------------------------------------------------------
-inline void MarchingCubes::SetIsoValue(vtkm::Id index, vtkm::Float64 v)
+inline void Contour::SetIsoValue(vtkm::Id index, vtkm::Float64 v)
 {
   std::size_t i = static_cast<std::size_t>(index);
   if (i >= this->IsoValues.size())
@@ -79,20 +79,20 @@ inline void MarchingCubes::SetIsoValue(vtkm::Id index, vtkm::Float64 v)
 }
 
 //-----------------------------------------------------------------------------
-inline void MarchingCubes::SetIsoValues(const std::vector<vtkm::Float64>& values)
+inline void Contour::SetIsoValues(const std::vector<vtkm::Float64>& values)
 {
   this->IsoValues = values;
 }
 
 //-----------------------------------------------------------------------------
-inline vtkm::Float64 MarchingCubes::GetIsoValue(vtkm::Id index) const
+inline vtkm::Float64 Contour::GetIsoValue(vtkm::Id index) const
 {
   return this->IsoValues[static_cast<std::size_t>(index)];
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -203,11 +203,10 @@ inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool MarchingCubes::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+inline VTKM_CONT bool Contour::DoMapField(vtkm::cont::DataSet& result,
+                                          const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                                          const vtkm::filter::FieldMetadata& fieldMeta,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::ArrayHandle<T> fieldArray;
 

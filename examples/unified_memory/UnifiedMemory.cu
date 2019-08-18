@@ -11,7 +11,7 @@
 #include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Logging.h> //for GetHumanReadableSize
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherStreamingMapField.h>
 

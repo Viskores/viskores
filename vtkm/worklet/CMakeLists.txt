@@ -38,7 +38,7 @@ set(headers
   KernelSplatter.h
   Keys.h
   Magnitude.h
-  MarchingCubes.h
+  Contour.h
   Mask.h
   MaskIndices.h
   MaskNone.h

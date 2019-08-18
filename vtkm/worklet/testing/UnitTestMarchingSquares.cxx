@@ -11,7 +11,7 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 class SineWave : public vtkm::worklet::WorkletMapField

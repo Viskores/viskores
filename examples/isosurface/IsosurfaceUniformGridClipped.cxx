@@ -9,7 +9,7 @@
 //============================================================================
 
 #include <vtkm/filter/ClipWithImplicitFunction.h>
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
   clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(plane));
   vtkm::cont::DataSet clipped = clip.Execute(dataSet);
 
-  vtkm::filter::MarchingCubes filter;
+  vtkm::filter::Contour filter;
   filter.SetGenerateNormals(true);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0, 0.5);
