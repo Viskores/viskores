@@ -81,7 +81,13 @@ VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent NumTrianglesTable[] = {
   3, 4, 4, 5, 4, 5, 3, 4, 4, 5, 5, 2, 3, 4, 2, 1,
   2, 3, 3, 2, 3, 4, 2, 1, 3, 2, 4, 1, 2, 1, 1, 0,
   // CELL_SHAPE_WEDGE, case 0 - 63
+  0, 1, 1, 2, 1, 2, 1, 1, 1, 2, 2, 3, 2, 3, 3, 2,
+  1, 2, 2, 3, 2, 3, 3, 2, 2, 3, 3, 2, 3, 4, 4, 1,
+  1, 2, 2, 3, 2, 3, 3, 2, 2, 3, 3, 4, 3, 2, 4, 1,
+  2, 3, 3, 4, 3, 4, 2, 1, 1, 2, 2, 1, 2, 1, 1, 0,
   // CELL_SHAPE_PYRAMID, case 0 - 31
+  0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 2,
+  2, 3, 3, 2, 3, 4, 2, 1, 3, 2, 4, 1, 2, 1, 1, 0
 };
 
 VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent EdgeTable[] = {
@@ -104,9 +110,26 @@ VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent EdgeTable[] = {
   0, 4, // side
   1, 5,
   2, 6,
-  3, 7
+  3, 7,
   // CELL_SHAPE_WEDGE, 9 edges * 2 vertices/edge = 18 entries
+  0, 1,
+  1, 2,
+  2, 0,
+  3, 4,
+  4, 5,
+  5, 3,
+  0, 3,
+  1, 4,
+  2, 5,
   // CELL_SHAPE_PYRAMID, 8 edges * 2 vertices/ede = 16 entries
+  0, 1,
+  1, 2,
+  2, 3,
+  3, 0,
+  0, 4,
+  1, 4,
+  2, 4,
+  3, 4
 };
 
 VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent EdgeTableOffset[] = {
@@ -124,7 +147,7 @@ VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent EdgeTableOffset[] = {
   0, //  CELL_SHAPE_VOXEL = 11,
   12, //  CELL_SHAPE_HEXAHEDRON = 12,
   12+24,    //  CELL_SHAPE_WEDGE = 13,
-  12+24+18 //  CELL_SHAPE_PYRAMID = 14,
+  12+24+18  //  CELL_SHAPE_PYRAMID = 14,
 };
 
 VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent TriangleTable[] = {
@@ -327,7 +350,108 @@ VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent TriangleTable[] = {
   8,  1,  10, 8,  X,  X,  X,  X,  1,  10, 2,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,
   1,  3,  8,  9,  1,  8,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  0,  9,  1,  X,  X,  X,  X,  X,
   X,  X,  X,  X,  X,  X,  X,  X,  0,  3,  8,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,
-  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X
+  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,
+
+  //  CELL_SHAPE_WEDGE = 13, 64 cases, 13 edges/case, 832 total entries
+  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //0
+  0,  6,  2,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //1
+  0,  1,  7,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //2
+  6,  1,  7,  6,  2,  1,  X,  X,  X,  X,  X,  X,  X, //3
+  1,  2,  8,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //4
+  6,  1,  0,  6,  8,  1,  X,  X,  X,  X,  X,  X,  X, //5
+  0,  2,  8,  7,  0,  8,  X,  X,  X,  X,  X,  X,  X, //6
+  7,  6,  8,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //7
+  3,  5,  6,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //8
+  3,  5,  0,  5,  2,  0,  X,  X,  X,  X,  X,  X,  X, //9
+  0,  1,  7,  6,  3,  5,  X,  X,  X,  X,  X,  X,  X, //10
+  1,  7,  3,  1,  3,  5,  1,  5,  2,  X,  X,  X,  X, //11
+  2,  8,  1,  6,  3,  5,  X,  X,  X,  X,  X,  X,  X, //12
+  0,  3,  1,  1,  3,  5,  1,  5,  8,  X,  X,  X,  X, //13
+  6,  3,  5,  0,  8,  7,  0,  2,  8,  X,  X,  X,  X, //14
+  7,  3,  5,  7,  5,  8,  X,  X,  X,  X,  X,  X,  X, //15
+  7,  4,  3,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //16
+  7,  4,  3,  0,  6,  2,  X,  X,  X,  X,  X,  X,  X, //17
+  0,  1,  3,  1,  4,  3,  X,  X,  X,  X,  X,  X,  X, //18
+  1,  4,  3,  1,  3,  6,  1,  6,  2,  X,  X,  X,  X, //19
+  7,  4,  3,  2,  8,  1,  X,  X,  X,  X,  X,  X,  X, //20
+  7,  4,  3,  6,  1,  0,  6,  8,  1,  X,  X,  X,  X, //21
+  0,  4,  3,  0,  8,  4,  0,  2,  8,  X,  X,  X,  X, //22
+  6,  8,  3,  3,  8,  4,  X,  X,  X,  X,  X,  X,  X, //23
+  6,  7,  4,  6,  4,  5,  X,  X,  X,  X,  X,  X,  X, //24
+  0,  7,  5,  7,  4,  5,  2,  0,  5,  X,  X,  X,  X, //25
+  1,  6,  0,  1,  5,  6,  1,  4,  5,  X,  X,  X,  X, //26
+  2,  1,  5,  5,  1,  4,  X,  X,  X,  X,  X,  X,  X, //27
+  2,  8,  1,  6,  7,  5,  7,  4,  5,  X,  X,  X,  X, //28
+  0,  7,  5,  7,  4,  5,  0,  5,  1,  1,  5,  8,  X, //29
+  0,  2,  8,  0,  8,  4,  0,  4,  5,  0,  5,  6,  X, //30
+  8,  4,  5,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //31
+  4,  8,  5,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //32
+  4,  8,  5,  0,  6,  2,  X,  X,  X,  X,  X,  X,  X, //33
+  4,  8,  5,  0,  1,  7,  X,  X,  X,  X,  X,  X,  X, //34
+  4,  8,  5,  6,  1,  7,  6,  2,  1,  X,  X,  X,  X, //35
+  1,  5,  4,  2,  5,  1,  X,  X,  X,  X,  X,  X,  X, //36
+  1,  5,  4,  1,  6,  5,  1,  0,  6,  X,  X,  X,  X, //37
+  5,  4,  7,  5,  7,  0,  5,  0,  2,  X,  X,  X,  X, //38
+  6,  4,  7,  6,  5,  4,  X,  X,  X,  X,  X,  X,  X, //39
+  6,  3,  8,  3,  4,  8,  X,  X,  X,  X,  X,  X,  X, //40
+  0,  3,  4,  0,  4,  8,  0,  8,  2,  X,  X,  X,  X, //41
+  7,  0,  1,  6,  3,  4,  6,  4,  8,  X,  X,  X,  X, //42
+  1,  7,  3,  1,  3,  2,  2,  3,  8,  8,  3,  4,  X, //43
+  2,  6,  1,  6,  3,  1,  3,  4,  1,  X,  X,  X,  X, //44
+  0,  3,  1,  1,  3,  4,  X,  X,  X,  X,  X,  X,  X, //45
+  7,  0,  4,  4,  0,  2,  4,  2,  3,  3,  2,  6,  X, //46
+  7,  3,  4,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //47
+  7,  8,  5,  7,  5,  3,  X,  X,  X,  X,  X,  X,  X, //48
+  0,  6,  2,  7,  8,  5,  7,  5,  3,  X,  X,  X,  X, //49
+  0,  1,  3,  1,  5,  3,  1,  8,  5,  X,  X,  X,  X, //50
+  2,  1,  6,  6,  1,  3,  5,  1,  8,  3,  1,  5,  X, //51
+  1,  3,  7,  1,  5,  3,  1,  2,  5,  X,  X,  X,  X, //52
+  1,  0,  6,  1,  6,  5,  1,  5,  7,  7,  5,  3,  X, //53
+  0,  2,  5,  0,  5,  3,  X,  X,  X,  X,  X,  X,  X, //54
+  3,  6,  5,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //55
+  7,  8,  6,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //56
+  0,  7,  8,  0,  8,  2,  X,  X,  X,  X,  X,  X,  X, //57
+  0,  1,  6,  1,  8,  6,  X,  X,  X,  X,  X,  X,  X, //58
+  2,  1,  8,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //59
+  6,  7,  1,  6,  1,  2,  X,  X,  X,  X,  X,  X,  X, //60
+  0,  7,  1,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //61
+  0,  2,  6,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //62
+  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //63
+
+  //  CELL_SHAPE_PYRAMID = 14, 32 cases, 13 edges/case, 416 total entries
+  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //0
+  3,  4,  0,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //1
+  5,  1,  0,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //2
+  5,  1,  4,  1,  3,  4,  X,  X,  X,  X,  X,  X,  X, //3
+  6,  2,  1,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //4
+  3,  4,  0,  6,  2,  1,  X,  X,  X,  X,  X,  X,  X, //5
+  5,  2,  0,  6,  2,  5,  X,  X,  X,  X,  X,  X,  X, //6
+  2,  3,  4,  2,  4,  6,  4,  5,  6,  X,  X,  X,  X, //7
+  2,  7,  3,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //8
+  2,  7,  4,  4,  0,  2,  X,  X,  X,  X,  X,  X,  X, //9
+  5,  1,  0,  2,  7,  3,  X,  X,  X,  X,  X,  X,  X, //10
+  5,  7,  4,  1,  7,  5,  2,  7,  1,  X,  X,  X,  X, //11
+  6,  3,  1,  7,  3,  6,  X,  X,  X,  X,  X,  X,  X, //12
+  4,  6,  7,  0,  6,  4,  1,  6,  0,  X,  X,  X,  X, //13
+  7,  5,  6,  3,  5,  7,  0,  5,  3,  X,  X,  X,  X, //14
+  7,  4,  5,  7,  5,  6,  X,  X,  X,  X,  X,  X,  X, //15
+  7,  5,  4,  7,  6,  5,  X,  X,  X,  X,  X,  X,  X, //16
+  5,  0,  3,  6,  5,  3,  7,  6,  3,  X,  X,  X,  X, //17
+  1,  0,  4,  7,  1,  4,  6,  1,  7,  X,  X,  X,  X, //18
+  6,  1,  3,  7,  6,  3,  X,  X,  X,  X,  X,  X,  X, //19
+  7,  5,  4,  7,  1,  5,  7,  2,  1,  X,  X,  X,  X, //20
+  3,  7,  0,  7,  5,  0,  7,  2,  5,  2,  1,  5,  X, //21
+  4,  2,  0,  7,  2,  4,  X,  X,  X,  X,  X,  X,  X, //22
+  7,  2,  3,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //23
+  2,  4,  3,  5,  4,  2,  6,  5,  2,  X,  X,  X,  X, //24
+  2,  5,  0,  2,  6,  5,  X,  X,  X,  X,  X,  X,  X, //25
+  6,  1,  0,  4,  6,  0,  3,  6,  4,  3,  2,  6,  X, //26
+  2,  6,  1,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //27
+  1,  4,  3,  1,  5,  4,  X,  X,  X,  X,  X,  X,  X, //28
+  1,  5,  0,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //29
+  4,  3,  0,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X, //30
+  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X,  X  //31
+
 #undef X
 };
 
@@ -346,7 +470,7 @@ VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent TriangleTableOffset[] = {
   0, //  CELL_SHAPE_VOXEL = 11,
   112, //  CELL_SHAPE_HEXAHEDRON = 12,
   112+4096, //  CELL_SHAPE_WEDGE = 13,
-  112+4096, // FIXME: put in correct number in. //  CELL_SHAPE_PYRAMID = 14,
+  112+4096+832, //  CELL_SHAPE_PYRAMID = 14,
 };
 
 // clang-format on
@@ -386,7 +510,9 @@ public:
         vtkm::cont::make_ArrayHandle(NumVerticesPerCellTable, vtkm::NUMBER_OF_CELL_SHAPES))
     , NumTrianglesTableOffsetArray(
         vtkm::cont::make_ArrayHandle(NumTrianglesTableOffset, vtkm::NUMBER_OF_CELL_SHAPES))
-    , NumTrianglesTableArray(vtkm::cont::make_ArrayHandle(NumTrianglesTable, 272))
+    , NumTrianglesTableArray(
+        vtkm::cont::make_ArrayHandle(NumTrianglesTable,
+                                     sizeof(NumTrianglesTable) / sizeof(NumTrianglesTable[0])))
   {
   }
 
@@ -441,7 +567,6 @@ public:
         13, //  CELL_SHAPE_PYRAMID = 14,
       };
 
-      // TBD
       vtkm::IdComponent triOffset = TriangleTableOffsetPortal.Get(shape) +
         NumEntriesPerCase[shape] * caseNumber + triangleNumber * 3;
       vtkm::IdComponent edgeIndex = TriangleTablePortal.Get(triOffset + vertexNumber);

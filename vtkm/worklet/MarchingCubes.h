@@ -122,10 +122,6 @@ public:
                             vtkm::IdComponent& numTriangles,
                             const ClassifyTableType& classifyTable) const
   {
-    //    std::cout << "cell shape: " << int(shape.Id)
-    //              << ", numVerticesPerCells: " << classifyTable.GetNumVerticesPerCell(shape.Id)
-    //              << std::endl;
-
     vtkm::IdComponent sum = 0;
     vtkm::IdComponent numIsoValues = static_cast<vtkm::IdComponent>(isovalues.GetNumberOfValues());
     vtkm::IdComponent numVerticesPerCell = classifyTable.GetNumVerticesPerCell(shape.Id);
@@ -139,8 +135,6 @@ public:
       }
 
       sum += classifyTable.GetNumTriangles(shape.Id, caseNumber);
-      //      std::cout << "isovalue: " << isovalues[i] << ", case: " << caseNumber << ", num triangles: "
-      //                << classifyTable.GetNumTriangles(shape.Id, caseNumber) << std::endl;
     }
     numTriangles = sum;
   }
@@ -149,6 +143,7 @@ public:
 /// \brief Used to store data need for the EdgeWeightGenerate worklet.
 /// This information is not passed as part of the arguments to the worklet as
 /// that dramatically increase compile time by 200%
+// TODO: remove unused data members.
 // -----------------------------------------------------------------------------
 class EdgeWeightGenerateMetaData : vtkm::cont::ExecutionObjectBase
 {
@@ -311,8 +306,6 @@ public:
       }
 
       sum += classifyTable.GetNumTriangles(shape.Id, caseNumber);
-      //      std::cout << "isovalue: " << isovalues[i] << ", case: " << caseNumber << ", num triangles: "
-      //                << classifyTable.GetNumTriangles(shape.Id, caseNumber) << std::endl;
       if (sum > visitIndex)
       {
         break;
