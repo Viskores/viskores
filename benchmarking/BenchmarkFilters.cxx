@@ -471,12 +471,12 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(WarpVector, BenchWarpVector);
 
   template <typename, typename DeviceAdapter>
-  struct BenchMarchingCubes
+  struct BenchContour
   {
-    vtkm::filter::MarchingCubes Filter;
+    vtkm::filter::Contour Filter;
 
     VTKM_CONT
-    BenchMarchingCubes(vtkm::Id numIsoVals, bool mergePoints, bool normals, bool fastNormals)
+    BenchContour(vtkm::Id numIsoVals, bool mergePoints, bool normals, bool fastNormals)
       : Filter()
     {
       this->Filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
@@ -513,25 +513,25 @@ class BenchmarkFilters
     std::string Description() const
     {
       std::ostringstream desc;
-      desc << "MarchingCubes numIsoVal=" << this->Filter.GetNumberOfIsoValues() << " "
+      desc << "Contour numIsoVal=" << this->Filter.GetNumberOfIsoValues() << " "
            << "mergePoints=" << this->Filter.GetMergeDuplicatePoints() << " "
            << "normals=" << this->Filter.GetGenerateNormals() << " "
            << "fastNormals=" << this->Filter.GetComputeFastNormalsForStructured();
       return desc.str();
     }
   };
-  VTKM_MAKE_BENCHMARK(MarchingCubes1FFF, BenchMarchingCubes, 1, false, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes3FFF, BenchMarchingCubes, 3, false, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes12FFF, BenchMarchingCubes, 12, false, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes1TFF, BenchMarchingCubes, 1, true, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes3TFF, BenchMarchingCubes, 3, true, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes12TFF, BenchMarchingCubes, 12, true, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes1FTF, BenchMarchingCubes, 1, false, true, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes3FTF, BenchMarchingCubes, 3, false, true, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes12FTF, BenchMarchingCubes, 12, false, true, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes1FTT, BenchMarchingCubes, 1, false, true, true);
-  VTKM_MAKE_BENCHMARK(MarchingCubes3FTT, BenchMarchingCubes, 3, false, true, true);
-  VTKM_MAKE_BENCHMARK(MarchingCubes12FTT, BenchMarchingCubes, 12, false, true, true);
+  VTKM_MAKE_BENCHMARK(Contour1FFF, BenchContour, 1, false, false, false);
+  VTKM_MAKE_BENCHMARK(Contour3FFF, BenchContour, 3, false, false, false);
+  VTKM_MAKE_BENCHMARK(Contour12FFF, BenchContour, 12, false, false, false);
+  VTKM_MAKE_BENCHMARK(Contour1TFF, BenchContour, 1, true, false, false);
+  VTKM_MAKE_BENCHMARK(Contour3TFF, BenchContour, 3, true, false, false);
+  VTKM_MAKE_BENCHMARK(Contour12TFF, BenchContour, 12, true, false, false);
+  VTKM_MAKE_BENCHMARK(Contour1FTF, BenchContour, 1, false, true, false);
+  VTKM_MAKE_BENCHMARK(Contour3FTF, BenchContour, 3, false, true, false);
+  VTKM_MAKE_BENCHMARK(Contour12FTF, BenchContour, 12, false, true, false);
+  VTKM_MAKE_BENCHMARK(Contour1FTT, BenchContour, 1, false, true, true);
+  VTKM_MAKE_BENCHMARK(Contour3FTT, BenchContour, 3, false, true, true);
+  VTKM_MAKE_BENCHMARK(Contour12FTT, BenchContour, 12, false, true, true);
 
   template <typename, typename DeviceAdapter>
   struct BenchExternalFaces
@@ -750,26 +750,26 @@ public:
     {
       if (ReducedOptions)
       {
-        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FTT, dummyTypes, id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes1TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes3TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes1FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes1FTT, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FTT, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour3FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour3TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour3FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour3FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FTT, dummyTypes, id);
       }
     }
     if (benches & BenchmarkName::EXTERNAL_FACES)
