@@ -15,6 +15,8 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/cont/ImplicitFunctionHandle.h>
+#include <vtkm/filter/ClipWithImplicitFunction.h>
 #include <vtkm/worklet/Contour.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
@@ -395,10 +397,65 @@ void TestContourExplicit()
                    "Wrong scalars result for Contour worklet");
 }
 
+void TestContourClipped()
+{
+  std::cout << "Testing Contour worklet on a clipped uniform grid" << std::endl;
+
+  vtkm::Id3 dims(4, 4, 4);
+  vtkm::cont::DataSet dataSet = vtkm_ut_mc_worklet::MakeIsosurfaceTestDataSet(dims);
+
+  vtkm::Plane plane(vtkm::make_Vec(0.5, 0.5, 0.5), vtkm::make_Vec(1, 1, 1));
+  vtkm::filter::ClipWithImplicitFunction clip;
+  clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(plane));
+  vtkm::cont::DataSet clipped = clip.Execute(dataSet);
+
+  vtkm::cont::CellSetExplicit<> cellSet;
+  clipped.GetCellSet().CopyTo(cellSet);
+  vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
+  clipped.GetField("nodevar").GetData().CopyTo(pointFieldArray);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
+  clipped.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+
+  vtkm::Float32 contourValue = 0.5f;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
+
+  vtkm::worklet::Contour isosurfaceFilter;
+  isosurfaceFilter.SetMergeDuplicatePoints(false);
+
+  auto result = isosurfaceFilter.Run(&contourValue,
+                                     1,
+                                     cellSet,
+                                     dataSet.GetCoordinateSystem(),
+                                     pointFieldArray,
+                                     verticesArray,
+                                     normalsArray);
+
+  scalarsArray = isosurfaceFilter.ProcessPointField(pointFieldArray);
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
+  cellFieldArrayOut = isosurfaceFilter.ProcessCellField(cellFieldArray);
+
+  std::cout << "vertices: ";
+  vtkm::cont::printSummary_ArrayHandle(verticesArray, std::cout);
+  std::cout << std::endl;
+  std::cout << "normals: ";
+  vtkm::cont::printSummary_ArrayHandle(normalsArray, std::cout);
+  std::cout << std::endl;
+  std::cout << "scalars: ";
+  vtkm::cont::printSummary_ArrayHandle(scalarsArray, std::cout);
+  std::cout << std::endl;
+  std::cout << "cell field: ";
+  vtkm::cont::printSummary_ArrayHandle(cellFieldArrayOut, std::cout);
+  std::cout << std::endl;
+}
+
 void TestContour()
 {
   TestContourUniformGrid();
   TestContourExplicit();
+  TestContourClipped();
 }
 
 int UnitTestContour(int argc, char* argv[])
