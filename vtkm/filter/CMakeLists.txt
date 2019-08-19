@@ -60,6 +60,7 @@ set(headers
   Probe.h
   SplitSharpEdges.h
   Streamline.h
+  StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
@@ -122,6 +123,7 @@ set(header_template_sources
   Probe.hxx
   SplitSharpEdges.hxx
   Streamline.hxx
+  StreamSurface.hxx
   SurfaceNormals.hxx
   Tetrahedralize.hxx
   Threshold.hxx
