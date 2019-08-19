@@ -182,12 +182,12 @@ void TestPointGradientUniform3DWithVectorField2()
   }
 }
 
-void TestPointGradientExplicit()
+void TestPointGradientExplicit3D()
 {
-  std::cout << "Testing PointGradient Worklet on Explicit data" << std::endl;
+  std::cout << "Testing PointGradient Worklet on Explicit 3D data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet5();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
   dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
@@ -195,11 +195,48 @@ void TestPointGradientExplicit()
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
 
-  vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
-  for (int i = 0; i < 2; ++i)
+  //vtkm::cont::printSummary_ArrayHandle(result, std::cout, true);
+  const int nVerts = 11;
+  vtkm::Vec3f_32 expected[nVerts] = {
+    { 10.0f, 40.2f, 30.1f },  { 27.4f, 40.1f, 10.1f },        { 17.425f, 40.0f, 10.1f },
+    { -10.0f, 40.1f, 30.1f }, { 9.9f, -0.0500011f, 30.0f },   { 16.2125f, -4.55f, 10.0f },
+    { 6.2f, -4.6f, 10.0f },   { -10.1f, -0.0999985f, 30.0f }, { 22.5125f, -4.575f, 10.025f },
+    { 1.0f, -40.3f, 30.0f },  { 0.6f, -49.2f, 10.0f }
+  };
+  for (int i = 0; i < nVerts; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
                      "Wrong result for PointGradient worklet on 3D explicit data");
+  }
+}
+
+void TestPointGradientExplicit2D()
+{
+  std::cout << "Testing PointGradient Worklet on Explicit 3D data" << std::endl;
+
+  vtkm::cont::testing::MakeTestDataSet testDataSet;
+  vtkm::cont::DataSet dataSet = testDataSet.Make2DExplicitDataSet0();
+
+  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
+  dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
+
+  vtkm::worklet::PointGradient gradient;
+  auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
+
+  //vtkm::cont::printSummary_ArrayHandle(result, std::cout, true);
+  const int nVerts = 16;
+  vtkm::Vec3f_32 expected[nVerts] = { { -22.0f, -7.0f, 0.0f },       { -25.5f, -7.0f, 0.0f },
+                                      { -30.5f, 7.0f, 0.0f },        { -32.0f, 16.0f, 0.0f },
+                                      { -23.0f, -42.0f, 0.0f },      { -23.25f, -17.0f, 0.0f },
+                                      { -20.6667f, 1.33333f, 0.0f }, { -23.0f, 14.0f, 0.0f },
+                                      { -8.0f, -42.0f, 0.0f },       { 1.33333f, -19.7222f, 0.0f },
+                                      { -6.2963f, -4.03704f, 0.0f }, { -5.0f, 12.0f, 0.0f },
+                                      { 22.5556f, -13.4444f, 0.0f }, { -19.8889f, 59.1111f, 0.0f },
+                                      { 22.5556f, 15.4444f, 0.0f },  { 45.0f, 26.6667f, 0.0f } };
+  for (int i = 0; i < nVerts; ++i)
+  {
+    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+                     "Wrong result for PointGradient worklet on 2D explicit data");
   }
 }
 
@@ -209,7 +246,8 @@ void TestPointGradient()
   TestPointGradientUniform3D();
   TestPointGradientUniform3DWithVectorField();
   TestPointGradientUniform3DWithVectorField2();
-  TestPointGradientExplicit();
+  TestPointGradientExplicit2D();
+  TestPointGradientExplicit3D();
 }
 }
 
