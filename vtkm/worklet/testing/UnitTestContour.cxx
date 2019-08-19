@@ -272,7 +272,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
 } // vtkm_ut_mc_worklet namespace
 
-void TestMarchingCubesUniformGrid()
+void TestContourUniformGrid()
 {
   std::cout << "Testing Contour worklet on a uniform grid" << std::endl;
 
@@ -327,7 +327,7 @@ void TestMarchingCubesUniformGrid()
                    "Wrong result for Isosurface filter");
 }
 
-void TestMarchingCubesExplicit()
+void TestContourExplicit()
 {
   std::cout << "Testing Contour worklet on explicit data" << std::endl;
 
@@ -351,10 +351,10 @@ void TestMarchingCubesExplicit()
   Vec3Handle vertices;
   Vec3Handle normals;
 
-  vtkm::worklet::Contour marchingCubes;
-  marchingCubes.SetMergeDuplicatePoints(false);
+  vtkm::worklet::Contour Contour;
+  Contour.SetMergeDuplicatePoints(false);
 
-  auto result = marchingCubes.Run(
+  auto result = Contour.Run(
     &contourValue, 1, cellSet, dataSet.GetCoordinateSystem(), contourArray, vertices, normals);
 
   DataHandle scalars;
@@ -364,13 +364,13 @@ void TestMarchingCubesExplicit()
   DataSetGenerator::DataArrayHandle projectedArray;
   projectedField.GetData().CopyTo(projectedArray);
 
-  scalars = marchingCubes.ProcessPointField(projectedArray);
+  scalars = Contour.ProcessPointField(projectedArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
-  cellFieldArrayOut = marchingCubes.ProcessCellField(cellFieldArray);
+  cellFieldArrayOut = Contour.ProcessCellField(cellFieldArray);
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(vertices, std::cout);
@@ -395,13 +395,13 @@ void TestMarchingCubesExplicit()
                    "Wrong scalars result for Contour worklet");
 }
 
-void TestMarchingCubes()
+void TestContour()
 {
-  TestMarchingCubesUniformGrid();
-  TestMarchingCubesExplicit();
+  TestContourUniformGrid();
+  TestContourExplicit();
 }
 
-int UnitTestMarchingCubes(int argc, char* argv[])
+int UnitTestContour(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestMarchingCubes, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestContour, argc, argv);
 }

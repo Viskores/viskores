@@ -18,6 +18,7 @@ set(unit_tests
   UnitTestCellSetDualGraph.cxx
   UnitTestCellMeasure.cxx
   UnitTestClipping.cxx
+  UnitTestContour.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestContourTreeUniformAugmented.cxx
   UnitTestCoordinateSystemTransform.cxx
@@ -36,7 +37,6 @@ set(unit_tests
   UnitTestKdTreeBuildNNS.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
-  UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
   UnitTestMaskIndices.cxx
   UnitTestMaskPoints.cxx

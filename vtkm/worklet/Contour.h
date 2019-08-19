@@ -203,10 +203,6 @@ template <typename T>
 class EdgeWeightGenerate : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
-  struct ClassifyCellTagType : vtkm::ListTagBase<T>
-  {
-  };
-
   using ScatterType = vtkm::worklet::ScatterCounting;
 
   template <typename ArrayHandleType>
@@ -259,7 +255,7 @@ public:
       // the isovalues until the sum >= our visit index. But we need to make
       // sure the caseNumber is correct before stopping
       caseNumber = 0;
-      for (vtkm::Id j = 0; j < numVerticesPerCell; ++j)
+      for (vtkm::IdComponent j = 0; j < numVerticesPerCell; ++j)
       {
         caseNumber |= (fieldIn[j] > ivalue) << j;
       }
