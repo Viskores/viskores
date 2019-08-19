@@ -65,6 +65,7 @@ set(headers
   Threshold.h
   ThresholdPoints.h
   Triangulate.h
+  Tube.h
   VectorMagnitude.h
   VertexClustering.h
   WarpScalar.h
@@ -127,6 +128,7 @@ set(header_template_sources
   Threshold.hxx
   ThresholdPoints.hxx
   Triangulate.hxx
+  Tube.hxx
   VectorMagnitude.hxx
   VertexClustering.hxx
   WarpScalar.hxx

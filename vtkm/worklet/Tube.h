@@ -465,6 +465,14 @@ public:
   };
 
   VTKM_CONT
+  Tube()
+    : Capping(false)
+    , NumSides(0)
+    , Radius(0)
+  {
+  }
+
+  VTKM_CONT
   Tube(const bool& capping, const vtkm::Id& n, const vtkm::FloatDefault& r)
     : Capping(capping)
     , NumSides(n)
