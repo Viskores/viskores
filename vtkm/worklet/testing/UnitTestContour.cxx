@@ -427,7 +427,7 @@ void TestContourClipped()
   auto result = isosurfaceFilter.Run(&contourValue,
                                      1,
                                      cellSet,
-                                     dataSet.GetCoordinateSystem(),
+                                     clipped.GetCoordinateSystem(),
                                      pointFieldArray,
                                      verticesArray,
                                      normalsArray);
