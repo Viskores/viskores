@@ -117,7 +117,7 @@ public:
     vtkm::Id3 dims(4, 4, 4);
     vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-    vtkm::filter::MarchingCubes filter;
+    vtkm::filter::Contour filter;
     filter.SetGenerateNormals(true);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(0, 0.1);
