@@ -7,8 +7,8 @@ shopt -s dotglob
 readonly name="diy"
 readonly ownership="Diy Upstream <kwrobot@kitware.com>"
 readonly subtree="vtkm/thirdparty/$name/vtkm$name"
-readonly repo="https://gitlab.kitware.com/robertmaynard/diy2.git"
-readonly tag="for_vtkm_updated"
+readonly repo="https://gitlab.kitware.com/third-party/diy2.git"
+readonly tag="for/vtk-m"
 readonly paths="
 include
 LEGAL.txt
