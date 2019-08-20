@@ -1165,6 +1165,27 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   vtkm::Vec<WCoordType, 5> wpoints;
   wCoords.CopyInto(wpoints);
 
+  if (pcoords[2] > static_cast<ParametricCoordType>(0.999))
+  {
+    // If we are at the apex of the pyramid we need to do something special.
+    // As we approach the apex, the derivatives of the parametric shape
+    // functions in x and y go to 0 while the inverse of the Jacobian
+    // also goes to 0.  This results in 0/0 but using l'Hopital's rule
+    // we could actually compute the value of the limit, if we had a
+    // functional expression to compute the gradient.  We're on a computer
+    // so we don't but we can cheat and do a linear extrapolation of the
+    // derivatives which really ends up as the same thing.
+    using PCoordType = vtkm::Vec<ParametricCoordType, 3>;
+    using ReturnType = vtkm::Vec<ValueType, 3>;
+    PCoordType pcoords1(0.5f, 0.5f, (2 * 0.998f) - pcoords[2]);
+    ReturnType derivative1 =
+      detail::CellDerivativeFor3DCell(field, wpoints, pcoords1, vtkm::CellShapeTagPyramid{});
+    PCoordType pcoords2(0.5f, 0.5f, 0.998f);
+    ReturnType derivative2 =
+      detail::CellDerivativeFor3DCell(field, wpoints, pcoords2, vtkm::CellShapeTagPyramid{});
+    return (ValueType(2) * derivative2) - derivative1;
+  }
+
   return detail::CellDerivativeFor3DCell(field, wpoints, pcoords, vtkm::CellShapeTagPyramid());
 }
 }
