@@ -15,8 +15,10 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/cont/ImplicitFunctionHandle.h>
+#include <vtkm/filter/ClipWithImplicitFunction.h>
+#include <vtkm/worklet/Contour.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/MarchingCubes.h>
 
 namespace vtkm_ut_mc_worklet
 {
@@ -272,9 +274,9 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
 } // vtkm_ut_mc_worklet namespace
 
-void TestMarchingCubesUniformGrid()
+void TestContourUniformGrid()
 {
-  std::cout << "Testing MarchingCubes worklet on a uniform grid" << std::endl;
+  std::cout << "Testing Contour worklet on a uniform grid" << std::endl;
 
   vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::DataSet dataSet = vtkm_ut_mc_worklet::MakeIsosurfaceTestDataSet(dims);
@@ -286,7 +288,7 @@ void TestMarchingCubesUniformGrid()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
-  vtkm::worklet::MarchingCubes isosurfaceFilter;
+  vtkm::worklet::Contour isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
   vtkm::Float32 contourValue = 0.5f;
@@ -327,9 +329,9 @@ void TestMarchingCubesUniformGrid()
                    "Wrong result for Isosurface filter");
 }
 
-void TestMarchingCubesExplicit()
+void TestContourExplicit()
 {
-  std::cout << "Testing MarchingCubes worklet on explicit data" << std::endl;
+  std::cout << "Testing Contour worklet on explicit data" << std::endl;
 
   using DataSetGenerator = vtkm_ut_mc_worklet::MakeRadiantDataSet;
   using Vec3Handle = vtkm::cont::ArrayHandle<vtkm::Vec3f_32>;
@@ -351,10 +353,10 @@ void TestMarchingCubesExplicit()
   Vec3Handle vertices;
   Vec3Handle normals;
 
-  vtkm::worklet::MarchingCubes marchingCubes;
-  marchingCubes.SetMergeDuplicatePoints(false);
+  vtkm::worklet::Contour Contour;
+  Contour.SetMergeDuplicatePoints(false);
 
-  auto result = marchingCubes.Run(
+  auto result = Contour.Run(
     &contourValue, 1, cellSet, dataSet.GetCoordinateSystem(), contourArray, vertices, normals);
 
   DataHandle scalars;
@@ -364,13 +366,13 @@ void TestMarchingCubesExplicit()
   DataSetGenerator::DataArrayHandle projectedArray;
   projectedField.GetData().CopyTo(projectedArray);
 
-  scalars = marchingCubes.ProcessPointField(projectedArray);
+  scalars = Contour.ProcessPointField(projectedArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
-  cellFieldArrayOut = marchingCubes.ProcessCellField(cellFieldArray);
+  cellFieldArrayOut = Contour.ProcessCellField(cellFieldArray);
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(vertices, std::cout);
@@ -388,20 +390,75 @@ void TestMarchingCubesExplicit()
   VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues(),
                    "Output cell data invalid");
   VTKM_TEST_ASSERT(test_equal(vertices.GetNumberOfValues(), 2472),
-                   "Wrong vertices result for MarchingCubes worklet");
+                   "Wrong vertices result for Contour worklet");
   VTKM_TEST_ASSERT(test_equal(normals.GetNumberOfValues(), 2472),
-                   "Wrong normals result for MarchingCubes worklet");
+                   "Wrong normals result for Contour worklet");
   VTKM_TEST_ASSERT(test_equal(scalars.GetNumberOfValues(), 2472),
-                   "Wrong scalars result for MarchingCubes worklet");
+                   "Wrong scalars result for Contour worklet");
 }
 
-void TestMarchingCubes()
+void TestContourClipped()
 {
-  TestMarchingCubesUniformGrid();
-  TestMarchingCubesExplicit();
+  std::cout << "Testing Contour worklet on a clipped uniform grid" << std::endl;
+
+  vtkm::Id3 dims(4, 4, 4);
+  vtkm::cont::DataSet dataSet = vtkm_ut_mc_worklet::MakeIsosurfaceTestDataSet(dims);
+
+  vtkm::Plane plane(vtkm::make_Vec(0.5, 0.5, 0.5), vtkm::make_Vec(1, 1, 1));
+  vtkm::filter::ClipWithImplicitFunction clip;
+  clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(plane));
+  vtkm::cont::DataSet clipped = clip.Execute(dataSet);
+
+  vtkm::cont::CellSetExplicit<> cellSet;
+  clipped.GetCellSet().CopyTo(cellSet);
+  vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
+  clipped.GetField("nodevar").GetData().CopyTo(pointFieldArray);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
+  clipped.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+
+  vtkm::Float32 contourValue = 0.5f;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
+
+  vtkm::worklet::Contour isosurfaceFilter;
+  isosurfaceFilter.SetMergeDuplicatePoints(false);
+
+  auto result = isosurfaceFilter.Run(&contourValue,
+                                     1,
+                                     cellSet,
+                                     clipped.GetCoordinateSystem(),
+                                     pointFieldArray,
+                                     verticesArray,
+                                     normalsArray);
+
+  scalarsArray = isosurfaceFilter.ProcessPointField(pointFieldArray);
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
+  cellFieldArrayOut = isosurfaceFilter.ProcessCellField(cellFieldArray);
+
+  std::cout << "vertices: ";
+  vtkm::cont::printSummary_ArrayHandle(verticesArray, std::cout);
+  std::cout << std::endl;
+  std::cout << "normals: ";
+  vtkm::cont::printSummary_ArrayHandle(normalsArray, std::cout);
+  std::cout << std::endl;
+  std::cout << "scalars: ";
+  vtkm::cont::printSummary_ArrayHandle(scalarsArray, std::cout);
+  std::cout << std::endl;
+  std::cout << "cell field: ";
+  vtkm::cont::printSummary_ArrayHandle(cellFieldArrayOut, std::cout);
+  std::cout << std::endl;
 }
 
-int UnitTestMarchingCubes(int argc, char* argv[])
+void TestContour()
 {
-  return vtkm::cont::testing::Testing::Run(TestMarchingCubes, argc, argv);
+  TestContourUniformGrid();
+  TestContourExplicit();
+  TestContourClipped();
+}
+
+int UnitTestContour(int argc, char* argv[])
+{
+  return vtkm::cont::testing::Testing::Run(TestContour, argc, argv);
 }

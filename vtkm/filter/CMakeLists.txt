@@ -16,6 +16,7 @@ set(headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   ComputeMoments.h
+  Contour.h
   ContourTreeUniform.h
   ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
@@ -43,7 +44,6 @@ set(headers
   ImageConnectivity.h
   Lagrangian.h
   LagrangianStructures.h
-  MarchingCubes.h
   Mask.h
   MaskPoints.h
   MeshQuality.h
@@ -85,6 +85,7 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ComputeMoments.hxx
+  Contour.hxx
   ContourTreeUniform.hxx
   ContourTreeUniformAugmented.hxx
   CoordinateSystemTransform.hxx
@@ -108,7 +109,6 @@ set(header_template_sources
   ImageConnectivity.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
-  MarchingCubes.hxx
   Mask.hxx
   MaskPoints.hxx
   MeshQuality.hxx
