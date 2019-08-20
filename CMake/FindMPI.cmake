@@ -1142,8 +1142,14 @@ macro(_MPI_create_imported_target LANG)
   endif()
 
   # When this is consumed for compiling CUDA, use '-Xcompiler' to wrap '-pthread'.
-  string(REPLACE "-pthread" "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:-Xcompiler >-pthread"
-    _MPI_${LANG}_COMPILE_OPTIONS "${MPI_${LANG}_COMPILE_OPTIONS}")
+  # This only robustly works with CMake 3.12+ as before than it would be an error
+  # when evaluated with CUDA language disabled.
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.12 OR CMAKE_CUDA_COMPILER_LOADED)
+    string(REPLACE "-pthread" "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:-Xcompiler >-pthread"
+      _MPI_${LANG}_COMPILE_OPTIONS "${MPI_${LANG}_COMPILE_OPTIONS}")
+  else()
+    set(_MPI_${LANG}_COMPILE_OPTIONS "${MPI_${LANG}_COMPILE_OPTIONS}")
+  endif()
   set_property(TARGET MPI::MPI_${LANG} PROPERTY INTERFACE_COMPILE_OPTIONS "${_MPI_${LANG}_COMPILE_OPTIONS}")
   unset(_MPI_${LANG}_COMPILE_OPTIONS)
 
@@ -1712,7 +1718,13 @@ foreach(LANG IN ITEMS C CXX Fortran)
     set(MPI_${LANG}_INCLUDE_PATH "${MPI_${LANG}_INCLUDE_DIRS}")
     unset(MPI_${LANG}_COMPILE_FLAGS)
     if(MPI_${LANG}_COMPILE_OPTIONS)
-      list(JOIN MPI_${LANG}_COMPILE_FLAGS " " MPI_${LANG}_COMPILE_OPTIONS)
+      if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
+        list(JOIN MPI_${LANG}_COMPILE_OPTIONS " " MPI_${LANG}_COMPILE_FLAGS)
+      else()
+        foreach(_MPI_OPT IN LISTS MPI_${LANG}_COMPILE_OPTIONS)
+          string(APPEND MPI_${LANG}_COMPILE_FLAGS " ${_MPI_OPT}")
+        endforeach()
+      endif()
     endif()
     if(MPI_${LANG}_COMPILE_DEFINITIONS)
       foreach(_MPI_DEF IN LISTS MPI_${LANG}_COMPILE_DEFINITIONS)
