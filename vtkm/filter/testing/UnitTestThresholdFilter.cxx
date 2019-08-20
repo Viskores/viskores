@@ -11,6 +11,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Threshold.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
@@ -43,6 +44,11 @@ public:
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
                        cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
                      "Wrong cell field data");
+
+    // Make sure that the resulting data set can be successfully passed to another
+    // simple filter using the cell set.
+    vtkm::filter::CleanGrid clean;
+    clean.Execute(output);
   }
 
   void TestRegular3D() const
@@ -68,6 +74,11 @@ public:
                        cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
                        cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
                      "Wrong cell field data");
+
+    // Make sure that the resulting data set can be successfully passed to another
+    // simple filter using the cell set.
+    vtkm::filter::CleanGrid clean;
+    clean.Execute(output);
   }
 
   void TestExplicit3D() const
@@ -93,6 +104,11 @@ public:
                        cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
                        cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
                      "Wrong cell field data");
+
+    // Make sure that the resulting data set can be successfully passed to another
+    // simple filter using the cell set.
+    vtkm::filter::CleanGrid clean;
+    clean.Execute(output);
   }
 
   void TestExplicit3DZeroResults() const
@@ -115,6 +131,11 @@ public:
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 0, "field should be empty");
+
+    // Make sure that the resulting data set can be successfully passed to another
+    // simple filter using the cell set.
+    vtkm::filter::CleanGrid clean;
+    clean.Execute(output);
   }
 
   void operator()() const
