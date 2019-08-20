@@ -11,6 +11,7 @@
 set(headers
   Algorithm.h
   ArrayCopy.h
+  ArrayGetValues.h
   ArrayHandle.h
   ArrayHandleBitField.h
   ArrayHandleCartesianProduct.h
