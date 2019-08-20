@@ -21,6 +21,7 @@
 
 #include <array>
 #include <limits>
+#include <type_traits>
 
 namespace vtkm
 {
@@ -64,16 +65,20 @@ public:
 
   VTKM_EXEC_CONT vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
+  template <typename SPT = SourcePortalType,
+            typename Supported = typename vtkm::internal::PortalSupportsGets<SPT>::type,
+            typename = typename std::enable_if<Supported::value>::type>
   VTKM_EXEC_CONT ValueType Get(vtkm::Id valueIndex) const
   {
-    return this->Get(valueIndex,
-                     typename vtkm::internal::PortalSupportsGets<SourcePortalType>::type{});
+    return this->Get(valueIndex, tao::seq::make_index_sequence<NUM_COMPONENTS>());
   }
 
+  template <typename SPT = SourcePortalType,
+            typename Supported = typename vtkm::internal::PortalSupportsSets<SPT>::type,
+            typename = typename std::enable_if<Supported::value>::type>
   VTKM_EXEC_CONT void Set(vtkm::Id valueIndex, const ValueType& value) const
   {
-    this->Set(
-      valueIndex, value, typename vtkm::internal::PortalSupportsSets<SourcePortalType>::type{});
+    this->Set(valueIndex, value, tao::seq::make_index_sequence<NUM_COMPONENTS>());
   }
 
 private:
@@ -88,13 +93,6 @@ private:
   {
     return ValueType{ this->GetComponent<I>(valueIndex)... };
   }
-
-  VTKM_EXEC_CONT ValueType Get(vtkm::Id valueIndex, std::true_type) const
-  {
-    return this->Get(valueIndex, tao::seq::make_index_sequence<NUM_COMPONENTS>());
-  }
-
-  VTKM_EXEC_CONT ValueType Get(vtkm::Id, std::false_type) const { return ValueType{}; }
 
   template <std::size_t I>
   VTKM_EXEC_CONT bool SetComponent(vtkm::Id valueIndex, const ValueType& value) const
@@ -112,13 +110,6 @@ private:
     // Is there a better way to unpack an expression and execute them with no other side effects?
     (void)std::initializer_list<bool>{ this->SetComponent<I>(valueIndex, value)... };
   }
-
-  VTKM_EXEC_CONT void Set(vtkm::Id valueIndex, const ValueType& value, std::true_type) const
-  {
-    this->Set(valueIndex, value, tao::seq::make_index_sequence<NUM_COMPONENTS>());
-  }
-
-  VTKM_EXEC_CONT void Set(vtkm::Id, std::false_type) const {}
 };
 
 } // namespace internal
