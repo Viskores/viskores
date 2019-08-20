@@ -86,7 +86,7 @@ endif()
 
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
-  cmake_minimum_required(VERSION 3.9...3.14 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.9...3.15 FATAL_ERROR)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
   add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
@@ -107,7 +107,7 @@ if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
 endif()
 
 if(VTKm_ENABLE_CUDA)
-  cmake_minimum_required(VERSION 3.13...3.14 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.13...3.15 FATAL_ERROR)
   enable_language(CUDA)
 
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND

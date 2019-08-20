@@ -73,10 +73,17 @@ if(VTKM_COMPILER_IS_MSVC)
   target_compile_definitions(vtkm_developer_flags INTERFACE "_SCL_SECURE_NO_WARNINGS"
                                                             "_CRT_SECURE_NO_WARNINGS")
 
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
+    set(cxx_flags "-W3")
+    set(cuda_flags "-Xcompiler=-W3")
+  endif()
+  list(APPEND cxx_flags -wd4702 -wd4505)
+  list(APPEND cuda_flags "-Xcompiler=-wd4702,-wd4505")
+
   #Setup MSVC warnings with CUDA and CXX
-  target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd4702 -wd4505>)
+  target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>)
   if(TARGET vtkm::cuda)
-    target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-wd4702,-wd4505  -Xcudafe=--diag_suppress=1394,--diag_suppress=766>)
+    target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags}  -Xcudafe=--diag_suppress=1394,--diag_suppress=766>)
   endif()
 
   if(MSVC_VERSION LESS 1900)

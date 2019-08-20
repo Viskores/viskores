@@ -11,11 +11,11 @@
 # If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX.
 # We require CMake 3.11 with the MSVC generator as the $<COMPILE_LANGUAGE:>
 # generator expression is not supported on older versions.
-cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
 project (VTKm)
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-  cmake_minimum_required(VERSION 3.11...3.14 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.11...3.15 FATAL_ERROR)
 endif()
 
 # Update module path
