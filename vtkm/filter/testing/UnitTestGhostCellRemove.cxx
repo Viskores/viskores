@@ -264,37 +264,34 @@ void TestGhostCellRemove()
             ghostCellRemoval.RemoveByType(
               static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST));
 
-          std::vector<std::string> outputType = { "permutation", "explicit" };
-          for (auto& ot : outputType)
+          auto output = ghostCellRemoval.Execute(ds, vtkm::filter::GhostCellRemovePolicy());
+          vtkm::Id numCells = output.GetCellSet(0).GetNumberOfCells();
+
+          //Validate the output.
+          VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1,
+                           "Wrong number of cell sets in output");
+          vtkm::Id numCellsReq = (nx - 2 * layer) * (ny - 2 * layer);
+          if (nz != 0)
+            numCellsReq *= (nz - 2 * layer);
+
+          VTKM_TEST_ASSERT(numCellsReq == numCells, "Wrong number of cells in output");
+          if (dsType == "uniform" || dsType == "rectilinear")
           {
-            if (ot == "explicit")
-              ghostCellRemoval.ConvertOutputToUnstructured();
-
-            auto output = ghostCellRemoval.Execute(ds, vtkm::filter::GhostCellRemovePolicy());
-            vtkm::Id numCells = output.GetCellSet(0).GetNumberOfCells();
-
-            //Validate the output.
-            VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1,
-                             "Wrong number of cell sets in output");
-            vtkm::Id numCellsReq = (nx - 2 * layer) * (ny - 2 * layer);
-            if (nz != 0)
-              numCellsReq *= (nz - 2 * layer);
-
-            VTKM_TEST_ASSERT(numCellsReq == numCells, "Wrong number of cells in output");
-            if (dsType == "uniform" || dsType == "rectilinear")
+            if (nz == 0)
             {
-              if (nz == 0)
-                VTKM_TEST_ASSERT(
-                  output.GetCellSet(0).IsSameType(vtkm::cont::CellSetStructured<2>()),
-                  "Wrong cell type for explicit conversion");
-              else if (nz > 0)
-                VTKM_TEST_ASSERT(
-                  output.GetCellSet(0).IsSameType(vtkm::cont::CellSetStructured<3>()),
-                  "Wrong cell type for explicit conversion");
-            }
-            else if (ot == "explicit")
-              VTKM_TEST_ASSERT(output.GetCellSet(0).IsType<vtkm::cont::CellSetExplicit<>>(),
+              VTKM_TEST_ASSERT(output.GetCellSet(0).IsSameType(vtkm::cont::CellSetStructured<2>()),
                                "Wrong cell type for explicit conversion");
+            }
+            else if (nz > 0)
+            {
+              VTKM_TEST_ASSERT(output.GetCellSet(0).IsSameType(vtkm::cont::CellSetStructured<3>()),
+                               "Wrong cell type for explicit conversion");
+            }
+          }
+          else
+          {
+            VTKM_TEST_ASSERT(output.GetCellSet(0).IsType<vtkm::cont::CellSetExplicit<>>(),
+                             "Wrong cell type for explicit conversion");
           }
         }
 
@@ -309,7 +306,6 @@ void TestGhostCellRemove()
 
           vtkm::filter::GhostCellRemove ghostCellRemoval;
           ghostCellRemoval.RemoveGhostField();
-          ghostCellRemoval.ConvertOutputToUnstructured();
           auto output = ghostCellRemoval.Execute(ds, vtkm::filter::GhostCellRemovePolicy());
           VTKM_TEST_ASSERT(output.GetCellSet(0).IsType<vtkm::cont::CellSetExplicit<>>(),
                            "Wrong cell type for explicit conversion");
