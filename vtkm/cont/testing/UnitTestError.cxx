@@ -31,11 +31,17 @@ void RecursiveFunction(int recurse)
 
 void ValidateError(const vtkm::cont::Error& error)
 {
-  std::cout << error.what() << std::endl;
   std::string message = "Too much recursion";
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "stack trace: " << error.GetStackTrace());
+  std::stringstream stackTraceStream(error.GetStackTrace());
+  std::string tmp;
+  size_t count = 0;
+  while (std::getline(stackTraceStream, tmp))
+  {
+    count++;
+  }
+
   VTKM_TEST_ASSERT(test_equal(message, error.GetMessage()), "Message was incorrect");
-  VTKM_TEST_ASSERT(test_equal(stackTrace, error.GetStackTrace()), "StackTrace was incorrect");
+  VTKM_TEST_ASSERT(count > 11, "StackTrace did not recurse enough");
   VTKM_TEST_ASSERT(test_equal(message + "\n" + error.GetStackTrace(), std::string(error.what())),
                    "what() was incorrect");
 }
