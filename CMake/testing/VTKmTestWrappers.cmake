@@ -120,7 +120,7 @@ function(vtkm_unit_tests)
 
   # Logging is turned on by default now to Warning levels
   # To get tests to correctly output info level logs we need to set
-  # the StderrLogLevel 
+  # the StderrLogLevel
   set(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "vtkm::cont::SetStderrLogLevel(vtkm::cont::LogLevel::Info);")
 
   #the creation of the test source list needs to occur before the labeling as
