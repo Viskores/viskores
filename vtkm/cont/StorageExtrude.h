@@ -69,11 +69,6 @@ struct VTKM_ALWAYS_EXPORT ArrayPortalExtrudePlane
     return result;
   }
 
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const {}
-
   PortalType Portal;
   vtkm::Int32 NumberOfPlanes;
 };
@@ -284,10 +279,6 @@ struct VTKM_ALWAYS_EXPORT ArrayPortalExtrude
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   vtkm::Vec<ValueType, 6> GetWedge(const IndicesExtrude& index) const;
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const {}
 
   PortalType Portal;
   vtkm::Int32 NumberOfValues;
