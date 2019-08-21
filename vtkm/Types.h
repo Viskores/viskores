@@ -678,12 +678,13 @@ public:
   }
 
 public:
-  inline VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfComponents() const { return NUM_COMPONENTS; }
-
-  inline VTKM_EXEC_CONT const ComponentType& operator[](vtkm::IdComponent idx) const
+  inline VTKM_EXEC_CONT constexpr vtkm::IdComponent GetNumberOfComponents() const
   {
-    VTKM_ASSERT(idx >= 0);
-    VTKM_ASSERT(idx < NUM_COMPONENTS);
+    return NUM_COMPONENTS;
+  }
+
+  inline VTKM_EXEC_CONT constexpr const ComponentType& operator[](vtkm::IdComponent idx) const
+  {
     return this->Components[idx];
   }
 
@@ -854,8 +855,16 @@ public:
     return *this;
   }
 
+  inline VTKM_EXEC_CONT constexpr vtkm::IdComponent GetNumberOfComponents() const
+  {
+    return NUM_COMPONENTS;
+  }
+
   VTKM_EXEC_CONT
-  ComponentType operator[](vtkm::IdComponent vtkmNotUsed(idx)) const { return ComponentType(); }
+  constexpr ComponentType operator[](vtkm::IdComponent vtkmNotUsed(idx)) const
+  {
+    return ComponentType();
+  }
 
   VTKM_EXEC_CONT
   bool operator==(const Vec<T, NUM_COMPONENTS>& vtkmNotUsed(other)) const { return true; }
