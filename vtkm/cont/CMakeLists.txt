@@ -30,6 +30,7 @@ set(headers
   ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
+  ArrayHandleSOA.h
   ArrayHandleStreaming.h
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
@@ -128,6 +129,7 @@ set(template_sources
 
 set(sources
   ArrayHandle.cxx
+  ArrayHandleSOA.cxx
   ColorTablePresets.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx

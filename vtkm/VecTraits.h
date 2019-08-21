@@ -121,10 +121,16 @@ struct VTKM_NEVER_EXPORT VecTraits
 namespace detail
 {
 
-template <typename T, typename S = typename vtkm::VecTraits<T>::ComponentType>
-std::true_type HasVecTraitsImpl(T*);
+template <typename T>
+struct HasVecTraitsImpl
+{
+  template <typename A, typename S = typename vtkm::VecTraits<A>::ComponentType>
+  static std::true_type Test(A*);
 
-std::false_type HasVecTraitsImpl(...);
+  static std::false_type Test(...);
+
+  using Type = decltype(Test(std::declval<T*>()));
+};
 
 } // namespace detail
 
@@ -137,7 +143,7 @@ std::false_type HasVecTraitsImpl(...);
 /// VecTraits are not defined.
 ///
 template <typename T>
-using HasVecTraits = decltype(detail::HasVecTraitsImpl(std::declval<T*>()));
+using HasVecTraits = typename detail::HasVecTraitsImpl<T>::Type;
 
 // This partial specialization allows you to define a non-const version of
 // VecTraits and have it still work for const version.

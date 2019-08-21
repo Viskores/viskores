@@ -23,6 +23,7 @@
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/ArrayHandleZip.h>
@@ -243,6 +244,184 @@ public:
 #ifndef VTKM_CUDA
 private:
 #endif
+
+  struct TestArrayPortalSOA
+  {
+    template <typename ComponentType>
+    VTKM_CONT void operator()(ComponentType) const
+    {
+      constexpr vtkm::IdComponent NUM_COMPONENTS = 4;
+      using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
+      using ComponentArrayType = vtkm::cont::ArrayHandle<ComponentType>;
+      using SOAPortalType =
+        vtkm::internal::ArrayPortalSOA<ValueType, typename ComponentArrayType::PortalControl>;
+
+      std::cout << "Test SOA portal reflects data in component portals." << std::endl;
+      SOAPortalType soaPortalIn(ARRAY_SIZE);
+
+      std::array<vtkm::cont::ArrayHandle<ComponentType>, NUM_COMPONENTS> implArrays;
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+      {
+        vtkm::cont::ArrayHandle<ComponentType> array;
+        array.Allocate(ARRAY_SIZE);
+        auto portal = array.GetPortalControl();
+        for (vtkm::IdComponent valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+        {
+          portal.Set(valueIndex, TestValue(valueIndex, ValueType{})[componentIndex]);
+        }
+
+        soaPortalIn.SetPortal(componentIndex, portal);
+
+        implArrays[static_cast<std::size_t>(componentIndex)] = array;
+      }
+
+      VTKM_TEST_ASSERT(soaPortalIn.GetNumberOfValues() == ARRAY_SIZE);
+      CheckPortal(soaPortalIn);
+
+      std::cout << "Test data set in SOA portal gets set in component portals." << std::endl;
+      SOAPortalType soaPortalOut(ARRAY_SIZE);
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+      {
+        vtkm::cont::ArrayHandle<ComponentType> array;
+        array.Allocate(ARRAY_SIZE);
+        auto portal = array.GetPortalControl();
+        soaPortalOut.SetPortal(componentIndex, portal);
+
+        implArrays[static_cast<std::size_t>(componentIndex)] = array;
+      }
+
+      SetPortal(soaPortalOut);
+
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+      {
+        auto portal = implArrays[static_cast<size_t>(componentIndex)].GetPortalConstControl();
+        for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+        {
+          ComponentType x = TestValue(valueIndex, ValueType{})[componentIndex];
+          VTKM_TEST_ASSERT(test_equal(x, portal.Get(valueIndex)));
+        }
+      }
+    }
+  };
+
+  struct TestSOAAsInput
+  {
+    template <typename ValueType>
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      using VTraits = vtkm::VecTraits<ValueType>;
+      using ComponentType = typename VTraits::ComponentType;
+      constexpr vtkm::IdComponent NUM_COMPONENTS = VTraits::NUM_COMPONENTS;
+
+      {
+        vtkm::cont::ArrayHandleSOA<ValueType> soaArray;
+        for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+             ++componentIndex)
+        {
+          vtkm::cont::ArrayHandle<ComponentType> componentArray;
+          componentArray.Allocate(ARRAY_SIZE);
+          auto componentPortal = componentArray.GetPortalControl();
+          for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+          {
+            componentPortal.Set(
+              valueIndex,
+              VTraits::GetComponent(TestValue(valueIndex, ValueType{}), componentIndex));
+          }
+          soaArray.SetArray(componentIndex, componentArray);
+        }
+
+        VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+        VTKM_TEST_ASSERT(soaArray.GetPortalConstControl().GetNumberOfValues() == ARRAY_SIZE);
+        CheckPortal(soaArray.GetPortalConstControl());
+
+        vtkm::cont::ArrayHandle<ValueType> basicArray;
+        vtkm::cont::ArrayCopy(soaArray, basicArray);
+        VTKM_TEST_ASSERT(basicArray.GetNumberOfValues() == ARRAY_SIZE);
+        CheckPortal(basicArray.GetPortalConstControl());
+      }
+
+      {
+        // Check constructors
+        using Vec3 = vtkm::Vec<ComponentType, 3>;
+        std::vector<ComponentType> vector0;
+        std::vector<ComponentType> vector1;
+        std::vector<ComponentType> vector2;
+        for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+        {
+          Vec3 value = TestValue(valueIndex, Vec3{});
+          vector0.push_back(value[0]);
+          vector1.push_back(value[1]);
+          vector2.push_back(value[2]);
+        }
+
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray = { vector0, vector1, vector2 };
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray =
+            vtkm::cont::make_ArrayHandleSOA<Vec3>({ vector0, vector1, vector2 });
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray =
+            vtkm::cont::make_ArrayHandleSOA(vector0, vector1, vector2);
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA<Vec3>(
+            { &vector0.front(), &vector1.front(), &vector2.front() }, ARRAY_SIZE);
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+
+        {
+          vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA(
+            ARRAY_SIZE, &vector0.front(), &vector1.front(), &vector2.front());
+          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+          CheckPortal(soaArray.GetPortalConstControl());
+        }
+      }
+    }
+  };
+
+  struct TestSOAAsOutput
+  {
+    template <typename ValueType>
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      using VTraits = vtkm::VecTraits<ValueType>;
+      using ComponentType = typename VTraits::ComponentType;
+      constexpr vtkm::IdComponent NUM_COMPONENTS = VTraits::NUM_COMPONENTS;
+
+      vtkm::cont::ArrayHandle<ValueType> basicArray;
+      basicArray.Allocate(ARRAY_SIZE);
+      SetPortal(basicArray.GetPortalControl());
+
+      vtkm::cont::ArrayHandleSOA<ValueType> soaArray;
+      vtkm::cont::ArrayCopy(basicArray, soaArray);
+
+      VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+      {
+        vtkm::cont::ArrayHandle<ComponentType> componentArray = soaArray.GetArray(componentIndex);
+        auto componentPortal = componentArray.GetPortalConstControl();
+        for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+        {
+          ComponentType expected =
+            VTraits::GetComponent(TestValue(valueIndex, ValueType{}), componentIndex);
+          ComponentType got = componentPortal.Get(valueIndex);
+          VTKM_TEST_ASSERT(test_equal(expected, got));
+        }
+      }
+    }
+  };
 
   struct TestCompositeAsInput
   {
@@ -1259,6 +1438,21 @@ private:
     VTKM_CONT void operator()() const
     {
       std::cout << "Doing FancyArrayHandle tests" << std::endl;
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayPortalSOA" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestArrayPortalSOA(), ScalarTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleSOA as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(TestingFancyArrayHandles<DeviceAdapterTag>::TestSOAAsInput(),
+                                       HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleSOA as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestSOAAsOutput(), HandleTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleCompositeVector as Input" << std::endl;
