@@ -404,7 +404,7 @@ void TestContourClipped()
   vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::DataSet dataSet = vtkm_ut_mc_worklet::MakeIsosurfaceTestDataSet(dims);
 
-  vtkm::Plane plane(vtkm::make_Vec(0.5, 0.5, 0.5), vtkm::make_Vec(1, 1, 1));
+  vtkm::Plane plane(vtkm::make_Vec(0.51, 0.51, 0.51), vtkm::make_Vec(1, 1, 1));
   vtkm::filter::ClipWithImplicitFunction clip;
   clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(plane));
   vtkm::cont::DataSet clipped = clip.Execute(dataSet);
