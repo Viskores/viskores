@@ -906,10 +906,15 @@ protected:
       // Skipping INFORMATION is tricky. The reader needs to be aware of the types of the
       // information, which is not provided in the file.
       // Here we will just skip until an empty line is found.
-      std::string line;
-      while (this->DataFile->Stream.good() && line != "\n")
+      // However, if there are no keys, then there is nothing to read (and the stream tends
+      // to skip over empty lines.
+      if (numKeys > 0)
       {
-        std::getline(this->DataFile->Stream, line);
+        std::string line;
+        do
+        {
+          std::getline(this->DataFile->Stream, line);
+        } while (this->DataFile->Stream.good() && !line.empty());
       }
     }
     else
