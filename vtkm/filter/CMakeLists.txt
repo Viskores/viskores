@@ -98,7 +98,6 @@ set(header_template_sources
   ExtractStructured.hxx
   FieldToColors.hxx
   Filter.hxx
-  FilterCell.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx

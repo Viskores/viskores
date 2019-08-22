@@ -55,30 +55,67 @@ const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(vtkm::Id index)
 
 vtkm::Id DataSet::GetCoordinateSystemIndex(const std::string& name) const
 {
-  bool found;
-  vtkm::Id index = this->FindCoordinateSystemIndex(name, found);
-  if (found)
+  vtkm::Id index = -1;
+  for (auto i = this->CoordSystems.begin(); i != this->CoordSystems.end(); ++i)
   {
-    return index;
+    if (i->GetName() == name)
+    {
+      index = static_cast<vtkm::Id>(std::distance(this->CoordSystems.begin(), i));
+      break;
+    }
   }
-  else
+  return index;
+}
+
+const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(const std::string& name) const
+{
+  vtkm::Id index = this->GetCoordinateSystemIndex(name);
+  if (index < 0)
   {
-    throw vtkm::cont::ErrorBadValue("No coordinate system with requested name");
+    std::string error_message("No coordinate system with the name " + name +
+                              " valid names are: \n");
+    for (const auto& cs : this->CoordSystems)
+    {
+      error_message += cs.GetName() + "\n";
+    }
+    throw vtkm::cont::ErrorBadValue(error_message);
   }
+  return this->GetCoordinateSystem(index);
+}
+
+const vtkm::cont::DynamicCellSet& DataSet::GetCellSet(vtkm::Id index) const
+{
+  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCellSets()));
+  return this->CellSets[static_cast<std::size_t>(index)];
 }
 
 vtkm::Id DataSet::GetCellSetIndex(const std::string& name) const
 {
-  bool found;
-  vtkm::Id index = this->FindCellSetIndex(name, found);
-  if (found)
+  vtkm::Id index = -1;
+  for (auto i = this->CellSets.begin(); i != this->CellSets.end(); ++i)
   {
-    return index;
+    if (i->GetName() == name)
+    {
+      index = static_cast<vtkm::Id>(std::distance(this->CellSets.begin(), i));
+      break;
+    }
   }
-  else
+  return index;
+}
+
+const vtkm::cont::DynamicCellSet& DataSet::GetCellSet(const std::string& name) const
+{
+  vtkm::Id index = this->GetCellSetIndex(name);
+  if (index < 0)
   {
-    throw vtkm::cont::ErrorBadValue("No cell set with requested name");
+    std::string error_message("No cell set with the name " + name + " valid names are: \n");
+    for (const auto& cs : this->CellSets)
+    {
+      error_message += cs.GetName() + "\n";
+    }
+    throw vtkm::cont::ErrorBadValue(error_message);
   }
+  return this->GetCellSet(index);
 }
 
 void DataSet::PrintSummary(std::ostream& out) const
@@ -112,35 +149,6 @@ vtkm::Id DataSet::FindFieldIndex(const std::string& name,
     if ((association == vtkm::cont::Field::Association::ANY ||
          association == this->Fields[index].GetAssociation()) &&
         this->Fields[index].GetName() == name)
-    {
-      found = true;
-      return static_cast<vtkm::Id>(index);
-    }
-  }
-  found = false;
-  return -1;
-}
-
-
-vtkm::Id DataSet::FindCoordinateSystemIndex(const std::string& name, bool& found) const
-{
-  for (std::size_t index = 0; index < this->CoordSystems.size(); ++index)
-  {
-    if (this->CoordSystems[index].GetName() == name)
-    {
-      found = true;
-      return static_cast<vtkm::Id>(index);
-    }
-  }
-  found = false;
-  return -1;
-}
-
-vtkm::Id DataSet::FindCellSetIndex(const std::string& name, bool& found) const
-{
-  for (std::size_t index = 0; index < static_cast<size_t>(this->GetNumberOfCellSets()); ++index)
-  {
-    if (this->CellSets[index].GetName() == name)
     {
       found = true;
       return static_cast<vtkm::Id>(index);

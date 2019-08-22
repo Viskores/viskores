@@ -808,7 +808,7 @@ private:
     vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals> normals,
     bool withNormals)
   {
-    vtkm::cont::CellSetSingleType<> outputCells("contour");
+    vtkm::cont::CellSetSingleType<> outputCells(cells.GetName());
 
     DeduceCellType<ValueType,
                    CoordinateSystem,
@@ -949,7 +949,7 @@ private:
       this->InterpolationEdgeIds, this->InterpolationWeights, coordinateSystem, vertices);
 
     //assign the connectivity to the cell set
-    vtkm::cont::CellSetSingleType<> outputCells("contour");
+    vtkm::cont::CellSetSingleType<> outputCells(cells.GetName());
     outputCells.Fill(vertices.GetNumberOfValues(), vtkm::CELL_SHAPE_TRIANGLE, 3, connectivity);
 
     //now that the vertices have been generated we can generate the normals
