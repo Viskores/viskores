@@ -50,8 +50,7 @@ private:
     this->DataFile->Stream >> tag;
     if (tag == "FIELD")
     {
-      std::string name;
-      this->ReadFields(name, &visitBounds);
+      this->ReadGlobalFields(&visitBounds);
       this->DataFile->Stream >> tag;
     }
     if (visitBounds.empty())

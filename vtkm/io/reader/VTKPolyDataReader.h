@@ -78,8 +78,7 @@ private:
     this->DataFile->Stream >> tag;
     if (tag == "FIELD")
     {
-      std::string name;
-      this->ReadFields(name);
+      this->ReadGlobalFields();
       this->DataFile->Stream >> tag;
     }
 

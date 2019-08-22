@@ -335,8 +335,7 @@ protected:
     std::size_t numPoints;
     this->DataFile->Stream >> numPoints >> dataType >> std::ws;
 
-    vtkm::cont::VariantArrayHandle points;
-    this->DoReadArrayVariant(dataType, numPoints, 3, points);
+    vtkm::cont::VariantArrayHandle points = this->DoReadArrayVariant(dataType, numPoints, 3);
 
     this->DataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", points));
   }
@@ -416,58 +415,38 @@ protected:
       this->DataFile->Stream >> size;
       while (!this->DataFile->Stream.eof())
       {
-        std::string name;
-        vtkm::cont::ArrayHandle<vtkm::Float32> empty;
-        vtkm::cont::VariantArrayHandle data(empty);
-
         this->DataFile->Stream >> tag;
         if (tag == "SCALARS")
         {
-          this->ReadScalars(size, name, data);
+          this->ReadScalars(association, size);
         }
         else if (tag == "COLOR_SCALARS")
         {
-          this->ReadColorScalars(size, name);
+          this->ReadColorScalars(association, size);
         }
         else if (tag == "LOOKUP_TABLE")
         {
-          this->ReadLookupTable(name);
+          this->ReadLookupTable();
         }
         else if (tag == "VECTORS" || tag == "NORMALS")
         {
-          this->ReadVectors(size, name, data);
+          this->ReadVectors(association, size);
         }
         else if (tag == "TEXTURE_COORDINATES")
         {
-          this->ReadTextureCoordinates(size, name, data);
+          this->ReadTextureCoordinates(association, size);
         }
         else if (tag == "TENSORS")
         {
-          this->ReadTensors(size, name, data);
+          this->ReadTensors(association, size);
         }
         else if (tag == "FIELD")
         {
-          this->ReadFields(name);
+          this->ReadFields(association, size);
         }
         else
         {
           break;
-        }
-
-        if (data.GetNumberOfValues() > 0)
-        {
-          switch (association)
-          {
-            case vtkm::cont::Field::Association::POINTS:
-              this->DataSet.AddField(vtkm::cont::Field(name, association, data));
-              break;
-            case vtkm::cont::Field::Association::CELL_SET:
-              vtkm::cont::CastAndCall(data, PermuteCellData(this->CellsPermutation, data));
-              this->DataSet.AddField(vtkm::cont::Field(name, association, "cells", data));
-              break;
-            default:
-              break;
-          }
         }
       }
     }
@@ -563,11 +542,33 @@ private:
 
   virtual void Read() = 0;
 
-  void ReadScalars(std::size_t numElements,
-                   std::string& dataName,
-                   vtkm::cont::VariantArrayHandle& data)
+  void AddField(const std::string& name,
+                vtkm::cont::Field::Association association,
+                vtkm::cont::VariantArrayHandle& data)
   {
-    std::string dataType, lookupTableName;
+    if (data.GetNumberOfValues() > 0)
+    {
+      switch (association)
+      {
+        case vtkm::cont::Field::Association::POINTS:
+        case vtkm::cont::Field::Association::WHOLE_MESH:
+          this->DataSet.AddField(vtkm::cont::Field(name, association, data));
+          break;
+        case vtkm::cont::Field::Association::CELL_SET:
+          vtkm::cont::CastAndCall(data, PermuteCellData(this->CellsPermutation, data));
+          this->DataSet.AddField(vtkm::cont::Field(name, association, "cells", data));
+          break;
+        default:
+          VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                     "Not recording field '" << name << "' because it has an unknown association");
+          break;
+      }
+    }
+  }
+
+  void ReadScalars(vtkm::cont::Field::Association association, std::size_t numElements)
+  {
+    std::string dataName, dataType, lookupTableName;
     vtkm::IdComponent numComponents = 1;
     this->DataFile->Stream >> dataName >> dataType;
     std::string tag;
@@ -588,67 +589,98 @@ private:
     internal::parseAssert(tag == "LOOKUP_TABLE");
     this->DataFile->Stream >> lookupTableName >> std::ws;
 
-    this->DoReadArrayVariant(dataType, numElements, numComponents, data);
+    vtkm::cont::VariantArrayHandle data =
+      this->DoReadArrayVariant(dataType, numElements, numComponents);
+    this->AddField(dataName, association, data);
   }
 
-  void ReadColorScalars(std::size_t numElements, std::string& dataName)
+  void ReadColorScalars(vtkm::cont::Field::Association association, std::size_t numElements)
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
                "Support for COLOR_SCALARS is not implemented. Skipping.");
 
-    std::size_t numValues;
-    this->DataFile->Stream >> dataName >> numValues >> std::ws;
-    this->SkipArray(numElements * numValues, vtkm::io::internal::ColorChannel8());
+    std::string dataName;
+    vtkm::IdComponent numComponents;
+    this->DataFile->Stream >> dataName >> numComponents >> std::ws;
+    std::string dataType = this->DataFile->IsBinary ? "unsigned_char" : "float";
+    vtkm::cont::VariantArrayHandle data =
+      this->DoReadArrayVariant(dataType, numElements, numComponents);
+    this->AddField(dataName, association, data);
   }
 
-  void ReadLookupTable(std::string& dataName)
+  void ReadLookupTable()
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
                "Support for LOOKUP_TABLE is not implemented. Skipping.");
 
+    std::string dataName;
     std::size_t numEntries;
     this->DataFile->Stream >> dataName >> numEntries >> std::ws;
     this->SkipArray(numEntries, vtkm::Vec<vtkm::io::internal::ColorChannel8, 4>());
   }
 
-  void ReadTextureCoordinates(std::size_t numElements,
-                              std::string& dataName,
-                              vtkm::cont::VariantArrayHandle& data)
+  void ReadTextureCoordinates(vtkm::cont::Field::Association association, std::size_t numElements)
   {
+    std::string dataName;
     vtkm::IdComponent numComponents;
     std::string dataType;
     this->DataFile->Stream >> dataName >> numComponents >> dataType >> std::ws;
 
-    this->DoReadArrayVariant(dataType, numElements, numComponents, data);
+    vtkm::cont::VariantArrayHandle data =
+      this->DoReadArrayVariant(dataType, numElements, numComponents);
+    this->AddField(dataName, association, data);
   }
 
-  void ReadVectors(std::size_t numElements,
-                   std::string& dataName,
-                   vtkm::cont::VariantArrayHandle& data)
+  void ReadVectors(vtkm::cont::Field::Association association, std::size_t numElements)
   {
+    std::string dataName;
     std::string dataType;
     this->DataFile->Stream >> dataName >> dataType >> std::ws;
 
-    this->DoReadArrayVariant(dataType, numElements, 3, data);
+    vtkm::cont::VariantArrayHandle data = this->DoReadArrayVariant(dataType, numElements, 3);
+    this->AddField(dataName, association, data);
   }
 
-  void ReadTensors(std::size_t numElements,
-                   std::string& dataName,
-                   vtkm::cont::VariantArrayHandle& data)
+  void ReadTensors(vtkm::cont::Field::Association association, std::size_t numElements)
   {
+    std::string dataName;
     std::string dataType;
     this->DataFile->Stream >> dataName >> dataType >> std::ws;
 
-    this->DoReadArrayVariant(dataType, numElements, 9, data);
+    vtkm::cont::VariantArrayHandle data = this->DoReadArrayVariant(dataType, numElements, 9);
+    this->AddField(dataName, association, data);
+  }
+
+  void ReadFields(vtkm::cont::Field::Association association, std::size_t expectedNumElements)
+  {
+    std::string dataName;
+    vtkm::Id numArrays;
+    this->DataFile->Stream >> dataName >> numArrays >> std::ws;
+    for (vtkm::Id i = 0; i < numArrays; ++i)
+    {
+      std::size_t numTuples;
+      vtkm::IdComponent numComponents;
+      std::string arrayName, dataType;
+      this->DataFile->Stream >> arrayName >> numComponents >> numTuples >> dataType >> std::ws;
+      if (numTuples == expectedNumElements)
+      {
+        vtkm::cont::VariantArrayHandle data =
+          this->DoReadArrayVariant(dataType, numTuples, numComponents);
+        this->AddField(arrayName, association, data);
+      }
+      else
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                   "Field " << arrayName
+                            << "'s size does not match expected number of elements. Skipping");
+      }
+    }
   }
 
 protected:
-  //ReadFields needs to be protected so that derived readers can skip
-  //VisIt header fields
-  void ReadFields(std::string& dataName, std::vector<vtkm::Float32>* visitBounds = nullptr)
+  void ReadGlobalFields(std::vector<vtkm::Float32>* visitBounds = nullptr)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Support for FIELD is not implemented. Skipping.");
-
+    std::string dataName;
     vtkm::Id numArrays;
     this->DataFile->Stream >> dataName >> numArrays >> std::ws;
     for (vtkm::Id i = 0; i < numArrays; ++i)
@@ -666,6 +698,8 @@ protected:
       }
       else
       {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                   "Support for global field " << arrayName << " not implemented. Skipping.");
         this->DoSkipArrayVariant(dataType, numTuples, numComponents);
       }
     }
@@ -755,14 +789,19 @@ protected:
     }
   }
 
-  void DoReadArrayVariant(std::string dataType,
-                          std::size_t numElements,
-                          vtkm::IdComponent numComponents,
-                          vtkm::cont::VariantArrayHandle& data)
+  vtkm::cont::VariantArrayHandle DoReadArrayVariant(std::string dataType,
+                                                    std::size_t numElements,
+                                                    vtkm::IdComponent numComponents)
   {
+    // Create empty data to start so that the return can check if data were actually read
+    vtkm::cont::ArrayHandle<vtkm::Float32> empty;
+    vtkm::cont::VariantArrayHandle data(empty);
+
     vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
     vtkm::io::internal::SelectTypeAndCall(
       typeId, numComponents, ReadArrayVariant(this, numElements, data));
+
+    return data;
   }
 
   template <typename T>

@@ -138,6 +138,8 @@ void DataSet::PrintSummary(std::ostream& out) const
   {
     this->GetField(index).PrintSummary(out);
   }
+
+  out.flush();
 }
 
 vtkm::Id DataSet::FindFieldIndex(const std::string& name,
