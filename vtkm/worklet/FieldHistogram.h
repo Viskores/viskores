@@ -13,6 +13,7 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -116,7 +117,7 @@ public:
            FieldType& binDelta,
            vtkm::cont::ArrayHandle<vtkm::Id>& binArray)
   {
-    const vtkm::Vec<FieldType, 2> initValue(fieldArray.GetPortalConstControl().Get(0));
+    const vtkm::Vec<FieldType, 2> initValue{ vtkm::cont::ArrayGetValue(0, fieldArray) };
 
     vtkm::Vec<FieldType, 2> result =
       vtkm::cont::Algorithm::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
