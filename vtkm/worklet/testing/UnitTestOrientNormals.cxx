@@ -33,7 +33,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/SurfaceNormals.h>
 
@@ -66,7 +66,7 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   auto dataSet = wavelet.GenerateDataSet();
 
   // Cut a contour
-  vtkm::filter::MarchingCubes contour;
+  vtkm::filter::Contour contour;
   contour.SetActiveField("scalars", vtkm::cont::Field::Association::POINTS);
   contour.SetNumberOfIsoValues(1);
   contour.SetIsoValue(192);

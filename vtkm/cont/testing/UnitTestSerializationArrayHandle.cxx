@@ -21,6 +21,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
+#include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayHandleSwizzle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -79,6 +80,18 @@ struct TestArrayHandleBasic
   void operator()(T) const
   {
     auto array = RandomArrayHandle<T>::Make(ArraySize);
+    RunTest(array);
+    RunTest(MakeTestVariantArrayHandle(array));
+  }
+};
+
+struct TestArrayHandleSOA
+{
+  template <typename T>
+  void operator()(T) const
+  {
+    vtkm::cont::ArrayHandleSOA<T> array;
+    vtkm::cont::ArrayCopy(RandomArrayHandle<T>::Make(ArraySize), array);
     RunTest(array);
     RunTest(MakeTestVariantArrayHandle(array));
   }
@@ -450,6 +463,9 @@ void TestArrayHandleSerialization()
 {
   std::cout << "Testing ArrayHandleBasic\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleBasic(), TestTypesList());
+
+  std::cout << "Testing ArrayHandleSOA\n";
+  vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesList());
 
   std::cout << "Testing ArrayHandleCartesianProduct\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleCartesianProduct(), TestTypesList());

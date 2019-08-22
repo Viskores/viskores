@@ -15,6 +15,7 @@ set(unit_tests
   UnitTestCleanGrid.cxx
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
+  UnitTestContourFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
@@ -35,7 +36,6 @@ set(unit_tests
   UnitTestImageConnectivityFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestLagrangianStructuresFilter.cxx
-  UnitTestMarchingCubesFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMeshQualityFilter.cxx

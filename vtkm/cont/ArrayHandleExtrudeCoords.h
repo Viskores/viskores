@@ -41,6 +41,8 @@ public:
 
   vtkm::Id GetNumberOfPointsPerPlane() const { return (this->GetStorage().GetLength() / 2); }
   vtkm::Int32 GetNumberOfPlanes() const { return this->GetStorage().GetNumberOfPlanes(); }
+  bool GetUseCylindrical() const { return this->GetStorage().GetUseCylindrical(); }
+  const vtkm::cont::ArrayHandle<T>& GetArray() const { return this->GetStorage().Array; }
 };
 
 template <typename T>
@@ -94,6 +96,58 @@ vtkm::cont::ArrayHandleExtrudeCoords<T> make_ArrayHandleExtrudeCoords(
   }
 }
 }
+} // end namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename T>
+struct SerializableTypeString<vtkm::cont::ArrayHandleExtrudeCoords<T>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_ExtrudeCoords<" + SerializableTypeString<T>::Get() + ">";
+    return name;
+  }
+};
 }
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename T>
+struct Serialization<vtkm::cont::ArrayHandleExtrudeCoords<T>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleExtrudeCoords<T>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& ah)
+  {
+    vtkmdiy::save(bb, ah.GetNumberOfPlanes());
+    vtkmdiy::save(bb, ah.GetUseCylindrical());
+    vtkmdiy::save(bb, ah.GetArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& ah)
+  {
+    vtkm::Int32 numberOfPlanes;
+    bool isCylindrical;
+    vtkm::cont::ArrayHandle<T> array;
+
+    vtkmdiy::load(bb, numberOfPlanes);
+    vtkmdiy::load(bb, isCylindrical);
+    vtkmdiy::load(bb, array);
+
+    ah = vtkm::cont::make_ArrayHandleExtrudeCoords(array, numberOfPlanes, isCylindrical);
+  }
+};
+
+} // diy
 
 #endif

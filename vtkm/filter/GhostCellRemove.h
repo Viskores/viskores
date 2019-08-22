@@ -52,14 +52,9 @@ public:
   bool GetRemoveAllGhost() const { return this->RemoveAll; }
 
   VTKM_CONT
-  void ConvertOutputToUnstructured() { this->ConvertToUnstructured = true; }
-
-  VTKM_CONT
   bool GetRemoveByType() const { return !this->RemoveAll; }
   VTKM_CONT
   vtkm::UInt8 GetRemoveType() const { return this->RemoveVals; }
-  VTKM_CONT
-  bool GetConvertOutputToUnstructured() { return this->ConvertToUnstructured; }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -78,16 +73,14 @@ public:
 private:
   bool RemoveAll;
   bool RemoveField;
-  bool ConvertToUnstructured;
   vtkm::UInt8 RemoveVals;
   vtkm::worklet::Threshold Worklet;
-
-  VTKM_CONT vtkm::cont::CellSetExplicit<> ConvertOutputToUnstructured(
-    vtkm::cont::DynamicCellSet& inCells);
 };
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_GhostCellRemove_hxx
 #include <vtkm/filter/GhostCellRemove.hxx>
+#endif
 
 #endif // vtk_m_filter_GhostCellRemove_h

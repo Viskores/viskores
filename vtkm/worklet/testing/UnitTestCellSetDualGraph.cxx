@@ -9,7 +9,7 @@
 //============================================================================
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 
 #include <vtkm/worklet/connectivities/CellSetDualGraph.h>
 

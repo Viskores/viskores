@@ -17,7 +17,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/CleanGrid.h>
 
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 
 namespace vtkm_ut_mc_filter
 {
@@ -268,14 +268,14 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   return dataSet;
 }
 
-void TestMarchingCubesUniformGrid()
+void TestContourUniformGrid()
 {
-  std::cout << "Testing MarchingCubes filter on a uniform grid" << std::endl;
+  std::cout << "Testing Contour filter on a uniform grid" << std::endl;
 
   vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-  vtkm::filter::MarchingCubes mc;
+  vtkm::filter::Contour mc;
 
   mc.SetGenerateNormals(true);
   mc.SetIsoValue(0, 0.5);
@@ -334,9 +334,9 @@ void TestMarchingCubesUniformGrid()
   }
 }
 
-void TestMarchingCubesCustomPolicy()
+void TestContourCustomPolicy()
 {
-  std::cout << "Testing MarchingCubes filter with custom field and cellset" << std::endl;
+  std::cout << "Testing Contour filter with custom field and cellset" << std::endl;
 
   using DataSetGenerator = MakeRadiantDataSet;
   DataSetGenerator dataSetGenerator;
@@ -344,7 +344,7 @@ void TestMarchingCubesCustomPolicy()
   const vtkm::IdComponent Dimension = 10;
   vtkm::cont::DataSet dataSet = dataSetGenerator.Make3DRadiantDataSet(Dimension);
 
-  vtkm::filter::MarchingCubes mc;
+  vtkm::filter::Contour mc;
 
   mc.SetGenerateNormals(false);
   mc.SetIsoValue(0, 0.45);
@@ -435,7 +435,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
 
-  vtkm::filter::MarchingCubes mc;
+  vtkm::filter::Contour mc;
   mc.SetIsoValue(0, 200);
   mc.SetGenerateNormals(true);
 
@@ -481,9 +481,9 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   }
 }
 
-void TestMarchingCubesNormals()
+void TestContourNormals()
 {
-  std::cout << "Testing MarchingCubes normals generation" << std::endl;
+  std::cout << "Testing Contour normals generation" << std::endl;
 
   std::cout << "\tStructured dataset\n";
   vtkm::cont::DataSet dataset = MakeNormalsTestDataSet();
@@ -498,16 +498,16 @@ void TestMarchingCubesNormals()
   TestNormals(result, false);
 }
 
-void TestMarchingCubesFilter()
+void TestContourFilter()
 {
-  TestMarchingCubesUniformGrid();
-  TestMarchingCubesCustomPolicy();
-  TestMarchingCubesNormals();
+  TestContourUniformGrid();
+  TestContourCustomPolicy();
+  TestContourNormals();
 }
 
 } // anonymous namespace
 
-int UnitTestMarchingCubesFilter(int argc, char* argv[])
+int UnitTestContourFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(vtkm_ut_mc_filter::TestMarchingCubesFilter, argc, argv);
+  return vtkm::cont::testing::Testing::Run(vtkm_ut_mc_filter::TestContourFilter, argc, argv);
 }
