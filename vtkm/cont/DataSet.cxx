@@ -53,6 +53,12 @@ const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(vtkm::Id index)
   return this->CoordSystems[static_cast<std::size_t>(index)];
 }
 
+vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(vtkm::Id index)
+{
+  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCoordinateSystems()));
+  return this->CoordSystems[static_cast<std::size_t>(index)];
+}
+
 vtkm::Id DataSet::GetCoordinateSystemIndex(const std::string& name) const
 {
   vtkm::Id index = -1;
@@ -68,6 +74,22 @@ vtkm::Id DataSet::GetCoordinateSystemIndex(const std::string& name) const
 }
 
 const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(const std::string& name) const
+{
+  vtkm::Id index = this->GetCoordinateSystemIndex(name);
+  if (index < 0)
+  {
+    std::string error_message("No coordinate system with the name " + name +
+                              " valid names are: \n");
+    for (const auto& cs : this->CoordSystems)
+    {
+      error_message += cs.GetName() + "\n";
+    }
+    throw vtkm::cont::ErrorBadValue(error_message);
+  }
+  return this->GetCoordinateSystem(index);
+}
+
+vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(const std::string& name)
 {
   vtkm::Id index = this->GetCoordinateSystemIndex(name);
   if (index < 0)

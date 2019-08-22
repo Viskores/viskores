@@ -109,6 +109,9 @@ public:
   VTKM_CONT
   const vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0) const;
 
+  VTKM_CONT
+  vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0);
+
   /// Returns the index for the first CoordinateSystem whose
   /// name matches the provided string.
   /// Will return -1 if no match is found
@@ -117,8 +120,13 @@ public:
 
   /// Returns the first CoordinateSystem that matches the provided name.
   /// Will throw an exception if no match is found
+  //@{
   VTKM_CONT
   const vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name) const;
+
+  VTKM_CONT
+  vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name);
+  //@}
 
   VTKM_CONT
   void AddCellSet(const vtkm::cont::DynamicCellSet& cellSet) { this->CellSets.push_back(cellSet); }
