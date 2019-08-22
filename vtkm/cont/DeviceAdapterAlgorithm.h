@@ -685,15 +685,6 @@ public:
 
 /// \brief Class providing a device-specific support for atomic operations.
 ///
-/// The class provide the actual implementation used by
-/// vtkm::cont::DeviceAdapterAtomicArrayImplementation.
-///
-/// TODO combine this with AtomicInterfaceExecution.
-template <typename T, typename DeviceTag>
-class DeviceAdapterAtomicArrayImplementation;
-
-/// \brief Class providing a device-specific support for atomic operations.
-///
 /// AtomicInterfaceControl provides atomic operations for the control
 /// environment, and may be subclassed to implement the device interface when
 /// appropriate for a CPU-based device.

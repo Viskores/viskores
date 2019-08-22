@@ -345,8 +345,8 @@ public:
     VTKM_EXEC void operator()(vtkm::Id index) const
     {
       T value = (T)index;
-      //Get the old value from the array with a no-op
-      T oldValue = this->AArray.Add(0, T(0));
+      //Get the old value from the array
+      T oldValue = this->AArray.Get(0);
       //This creates an atomic add using the CAS operatoin
       T assumed = T(0);
       do
@@ -2330,7 +2330,9 @@ private:
 
     vtkm::Int32 atomicCount = 0;
     for (vtkm::Int32 i = 0; i < SHORT_ARRAY_SIZE; i++)
+    {
       atomicCount += i;
+    }
     std::cout << "-------------------------------------------" << std::endl;
     // To test the atomics, SHORT_ARRAY_SIZE number of threads will all increment
     // a single atomic value.

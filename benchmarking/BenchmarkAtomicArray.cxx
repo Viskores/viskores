@@ -317,7 +317,7 @@ public:
         vtkm::Id idx = i % this->ArraySize;
         ValueType val = static_cast<ValueType>(i);
         // Get the old val with a no-op
-        ValueType oldVal = this->Portal.Add(idx, static_cast<ValueType>(0));
+        ValueType oldVal = this->Portal.Get(idx);
         ValueType assumed = static_cast<ValueType>(0);
         do
         {
@@ -445,7 +445,7 @@ public:
         vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % this->ArraySize;
         ValueType val = static_cast<ValueType>(i);
         // Get the old val with a no-op
-        ValueType oldVal = this->Portal.Add(idx, static_cast<ValueType>(0));
+        ValueType oldVal = this->Portal.Get(idx);
         ValueType assumed = static_cast<ValueType>(0);
         do
         {

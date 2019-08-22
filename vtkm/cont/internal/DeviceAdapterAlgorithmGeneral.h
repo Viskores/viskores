@@ -19,7 +19,6 @@
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/cont/internal/DeviceAdapterAtomicArrayImplementation.h>
 #include <vtkm/cont/internal/FunctorsGeneral.h>
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
