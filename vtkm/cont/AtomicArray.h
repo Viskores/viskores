@@ -54,8 +54,7 @@ public:
   {
   }
 
-  template <typename StorageType>
-  VTKM_CONT AtomicArray(vtkm::cont::ArrayHandle<T, StorageType> handle)
+  VTKM_CONT AtomicArray(vtkm::cont::ArrayHandle<T> handle)
     : Handle(handle)
   {
   }
