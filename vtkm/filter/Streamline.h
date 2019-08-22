@@ -57,10 +57,10 @@ public:
                             vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
-  vtkm::worklet::Streamline Worklet;
-  vtkm::worklet::particleadvection::ScalarType StepSize;
   vtkm::Id NumberOfSteps;
+  vtkm::worklet::particleadvection::ScalarType StepSize;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
+  vtkm::worklet::Streamline Worklet;
 };
 }
 } // namespace vtkm::filter

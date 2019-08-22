@@ -11,6 +11,10 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/particleadvection/GridEvaluators.h>
+#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm
 {
@@ -19,30 +23,54 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT StreamSurface::StreamSurface()
-  : vtkm::filter::FilterDataSet<StreamSurface>()
+  : vtkm::filter::FilterDataSetWithField<StreamSurface>()
   , Worklet()
 {
 }
 
 //-----------------------------------------------------------------------------
-template <typename Policy>
-inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(const vtkm::cont::DataSet& input,
-                                                              vtkm::filter::PolicyBase<Policy>)
+template <typename T, typename StorageType, typename DerivedPolicy>
+inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  vtkm::worklet::StreamSurface streamSrf;
+  //Check for some basics.
+  if (this->Seeds.GetNumberOfValues() == 0)
+    throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
-  vtkm::cont::CellSetSingleType<> newCells;
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::CoordinateSystem& coords =
+    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  streamSrf.Run(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
-                input.GetCellSet(this->GetActiveCellSetIndex()),
-                newPoints,
-                newCells);
+  if (!fieldMeta.IsPointField())
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+
+  //compute streamlines
+  GridEvalType eval(coords, cells, field);
+  RK4Type rk4(eval, this->StepSize);
+
+  vtkm::worklet::Streamline streamline;
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> seedArray;
+  vtkm::cont::ArrayCopy(this->Seeds, seedArray);
+  auto res = streamline.Run(rk4, seedArray, this->NumberOfSteps);
+
+  //compute surface from streamlines
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> srfPoints;
+  vtkm::cont::CellSetSingleType<> srfCells;
+  vtkm::cont::CoordinateSystem slCoords("coordinates", res.positions);
+  this->Worklet.Run(slCoords, res.polyLines, srfPoints, srfCells);
 
   vtkm::cont::DataSet outData;
-  vtkm::cont::CoordinateSystem outCoords("coordinates", newPoints);
-  outData.AddCellSet(newCells);
-  outData.AddCoordinateSystem(outCoords);
+  vtkm::cont::CoordinateSystem outputCoords("coordinates", srfPoints);
+  outData.AddCoordinateSystem(outputCoords);
+  outData.AddCellSet(srfCells);
 
   return outData;
 }
