@@ -29,32 +29,43 @@ template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet Tube::DoExecute(const vtkm::cont::DataSet& input,
                                                      vtkm::filter::PolicyBase<Policy>)
 {
-  vtkm::worklet::Tube tube(this->Capping, this->NumberOfSides, this->Radius);
+  this->Worklet.SetCapping(this->Capping);
+  this->Worklet.SetNumberOfSides(this->NumberOfSides);
+  this->Worklet.SetRadius(this->Radius);
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
-  tube.Run(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
-           input.GetCellSet(this->GetActiveCellSetIndex()),
-           newPoints,
-           newCells);
+  this->Worklet.Run(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
+                    input.GetCellSet(this->GetActiveCellSetIndex()),
+                    newPoints,
+                    newCells);
 
   vtkm::cont::DataSet outData;
-
   vtkm::cont::CoordinateSystem outCoords("coordinates", newPoints);
   outData.AddCellSet(newCells);
   outData.AddCoordinateSystem(outCoords);
-
   return outData;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Tube::DoMapField(vtkm::cont::DataSet&,
-                                       const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                       const vtkm::filter::FieldMetadata&,
+inline VTKM_CONT bool Tube::DoMapField(vtkm::cont::DataSet& result,
+                                       const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                                       const vtkm::filter::FieldMetadata& fieldMeta,
                                        vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  return false;
+  vtkm::cont::ArrayHandle<T> fieldArray;
+
+  if (fieldMeta.IsPointField())
+    fieldArray = this->Worklet.ProcessPointField(input);
+  else if (fieldMeta.IsCellField())
+    fieldArray = this->Worklet.ProcessCellField(input);
+  else
+    return false;
+
+  //use the same meta data as the input so we get the same field name, etc.
+  result.AddField(fieldMeta.AsField(fieldArray));
+  return true;
 }
 }
 } // namespace vtkm::filter
