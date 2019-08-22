@@ -322,11 +322,11 @@ void TestContourUniformGrid()
   vtkm::cont::printSummary_ArrayHandle(cellFieldArrayOut, std::cout);
   std::cout << std::endl;
 
-  VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues(),
-                   "Output cell data invalid");
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues());
 
-  VTKM_TEST_ASSERT(test_equal(verticesArray.GetNumberOfValues(), 480),
-                   "Wrong result for Isosurface filter");
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == 160);
+
+  VTKM_TEST_ASSERT(verticesArray.GetNumberOfValues() == 480);
 }
 
 void TestContourExplicit()
@@ -387,14 +387,11 @@ void TestContourExplicit()
   vtkm::cont::printSummary_ArrayHandle(cellFieldArrayOut, std::cout);
   std::cout << std::endl;
 
-  VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues(),
-                   "Output cell data invalid");
-  VTKM_TEST_ASSERT(test_equal(vertices.GetNumberOfValues(), 2472),
-                   "Wrong vertices result for Contour worklet");
-  VTKM_TEST_ASSERT(test_equal(normals.GetNumberOfValues(), 2472),
-                   "Wrong normals result for Contour worklet");
-  VTKM_TEST_ASSERT(test_equal(scalars.GetNumberOfValues(), 2472),
-                   "Wrong scalars result for Contour worklet");
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues());
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == 824);
+  VTKM_TEST_ASSERT(test_equal(vertices.GetNumberOfValues(), 2472));
+  VTKM_TEST_ASSERT(test_equal(normals.GetNumberOfValues(), 2472));
+  VTKM_TEST_ASSERT(test_equal(scalars.GetNumberOfValues(), 2472));
 }
 
 void TestContourClipped()
@@ -449,6 +446,12 @@ void TestContourClipped()
   std::cout << "cell field: ";
   vtkm::cont::printSummary_ArrayHandle(cellFieldArrayOut, std::cout);
   std::cout << std::endl;
+
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues());
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == 170);
+  VTKM_TEST_ASSERT(verticesArray.GetNumberOfValues() == 510);
+  VTKM_TEST_ASSERT(normalsArray.GetNumberOfValues() == 510);
+  VTKM_TEST_ASSERT(scalarsArray.GetNumberOfValues() == 510);
 }
 
 void TestContour()
