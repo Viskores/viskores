@@ -54,6 +54,7 @@ set(unit_tests
   UnitTestThresholdFilter.cxx
   UnitTestThresholdPointsFilter.cxx
   UnitTestTriangulateFilter.cxx
+  UnitTestTubeFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
   UnitTestWarpScalarFilter.cxx
