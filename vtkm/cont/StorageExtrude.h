@@ -12,6 +12,8 @@
 
 #include <vtkm/internal/IndicesExtrude.h>
 
+#include <vtkm/BaseComponent.h>
+
 #include <vtkm/cont/ErrorBadType.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
