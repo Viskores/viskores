@@ -49,6 +49,7 @@ set(unit_tests
   UnitTestProbe.cxx
   UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
+  UnitTestStreamSurfaceFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx

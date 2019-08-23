@@ -8,11 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Streamline_h
-#define vtk_m_filter_Streamline_h
+#ifndef vtk_m_filter_StreamSurface_h
+#define vtk_m_filter_StreamSurface_h
 
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/StreamSurface.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 
@@ -24,13 +25,13 @@ namespace filter
 
 /// Takes as input a vector field and seed locations and generates the
 /// paths taken by the seeds through the vector field.
-class Streamline : public vtkm::filter::FilterDataSetWithField<Streamline>
+class StreamSurface : public vtkm::filter::FilterDataSetWithField<StreamSurface>
 {
 public:
   using SupportedTypes = vtkm::TypeListTagFieldVec3;
 
   VTKM_CONT
-  Streamline();
+  StreamSurface();
 
   VTKM_CONT
   void SetStepSize(vtkm::worklet::particleadvection::ScalarType s) { this->StepSize = s; }
@@ -39,7 +40,7 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds);
+  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds) { this->Seeds = seeds; }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -58,13 +59,13 @@ public:
 
 private:
   vtkm::Id NumberOfSteps;
-  vtkm::worklet::particleadvection::ScalarType StepSize;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
-  vtkm::worklet::Streamline Worklet;
+  vtkm::worklet::particleadvection::ScalarType StepSize;
+  vtkm::worklet::StreamSurface Worklet;
 };
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/Streamline.hxx>
+#include <vtkm/filter/StreamSurface.hxx>
 
-#endif // vtk_m_filter_Streamline_h
+#endif // vtk_m_filter_StreamSurface_h
