@@ -21,7 +21,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::cont::DataSet Execute();
+  vtkm::cont::DataSet Execute() const;
 
 private:
   vtkm::Id3 Dims;

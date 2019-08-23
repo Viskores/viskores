@@ -66,7 +66,7 @@ public:
 } // namespace tangle
 
 VTKM_CONT_EXPORT
-vtkm::cont::DataSet Tangle::Execute()
+vtkm::cont::DataSet Tangle::Execute() const
 {
   vtkm::cont::DataSet dataSet;
 

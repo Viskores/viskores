@@ -12,12 +12,12 @@ set(headers
   Tangle.h
   )
 
-set(sources
+set(device_sources
   Tangle.cxx
   )
 
 vtkm_library(NAME vtkm_source
-  SOURCES ${sources}
+  DEVICE_SOURCES ${device_sources}
   HEADERS ${headers}
   )
 
