@@ -53,6 +53,8 @@
 
 #include <vtkm/worklet/cosmotools/CosmoTools.h>
 
+#include <vtkm/cont/ArrayGetValues.h>
+
 namespace vtkm
 {
 namespace worklet
@@ -141,7 +143,9 @@ vtkm::Id CosmoTools<T, StorageType>::MBPCenterFinderMxN(T* mxnPotential)
 
   // Use the worst estimate for the first selected bin to compare to best of all others
   // Any bin that passes is a candidate for having the MBP
-  T cutoffPotential = worstEstPotential.GetPortalControl().Get(0);
+  T cutoffPotential = vtkm::cont::ArrayGetValue(0, worstEstPotential);
+  worstEstPotential.ReleaseResources();
+  tempBest.ReleaseResources();
 
   vtkm::cont::ArrayHandle<vtkm::Id> candidate;
   DeviceAlgorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nParticles), candidate);
@@ -178,8 +182,8 @@ vtkm::Id CosmoTools<T, StorageType>::MBPCenterFinderMxN(T* mxnPotential)
 #endif
 
   // Return the found MBP particle and its potential
-  vtkm::Id mxnMBP = mparticles.GetPortalControl().Get(0);
-  *mxnPotential = mpotential.GetPortalControl().Get(0);
+  vtkm::Id mxnMBP = vtkm::cont::ArrayGetValue(0, mparticles);
+  *mxnPotential = vtkm::cont::ArrayGetValue(0, mpotential);
 
   return mxnMBP;
 }
@@ -200,9 +204,9 @@ void CosmoTools<T, StorageType>::BinParticlesHalo(vtkm::cont::ArrayHandle<vtkm::
                                                   vtkm::cont::ArrayHandle<vtkm::Id>& binZ)
 {
   // Compute number of bins and ranges for each bin
-  vtkm::Vec<T, 2> xRange(xLoc.GetPortalConstControl().Get(0));
-  vtkm::Vec<T, 2> yRange(yLoc.GetPortalConstControl().Get(0));
-  vtkm::Vec<T, 2> zRange(zLoc.GetPortalConstControl().Get(0));
+  vtkm::Vec<T, 2> xRange(vtkm::cont::ArrayGetValue(0, xLoc));
+  vtkm::Vec<T, 2> yRange(vtkm::cont::ArrayGetValue(0, yLoc));
+  vtkm::Vec<T, 2> zRange(vtkm::cont::ArrayGetValue(0, zLoc));
   xRange = DeviceAlgorithm::Reduce(xLoc, xRange, vtkm::MinAndMax<T>());
   T minX = xRange[0];
   T maxX = xRange[1];
@@ -411,8 +415,8 @@ vtkm::Id CosmoTools<T, StorageType>::MBPCenterFinderNxN(T* nxnPotential)
   DeviceAlgorithm::ScanInclusive(centerId, centerId, vtkm::Maximum());
   DeviceAlgorithm::ScanInclusive(centerIdReverse, centerIdReverse, vtkm::Maximum());
 
-  vtkm::Id nxnMBP = centerId.GetPortalConstControl().Get(0);
-  *nxnPotential = potential.GetPortalConstControl().Get(nxnMBP);
+  vtkm::Id nxnMBP = vtkm::cont::ArrayGetValue(0, centerId);
+  *nxnPotential = vtkm::cont::ArrayGetValue(nxnMBP, potential);
 
   return nxnMBP;
 }

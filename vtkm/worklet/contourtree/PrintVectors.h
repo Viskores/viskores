@@ -175,16 +175,24 @@ void printValues(std::string label, vtkm::cont::ArrayHandle<T, StorageType>& dVe
 {
   // -1 means full size
   if (nValues == -1)
+  {
     nValues = dVec.GetNumberOfValues();
+  }
+
   if (nValues > PRINT_COLS)
+  {
     nValues = PRINT_COLS;
+  }
 
   // print the label
   printLabel(label);
 
   // now print the data
+  const auto dVecPortal = dVec.GetPortalConstControl();
   for (vtkm::Id entry = 0; entry < nValues; entry++)
-    printDataType(dVec.GetPortalControl().Get(entry));
+  {
+    printDataType(dVecPortal.Get(entry));
+  }
 
   // and an endl
   std::cout << std::endl;
@@ -197,17 +205,24 @@ inline void printIndices(std::string label,
 {
   // -1 means full size
   if (nIndices == -1)
+  {
     nIndices = iVec.GetNumberOfValues();
+  }
 
   if (nIndices > PRINT_COLS)
+  {
     nIndices = PRINT_COLS;
+  }
 
   // print the label
   printLabel(label);
 
   // now print the data
+  const auto iVecPortal = iVec.GetPortalConstControl();
   for (vtkm::Id entry = 0; entry < nIndices; entry++)
-    printIndexType(iVec.GetPortalControl().Get(entry));
+  {
+    printIndexType(iVecPortal.Get(entry));
+  }
 
   // and an endl
   std::cout << std::endl;
@@ -220,22 +235,28 @@ void printLabelledBlock(std::string label,
                         vtkm::Id nColumns)
 {
   if (nRows > PRINT_COLS)
+  {
     nRows = PRINT_COLS;
+  }
+
   if (nColumns > PRINT_COLS)
+  {
     nColumns = PRINT_COLS;
+  }
 
   // start with a header
   printHeader(nColumns);
   // loop control variable
   vtkm::Id entry = 0;
   // per row
+  const auto dVecPortal = dVec.GetPortalConstControl();
   for (vtkm::Id row = 0; row < nRows; row++)
   { // per row
     printLabel(label + "[" + NumString(row) + "]");
     // now print the data
     for (vtkm::Id col = 0; col < nColumns; col++, entry++)
     {
-      printDataType(dVec.GetPortalConstControl().Get(entry));
+      printDataType(dVecPortal.Get(entry));
     }
     std::cout << std::endl;
   } // per row

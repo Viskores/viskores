@@ -15,6 +15,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecVariable.h>
 
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/exec/CellInterpolate.h>
 
@@ -277,14 +278,14 @@ public:
     if (cellSet.IsSameType(SingleExplicitType()))
     {
       SingleExplicitType CellSet = cellSet.Cast<SingleExplicitType>();
-      CellShape =
-        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
-          .GetPortalConstControl()
-          .Get(0);
-      PointsPerCell =
-        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
-          .GetPortalConstControl()
-          .Get(0);
+
+      const auto cellShapes =
+        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      const auto numIndices =
+        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+
+      CellShape = vtkm::cont::ArrayGetValue(0, cellShapes);
+      PointsPerCell = vtkm::cont::ArrayGetValue(0, numIndices);
       Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
                                                   vtkm::TopologyElementTagPoint());
     }
