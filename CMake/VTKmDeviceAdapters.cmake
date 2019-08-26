@@ -247,7 +247,11 @@ if(VTKm_ENABLE_CUDA)
     string(REPLACE ";" " " arch_flags "${arch_flags}")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
 
-    set_target_properties(vtkm_cuda PROPERTIES INTERFACE_CUDA_Architecture_Flags "${arch_flags}")
+    # This needs to be lower-case for the property to be properly exported
+    # CMake 3.15 we can add `cuda_architecture_flags` to the EXPORT_PROPERTIES
+    # target property to have this automatically exported for us
+    set_target_properties(vtkm_cuda PROPERTIES cuda_architecture_flags "${arch_flags}")
+    set(VTKm_CUDA_Architecture_Flags "${arch_flags}")
   endif()
 endif()
 
