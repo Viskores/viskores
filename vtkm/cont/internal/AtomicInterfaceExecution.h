@@ -29,6 +29,9 @@ namespace internal
 /// be the same. A full list of supported word types is advertised in the type
 /// list @a WordTypes.
 ///
+/// In addition, each atomic interface must support Add and CompareAndSwap on
+/// UInt32 and UInt64, as these are required for the AtomicArray implementation.
+///
 /// To implement this on devices that share the control environment, subclass
 /// vtkm::cont::internal::AtomicInterfaceControl, which may also be used
 /// directly from control-side code.
@@ -51,6 +54,19 @@ class AtomicInterfaceExecution
   /// memory ordering.
   VTKM_EXEC static void Store(vtkm::WordTypeDefault* addr, vtkm::WordTypeDefault value);
   VTKM_EXEC static void Store(WordTypePreferred* addr, WordTypePreferred value);
+
+  /// Perform an atomic integer add operation on the word at @a addr, adding
+  /// @arg. This operation performs a full memory barrier around the atomic
+  /// access.
+  ///
+  /// The value at @a addr prior to the addition is returned.
+  ///
+  /// @note Overflow behavior is not defined for this operation.
+  /// @{
+  VTKM_EXEC static vtkm::WordTypeDefault Add(vtkm::WordTypeDefault* addr,
+                                             vtkm::WordTypeDefault arg);
+  VTKM_EXEC static WordTypePreferred Add(WordTypePreferred* addr, WordTypePreferred arg);
+  /// @}
 
   /// Perform a bitwise atomic not operation on the word at @a addr.
   /// This operation performs a full memory barrier around the atomic access.
@@ -84,6 +100,11 @@ class AtomicInterfaceExecution
   /// @}
 
   /// Perform an atomic CAS operation on the word at @a addr.
+  ///
+  /// If the value at @a addr equals @a expected, @a addr will be set to
+  /// @a newWord and @a expected is returned. Otherwise, the value at @a addr
+  /// is returned and not modified.
+  ///
   /// This operation performs a full memory barrier around the atomic access.
   /// @{
   VTKM_EXEC static vtkm::WordTypeDefault CompareAndSwap(vtkm::WordTypeDefault* addr,

@@ -13,7 +13,6 @@ set(headers
   AtomicInterfaceExecutionCuda.h
   CudaAllocator.h
   DeviceAdapterAlgorithmCuda.h
-  DeviceAdapterAtomicArrayImplementationCuda.h
   DeviceAdapterRuntimeDetectorCuda.h
   DeviceAdapterTagCuda.h
   DeviceAdapterTimerImplementationCuda.h

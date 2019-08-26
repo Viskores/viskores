@@ -22,7 +22,6 @@ set(headers
   AtomicInterfaceExecution.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
-  DeviceAdapterAtomicArrayImplementation.h
   DeviceAdapterListHelpers.h
   DynamicTransform.h
   FunctorsGeneral.h
