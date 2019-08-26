@@ -61,17 +61,20 @@ private:
     this->DataFile->Stream >> tag >> numPoints[0] >> dataType >> std::ws;
     if (tag != "X_COORDINATES")
       throw vtkm::io::ErrorIO("X_COORDINATES tag not found");
-    X = this->DoReadArrayVariant(readDataType, numPoints[0], 1);
+    X =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, readDataType, numPoints[0], 1);
 
     this->DataFile->Stream >> tag >> numPoints[1] >> dataType >> std::ws;
     if (tag != "Y_COORDINATES")
       throw vtkm::io::ErrorIO("Y_COORDINATES tag not found");
-    Y = this->DoReadArrayVariant(readDataType, numPoints[1], 1);
+    Y =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, readDataType, numPoints[1], 1);
 
     this->DataFile->Stream >> tag >> numPoints[2] >> dataType >> std::ws;
     if (tag != "Z_COORDINATES")
       throw vtkm::io::ErrorIO("Z_COORDINATES tag not found");
-    Z = this->DoReadArrayVariant(readDataType, numPoints[2], 1);
+    Z =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, readDataType, numPoints[2], 1);
 
     if (dim != vtkm::Id3(static_cast<vtkm::Id>(numPoints[0]),
                          static_cast<vtkm::Id>(numPoints[1]),

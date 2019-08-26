@@ -335,7 +335,8 @@ protected:
     std::size_t numPoints;
     this->DataFile->Stream >> numPoints >> dataType >> std::ws;
 
-    vtkm::cont::VariantArrayHandle points = this->DoReadArrayVariant(dataType, numPoints, 3);
+    vtkm::cont::VariantArrayHandle points =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::POINTS, dataType, numPoints, 3);
 
     this->DataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", points));
   }
@@ -457,6 +458,8 @@ protected:
     this->CellsPermutation = permutation;
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id> GetCellsPermutation() const { return this->CellsPermutation; }
+
   void TransferDataFile(VTKDataSetReaderBase& reader)
   {
     reader.DataFile.swap(this->DataFile);
@@ -555,7 +558,6 @@ private:
           this->DataSet.AddField(vtkm::cont::Field(name, association, data));
           break;
         case vtkm::cont::Field::Association::CELL_SET:
-          vtkm::cont::CastAndCall(data, PermuteCellData(this->CellsPermutation, data));
           this->DataSet.AddField(vtkm::cont::Field(name, association, "cells", data));
           break;
         default:
@@ -590,7 +592,7 @@ private:
     this->DataFile->Stream >> lookupTableName >> std::ws;
 
     vtkm::cont::VariantArrayHandle data =
-      this->DoReadArrayVariant(dataType, numElements, numComponents);
+      this->DoReadArrayVariant(association, dataType, numElements, numComponents);
     this->AddField(dataName, association, data);
   }
 
@@ -604,7 +606,7 @@ private:
     this->DataFile->Stream >> dataName >> numComponents >> std::ws;
     std::string dataType = this->DataFile->IsBinary ? "unsigned_char" : "float";
     vtkm::cont::VariantArrayHandle data =
-      this->DoReadArrayVariant(dataType, numElements, numComponents);
+      this->DoReadArrayVariant(association, dataType, numElements, numComponents);
     this->AddField(dataName, association, data);
   }
 
@@ -627,7 +629,7 @@ private:
     this->DataFile->Stream >> dataName >> numComponents >> dataType >> std::ws;
 
     vtkm::cont::VariantArrayHandle data =
-      this->DoReadArrayVariant(dataType, numElements, numComponents);
+      this->DoReadArrayVariant(association, dataType, numElements, numComponents);
     this->AddField(dataName, association, data);
   }
 
@@ -637,7 +639,8 @@ private:
     std::string dataType;
     this->DataFile->Stream >> dataName >> dataType >> std::ws;
 
-    vtkm::cont::VariantArrayHandle data = this->DoReadArrayVariant(dataType, numElements, 3);
+    vtkm::cont::VariantArrayHandle data =
+      this->DoReadArrayVariant(association, dataType, numElements, 3);
     this->AddField(dataName, association, data);
   }
 
@@ -647,7 +650,8 @@ private:
     std::string dataType;
     this->DataFile->Stream >> dataName >> dataType >> std::ws;
 
-    vtkm::cont::VariantArrayHandle data = this->DoReadArrayVariant(dataType, numElements, 9);
+    vtkm::cont::VariantArrayHandle data =
+      this->DoReadArrayVariant(association, dataType, numElements, 9);
     this->AddField(dataName, association, data);
   }
 
@@ -665,7 +669,7 @@ private:
       if (numTuples == expectedNumElements)
       {
         vtkm::cont::VariantArrayHandle data =
-          this->DoReadArrayVariant(dataType, numTuples, numComponents);
+          this->DoReadArrayVariant(association, dataType, numTuples, numComponents);
         this->AddField(arrayName, association, data);
       }
       else
@@ -736,9 +740,11 @@ private:
   {
   public:
     ReadArrayVariant(VTKDataSetReaderBase* reader,
+                     vtkm::cont::Field::Association association,
                      std::size_t numElements,
                      vtkm::cont::VariantArrayHandle& data)
       : SkipArrayVariant(reader, numElements)
+      , Association(association)
       , Data(&data)
     {
     }
@@ -748,7 +754,25 @@ private:
     {
       std::vector<T> buffer(this->NumElements);
       this->Reader->ReadArray(buffer);
-      *this->Data = internal::CreateVariantArrayHandle(buffer);
+      if ((this->Association != vtkm::cont::Field::Association::CELL_SET) ||
+          (this->Reader->GetCellsPermutation().GetNumberOfValues() < 1))
+      {
+        *this->Data = internal::CreateVariantArrayHandle(buffer);
+      }
+      else
+      {
+        // If we are reading data associated with a cell set, we need to (sometimes) permute the
+        // data due to differences between VTK and VTK-m cell shapes.
+        auto permutation = this->Reader->GetCellsPermutation().GetPortalConstControl();
+        vtkm::Id outSize = permutation.GetNumberOfValues();
+        std::vector<T> permutedBuffer(static_cast<std::size_t>(outSize));
+        for (vtkm::Id outIndex = 0; outIndex < outSize; outIndex++)
+        {
+          std::size_t inIndex = static_cast<std::size_t>(permutation.Get(outIndex));
+          permutedBuffer[static_cast<std::size_t>(outIndex)] = buffer[inIndex];
+        }
+        *this->Data = internal::CreateVariantArrayHandle(permutedBuffer);
+      }
     }
 
     template <typename T>
@@ -760,6 +784,7 @@ private:
     }
 
   private:
+    vtkm::cont::Field::Association Association;
     vtkm::cont::VariantArrayHandle* Data;
   };
 
@@ -789,7 +814,8 @@ protected:
     }
   }
 
-  vtkm::cont::VariantArrayHandle DoReadArrayVariant(std::string dataType,
+  vtkm::cont::VariantArrayHandle DoReadArrayVariant(vtkm::cont::Field::Association association,
+                                                    std::string dataType,
                                                     std::size_t numElements,
                                                     vtkm::IdComponent numComponents)
   {
@@ -799,7 +825,7 @@ protected:
 
     vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
     vtkm::io::internal::SelectTypeAndCall(
-      typeId, numComponents, ReadArrayVariant(this, numElements, data));
+      typeId, numComponents, ReadArrayVariant(this, association, numElements, data));
 
     return data;
   }
@@ -961,45 +987,6 @@ protected:
       internal::parseAssert(false);
     }
   }
-
-private:
-  class PermuteCellData
-  {
-  public:
-    PermuteCellData(const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
-                    vtkm::cont::VariantArrayHandle& data)
-      : Permutation(permutation)
-      , Data(&data)
-    {
-    }
-
-    template <typename ArrayHandleType>
-    void operator()(const ArrayHandleType& handle) const
-    {
-      VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-      using T = typename ArrayHandleType::ValueType;
-
-      if (this->Permutation.GetNumberOfValues() < 1)
-      {
-        return;
-      }
-      vtkm::cont::ArrayHandle<T> out;
-      out.Allocate(this->Permutation.GetNumberOfValues());
-
-      auto permutationPortal = this->Permutation.GetPortalConstControl();
-      auto inPortal = handle.GetPortalConstControl();
-      auto outPortal = out.GetPortalControl();
-      for (vtkm::Id i = 0; i < out.GetNumberOfValues(); ++i)
-      {
-        outPortal.Set(i, inPortal.Get(permutationPortal.Get(i)));
-      }
-      *this->Data = vtkm::cont::VariantArrayHandle(out);
-    }
-
-  private:
-    const vtkm::cont::ArrayHandle<vtkm::Id> Permutation;
-    vtkm::cont::VariantArrayHandle* Data;
-  };
 
 protected:
   std::unique_ptr<internal::VTKDataSetFile> DataFile;
