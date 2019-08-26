@@ -33,6 +33,12 @@ const vtkm::cont::Field& DataSet::GetField(vtkm::Id index) const
   return this->Fields[static_cast<std::size_t>(index)];
 }
 
+vtkm::cont::Field& DataSet::GetField(vtkm::Id index)
+{
+  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
+  return this->Fields[static_cast<std::size_t>(index)];
+}
+
 vtkm::Id DataSet::GetFieldIndex(const std::string& name, vtkm::cont::Field::Association assoc) const
 {
   bool found;
@@ -111,6 +117,12 @@ const vtkm::cont::DynamicCellSet& DataSet::GetCellSet(vtkm::Id index) const
   return this->CellSets[static_cast<std::size_t>(index)];
 }
 
+vtkm::cont::DynamicCellSet& DataSet::GetCellSet(vtkm::Id index)
+{
+  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCellSets()));
+  return this->CellSets[static_cast<std::size_t>(index)];
+}
+
 vtkm::Id DataSet::GetCellSetIndex(const std::string& name) const
 {
   vtkm::Id index = -1;
@@ -126,6 +138,21 @@ vtkm::Id DataSet::GetCellSetIndex(const std::string& name) const
 }
 
 const vtkm::cont::DynamicCellSet& DataSet::GetCellSet(const std::string& name) const
+{
+  vtkm::Id index = this->GetCellSetIndex(name);
+  if (index < 0)
+  {
+    std::string error_message("No cell set with the name " + name + " valid names are: \n");
+    for (const auto& cs : this->CellSets)
+    {
+      error_message += cs.GetName() + "\n";
+    }
+    throw vtkm::cont::ErrorBadValue(error_message);
+  }
+  return this->GetCellSet(index);
+}
+
+vtkm::cont::DynamicCellSet& DataSet::GetCellSet(const std::string& name)
 {
   vtkm::Id index = this->GetCellSetIndex(name);
   if (index < 0)
