@@ -130,7 +130,7 @@ function(vtkm_get_cuda_flags settings_var)
   if(TARGET vtkm::cuda)
     get_property(arch_flags
       TARGET    vtkm::cuda
-      PROPERTY  INTERFACE_CUDA_Architecture_Flags)
+      PROPERTY  cuda_architecture_flags)
     set(${settings_var} "${${settings_var}} ${arch_flags}" PARENT_SCOPE)
   endif()
 endfunction()

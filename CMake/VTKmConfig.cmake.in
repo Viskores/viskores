@@ -91,6 +91,13 @@ if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@VTKm_BINARY_DIR@")
   include(${VTKm_CONFIG_DIR}/VTKmTargets.cmake)
 endif()
 
+# Once we can require CMake 3.15 for all cuda builds we can
+# replace this with setting `cuda_architecture_flags` as part of the
+# EXPORT_PROPERTIES of the vtkm_cuda target
+if(VTKm_ENABLE_CUDA)
+  set_target_properties(vtkm::cuda PROPERTIES cuda_architecture_flags "@VTKm_CUDA_Architecture_Flags@")
+endif()
+
 # VTKm requires some CMake Find modules not included with CMake, so
 # include the CMake modules distributed with VTKm.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
