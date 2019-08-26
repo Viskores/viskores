@@ -36,6 +36,9 @@ public:
   const vtkm::cont::Field& GetField(vtkm::Id index) const;
 
   VTKM_CONT
+  vtkm::cont::Field& GetField(vtkm::Id index);
+
+  VTKM_CONT
   bool HasField(const std::string& name,
                 vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const
   {
@@ -70,6 +73,7 @@ public:
 
   /// Returns the first field that matches the provided name and association
   /// Will throw an exception if no match is found
+  //@{
   VTKM_CONT
   const vtkm::cont::Field& GetField(
     const std::string& name,
@@ -78,21 +82,46 @@ public:
     return this->GetField(this->GetFieldIndex(name, assoc));
   }
 
+  VTKM_CONT
+  vtkm::cont::Field& GetField(
+    const std::string& name,
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY)
+  {
+    return this->GetField(this->GetFieldIndex(name, assoc));
+  }
+  //@}
+
   /// Returns the first cell field that matches the provided name.
   /// Will throw an exception if no match is found
+  //@{
   VTKM_CONT
   const vtkm::cont::Field& GetCellField(const std::string& name) const
   {
     return this->GetField(name, vtkm::cont::Field::Association::CELL_SET);
   }
 
+  VTKM_CONT
+  vtkm::cont::Field& GetCellField(const std::string& name)
+  {
+    return this->GetField(name, vtkm::cont::Field::Association::CELL_SET);
+  }
+  //@}
+
   /// Returns the first point field that matches the provided name.
   /// Will throw an exception if no match is found
+  //@{
   VTKM_CONT
   const vtkm::cont::Field& GetPointField(const std::string& name) const
   {
     return this->GetField(name, vtkm::cont::Field::Association::POINTS);
   }
+
+  VTKM_CONT
+  vtkm::cont::Field& GetPointField(const std::string& name)
+  {
+    return this->GetField(name, vtkm::cont::Field::Association::POINTS);
+  }
+  //@}
 
   VTKM_CONT
   void AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
@@ -109,6 +138,9 @@ public:
   VTKM_CONT
   const vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0) const;
 
+  VTKM_CONT
+  vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0);
+
   /// Returns the index for the first CoordinateSystem whose
   /// name matches the provided string.
   /// Will return -1 if no match is found
@@ -117,8 +149,13 @@ public:
 
   /// Returns the first CoordinateSystem that matches the provided name.
   /// Will throw an exception if no match is found
+  //@{
   VTKM_CONT
   const vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name) const;
+
+  VTKM_CONT
+  vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name);
+  //@}
 
   VTKM_CONT
   void AddCellSet(const vtkm::cont::DynamicCellSet& cellSet) { this->CellSets.push_back(cellSet); }
@@ -136,6 +173,9 @@ public:
   VTKM_CONT
   const vtkm::cont::DynamicCellSet& GetCellSet(vtkm::Id index = 0) const;
 
+  VTKM_CONT
+  vtkm::cont::DynamicCellSet& GetCellSet(vtkm::Id index = 0);
+
 
   /// Returns the index for the first cell set whose
   /// name matches the provided string.
@@ -146,8 +186,13 @@ public:
 
   /// Returns the first DynamicCellSet that matches the provided name.
   /// Will throw an exception if no match is found
+  //@{
   VTKM_CONT
   const vtkm::cont::DynamicCellSet& GetCellSet(const std::string& name) const;
+
+  VTKM_CONT
+  vtkm::cont::DynamicCellSet& GetCellSet(const std::string& name);
+  //@}
 
 
   VTKM_CONT
