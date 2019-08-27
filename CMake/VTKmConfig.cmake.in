@@ -98,6 +98,7 @@ endif()
 # EXPORT_PROPERTIES of the vtkm_cuda target
 if(VTKm_ENABLE_CUDA AND VTKM_FROM_INSTALL_DIR)
   set_target_properties(vtkm::cuda PROPERTIES cuda_architecture_flags "@VTKm_CUDA_Architecture_Flags@")
+  set_target_properties(vtkm::cuda PROPERTIES requires_static_builds TRUE)
 endif()
 
 # VTKm requires some CMake Find modules not included with CMake, so

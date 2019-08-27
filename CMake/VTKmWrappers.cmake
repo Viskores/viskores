@@ -207,7 +207,7 @@ function(vtkm_add_target_information uses_vtkm_target)
   # dynamic library boundaries.
   if(TARGET vtkm::cuda)
     get_target_property(lib_type ${uses_vtkm_target} TYPE)
-    get_target_property(requires_static vtkm::cuda INTERFACE_REQUIRES_STATIC_BUILDS)
+    get_target_property(requires_static vtkm::cuda requires_static_builds)
 
     if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY" AND VTKm_TI_EXTENDS_VTKM)
       #We provide different error messages based on if we are building VTK-m
