@@ -19,7 +19,6 @@
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 #include <vtkm/source/Tangle.h>
 #include <vtkm/worklet/Contour.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 
 namespace vtkm_ut_mc_worklet
 {
