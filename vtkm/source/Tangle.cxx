@@ -1,6 +1,12 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
 //
-// Created by ollie on 8/22/19.
-//
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//============================================================================
 
 #include <vtkm/source/Tangle.h>
 #include <vtkm/worklet/WorkletMapField.h>
