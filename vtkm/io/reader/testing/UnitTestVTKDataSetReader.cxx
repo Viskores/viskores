@@ -436,7 +436,7 @@ void TestReadingPolyData(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 5, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 8, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 8,
                    "Incorrect number of points (from cell set)");
