@@ -23,6 +23,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
+#include <vtkm/worklet/particleadvection/EvaluatorStatus.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
@@ -31,12 +32,6 @@ namespace worklet
 {
 namespace particleadvection
 {
-enum class EvaluatorStatus
-{
-  SUCCESS = 0,
-  OUTSIDE_SPATIAL_BOUNDS,
-  OUTSIDE_TEMPORAL_BOUNDS
-};
 
 template <typename DeviceAdapter, typename FieldArrayType>
 class ExecutionGridEvaluator
