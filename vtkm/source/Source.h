@@ -12,6 +12,7 @@
 #define vtk_m_source_Source_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/source/vtkm_source_export.h>
 
 namespace vtkm
 {
@@ -26,8 +27,6 @@ public:
 
   VTKM_CONT
   ~Source() {}
-
-  //VTKM_CONT vtkm::cont::DataSet Execute();
 };
 
 } // namespace source

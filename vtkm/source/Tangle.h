@@ -26,7 +26,7 @@ public:
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_SOURCE_EXPORT
   vtkm::cont::DataSet Execute() const;
 
 private:
