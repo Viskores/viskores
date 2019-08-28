@@ -2,10 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -50,11 +60,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
+#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_find_start_index_worklet_h
+#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_find_start_index_worklet_h
 
-#include <vtkm/Types.h>
-
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
@@ -62,49 +72,66 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem
+namespace mesh_dem_contourtree_mesh_inc
 {
 
-// Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructure2D
+
+class FindStartIndexWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
+  typedef void ControlSignature(WholeArrayIn neighbours,       // (input) neighbours
+                                WholeArrayIn arcs,             // (input) arcs
+                                WholeArrayOut firstNeighbour); // (output) firstNeighbours
+  typedef void ExecutionSignature(_1, InputIndex, _2, _3);
+  typedef _1 InputDomain;
+
+  // Default Constructor
   VTKM_EXEC_CONT
-  MeshStructure2D()
-    : nRows(0)
-    , nCols(0)
+  FindStartIndexWorklet() {}
+
+  template <typename InFieldPortalType, typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const InFieldPortalType& neighboursPortal,
+                            vtkm::Id sortedArcNo,
+                            const InFieldPortalType& arcsPortal,
+                            const OutFieldPortalType& firstNeighbourPortal) const
   {
+    if (sortedArcNo > 0)
+    {
+      vtkm::Id prevFrom = (neighboursPortal.Get(sortedArcNo - 1) % 2 == 0)
+        ? neighboursPortal.Get(sortedArcNo - 1) / 2
+        : maskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo - 1) / 2));
+      vtkm::Id currFrom = (neighboursPortal.Get(sortedArcNo) % 2 == 0)
+        ? neighboursPortal.Get(sortedArcNo) / 2
+        : maskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo) / 2));
+      if (currFrom != prevFrom)
+      {
+        firstNeighbourPortal.Set(currFrom, sortedArcNo);
+      }
+    }
+    else // sortedArcNo == 0
+    {
+      firstNeighbourPortal.Set(0, 0);
+    }
+
+    // In serial this worklet implements the following operation
+    // #pragma omp parallel for
+    // for (indexVector::size_type sortedArcNo = 1; sortedArcNo < neighbours.size(); ++sortedArcNo)
+    //   {
+    //      indexType prevFrom = (neighbours[sortedArcNo-1] % 2 == 0) ? neighbours[sortedArcNo-1]/2 : maskedIndex(arcs[neighbours[sortedArcNo-1]/2]);
+    //      indexType currFrom = (neighbours[sortedArcNo  ] % 2 == 0) ? neighbours[sortedArcNo  ]/2 : maskedIndex(arcs[neighbours[sortedArcNo  ]/2]);
+    //      if (currFrom != prevFrom)
+    //       {
+    //          assert(currFrom < firstNeighbour.size());
+    //          firstNeighbour[currFrom] = sortedArcNo;
+    //        }
+    //   }
   }
 
-  VTKM_EXEC_CONT
-  MeshStructure2D(vtkm::Id nrows, vtkm::Id ncols)
-    : nRows(nrows)
-    , nCols(ncols)
-  {
-  }
 
-  // number of mesh vertices
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols); }
+}; //  ComputeMaxNeighboursWorklet
 
-  // vertex row - integer divide by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexRow(vtkm::Id v) const { return v / nCols; }
 
-  // verteck column -- integer modulus by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
-
-  //vertex ID - row * ncols + col
-  VTKM_EXEC
-  inline vtkm::Id vertexId(vtkm::Id r, vtkm::Id c) const { return r * nCols + c; }
-
-  vtkm::Id nRows, nCols;
-
-}; // MeshStructure2D
-
-} // namespace mesh_dem
+} // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

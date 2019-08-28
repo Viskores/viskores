@@ -2,10 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -50,11 +60,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
+#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_init_to_combined_sort_order_arrays_worklet_h
+#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_init_to_combined_sort_order_arrays_worklet_h
 
-#include <vtkm/Types.h>
-
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
@@ -62,49 +72,55 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem
+namespace mesh_dem_contourtree_mesh_inc
 {
 
-// Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructure2D
+
+class InitToCombinedSortOrderArraysWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
+  typedef void ControlSignature(
+    FieldIn overallSortIndex,              // (input) overallSortIndex
+    FieldIn overallSortOrder,              // (input) overallSortOrder
+    WholeArrayOut thisToCombinedSortOrder, // (output) thisToCombinedSortOrder
+    WholeArrayOut otherToCombinedSortOrder // (output) otherToCombinedSortOrder
+    );
+  typedef void ExecutionSignature(_1, _2, _3, _4);
+  typedef _1 InputDomain;
+
+  // Default Constructor
   VTKM_EXEC_CONT
-  MeshStructure2D()
-    : nRows(0)
-    , nCols(0)
+  InitToCombinedSortOrderArraysWorklet() {}
+
+  template <typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& overallSortIndexVal,
+                            const vtkm::Id& overallSortOrderVal,
+                            const OutFieldPortalType& thisToCombinedSortOrderPortal,
+                            const OutFieldPortalType& otherToCombinedSortOrderPortal) const
   {
+    if (isThis(overallSortOrderVal))
+    {
+      thisToCombinedSortOrderPortal.Set(maskedIndex(overallSortOrderVal), overallSortIndexVal);
+    }
+    else
+    {
+      otherToCombinedSortOrderPortal.Set(maskedIndex(overallSortOrderVal), overallSortIndexVal);
+    }
+
+    // In serial this worklet implements the following operation
+    // for (indexVector::size_type i = 0; i < overallSortOrder.size(); ++i)
+    //   {
+    //     if (CombinedIndexVector::isThis(overallSortOrder[i]))
+    //         thisToCombinedSortOrder[maskedIndex(overallSortOrder[maskedIndex(i)])] = overallSortIndex[i];
+    //     else
+    //         otherToCombinedSortOrder[maskedIndex(overallSortOrder[maskedIndex(i)])] = overallSortIndex[i];
+    //   }
   }
 
-  VTKM_EXEC_CONT
-  MeshStructure2D(vtkm::Id nrows, vtkm::Id ncols)
-    : nRows(nrows)
-    , nCols(ncols)
-  {
-  }
+}; // InitToCombinedSortOrderArraysWorklet
 
-  // number of mesh vertices
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols); }
 
-  // vertex row - integer divide by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexRow(vtkm::Id v) const { return v / nCols; }
-
-  // verteck column -- integer modulus by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
-
-  //vertex ID - row * ncols + col
-  VTKM_EXEC
-  inline vtkm::Id vertexId(vtkm::Id r, vtkm::Id c) const { return r * nCols + c; }
-
-  vtkm::Id nRows, nCols;
-
-}; // MeshStructure2D
-
-} // namespace mesh_dem
+} // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

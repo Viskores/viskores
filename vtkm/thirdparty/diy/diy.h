@@ -34,6 +34,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include VTKM_DIY_INCLUDE(partners/swap.hpp)
 #include VTKM_DIY_INCLUDE(reduce.hpp)
 #include VTKM_DIY_INCLUDE(reduce-operations.hpp)
+#include VTKM_DIY_INCLUDE(resolve.hpp)
 #include VTKM_DIY_INCLUDE(serialization.hpp)
 #undef VTKM_DIY_INCLUDE
 VTKM_THIRDPARTY_POST_INCLUDE

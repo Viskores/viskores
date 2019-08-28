@@ -73,7 +73,7 @@ public:
     FieldIn sortIndices,       // (input) index into active vertices
     ExecObject meshStructure,  // (input) execution object with the mesh structure
     WholeArrayOut meshExtema); // (output) whether critical
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3);
+  typedef void ExecutionSignature(_1, _2, _3);
   using InputDomain = _1;
 
   // Constructor
@@ -82,16 +82,15 @@ public:
 
   template <typename MeshStructureType, typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& sortIndex,
-                            const vtkm::Id vertexIndex,
                             const MeshStructureType& meshStructure,
                             const OutFieldPortalType& meshExtrema) const
   {
-    meshExtrema.Set(sortIndex, meshStructure.GetExtremalNeighbour(vertexIndex));
+    meshExtrema.Set(sortIndex, meshStructure.GetExtremalNeighbour(sortIndex));
 
     // In serial this does
-    //for (indexType vertex = 0; vertex < mesh.sortIndices.size(); vertex++)
+    // for (indexType sortIndex = 0; sortIndex < mesh.sortIndices.size(); sortIndex++)
     //   { // per vertex
-    //     peaks[mesh.sortIndices[vertex]] = mesh.GetExtremalNeighbour(vertex, isMaximal);
+    //        extrema[sortIndex] = mesh.GetExtremalNeighbour(sortIndex, isMaximal);
     //   } // per vertex
   }
 }; // Mesh2D_DEM_VertexStarter

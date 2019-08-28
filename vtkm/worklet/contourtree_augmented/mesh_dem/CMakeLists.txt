@@ -12,6 +12,7 @@ set(headers
   MeshStructure3D.h
   SimulatedSimplicityComperator.h
   SortIndices.h
+  IdRelabler.h
   )
 
 #-----------------------------------------------------------------------------

@@ -121,6 +121,25 @@ void permuteIndices(IdArrayType &input, IdArrayType &permute, IdArrayType &outpu
 {}
 */
 
+// tranform functor needed for ScanExclusive calculation. Return 0 if noSuchElement else 1
+struct oneIfArcValid
+{
+  VTKM_EXEC_CONT
+  oneIfArcValid() {}
+
+  VTKM_EXEC_CONT
+  vtkm::Id operator()(vtkm::Id a) const { return noSuchElement(a) ? 0 : 1; }
+};
+
+// transform functor used in ContourTreeMesh to flag indicies as other when using the CombinedVectorClass
+struct markOther
+{
+  VTKM_EXEC_CONT
+  markOther() {}
+
+  VTKM_EXEC_CONT
+  vtkm::Id operator()(vtkm::Id idx) const { return idx | CV_OTHER_FLAG; }
+};
 
 // transform functor needed for ScanExclusive calculation. Return 1 if vertex is critical else 0.
 struct onefIfCritical

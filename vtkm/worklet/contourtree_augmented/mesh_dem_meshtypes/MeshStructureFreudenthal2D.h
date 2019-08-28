@@ -95,12 +95,14 @@ public:
     vtkm::Int32 nincident_edges,
     bool getmax,
     const IdArrayType& sortIndices,
+    const IdArrayType& sortOrder,
     const m2d_freudenthal::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn)
     : mesh_dem::MeshStructure2D<DeviceAdapter>(nrows, ncols)
     , getMax(getmax)
     , nIncidentEdges(nincident_edges)
   {
     sortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
+    sortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
     edgeBoundaryDetectionMasksPortal =
       edgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
   }
@@ -109,34 +111,27 @@ public:
   constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return m2d_freudenthal::N_INCIDENT_EDGES; }
 
   VTKM_EXEC
-  inline vtkm::Id GetNeighbourIndex(vtkm::Id vertex, vtkm::Id edgeNo) const
+  inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id edgeNo) const
   { // GetNeighbourIndex
+    vtkm::Id meshIndex = this->sortOrderPortal.Get(sortIndex);
     switch (edgeNo)
     {
       case 0:
-        return vertex + 1;
-      //break; // row    , col + 1
+        return this->sortIndicesPortal.Get(meshIndex + 1); // row    , col + 1
       case 1:
-        return vertex + this->nCols + 1;
-      //break; // row + 1, col + 1
+        return this->sortIndicesPortal.Get(meshIndex + this->nCols + 1); // row + 1, col + 1
       case 2:
-        return vertex + this->nCols;
-      //break; // row + 1, col
+        return this->sortIndicesPortal.Get(meshIndex + this->nCols); // row + 1, col
       case 3:
-        return vertex - 1;
-      //break; // row    , col - 1
+        return this->sortIndicesPortal.Get(meshIndex - 1); // row    , col - 1
       case 4:
-        return vertex - this->nCols - 1;
-      //break; // row - 1, col - 1
+        return this->sortIndicesPortal.Get(meshIndex - this->nCols - 1); // row - 1, col - 1
       case 5:
-        return vertex - this->nCols;
-      //break; // row - 1, col
+        return this->sortIndicesPortal.Get(meshIndex - this->nCols); // row - 1, col
       default:
-        VTKM_ASSERT(false);
-        return vertex;
+        return -1; // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
     }
   } // GetNeighbourIndex
-
 
 // Disable conversion warnings for Add, Subtract, Multiply, Divide on GCC only.
 // GCC creates false positive warnings for signed/unsigned char* operations.
@@ -151,16 +146,15 @@ public:
 
   // sets outgoing paths for saddles
   VTKM_EXEC
-  inline vtkm::Id GetExtremalNeighbour(vtkm::Id vertex) const
-  {
+  inline vtkm::Id GetExtremalNeighbour(vtkm::Id sortIndex) const
+  { // GetExtremalNeighbour()
     using namespace m2d_freudenthal;
-    // operator()
-    // convert to a sort index
-    vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
+    // convert to a mesh index
+    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
 
     // get the row and column
-    vtkm::Id row = this->vertexRow(vertex);
-    vtkm::Id col = this->vertexColumn(vertex);
+    vtkm::Id row = this->vertexRow(meshIndex);
+    vtkm::Id col = this->vertexColumn(meshIndex);
     vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : 0) |
       ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
       ((row == this->nRows - 1) ? bottomBit : 0);
@@ -172,40 +166,35 @@ public:
       if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(edgeNo)))
       {
         // calculate neighbour's ID and sort order
-        vtkm::Id nbr = GetNeighbourIndex(vertex, edgeNo);
-
-        // retrieve the sort index
-        vtkm::Id nbrIndex = sortIndicesPortal.Get(nbr);
+        vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, edgeNo);
 
         // if it's not a valid destination, ignore it
-        if (getMax ? (nbrIndex > sortIndex) : (nbrIndex < sortIndex))
+        if (getMax ? (nbrSortIndex > sortIndex) : (nbrSortIndex < sortIndex))
         {
           // and save the destination
-          return nbrIndex;
+          return nbrSortIndex;
         }
       }
     } // per edge
-
     return sortIndex | TERMINAL_ELEMENT;
-  } // operator()
+  } // GetExtremalNeighbour()
 
 
   // NOTE/FIXME: The following also iterates over all values and could be combined with GetExtremalNeighbour(). However, the
   // results are needed at different places and splitting the two functions leads to a cleaner design
   VTKM_EXEC
   inline vtkm::Pair<vtkm::Id, vtkm::Id> GetNeighbourComponentsMaskAndDegree(
-    vtkm::Id vertex,
+    vtkm::Id sortIndex,
     bool getMaxComponents) const
-  {
+  { // GetNeighbourComponentsMaskAndDegree()
     using namespace m2d_freudenthal;
-    // GetNeighbourComponentsMaskAndDegree()
     // get data portals
-    // convert to a sort index
-    vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
+    // convert to a mesh index
+    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
 
     // get the row and column
-    vtkm::Id row = this->vertexRow(vertex);
-    vtkm::Id col = this->vertexColumn(vertex);
+    vtkm::Id row = this->vertexRow(meshIndex);
+    vtkm::Id col = this->vertexColumn(meshIndex);
     vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : 0) |
       ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
       ((row == this->nRows - 1) ? bottomBit : 0);
@@ -219,16 +208,13 @@ public:
       if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(edgeNo)))
       {
         // calculate neighbour's ID and sort order
-        vtkm::Id nbr = GetNeighbourIndex(vertex, edgeNo);
-
-        // retrieve the sort index
-        vtkm::Id nbrIndex = sortIndicesPortal.Get(nbr);
+        vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, edgeNo);
 
         // if it's not a valid destination, ignore it
-        if (getMaxComponents ? (nbrIndex > sortIndex) : (nbrIndex < sortIndex))
+        if (getMaxComponents ? (nbrSortIndex > sortIndex) : (nbrSortIndex < sortIndex))
         {
           // now set the flag in the neighbourhoodMask
-          neighbourhoodMask |= static_cast<vtkm::Id>(1) << edgeNo;
+          neighbourhoodMask |= vtkm::Id{ 1 } << edgeNo;
         }
       }
     } // per edge
@@ -238,42 +224,44 @@ public:
     vtkm::Id neighbourComponentMask = 0;
     // special case for local minimum
     if (neighbourhoodMask == 0x3F)
+    {
       outDegree = 1;
+    }
     else
     { // not a local minimum
       if ((neighbourhoodMask & 0x30) == 0x20)
       {
         ++outDegree;
-        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 5;
+        neighbourComponentMask |= vtkm::Id{ 1 } << 5;
       }
       if ((neighbourhoodMask & 0x18) == 0x10)
       {
         ++outDegree;
-        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 4;
+        neighbourComponentMask |= vtkm::Id{ 1 } << 4;
       }
       if ((neighbourhoodMask & 0x0C) == 0x08)
       {
         ++outDegree;
-        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 3;
+        neighbourComponentMask |= vtkm::Id{ 1 } << 3;
       }
       if ((neighbourhoodMask & 0x06) == 0x04)
       {
         ++outDegree;
-        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 2;
+        neighbourComponentMask |= vtkm::Id{ 1 } << 2;
       }
       if ((neighbourhoodMask & 0x03) == 0x02)
       {
         ++outDegree;
-        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 1;
+        neighbourComponentMask |= vtkm::Id{ 1 } << 1;
       }
       if ((neighbourhoodMask & 0x21) == 0x01)
       {
         ++outDegree;
-        neighbourComponentMask |= static_cast<vtkm::Id>(1) << 0;
+        neighbourComponentMask |= vtkm::Id{ 1 } << 0;
       }
     } // not a local minimum
-
-    return vtkm::make_Pair(neighbourComponentMask, outDegree);
+    vtkm::Pair<vtkm::Id, vtkm::Id> re(neighbourComponentMask, outDegree);
+    return re;
   } // GetNeighbourComponentsMaskAndDegree()
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
@@ -282,6 +270,7 @@ public:
 
 private:
   sortIndicesPortalType sortIndicesPortal;
+  sortIndicesPortalType sortOrderPortal;
   edgeBoundaryDetectionMasksPortalType edgeBoundaryDetectionMasksPortal;
   bool getMax;
   vtkm::Id nIncidentEdges;

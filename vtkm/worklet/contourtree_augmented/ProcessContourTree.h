@@ -137,7 +137,8 @@ public:
     const IdArrayType& branchSaddle,
     const IdArrayType& branchParent,
     const IdArrayType& sortOrder,
-    const vtkm::cont::ArrayHandle<T, StorageType>& dataField);
+    const vtkm::cont::ArrayHandle<T, StorageType>& dataField,
+    bool dataFieldIsSorted);
 
 }; // class ProcessContourTree
 
@@ -160,7 +161,8 @@ process_contourtree_inc_ns::Branch<T>* ProcessContourTree::ComputeBranchDecompos
   const IdArrayType& branchSaddle,
   const IdArrayType& branchParent,
   const IdArrayType& sortOrder,
-  const vtkm::cont::ArrayHandle<T, StorageType>& dataField)
+  const vtkm::cont::ArrayHandle<T, StorageType>& dataField,
+  bool dataFieldIsSorted)
 {
   return process_contourtree_inc_ns::Branch<T>::ComputeBranchDecomposition(contourTreeSuperparents,
                                                                            contourTreeSupernodes,
@@ -170,7 +172,8 @@ process_contourtree_inc_ns::Branch<T>* ProcessContourTree::ComputeBranchDecompos
                                                                            branchSaddle,
                                                                            branchParent,
                                                                            sortOrder,
-                                                                           dataField);
+                                                                           dataField,
+                                                                           dataFieldIsSorted);
 }
 
 

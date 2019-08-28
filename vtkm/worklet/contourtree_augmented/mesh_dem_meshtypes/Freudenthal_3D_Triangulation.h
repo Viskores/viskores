@@ -131,6 +131,7 @@ MeshStructureFreudenthal3D<DeviceTag>
                                                m3d_freudenthal::N_INCIDENT_EDGES,
                                                this->useGetMax,
                                                this->sortIndices,
+                                               this->sortOrder,
                                                edgeBoundaryDetectionMasks,
                                                neighbourOffsets,
                                                linkComponentCaseTable);

@@ -2,10 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -50,11 +60,12 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
+#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_arc_comparator_h
+#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_arc_comparator_h
 
-#include <vtkm/Types.h>
-
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
@@ -62,49 +73,70 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem
+namespace mesh_dem_contourtree_mesh_inc
 {
 
-// Worklet for computing the sort indices from the sort order
+
+// comparator used for initial sort of data values
 template <typename DeviceAdapter>
-class MeshStructure2D
+class ArcComparatorImpl
 {
 public:
-  VTKM_EXEC_CONT
-  MeshStructure2D()
-    : nRows(0)
-    , nCols(0)
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+
+  // constructor - takes vectors as parameters
+  VTKM_CONT
+  ArcComparatorImpl(const IdArrayType& ct_arcs)
+  { // constructor
+    arcsPortal = ct_arcs.PrepareForInput(DeviceAdapter());
+  } // constructor
+
+  // () operator - gets called to do comparison
+  VTKM_EXEC
+  bool operator()(const vtkm::Id& x, const vtkm::Id& y) const
+  { // operator()
+    vtkm::Id from1 = (x % 2 == 0) ? x / 2 : maskedIndex(arcsPortal.Get(x / 2));
+    vtkm::Id from2 = (y % 2 == 0) ? y / 2 : maskedIndex(arcsPortal.Get(y / 2));
+    if (from1 != from2)
+    {
+      return from1 < from2;
+    }
+    else
+    {
+      vtkm::Id to1 = (x % 2 == 0) ? maskedIndex(arcsPortal.Get(x / 2)) : x / 2;
+      vtkm::Id to2 = (y % 2 == 0) ? maskedIndex(arcsPortal.Get(y / 2)) : y / 2;
+      return to1 < to2;
+    }
+  } // operator()
+
+private:
+  IdPortalType arcsPortal;
+
+}; // ArcComparator
+
+class ArcComparator : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  // constructor - takes vectors as parameters
+  VTKM_CONT
+  ArcComparator(const IdArrayType& arcs)
+    : Arcs(arcs)
   {
   }
 
-  VTKM_EXEC_CONT
-  MeshStructure2D(vtkm::Id nrows, vtkm::Id ncols)
-    : nRows(nrows)
-    , nCols(ncols)
+  template <typename DeviceAdapter>
+  VTKM_CONT ArcComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
   {
+    return ArcComparatorImpl<DeviceAdapter>(this->Arcs);
   }
 
-  // number of mesh vertices
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols); }
+private:
+  IdArrayType Arcs;
+}; // EdgePeakComparator
 
-  // vertex row - integer divide by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexRow(vtkm::Id v) const { return v / nCols; }
 
-  // verteck column -- integer modulus by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
-
-  //vertex ID - row * ncols + col
-  VTKM_EXEC
-  inline vtkm::Id vertexId(vtkm::Id r, vtkm::Id c) const { return r * nCols + c; }
-
-  vtkm::Id nRows, nCols;
-
-}; // MeshStructure2D
-
-} // namespace mesh_dem
+} // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

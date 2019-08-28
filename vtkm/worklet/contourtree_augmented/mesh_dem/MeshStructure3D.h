@@ -86,6 +86,10 @@ public:
   {
   }
 
+  // number of mesh vertices
+  VTKM_EXEC_CONT
+  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols * this->nSlices); }
+
   // vertex row - integer modulus by (nRows&nCols) and integer divide by columns
   VTKM_EXEC
   vtkm::Id vertexRow(vtkm::Id v) const { return (v % (nRows * nCols)) / nCols; }

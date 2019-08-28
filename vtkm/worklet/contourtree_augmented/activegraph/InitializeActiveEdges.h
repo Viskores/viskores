@@ -78,17 +78,16 @@ public:
 
   typedef void ControlSignature(
     FieldIn outdegree,               // (input) outdegree
-    WholeArrayIn sortOrder,          // (input) sort order
-    WholeArrayIn sortIndices,        // (input) sort indices
     ExecObject meshStructure,        // (input) execution object with the mesh structure
     FieldIn firstEdge,               // (input)
-    FieldIn globalIndex,             // (input)
+    FieldIn globalIndex,             // (input) ActiveGraph.globalIndex
     WholeArrayIn extrema,            // (input)
     WholeArrayIn neighbourhoodMasks, // (input)
     WholeArrayOut edgeNear,          // (output) edgeNear
     WholeArrayOut edgeFar,           // (output) edgeFar
     WholeArrayOut activeEdges);      // (output) activeEdges
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11);
+  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8, _9);
+
   using InputDomain = _1;
 
   // Default Constructor
@@ -98,11 +97,9 @@ public:
   template <typename MeshStructureType, typename InFieldPortalType, typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& outDegree,
                             const vtkm::Id activeIndex,
-                            const InFieldPortalType& sortOrder,
-                            const InFieldPortalType& sortIndices,
                             const MeshStructureType& meshStructure,
                             const vtkm::Id& firstEdgeIndex,
-                            const vtkm::Id& sortIndex,
+                            const vtkm::Id& sortIndex, // = globalIndex.Get(activeIndex)
                             const InFieldPortalType& extrema,
                             const InFieldPortalType& neighbourhoodMasks,
                             const OutFieldPortalType& edgeNear,
@@ -111,16 +108,13 @@ public:
   {
     if (outDegree != 0)
     {
-      vtkm::Id meshIndex = sortOrder.Get(sortIndex);
-
       // temporary array for storing edges
       vtkm::Id neigbourComponents[MeshClassType::MAX_OUTDEGREE];
       int currNbrNo = 0;
       for (vtkm::Id nbrNo = 0; nbrNo < meshStructure.GetMaxNumberOfNeighbours(); ++nbrNo)
         if (neighbourhoodMasks.Get(sortIndex) & (static_cast<vtkm::Id>(1) << nbrNo))
         {
-          neigbourComponents[currNbrNo++] =
-            sortIndices.Get(meshStructure.GetNeighbourIndex(meshIndex, nbrNo));
+          neigbourComponents[currNbrNo++] = meshStructure.GetNeighbourIndex(sortIndex, nbrNo);
         }
 
 
@@ -155,7 +149,6 @@ public:
         if (outDegree != 0)
           {
             indexType sortIndex = globalIndex[activeIndex];
-            indexType meshIndex = mesh.sortOrder[sortIndex];
 
             // temporary array for storing edges
             indexType neigbourComponents[Mesh::MAX_OUTDEGREE];
@@ -163,7 +156,7 @@ public:
             for (vtkm::Int32 nbrNo = 0; nbrNo < mesh.GetMaxNumberOfNeighbours(); ++nbrNo)
               if (neighbourhoodMasks[sortIndex] & 1 << nbrNo)
                 {
-                  neigbourComponents[currNbrNo++] = mesh.sortIndices[mesh.GetNeighbourIndex(meshIndex, nbrNo)];
+                   neigbourComponents[currNbrNo++] = mesh.GetNeighbourIndex(sortIndex, nbrNo);
                 }
 
 

@@ -112,6 +112,7 @@ public:
     vtkm::Id nslices,
     bool getmax,
     const IdArrayType& sortIndices,
+    const IdArrayType& sortOrder,
     const m3d_marchingcubes::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn,
     const m3d_marchingcubes::cubeVertexPermutationsType& cubeVertexPermutationsIn,
     const m3d_marchingcubes::linkVertexConnectionsType& linkVertexConnectionsSixIn,
@@ -122,6 +123,7 @@ public:
     , getMax(getmax)
   {
     sortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
+    sortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
     edgeBoundaryDetectionMasksPortal =
       edgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
     cubeVertexPermutationsPortal = cubeVertexPermutationsIn.PrepareForInput(DeviceAdapter());
@@ -139,70 +141,83 @@ public:
   }
 
   VTKM_EXEC
-  inline vtkm::Id GetNeighbourIndex(vtkm::Id vertex, vtkm::Id nbrNo) const
+  inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id nbrNo) const
   {
     using namespace m3d_marchingcubes;
+    vtkm::Id meshIndex = this->sortOrderPortal.Get(sortIndex);
     // GetNeighbourIndex
     switch (nbrNo)
     {
       // Edge connected neighbours
       case 0:
-        return vertex - (this->nRows * this->nCols); // { -1,  0,  0 }
+        return sortIndicesPortal.Get(meshIndex - (this->nRows * this->nCols)); // { -1,  0,  0 }
       case 1:
-        return vertex - this->nCols; // {  0, -1,  0 }
+        return sortIndicesPortal.Get(meshIndex - this->nCols); // {  0, -1,  0 }
       case 2:
-        return vertex - 1; // {  0,  0, -1 }
+        return sortIndicesPortal.Get(meshIndex - 1); // {  0,  0, -1 }
       case 3:
-        return vertex + 1; // {  0,  0,  1 }
+        return sortIndicesPortal.Get(meshIndex + 1); // {  0,  0,  1 }
       case 4:
-        return vertex + this->nCols; // {  0,  1,  0 }
+        return sortIndicesPortal.Get(meshIndex + this->nCols); // {  0,  1,  0 }
       // Face connected neighbours
       case 5:
-        return vertex + (this->nRows * this->nCols); // {  1,  0,  0 }
+        return sortIndicesPortal.Get(meshIndex + (this->nRows * this->nCols)); // {  1,  0,  0 }
       case 6:
-        return vertex - (this->nRows * this->nCols) - this->nCols; // { -1, -1,  0 }
+        return sortIndicesPortal.Get(meshIndex - (this->nRows * this->nCols) -
+                                     this->nCols); // { -1, -1,  0 }
       case 7:
-        return vertex - (this->nRows * this->nCols) - 1; // { -1,  0, -1 }
+        return sortIndicesPortal.Get(meshIndex - (this->nRows * this->nCols) - 1); // { -1,  0, -1 }
       case 8:
-        return vertex - (this->nRows * this->nCols) + 1; // { -1,  0,  1 }
+        return sortIndicesPortal.Get(meshIndex - (this->nRows * this->nCols) + 1); // { -1,  0,  1 }
       case 9:
-        return vertex - (this->nRows * this->nCols) + this->nCols; // { -1,  1,  0 }
+        return sortIndicesPortal.Get(meshIndex - (this->nRows * this->nCols) +
+                                     this->nCols); // { -1,  1,  0 }
       case 10:
-        return vertex - this->nCols - 1; // {  0, -1, -1 }
+        return sortIndicesPortal.Get(meshIndex - this->nCols - 1); // {  0, -1, -1 }
       case 11:
-        return vertex - this->nCols + 1; // {  0, -1,  1 }
+        return sortIndicesPortal.Get(meshIndex - this->nCols + 1); // {  0, -1,  1 }
       case 12:
-        return vertex + this->nCols - 1; // {  0,  1, -1 }
+        return sortIndicesPortal.Get(meshIndex + this->nCols - 1); // {  0,  1, -1 }
       case 13:
-        return vertex + this->nCols + 1; // {  0,  1,  1 }
+        return sortIndicesPortal.Get(meshIndex + this->nCols + 1); // {  0,  1,  1 }
       case 14:
-        return vertex + (this->nRows * this->nCols) - this->nCols; // {  1, -1,  0 }
+        return sortIndicesPortal.Get(meshIndex + (this->nRows * this->nCols) -
+                                     this->nCols); // {  1, -1,  0 }
       case 15:
-        return vertex + (this->nRows * this->nCols) - 1; // {  1,  0, -1 }
+        return sortIndicesPortal.Get(meshIndex + (this->nRows * this->nCols) - 1); // {  1,  0, -1 }
       case 16:
-        return vertex + (this->nRows * this->nCols) + 1; // {  1,  0,  1 }
+        return sortIndicesPortal.Get(meshIndex + (this->nRows * this->nCols) + 1); // {  1,  0,  1 }
       case 17:
-        return vertex + (this->nRows * this->nCols) + this->nCols; // {  1,  1,  0 }
+        return sortIndicesPortal.Get(meshIndex + (this->nRows * this->nCols) +
+                                     this->nCols); // {  1,  1,  0 }
       // Diagonal connected neighbours
       case 18:
-        return vertex - (this->nRows * this->nCols) - this->nCols - 1; // { -1, -1, -1 }
+        return sortIndicesPortal.Get(meshIndex - (this->nRows * this->nCols) - this->nCols -
+                                     1); // { -1, -1, -1 }
       case 19:
-        return vertex - (this->nRows * this->nCols) - this->nCols + 1; // { -1, -1,  1 }
+        return sortIndicesPortal.Get(meshIndex - (this->nRows * this->nCols) - this->nCols +
+                                     1); // { -1, -1,  1 }
       case 20:
-        return vertex - (this->nRows * this->nCols) + this->nCols - 1; // { -1,  1, -1 }
+        return sortIndicesPortal.Get(meshIndex - (this->nRows * this->nCols) + this->nCols -
+                                     1); // { -1,  1, -1 }
       case 21:
-        return vertex - (this->nRows * this->nCols) + this->nCols + 1; // { -1,  1,  1 }
+        return sortIndicesPortal.Get(meshIndex - (this->nRows * this->nCols) + this->nCols +
+                                     1); // { -1,  1,  1 }
       case 22:
-        return vertex + (this->nRows * this->nCols) - this->nCols - 1; // {  1, -1, -1 }
+        return sortIndicesPortal.Get(meshIndex + (this->nRows * this->nCols) - this->nCols -
+                                     1); // {  1, -1, -1 }
       case 23:
-        return vertex + (this->nRows * this->nCols) - this->nCols + 1; // {  1, -1,  1 }
+        return sortIndicesPortal.Get(meshIndex + (this->nRows * this->nCols) - this->nCols +
+                                     1); // {  1, -1,  1 }
       case 24:
-        return vertex + (this->nRows * this->nCols) + this->nCols - 1; // {  1,  1, -1 }
+        return sortIndicesPortal.Get(meshIndex + (this->nRows * this->nCols) + this->nCols -
+                                     1); // {  1,  1, -1 }
       case 25:
-        return vertex + (this->nRows * this->nCols) + this->nCols + 1; // {  1,  1,  1 }
+        return sortIndicesPortal.Get(meshIndex + (this->nRows * this->nCols) + this->nCols +
+                                     1); // {  1,  1,  1 }
       default:
         VTKM_ASSERT(false);
-        return vertex;
+        return meshIndex; // Need to error out here
     }
   } // GetNeighbourIndex
 
@@ -218,16 +233,16 @@ public:
 #endif // gcc || clang
 
   VTKM_EXEC
-  inline vtkm::Id GetExtremalNeighbour(vtkm::Id vertex) const
+  inline vtkm::Id GetExtremalNeighbour(vtkm::Id sortIndex) const
   {
     using namespace m3d_marchingcubes;
     // GetExtremalNeighbour()
     // convert to a sort index
-    vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
+    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
 
-    vtkm::Id slice = this->vertexSlice(vertex);
-    vtkm::Id row = this->vertexRow(vertex);
-    vtkm::Id col = this->vertexColumn(vertex);
+    vtkm::Id slice = this->vertexSlice(meshIndex);
+    vtkm::Id row = this->vertexRow(meshIndex);
+    vtkm::Id col = this->vertexColumn(meshIndex);
     vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
       ((slice == this->nSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
       ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
@@ -241,11 +256,11 @@ public:
       // only consider valid edges
       if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(nbrNo)))
       {
-        vtkm::Id nbrIndex = sortIndicesPortal.Get(GetNeighbourIndex(vertex, nbrNo));
+        vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, nbrNo);
         // explicit test allows reversal between join and split trees
-        if (getMax ? (nbrIndex > sortIndex) : (nbrIndex < sortIndex))
+        if (getMax ? (nbrSortIndex > sortIndex) : (nbrSortIndex < sortIndex))
         { // valid edge and outbound
-          return nbrIndex;
+          return nbrSortIndex;
         } // valid edge and outbound
       }
     } // per edge
@@ -255,17 +270,17 @@ public:
 
   VTKM_EXEC
   inline vtkm::Pair<vtkm::Id, vtkm::Id> GetNeighbourComponentsMaskAndDegree(
-    vtkm::Id vertex,
+    vtkm::Id sortIndex,
     bool getMaxComponents) const
   {
     using namespace m3d_marchingcubes;
     // GetNeighbourComponentsMaskAndDegree()
     // convert to a sort index
-    vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
+    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
 
-    vtkm::Id slice = this->vertexSlice(vertex);
-    vtkm::Id row = this->vertexRow(vertex);
-    vtkm::Id col = this->vertexColumn(vertex);
+    vtkm::Id slice = this->vertexSlice(meshIndex);
+    vtkm::Id row = this->vertexRow(meshIndex);
+    vtkm::Id col = this->vertexColumn(meshIndex);
     vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
       ((slice == this->nSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
       ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
@@ -279,9 +294,9 @@ public:
     {
       if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(edgeNo)))
       {
-        vtkm::Id nbrIndex = sortIndicesPortal.Get(GetNeighbourIndex(vertex, edgeNo));
+        vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, edgeNo);
 
-        if (getMaxComponents ? (sortIndex < nbrIndex) : (sortIndex > nbrIndex))
+        if (getMaxComponents ? (sortIndex < nbrSortIndex) : (sortIndex > nbrSortIndex))
         {
           parentId[edgeNo] = edgeNo;
         }
@@ -373,6 +388,7 @@ public:
 
 private:
   sortIndicesPortalType sortIndicesPortal;
+  sortIndicesPortalType sortOrderPortal;
   edgeBoundaryDetectionMasksPortalType edgeBoundaryDetectionMasksPortal;
   cubeVertexPermutationsPortalType cubeVertexPermutationsPortal;
   linkVertexConnectionsPortalType linkVertexConnectionsSixPortal;

@@ -158,6 +158,7 @@ MeshStructureMarchingCubes<DeviceTag>
                                                this->nSlices,
                                                this->useGetMax,
                                                this->sortIndices,
+                                               this->sortOrder,
                                                edgeBoundaryDetectionMasks,
                                                cubeVertexPermutations,
                                                linkVertexConnectionsSix,

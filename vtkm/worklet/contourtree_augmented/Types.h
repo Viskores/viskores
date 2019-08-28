@@ -117,6 +117,13 @@ inline vtkm::Id maskedIndex(vtkm::Id flaggedIndex)
   return (flaggedIndex & INDEX_MASK);
 } // maskedIndex()
 
+// Used in the context of CombinedVector class used in ContourTreeMesh to merge the mesh of contour trees
+VTKM_EXEC_CONT
+inline bool isThis(vtkm::Id flaggedIndex)
+{ // isThis
+  return ((flaggedIndex & CV_OTHER_FLAG) == 0);
+} // isThis
+
 template <typename T>
 struct MaskedIndexFunctor
 {

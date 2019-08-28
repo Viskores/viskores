@@ -75,6 +75,7 @@
 #include <vtkm/worklet/contourtree_augmented/MeshExtrema.h>
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
 
 namespace vtkm
 {
@@ -84,6 +85,30 @@ namespace worklet
 class ContourTreePPP2
 {
 public:
+  /*!
+  * Run the contour tree to merge an existing set of contour trees
+  */
+  template <typename FieldType, typename StorageType>
+  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType>
+             fieldArray, // TODO: We really should not need this
+           contourtree_augmented::ContourTreeMesh<FieldType>& mesh,
+           std::vector<std::pair<std::string, vtkm::Float64>>& timings,
+           contourtree_augmented::ContourTree& contourTree,
+           contourtree_augmented::IdArrayType sortOrder,
+           vtkm::Id& nIterations,
+           bool computeRegularStructure = true)
+  {
+    RunContourTree(
+      fieldArray, // Just a place-holder to fill the required field. Used when calling SortData on the contour tree which is a no-op
+      timings,
+      contourTree,
+      sortOrder,
+      nIterations,
+      mesh,
+      computeRegularStructure);
+    return;
+  }
+
   /*!
    * Run the contour tree analysis. This helper function is used to
    * allow one to run the contour tree in a consistent fashion independent
@@ -109,16 +134,9 @@ public:
       // Build the mesh and fill in the values
       Mesh_DEM_Triangulation_2D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols);
       // Run the contour tree on the mesh
-      return RunContourTree(fieldArray,
-                            timings,
-                            contourTree,
-                            sortOrder,
-                            nIterations,
-                            nRows,
-                            nCols,
-                            1,
-                            mesh,
-                            computeRegularStructure);
+      RunContourTree(
+        fieldArray, timings, contourTree, sortOrder, nIterations, mesh, computeRegularStructure);
+      return;
     }
     // 3D Contour Tree using marching cubes
     else if (useMarchingCubes)
@@ -126,16 +144,9 @@ public:
       // Build the mesh and fill in the values
       Mesh_DEM_Triangulation_3D_MarchingCubes<FieldType, StorageType> mesh(nRows, nCols, nSlices);
       // Run the contour tree on the mesh
-      return RunContourTree(fieldArray,
-                            timings,
-                            contourTree,
-                            sortOrder,
-                            nIterations,
-                            nRows,
-                            nCols,
-                            nSlices,
-                            mesh,
-                            computeRegularStructure);
+      RunContourTree(
+        fieldArray, timings, contourTree, sortOrder, nIterations, mesh, computeRegularStructure);
+      return;
     }
     // 3D Contour Tree with Freudenthal
     else
@@ -143,16 +154,9 @@ public:
       // Build the mesh and fill in the values
       Mesh_DEM_Triangulation_3D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols, nSlices);
       // Run the contour tree on the mesh
-      return RunContourTree(fieldArray,
-                            timings,
-                            contourTree,
-                            sortOrder,
-                            nIterations,
-                            nRows,
-                            nCols,
-                            nSlices,
-                            mesh,
-                            computeRegularStructure);
+      RunContourTree(
+        fieldArray, timings, contourTree, sortOrder, nIterations, mesh, computeRegularStructure);
+      return;
     }
   }
 
@@ -169,9 +173,6 @@ private:
                       contourtree_augmented::ContourTree& contourTree,
                       contourtree_augmented::IdArrayType& sortOrder,
                       vtkm::Id& nIterations,
-                      const vtkm::Id /*nRows*/,   // FIXME: Remove unused parameter?
-                      const vtkm::Id /*nCols*/,   // FIXME: Remove unused parameter?
-                      const vtkm::Id /*nSlices*/, // FIXME: Remove unused parameter?
                       MeshClass& mesh,
                       bool computeRegularStructure)
   {
@@ -204,7 +205,6 @@ private:
                                                             timer.GetElapsedTime()));
 
 #ifdef DEBUG_PRINT
-    joinGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
     joinGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
 #endif
     timer.Start();

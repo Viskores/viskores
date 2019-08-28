@@ -118,6 +118,7 @@ MeshStructureFreudenthal2D<DeviceTag>
                                                m2d_freudenthal::N_INCIDENT_EDGES,
                                                this->useGetMax,
                                                this->sortIndices,
+                                               this->sortOrder,
                                                edgeBoundaryDetectionMasks);
 }
 
