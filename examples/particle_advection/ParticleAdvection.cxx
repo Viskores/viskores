@@ -32,13 +32,12 @@ int main(int argc, char** argv)
 
   vtkm::cont::DataSet ds;
 
-  std::size_t pos;
-  if ((pos = dataFile.find_last_of(".bov") != std::string::npos))
+  if (dataFile.find(".bov") != std::string::npos)
   {
     vtkm::io::reader::BOVDataSetReader rdr(dataFile);
     ds = rdr.ReadDataSet();
   }
-  else if ((pos = dataFile.find_last_of(".vtk") != std::string::npos))
+  else if (dataFile.find(".vtk") != std::string::npos)
   {
     vtkm::io::reader::VTKDataSetReader rdr(dataFile);
     ds = rdr.ReadDataSet();
