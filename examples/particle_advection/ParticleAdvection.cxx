@@ -10,9 +10,16 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/filter/Streamline.h>
-#include <vtkm/io/reader/BOVDataSetReader.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
+
+// Example computing streamlines.
+// An example vector field is available in the vtk-m data directory: magField.vtk
+// Example usage:
+//   this will advect 200 particles 50 steps using a step size of 0.01
+//
+// Particle_Advection <path-to-data-dir>/magField.vtk vec 200 50 0.01 output.vtk
+//
 
 int main(int argc, char** argv)
 {
@@ -32,12 +39,7 @@ int main(int argc, char** argv)
 
   vtkm::cont::DataSet ds;
 
-  if (dataFile.find(".bov") != std::string::npos)
-  {
-    vtkm::io::reader::BOVDataSetReader rdr(dataFile);
-    ds = rdr.ReadDataSet();
-  }
-  else if (dataFile.find(".vtk") != std::string::npos)
+  if (dataFile.find(".vtk") != std::string::npos)
   {
     vtkm::io::reader::VTKDataSetReader rdr(dataFile);
     ds = rdr.ReadDataSet();
@@ -48,7 +50,7 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  //create seeds
+  //create seeds randomly placed withing the bounding box of the data.
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
   std::vector<vtkm::Vec3f> seeds;
 
