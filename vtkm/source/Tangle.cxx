@@ -71,6 +71,7 @@ public:
 };
 } // namespace tangle
 
+VTKM_SOURCE_EXPORT
 vtkm::cont::DataSet Tangle::Execute() const
 {
   vtkm::cont::DataSet dataSet;
