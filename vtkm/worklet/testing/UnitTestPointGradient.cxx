@@ -34,7 +34,12 @@ void TestPointGradientUniform2D()
   for (int i = 0; i < 2; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
-                     "Wrong result for PointGradient worklet on 2D uniform data");
+                     "Wrong result for PointGradient worklet on 2D uniform data",
+                     "\nExpected ",
+                     expected[i],
+                     "\nGot ",
+                     result.GetPortalConstControl().Get(i),
+                     "\n");
   }
 }
 
@@ -60,7 +65,12 @@ void TestPointGradientUniform3D()
   for (int i = 0; i < 4; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
-                     "Wrong result for PointGradient worklet on 3D uniform data");
+                     "Wrong result for PointGradient worklet on 3D uniform data",
+                     "\nExpected ",
+                     expected[i],
+                     "\nGot ",
+                     result.GetPortalConstControl().Get(i),
+                     "\n");
   }
 }
 
@@ -206,13 +216,18 @@ void TestPointGradientExplicit3D()
   for (int i = 0; i < nVerts; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
-                     "Wrong result for PointGradient worklet on 3D explicit data");
+                     "Wrong result for PointGradient worklet on 3D explicit data",
+                     "\nExpected ",
+                     expected[i],
+                     "\nGot ",
+                     result.GetPortalConstControl().Get(i),
+                     "\n");
   }
 }
 
 void TestPointGradientExplicit2D()
 {
-  std::cout << "Testing PointGradient Worklet on Explicit 3D data" << std::endl;
+  std::cout << "Testing PointGradient Worklet on Explicit 2D data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DExplicitDataSet0();
@@ -225,18 +240,24 @@ void TestPointGradientExplicit2D()
 
   //vtkm::cont::printSummary_ArrayHandle(result, std::cout, true);
   const int nVerts = 16;
-  vtkm::Vec3f_32 expected[nVerts] = { { -22.0f, -7.0f, 0.0f },       { -25.5f, -7.0f, 0.0f },
-                                      { -30.5f, 7.0f, 0.0f },        { -32.0f, 16.0f, 0.0f },
-                                      { -23.0f, -42.0f, 0.0f },      { -23.25f, -17.0f, 0.0f },
-                                      { -20.6667f, 1.33333f, 0.0f }, { -23.0f, 14.0f, 0.0f },
-                                      { -8.0f, -42.0f, 0.0f },       { 1.33333f, -19.7222f, 0.0f },
-                                      { -6.2963f, -4.03704f, 0.0f }, { -5.0f, 12.0f, 0.0f },
-                                      { 22.5556f, -13.4444f, 0.0f }, { -19.8889f, 59.1111f, 0.0f },
-                                      { 22.5556f, 15.4444f, 0.0f },  { 45.0f, 26.6667f, 0.0f } };
+  vtkm::Vec3f_32 expected[nVerts] = {
+    { -22.0f, -7.0f, 0.0f },       { -25.5f, -7.0f, 0.0f },         { -30.5f, 7.0f, 0.0f },
+    { -32.0f, 16.0f, 0.0f },       { -23.0f, -42.0f, 0.0f },        { -23.25f, -17.0f, 0.0f },
+    { -20.6667f, 1.33333f, 0.0f }, { -23.0f, 14.0f, 0.0f },         { -8.0f, -42.0f, 0.0f },
+    { 2.91546f, -24.8357f, 0.0f }, { -0.140736f, -7.71853f, 0.0f }, { -5.0f, 12.0f, 0.0f },
+    { 31.8803f, 1.0f, 0.0f },      { -44.8148f, 20.5f, 0.0f },      { 38.5653f, 5.86938f, 0.0f },
+    { 26.3967f, 86.7934f, 0.0f }
+  };
+
   for (int i = 0; i < nVerts; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
-                     "Wrong result for PointGradient worklet on 2D explicit data");
+                     "Wrong result for PointGradient worklet on 2D explicit data",
+                     "\nExpected ",
+                     expected[i],
+                     "\nGot ",
+                     result.GetPortalConstControl().Get(i),
+                     "\n");
   }
 }
 
