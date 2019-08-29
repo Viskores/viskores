@@ -32,7 +32,8 @@ void RecursiveFunction(int recurse)
 void ValidateError(const vtkm::cont::Error& error)
 {
   std::string message = "Too much recursion";
-  std::stringstream stackTraceStream(error.GetStackTrace());
+  std::string stackTrace = error.GetStackTrace();
+  std::stringstream stackTraceStream(stackTrace);
   std::string tmp;
   size_t count = 0;
   while (std::getline(stackTraceStream, tmp))
@@ -40,9 +41,17 @@ void ValidateError(const vtkm::cont::Error& error)
     count++;
   }
 
+  // StackTrace may be unavailable on certain Devices
+  if (stackTrace == "(Stack trace unavailable)")
+  {
+    VTKM_TEST_ASSERT(count == 1, "Logging disabled, stack trace shouldn't be available");
+  }
+  else
+  {
+    VTKM_TEST_ASSERT(count > 11, "StackTrace did not recurse enough");
+  }
   VTKM_TEST_ASSERT(test_equal(message, error.GetMessage()), "Message was incorrect");
-  VTKM_TEST_ASSERT(count > 11, "StackTrace did not recurse enough");
-  VTKM_TEST_ASSERT(test_equal(message + "\n" + error.GetStackTrace(), std::string(error.what())),
+  VTKM_TEST_ASSERT(test_equal(message + "\n" + stackTrace, std::string(error.what())),
                    "what() was incorrect");
 }
 

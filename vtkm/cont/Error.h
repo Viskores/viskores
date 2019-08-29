@@ -50,7 +50,8 @@ public:
   // For std::exception compatibility:
   const char* what() const noexcept override
   {
-    return (this->Message + "\n" + this->StackTrace).c_str();
+    std::string tmp = this->Message + "\n" + this->StackTrace;
+    return tmp.c_str();
   }
 
   /// Returns true if this exception is device independent. For exceptions that
