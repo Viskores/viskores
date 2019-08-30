@@ -797,7 +797,7 @@ VTKM_EXEC void PolygonSubTriangle(const FieldVecType& inField,
     vtkm::exec::CellInterpolate(inWCoords, pcoords, vtkm::CellShapeTagPolygon{}, worklet);
 
   // Find the unit vector pointing from the center of the polygon to pcoords
-  vtkm::Vec<ParametricCoordType, 2> radialVector = { pcoords[0] - 0.5, pcoords[1] - 0.5 };
+  vtkm::Vec<ParametricCoordType, 2> radialVector = { pcoords[0] - 0.5f, pcoords[1] - 0.5f };
   ParametricCoordType magnitudeSquared = vtkm::MagnitudeSquared(radialVector);
   if (magnitudeSquared > 8 * vtkm::Epsilon<ParametricCoordType>())
   {
@@ -827,7 +827,7 @@ VTKM_EXEC void PolygonSubTriangle(const FieldVecType& inField,
   // This scaling value is somewhat arbitrary. It is small enough to be "close" to the selected
   // point and small enough to be guaranteed to be inside the polygon, but large enough to to
   // get an accurate gradient.
-  static constexpr ParametricCoordType scale = 0.05;
+  static constexpr ParametricCoordType scale = 0.05f;
 
   vtkm::Vec<ParametricCoordType, 3> backPcoord = {
     pcoords[0] + scale * (-radialVector[1] - radialVector[0]),
