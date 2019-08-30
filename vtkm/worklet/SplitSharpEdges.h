@@ -482,8 +482,8 @@ public:
     auto connectivityArrayHandle = newCellset.GetConnectivityArray(vtkm::TopologyElementTagCell(),
                                                                    vtkm::TopologyElementTagPoint());
     auto connectivityArrayHandleP = connectivityArrayHandle.GetPortalControl();
-    auto offsetArrayHandle = newCellset.GetIndexOffsetArray(vtkm::TopologyElementTagCell(),
-                                                            vtkm::TopologyElementTagPoint());
+    auto offsetArrayHandle =
+      newCellset.GetOffsetsArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     auto offsetArrayHandleP = offsetArrayHandle.GetPortalControl();
     for (vtkm::Id i = 0; i < cellTopologyUpdateTuples.GetNumberOfValues(); i++)
     {

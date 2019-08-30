@@ -692,7 +692,10 @@ public:
     vtkm::cont::CellSetExplicit<> output;
     vtkm::Id numberOfPoints = scalars.GetNumberOfValues() +
       this->EdgePointsInterpolation.GetNumberOfValues() + total.NumberOfInCellPoints;
-    output.Fill(numberOfPoints, shapes, numberOfIndices, connectivity);
+
+    vtkm::cont::ConvertNumIndicesToOffsets(numberOfIndices, offsets);
+
+    output.Fill(numberOfPoints, shapes, connectivity, offsets);
     return output;
   }
 

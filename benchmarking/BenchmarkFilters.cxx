@@ -646,11 +646,11 @@ class BenchmarkFilters
         }
       }
 
-      template <typename T1, typename T2, typename T3, typename T4>
-      VTKM_CONT void operator()(const vtkm::cont::CellSetExplicit<T1, T2, T3, T4>& cellSet) const
+      template <typename T1, typename T2, typename T3>
+      VTKM_CONT void operator()(const vtkm::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
       {
         { // Why does CastAndCall insist on making the cellset const?
-          using CellSetT = vtkm::cont::CellSetExplicit<T1, T2, T3, T4>;
+          using CellSetT = vtkm::cont::CellSetExplicit<T1, T2, T3>;
           CellSetT& mcellSet = const_cast<CellSetT&>(cellSet);
           mcellSet.ResetConnectivity(vtkm::TopologyElementTagPoint{},
                                      vtkm::TopologyElementTagCell{});

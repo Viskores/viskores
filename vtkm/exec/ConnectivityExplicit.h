@@ -20,10 +20,7 @@ namespace vtkm
 namespace exec
 {
 
-template <typename ShapePortalType,
-          typename NumIndicesPortalType,
-          typename ConnectivityPortalType,
-          typename IndexOffsetPortalType>
+template <typename ShapesPortalType, typename ConnectivityPortalType, typename OffsetsPortalType>
 class ConnectivityExplicit
 {
 public:
@@ -31,14 +28,12 @@ public:
 
   ConnectivityExplicit() {}
 
-  ConnectivityExplicit(const ShapePortalType& shapePortal,
-                       const NumIndicesPortalType& numIndicesPortal,
+  ConnectivityExplicit(const ShapesPortalType& shapesPortal,
                        const ConnectivityPortalType& connPortal,
-                       const IndexOffsetPortalType& indexOffsetPortal)
-    : Shapes(shapePortal)
-    , NumIndices(numIndicesPortal)
+                       const OffsetsPortalType& offsetsPortal)
+    : Shapes(shapesPortal)
     , Connectivity(connPortal)
-    , IndexOffset(indexOffsetPortal)
+    , Offsets(offsetsPortal)
   {
   }
 
@@ -51,7 +46,10 @@ public:
   CellShapeTag GetCellShape(vtkm::Id index) const { return CellShapeTag(this->Shapes.Get(index)); }
 
   VTKM_EXEC
-  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const { return this->NumIndices.Get(index); }
+  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const
+  {
+    return static_cast<vtkm::IdComponent>(this->Offsets.Get(index + 1) - this->Offsets.Get(index));
+  }
 
   using IndicesType = vtkm::VecFromPortal<ConnectivityPortalType>;
 
@@ -63,16 +61,17 @@ public:
   VTKM_EXEC
   IndicesType GetIndices(vtkm::Id index) const
   {
-    vtkm::Id offset = this->IndexOffset.Get(index);
-    vtkm::IdComponent length = this->NumIndices.Get(index);
+    const vtkm::Id offset = this->Offsets.Get(index);
+    const vtkm::Id endOffset = this->Offsets.Get(index + 1);
+    const auto length = static_cast<vtkm::IdComponent>(endOffset - offset);
+
     return IndicesType(this->Connectivity, length, offset);
   }
 
 private:
-  ShapePortalType Shapes;
-  NumIndicesPortalType NumIndices;
+  ShapesPortalType Shapes;
   ConnectivityPortalType Connectivity;
-  IndexOffsetPortalType IndexOffset;
+  OffsetsPortalType Offsets;
 };
 
 } // namespace exec

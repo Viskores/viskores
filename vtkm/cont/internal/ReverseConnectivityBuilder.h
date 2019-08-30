@@ -131,15 +131,13 @@ public:
   VTKM_CONT
   template <typename ConnArray,
             typename RConnArray,
-            typename RNumArray,
-            typename RIndexArray,
+            typename ROffsetsArray,
             typename RConnToConnIdxCalc,
             typename ConnIdxToCellIdxCalc,
             typename Device>
   inline void Run(const ConnArray& conn,
                   RConnArray& rConn,
-                  RNumArray& rNumIndices,
-                  RIndexArray& rIndexOffsets,
+                  ROffsetsArray& rOffsets,
                   const RConnToConnIdxCalc& rConnToConnCalc,
                   const ConnIdxToCellIdxCalc& cellIdCalc,
                   vtkm::Id numberOfPoints,
@@ -152,12 +150,13 @@ public:
     auto zeros = vtkm::cont::make_ArrayHandleConstant(vtkm::IdComponent{ 0 }, numberOfPoints);
 
     // Compute RConn offsets by atomically building a histogram and doing an
-    // exclusive scan.
+    // extended scan.
     //
     // Example:
     // (in)  Conn:  | 3  0  1  2  |  3  0  1  3  |  3  0  3  4  |  3  3  4  5  |
     // (out) RNumIndices:  3  2  1  3  2  1
-    // (out) RIdxOffsets:  0  3  5  6  9  11
+    // (out) RIdxOffsets:  0  3  5  6  9 11 12
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> rNumIndices;
     { // allocate and zero the numIndices array:
       Algo::Copy(zeros, rNumIndices);
     }
@@ -165,17 +164,15 @@ public:
     { // Build histogram:
       vtkm::cont::AtomicArray<vtkm::IdComponent> atomicCounter{ rNumIndices };
       auto ac = atomicCounter.PrepareForExecution(Device());
-      rcb::BuildHistogram<decltype(ac), decltype(connPortal), RConnToConnIdxCalc> histoGen{
-        ac, connPortal, rConnToConnCalc
-      };
+      using BuildHisto =
+        rcb::BuildHistogram<decltype(ac), decltype(connPortal), RConnToConnIdxCalc>;
+      BuildHisto histoGen{ ac, connPortal, rConnToConnCalc };
 
       Algo::Schedule(histoGen, rConnSize);
     }
 
     { // Compute offsets:
-      auto rNumIndicesAsId =
-        vtkm::cont::make_ArrayHandleCast<typename RIndexArray::ValueType>(rNumIndices);
-      Algo::ScanExclusive(rNumIndicesAsId, rIndexOffsets);
+      Algo::ScanExtended(vtkm::cont::make_ArrayHandleCast<vtkm::Id>(rNumIndices), rOffsets);
     }
 
     { // Reset the numIndices array to 0's:
@@ -198,16 +195,16 @@ public:
     {
       vtkm::cont::AtomicArray<vtkm::IdComponent> atomicCounter{ rNumIndices };
       auto ac = atomicCounter.PrepareForExecution(Device());
-      auto rOffsetPortal = rIndexOffsets.PrepareForInput(Device());
+      auto rOffsetPortal = rOffsets.PrepareForInput(Device());
       auto rConnPortal = rConn.PrepareForOutput(rConnSize, Device());
 
-      rcb::GenerateRConn<decltype(ac),
-                         decltype(connPortal),
-                         decltype(rOffsetPortal),
-                         decltype(rConnPortal),
-                         RConnToConnIdxCalc,
-                         ConnIdxToCellIdxCalc>
-        rConnGen{ ac, connPortal, rOffsetPortal, rConnPortal, rConnToConnCalc, cellIdCalc };
+      using GenRConnT = rcb::GenerateRConn<decltype(ac),
+                                           decltype(connPortal),
+                                           decltype(rOffsetPortal),
+                                           decltype(rConnPortal),
+                                           RConnToConnIdxCalc,
+                                           ConnIdxToCellIdxCalc>;
+      GenRConnT rConnGen{ ac, connPortal, rOffsetPortal, rConnPortal, rConnToConnCalc, cellIdCalc };
 
       Algo::Schedule(rConnGen, rConnSize);
     }

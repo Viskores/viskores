@@ -229,11 +229,10 @@ namespace detail
 
 struct TestEqualCellSet
 {
-  template <typename ShapeST, typename CountST, typename ConnectivityST, typename OffsetST>
-  void operator()(
-    const vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>& cs1,
-    const vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>& cs2,
-    TestEqualResult& result) const
+  template <typename ShapeST, typename ConnectivityST, typename OffsetST>
+  void operator()(const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs1,
+                  const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs2,
+                  TestEqualResult& result) const
   {
     vtkm::TopologyElementTagCell visitTopo{};
     vtkm::TopologyElementTagPoint incidentTopo{};
@@ -266,8 +265,8 @@ struct TestEqualCellSet
       result.PushMessage("connectivity arrays don't match");
       return;
     }
-    result = test_equal_ArrayHandles(cs1.GetIndexOffsetArray(visitTopo, incidentTopo),
-                                     cs2.GetIndexOffsetArray(visitTopo, incidentTopo));
+    result = test_equal_ArrayHandles(cs1.GetOffsetsArray(visitTopo, incidentTopo),
+                                     cs2.GetOffsetsArray(visitTopo, incidentTopo));
     if (!result)
     {
       result.PushMessage("offsets arrays don't match");

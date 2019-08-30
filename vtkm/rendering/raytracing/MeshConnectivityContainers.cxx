@@ -71,7 +71,7 @@ UnstructuredContainer::UnstructuredContainer(const vtkm::cont::CellSetExplicit<>
   CellConn =
     Cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
   CellOffsets =
-    Cellset.GetIndexOffsetArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+    Cellset.GetOffsetsArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
   Shapes = Cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   Intersector.SetData(Coords, Triangles);

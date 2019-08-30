@@ -685,9 +685,10 @@ void MeshConnectivityBuilder::BuildConnectivity(
   const vtkm::cont::ArrayHandle<vtkm::Id> conn = cellSetUnstructured.GetConnectivityArray(
     vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
-  const vtkm::cont::ArrayHandleCounting<vtkm::Id> shapeOffsets =
-    cellSetUnstructured.GetIndexOffsetArray(vtkm::TopologyElementTagCell(),
-                                            vtkm::TopologyElementTagPoint());
+  const vtkm::cont::ArrayHandleCounting<vtkm::Id> offsets = cellSetUnstructured.GetOffsetsArray(
+    vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+  const auto shapeOffsets =
+    vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
 
   vtkm::cont::ArrayHandle<vtkm::Id> faceConnectivity;
   vtkm::cont::ArrayHandle<vtkm::Id3> cellFaceId;
@@ -746,8 +747,10 @@ void MeshConnectivityBuilder::BuildConnectivity(
   const vtkm::cont::ArrayHandle<vtkm::Id> conn = cellSetUnstructured.GetConnectivityArray(
     vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
-  const vtkm::cont::ArrayHandle<vtkm::Id> shapeOffsets = cellSetUnstructured.GetIndexOffsetArray(
+  const vtkm::cont::ArrayHandle<vtkm::Id> offsets = cellSetUnstructured.GetOffsetsArray(
     vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+  const auto shapeOffsets =
+    vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
 
   vtkm::cont::ArrayHandle<vtkm::Id> faceConnectivity;
   vtkm::cont::ArrayHandle<vtkm::Id3> cellFaceId;
