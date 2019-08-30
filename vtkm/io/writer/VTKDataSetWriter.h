@@ -308,10 +308,13 @@ private:
     ///\todo: support uniform/rectilinear
     out << "DATASET STRUCTURED_GRID" << std::endl;
 
+    auto pointDimensions = cellSet.GetPointDimensions();
+    using VTraits = vtkm::VecTraits<decltype(pointDimensions)>;
+
     out << "DIMENSIONS ";
-    out << cellSet.GetPointDimensions()[0] << " ";
-    out << (DIM > 1 ? cellSet.GetPointDimensions()[1] : 1) << " ";
-    out << (DIM > 2 ? cellSet.GetPointDimensions()[2] : 1) << std::endl;
+    out << VTraits::GetComponent(pointDimensions, 0) << " ";
+    out << (DIM > 1 ? VTraits::GetComponent(pointDimensions, 1) : 1) << " ";
+    out << (DIM > 2 ? VTraits::GetComponent(pointDimensions, 2) : 1) << " ";
 
     WritePoints(out, dataSet);
   }
@@ -335,6 +338,10 @@ private:
       if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
       {
         WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExplicit<>>());
+      }
+      else if (cellSet.IsType<vtkm::cont::CellSetStructured<1>>())
+      {
+        WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<1>>());
       }
       else if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
       {
