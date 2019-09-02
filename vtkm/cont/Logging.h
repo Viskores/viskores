@@ -439,10 +439,10 @@ VTKM_CONT_EXPORT
 VTKM_CONT
 std::string GetHumanReadableSize(vtkm::UInt64 bytes, int prec = 2);
 
-VTKM_CONT
-inline std::string GetHumanReadableSize(vtkm::Id bytes, int prec = 2)
+template <typename T>
+VTKM_CONT inline std::string GetHumanReadableSize(T&& bytes, int prec = 2)
 {
-  return GetHumanReadableSize(static_cast<vtkm::UInt64>(bytes), prec);
+  return GetHumanReadableSize(static_cast<vtkm::UInt64>(std::forward<T>(bytes)), prec);
 }
 //@}
 
@@ -453,10 +453,10 @@ VTKM_CONT_EXPORT
 VTKM_CONT
 std::string GetSizeString(vtkm::UInt64 bytes, int prec = 2);
 
-VTKM_CONT
-inline std::string GetSizeString(vtkm::Id bytes, int prec = 2)
+template <typename T>
+VTKM_CONT inline std::string GetSizeString(T&& bytes, int prec = 2)
 {
-  return GetSizeString(static_cast<vtkm::UInt64>(bytes), prec);
+  return GetSizeString(static_cast<vtkm::UInt64>(std::forward<T>(bytes)), prec);
 }
 //@}
 
