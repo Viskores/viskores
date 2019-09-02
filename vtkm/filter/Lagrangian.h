@@ -63,7 +63,7 @@ public:
   void UpdateSeedResolution(vtkm::cont::DataSet input);
 
   VTKM_CONT
-  void WriteDataSet(vtkm::Id cycle, std::string filename, vtkm::cont::DataSet dataset);
+  void WriteDataSet(vtkm::Id cycle, const std::string& filename, vtkm::cont::DataSet dataset);
 
   VTKM_CONT
   void InitializeUniformSeeds(const vtkm::cont::DataSet& input);
