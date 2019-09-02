@@ -13,6 +13,6 @@
 #include "MultiDeviceGradient.h"
 #include "MultiDeviceGradient.hxx"
 
-template vtkm::cont::MultiBlock MultiDeviceGradient::PrepareForExecution<
-  vtkm::filter::PolicyDefault>(const vtkm::cont::MultiBlock&,
+template vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForExecution<
+  vtkm::filter::PolicyDefault>(const vtkm::cont::PartitionedDataSet&,
                                const vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>&);

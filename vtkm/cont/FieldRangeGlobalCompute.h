@@ -20,7 +20,8 @@ namespace cont
 {
 /// \brief utility functions to compute global ranges for dataset fields.
 ///
-/// These functions compute global ranges for fields in a dataset or a multiblock.
+/// These functions compute global ranges for fields in a single DataSet or a
+/// PartitionedDataSet.
 /// In non-distributed environments, this is exactly same as `FieldRangeCompute`. In
 /// distributed environments, however, the range is computed locally on each rank
 /// and then a reduce-all collective is performed to reduces the ranges on all ranks.
@@ -49,28 +50,29 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
 //@}
 
 //{@
-/// Returns the range for a field from a multiblock. If the field is not present on any
-/// of the blocks, an empty ArrayHandle will be returned. If the field is present on some blocks,
-/// but not all, those blocks without the field are skipped.
+/// Returns the range for a field from a PartitionedDataSet. If the field is
+/// not present on any of the partitions, an empty ArrayHandle will be
+/// returned. If the field is present on some partitions, but not all, those
+/// partitions without the field are skipped.
 ///
-/// The returned array handle will have as many values as the maximum number of components for
-/// the selected field across all blocks.
+/// The returned array handle will have as many values as the maximum number of
+/// components for the selected field across all partitions.
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
-  const vtkm::cont::MultiBlock& multiblock,
+  const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
 template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
-  const vtkm::cont::MultiBlock& multiblock,
+  const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
   vtkm::cont::Field::Association assoc,
   TypeList)
 {
   VTKM_IS_LIST_TAG(TypeList);
-  return detail::FieldRangeGlobalComputeImpl(multiblock, name, assoc, TypeList());
+  return detail::FieldRangeGlobalComputeImpl(pds, name, assoc, TypeList());
 }
 //@}
 }

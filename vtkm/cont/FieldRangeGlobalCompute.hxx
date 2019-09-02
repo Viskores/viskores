@@ -35,12 +35,12 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalComputeImpl(
 
 template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalComputeImpl(
-  const vtkm::cont::MultiBlock& multiblock,
+  const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
   vtkm::cont::Field::Association assoc,
   TypeList)
 {
-  auto lrange = vtkm::cont::FieldRangeCompute(multiblock, name, assoc, TypeList());
+  auto lrange = vtkm::cont::FieldRangeCompute(pds, name, assoc, TypeList());
   return vtkm::cont::detail::MergeRangesGlobal(lrange);
 }
 }

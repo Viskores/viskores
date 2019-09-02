@@ -10,7 +10,7 @@
 
 #include <vtkm/ImplicitFunction.h>
 #include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/AssignerMultiBlock.h>
+#include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/BoundsGlobalCompute.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Serialization.h>
@@ -204,14 +204,14 @@ public:
   ~RedistributePoints() {}
 
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::MultiBlock PrepareForExecution(
-    const vtkm::cont::MultiBlock& input,
+  VTKM_CONT vtkm::cont::PartitionedDataSet PrepareForExecution(
+    const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 };
 
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::MultiBlock RedistributePoints::PrepareForExecution(
-  const vtkm::cont::MultiBlock& input,
+inline VTKM_CONT vtkm::cont::PartitionedDataSet RedistributePoints::PrepareForExecution(
+  const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
@@ -219,7 +219,7 @@ inline VTKM_CONT vtkm::cont::MultiBlock RedistributePoints::PrepareForExecution(
   // let's first get the global bounds of the domain
   vtkm::Bounds gbounds = vtkm::cont::BoundsGlobalCompute(input);
 
-  vtkm::cont::AssignerMultiBlock assigner(input.GetNumberOfBlocks());
+  vtkm::cont::AssignerPartitionedDataSet assigner(input.GetNumberOfPartitions());
   vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds> decomposer(
     /*dim*/ 3, internal::convert(gbounds), assigner.nblocks());
 
@@ -230,19 +230,19 @@ inline VTKM_CONT vtkm::cont::MultiBlock RedistributePoints::PrepareForExecution(
                          [](void* ptr) { delete static_cast<vtkm::cont::DataSet*>(ptr); });
   decomposer.decompose(comm.rank(), assigner, master);
 
-  assert(static_cast<vtkm::Id>(master.size()) == input.GetNumberOfBlocks());
+  assert(static_cast<vtkm::Id>(master.size()) == input.GetNumberOfPartitions());
   // let's populate local blocks
   master.foreach ([&input](vtkm::cont::DataSet* ds, const vtkmdiy::Master::ProxyWithLink& proxy) {
     auto lid = proxy.master()->lid(proxy.gid());
-    *ds = input.GetBlock(lid);
+    *ds = input.GetPartition(lid);
   });
 
   internal::Redistributor<DerivedPolicy> redistributor(decomposer, policy);
   vtkmdiy::all_to_all(master, assigner, redistributor, /*k=*/2);
 
-  vtkm::cont::MultiBlock result;
+  vtkm::cont::PartitionedDataSet result;
   master.foreach ([&result](vtkm::cont::DataSet* ds, const vtkmdiy::Master::ProxyWithLink&) {
-    result.AddBlock(*ds);
+    result.AppendPartition(*ds);
   });
 
   return result;

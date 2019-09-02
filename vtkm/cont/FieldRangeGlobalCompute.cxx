@@ -33,11 +33,11 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(const vtkm::cont::D
 //-----------------------------------------------------------------------------
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
-  const vtkm::cont::MultiBlock& multiblock,
+  const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
   vtkm::cont::Field::Association assoc)
 {
-  return detail::FieldRangeGlobalComputeImpl(multiblock, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
+  return detail::FieldRangeGlobalComputeImpl(pds, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
 }
 
 //-----------------------------------------------------------------------------
