@@ -80,7 +80,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
   vtkm::cont::ArrayHandle<PointType> points;
   vtkm::cont::ArrayCopy(uniformDs.GetCoordinateSystem().GetData(), points);
 
-  vtkm::Id numberOfCells = uniformDs.GetCellSet().GetNumberOfCells();
+  vtkm::Id numberOfCells = uniformDs.GetNumberOfCells();
   vtkm::Id numberOfIndices = numberOfCells * PointsPerCell;
 
   Connectivity structured;
@@ -135,7 +135,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
   // build dataset
   vtkm::cont::DataSet out;
   out.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", points));
-  out.AddCellSet(cellset);
+  out.SetCellSet(cellset);
   return out;
 }
 
@@ -146,7 +146,7 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
                          vtkm::cont::ArrayHandle<PointType>& pcoords,
                          vtkm::cont::ArrayHandle<PointType>& wcoords)
 {
-  vtkm::Id numberOfCells = ds.GetCellSet().GetNumberOfCells();
+  vtkm::Id numberOfCells = ds.GetNumberOfCells();
 
   std::uniform_int_distribution<vtkm::Id> cellIdGen(0, numberOfCells - 1);
 
@@ -201,8 +201,7 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
 {
   auto ds = MakeTestDataSet(dim);
 
-  std::cout << "Testing " << DIMENSIONS << "D dataset with " << ds.GetCellSet().GetNumberOfCells()
-            << " cells\n";
+  std::cout << "Testing " << DIMENSIONS << "D dataset with " << ds.GetNumberOfCells() << " cells\n";
 
   vtkm::cont::CellLocatorUniformBins locator;
   locator.SetDensityL1(64.0f);

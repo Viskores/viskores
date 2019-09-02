@@ -79,19 +79,19 @@ vtkm::cont::DataSet DataSetBuilderUniform::CreateDataSet(const vtkm::Id3& dimens
   {
     vtkm::cont::CellSetStructured<1> cellSet(cellNm);
     cellSet.SetPointDimensions(dims[0]);
-    dataSet.AddCellSet(cellSet);
+    dataSet.SetCellSet(cellSet);
   }
   else if (ndims == 2)
   {
     vtkm::cont::CellSetStructured<2> cellSet(cellNm);
     cellSet.SetPointDimensions(vtkm::Id2(dims[0], dims[1]));
-    dataSet.AddCellSet(cellSet);
+    dataSet.SetCellSet(cellSet);
   }
   else if (ndims == 3)
   {
     vtkm::cont::CellSetStructured<3> cellSet(cellNm);
     cellSet.SetPointDimensions(vtkm::Id3(dims[0], dims[1], dims[2]));
-    dataSet.AddCellSet(cellSet);
+    dataSet.SetCellSet(cellSet);
   }
   else
   {

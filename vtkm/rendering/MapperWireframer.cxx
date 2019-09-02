@@ -303,7 +303,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     // running the external faces filter on the input cell set.
     vtkm::cont::DataSet dataSet;
     dataSet.AddCoordinateSystem(actualCoords);
-    dataSet.AddCellSet(inCellSet);
+    dataSet.SetCellSet(inCellSet);
     dataSet.AddField(inScalarField);
     vtkm::filter::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);

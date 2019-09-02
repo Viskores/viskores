@@ -135,7 +135,7 @@ void TestStreamLineUniformGrid()
 
   vtkm::cont::CellSetStructured<3> inCellSet("cells");
   inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));
-  inDataSet.AddCellSet(inCellSet);
+  inDataSet.SetCellSet(inCellSet);
 
   // Create and run the filter
   vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32> streamLines;
@@ -144,7 +144,7 @@ void TestStreamLineUniformGrid()
 
   // Check output
   vtkm::cont::CellSetExplicit<> outCellSet;
-  outDataSet.GetCellSet(0).CopyTo(outCellSet);
+  outDataSet.GetCellSet().CopyTo(outCellSet);
   auto coordArray = outDataSet.GetCoordinateSystem(0).GetData();
 
   vtkm::Id numberOfCells = outCellSet.GetNumberOfCells();

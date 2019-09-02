@@ -53,7 +53,7 @@ private:
     vtkm::Id3 dim;
     this->DataFile->Stream >> dim[0] >> dim[1] >> dim[2] >> std::ws;
 
-    this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
+    this->DataSet.SetCellSet(internal::CreateCellSetStructured(dim));
 
     // Read the points
     this->DataFile->Stream >> tag;

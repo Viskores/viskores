@@ -17,7 +17,7 @@ VTKM_CONT
 inline void Probe::SetGeometry(const vtkm::cont::DataSet& geometry)
 {
   this->Geometry = vtkm::cont::DataSet();
-  this->Geometry.AddCellSet(geometry.GetCellSet());
+  this->Geometry.SetCellSet(geometry.GetCellSet());
   this->Geometry.AddCoordinateSystem(geometry.GetCoordinateSystem());
 }
 
@@ -26,10 +26,9 @@ VTKM_CONT inline vtkm::cont::DataSet Probe::DoExecute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  this->Worklet.Run(
-    vtkm::filter::ApplyPolicy(input.GetCellSet(this->GetActiveCellSetIndex()), policy),
-    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
-    this->Geometry.GetCoordinateSystem().GetData());
+  this->Worklet.Run(vtkm::filter::ApplyPolicy(input.GetCellSet(), policy),
+                    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
+                    this->Geometry.GetCoordinateSystem().GetData());
 
   auto output = this->Geometry;
   auto hpf = this->Worklet.GetHiddenPointsField();
@@ -37,7 +36,7 @@ VTKM_CONT inline vtkm::cont::DataSet Probe::DoExecute(
     this->Worklet.GetHiddenCellsField(vtkm::filter::ApplyPolicy(output.GetCellSet(), policy));
 
   output.AddField(vtkm::cont::make_FieldPoint("HIDDEN", hpf));
-  output.AddField(vtkm::cont::make_FieldCell("HIDDEN", output.GetCellSet().GetName(), hcf));
+  output.AddField(vtkm::cont::make_FieldCell("HIDDEN", hcf));
 
   return output;
 }

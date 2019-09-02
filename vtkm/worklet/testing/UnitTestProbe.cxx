@@ -44,7 +44,7 @@ vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& u
 
   vtkm::cont::CellSetExplicit<> cs(uds.GetCellSet().GetName());
   vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs);
-  eds.AddCellSet(cs);
+  eds.SetCellSet(cs);
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> points;
   vtkm::cont::ArrayCopy(uds.GetCoordinateSystem().GetData(), points);

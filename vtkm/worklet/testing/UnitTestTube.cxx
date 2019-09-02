@@ -120,7 +120,7 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
   vtkm::worklet::Tube tubeWorklet(capEnds, numSides, radius);
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
-  tubeWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), newPoints, newCells);
+  tubeWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(), newPoints, newCells);
 
   VTKM_TEST_ASSERT(newPoints.GetNumberOfValues() == reqNumPts,
                    "Wrong number of points in Tube worklet");
@@ -175,7 +175,7 @@ void TestLinearPolylines()
     vtkm::worklet::Tube tubeWorklet(capEnds, numSides, radius);
     vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
     vtkm::cont::CellSetSingleType<> newCells;
-    tubeWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), newPoints, newCells);
+    tubeWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(), newPoints, newCells);
 
     VTKM_TEST_ASSERT(newPoints.GetNumberOfValues() == reqNumPts,
                      "Wrong number of points in Tube worklet");

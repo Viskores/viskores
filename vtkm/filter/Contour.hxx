@@ -120,7 +120,7 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   }
 
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
@@ -190,7 +190,7 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   }
 
   //assign the connectivity to the cell set
-  output.AddCellSet(outputCells);
+  output.SetCellSet(outputCells);
 
   //add the coordinates to the output dataset
   vtkm::cont::CoordinateSystem outputCoords("coordinates", vertices);

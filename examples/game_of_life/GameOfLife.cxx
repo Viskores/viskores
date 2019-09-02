@@ -115,7 +115,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
 
     //get the coordinate system we are using for the 2D area
-    const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+    const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
     //get the previous state of the game
     input.GetField("state", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(prevstate);
@@ -126,15 +126,10 @@ public:
 
     //save the results
     vtkm::cont::DataSet output;
-    output.AddCellSet(input.GetCellSet(this->GetActiveCellSetIndex()));
-    output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
+    output.CopyStructure(input);
 
-    vtkm::cont::Field colorField("colors", vtkm::cont::Field::Association::POINTS, colors);
-    output.AddField(colorField);
-
-    vtkm::cont::Field stateField("state", vtkm::cont::Field::Association::POINTS, state);
-    output.AddField(stateField);
-
+    output.AddField(vtkm::cont::make_FieldPoint("colors", colors));
+    output.AddField(vtkm::cont::make_FieldPoint("state", state));
     return output;
   }
 
@@ -206,7 +201,7 @@ struct RenderGameOfLife
   void render(vtkm::cont::DataSet& data)
   {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    vtkm::Int32 arraySize = (vtkm::Int32)data.GetCoordinateSystem().GetNumberOfPoints();
+    vtkm::Int32 arraySize = (vtkm::Int32)data.GetNumberOfPoints();
 
     UploadData task(&this->ColorState,
                     data.GetField("colors", vtkm::cont::Field::Association::POINTS));

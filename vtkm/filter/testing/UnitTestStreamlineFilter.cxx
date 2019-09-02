@@ -57,8 +57,6 @@ void TestStreamline()
   auto output = streamline.Execute(ds);
 
   //Validate the result is correct.
-  VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
 
@@ -99,11 +97,6 @@ void TestPathline()
   auto output = pathline.Execute(ds1);
 
   //Validate the result is correct.
-  VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
-  VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
-
   vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
   VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 60, "Wrong number of coordinates");
 

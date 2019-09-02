@@ -62,11 +62,11 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
   using Integrator = vtkm::worklet::particleadvection::EulerIntegrator<GridEvaluator>;
 
   GridEvaluator eval(ds1.GetCoordinateSystem(),
-                     ds1.GetCellSet(0),
+                     ds1.GetCellSet(),
                      fieldArray1,
                      0,
                      ds2.GetCoordinateSystem(),
-                     ds2.GetCellSet(0),
+                     ds2.GetCellSet(),
                      fieldArray2,
                      10.0);
 
@@ -99,7 +99,7 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
     vtkm::worklet::StreamlineResult res = streamline.Run(integrator, seedArray, numSteps);
     vtkm::cont::DataSet outData;
     vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
-    outData.AddCellSet(res.polyLines);
+    outData.SetCellSet(res.polyLines);
     outData.AddCoordinateSystem(outputCoords);
     renderAndWriteDataSet(outData);
   }

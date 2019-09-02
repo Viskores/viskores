@@ -31,7 +31,6 @@ namespace filter
 template <typename Derived>
 inline VTKM_CONT FilterDataSetWithField<Derived>::FilterDataSetWithField()
   : OutputFieldName()
-  , CellSetIndex(0)
   , CoordinateSystemIndex(0)
   , ActiveFieldName()
   , ActiveFieldAssociation(vtkm::cont::Field::Association::ANY)
@@ -56,8 +55,7 @@ inline VTKM_CONT vtkm::cont::DataSet FilterDataSetWithField<Derived>::PrepareFor
   {
     // we need to state that the field is actually a coordinate system, so that
     // the filter uses the proper policy to convert the types.
-    return this->PrepareForExecution(
-      input, input.GetCoordinateSystem(this->GetActiveCellSetIndex()), policy);
+    return this->PrepareForExecution(input, input.GetCoordinateSystem(), policy);
   }
   else
   {

@@ -203,7 +203,7 @@ vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::cont::DataSe
   for (vtkm::Id i = 0; i < numPts; i++)
     explPortal.Set(i, cp.Get(i));
 
-  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet(0);
+  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::Id> conn;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
@@ -509,7 +509,7 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
   /*
   vtkm::cont::DataSet ds;
   ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", res.positions));
-  ds.AddCellSet(res.polyLines);
+  ds.SetCellSet(res.polyLines);
   ds.PrintSummary(std::cout);
   vtkm::io::writer::VTKDataSetWriter writer1("ds.vtk");
   writer1.WriteDataSet(ds);

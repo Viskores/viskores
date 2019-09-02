@@ -33,7 +33,7 @@ void WaveletGeneratorTest()
   }
 
   {
-    auto cells = ds.GetCellSet(ds.GetCellSetIndex("cells"));
+    auto cells = ds.GetCellSet();
     VTKM_TEST_ASSERT(test_equal(cells.GetNumberOfCells(), 8000), "Incorrect number of cells.");
   }
 

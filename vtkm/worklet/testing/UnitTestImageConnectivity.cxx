@@ -42,7 +42,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
     vtkm::worklet::connectivity::ImageConnectivity().Run(
-      data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
+      data.GetCellSet().Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
 
     std::vector<vtkm::Id> componentExpected = { 0, 1, 2, 1, 1, 3, 3, 4, 0, 1, 1, 1, 3, 3, 3, 4,
                                                 1, 1, 3, 3, 3, 4, 3, 4, 1, 1, 3, 3, 4, 4, 4, 4 };
@@ -75,7 +75,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
     vtkm::worklet::connectivity::ImageConnectivity().Run(
-      data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
+      data.GetCellSet().Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
 
     std::vector<vtkm::UInt8> componentExpected = { 0, 1, 1, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 1, 1, 2,
                                                    0, 1, 1, 0, 0, 1, 1, 2, 0, 1, 0, 0, 0, 1, 1, 2,

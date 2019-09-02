@@ -42,7 +42,7 @@ inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
   }
 
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   const vtkm::cont::CoordinateSystem& inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
@@ -52,7 +52,7 @@ inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
 
   //create the output data
   vtkm::cont::DataSet output;
-  output.AddCellSet(outputCellSet);
+  output.SetCellSet(outputCellSet);
 
   // Compute the new boundary points and add them to the output:
   auto outputCoordsArray = this->Worklet.ProcessPointField(inputCoords.GetData());

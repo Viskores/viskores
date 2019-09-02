@@ -47,7 +47,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //1. extract the cell set
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   //2. using the policy convert the dynamic cell set, and run the
   // external faces worklet
@@ -81,7 +81,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
 
   //4. create the output dataset
   vtkm::cont::DataSet output;
-  output.AddCellSet(outCellSet);
+  output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
   if (this->CompactPoints)

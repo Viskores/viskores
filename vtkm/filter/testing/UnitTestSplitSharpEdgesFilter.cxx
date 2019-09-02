@@ -107,7 +107,7 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddPointField(dataSet, "pointvar", vars, nVerts);
-  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
+  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells);
 
   return dataSet;
 }
@@ -252,8 +252,8 @@ void TestWithStructuredData()
   dataSet = cellNormals.Execute(dataSet, SplitSharpTestPolicy{});
 
   // Split sharp edges:
-  std::cout << dataSet.GetCellSet().GetNumberOfCells() << std::endl;
-  std::cout << dataSet.GetCoordinateSystem().GetNumberOfPoints() << std::endl;
+  std::cout << dataSet.GetNumberOfCells() << std::endl;
+  std::cout << dataSet.GetNumberOfPoints() << std::endl;
   vtkm::filter::SplitSharpEdges split;
   split.SetActiveField("normals", vtkm::cont::Field::Association::CELL_SET);
   dataSet = split.Execute(dataSet, SplitSharpTestPolicy{});

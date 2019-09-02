@@ -36,12 +36,6 @@ public:
   ~FilterDataSet();
 
   VTKM_CONT
-  void SetActiveCellSetIndex(vtkm::Id index) { this->CellSetIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCellSetIndex() const { return this->CellSetIndex; }
-
-  VTKM_CONT
   void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
 
   VTKM_CONT
@@ -66,7 +60,6 @@ public:
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
 
   friend class vtkm::filter::Filter<Derived>;

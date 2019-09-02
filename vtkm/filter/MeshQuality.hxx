@@ -83,7 +83,7 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 
   //TODO: Should other cellset types be supported?
   vtkm::cont::CellSetExplicit<> cellSet;
-  input.GetCellSet(this->GetActiveCellSetIndex()).CopyTo(cellSet);
+  input.GetCellSet().CopyTo(cellSet);
 
   ShapeHandle cellShapes =
     cellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
@@ -229,7 +229,7 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
     }
 
     //Append the summary stats into the output dataset as a new field
-    result.AddField(vtkm::cont::make_FieldCell(fieldName, "cells", shapeMeshQuality));
+    result.AddField(vtkm::cont::make_FieldCell(fieldName, shapeMeshQuality));
 
 #ifdef DEBUG_PRINT
     std::cout << "-----------------------------------------------------\n"
@@ -255,7 +255,7 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
   //Append the metric values of all cells into the output
   //dataset as a new field
   const std::string s = "allCells-metricValues";
-  result.AddField(vtkm::cont::make_FieldCell(s, "cells", outArray));
+  result.AddField(vtkm::cont::make_FieldCell(s, outArray));
 
   return result;
 }

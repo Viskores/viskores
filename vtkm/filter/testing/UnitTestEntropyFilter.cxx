@@ -96,7 +96,7 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   static constexpr vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
   cellSet.SetPointDimensions(vdims);
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
   return dataSet;
 }

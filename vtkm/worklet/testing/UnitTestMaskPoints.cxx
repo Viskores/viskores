@@ -43,8 +43,8 @@ public:
     // Output dataset gets new cell set of points that pass subsampling
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 2);
-    outDataSet.AddCellSet(outCellSet);
+    outCellSet = maskPoints.Run(dataset.GetCellSet(), 2);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 12), "Wrong result for MaskPoints");
   }
@@ -64,8 +64,8 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 5);
-    outDataSet.AddCellSet(outCellSet);
+    outCellSet = maskPoints.Run(dataset.GetCellSet(), 5);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 25), "Wrong result for MaskPoints");
   }
@@ -85,8 +85,8 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 3);
-    outDataSet.AddCellSet(outCellSet);
+    outCellSet = maskPoints.Run(dataset.GetCellSet(), 3);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 3), "Wrong result for MaskPoints");
   }
