@@ -30,8 +30,7 @@ public:
     tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
     vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 20),
-                     "Wrong result for Tetrahedralize");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 20), "Wrong result for Tetrahedralize");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 18),
                      "Wrong number of points for Tetrahedralize");
 
@@ -54,8 +53,7 @@ public:
     tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
     vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11),
-                     "Wrong result for Tetrahedralize");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 11), "Wrong result for Tetrahedralize");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 11),
                      "Wrong number of points for Tetrahedralize");
 

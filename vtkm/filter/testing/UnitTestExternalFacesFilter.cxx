@@ -64,7 +64,7 @@ void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
 
   // verify cellset
   vtkm::cont::CellSetExplicit<>& new_cellSet =
-    resultds.GetCellSet(0).Cast<vtkm::cont::CellSetExplicit<>>();
+    resultds.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
   const vtkm::Id numOutputExtFaces = new_cellSet.GetNumberOfCells();
   VTKM_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces, "Number of External Faces mismatch");
 

@@ -56,7 +56,7 @@ void TestSameNumPolylines()
   vtkm::worklet::StreamSurface streamSurfaceWorklet;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
-  streamSurfaceWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), newPoints, newCells);
+  streamSurfaceWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(), newPoints, newCells);
 
   VTKM_TEST_ASSERT(newPoints.GetNumberOfValues() == ds.GetCoordinateSystem(0).GetNumberOfValues(),
                    "Wrong number of points in StreamSurface worklet");
@@ -65,7 +65,7 @@ void TestSameNumPolylines()
   /*
   vtkm::cont::DataSet ds2;
   ds2.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", newPoints));
-  ds2.AddCellSet(newCells);
+  ds2.SetCellSet(newCells);
   vtkm::io::writer::VTKDataSetWriter writer("srf.vtk");
   writer.WriteDataSet(ds2);
 */
@@ -121,7 +121,7 @@ void TestUnequalNumPolylines(int unequalType)
   vtkm::worklet::StreamSurface streamSurfaceWorklet;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
-  streamSurfaceWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), newPoints, newCells);
+  streamSurfaceWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(), newPoints, newCells);
 
   vtkm::Id numRequiredCells = (unequalType == 1 ? 18 : 15);
 
@@ -133,7 +133,7 @@ void TestUnequalNumPolylines(int unequalType)
   /*
   vtkm::cont::DataSet ds2;
   ds2.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", newPoints));
-  ds2.AddCellSet(newCells);
+  ds2.SetCellSet(newCells);
   vtkm::io::writer::VTKDataSetWriter writer("srf.vtk");
   writer.WriteDataSet(ds2);
 */

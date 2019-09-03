@@ -39,25 +39,11 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(
-  const vtkm::cont::DataSet& input,
+  const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Int64, StorageType>& field,
   const vtkm::filter::FieldMetadata&,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  // Check the fields of the dataset to see what kinds of fields are present so
-  // we can free the mapping arrays that won't be needed. A point field must
-  // exist for this algorithm, so just check cells.
-  const vtkm::Id numFields = input.GetNumberOfFields();
-  bool hasCellFields = false;
-  for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
-  {
-    auto f = input.GetField(fieldIdx);
-    if (f.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
-    {
-      hasCellFields = true;
-    }
-  }
-
   vtkm::cont::ArrayHandle<vtkm::Float64> decompress;
   decompressor.Decompress(field, decompress, rate, field.GetNumberOfValues());
 

@@ -58,8 +58,6 @@ private:
     vtkm::cont::testing::MakeTestDataSet tds;
     vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet0();
 
-    VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1, "Incorrect number of cell sets");
-
     VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
 
     // test various field-getting methods and associations
@@ -91,7 +89,7 @@ private:
 
     // test cell-to-point connectivity
     vtkm::cont::CellSetExplicit<> cellset;
-    ds.GetCellSet(0).CopyTo(cellset);
+    ds.GetCellSet().CopyTo(cellset);
 
     vtkm::Id connectivitySize = 7;
     vtkm::Id numPoints = 5;

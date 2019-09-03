@@ -57,7 +57,7 @@ void TestVertexClustering()
   {
     using CellSetType = vtkm::cont::CellSetSingleType<>;
     CellSetType cellSet;
-    outDataSet.GetCellSet(0).CopyTo(cellSet);
+    outDataSet.GetCellSet().CopyTo(cellSet);
     auto cellArray =
       cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     std::cerr << "output_pointIds = " << cellArray.GetNumberOfValues() << "\n";
@@ -89,9 +89,8 @@ void TestVertexClustering()
   }
 
   using CellSetType = vtkm::cont::CellSetSingleType<>;
-  VTKM_TEST_ASSERT(outDataSet.GetNumberOfCellSets() == 1, "Number of output cellsets mismatch");
   CellSetType cellSet;
-  outDataSet.GetCellSet(0).CopyTo(cellSet);
+  outDataSet.GetCellSet().CopyTo(cellSet);
   VTKM_TEST_ASSERT(
     cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
         .GetNumberOfValues() == output_pointIds,

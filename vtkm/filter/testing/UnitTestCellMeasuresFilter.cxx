@@ -30,12 +30,9 @@ void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
   vtkm::cont::DataSet outputData = vols.Execute(dataset);
 
   VTKM_TEST_ASSERT(vols.GetCellMeasureName().empty(), "Default output field name should be empty.");
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() ==
-                     static_cast<vtkm::Id>(expected.size()),
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == static_cast<vtkm::Id>(expected.size()),
                    "Wrong number of cells in the output dataset");
 
   // Check that the empty measure name above produced a field with the expected name.

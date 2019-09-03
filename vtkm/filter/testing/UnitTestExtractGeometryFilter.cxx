@@ -39,8 +39,7 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
     vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
-                     "Wrong result for ExtractGeometry");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
@@ -67,8 +66,7 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
     vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
-                     "Wrong result for ExtractGeometry");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
@@ -95,8 +93,7 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
     vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 64),
-                     "Wrong result for ExtractGeometry");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 64), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
@@ -122,8 +119,7 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(true);
 
     vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
-                     "Wrong result for ExtractGeometry");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);

@@ -32,64 +32,39 @@ public:
   PointTransform() {}
 
   //Translation
-  template <typename S>
-  VTKM_CONT void SetTranslation(const S& tx, const S& ty, const S& tz)
+  VTKM_CONT void SetTranslation(const T& tx, const T& ty, const T& tz)
   {
-    matrix = vtkm::Transform3DTranslate(static_cast<T>(tx), static_cast<T>(ty), static_cast<T>(tz));
+    matrix = vtkm::Transform3DTranslate(tx, ty, tz);
   }
 
-  template <typename S>
-  VTKM_CONT void SetTranslation(const vtkm::Vec<S, 3>& v)
-  {
-    SetTranslation(v[0], v[1], v[2]);
-  }
+  VTKM_CONT void SetTranslation(const vtkm::Vec<T, 3>& v) { SetTranslation(v[0], v[1], v[2]); }
 
   //Rotation
-  template <typename S>
-  VTKM_CONT void SetRotation(const S& angleDegrees, const vtkm::Vec<S, 3>& axis)
+  VTKM_CONT void SetRotation(const T& angleDegrees, const vtkm::Vec<T, 3>& axis)
   {
     matrix = vtkm::Transform3DRotate(angleDegrees, axis);
   }
 
-  template <typename S>
-  VTKM_CONT void SetRotation(const S& angleDegrees, const S& rx, const S& ry, const S& rz)
+  VTKM_CONT void SetRotation(const T& angleDegrees, const T& rx, const T& ry, const T& rz)
   {
-    SetRotation(angleDegrees, vtkm::Vec<S, 3>(rx, ry, rz));
+    SetRotation(angleDegrees, { rx, ry, rz });
   }
 
-  template <typename S>
-  VTKM_CONT void SetRotationX(const S& angleDegrees)
-  {
-    SetRotation(angleDegrees, 1, 0, 0);
-  }
+  VTKM_CONT void SetRotationX(const T& angleDegrees) { SetRotation(angleDegrees, 1, 0, 0); }
 
-  template <typename S>
-  VTKM_CONT void SetRotationY(const S& angleDegrees)
-  {
-    SetRotation(angleDegrees, 0, 1, 0);
-  }
+  VTKM_CONT void SetRotationY(const T& angleDegrees) { SetRotation(angleDegrees, 0, 1, 0); }
 
-  template <typename S>
-  VTKM_CONT void SetRotationZ(const S& angleDegrees)
-  {
-    SetRotation(angleDegrees, 0, 0, 1);
-  }
+  VTKM_CONT void SetRotationZ(const T& angleDegrees) { SetRotation(angleDegrees, 0, 0, 1); }
 
   //Scaling
-  template <typename S>
-  VTKM_CONT void SetScale(const S& s)
+  VTKM_CONT void SetScale(const T& s) { matrix = vtkm::Transform3DScale(s, s, s); }
+
+  VTKM_CONT void SetScale(const T& sx, const T& sy, const T& sz)
   {
-    matrix = vtkm::Transform3DScale(s, s, s);
+    matrix = vtkm::Transform3DScale(sx, sy, sz);
   }
 
-  template <typename S>
-  VTKM_CONT void SetScale(const S& sx, const S& sy, const S& sz)
-  {
-    matrix = vtkm::Transform3DScale(static_cast<T>(sx), static_cast<T>(sy), static_cast<T>(sz));
-  }
-
-  template <typename S>
-  VTKM_CONT void SetScale(const vtkm::Vec<S, 3>& v)
+  VTKM_CONT void SetScale(const vtkm::Vec<T, 3>& v)
   {
     matrix = vtkm::Transform3DScale(v[0], v[1], v[2]);
   }

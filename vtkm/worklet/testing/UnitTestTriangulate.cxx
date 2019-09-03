@@ -30,7 +30,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
 
     // Convert uniform quadrilaterals to triangles
     vtkm::worklet::Triangulate triangulate;
@@ -39,7 +39,7 @@ public:
     // Create the output dataset and assign the input coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataSet.GetCoordinateSystem(0));
-    outDataSet.AddCellSet(outCellSet);
+    outDataSet.SetCellSet(outCellSet);
 
     // Two triangles are created for every quad cell
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 2),
@@ -55,7 +55,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DExplicitDataSet0();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
 
     // Convert explicit cells to triangles
@@ -65,7 +65,7 @@ public:
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataSet.GetCoordinateSystem(0));
-    outDataSet.AddCellSet(outCellSet);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 14),
                      "Wrong result for Triangulate filter");

@@ -36,13 +36,13 @@ inline VTKM_CONT vtkm::cont::DataSet Tube::DoExecute(const vtkm::cont::DataSet& 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
   this->Worklet.Run(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
-                    input.GetCellSet(this->GetActiveCellSetIndex()),
+                    input.GetCellSet(),
                     newPoints,
                     newCells);
 
   vtkm::cont::DataSet outData;
   vtkm::cont::CoordinateSystem outCoords("coordinates", newPoints);
-  outData.AddCellSet(newCells);
+  outData.SetCellSet(newCells);
   outData.AddCoordinateSystem(outCoords);
   return outData;
 }

@@ -231,19 +231,19 @@ private:
     {
       vtkm::cont::CellSetStructured<1> cellSet(cellNm);
       cellSet.SetPointDimensions(dims[0]);
-      dataSet.AddCellSet(cellSet);
+      dataSet.SetCellSet(cellSet);
     }
     else if (ndims == 2)
     {
       vtkm::cont::CellSetStructured<2> cellSet(cellNm);
       cellSet.SetPointDimensions(vtkm::make_Vec(dims[0], dims[1]));
-      dataSet.AddCellSet(cellSet);
+      dataSet.SetCellSet(cellSet);
     }
     else if (ndims == 3)
     {
       vtkm::cont::CellSetStructured<3> cellSet(cellNm);
       cellSet.SetPointDimensions(vtkm::make_Vec(dims[0], dims[1], dims[2]));
-      dataSet.AddCellSet(cellSet);
+      dataSet.SetCellSet(cellSet);
     }
     else
     {

@@ -215,7 +215,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   vtkm::cont::CellSetExplicit<> cellSet(cellNm);
 
   cellSet.Fill(nPts, shapes, numIndices, connectivity);
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
   return dataSet;
 }
@@ -258,7 +258,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   vtkm::cont::CellSetExplicit<> cellSet(cellNm);
 
   cellSet.Fill(nPts, shapes, numIndices, connectivity);
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
   return dataSet;
 }
@@ -298,7 +298,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   vtkm::cont::CellSetSingleType<> cellSet(cellNm);
 
   cellSet.Fill(coords.GetNumberOfValues(), tag.Id, numberOfPointsPerCell, connectivity);
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
   return dataSet;
 }

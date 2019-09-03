@@ -121,14 +121,18 @@ if(VTKm_ENABLE_CUDA)
     set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME vtkm::cuda)
 
     install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
-    # Reserve `INTERFACE_REQUIRES_STATIC_BUILDS` to potential work around issues
+    # Reserve `requires_static_builds` to potential work around issues
     # where VTK-m doesn't work when building shared as virtual functions fail
     # inside device code. We don't want to force BUILD_SHARED_LIBS to a specific
     # value as that could impact other projects that embed VTK-m. Instead what
     # we do is make sure that libraries built by vtkm_library() are static
     # if they use CUDA
+    #
+    # This needs to be lower-case for the property to be properly exported
+    # CMake 3.15 we can add `requires_static_builds` to the EXPORT_PROPERTIES
+    # target property to have this automatically exported for us
     set_target_properties(vtkm_cuda PROPERTIES
-      INTERFACE_REQUIRES_STATIC_BUILDS TRUE
+      requires_static_builds TRUE
     )
 
 
@@ -247,7 +251,11 @@ if(VTKm_ENABLE_CUDA)
     string(REPLACE ";" " " arch_flags "${arch_flags}")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
 
-    set_target_properties(vtkm_cuda PROPERTIES INTERFACE_CUDA_Architecture_Flags "${arch_flags}")
+    # This needs to be lower-case for the property to be properly exported
+    # CMake 3.15 we can add `cuda_architecture_flags` to the EXPORT_PROPERTIES
+    # target property to have this automatically exported for us
+    set_target_properties(vtkm_cuda PROPERTIES cuda_architecture_flags "${arch_flags}")
+    set(VTKm_CUDA_Architecture_Flags "${arch_flags}")
   endif()
 endif()
 

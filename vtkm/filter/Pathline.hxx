@@ -48,9 +48,8 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
   }
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
-  const vtkm::cont::DynamicCellSet& cells2 =
-    this->NextDataSet.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::DynamicCellSet& cells2 = this->NextDataSet.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   const vtkm::cont::CoordinateSystem& coords2 =
@@ -81,7 +80,7 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
 
   vtkm::cont::DataSet outData;
   vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
-  outData.AddCellSet(res.polyLines);
+  outData.SetCellSet(res.polyLines);
   outData.AddCoordinateSystem(outputCoords);
 
   return outData;

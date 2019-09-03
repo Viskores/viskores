@@ -26,7 +26,7 @@ namespace
 
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
 {
-  const vtkm::cont::DynamicCellSet& inCellSet = inDataSet.GetCellSet(0);
+  const vtkm::cont::DynamicCellSet& inCellSet = inDataSet.GetCellSet();
 
   vtkm::cont::CellSetExplicit<> outCellSet("cells");
 
@@ -48,7 +48,7 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
     outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(i));
   }
 
-  outDataSet.AddCellSet(outCellSet);
+  outDataSet.SetCellSet(outCellSet);
 
   return outDataSet;
 }
@@ -98,7 +98,7 @@ void TestExternalFaces1()
   //Run the External Faces worklet
   vtkm::cont::DataSet new_ds = RunExternalFaces(ds);
   vtkm::cont::CellSetExplicit<> new_cs;
-  new_ds.GetCellSet(0).CopyTo(new_cs);
+  new_ds.GetCellSet().CopyTo(new_cs);
 
   vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
 
@@ -129,7 +129,7 @@ void TestExternalFaces2()
 
   vtkm::cont::DataSet outDataSet = RunExternalFaces(inDataSet);
   vtkm::cont::CellSetExplicit<> outCellSet;
-  outDataSet.GetCellSet(0).CopyTo(outCellSet);
+  outDataSet.GetCellSet().CopyTo(outCellSet);
 
   VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == NUM_FACES, "Got wrong number of faces.");
 
@@ -172,7 +172,7 @@ void TestExternalFaces3()
   //Run the External Faces worklet
   vtkm::cont::DataSet new_ds = RunExternalFaces(dataSet);
   vtkm::cont::CellSetExplicit<> new_cs;
-  new_ds.GetCellSet(0).CopyTo(new_cs);
+  new_ds.GetCellSet().CopyTo(new_cs);
 
   vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
 

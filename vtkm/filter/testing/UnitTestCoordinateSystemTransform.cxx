@@ -94,7 +94,7 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
   }
   cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
 
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
   return dataSet;
 }
 

@@ -58,7 +58,7 @@ vtkm::cont::DataSet MakePointTransformTestDataSet()
   }
   cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
 
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
   return dataSet;
 }
 

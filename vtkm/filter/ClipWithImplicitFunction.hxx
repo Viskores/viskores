@@ -29,7 +29,7 @@ inline vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   const vtkm::cont::CoordinateSystem& inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
@@ -43,7 +43,7 @@ inline vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(
 
   //create the output data
   vtkm::cont::DataSet output;
-  output.AddCellSet(outputCellSet);
+  output.SetCellSet(outputCellSet);
   output.AddCoordinateSystem(outputCoords);
 
   return output;

@@ -75,7 +75,7 @@ vtkm::cont::DataSet MakeTestDataSetCurvilinear()
   }
 
   vtkm::cont::DataSet curvi;
-  curvi.AddCellSet(recti.GetCellSet());
+  curvi.SetCellSet(recti.GetCellSet());
   curvi.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", sheared));
 
   return curvi;
@@ -115,7 +115,7 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
                          vtkm::cont::ArrayHandle<PointType>& pcoords,
                          vtkm::cont::ArrayHandle<PointType>& wcoords)
 {
-  vtkm::Id numberOfCells = ds.GetCellSet().GetNumberOfCells();
+  vtkm::Id numberOfCells = ds.GetNumberOfCells();
 
   std::uniform_int_distribution<vtkm::Id> cellIdGen(0, numberOfCells - 1);
   std::uniform_real_distribution<vtkm::FloatDefault> pcoordGen(0.0f, 1.0f);

@@ -36,12 +36,6 @@ public:
   ~FilterDataSetWithField();
 
   VTKM_CONT
-  void SetActiveCellSetIndex(vtkm::Id index) { this->CellSetIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCellSetIndex() const { return this->CellSetIndex; }
-
-  VTKM_CONT
   void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
 
   VTKM_CONT
@@ -80,7 +74,6 @@ public:
   // Association::WHOLE_MESH -> (I think this is points)
   // Association::POINTS -> map using point mapping
   // Association::CELL_SET -> how do we map this?
-  // Association::LOGICAL_DIM -> unable to map?
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,
@@ -106,7 +99,6 @@ private:
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
-  vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
   std::string ActiveFieldName;
   vtkm::cont::Field::Association ActiveFieldAssociation;

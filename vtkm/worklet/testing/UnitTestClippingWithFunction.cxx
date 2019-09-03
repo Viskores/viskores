@@ -119,7 +119,7 @@ void TestClippingExplicit()
   vtkm::worklet::Clip clip;
   bool invertClip = false;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0),
+    clip.Run(ds.GetCellSet(),
              ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
              clipValue,
              invertClip);
@@ -175,7 +175,7 @@ void TestClippingStructured()
   bool invertClip = false;
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0),
+    clip.Run(ds.GetCellSet(),
              ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
              clipValue,
              invertClip);
@@ -237,7 +237,7 @@ void TestClippingWithImplicitFunction()
   bool invertClip = false;
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0),
+    clip.Run(ds.GetCellSet(),
              vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
              ds.GetCoordinateSystem("coords"),
              invertClip);
@@ -296,7 +296,7 @@ void TestClippingWithImplicitFunctionInverted()
   bool invertClip = true;
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0),
+    clip.Run(ds.GetCellSet(),
              vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
              ds.GetCoordinateSystem("coords"),
              invertClip);

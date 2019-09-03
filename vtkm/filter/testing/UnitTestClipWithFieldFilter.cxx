@@ -62,8 +62,6 @@ void TestClipExplicit()
 
   const vtkm::cont::DataSet outputData = clip.Execute(ds);
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,

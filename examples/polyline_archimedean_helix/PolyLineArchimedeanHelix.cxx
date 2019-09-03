@@ -67,11 +67,11 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
   // This generates a new pointset, and new cell set.
   vtkm::cont::ArrayHandle<vtkm::Vec3f> tubePoints;
   vtkm::cont::CellSetSingleType<> tubeCells;
-  tubeWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), tubePoints, tubeCells);
+  tubeWorklet.Run(ds.GetCoordinateSystem(), ds.GetCellSet(), tubePoints, tubeCells);
 
   vtkm::cont::DataSet tubeDataset;
   tubeDataset.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", tubePoints));
-  tubeDataset.AddCellSet(tubeCells);
+  tubeDataset.SetCellSet(tubeCells);
 
   vtkm::Bounds coordsBounds = tubeDataset.GetCoordinateSystem().GetBounds();
 

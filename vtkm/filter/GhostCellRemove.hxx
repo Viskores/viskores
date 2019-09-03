@@ -305,7 +305,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   vtkm::cont::DynamicCellSet cellOut;
 
   //Preserve structured output where possible.
@@ -354,7 +354,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
 
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-  output.AddCellSet(cellOut);
+  output.SetCellSet(cellOut);
 
   return output;
 }

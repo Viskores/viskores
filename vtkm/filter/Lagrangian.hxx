@@ -108,8 +108,7 @@ inline void Lagrangian::WriteDataSet(vtkm::Id cycle,
   file << filename << cycle << ".vtk";
   vtkm::io::writer::VTKDataSetWriter writer(file.str().c_str());
   writer.WriteDataSet(dataset);
-  std::cout << "Number of flows in writedataset is : " << dataset.GetCellSet(0).GetNumberOfCells()
-            << std::endl;
+  std::cout << "Number of flows in writedataset is : " << dataset.GetNumberOfCells() << std::endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -228,7 +227,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
 
   cycle += 1;
   std::cout << "Cycle : " << cycle << std::endl;
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();

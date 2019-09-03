@@ -34,7 +34,7 @@ inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // Get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newCoords;
   vtkm::cont::CellSetExplicit<> newCellset;
 
@@ -46,7 +46,7 @@ inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
                     newCellset);
 
   vtkm::cont::DataSet output;
-  output.AddCellSet(newCellset);
+  output.SetCellSet(newCellset);
   output.AddCoordinateSystem(
     vtkm::cont::CoordinateSystem(input.GetCoordinateSystem().GetName(), newCoords));
   return output;
