@@ -144,7 +144,7 @@ public:
     vtkm::cont::Algorithm::CopyIf(
       vtkm::cont::ArrayHandleIndex(passFlags.GetNumberOfValues()), passFlags, this->ValidCellIds);
 
-    return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
+    return OutputType(this->ValidCellIds, cellSet);
   }
 
   template <typename FieldArrayType, typename UnaryPredicate>

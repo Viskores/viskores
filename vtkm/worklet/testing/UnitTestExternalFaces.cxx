@@ -28,7 +28,7 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
 {
   const vtkm::cont::DynamicCellSet& inCellSet = inDataSet.GetCellSet();
 
-  vtkm::cont::CellSetExplicit<> outCellSet("cells");
+  vtkm::cont::CellSetExplicit<> outCellSet;
 
   //Run the External Faces worklet
   if (inCellSet.IsSameType(vtkm::cont::CellSetStructured<3>()))

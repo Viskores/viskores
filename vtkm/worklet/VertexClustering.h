@@ -512,7 +512,7 @@ public:
     vtkm::cont::DataSet output;
     output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
 
-    vtkm::cont::CellSetSingleType<> triangles("cells");
+    vtkm::cont::CellSetSingleType<> triangles;
     triangles.Fill(repPointArray.GetNumberOfValues(),
                    vtkm::CellShapeTagTriangle::Id,
                    3,

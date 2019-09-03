@@ -25,8 +25,8 @@ template <typename ShapeStorageTag,
 VTKM_CONT CellSetExplicit<ShapeStorageTag,
                           NumIndicesStorageTag,
                           ConnectivityStorageTag,
-                          OffsetsStorageTag>::CellSetExplicit(const std::string& name)
-  : CellSet(name)
+                          OffsetsStorageTag>::CellSetExplicit()
+  : CellSet()
   , Data(std::make_shared<Internals>())
 {
 }
@@ -103,7 +103,7 @@ void CellSetExplicit<ShapeStorageTag,
                      ConnectivityStorageTag,
                      OffsetsStorageTag>::PrintSummary(std::ostream& out) const
 {
-  out << "   ExplicitCellSet: " << this->Name << std::endl;
+  out << "   ExplicitCellSet: " << std::endl;
   out << "   VisitCellsWithPoints: " << std::endl;
   this->Data->VisitCellsWithPoints.PrintSummary(out);
   out << "   VisitPointsWithCells: " << std::endl;

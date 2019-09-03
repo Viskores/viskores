@@ -238,11 +238,6 @@ struct TestEqualCellSet
     vtkm::TopologyElementTagCell visitTopo{};
     vtkm::TopologyElementTagPoint incidentTopo{};
 
-    if (cs1.GetName() != cs2.GetName())
-    {
-      result.PushMessage("names don't match");
-      return;
-    }
     if (cs1.GetNumberOfPoints() != cs2.GetNumberOfPoints())
     {
       result.PushMessage("number of points don't match");
@@ -285,11 +280,6 @@ struct TestEqualCellSet
                   const vtkm::cont::CellSetStructured<DIMENSION>& cs2,
                   TestEqualResult& result) const
   {
-    if (cs1.GetName() != cs2.GetName())
-    {
-      result.PushMessage("names don't match");
-      return;
-    }
     if (cs1.GetPointDimensions() != cs2.GetPointDimensions())
     {
       result.PushMessage("point dimensions don't match");

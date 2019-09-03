@@ -105,7 +105,7 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   static constexpr vtkm::IdComponent ndim = 3;
-  vtkm::cont::CellSetStructured<ndim> cellSet("cells");
+  vtkm::cont::CellSetStructured<ndim> cellSet;
   cellSet.SetPointDimensions(vdims);
   dataSet.SetCellSet(cellSet);
 
@@ -261,7 +261,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
                                      vtkm::cont::Field::Association::POINTS,
                                      vtkm::cont::VariantArrayHandle(distanceToOther)));
 
-  CellSet cellSet("cells");
+  CellSet cellSet;
   cellSet.Fill((dim + 1) * (dim + 1) * (dim + 1), HexTag::Id, HexTraits::NUM_POINTS, connectivity);
 
   dataSet.SetCellSet(cellSet);

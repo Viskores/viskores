@@ -63,7 +63,7 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
   pointVar.push_back(15);
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, vtkm::CopyFlag::On));
-  vtkm::cont::CellSetSingleType<> cellSet("cells");
+  vtkm::cont::CellSetSingleType<> cellSet;
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   connectivity.Allocate(8);

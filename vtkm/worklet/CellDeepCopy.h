@@ -92,7 +92,7 @@ struct CellDeepCopy
 
     vtkm::cont::
       CellSetExplicit<ShapeStorage, NumIndicesStorage, ConnectivityStorage, OffsetsStorage>
-        newCellSet(inCellSet.GetName());
+        newCellSet;
     newCellSet.Fill(inCellSet.GetNumberOfPoints(), shapes, numIndices, connectivity, offsets);
     outCellSet = newCellSet;
   }

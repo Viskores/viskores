@@ -39,7 +39,7 @@ vtkm::cont::DataSet Make2DUniformStatDataSet0()
   dataSet.AddField(vtkm::cont::make_Field(
     "data", vtkm::cont::Field::Association::CELL_SET, data, nCells, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetStructured<dimension> cellSet("cells");
+  vtkm::cont::CellSetStructured<dimension> cellSet;
 
   //Set uniform structure
   cellSet.SetPointDimensions(vtkm::make_Vec(xVerts, yVerts));
@@ -274,7 +274,7 @@ vtkm::cont::DataSet Make2DUniformStatDataSet1()
   dataSet.AddField(vtkm::cont::make_Field(
     "c_uniform", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetStructured<dimension> cellSet("cells");
+  vtkm::cont::CellSetStructured<dimension> cellSet;
 
   //Set uniform structure
   cellSet.SetPointDimensions(vtkm::make_Vec(xVerts, yVerts));

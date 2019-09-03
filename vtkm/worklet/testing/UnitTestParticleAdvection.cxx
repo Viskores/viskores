@@ -216,9 +216,9 @@ vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::cont::DataSe
     vtkm::Id2 cellDims = cells2D.GetCellDimensions();
     MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
     if (createSingleType)
-      output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates", "cells");
+      output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
     else
-      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates", "cells");
+      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
   {
@@ -226,10 +226,9 @@ vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::cont::DataSe
     vtkm::Id3 cellDims = cells3D.GetCellDimensions();
     MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
     if (createSingleType)
-      output =
-        dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates", "cells");
+      output = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
     else
-      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates", "cells");
+      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
   }
 
   return output;

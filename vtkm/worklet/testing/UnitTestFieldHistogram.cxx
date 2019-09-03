@@ -239,7 +239,7 @@ vtkm::cont::DataSet MakeTestDataSet()
   dataSet.AddField(vtkm::cont::make_Field(
     "c_uniform", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetStructured<dimension> cellSet("cells");
+  vtkm::cont::CellSetStructured<dimension> cellSet;
 
   //Set regular structure
   cellSet.SetPointDimensions(vtkm::make_Vec(xVerts, yVerts));
