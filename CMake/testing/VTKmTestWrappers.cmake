@@ -164,7 +164,7 @@ function(vtkm_unit_tests)
           )
       else()
         add_test(NAME ${tname}${upper_backend}
-          COMMAND ${test_prog} ${tname} ${device_command_line_argument} 
+          COMMAND ${test_prog} ${tname} ${device_command_line_argument}
                   ${vtkm_default_test_log_level} ${VTKm_UT_TEST_ARGS}
           )
       endif()
