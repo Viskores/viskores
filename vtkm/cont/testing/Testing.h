@@ -36,7 +36,7 @@ struct Testing
 {
 public:
   template <class Func>
-  static VTKM_CONT int Run(Func function, int argc, char* argv[])
+  static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
     vtkm::cont::Initialize(argc, argv);
 

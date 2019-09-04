@@ -314,7 +314,7 @@ public:
   /// \endcode
   ///
   template <class Func>
-  static VTKM_CONT int Run(Func function, int argc, char* argv[])
+  static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
     if (argc == 0 || argv == nullptr)
     {
