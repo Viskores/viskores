@@ -39,7 +39,6 @@ public:
   static VTKM_CONT int Run(Func function, int argc, char* argv[])
   {
     vtkm::cont::Initialize(argc, argv);
-    vtkm::cont::SetStderrLogLevel(vtkm::cont::LogLevel::Info);
 
     try
     {

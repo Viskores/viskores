@@ -123,8 +123,7 @@ void InitLogging(int& argc, char* argv[])
   loguru::set_verbosity_to_name_callback(&verbosityToNameCallback);
   loguru::set_name_to_verbosity_callback(&nameToVerbosityCallback);
 
-  // Only set the default verbosity level if we won't overwrite
-  // a log level set by SetStderrLogLevel before InitLogging
+  // Set the default log level to warning
   SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
   loguru::init(argc, argv);
 
