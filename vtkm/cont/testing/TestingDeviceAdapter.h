@@ -14,6 +14,7 @@
 #include <vtkm/BinaryPredicates.h>
 #include <vtkm/TypeTraits.h>
 
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
@@ -1985,6 +1986,108 @@ private:
     }
   }
 
+  static VTKM_CONT void TestScanExtended()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Extended Scan" << std::endl;
+
+    {
+      std::cout << "  size " << ARRAY_SIZE << std::endl;
+
+      //construct the index array
+      IdArrayHandle array;
+      Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                          ARRAY_SIZE);
+
+      // we now have an array whose sum = (OFFSET * ARRAY_SIZE),
+      // let's validate that
+      Algorithm::ScanExtended(array, array);
+      VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE + 1, "Output size incorrect.");
+      auto portal = array.GetPortalConstControl();
+      for (vtkm::Id i = 0; i < ARRAY_SIZE + 1; ++i)
+      {
+        const vtkm::Id value = portal.Get(i);
+        VTKM_TEST_ASSERT(value == i * OFFSET, "Incorrect partial sum");
+      }
+
+      std::cout << "  size 1" << std::endl;
+      array.Shrink(1);
+      array.GetPortalControl().Set(0, OFFSET);
+      Algorithm::ScanExtended(array, array);
+      VTKM_TEST_ASSERT(array.GetNumberOfValues() == 2);
+      portal = array.GetPortalConstControl();
+      VTKM_TEST_ASSERT(portal.Get(0) == 0, "Incorrect initial value");
+      VTKM_TEST_ASSERT(portal.Get(1) == OFFSET, "Incorrect total sum");
+
+      std::cout << "  size 0" << std::endl;
+      array.Shrink(0);
+      Algorithm::ScanExtended(array, array);
+      VTKM_TEST_ASSERT(array.GetNumberOfValues() == 1);
+      portal = array.GetPortalConstControl();
+      VTKM_TEST_ASSERT(portal.Get(0) == 0, "Incorrect initial value");
+    }
+
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Extended Scan with multiplication operator" << std::endl;
+    {
+      std::vector<vtkm::Float64> inputValues(ARRAY_SIZE);
+      for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
+      {
+        inputValues[i] = 1.01;
+      }
+
+      std::size_t mid = ARRAY_SIZE / 2;
+      inputValues[mid] = 0.0;
+
+      vtkm::cont::ArrayHandle<vtkm::Float64> array =
+        vtkm::cont::make_ArrayHandle(inputValues, vtkm::CopyFlag::On);
+
+      vtkm::Float64 initialValue = 2.00;
+      Algorithm::ScanExtended(array, array, vtkm::Multiply(), initialValue);
+
+      VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE + 1,
+                       "ScanExtended output size incorrect.");
+
+      auto portal = array.GetPortalConstControl();
+      VTKM_TEST_ASSERT(portal.Get(0) == initialValue,
+                       "ScanExtended result's first value != initialValue");
+
+      for (std::size_t i = 1; i <= mid; ++i)
+      {
+        vtkm::Id index = static_cast<vtkm::Id>(i);
+        vtkm::Float64 expected = pow(1.01, static_cast<vtkm::Float64>(i)) * initialValue;
+        vtkm::Float64 got = portal.Get(index);
+        VTKM_TEST_ASSERT(test_equal(got, expected), "Incorrect results for ScanExtended");
+      }
+      for (std::size_t i = mid + 1; i < ARRAY_SIZE + 1; ++i)
+      {
+        vtkm::Id index = static_cast<vtkm::Id>(i);
+        VTKM_TEST_ASSERT(portal.Get(index) == 0.0f, "Incorrect results for ScanExtended");
+      }
+    }
+
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Extended Scan with a vtkm::Vec" << std::endl;
+
+    {
+      using Vec3 = vtkm::Vec3f_64;
+      using Vec3ArrayHandle = vtkm::cont::ArrayHandle<Vec3, StorageTag>;
+
+      std::vector<Vec3> testValues(ARRAY_SIZE);
+
+      for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
+      {
+        testValues[i] = TestValue(1, Vec3());
+      }
+      Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues, vtkm::CopyFlag::On);
+
+      Algorithm::ScanExtended(values, values);
+      VTKM_TEST_ASSERT(test_equal(vtkm::cont::ArrayGetValue(ARRAY_SIZE, values),
+                                  (TestValue(1, Vec3()) * ARRAY_SIZE)),
+                       "Got bad sum from ScanExtended");
+    }
+  }
+
   static VTKM_CONT void TestErrorExecution()
   {
     std::cout << "-------------------------------------------" << std::endl;
@@ -2763,6 +2866,7 @@ private:
       TestReduceByKeyWithFancyArrays();
 
       TestScanExclusive();
+      TestScanExtended();
 
       TestScanInclusive();
       TestScanInclusiveWithComparisonObject();
