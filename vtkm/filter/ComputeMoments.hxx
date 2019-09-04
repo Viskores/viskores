@@ -39,7 +39,7 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
   vtkm::cont::DataSet output;
   output.CopyStructure(input);
 
-  auto worklet = vtkm::worklet::moments::ComputeMoments(this->Radius);
+  auto worklet = vtkm::worklet::moments::ComputeMoments(this->RadiusDiscrete, this->RadiusReal);
 
   worklet.Run(input.GetCellSet(this->GetActiveCellSetIndex()), field, this->Order, output);
 

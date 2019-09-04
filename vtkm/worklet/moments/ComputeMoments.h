@@ -32,13 +32,17 @@ namespace moments
 struct ComputeMoments2D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  ComputeMoments2D(const vtkm::Vec<vtkm::Int32, 3>& _radius, int _p, int _q)
-    : Radius(_radius)
+  ComputeMoments2D(const vtkm::Vec<vtkm::Int32, 3>& _radiusDiscrete,
+                   const vtkm::Vec<double, 3>& _radiusReal,
+                   int _p,
+                   int _q)
+    : RadiusDiscrete(_radiusDiscrete)
+    , RadiusReal(_radiusReal)
     , p(_p)
     , q(_q)
   {
-    assert(_radius[0] >= 1);
-    assert(_radius[1] >= 1);
+    assert(_radiusReal[0] >= 1);
+    assert(_radiusReal[1] >= 1);
 
     assert(_p >= 0);
     assert(_q >= 0);
@@ -55,22 +59,22 @@ public:
   {
     // TODO: type safety and numerical precision
     auto sum = vtkm::TypeTraits<T>::ZeroInitialization();
-    vtkm::Vec<vtkm::Float64, 2> recp{ 1.0 / Radius[0], 1.0 / Radius[1] };
+    vtkm::Vec<vtkm::Float64, 2> recp{ 1.0 / RadiusReal[0], 1.0 / RadiusReal[1] };
 
     // Clamp the radius to the dataset bounds (discard out-of-bounds points).
-    const auto minRadius = boundary.ClampNeighborIndex(-this->Radius);
-    const auto maxRadius = boundary.ClampNeighborIndex(this->Radius);
+    const auto minRadius = boundary.ClampNeighborIndex(-this->RadiusDiscrete);
+    const auto maxRadius = boundary.ClampNeighborIndex(this->RadiusDiscrete);
 
     for (vtkm::IdComponent j = minRadius[1]; j <= maxRadius[1]; ++j)
     {
-      if (j > -this->Radius[1] && boundary.IJK[1] + j == 0)
+      if (j > -this->RadiusDiscrete[1] && boundary.IJK[1] + j == 0)
       { // Don't double count samples that exist on other nodes:
         continue;
       }
 
       for (vtkm::IdComponent i = minRadius[0]; i <= maxRadius[0]; ++i)
       {
-        if (i > -this->Radius[0] && boundary.IJK[0] + i == 0)
+        if (i > -this->RadiusDiscrete[0] && boundary.IJK[0] + i == 0)
         { // Don't double count samples that exist on other nodes:
           continue;
         }
@@ -89,7 +93,8 @@ public:
   }
 
 private:
-  const vtkm::Vec<vtkm::Int32, 3> Radius;
+  const vtkm::Vec<vtkm::Int32, 3> RadiusDiscrete;
+  const vtkm::Vec<double, 3> RadiusReal;
   const int p;
   const int q;
 };
@@ -97,15 +102,20 @@ private:
 struct ComputeMoments3D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  ComputeMoments3D(const vtkm::Vec<vtkm::Int32, 3>& _radius, int _p, int _q, int _r)
-    : Radius(_radius)
+  ComputeMoments3D(vtkm::Vec<vtkm::Int32, 3>& _radiusDiscrete,
+                   vtkm::Vec<double, 3>& _radiusReal,
+                   int _p,
+                   int _q,
+                   int _r)
+    : RadiusDiscrete(_radiusDiscrete)
+    , RadiusReal(_radiusReal)
     , p(_p)
     , q(_q)
     , r(_r)
   {
-    assert(_radius[0] >= 1);
-    assert(_radius[1] >= 1);
-    assert(_radius[2] >= 1);
+    assert(_radiusReal[0] >= 1);
+    assert(_radiusReal[1] >= 1);
+    assert(_radiusReal[2] >= 1);
 
     assert(_p >= 0);
     assert(_q >= 0);
@@ -123,31 +133,31 @@ public:
   {
     // TODO: type safety and numerical precision
     auto sum = vtkm::TypeTraits<T>::ZeroInitialization();
-    const vtkm::Vec<vtkm::Float64, 3> recp{ 1.0 / this->Radius[0],
-                                            1.0 / this->Radius[1],
-                                            1.0 / this->Radius[2] };
+    const vtkm::Vec<vtkm::Float64, 3> recp{ 1.0 / this->RadiusReal[0],
+                                            1.0 / this->RadiusReal[1],
+                                            1.0 / this->RadiusReal[2] };
 
     // Clamp the radius to the dataset bounds (discard out-of-bounds points).
-    const auto minRadius = boundary.ClampNeighborIndex(-this->Radius);
-    const auto maxRadius = boundary.ClampNeighborIndex(this->Radius);
+    const auto minRadius = boundary.ClampNeighborIndex(-this->RadiusDiscrete);
+    const auto maxRadius = boundary.ClampNeighborIndex(this->RadiusDiscrete);
 
     for (vtkm::IdComponent k = minRadius[2]; k <= maxRadius[2]; ++k)
     {
-      if (k > -this->Radius[2] && boundary.IJK[2] + k == 0)
+      if (k > -this->RadiusDiscrete[2] && boundary.IJK[2] + k == 0)
       { // Don't double count samples that exist on other nodes:
         continue;
       }
 
       for (vtkm::IdComponent j = minRadius[1]; j <= maxRadius[1]; ++j)
       {
-        if (j > -this->Radius[1] && boundary.IJK[1] + j == 0)
+        if (j > -this->RadiusDiscrete[1] && boundary.IJK[1] + j == 0)
         { // Don't double count samples that exist on other nodes:
           continue;
         }
 
         for (vtkm::IdComponent i = minRadius[0]; i <= maxRadius[0]; ++i)
         {
-          if (i > -this->Radius[0] && boundary.IJK[0] + i == 0)
+          if (i > -this->RadiusDiscrete[0] && boundary.IJK[0] + i == 0)
           { // Don't double count samples that exist on other nodes:
             continue;
           }
@@ -168,7 +178,8 @@ public:
   }
 
 private:
-  const vtkm::Vec<vtkm::Int32, 3>& Radius;
+  const vtkm::Vec<vtkm::Int32, 3>& RadiusDiscrete;
+  const vtkm::Vec<double, 3>& RadiusReal;
   const int p;
   const int q;
   const int r;
@@ -177,8 +188,9 @@ private:
 class ComputeMoments
 {
 public:
-  ComputeMoments(vtkm::Vec<vtkm::Int32, 3> _radius)
-    : Radius(_radius)
+  ComputeMoments(vtkm::Vec<vtkm::Int32, 3>& _radiusDiscrete, vtkm::Vec<double, 3>& _radiusReal)
+    : RadiusDiscrete(_radiusDiscrete)
+    , RadiusReal(_radiusReal)
   {
   }
 
@@ -188,7 +200,8 @@ public:
     template <typename T, typename S>
     void operator()(const vtkm::cont::CellSetStructured<2>& input,
                     const vtkm::cont::ArrayHandle<T, S>& pixels,
-                    vtkm::Vec<vtkm::Int32, 3> Radius,
+                    vtkm::Vec<vtkm::Int32, 3> RadiusDiscrete,
+                    vtkm::Vec<double, 3> RadiusReal,
                     int maxOrder,
                     vtkm::cont::DataSet& output) const
     {
@@ -203,7 +216,7 @@ public:
 
           vtkm::cont::ArrayHandle<T> moments;
 
-          DispatcherType dispatcher(WorkletType{ Radius, p, q });
+          DispatcherType dispatcher(WorkletType{ RadiusDiscrete, RadiusReal, p, q });
           dispatcher.Invoke(input, pixels, moments);
 
           std::string fieldName = std::string("index") + std::string(p, '0') + std::string(q, '1');
@@ -218,7 +231,8 @@ public:
     template <typename T, typename S>
     void operator()(const vtkm::cont::CellSetStructured<3>& input,
                     const vtkm::cont::ArrayHandle<T, S>& pixels,
-                    vtkm::Vec<vtkm::Int32, 3> Radius,
+                    vtkm::Vec<vtkm::Int32, 3> RadiusDiscrete,
+                    vtkm::Vec<double, 3> RadiusReal,
                     int maxOrder,
                     vtkm::cont::DataSet& output) const
     {
@@ -236,7 +250,7 @@ public:
 
             vtkm::cont::ArrayHandle<T> moments;
 
-            DispatcherType dispatcher(WorkletType{ Radius, p, q, r });
+            DispatcherType dispatcher(WorkletType{ RadiusDiscrete, RadiusReal, p, q, r });
             dispatcher.Invoke(input, pixels, moments);
 
             std::string fieldName = std::string("index") + std::string(p, '0') +
@@ -258,11 +272,13 @@ public:
            vtkm::cont::DataSet& output) const
   {
     input.ResetCellSetList(vtkm::cont::CellSetListTagStructured())
-      .CastAndCall(ResolveDynamicCellSet(), pixels, this->Radius, maxOrder, output);
+      .CastAndCall(
+        ResolveDynamicCellSet(), pixels, this->RadiusDiscrete, this->RadiusReal, maxOrder, output);
   }
 
 private:
-  const vtkm::Vec<vtkm::Int32, 3> Radius = { 1, 1, 1 };
+  const vtkm::Vec<vtkm::Int32, 3> RadiusDiscrete = { 1, 1, 1 };
+  const vtkm::Vec<double, 3> RadiusReal = { 1, 1, 1 };
 };
 }
 }
