@@ -26,9 +26,15 @@ int main(int argc, char** argv)
   auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
   auto config = vtkm::cont::Initialize(argc, argv, opts);
 
-  std::cout << "Temporal Advection Example" << std::endl;
-  std::cout << "Parameters are [options] <dataset slice 1> <time 1> "
-            << "<dataset slice 2> <time 2> <num steps> <step size> <output dataset>" << std::endl;
+  // Sample data to use this example can be found in the data directory of the
+  // VTK-m repo in the location temporal_datasets.
+  // These example with these datasets can be used for this example as :
+  // ./Temporal_Advection DoubleGyre_0.vtk 0.0 DoubleGyre_5.vtk 5.0
+  //                      velocity 500 0.025 pathlines.vtk
+  std::cout << "Parameters are [options] "
+            << "<dataset slice 1> <time 1> "
+            << "<dataset slice 2> <time 2> "
+            << "<field name> <num steps> <step size> <output dataset>" << std::endl;
 
   if (argc < 7)
   {
@@ -36,7 +42,7 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  std::string datasetName1, datasetName2, outputName;
+  std::string fieldName, datasetName1, datasetName2, outputName;
   vtkm::FloatDefault time1, time2;
 
   vtkm::Id numSteps;
@@ -63,6 +69,7 @@ int main(int argc, char** argv)
   // Instantiate the filter by providing necessary parameters.
   // Necessary parameters are :
   vtkm::filter::Pathline pathlineFilter;
+  pathlineFilter.SetActiveField("velocity");
   // 1. The current and next time slice. The current time slice is passed
   //    through the parameter to the Execute method.
   pathlineFilter.SetNextDataSet(ds2);
@@ -82,7 +89,7 @@ int main(int argc, char** argv)
   // The way to verify if the code produces correct streamlines
   // is to do a visual test by using VisIt/ParaView to visualize
   // the file written by this method.
-  vtkm::io::writer::VTKDataSetWriter writer("pathlines.vtk");
+  vtkm::io::writer::VTKDataSetWriter writer(outputName);
   writer.WriteDataSet(output);
   return 0;
 }
