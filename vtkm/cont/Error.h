@@ -48,11 +48,7 @@ public:
 #endif
 
   // For std::exception compatibility:
-  const char* what() const noexcept override
-  {
-    std::string tmp = this->Message + "\n" + this->StackTrace;
-    return tmp.c_str();
-  }
+  const char* what() const noexcept override { return this->What.c_str(); }
 
   /// Returns true if this exception is device independent. For exceptions that
   /// are not device independent, `vtkm::TryExecute`, for example, may try
@@ -64,6 +60,7 @@ protected:
   Error(const std::string& message, bool is_device_independent = false)
     : Message(message)
     , StackTrace(vtkm::cont::GetStackTrace(1))
+    , What(Message + "\n" + StackTrace)
     , IsDeviceIndependent(is_device_independent)
   {
   }
@@ -73,6 +70,7 @@ protected:
 private:
   std::string Message;
   std::string StackTrace;
+  std::string What;
   bool IsDeviceIndependent;
 };
 
