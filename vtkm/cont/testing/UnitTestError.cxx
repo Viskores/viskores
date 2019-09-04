@@ -11,7 +11,6 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
