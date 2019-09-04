@@ -18,7 +18,7 @@
 
 using RuntimeTaskQueue = TaskQueue<std::function<void()>>;
 
-/// \brief Construct a MultiDeviceGradient for a given multiblock dataset
+/// \brief Construct a MultiDeviceGradient for a given partitioned dataset
 ///
 /// The Policy used with MultiDeviceGradient must include the TBB and CUDA
 /// backends.
@@ -45,8 +45,8 @@ public:
   /// Will submit each block to a work queue that the threads will
   /// pull work from
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::MultiBlock PrepareForExecution(
-    const vtkm::cont::MultiBlock&,
+  VTKM_CONT vtkm::cont::PartitionedDataSet PrepareForExecution(
+    const vtkm::cont::PartitionedDataSet&,
     const vtkm::filter::PolicyBase<DerivedPolicy>&);
 
 private:
@@ -56,8 +56,8 @@ private:
 };
 
 #ifndef vtk_m_examples_multibackend_MultiDeviceGradient_cxx
-extern template vtkm::cont::MultiBlock MultiDeviceGradient::PrepareForExecution<
-  vtkm::filter::PolicyDefault>(const vtkm::cont::MultiBlock&,
+extern template vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForExecution<
+  vtkm::filter::PolicyDefault>(const vtkm::cont::PartitionedDataSet&,
                                const vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>&);
 #endif
 

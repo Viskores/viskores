@@ -12,9 +12,9 @@
 
 #include "TaskQueue.h"
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 vtkm::cont::DataSet make_test3DImageData(int xdim, int ydim, int zdim);
-void io_generator(TaskQueue<vtkm::cont::MultiBlock>& queue, std::size_t numberOfTasks);
+void io_generator(TaskQueue<vtkm::cont::PartitionedDataSet>& queue, std::size_t numberOfTasks);
 
 #endif
