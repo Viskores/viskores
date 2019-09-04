@@ -148,9 +148,6 @@ public:
         locator.SetCellSet(cellset);
         locator.Update();
         this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformGrid>(locator);
-        vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
-        this->InterpolationHelper =
-          std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
       }
       else if (coordinates.GetData().IsType<RectilinearType>())
       {
@@ -159,22 +156,19 @@ public:
         locator.SetCellSet(cellset);
         locator.Update();
         this->Locator = std::make_shared<vtkm::cont::CellLocatorRectilinearGrid>(locator);
-        vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
-        this->InterpolationHelper =
-          std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
       }
       else
       {
-        // Default to using an explicit grid.
+        // Default to using an locator for explicit meshes.
         vtkm::cont::CellLocatorUniformBins locator;
         locator.SetCoordinates(coordinates);
         locator.SetCellSet(cellset);
         locator.Update();
         this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
-        vtkm::cont::CellExplicitInterpolationHelper interpolationHelper(cellset);
-        this->InterpolationHelper =
-          std::make_shared<vtkm::cont::CellExplicitInterpolationHelper>(interpolationHelper);
       }
+      vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
+      this->InterpolationHelper =
+        std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
@@ -183,9 +177,9 @@ public:
       locator.SetCellSet(cellset);
       locator.Update();
       this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
-      vtkm::cont::SingleCellExplicitInterpolationHelper interpolationHelper(cellset);
+      vtkm::cont::SingleCellTypeInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
-        std::make_shared<vtkm::cont::SingleCellExplicitInterpolationHelper>(interpolationHelper);
+        std::make_shared<vtkm::cont::SingleCellTypeInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
@@ -194,9 +188,9 @@ public:
       locator.SetCellSet(cellset);
       locator.Update();
       this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
-      vtkm::cont::CellExplicitInterpolationHelper interpolationHelper(cellset);
+      vtkm::cont::ExplicitCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
-        std::make_shared<vtkm::cont::CellExplicitInterpolationHelper>(interpolationHelper);
+        std::make_shared<vtkm::cont::ExplicitCellInterpolationHelper>(interpolationHelper);
     }
     else
       throw vtkm::cont::ErrorInternal("Unsupported cellset type.");

@@ -213,25 +213,51 @@ vtkm::cont::DataSet CreateWeirdnessFromStructuredDataSet(const vtkm::cont::DataS
   vtkm::cont::DataSet output;
   vtkm::cont::DataSetBuilderExplicit dsb;
 
-  if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
+  using Structured2DType = vtkm::cont::CellSetStructured<2>;
+  using Structured3DType = vtkm::cont::CellSetStructured<3>;
+
+  switch (option)
   {
-    vtkm::cont::CellSetStructured<2> cells2D = cellSet.Cast<vtkm::cont::CellSetStructured<2>>();
-    vtkm::Id2 cellDims = cells2D.GetCellDimensions();
-    MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
-    if (createSingleType)
-      output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
-    else
-      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
-  }
-  else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
-  {
-    vtkm::cont::CellSetStructured<3> cells3D = cellSet.Cast<vtkm::cont::CellSetStructured<3>>();
-    vtkm::Id3 cellDims = cells3D.GetCellDimensions();
-    MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
-    if (createSingleType)
-      output = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
-    else
-      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
+    case DataSetOption::SINGLE:
+      if (cellSet.IsType<Structured2DType>())
+      {
+        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
+        vtkm::Id2 cellDims = cells2D.GetCellDimensions();
+        MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
+        output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
+      }
+      else
+      {
+        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
+        vtkm::Id3 cellDims = cells3D.GetCellDimensions();
+        MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
+        output = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
+      }
+      break;
+
+    case DataSetOption::CURVILINEAR:
+      // In this case the cell set/connectivity is the same as the input
+      // Only the coords are no longer Uniform / Rectilinear
+      output.SetCellSet(cellSet);
+      output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", explCoords));
+      break;
+
+    case DataSetOption::EXPLICIT:
+      if (cellSet.IsType<Structured2DType>())
+      {
+        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
+        vtkm::Id2 cellDims = cells2D.GetCellDimensions();
+        MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
+        output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
+      }
+      else
+      {
+        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
+        vtkm::Id3 cellDims = cells3D.GetCellDimensions();
+        MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
+        output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
+      }
+      break;
   }
   return output;
 }
@@ -506,15 +532,6 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
   for (vtkm::Id i = 0; i < nSeeds; i++)
     VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(i) <= maxSteps,
                      "Too many steps taken in streamline");
-
-  /*
-  vtkm::cont::DataSet ds;
-  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", res.positions));
-  ds.SetCellSet(res.polyLines);
-  ds.PrintSummary(std::cout);
-  vtkm::io::writer::VTKDataSetWriter writer1("ds.vtk");
-  writer1.WriteDataSet(ds);
-  */
 }
 
 void TestParticleWorklets()
