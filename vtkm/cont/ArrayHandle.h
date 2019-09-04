@@ -74,15 +74,11 @@ struct IsInValidArrayHandle
 {
 };
 
-/// Checks to see if the ArrayHandle allows
-/// writing, as some ArrayHandles (Implicit) don't support writing.
-/// This check is compatible with the C++11 type_traits.
-/// It contains a typedef named type that is either
-/// std::true_type or std::false_type.
-/// Both of these have a typedef named value with the respective boolean value.
-///
+namespace detail
+{
+
 template <typename ArrayHandle>
-struct IsWritableArrayHandle
+struct IsWritableArrayHandleImpl
 {
 private:
   template <typename U,
@@ -98,6 +94,17 @@ public:
   using type = decltype(hasSet<PortalType>(0));
   static constexpr bool value = type::value;
 };
+}
+
+/// Checks to see if the ArrayHandle allows
+/// writing, as some ArrayHandles (Implicit) don't support writing.
+/// This check is compatible with the C++11 type_traits.
+/// It contains a typedef named type that is either
+/// std::true_type or std::false_type.
+/// Both of these have a typedef named value with the respective boolean value.
+///
+template <typename ArrayHandle>
+using IsWritableArrayHandle = typename detail::IsWritableArrayHandleImpl<ArrayHandle>::type;
 
 /// Checks to see if the given object is an array handle. This check is
 /// compatible with C++11 type_traits. It a typedef named \c type that is
