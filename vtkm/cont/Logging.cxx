@@ -103,10 +103,6 @@ namespace vtkm
 namespace cont
 {
 
-#ifdef VTKM_ENABLE_LOGGING
-static bool logSet = false;
-#endif // VTKM_ENABLE_LOGGING
-
 VTKM_CONT
 void InitLogging(int& argc, char* argv[])
 {
@@ -129,10 +125,7 @@ void InitLogging(int& argc, char* argv[])
 
   // Only set the default verbosity level if we won't overwrite
   // a log level set by SetStderrLogLevel before InitLogging
-  if (!logSet)
-  {
-    SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
-  }
+  SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
   loguru::init(argc, argv);
 
   LOG_F(INFO, "Logging initialized.");
@@ -158,7 +151,6 @@ void SetStderrLogLevel(LogLevel level)
 {
 #ifdef VTKM_ENABLE_LOGGING
   loguru::g_stderr_verbosity = static_cast<loguru::Verbosity>(level);
-  logSet = true;
 #else  // VTKM_ENABLE_LOGGING
   (void)level;
 #endif // VTKM_ENABLE_LOGGING

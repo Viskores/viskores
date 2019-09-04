@@ -103,13 +103,8 @@ function(vtkm_unit_tests)
     set(extraArgs EXTRA_INCLUDE "vtkm/cont/testing/Testing.h"
                   FUNCTION "vtkm::cont::testing::Environment env")
   else()
-    set(extraArgs EXTRA_INCLUDE "vtkm/cont/Logging.h")
+    set(extraArgs)
   endif()
-
-  # Logging is turned on by default now to Warning levels
-  # To get tests to correctly output info level logs we need to set
-  # the StderrLogLevel
-  set(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "vtkm::cont::SetStderrLogLevel(vtkm::cont::LogLevel::Info);")
 
   #the creation of the test source list needs to occur before the labeling as
   #cuda. This is so that we get the correctly named entry points generated

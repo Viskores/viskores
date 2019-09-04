@@ -318,6 +318,7 @@ public:
   {
 
     vtkm::cont::InitLogging(argc, argv);
+    vtkm::cont::SetStderrLogLevel(vtkm::cont::LogLevel::Info);
 
     try
     {
