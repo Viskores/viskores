@@ -51,6 +51,9 @@ void ValidateError(const vtkm::cont::Error& error)
     VTKM_TEST_ASSERT(count > 11, "StackTrace did not recurse enough");
   }
   VTKM_TEST_ASSERT(test_equal(message, error.GetMessage()), "Message was incorrect");
+  std::string k = error.what();
+  std::cout << "what directly:" << error.what() << std::endl;
+  std::cout << "what as var: " << k << std::endl;
   VTKM_TEST_ASSERT(test_equal(message + "\n" + stackTrace, std::string(error.what())),
                    "what() was incorrect");
 }
