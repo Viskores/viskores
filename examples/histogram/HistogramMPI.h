@@ -65,16 +65,16 @@ public:
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //@{
-  /// when operating on vtkm::cont::MultiBlock, we
+  /// when operating on vtkm::cont::PartitionedDataSet, we
   /// want to do processing across ranks as well. Just adding pre/post handles
   /// for the same does the trick.
   template <typename DerivedPolicy>
-  VTKM_CONT void PreExecute(const vtkm::cont::MultiBlock& input,
+  VTKM_CONT void PreExecute(const vtkm::cont::PartitionedDataSet& input,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT void PostExecute(const vtkm::cont::MultiBlock& input,
-                             vtkm::cont::MultiBlock& output,
+  VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,
+                             vtkm::cont::PartitionedDataSet& output,
                              const vtkm::filter::PolicyBase<DerivedPolicy>&);
   //@}
 

@@ -42,7 +42,7 @@ vtkm::cont::DataSet MakePointTransformTestDataSet()
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetExplicit<> cellSet("cells");
+  vtkm::cont::CellSetExplicit<> cellSet;
   cellSet.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {
@@ -56,7 +56,7 @@ vtkm::cont::DataSet MakePointTransformTestDataSet()
   }
   cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
 
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
   return dataSet;
 }
 
@@ -74,28 +74,36 @@ void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
     .GetData()
     .CopyTo(resultArrayHandle);
 
+  vtkm::cont::ArrayHandleVirtualCoordinates outPointsArrayHandle =
+    result.GetCoordinateSystem().GetData();
+
   auto points = coords.GetData();
   VTKM_TEST_ASSERT(points.GetNumberOfValues() == resultArrayHandle.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 
-  auto pointsPortal = points.GetPortalControl();
-  auto resultsPortal = resultArrayHandle.GetPortalControl();
+  auto pointsPortal = points.GetPortalConstControl();
+  auto resultsPortal = resultArrayHandle.GetPortalConstControl();
+  auto outPointsPortal = outPointsArrayHandle.GetPortalConstControl();
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
+  {
     VTKM_TEST_ASSERT(
       test_equal(resultsPortal.Get(i), vtkm::Transform3DPoint(matrix, pointsPortal.Get(i))),
       "Wrong result for PointTransform worklet");
+    VTKM_TEST_ASSERT(
+      test_equal(outPointsPortal.Get(i), vtkm::Transform3DPoint(matrix, pointsPortal.Get(i))),
+      "Wrong result for PointTransform worklet");
+  }
 }
 
 
 void TestPointTransformTranslation(const vtkm::cont::DataSet& ds, const vtkm::Vec3f& trans)
 {
-  vtkm::filter::PointTransform<vtkm::FloatDefault> filter;
+  vtkm::filter::PointTransform filter;
 
   filter.SetOutputFieldName("translation");
-  filter.SetUseCoordinateSystemAsField(true);
   filter.SetTranslation(trans);
-  auto result = filter.Execute(ds);
+  vtkm::cont::DataSet result = filter.Execute(ds);
 
   ValidatePointTransform(
     ds.GetCoordinateSystem(), "translation", result, Transform3DTranslate(trans));
@@ -103,12 +111,11 @@ void TestPointTransformTranslation(const vtkm::cont::DataSet& ds, const vtkm::Ve
 
 void TestPointTransformScale(const vtkm::cont::DataSet& ds, const vtkm::Vec3f& scale)
 {
-  vtkm::filter::PointTransform<vtkm::FloatDefault> filter;
+  vtkm::filter::PointTransform filter;
 
   filter.SetOutputFieldName("scale");
-  filter.SetUseCoordinateSystemAsField(true);
   filter.SetScale(scale);
-  auto result = filter.Execute(ds);
+  vtkm::cont::DataSet result = filter.Execute(ds);
 
   ValidatePointTransform(ds.GetCoordinateSystem(), "scale", result, Transform3DScale(scale));
 }
@@ -117,12 +124,11 @@ void TestPointTransformRotation(const vtkm::cont::DataSet& ds,
                                 const vtkm::FloatDefault& angle,
                                 const vtkm::Vec3f& axis)
 {
-  vtkm::filter::PointTransform<vtkm::FloatDefault> filter;
+  vtkm::filter::PointTransform filter;
 
   filter.SetOutputFieldName("rotation");
-  filter.SetUseCoordinateSystemAsField(true);
   filter.SetRotation(angle, axis);
-  auto result = filter.Execute(ds);
+  vtkm::cont::DataSet result = filter.Execute(ds);
 
   ValidatePointTransform(
     ds.GetCoordinateSystem(), "rotation", result, Transform3DRotate(angle, axis));

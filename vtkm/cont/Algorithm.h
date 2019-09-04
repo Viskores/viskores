@@ -317,6 +317,19 @@ struct ScanExclusiveByKeyFunctor
   }
 };
 
+template <typename T>
+struct ScanExtendedFunctor
+{
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExtended(
+      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+    return true;
+  }
+};
+
 struct ScheduleFunctor
 {
   template <typename Device, typename... Args>
@@ -973,6 +986,42 @@ struct Algorithm
                                            vtkm::cont::ArrayHandle<U, VOut>& output)
   {
     ScanExclusiveByKey(vtkm::cont::DeviceAdapterTagAny(), keys, values, output);
+  }
+
+
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static void ScanExtended(vtkm::cont::DeviceAdapterId devId,
+                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output)
+  {
+    detail::ScanExtendedFunctor<T> functor;
+    vtkm::cont::TryExecuteOnDevice(devId, functor, input, output);
+  }
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static void ScanExtended(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output)
+  {
+    ScanExtended(vtkm::cont::DeviceAdapterTagAny(), input, output);
+  }
+
+
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static void ScanExtended(vtkm::cont::DeviceAdapterId devId,
+                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output,
+                                     BinaryFunctor binaryFunctor,
+                                     const T& initialValue)
+  {
+    detail::ScanExtendedFunctor<T> functor;
+    vtkm::cont::TryExecuteOnDevice(devId, functor, input, output, binaryFunctor, initialValue);
+  }
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static void ScanExtended(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output,
+                                     BinaryFunctor binaryFunctor,
+                                     const T& initialValue)
+  {
+    ScanExtended(vtkm::cont::DeviceAdapterTagAny(), input, output, binaryFunctor, initialValue);
   }
 
 

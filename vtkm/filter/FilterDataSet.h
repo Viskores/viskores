@@ -15,7 +15,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include <vtkm/filter/Filter.h>
 #include <vtkm/filter/PolicyBase.h>
@@ -34,12 +34,6 @@ public:
 
   VTKM_CONT
   ~FilterDataSet();
-
-  VTKM_CONT
-  void SetActiveCellSetIndex(vtkm::Id index) { this->CellSetIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCellSetIndex() const { return this->CellSetIndex; }
 
   VTKM_CONT
   void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
@@ -66,7 +60,6 @@ public:
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
 
   friend class vtkm::filter::Filter<Derived>;

@@ -27,7 +27,7 @@ constexpr vtkm::Id3 BaseLinePointDimensions{ xdim, ydim, zdim };
 constexpr vtkm::Id BaseLineNumberOfPoints = xdim * ydim * zdim;
 constexpr vtkm::Id BaseLineNumberOfCells = (xdim - 1) * (ydim - 1) * (zdim - 1);
 
-vtkm::cont::CellSetStructured<3> BaseLine{ "BaseLine" };
+vtkm::cont::CellSetStructured<3> BaseLine;
 
 void InitializeBaseLine()
 {

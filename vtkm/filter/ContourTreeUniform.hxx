@@ -84,7 +84,7 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   }
 
   // Collect sizing information from the dataset
-  const auto& dynamicCellSet = input.GetCellSet(this->GetActiveCellSetIndex());
+  const auto& dynamicCellSet = input.GetCellSet();
   vtkm::cont::CellSetStructured<2> cellSet;
   dynamicCellSet.CopyTo(cellSet);
 
@@ -97,7 +97,7 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   vtkm::worklet::ContourTreeMesh2D worklet;
   worklet.Run(field, nRows, nCols, saddlePeak);
 
-  return CreateResultFieldCell(input, saddlePeak, this->GetOutputFieldName(), dynamicCellSet);
+  return CreateResultFieldCell(input, saddlePeak, this->GetOutputFieldName());
 }
 //-----------------------------------------------------------------------------
 ContourTreeMesh3D::ContourTreeMesh3D()
@@ -121,7 +121,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
 
   // Collect sizing information from the dataset
   vtkm::cont::CellSetStructured<3> cellSet;
-  input.GetCellSet(this->GetActiveCellSetIndex()).CopyTo(cellSet);
+  input.GetCellSet().CopyTo(cellSet);
 
   vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
   vtkm::Id nRows = pointDimensions[0];

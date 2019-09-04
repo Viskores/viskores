@@ -1106,9 +1106,50 @@ struct InclusiveToExclusiveKernel : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    ValueType result = (index == 0)
+    const ValueType result = (index == 0)
       ? this->InitialValue
       : this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
+
+    this->OutPortal.Set(index, result);
+  }
+};
+
+template <typename InPortalType, typename OutPortalType, typename BinaryFunctor>
+struct InclusiveToExtendedKernel : vtkm::exec::FunctorBase
+{
+  using ValueType = typename InPortalType::ValueType;
+
+  InPortalType InPortal;
+  OutPortalType OutPortal;
+  BinaryFunctor BinaryOperator;
+  ValueType InitialValue;
+  ValueType FinalValue;
+
+  VTKM_CONT
+  InclusiveToExtendedKernel(const InPortalType& inPortal,
+                            const OutPortalType& outPortal,
+                            BinaryFunctor& binaryOperator,
+                            ValueType initialValue,
+                            ValueType finalValue)
+    : InPortal(inPortal)
+    , OutPortal(outPortal)
+    , BinaryOperator(binaryOperator)
+    , InitialValue(initialValue)
+    , FinalValue(finalValue)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  void operator()(vtkm::Id index) const
+  {
+    // The output array has one more value than the input, which holds the
+    // total sum.
+    const ValueType result =
+      (index == 0) ? this->InitialValue : (index == this->InPortal.GetNumberOfValues())
+        ? this->FinalValue
+        : this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
+
     this->OutPortal.Set(index, result);
   }
 };

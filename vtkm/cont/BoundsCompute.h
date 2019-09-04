@@ -19,19 +19,19 @@ namespace cont
 {
 
 class DataSet;
-class MultiBlock;
+class PartitionedDataSet;
 
 //@{
-/// \brief Functions to compute bounds for a dataset or multiblock
+/// \brief Functions to compute bounds for a single dataSset or partition dataset
 ///
-/// These are utility functions that compute bounds for the dataset or
-/// multiblock. When VTK-m is operating in an distributed environment, these
-/// are bounds on the local process. To get global bounds across all ranks,
-/// use `vtkm::cont::BoundsGlobalCompute` instead.
+/// These are utility functions that compute bounds for a single dataset or
+/// partitioned dataset. When VTK-m is operating in an distributed environment,
+/// these are bounds on the local process. To get global bounds across all
+/// ranks, use `vtkm::cont::BoundsGlobalCompute` instead.
 ///
 /// Note that if the provided CoordinateSystem does not exists, empty bounds
-/// are returned. Likewise, for MultiBlock, blocks without the chosen CoordinateSystem
-/// are skipped.
+/// are returned. Likewise, for PartitionedDataSet, partitions without the
+/// chosen CoordinateSystem are skipped.
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::Bounds BoundsCompute(const vtkm::cont::DataSet& dataset,
@@ -39,7 +39,7 @@ vtkm::Bounds BoundsCompute(const vtkm::cont::DataSet& dataset,
 
 VTKM_CONT_EXPORT
 VTKM_CONT
-vtkm::Bounds BoundsCompute(const vtkm::cont::MultiBlock& multiblock,
+vtkm::Bounds BoundsCompute(const vtkm::cont::PartitionedDataSet& pds,
                            vtkm::Id coordinate_system_index = 0);
 
 VTKM_CONT_EXPORT
@@ -49,7 +49,7 @@ vtkm::Bounds BoundsCompute(const vtkm::cont::DataSet& dataset,
 
 VTKM_CONT_EXPORT
 VTKM_CONT
-vtkm::Bounds BoundsCompute(const vtkm::cont::MultiBlock& multiblock,
+vtkm::Bounds BoundsCompute(const vtkm::cont::PartitionedDataSet& pds,
                            const std::string& coordinate_system_name);
 //@}
 }

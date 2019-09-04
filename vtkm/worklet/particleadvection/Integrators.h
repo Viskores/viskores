@@ -22,7 +22,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
 
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
+#include <vtkm/worklet/particleadvection/EvaluatorStatus.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm

@@ -206,61 +206,32 @@ vtkm::cont::DataSet CreateWeirdnessFromStructuredDataSet(const vtkm::cont::DataS
   for (vtkm::Id i = 0; i < numPts; i++)
     explPortal.Set(i, cp.Get(i));
 
-  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet(0);
+  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::Id> conn;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
   vtkm::cont::DataSet output;
   vtkm::cont::DataSetBuilderExplicit dsb;
 
-  using Structured2DType = vtkm::cont::CellSetStructured<2>;
-  using Structured3DType = vtkm::cont::CellSetStructured<3>;
-
-  switch (option)
+  if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
   {
-    case DataSetOption::SINGLE:
-      if (cellSet.IsType<Structured2DType>())
-      {
-        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
-        vtkm::Id2 cellDims = cells2D.GetCellDimensions();
-        MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
-        output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates", "cells");
-      }
-      else
-      {
-        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
-        vtkm::Id3 cellDims = cells3D.GetCellDimensions();
-        MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
-        output =
-          dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates", "cells");
-      }
-      break;
-
-    case DataSetOption::CURVILINEAR:
-      // In this case the cell set/connectivity is the same as the input
-      // Only the coords are no longer Uniform / Rectilinear
-      output.SetCellSet(cellSet);
-      vtkm::cont::CoordinateSystem coords(inputCoords.GetName(), explCoords);
-      output.AddCoordinateSystem(coords);
-      break;
-
-    case DataSetOption::EXPLICIT:
-    default:
-      if (cellSet.IsType<Structured2DType>())
-      {
-        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
-        vtkm::Id2 cellDims = cells2D.GetCellDimensions();
-        MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
-        output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates", "cells");
-      }
-      else
-      {
-        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
-        vtkm::Id3 cellDims = cells3D.GetCellDimensions();
-        MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
-        output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates", "cells");
-      }
-      break;
+    vtkm::cont::CellSetStructured<2> cells2D = cellSet.Cast<vtkm::cont::CellSetStructured<2>>();
+    vtkm::Id2 cellDims = cells2D.GetCellDimensions();
+    MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
+    if (createSingleType)
+      output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
+    else
+      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
+  }
+  else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
+  {
+    vtkm::cont::CellSetStructured<3> cells3D = cellSet.Cast<vtkm::cont::CellSetStructured<3>>();
+    vtkm::Id3 cellDims = cells3D.GetCellDimensions();
+    MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
+    if (createSingleType)
+      output = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
+    else
+      output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
   }
   return output;
 }
@@ -535,6 +506,15 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
   for (vtkm::Id i = 0; i < nSeeds; i++)
     VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(i) <= maxSteps,
                      "Too many steps taken in streamline");
+
+  /*
+  vtkm::cont::DataSet ds;
+  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", res.positions));
+  ds.SetCellSet(res.polyLines);
+  ds.PrintSummary(std::cout);
+  vtkm::io::writer::VTKDataSetWriter writer1("ds.vtk");
+  writer1.WriteDataSet(ds);
+  */
 }
 
 void TestParticleWorklets()

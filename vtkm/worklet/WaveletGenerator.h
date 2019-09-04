@@ -225,7 +225,7 @@ public:
     vtkm::cont::CoordinateSystem coords{ "coords", dims, origin, this->Spacing };
 
     // And cells:
-    vtkm::cont::CellSetStructured<3> cellSet{ "cells" };
+    vtkm::cont::CellSetStructured<3> cellSet;
     cellSet.SetPointDimensions(dims);
 
     // Scalars, too
@@ -234,7 +234,7 @@ public:
     // Compile the dataset:
     vtkm::cont::DataSet dataSet;
     dataSet.AddCoordinateSystem(coords);
-    dataSet.AddCellSet(cellSet);
+    dataSet.SetCellSet(cellSet);
     dataSet.AddField(field);
 
     return dataSet;

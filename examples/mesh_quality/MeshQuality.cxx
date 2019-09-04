@@ -194,7 +194,7 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   conn.push_back(7);
   conn.push_back(2);
 
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   return dataSet;
 }

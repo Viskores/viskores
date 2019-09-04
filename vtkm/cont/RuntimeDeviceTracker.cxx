@@ -170,6 +170,17 @@ void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId deviceId)
 }
 
 VTKM_CONT
+void RuntimeDeviceTracker::PrintSummary(std::ostream& out) const
+{
+  for (vtkm::Int8 i = 1; i < VTKM_MAX_DEVICE_ADAPTER_ID; ++i)
+  {
+    auto dev = vtkm::cont::make_DeviceAdapterId(i);
+    out << " - Device " << static_cast<vtkm::Int32>(i) << " (" << dev.GetName()
+        << "): Enabled=" << this->CanRunOn(dev) << "\n";
+  }
+}
+
+VTKM_CONT
 ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterId device,
                                                        RuntimeDeviceTrackerMode mode)
   : RuntimeDeviceTracker(GetRuntimeDeviceTracker().Internals, false)

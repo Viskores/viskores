@@ -189,7 +189,7 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
   for (vtkm::Id i = 0; i < numPts; i++)
     explPortal.Set(i, cp.Get(i));
 
-  vtkm::cont::DynamicCellSet cellSet = dsUniform.GetCellSet(0);
+  vtkm::cont::DynamicCellSet cellSet = dsUniform.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::Id> conn;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
@@ -201,14 +201,14 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
     vtkm::Id2 dims(numI, numJ);
     MakeExplicitCells(
       cellSet.Cast<vtkm::cont::CellSetStructured<2>>(), dims, numIndices, shapes, conn);
-    ds = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates", "cells");
+    ds = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
   {
     vtkm::Id3 dims(numI, numJ, numK);
     MakeExplicitCells(
       cellSet.Cast<vtkm::cont::CellSetStructured<3>>(), dims, numIndices, shapes, conn);
-    ds = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates", "cells");
+    ds = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
   }
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers);
@@ -265,11 +265,10 @@ void TestGhostCellRemove()
               static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST));
 
           auto output = ghostCellRemoval.Execute(ds, vtkm::filter::GhostCellRemovePolicy());
-          vtkm::Id numCells = output.GetCellSet(0).GetNumberOfCells();
+          vtkm::Id numCells = output.GetNumberOfCells();
 
           //Validate the output.
-          VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1,
-                           "Wrong number of cell sets in output");
+
           vtkm::Id numCellsReq = (nx - 2 * layer) * (ny - 2 * layer);
           if (nz != 0)
             numCellsReq *= (nz - 2 * layer);
@@ -279,18 +278,18 @@ void TestGhostCellRemove()
           {
             if (nz == 0)
             {
-              VTKM_TEST_ASSERT(output.GetCellSet(0).IsSameType(vtkm::cont::CellSetStructured<2>()),
+              VTKM_TEST_ASSERT(output.GetCellSet().IsSameType(vtkm::cont::CellSetStructured<2>()),
                                "Wrong cell type for explicit conversion");
             }
             else if (nz > 0)
             {
-              VTKM_TEST_ASSERT(output.GetCellSet(0).IsSameType(vtkm::cont::CellSetStructured<3>()),
+              VTKM_TEST_ASSERT(output.GetCellSet().IsSameType(vtkm::cont::CellSetStructured<3>()),
                                "Wrong cell type for explicit conversion");
             }
           }
           else
           {
-            VTKM_TEST_ASSERT(output.GetCellSet(0).IsType<vtkm::cont::CellSetExplicit<>>(),
+            VTKM_TEST_ASSERT(output.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                              "Wrong cell type for explicit conversion");
           }
         }
@@ -307,7 +306,7 @@ void TestGhostCellRemove()
           vtkm::filter::GhostCellRemove ghostCellRemoval;
           ghostCellRemoval.RemoveGhostField();
           auto output = ghostCellRemoval.Execute(ds, vtkm::filter::GhostCellRemovePolicy());
-          VTKM_TEST_ASSERT(output.GetCellSet(0).IsType<vtkm::cont::CellSetExplicit<>>(),
+          VTKM_TEST_ASSERT(output.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                            "Wrong cell type for explicit conversion");
         }
       }

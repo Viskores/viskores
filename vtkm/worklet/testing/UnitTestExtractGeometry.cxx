@@ -29,7 +29,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Cells to extract
     const int nCells = 2;
@@ -61,7 +61,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Implicit function
     vtkm::Vec3f minPoint(0.5f, 0.0f, 0.0f);
@@ -104,7 +104,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Cells to extract
     const int nCells = 5;
@@ -137,7 +137,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Cells to extract
     const int nCells = 5;
@@ -169,7 +169,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Implicit function
     vtkm::Vec3f minPoint(1.0f, 1.0f, 1.0f);
@@ -209,7 +209,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Implicit function
     vtkm::Vec3f center(2.f, 2.f, 2.f);

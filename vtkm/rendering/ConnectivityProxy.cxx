@@ -249,7 +249,7 @@ ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DynamicCellSet& cellset,
 {
   vtkm::cont::DataSet dataset;
 
-  dataset.AddCellSet(cellset);
+  dataset.SetCellSet(cellset);
   dataset.AddCoordinateSystem(coords);
   dataset.AddField(scalarField);
 

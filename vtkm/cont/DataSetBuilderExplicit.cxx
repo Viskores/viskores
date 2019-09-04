@@ -22,11 +22,9 @@ DataSetBuilderExplicitIterative::DataSetBuilderExplicitIterative()
 
 
 VTKM_CONT
-void DataSetBuilderExplicitIterative::Begin(const std::string& coordName,
-                                            const std::string& cellName)
+void DataSetBuilderExplicitIterative::Begin(const std::string& coordName)
 {
   this->coordNm = coordName;
-  this->cellNm = cellName;
   this->points.resize(0);
   this->shapes.resize(0);
   this->numIdx.resize(0);
@@ -38,7 +36,7 @@ VTKM_CONT
 vtkm::cont::DataSet DataSetBuilderExplicitIterative::Create()
 {
   DataSetBuilderExplicit dsb;
-  return dsb.Create(points, shapes, numIdx, connectivity, coordNm, cellNm);
+  return dsb.Create(points, shapes, numIdx, connectivity, coordNm);
 }
 
 VTKM_CONT

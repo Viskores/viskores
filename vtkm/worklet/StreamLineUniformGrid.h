@@ -327,7 +327,7 @@ public:
 
     // Get information from input dataset
     vtkm::cont::CellSetStructured<3> inCellSet;
-    InDataSet.GetCellSet(0).CopyTo(inCellSet);
+    InDataSet.GetCellSet().CopyTo(inCellSet);
     vtkm::Id3 vdims = inCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
 
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
@@ -396,7 +396,7 @@ public:
     vtkm::cont::CellSetExplicit<> outCellSet;
 
     outCellSet.Fill(coordinates.GetNumberOfValues(), cellTypes, numIndices, connectivity);
-    OutDataSet.AddCellSet(outCellSet);
+    OutDataSet.SetCellSet(outCellSet);
     OutDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
     return OutDataSet;

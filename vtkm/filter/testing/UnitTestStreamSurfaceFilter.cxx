@@ -61,8 +61,6 @@ void TestStreamSurface()
   auto output = streamSrf.Execute(ds);
 
   //Validate the result is correct.
-  VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
 

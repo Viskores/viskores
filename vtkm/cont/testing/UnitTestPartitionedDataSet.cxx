@@ -18,7 +18,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/FieldRangeCompute.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -28,26 +28,26 @@
 #include <vtkm/thirdparty/diy/diy.h>
 
 void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet);
-static void MultiBlockTest()
+static void PartitionedDataSetTest()
 {
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::MultiBlock multiblock;
+  vtkm::cont::PartitionedDataSet pds;
 
   vtkm::cont::DataSet TDset1 = testDataSet.Make2DUniformDataSet0();
   vtkm::cont::DataSet TDset2 = testDataSet.Make3DUniformDataSet0();
 
-  multiblock.AddBlock(TDset1);
-  multiblock.AddBlock(TDset2);
+  pds.AppendPartition(TDset1);
+  pds.AppendPartition(TDset2);
 
-  VTKM_TEST_ASSERT(multiblock.GetNumberOfBlocks() == 2, "Incorrect number of blocks");
+  VTKM_TEST_ASSERT(pds.GetNumberOfPartitions() == 2, "Incorrect number of partitions");
 
-  vtkm::cont::DataSet TestDSet = multiblock.GetBlock(0);
+  vtkm::cont::DataSet TestDSet = pds.GetPartition(0);
   VTKM_TEST_ASSERT(TDset1.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
                    "Incorrect number of fields");
   VTKM_TEST_ASSERT(TDset1.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
                    "Incorrect number of coordinate systems");
 
-  TestDSet = multiblock.GetBlock(1);
+  TestDSet = pds.GetPartition(1);
   VTKM_TEST_ASSERT(TDset2.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
                    "Incorrect number of fields");
   VTKM_TEST_ASSERT(TDset2.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
@@ -59,11 +59,10 @@ static void MultiBlockTest()
   GlobalBound.Include(Set1Bounds);
   GlobalBound.Include(Set2Bounds);
 
-  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(multiblock) == GlobalBound,
-                   "Global bounds info incorrect");
-  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(multiblock.GetBlock(0)) == Set1Bounds,
+  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(pds) == GlobalBound, "Global bounds info incorrect");
+  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(pds.GetPartition(0)) == Set1Bounds,
                    "Local bounds info incorrect");
-  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(multiblock.GetBlock(1)) == Set2Bounds,
+  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(pds.GetPartition(1)) == Set2Bounds,
                    "Local bounds info incorrect");
 
   vtkm::Range Set1Field1Range;
@@ -84,59 +83,59 @@ static void MultiBlockTest()
   Field2GlobeRange.Include(Set2Field2Range);
 
   using vtkm::cont::FieldRangeCompute;
-  VTKM_TEST_ASSERT(FieldRangeCompute(multiblock, "pointvar").GetPortalConstControl().Get(0) ==
+  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "pointvar").GetPortalConstControl().Get(0) ==
                      Field1GlobeRange,
                    "Local field value range info incorrect");
-  VTKM_TEST_ASSERT(FieldRangeCompute(multiblock, "cellvar").GetPortalConstControl().Get(0) ==
+  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "cellvar").GetPortalConstControl().Get(0) ==
                      Field2GlobeRange,
                    "Local field value range info incorrect");
 
   vtkm::Range SourceRange; //test the validity of member function GetField(FieldName, BlockId)
-  multiblock.GetField("cellvar", 0).GetRange(&SourceRange);
+  pds.GetField("cellvar", 0).GetRange(&SourceRange);
   vtkm::Range TestRange;
-  multiblock.GetBlock(0).GetField("cellvar").GetRange(&TestRange);
+  pds.GetPartition(0).GetField("cellvar").GetRange(&TestRange);
   VTKM_TEST_ASSERT(TestRange == SourceRange, "Local field value info incorrect");
 
-  vtkm::cont::MultiBlock testblocks1;
-  std::vector<vtkm::cont::DataSet> blocks = multiblock.GetBlocks();
-  testblocks1.AddBlocks(blocks);
-  VTKM_TEST_ASSERT(multiblock.GetNumberOfBlocks() == testblocks1.GetNumberOfBlocks(),
-                   "inconsistent number of blocks");
+  vtkm::cont::PartitionedDataSet testblocks1;
+  std::vector<vtkm::cont::DataSet> partitions = pds.GetPartitions();
+  testblocks1.AppendPartitions(partitions);
+  VTKM_TEST_ASSERT(pds.GetNumberOfPartitions() == testblocks1.GetNumberOfPartitions(),
+                   "inconsistent number of partitions");
 
-  vtkm::cont::MultiBlock testblocks2(2);
-  testblocks2.InsertBlock(0, TDset1);
-  testblocks2.InsertBlock(1, TDset2);
+  vtkm::cont::PartitionedDataSet testblocks2(2);
+  testblocks2.InsertPartition(0, TDset1);
+  testblocks2.InsertPartition(1, TDset2);
 
-  TestDSet = testblocks2.GetBlock(0);
+  TestDSet = testblocks2.GetPartition(0);
   DataSet_Compare(TDset1, TestDSet);
 
-  TestDSet = testblocks2.GetBlock(1);
+  TestDSet = testblocks2.GetPartition(1);
   DataSet_Compare(TDset2, TestDSet);
 
-  testblocks2.ReplaceBlock(0, TDset2);
-  testblocks2.ReplaceBlock(1, TDset1);
+  testblocks2.ReplacePartition(0, TDset2);
+  testblocks2.ReplacePartition(1, TDset1);
 
-  TestDSet = testblocks2.GetBlock(0);
+  TestDSet = testblocks2.GetPartition(0);
   DataSet_Compare(TDset2, TestDSet);
 
-  TestDSet = testblocks2.GetBlock(1);
+  TestDSet = testblocks2.GetPartition(1);
   DataSet_Compare(TDset1, TestDSet);
 }
 
-void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet)
+void DataSet_Compare(vtkm::cont::DataSet& leftDataSet, vtkm::cont::DataSet& rightDataSet)
 {
-  for (vtkm::Id j = 0; j < LeftDateSet.GetNumberOfFields(); j++)
+  for (vtkm::Id j = 0; j < leftDataSet.GetNumberOfFields(); j++)
   {
-    vtkm::cont::ArrayHandle<vtkm::Float32> LDataArray;
-    LeftDateSet.GetField(j).GetData().CopyTo(LDataArray);
-    vtkm::cont::ArrayHandle<vtkm::Float32> RDataArray;
-    RightDateSet.GetField(j).GetData().CopyTo(RDataArray);
-    VTKM_TEST_ASSERT(LDataArray == RDataArray, "field value info incorrect");
+    vtkm::cont::ArrayHandle<vtkm::Float32> lDataArray;
+    leftDataSet.GetField(j).GetData().CopyTo(lDataArray);
+    vtkm::cont::ArrayHandle<vtkm::Float32> rDataArray;
+    rightDataSet.GetField(j).GetData().CopyTo(rDataArray);
+    VTKM_TEST_ASSERT(lDataArray == rDataArray, "field value info incorrect");
   }
   return;
 }
 
-int UnitTestMultiBlock(int argc, char* argv[])
+int UnitTestPartitionedDataSet(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(MultiBlockTest, argc, argv);
+  return vtkm::cont::testing::Testing::Run(PartitionedDataSetTest, argc, argv);
 }

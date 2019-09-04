@@ -76,7 +76,7 @@ public:
     vtkm::cont::ArrayCopy(pointIds, this->ValidPointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    vtkm::cont::CellSetSingleType<> outCellSet;
     outCellSet.Fill(
       cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, this->ValidPointIds);
 
@@ -103,7 +103,7 @@ public:
     vtkm::cont::Algorithm::CopyIf(indices, passFlags, this->ValidPointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    vtkm::cont::CellSetSingleType<> outCellSet;
     outCellSet.Fill(
       cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, this->ValidPointIds);
 

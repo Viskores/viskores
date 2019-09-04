@@ -43,7 +43,7 @@ set(headers
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayRangeCompute.h
-  AssignerMultiBlock.h
+  AssignerPartitionedDataSet.h
   AtomicArray.h
   BitField.h
   BoundsCompute.h
@@ -93,7 +93,7 @@ set(headers
   Initialize.h
   Invoker.h
   Logging.h
-  MultiBlock.h
+  PartitionedDataSet.h
   PointLocator.h
   PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
@@ -152,7 +152,7 @@ set(sources
   set(device_sources
   ArrayHandleVirtual.cxx
   ArrayRangeCompute.cxx
-  AssignerMultiBlock.cxx
+  AssignerPartitionedDataSet.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
   CellLocator.cxx
@@ -175,7 +175,7 @@ set(sources
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
-  MultiBlock.cxx
+  PartitionedDataSet.cxx
   PointLocator.cxx
   PointLocatorUniformGrid.cxx
   RuntimeDeviceInformation.cxx

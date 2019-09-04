@@ -30,9 +30,8 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
-  const vtkm::cont::CoordinateSystem& coordinates =
-    input.GetCoordinateSystem(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::CoordinateSystem& coordinates = input.GetCoordinateSystem();
 
   auto cellset = this->Worklet.Run(vtkm::filter::ApplyPolicyStructured(cells, policy),
                                    this->VOI,
@@ -44,7 +43,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
   vtkm::cont::CoordinateSystem outputCoordinates(coordinates.GetName(), coords);
 
   vtkm::cont::DataSet output;
-  output.AddCellSet(vtkm::cont::DynamicCellSet(cellset));
+  output.SetCellSet(vtkm::cont::DynamicCellSet(cellset));
   output.AddCoordinateSystem(outputCoordinates);
   return output;
 }

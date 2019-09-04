@@ -27,7 +27,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
 
     // RangeId3 and subsample
     vtkm::RangeId3 range(1, 4, 1, 4, 0, 1);
@@ -52,7 +52,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::worklet::ExtractStructured worklet;
     vtkm::worklet::ExtractStructured::DynamicCellSetStructured outCellSet;
@@ -118,7 +118,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::worklet::ExtractStructured worklet;
     vtkm::worklet::ExtractStructured::DynamicCellSetStructured outCellSet;
@@ -169,7 +169,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DRectilinearDataSet0();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
 
     // RangeId3 and subsample
     vtkm::RangeId3 range(0, 2, 0, 2, 0, 1);
@@ -195,7 +195,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DRectilinearDataSet0();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
 
     // RangeId3 and subsample
     vtkm::RangeId3 range(0, 2, 0, 2, 0, 2);

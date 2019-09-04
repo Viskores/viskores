@@ -195,7 +195,7 @@ public:
 
     vtkm::cont::
       CellSetExplicit<ShapeStorage, NumIndicesStorage, NewConnectivityStorage, OffsetsStorage>
-        outCellSet(inCellSet.GetName());
+        outCellSet;
     outCellSet.Fill(numberOfPoints,
                     inCellSet.GetShapesArray(VisitTopology(), IncidentTopology()),
                     inCellSet.GetNumIndicesArray(VisitTopology(), IncidentTopology()),
