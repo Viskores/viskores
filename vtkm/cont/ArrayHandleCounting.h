@@ -81,12 +81,6 @@ public:
     return ValueType(this->Start + this->Step * ValueType(static_cast<ComponentType>(index)));
   }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
-  {
-    VTKM_ASSERT(false && "Cannot write to read-only counting array.");
-  }
-
 private:
   ValueType Start;
   ValueType Step;
@@ -95,11 +89,10 @@ private:
 
 /// A convenience class that provides a typedef to the appropriate tag for
 /// a counting storage.
-template <typename ConstantValueType>
+template <typename ValueType>
 struct ArrayHandleCountingTraits
 {
-  using Tag =
-    vtkm::cont::StorageTagImplicit<vtkm::cont::internal::ArrayPortalCounting<ConstantValueType>>;
+  using Tag = vtkm::cont::StorageTagImplicit<vtkm::cont::internal::ArrayPortalCounting<ValueType>>;
 };
 
 } // namespace internal
