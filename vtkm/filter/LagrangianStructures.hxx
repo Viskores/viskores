@@ -49,7 +49,7 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
   using Integrator = vtkm::worklet::particleadvection::RK4Integrator<GridEvaluator>;
 
-  Scalar stepSize = this->GetStepSize();
+  vtkm::FloatDefault stepSize = this->GetStepSize();
   vtkm::Id numberOfSteps = this->GetNumberOfSteps();
 
   vtkm::cont::CoordinateSystem coordinates = input.GetCoordinateSystem();
@@ -60,16 +60,16 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   {
     vtkm::Id3 lcsGridDims = this->GetAuxiliaryGridDimensions();
     vtkm::Bounds inputBounds = coordinates.GetBounds();
-    Vector origin(static_cast<Scalar>(inputBounds.X.Min),
-                  static_cast<Scalar>(inputBounds.Y.Min),
-                  static_cast<Scalar>(inputBounds.Z.Min));
-    Vector spacing;
-    spacing[0] =
-      static_cast<Scalar>(inputBounds.X.Length()) / static_cast<Scalar>(lcsGridDims[0] - 1);
-    spacing[1] =
-      static_cast<Scalar>(inputBounds.Y.Length()) / static_cast<Scalar>(lcsGridDims[1] - 1);
-    spacing[2] =
-      static_cast<Scalar>(inputBounds.Z.Length()) / static_cast<Scalar>(lcsGridDims[2] - 1);
+    vtkm::Vec3f origin(static_cast<vtkm::FloatDefault>(inputBounds.X.Min),
+                       static_cast<vtkm::FloatDefault>(inputBounds.Y.Min),
+                       static_cast<vtkm::FloatDefault>(inputBounds.Z.Min));
+    vtkm::Vec3f spacing;
+    spacing[0] = static_cast<vtkm::FloatDefault>(inputBounds.X.Length()) /
+      static_cast<vtkm::FloatDefault>(lcsGridDims[0] - 1);
+    spacing[1] = static_cast<vtkm::FloatDefault>(inputBounds.Y.Length()) /
+      static_cast<vtkm::FloatDefault>(lcsGridDims[1] - 1);
+    spacing[2] = static_cast<vtkm::FloatDefault>(inputBounds.Z.Length()) /
+      static_cast<vtkm::FloatDefault>(lcsGridDims[2] - 1);
     vtkm::cont::DataSetBuilderUniform uniformDatasetBuilder;
     lcsInput = uniformDatasetBuilder.Create(lcsGridDims, origin, spacing);
   }
@@ -82,7 +82,7 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
         "Provided data is not structured, provide parameters for an auxiliary grid.");
     lcsInput = input;
   }
-  vtkm::cont::ArrayHandle<Vector> lcsInputPoints, lcsOutputPoints;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> lcsInputPoints, lcsOutputPoints;
   vtkm::cont::ArrayCopy(lcsInput.GetCoordinateSystem().GetData(), lcsInputPoints);
   if (this->GetUseFlowMapOutput())
   {
@@ -99,13 +99,13 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
     Integrator integrator(evaluator, stepSize);
     vtkm::worklet::ParticleAdvection particles;
     vtkm::worklet::ParticleAdvectionResult advectionResult;
-    vtkm::cont::ArrayHandle<Vector> advectionPoints;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> advectionPoints;
     vtkm::cont::ArrayCopy(lcsInputPoints, advectionPoints);
     advectionResult = particles.Run(integrator, advectionPoints, numberOfSteps);
     lcsOutputPoints = advectionResult.positions;
   }
   // FTLE output field
-  vtkm::cont::ArrayHandle<Scalar> outputField;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputField;
   vtkm::FloatDefault advectionTime = this->GetAdvectionTime();
 
   vtkm::cont::DynamicCellSet lcsCellSet = lcsInput.GetCellSet();

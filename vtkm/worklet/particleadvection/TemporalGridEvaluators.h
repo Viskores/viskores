@@ -82,7 +82,7 @@ public:
     if (eval != EvaluatorStatus::SUCCESS)
       return eval;
     // LERP between the two values of calculated fields to obtain the new value
-    ScalarType proportion = (time - this->TimeOne) / this->TimeDiff;
+    vtkm::FloatDefault proportion = (time - this->TimeOne) / this->TimeDiff;
     out = vtkm::Lerp(one, two, proportion);
     return EvaluatorStatus::SUCCESS;
   }

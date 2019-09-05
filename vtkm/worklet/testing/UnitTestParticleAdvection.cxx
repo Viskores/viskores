@@ -395,7 +395,7 @@ void ValidateIntegratorForBoundary(const vtkm::Vec<ScalarType, 3>& vector,
 
 void TestEvaluators()
 {
-  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
+  using ScalarType = vtkm::FloatDefault;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>;
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
@@ -517,7 +517,7 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
 
 void TestParticleWorklets()
 {
-  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
+  using ScalarType = vtkm::FloatDefault;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>;
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
@@ -602,7 +602,7 @@ void TestParticleWorklets()
 
 void TestParticleStatus()
 {
-  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
+  using ScalarType = vtkm::FloatDefault;
 
   vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
   const vtkm::Id3 dims(5, 5, 5);

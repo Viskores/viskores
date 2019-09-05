@@ -69,7 +69,7 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
 
   GridEvalType eval(
     coords, cells, field, this->PreviousTime, coords2, cells2, field2, this->NextTime);
-  RK4Type rk4(eval, static_cast<vtkm::worklet::particleadvection::ScalarType>(this->StepSize));
+  RK4Type rk4(eval, this->StepSize);
 
   vtkm::worklet::Streamline streamline;
   vtkm::worklet::StreamlineResult res;

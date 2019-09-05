@@ -34,7 +34,7 @@ public:
   StreamSurface();
 
   VTKM_CONT
-  void SetStepSize(vtkm::worklet::particleadvection::ScalarType s) { this->StepSize = s; }
+  void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
 
   VTKM_CONT
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
@@ -60,7 +60,7 @@ public:
 private:
   vtkm::Id NumberOfSteps;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
-  vtkm::worklet::particleadvection::ScalarType StepSize;
+  vtkm::FloatDefault StepSize;
   vtkm::worklet::StreamSurface Worklet;
 };
 }
