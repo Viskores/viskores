@@ -77,34 +77,35 @@ struct IsInValidArrayHandle
 namespace detail
 {
 
-template <typename ArrayHandle>
-struct IsWritableArrayHandleImpl
+template <typename PortalType>
+struct IsWritableArrayPortalImpl
 {
 private:
   template <typename U,
-            typename S = decltype(std::declval<U>().Set(vtkm::Id{},
-                                                        std::declval<typename U::ValueType>()))>
+            typename VT = typename U::ValueType,
+            typename S = decltype(std::declval<U>().Set(0, std::declval<VT>()))>
   static std::true_type hasSet(int);
+
   template <typename U>
   static std::false_type hasSet(...);
 
-  using PortalType = typename ArrayHandle::PortalControl;
-
 public:
   using type = decltype(hasSet<PortalType>(0));
-  static constexpr bool value = type::value;
 };
-}
 
-/// Checks to see if the ArrayHandle allows
-/// writing, as some ArrayHandles (Implicit) don't support writing.
-/// This check is compatible with the C++11 type_traits.
-/// It contains a typedef named type that is either
-/// std::true_type or std::false_type.
-/// Both of these have a typedef named value with the respective boolean value.
-///
+} // namespace detail
+
+/// Checks to see if the ArrayHandle or ArrayPortal allows writing, as some
+/// ArrayHandles (Implicit) don't support writing. These will be defined as
+/// either std::true_type or std::false_type.
+/// @{
+template <typename PortalType>
+using IsWritableArrayPortal = typename detail::IsWritableArrayPortalImpl<PortalType>::type;
+
 template <typename ArrayHandle>
-using IsWritableArrayHandle = typename detail::IsWritableArrayHandleImpl<ArrayHandle>::type;
+using IsWritableArrayHandle =
+  IsWritableArrayPortal<typename std::decay<ArrayHandle>::type::PortalControl>;
+/// @}
 
 /// Checks to see if the given object is an array handle. This check is
 /// compatible with C++11 type_traits. It a typedef named \c type that is
