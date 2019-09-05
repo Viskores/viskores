@@ -123,8 +123,6 @@ struct CountSetBitsFunctor
 
 struct FillFunctor
 {
-  vtkm::Id PopCount{ 0 };
-
   template <typename Device, typename... Args>
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
