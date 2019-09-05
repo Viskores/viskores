@@ -532,21 +532,21 @@ public:
   void Allocate(vtkm::Id numValues)
   {
     VTKM_ASSERT(this->Valid);
-    return ForEachArray::Allocate(this->Arrays, numValues);
+    ForEachArray::Allocate(this->Arrays, numValues);
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id numValues)
   {
     VTKM_ASSERT(this->Valid);
-    return ForEachArray::Shrink(this->Arrays, numValues);
+    ForEachArray::Shrink(this->Arrays, numValues);
   }
 
   VTKM_CONT
   void ReleaseResources()
   {
     VTKM_ASSERT(this->Valid);
-    return ForEachArray::ReleaseResources(this->Arrays);
+    ForEachArray::ReleaseResources(this->Arrays);
   }
 
   VTKM_CONT
