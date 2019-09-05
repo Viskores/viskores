@@ -58,7 +58,6 @@ public:
   VTKM_CONT
   Field() = default;
 
-  /// constructors for points / whole mesh
   VTKM_CONT
   Field(std::string name, Association association, const vtkm::cont::VariantArrayHandle& data);
 
@@ -67,22 +66,6 @@ public:
                   Association association,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
     : Field(name, association, vtkm::cont::VariantArrayHandle{ data })
-  {
-  }
-
-  /// constructors for cell set associations
-  VTKM_CONT
-  Field(std::string name,
-        Association association,
-        const std::string& cellSetName,
-        const vtkm::cont::VariantArrayHandle& data);
-
-  template <typename T, typename Storage>
-  VTKM_CONT Field(std::string name,
-                  Association association,
-                  const std::string& cellSetName,
-                  const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, cellSetName, vtkm::cont::VariantArrayHandle{ data })
   {
   }
 
@@ -96,7 +79,6 @@ public:
 
   VTKM_CONT const std::string& GetName() const { return this->Name; }
   VTKM_CONT Association GetAssociation() const { return this->FieldAssociation; }
-  VTKM_CONT std::string GetAssocCellSet() const { return this->AssocCellSetName; }
   const vtkm::cont::VariantArrayHandle& GetData() const;
   vtkm::cont::VariantArrayHandle& GetData();
 
@@ -161,8 +143,6 @@ private:
   std::string Name; ///< name of field
 
   Association FieldAssociation = Association::ANY;
-  std::string AssocCellSetName; ///< only populate if assoc is cells
-
   vtkm::cont::VariantArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag = true;
@@ -211,49 +191,7 @@ vtkm::cont::Field make_Field(std::string name,
   return vtkm::cont::Field(name, association, vtkm::cont::make_ArrayHandle(data, copy));
 }
 
-template <typename T>
-vtkm::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             const std::string& cellSetName,
-                             const T* data,
-                             vtkm::Id size,
-                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
-{
-  return vtkm::cont::Field(
-    name, association, cellSetName, vtkm::cont::make_ArrayHandle(data, size, copy));
-}
-
-template <typename T>
-vtkm::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             const std::string& cellSetName,
-                             const std::vector<T>& data,
-                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
-{
-  return vtkm::cont::Field(
-    name, association, cellSetName, vtkm::cont::make_ArrayHandle(data, copy));
-}
-
 //@}
-
-/// Convenience functions to build a point or cell field from vtkm::cont::ArrayHandle
-/// If \c association is CELL_SET it will
-template <typename T, typename S>
-vtkm::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             const std::string& cellSetName,
-                             const vtkm::cont::ArrayHandle<T, S>& data)
-{
-  if (association == Field::Association::CELL_SET)
-  {
-    return vtkm::cont::Field(name, association, cellSetName, data);
-  }
-  else
-  {
-    return vtkm::cont::Field(name, association, data);
-  }
-}
-
 
 /// Convenience function to build point fields from vtkm::cont::ArrayHandle
 template <typename T, typename S>
@@ -271,20 +209,17 @@ inline vtkm::cont::Field make_FieldPoint(std::string name,
 
 /// Convenience function to build cell fields from vtkm::cont::ArrayHandle
 template <typename T, typename S>
-vtkm::cont::Field make_FieldCell(std::string name,
-                                 const std::string& cellSetName,
-                                 const vtkm::cont::ArrayHandle<T, S>& data)
+vtkm::cont::Field make_FieldCell(std::string name, const vtkm::cont::ArrayHandle<T, S>& data)
 {
-  return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, cellSetName, data);
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, data);
 }
 
 
 /// Convenience function to build cell fields from vtkm::cont::VariantArrayHandle
 inline vtkm::cont::Field make_FieldCell(std::string name,
-                                        const std::string& cellSetName,
                                         const vtkm::cont::VariantArrayHandle& data)
 {
-  return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, cellSetName, data);
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, data);
 }
 
 } // namespace cont
@@ -343,10 +278,6 @@ public:
 
     vtkmdiy::save(bb, field.GetName());
     vtkmdiy::save(bb, static_cast<int>(field.GetAssociation()));
-    if (field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
-    {
-      vtkmdiy::save(bb, field.GetAssocCellSet());
-    }
     vtkmdiy::save(bb, field.GetData().ResetTypes(TypeList{}));
   }
 
@@ -361,19 +292,8 @@ public:
 
     auto assoc = static_cast<vtkm::cont::Field::Association>(assocVal);
     vtkm::cont::VariantArrayHandleBase<TypeList> data;
-    if (assoc == vtkm::cont::Field::Association::CELL_SET)
-    {
-      std::string assocCellSetName;
-      vtkmdiy::load(bb, assocCellSetName);
-      vtkmdiy::load(bb, data);
-      field =
-        vtkm::cont::Field(name, assoc, assocCellSetName, vtkm::cont::VariantArrayHandle(data));
-    }
-    else
-    {
-      vtkmdiy::load(bb, data);
-      field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
-    }
+    vtkmdiy::load(bb, data);
+    field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
   }
 };
 

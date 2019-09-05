@@ -19,6 +19,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::ScheduleTask(
   vtkm::exec::serial::internal::TaskTiling1D& functor,
   vtkm::Id size)
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];
   errorString[0] = '\0';
@@ -44,6 +46,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::ScheduleTask(
   vtkm::exec::serial::internal::TaskTiling3D& functor,
   vtkm::Id3 size)
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];
   errorString[0] = '\0';

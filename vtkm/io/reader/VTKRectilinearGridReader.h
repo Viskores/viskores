@@ -41,8 +41,7 @@ private:
     this->DataFile->Stream >> tag;
     if (tag == "FIELD")
     {
-      std::string name;
-      this->ReadFields(name);
+      this->ReadGlobalFields();
       this->DataFile->Stream >> tag;
     }
 
@@ -62,17 +61,20 @@ private:
     this->DataFile->Stream >> tag >> numPoints[0] >> dataType >> std::ws;
     if (tag != "X_COORDINATES")
       throw vtkm::io::ErrorIO("X_COORDINATES tag not found");
-    this->DoReadArrayVariant(readDataType, numPoints[0], 1, X);
+    X =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, readDataType, numPoints[0], 1);
 
     this->DataFile->Stream >> tag >> numPoints[1] >> dataType >> std::ws;
     if (tag != "Y_COORDINATES")
       throw vtkm::io::ErrorIO("Y_COORDINATES tag not found");
-    this->DoReadArrayVariant(readDataType, numPoints[1], 1, Y);
+    Y =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, readDataType, numPoints[1], 1);
 
     this->DataFile->Stream >> tag >> numPoints[2] >> dataType >> std::ws;
     if (tag != "Z_COORDINATES")
       throw vtkm::io::ErrorIO("Z_COORDINATES tag not found");
-    this->DoReadArrayVariant(readDataType, numPoints[2], 1, Z);
+    Z =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, readDataType, numPoints[2], 1);
 
     if (dim != vtkm::Id3(static_cast<vtkm::Id>(numPoints[0]),
                          static_cast<vtkm::Id>(numPoints[1]),
@@ -92,7 +94,7 @@ private:
     vtkm::cont::CoordinateSystem coordSys("coordinates", coords);
     this->DataSet.AddCoordinateSystem(coordSys);
 
-    this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
+    this->DataSet.SetCellSet(internal::CreateCellSetStructured(dim));
 
     // Read points and cell attributes
     this->ReadAttributes();

@@ -10,6 +10,7 @@
 #ifndef vtkm_m_worklet_Threshold_h
 #define vtkm_m_worklet_Threshold_h
 
+#include <vtkm/worklet/CellDeepCopy.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -143,7 +144,7 @@ public:
     vtkm::cont::Algorithm::CopyIf(
       vtkm::cont::ArrayHandleIndex(passFlags.GetNumberOfValues()), passFlags, this->ValidCellIds);
 
-    return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
+    return OutputType(this->ValidCellIds, cellSet);
   }
 
   template <typename FieldArrayType, typename UnaryPredicate>
@@ -171,7 +172,9 @@ public:
     template <typename CellSetType>
     void operator()(const CellSetType& cellSet) const
     {
-      this->Output = this->Worklet.Run(cellSet, this->Field, this->FieldType, this->Predicate);
+      // Copy output to an explicit grid so that other units can guess what this is.
+      this->Output = vtkm::worklet::CellDeepCopy::Run(
+        this->Worklet.Run(cellSet, this->Field, this->FieldType, this->Predicate));
     }
   };
 

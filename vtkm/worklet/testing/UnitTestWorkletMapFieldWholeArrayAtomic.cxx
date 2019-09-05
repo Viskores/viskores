@@ -46,7 +46,8 @@ struct DoTestAtomicArrayWorklet
   {
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), inOutArray);
+    dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
+                      inOutArray.ResetTypes<vtkm::cont::AtomicArrayTypeListTag>());
   }
 
   template <typename T>

@@ -40,9 +40,8 @@ static void TwoDimRectilinearTest()
   vtkm::cont::DataSet dataSet = testDataSet.Make2DRectilinearDataSet0();
 
   vtkm::cont::CellSetStructured<2> cellSet;
-  dataSet.GetCellSet(0).CopyTo(cellSet);
+  dataSet.GetCellSet().CopyTo(cellSet);
 
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1, "Incorrect number of cell sets");
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
                    "Incorrect number of coordinate systems");
@@ -123,9 +122,7 @@ static void ThreeDimRectilinearTest()
   vtkm::cont::DataSet dataSet = testDataSet.Make3DRectilinearDataSet0();
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  dataSet.GetCellSet(0).CopyTo(cellSet);
-
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1, "Incorrect number of cell sets");
+  dataSet.GetCellSet().CopyTo(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
 

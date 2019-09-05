@@ -143,7 +143,7 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // extract the input cell set
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   // field to threshold on must be a point field
   if (fieldMeta.IsPointField() == false)
@@ -181,7 +181,7 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
 
   // create the output dataset
   vtkm::cont::DataSet output;
-  output.AddCellSet(outCellSet);
+  output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
   // compact the unused points in the output dataset

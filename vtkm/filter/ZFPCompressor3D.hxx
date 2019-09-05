@@ -47,28 +47,15 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor3D::DoExecute(
   const vtkm::filter::FieldMetadata&,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  // Check the fields of the dataset to see what kinds of fields are present so
-  // we can free the mapping arrays that won't be needed. A point field must
-  // exist for this algorithm, so just check cells.
-  const vtkm::Id numFields = input.GetNumberOfFields();
-  bool hasCellFields = false;
-  for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
-  {
-    auto f = input.GetField(fieldIdx);
-    if (f.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
-    {
-      hasCellFields = true;
-    }
-  }
   vtkm::cont::CellSetStructured<3> cellSet;
-  input.GetCellSet(this->GetActiveCoordinateSystemIndex()).CopyTo(cellSet);
+  input.GetCellSet().CopyTo(cellSet);
   vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
 
   auto compressed = compressor.Compress(field, rate, pointDimensions);
 
   vtkm::cont::DataSet dataset;
-  dataset.AddCellSet(cellSet);
+  dataset.SetCellSet(cellSet);
   dataset.AddField(vtkm::cont::make_FieldPoint("compressed", compressed));
 
   return dataset;

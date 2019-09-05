@@ -8,6 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_GhostCellRemove_hxx
+#define vtk_m_filter_GhostCellRemove_hxx
+#include <vtkm/filter/GhostCellRemove.h>
+
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
@@ -286,7 +290,6 @@ inline VTKM_CONT GhostCellRemove::GhostCellRemove()
   : vtkm::filter::FilterDataSetWithField<GhostCellRemove>()
   , RemoveAll(false)
   , RemoveField(false)
-  , ConvertToUnstructured(false)
   , RemoveVals(0)
 {
   this->SetActiveField("vtkmGhostCells");
@@ -302,7 +305,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   vtkm::cont::DynamicCellSet cellOut;
 
   //Preserve structured output where possible.
@@ -331,29 +334,27 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
   }
 
   if (this->GetRemoveAllGhost())
+  {
     cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
                                 field,
                                 fieldMeta.GetAssociation(),
                                 RemoveAllGhosts());
+  }
   else if (this->GetRemoveByType())
+  {
     cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
                                 field,
                                 fieldMeta.GetAssociation(),
                                 RemoveGhostByType(this->GetRemoveType()));
+  }
   else
+  {
     throw vtkm::cont::ErrorFilterExecution("Unsupported ghost cell removal type");
+  }
 
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
-  if (this->GetConvertOutputToUnstructured())
-  {
-    vtkm::cont::CellSetExplicit<> explicitCells;
-    explicitCells = this->ConvertOutputToUnstructured(cellOut);
-    output.AddCellSet(explicitCells);
-  }
-  else
-    output.AddCellSet(cellOut);
+  output.SetCellSet(cellOut);
 
   return output;
 }
@@ -383,41 +384,7 @@ inline VTKM_CONT bool GhostCellRemove::DoMapField(
     return false;
   }
 }
-
-inline VTKM_CONT vtkm::cont::CellSetExplicit<> GhostCellRemove::ConvertOutputToUnstructured(
-  vtkm::cont::DynamicCellSet& inCells)
-{
-  using PermStructured2d = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>>;
-  using PermStructured3d = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>>;
-  using PermExplicit = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>>;
-  using PermExplicitSingle = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>>;
-
-  vtkm::cont::CellSetExplicit<> explicitCells;
-
-  if (inCells.IsSameType(PermStructured2d()))
-  {
-    PermStructured2d perm = inCells.Cast<PermStructured2d>();
-    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells);
-  }
-  else if (inCells.IsSameType(PermStructured3d()))
-  {
-    PermStructured3d perm = inCells.Cast<PermStructured3d>();
-    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells);
-  }
-  else if (inCells.IsSameType(PermExplicit()))
-  {
-    PermExplicit perm = inCells.Cast<PermExplicit>();
-    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells);
-  }
-  else if (inCells.IsSameType(PermExplicitSingle()))
-  {
-    PermExplicitSingle perm = inCells.Cast<PermExplicitSingle>();
-    vtkm::worklet::CellDeepCopy::Run(perm, explicitCells);
-  }
-  else
-    throw vtkm::cont::ErrorFilterExecution("Unsupported permutation cell type");
-
-  return explicitCells;
 }
 }
-}
+
+#endif //vtk_m_filter_GhostCellRemove_hxx

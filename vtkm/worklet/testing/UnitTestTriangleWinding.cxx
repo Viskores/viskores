@@ -33,7 +33,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-using NormalType = vtkm::Vec<vtkm::Float32, 3>;
+using MyNormalT = vtkm::Vec<vtkm::Float32, 3>;
 
 namespace
 {
@@ -41,12 +41,12 @@ namespace
 vtkm::cont::DataSet GenerateDataSet()
 {
   auto ds = vtkm::cont::testing::MakeTestDataSet{}.Make3DExplicitDataSetPolygonal();
-  const auto numCells = ds.GetCellSet().GetNumberOfCells();
+  const auto numCells = ds.GetNumberOfCells();
 
-  vtkm::cont::ArrayHandle<NormalType> cellNormals;
-  vtkm::cont::Algorithm::Fill(cellNormals, NormalType{ 1., 0., 0. }, numCells);
+  vtkm::cont::ArrayHandle<MyNormalT> cellNormals;
+  vtkm::cont::Algorithm::Fill(cellNormals, MyNormalT{ 1., 0., 0. }, numCells);
 
-  ds.AddField(vtkm::cont::make_FieldCell("normals", ds.GetCellSet().GetName(), cellNormals));
+  ds.AddField(vtkm::cont::make_FieldCell("normals", cellNormals));
   return ds;
 }
 
@@ -60,7 +60,7 @@ void Validate(vtkm::cont::DataSet dataSet)
     cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
   const auto cellArray = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
   const auto cellNormalsVar = dataSet.GetCellField("normals").GetData();
-  const auto cellNormalsArray = cellNormalsVar.Cast<vtkm::cont::ArrayHandle<NormalType>>();
+  const auto cellNormalsArray = cellNormalsVar.Cast<vtkm::cont::ArrayHandle<MyNormalT>>();
 
   const auto cellPortal = cellArray.GetPortalConstControl();
   const auto cellNormals = cellNormalsArray.GetPortalConstControl();
@@ -77,13 +77,13 @@ void Validate(vtkm::cont::DataSet dataSet)
       continue;
     }
 
-    const NormalType cellNormal = cellNormals.Get(cellId);
-    const NormalType p0 = coords.Get(cell[0]);
-    const NormalType p1 = coords.Get(cell[1]);
-    const NormalType p2 = coords.Get(cell[2]);
-    const NormalType v01 = p1 - p0;
-    const NormalType v02 = p2 - p0;
-    const NormalType triangleNormal = vtkm::Cross(v01, v02);
+    const MyNormalT cellNormal = cellNormals.Get(cellId);
+    const MyNormalT p0 = coords.Get(cell[0]);
+    const MyNormalT p1 = coords.Get(cell[1]);
+    const MyNormalT p2 = coords.Get(cell[2]);
+    const MyNormalT v01 = p1 - p0;
+    const MyNormalT v02 = p2 - p0;
+    const MyNormalT triangleNormal = vtkm::Cross(v01, v02);
     VTKM_TEST_ASSERT(vtkm::Dot(triangleNormal, cellNormal) > 0,
                      "Triangle at index ",
                      cellId,
@@ -112,14 +112,14 @@ void DoTest()
   auto cellSet = ds.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
   const auto coords = ds.GetCoordinateSystem().GetData();
   const auto cellNormalsVar = ds.GetCellField("normals").GetData();
-  const auto cellNormals = cellNormalsVar.Cast<vtkm::cont::ArrayHandle<NormalType>>();
+  const auto cellNormals = cellNormalsVar.Cast<vtkm::cont::ArrayHandle<MyNormalT>>();
 
 
   auto newCells = vtkm::worklet::TriangleWinding::Run(cellSet, coords, cellNormals);
 
   vtkm::cont::DataSet result;
   result.AddCoordinateSystem(ds.GetCoordinateSystem());
-  result.AddCellSet(newCells);
+  result.SetCellSet(newCells);
   for (vtkm::Id i = 0; i < ds.GetNumberOfFields(); ++i)
   {
     result.AddField(ds.GetField(i));

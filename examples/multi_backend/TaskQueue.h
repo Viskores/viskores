@@ -10,7 +10,7 @@
 #ifndef vtk_m_examples_multibackend_TaskQueue_h
 #define vtk_m_examples_multibackend_TaskQueue_h
 
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include <condition_variable>
 #include <mutex>

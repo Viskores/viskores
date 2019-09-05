@@ -14,7 +14,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include <vtkm/filter/Filter.h>
 #include <vtkm/filter/PolicyBase.h>
@@ -70,8 +70,9 @@ public:
 
 
   //@{
-  /// Select the coordinate system index to make active to use as the field when
-  /// UseCoordinateSystemAsField is true.
+  /// Select the coordinate system index to make active to use when processing the input
+  /// DataSet. This is used primarily by the Filter to select the coordinate system
+  /// to use as a field when \c UseCoordinateSystemAsField is true.
   VTKM_CONT
   void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
 
@@ -79,6 +80,7 @@ public:
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
   //@}
 
+  //@{
   /// These are provided to satisfy the Filter API requirements.
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
@@ -96,7 +98,9 @@ public:
     const vtkm::cont::DataSet& input,
     const vtkm::cont::CoordinateSystem& field,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  //@}
 
+protected:
 private:
   std::string OutputFieldName;
   vtkm::Id CoordinateSystemIndex;

@@ -53,6 +53,8 @@
 
 #include <vtkm/worklet/cosmotools/CosmoTools.h>
 
+#include <vtkm/cont/ArrayGetValues.h>
+
 namespace vtkm
 {
 namespace worklet
@@ -191,9 +193,9 @@ void CosmoTools<T, StorageType>::BinParticlesAll(vtkm::cont::ArrayHandle<vtkm::I
 {
   // Compute number of bins and ranges for each bin
   vtkm::Vec<T, 2> result;
-  vtkm::Vec<T, 2> xInit(xLoc.GetPortalConstControl().Get(0));
-  vtkm::Vec<T, 2> yInit(yLoc.GetPortalConstControl().Get(0));
-  vtkm::Vec<T, 2> zInit(zLoc.GetPortalConstControl().Get(0));
+  vtkm::Vec<T, 2> xInit(vtkm::cont::ArrayGetValue(0, xLoc));
+  vtkm::Vec<T, 2> yInit(vtkm::cont::ArrayGetValue(0, yLoc));
+  vtkm::Vec<T, 2> zInit(vtkm::cont::ArrayGetValue(0, zLoc));
   result = DeviceAlgorithm::Reduce(xLoc, xInit, vtkm::MinAndMax<T>());
   T minX = result[0];
   T maxX = result[1];

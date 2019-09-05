@@ -143,6 +143,7 @@
 #include <vtkm/worklet/contourtree/UpdateOutbound.h>
 
 #include <vtkm/Pair.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
@@ -490,8 +491,8 @@ void ContourTree<T, StorageType>::FindSupernodes()
   vtkm::cont::Algorithm::ScanExclusive(isSupernode, supernodeID);
 
   // size is the position of the last element + the size of the last element (0/1)
-  vtkm::Id nSupernodes = supernodeID.GetPortalConstControl().Get(nCandidates - 1) +
-    isSupernode.GetPortalConstControl().Get(nCandidates - 1);
+  vtkm::Id nSupernodes = vtkm::cont::ArrayGetValue(nCandidates - 1, supernodeID) +
+    vtkm::cont::ArrayGetValue(nCandidates - 1, isSupernode);
 
   // allocate memory for our arrays
   supernodes.ReleaseResources();
@@ -865,30 +866,39 @@ void ContourTree<T, StorageType>::CollectSaddlePeak(
 {
   // Collect the valid saddle peak pairs
   std::vector<vtkm::Pair<vtkm::Id, vtkm::Id>> superarcVector;
+  const auto supernodePortal = supernodes.GetPortalConstControl();
+  const auto superarcPortal = superarcs.GetPortalConstControl();
   for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
   {
     // ID of regular node
-    vtkm::Id regularID = supernodes.GetPortalConstControl().Get(supernode);
+    const vtkm::Id regularID = supernodePortal.Get(supernode);
 
     // retrieve ID of target supernode
-    vtkm::Id superTo = superarcs.GetPortalConstControl().Get(supernode);
+    const vtkm::Id superTo = superarcPortal.Get(supernode);
+    ;
 
     // if this is true, it is the last pruned vertex
     if (superTo == NO_VERTEX_ASSIGNED)
+    {
       continue;
+    }
 
     // retrieve the regular ID for it
-    vtkm::Id regularTo = supernodes.GetPortalConstControl().Get(superTo);
+    const vtkm::Id regularTo = supernodePortal.Get(superTo);
 
     // how we print depends on which end has lower ID
     if (regularID < regularTo)
     { // from is lower
       // extra test to catch duplicate edge
-      if (superarcs.GetPortalConstControl().Get(superTo) != supernode)
+      if (superarcPortal.Get(superTo) != supernode)
+      {
         superarcVector.push_back(vtkm::make_Pair(regularID, regularTo));
+      }
     } // from is lower
     else
+    {
       superarcVector.push_back(vtkm::make_Pair(regularTo, regularID));
+    }
   } // per vertex
 
   // Setting saddlePeak reference to the make_ArrayHandle directly does not work

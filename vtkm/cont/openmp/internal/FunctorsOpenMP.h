@@ -368,7 +368,7 @@ struct ReduceHelper
     ReturnType accum = f(data[2 * tid], data[2 * tid + 1]);
 
     vtkm::Id i = numThreads * 2;
-    const vtkm::Id unrollEnd = (numVals / 4) * 4;
+    const vtkm::Id unrollEnd = ((numVals / 4) * 4) - 4;
     VTKM_OPENMP_DIRECTIVE(for schedule(static))
     for (i = numThreads * 2; i < unrollEnd; i += 4)
     {
@@ -377,8 +377,9 @@ struct ReduceHelper
       accum = f(accum, t1);
       accum = f(accum, t2);
     }
-    // Let thread 0 mop up any remaining values:
-    if (tid == 0)
+    // Let the last thread mop up any remaining values as it would
+    // have just accessed the adjacent data
+    if (tid == numThreads - 1)
     {
       for (i = unrollEnd; i < numVals; ++i)
       {

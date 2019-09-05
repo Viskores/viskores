@@ -115,7 +115,7 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
   vtkm::Id nRows;
   vtkm::Id nCols;
   vtkm::Id nSlices = 1;
-  const auto& cells = input.GetCellSet(this->GetActiveCoordinateSystemIndex());
+  const auto& cells = input.GetCellSet();
   vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(GetRowsColsSlices(), nRows, nCols, nSlices);
 
   // Run the worklet

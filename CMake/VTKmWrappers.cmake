@@ -130,7 +130,7 @@ function(vtkm_get_cuda_flags settings_var)
   if(TARGET vtkm::cuda)
     get_property(arch_flags
       TARGET    vtkm::cuda
-      PROPERTY  INTERFACE_CUDA_Architecture_Flags)
+      PROPERTY  cuda_architecture_flags)
     set(${settings_var} "${${settings_var}} ${arch_flags}" PARENT_SCOPE)
   endif()
 endfunction()
@@ -166,7 +166,8 @@ endfunction()
 #  need to be marked as going to a special compiler for certain device adapters
 #  such as CUDA.
 #
-#  EXTENDS_VTKM: Some programming models have restrictions on how types can be extended.
+#  EXTENDS_VTKM: Some programming models have restrictions on how types can be used,
+#  passed across library boundaries, and derived from.
 #  For example CUDA doesn't allow device side calls across dynamic library boundaries,
 #  and requires all polymorphic classes to be reachable at dynamic library/executable
 #  link time.
@@ -177,10 +178,13 @@ endfunction()
 #   Executable: do nothing, zero restrictions
 #   Static library: do nothing, zero restrictions
 #   Dynamic library:
-#     -> Wanting to extend VTK-m and provide these types to consumers. This
-#     is supported when CUDA isn't enabled. Otherwise we need to ERROR!
 #     -> Wanting to use VTK-m as implementation detail, doesn't expose VTK-m
 #        types to consumers. This is supported no matter if CUDA is enabled.
+#     -> Wanting to extend VTK-m and provide these types to consumers.
+#        This is only supported when CUDA isn't enabled. Otherwise we need to ERROR!
+#     -> Wanting to pass known VTK-m types across library boundaries for others
+#        to use in filters/worklets.
+#        This is only supported when CUDA isn't enabled. Otherwise we need to ERROR!
 #
 #  For most consumers they can ignore the `EXTENDS_VTKM` property as the default
 #  will be correct.
@@ -203,9 +207,9 @@ function(vtkm_add_target_information uses_vtkm_target)
   # dynamic library boundaries.
   if(TARGET vtkm::cuda)
     get_target_property(lib_type ${uses_vtkm_target} TYPE)
-    get_target_property(requires_static vtkm::cuda INTERFACE_REQUIRES_STATIC_BUILDS)
+    get_target_property(requires_static vtkm::cuda requires_static_builds)
 
-    if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY")
+    if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY" AND VTKm_TI_EXTENDS_VTKM)
       #We provide different error messages based on if we are building VTK-m
       #or being called by a consumer of VTK-m. We use PROJECT_NAME so that we
       #produce the correct error message when VTK-m is a subdirectory include
@@ -277,6 +281,7 @@ function(vtkm_library)
               ${VTKm_LIB_DEVICE_SOURCES}
               )
   vtkm_add_target_information(${lib_name}
+                              EXTENDS_VTKM
                               DEVICE_SOURCES ${VTKm_LIB_DEVICE_SOURCES}
                               )
   if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)

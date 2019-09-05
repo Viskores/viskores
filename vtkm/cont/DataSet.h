@@ -30,10 +30,22 @@ class VTKM_CONT_EXPORT DataSet
 public:
   VTKM_CONT void Clear();
 
+  /// Get the number of cells contained in this DataSet
+  VTKM_CONT vtkm::Id GetNumberOfCells() const;
+
+  /// Get the number of points contained in this DataSet
+  ///
+  /// Note: All coordinate systems for a DataSet are expected
+  /// to have the same number of points.
+  VTKM_CONT vtkm::Id GetNumberOfPoints() const;
+
   VTKM_CONT void AddField(const Field& field) { this->Fields.push_back(field); }
 
   VTKM_CONT
   const vtkm::cont::Field& GetField(vtkm::Id index) const;
+
+  VTKM_CONT
+  vtkm::cont::Field& GetField(vtkm::Id index);
 
   VTKM_CONT
   bool HasField(const std::string& name,
@@ -60,11 +72,17 @@ public:
     return found;
   }
 
+
+  /// Returns the first field that matches the provided name and association
+  /// Will return -1 if no match is found
   VTKM_CONT
   vtkm::Id GetFieldIndex(
     const std::string& name,
     vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const;
 
+  /// Returns the first field that matches the provided name and association
+  /// Will throw an exception if no match is found
+  //@{
   VTKM_CONT
   const vtkm::cont::Field& GetField(
     const std::string& name,
@@ -74,16 +92,45 @@ public:
   }
 
   VTKM_CONT
+  vtkm::cont::Field& GetField(
+    const std::string& name,
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY)
+  {
+    return this->GetField(this->GetFieldIndex(name, assoc));
+  }
+  //@}
+
+  /// Returns the first cell field that matches the provided name.
+  /// Will throw an exception if no match is found
+  //@{
+  VTKM_CONT
   const vtkm::cont::Field& GetCellField(const std::string& name) const
   {
     return this->GetField(name, vtkm::cont::Field::Association::CELL_SET);
   }
 
   VTKM_CONT
+  vtkm::cont::Field& GetCellField(const std::string& name)
+  {
+    return this->GetField(name, vtkm::cont::Field::Association::CELL_SET);
+  }
+  //@}
+
+  /// Returns the first point field that matches the provided name.
+  /// Will throw an exception if no match is found
+  //@{
+  VTKM_CONT
   const vtkm::cont::Field& GetPointField(const std::string& name) const
   {
     return this->GetField(name, vtkm::cont::Field::Association::POINTS);
   }
+
+  VTKM_CONT
+  vtkm::cont::Field& GetPointField(const std::string& name)
+  {
+    return this->GetField(name, vtkm::cont::Field::Association::POINTS);
+  }
+  //@}
 
   VTKM_CONT
   void AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
@@ -92,64 +139,48 @@ public:
   }
 
   VTKM_CONT
+  bool HasCoordinateSystem(const std::string& name) const
+  {
+    return this->GetCoordinateSystemIndex(name) >= 0;
+  }
+
+  VTKM_CONT
   const vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0) const;
 
   VTKM_CONT
-  bool HasCoordinateSystem(const std::string& name) const
-  {
-    bool found;
-    this->FindCoordinateSystemIndex(name, found);
-    return found;
-  }
+  vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0);
 
+  /// Returns the index for the first CoordinateSystem whose
+  /// name matches the provided string.
+  /// Will return -1 if no match is found
   VTKM_CONT
   vtkm::Id GetCoordinateSystemIndex(const std::string& name) const;
 
+  /// Returns the first CoordinateSystem that matches the provided name.
+  /// Will throw an exception if no match is found
+  //@{
   VTKM_CONT
-  const vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name) const
-  {
-    return this->GetCoordinateSystem(this->GetCoordinateSystemIndex(name));
-  }
+  const vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name) const;
 
   VTKM_CONT
-  void AddCellSet(const vtkm::cont::DynamicCellSet& cellSet) { this->CellSets.push_back(cellSet); }
+  vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name);
+  //@}
+
+  VTKM_CONT
+  void SetCellSet(const vtkm::cont::DynamicCellSet& cellSet) { this->CellSet = cellSet; }
 
   template <typename CellSetType>
-  VTKM_CONT void AddCellSet(const CellSetType& cellSet)
+  VTKM_CONT void SetCellSet(const CellSetType& cellSet)
   {
     VTKM_IS_CELL_SET(CellSetType);
-    this->CellSets.push_back(vtkm::cont::DynamicCellSet(cellSet));
+    this->CellSet = vtkm::cont::DynamicCellSet(cellSet);
   }
 
   VTKM_CONT
-  vtkm::cont::DynamicCellSet GetCellSet(vtkm::Id index = 0) const
-  {
-    VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCellSets()));
-    return this->CellSets[static_cast<std::size_t>(index)];
-  }
+  const vtkm::cont::DynamicCellSet& GetCellSet() const { return this->CellSet; }
 
   VTKM_CONT
-  bool HasCellSet(const std::string& name) const
-  {
-    bool found;
-    this->FindCellSetIndex(name, found);
-    return found;
-  }
-
-  VTKM_CONT
-  vtkm::Id GetCellSetIndex(const std::string& name) const;
-
-  VTKM_CONT
-  vtkm::cont::DynamicCellSet GetCellSet(const std::string& name) const
-  {
-    return this->GetCellSet(this->GetCellSetIndex(name));
-  }
-
-  VTKM_CONT
-  vtkm::IdComponent GetNumberOfCellSets() const
-  {
-    return static_cast<vtkm::IdComponent>(this->CellSets.size());
-  }
+  vtkm::cont::DynamicCellSet& GetCellSet() { return this->CellSet; }
 
   VTKM_CONT
   vtkm::IdComponent GetNumberOfFields() const
@@ -163,7 +194,7 @@ public:
     return static_cast<vtkm::IdComponent>(this->CoordSystems.size());
   }
 
-  /// Copies the structure i.e. coordinates systems and cellsets from the source
+  /// Copies the structure i.e. coordinates systems and cellset from the source
   /// dataset. The fields are left unchanged.
   VTKM_CONT
   void CopyStructure(const vtkm::cont::DataSet& source);
@@ -174,18 +205,12 @@ public:
 private:
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   std::vector<vtkm::cont::Field> Fields;
-  std::vector<vtkm::cont::DynamicCellSet> CellSets;
+  vtkm::cont::DynamicCellSet CellSet;
 
   VTKM_CONT
   vtkm::Id FindFieldIndex(const std::string& name,
                           vtkm::cont::Field::Association association,
                           bool& found) const;
-
-  VTKM_CONT
-  vtkm::Id FindCoordinateSystemIndex(const std::string& name, bool& found) const;
-
-  VTKM_CONT
-  vtkm::Id FindCellSetIndex(const std::string& name, bool& found) const;
 };
 
 } // namespace cont
@@ -235,12 +260,7 @@ public:
       vtkmdiy::save(bb, dataset.GetCoordinateSystem(i));
     }
 
-    vtkm::IdComponent numberOfCellSets = dataset.GetNumberOfCellSets();
-    vtkmdiy::save(bb, numberOfCellSets);
-    for (vtkm::IdComponent i = 0; i < numberOfCellSets; ++i)
-    {
-      vtkmdiy::save(bb, dataset.GetCellSet(i).ResetCellSetList(CellSetTypesList{}));
-    }
+    vtkmdiy::save(bb, dataset.GetCellSet().ResetCellSetList(CellSetTypesList{}));
 
     vtkm::IdComponent numberOfFields = dataset.GetNumberOfFields();
     vtkmdiy::save(bb, numberOfFields);
@@ -264,14 +284,9 @@ public:
       dataset.AddCoordinateSystem(coords);
     }
 
-    vtkm::IdComponent numberOfCellSets = 0;
-    vtkmdiy::load(bb, numberOfCellSets);
-    for (vtkm::IdComponent i = 0; i < numberOfCellSets; ++i)
-    {
-      vtkm::cont::DynamicCellSetBase<CellSetTypesList> cells;
-      vtkmdiy::load(bb, cells);
-      dataset.AddCellSet(vtkm::cont::DynamicCellSet(cells));
-    }
+    vtkm::cont::DynamicCellSetBase<CellSetTypesList> cells;
+    vtkmdiy::load(bb, cells);
+    dataset.SetCellSet(vtkm::cont::DynamicCellSet(cells));
 
     vtkm::IdComponent numberOfFields = 0;
     vtkmdiy::load(bb, numberOfFields);

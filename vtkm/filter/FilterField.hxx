@@ -96,7 +96,6 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
 {
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems
-
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
 

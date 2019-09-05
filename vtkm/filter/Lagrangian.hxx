@@ -25,7 +25,6 @@
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 #include <cstring>
-#include <iostream>
 #include <sstream>
 #include <string.h>
 
@@ -101,15 +100,13 @@ inline VTKM_CONT Lagrangian::Lagrangian()
 
 //-----------------------------------------------------------------------------
 inline void Lagrangian::WriteDataSet(vtkm::Id cycle,
-                                     std::string filename,
+                                     const std::string& filename,
                                      vtkm::cont::DataSet dataset)
 {
-  std::stringstream file;
-  file << filename << cycle << ".vtk";
-  vtkm::io::writer::VTKDataSetWriter writer(file.str().c_str());
+  std::stringstream file_stream;
+  file_stream << filename << cycle << ".vtk";
+  vtkm::io::writer::VTKDataSetWriter writer(file_stream.str());
   writer.WriteDataSet(dataset);
-  std::cout << "Number of flows in writedataset is : " << dataset.GetCellSet(0).GetNumberOfCells()
-            << std::endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -227,9 +224,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::cont::ArrayCopy(BasisParticles, basisParticleArray);
 
   cycle += 1;
-  std::cout << "Cycle : " << cycle << std::endl;
-  const vtkm::cont::DynamicCellSet& cells =
-    input.GetCellSet(this->GetActiveCoordinateSystemIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
@@ -300,8 +295,8 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     outputData = dataSetBuilder.Create(pointCoordinates, shapes, numIndices, connectivity);
     std::stringstream file_path;
     file_path << "output/basisflows_" << this->rank << "_";
-    std::cout << "Writing basis flows to output/" << std::endl;
-    WriteDataSet(cycle, file_path.str().c_str(), outputData);
+    auto f_path = file_path.str();
+    WriteDataSet(cycle, f_path, outputData);
     if (this->resetParticles)
     {
       InitializeUniformSeeds(input);

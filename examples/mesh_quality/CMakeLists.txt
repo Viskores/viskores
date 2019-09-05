@@ -32,6 +32,6 @@ if(TARGET vtkm::tbb)
   target_compile_definitions(MeshQuality PRIVATE BUILDING_TBB_VERSION)
 endif()
 
-if(TARGET vtkm::cuda)
-  set_source_files_properties(MeshQuality.cxx PROPERTIES LANGUAGE "CUDA")
-endif()
+vtkm_add_target_information(MeshQuality
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES MeshQuality.cxx)

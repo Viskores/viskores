@@ -13,6 +13,7 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -109,22 +110,21 @@ public:
   void Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray, StatInfo& statinfo)
   {
     using DeviceAlgorithms = vtkm::cont::Algorithm;
-    using FieldPortal = typename vtkm::cont::ArrayHandle<FieldType, Storage>::PortalConstControl;
 
     // Copy original data to array for sorting
     vtkm::cont::ArrayHandle<FieldType> tempArray;
     DeviceAlgorithms::Copy(fieldArray, tempArray);
     DeviceAlgorithms::Sort(tempArray);
 
-    FieldPortal tempPortal = tempArray.GetPortalConstControl();
-    vtkm::Id dataSize = tempPortal.GetNumberOfValues();
+    vtkm::Id dataSize = tempArray.GetNumberOfValues();
     FieldType numValues = static_cast<FieldType>(dataSize);
+    const auto firstAndMedian = vtkm::cont::ArrayGetValues({ 0, dataSize / 2 }, tempArray);
 
     // Median
-    statinfo.median = tempPortal.Get(dataSize / 2);
+    statinfo.median = firstAndMedian[1];
 
     // Minimum and maximum
-    const vtkm::Vec<FieldType, 2> initValue(tempPortal.Get(0));
+    const vtkm::Vec<FieldType, 2> initValue(firstAndMedian[0]);
     vtkm::Vec<FieldType, 2> result =
       DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
     statinfo.minimum = result[0];

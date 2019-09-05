@@ -227,36 +227,23 @@ vtkm::cont::DataSet MakeTestDataSet()
     "p_uniform", vtkm::cont::Field::Association::POINTS, uniform, nVerts, vtkm::CopyFlag::On));
 
   // Set cell scalars
-  dataSet.AddField(vtkm::cont::make_Field("c_poisson",
-                                          vtkm::cont::Field::Association::CELL_SET,
-                                          "cells",
-                                          poisson,
-                                          nCells,
-                                          vtkm::CopyFlag::On));
-  dataSet.AddField(vtkm::cont::make_Field("c_normal",
-                                          vtkm::cont::Field::Association::CELL_SET,
-                                          "cells",
-                                          normal,
-                                          nCells,
-                                          vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_poisson", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_normal", vtkm::cont::Field::Association::CELL_SET, normal, nCells, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field("c_chiSquare",
                                           vtkm::cont::Field::Association::CELL_SET,
-                                          "cells",
                                           chiSquare,
                                           nCells,
                                           vtkm::CopyFlag::On));
-  dataSet.AddField(vtkm::cont::make_Field("c_uniform",
-                                          vtkm::cont::Field::Association::CELL_SET,
-                                          "cells",
-                                          poisson,
-                                          nCells,
-                                          vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_uniform", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetStructured<dimension> cellSet("cells");
+  vtkm::cont::CellSetStructured<dimension> cellSet;
 
   //Set regular structure
   cellSet.SetPointDimensions(vtkm::make_Vec(xVerts, yVerts));
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
   return dataSet;
 }

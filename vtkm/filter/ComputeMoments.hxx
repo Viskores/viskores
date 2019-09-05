@@ -41,7 +41,7 @@ inline VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(
 
   auto worklet = vtkm::worklet::moments::ComputeMoments(this->Radius);
 
-  worklet.Run(input.GetCellSet(this->GetActiveCellSetIndex()), field, this->Order, output);
+  worklet.Run(input.GetCellSet(), field, this->Order, output);
 
   return output;
 }

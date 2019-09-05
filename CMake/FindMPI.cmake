@@ -306,6 +306,19 @@ set(_MPI_XL_Fortran_COMPILER_NAMES         mpixlf95   mpixlf95_r mpxlf95 mpxlf95
                                            mpixlf77   mpixlf77_r mpxlf77 mpxlf77_r
                                            mpixlf     mpixlf_r   mpxlf   mpxlf_r)
 
+# Allow CMake 3.8.0 to use OS specific `separate_arguments` signature.
+# Otherwise use the 3.9 NATIVE_COMMAND feature that does this for us
+# automatically
+if (CMAKE_VERSION VERSION_LESS "3.9.0")
+  if (WIN32 AND NOT CYGWIN)
+    set(_MPI_parse_kind WINDOWS_COMMAND)
+  else ()
+    set(_MPI_parse_kind UNIX_COMMAND)
+  endif ()
+else ()
+  set(_MPI_parse_kind NATIVE_COMMAND)
+endif ()
+
 # Prepend vendor-specific compiler wrappers to the list. If we don't know the compiler,
 # attempt all of them.
 # By attempting vendor-specific compiler names first, we should avoid situations where the compiler wrapper
@@ -340,9 +353,9 @@ unset(_MPIEXEC_NAMES_BASE)
 
 function (_MPI_check_compiler LANG QUERY_FLAG OUTPUT_VARIABLE RESULT_VARIABLE)
   if(DEFINED MPI_${LANG}_COMPILER_FLAGS)
-    separate_arguments(_MPI_COMPILER_WRAPPER_OPTIONS NATIVE_COMMAND "${MPI_${LANG}_COMPILER_FLAGS}")
+    separate_arguments(_MPI_COMPILER_WRAPPER_OPTIONS ${_MPI_parse_kind} "${MPI_${LANG}_COMPILER_FLAGS}")
   else()
-    separate_arguments(_MPI_COMPILER_WRAPPER_OPTIONS NATIVE_COMMAND "${MPI_COMPILER_FLAGS}")
+    separate_arguments(_MPI_COMPILER_WRAPPER_OPTIONS ${_MPI_parse_kind} "${MPI_COMPILER_FLAGS}")
   endif()
   execute_process(
     COMMAND ${MPI_${LANG}_COMPILER} ${_MPI_COMPILER_WRAPPER_OPTIONS} ${QUERY_FLAG}
@@ -630,7 +643,7 @@ function (_MPI_interrogate_compiler LANG)
   if (NOT MPI_ALL_INCLUDE_PATHS)
     _MPI_check_compiler(${LANG} "-showme:incdirs" MPI_INCDIRS_CMDLINE MPI_INCDIRS_COMPILER_RETURN)
     if(MPI_INCDIRS_COMPILER_RETURN)
-      separate_arguments(MPI_ALL_INCLUDE_PATHS NATIVE_COMMAND "${MPI_INCDIRS_CMDLINE}")
+      separate_arguments(MPI_ALL_INCLUDE_PATHS ${_MPI_parse_kind} "${MPI_INCDIRS_CMDLINE}")
     endif()
   endif()
 
@@ -698,7 +711,7 @@ function (_MPI_interrogate_compiler LANG)
   if (NOT MPI_ALL_LINK_PATHS)
     _MPI_check_compiler(${LANG} "-showme:libdirs" MPI_LIBDIRS_CMDLINE MPI_LIBDIRS_COMPILER_RETURN)
     if(MPI_LIBDIRS_COMPILER_RETURN)
-      separate_arguments(MPI_ALL_LINK_PATHS NATIVE_COMMAND "${MPI_LIBDIRS_CMDLINE}")
+      separate_arguments(MPI_ALL_LINK_PATHS ${_MPI_parse_kind} "${MPI_LIBDIRS_CMDLINE}")
     endif()
   endif()
 
@@ -1142,8 +1155,14 @@ macro(_MPI_create_imported_target LANG)
   endif()
 
   # When this is consumed for compiling CUDA, use '-Xcompiler' to wrap '-pthread'.
-  string(REPLACE "-pthread" "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:-Xcompiler >-pthread"
-    _MPI_${LANG}_COMPILE_OPTIONS "${MPI_${LANG}_COMPILE_OPTIONS}")
+  # This only robustly works with CMake 3.12+ as before than it would be an error
+  # when evaluated with CUDA language disabled.
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.12 OR CMAKE_CUDA_COMPILER_LOADED)
+    string(REPLACE "-pthread" "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:-Xcompiler >-pthread"
+      _MPI_${LANG}_COMPILE_OPTIONS "${MPI_${LANG}_COMPILE_OPTIONS}")
+  else()
+    set(_MPI_${LANG}_COMPILE_OPTIONS "${MPI_${LANG}_COMPILE_OPTIONS}")
+  endif()
   set_property(TARGET MPI::MPI_${LANG} PROPERTY INTERFACE_COMPILE_OPTIONS "${_MPI_${LANG}_COMPILE_OPTIONS}")
   unset(_MPI_${LANG}_COMPILE_OPTIONS)
 
@@ -1151,7 +1170,7 @@ macro(_MPI_create_imported_target LANG)
 
   set_property(TARGET MPI::MPI_${LANG} PROPERTY INTERFACE_LINK_LIBRARIES "")
   if(MPI_${LANG}_LINK_FLAGS)
-    separate_arguments(_MPI_${LANG}_LINK_FLAGS NATIVE_COMMAND "${MPI_${LANG}_LINK_FLAGS}")
+    separate_arguments(_MPI_${LANG}_LINK_FLAGS ${_MPI_parse_kind} "${MPI_${LANG}_LINK_FLAGS}")
     if(CMAKE_VERSION VERSION_LESS 3.13)
       set_property(TARGET MPI::MPI_${LANG} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${_MPI_${LANG}_LINK_FLAGS}")
     else()
@@ -1343,7 +1362,7 @@ if(NOT MPI_IGNORE_LEGACY_VARIABLES)
     unset(MPI_${LANG}_EXTRA_COMPILE_DEFINITIONS)
     unset(MPI_${LANG}_EXTRA_COMPILE_OPTIONS)
     if(MPI_${LANG}_COMPILE_FLAGS)
-      separate_arguments(MPI_SEPARATE_FLAGS NATIVE_COMMAND "${MPI_${LANG}_COMPILE_FLAGS}")
+      separate_arguments(MPI_SEPARATE_FLAGS ${_MPI_parse_kind} "${MPI_${LANG}_COMPILE_FLAGS}")
       foreach(_MPI_FLAG IN LISTS MPI_SEPARATE_FLAGS)
         if("${_MPI_FLAG}" MATCHES "^ *-D([^ ]+)")
           list(APPEND MPI_${LANG}_EXTRA_COMPILE_DEFINITIONS "${CMAKE_MATCH_1}")
@@ -1712,7 +1731,13 @@ foreach(LANG IN ITEMS C CXX Fortran)
     set(MPI_${LANG}_INCLUDE_PATH "${MPI_${LANG}_INCLUDE_DIRS}")
     unset(MPI_${LANG}_COMPILE_FLAGS)
     if(MPI_${LANG}_COMPILE_OPTIONS)
-      list(JOIN MPI_${LANG}_COMPILE_FLAGS " " MPI_${LANG}_COMPILE_OPTIONS)
+      if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
+        list(JOIN MPI_${LANG}_COMPILE_OPTIONS " " MPI_${LANG}_COMPILE_FLAGS)
+      else()
+        foreach(_MPI_OPT IN LISTS MPI_${LANG}_COMPILE_OPTIONS)
+          string(APPEND MPI_${LANG}_COMPILE_FLAGS " ${_MPI_OPT}")
+        endforeach()
+      endif()
     endif()
     if(MPI_${LANG}_COMPILE_DEFINITIONS)
       foreach(_MPI_DEF IN LISTS MPI_${LANG}_COMPILE_DEFINITIONS)

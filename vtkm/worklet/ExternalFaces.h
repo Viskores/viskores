@@ -18,6 +18,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -690,21 +691,11 @@ public:
     auto coordData = coord.GetData();
     if (coordData.IsType<CartesianArrayHandle>())
     {
-      auto vertices = coordData.Cast<CartesianArrayHandle>();
-
-      MinPoint[0] =
-        static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetFirstPortal().Get(0));
-      MinPoint[1] =
-        static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetSecondPortal().Get(0));
-      MinPoint[2] =
-        static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetThirdPortal().Get(0));
-
-      MaxPoint[0] = static_cast<vtkm::Float64>(
-        vertices.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1));
-      MaxPoint[1] = static_cast<vtkm::Float64>(
-        vertices.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1));
-      MaxPoint[2] = static_cast<vtkm::Float64>(
-        vertices.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1));
+      const auto vertices = coordData.Cast<CartesianArrayHandle>();
+      const auto vertsSize = vertices.GetNumberOfValues();
+      const auto tmp = vtkm::cont::ArrayGetValues({ 0, vertsSize - 1 }, vertices);
+      MinPoint = tmp[0];
+      MaxPoint = tmp[1];
     }
     else
     {
