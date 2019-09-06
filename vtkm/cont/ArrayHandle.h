@@ -24,6 +24,8 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
 
+#include <vtkm/internal/ArrayPortalHelpers.h>
+
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -74,37 +76,15 @@ struct IsInValidArrayHandle
 {
 };
 
-namespace detail
-{
-
-template <typename PortalType>
-struct IsWritableArrayPortalImpl
-{
-private:
-  template <typename U,
-            typename VT = typename U::ValueType,
-            typename S = decltype(std::declval<U>().Set(0, std::declval<VT>()))>
-  static std::true_type hasSet(int);
-
-  template <typename U>
-  static std::false_type hasSet(...);
-
-public:
-  using type = decltype(hasSet<PortalType>(0));
-};
-
-} // namespace detail
-
-/// Checks to see if the ArrayHandle or ArrayPortal allows writing, as some
-/// ArrayHandles (Implicit) don't support writing. These will be defined as
-/// either std::true_type or std::false_type.
-/// @{
-template <typename PortalType>
-using IsWritableArrayPortal = typename detail::IsWritableArrayPortalImpl<PortalType>::type;
-
+/// Checks to see if the ArrayHandle allows writing, as some ArrayHandles
+/// (Implicit) don't support writing. These will be defined as either
+/// std::true_type or std::false_type.
+///
+/// \sa vtkm::internal::PortalSupportsSets
+///
 template <typename ArrayHandle>
 using IsWritableArrayHandle =
-  IsWritableArrayPortal<typename std::decay<ArrayHandle>::type::PortalControl>;
+  vtkm::internal::PortalSupportsSets<typename std::decay<ArrayHandle>::type::PortalControl>;
 /// @}
 
 /// Checks to see if the given object is an array handle. This check is

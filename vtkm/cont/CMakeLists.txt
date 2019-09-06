@@ -20,6 +20,7 @@ set(headers
   ArrayHandleConcatenate.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
+  ArrayHandleDecorator.h
   ArrayHandleDiscard.h
   ArrayHandleExtractComponent.h
   ArrayHandleExtrudeCoords.h
