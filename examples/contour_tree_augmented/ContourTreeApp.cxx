@@ -138,10 +138,10 @@ public:
 
   std::string getOption(const std::string& option) const
   {
-    auto index = this->findOption(option);
+    std::size_t index = static_cast<std::size_t>(this->findOption(option));
     if (index >= 0)
     {
-      std::string val = this->mCLOptions[static_cast<std::size_t>(index)];
+      std::string val = this->mCLOptions[index];
       auto valPos = val.find("=");
       if (valPos)
       {
@@ -201,19 +201,21 @@ int main(int argc, char* argv[])
   ParseCL parser;
   parser.parse(argc, argv);
   std::string filename = parser.getOptions().back();
-  bool computeRegularStructure = true;
+  unsigned int computeRegularStructure = 1; // 1=fully augmented
   bool useMarchingCubes = false;
   bool computeBranchDecomposition = true;
   bool printContourTree = false;
   if (parser.hasOption("--augmentTree"))
-    computeRegularStructure = std::stoi(parser.getOption("--augmentTree"));
+    computeRegularStructure =
+      static_cast<unsigned int>(std::stoi(parser.getOption("--augmentTree")));
   if (parser.hasOption("--mc"))
     useMarchingCubes = true;
   if (parser.hasOption("--printCT"))
     printContourTree = true;
   if (parser.hasOption("--branchDecomp"))
     computeBranchDecomposition = std::stoi(parser.getOption("--branchDecomp"));
-  if (computeBranchDecomposition && (!computeRegularStructure))
+  // We need the fully augmented tree to compute the branch decomposition
+  if (computeBranchDecomposition && (computeRegularStructure != 1))
   {
     std::cout << "Regular structure is required for branch decomposition."
                  " Disabling branch decomposition"
@@ -318,7 +320,12 @@ int main(int argc, char* argv[])
     std::cout << "--mc              Use marching cubes interpolation for contour tree calculation. "
                  "(Default=False)"
               << std::endl;
-    std::cout << "--augmentTree     Compute the augmented contour tree. (Default=True)"
+    std::cout << "--augmentTree     1 = compute the fully augmented contour tree (Default)"
+              << std::endl;
+    std::cout << "                  2 = compute the boundary augmented contour tree " << std::endl;
+    std::cout << "                  0 = no augmentation. NOTE: When using MPI, local ranks use"
+              << std::endl;
+    std::cout << "                      boundary augmentation to support parallel merge of blocks"
               << std::endl;
     std::cout << "--branchDecomp    Compute the volume branch decomposition for the contour tree. "
                  "Requires --augmentTree (Default=True)"
@@ -358,6 +365,7 @@ int main(int argc, char* argv[])
   {
     std::cout << "Settings:" << std::endl;
     std::cout << "    filename=" << filename << std::endl;
+    std::cout << "    device=" << device << std::endl;
     std::cout << "    mc=" << useMarchingCubes << std::endl;
     std::cout << "    augmentTree=" << computeRegularStructure << std::endl;
     std::cout << "    branchDecomp=" << computeBranchDecomposition << std::endl;
@@ -367,7 +375,7 @@ int main(int argc, char* argv[])
 #ifdef ENABLE_SET_NUM_THREADS
     std::cout << "    numThreads=" << numThreads << std::endl;
 #endif
-    std::cout << "    computeIsovalyes=" << (numLevels > 0) << std::endl;
+    std::cout << "    computeIsovalues=" << (numLevels > 0) << std::endl;
     if (numLevels > 0)
     {
       std::cout << "    levels=" << numLevels << std::endl;
@@ -450,7 +458,7 @@ int main(int argc, char* argv[])
   // Print the mesh metadata
   if (rank == 0)
   {
-    std::cout << " Number of dimensions: " << nDims << std::endl;
+    std::cout << "Number of dimensions: " << nDims << std::endl;
     std::cout << "Number of mesh vertices: " << nVertices << std::endl;
   }
   // Check the the number of dimensiosn is either 2D or 3D
@@ -543,7 +551,7 @@ int main(int argc, char* argv[])
     {
       if (rank == 0)
       {
-        std::cout << "Number of ranks too large for data. Use " << lastDimSize / 2
+        std::cout << "Number of ranks to large for data. Use " << lastDimSize / 2
                   << "or fewer ranks" << std::endl;
       }
       MPI_Finalize();
@@ -554,11 +562,6 @@ int main(int argc, char* argv[])
     vtkm::Id blockSliceSize =
       nDims == 2 ? static_cast<vtkm::Id>(dims[0]) : static_cast<vtkm::Id>((dims[0] * dims[1]));
     vtkm::Id blockNumValues = blockSize * blockSliceSize;
-
-    /*//Print the input values
-    for(auto i = values.begin(); i != values.end(); ++i)
-        std::cout << *i << ' ';
-    std::cout<<std::endl;*/
 
     vtkm::Id startBlock = blocksPerRank * rank;
     vtkm::Id endBlock = startBlock + blocksPerRank;
@@ -578,7 +581,6 @@ int main(int argc, char* argv[])
       vtkm::Id currBlockSize = (vtkm::Id)((blockEnd - blockStart) / blockSliceSize);
 
       vtkm::cont::DataSet ds;
-      //std::cout<<"Block index: "<<blockIndex<<" start="<<blockStart<<" end="<<blockEnd<<" (rank="<<rank<<")"<<std::endl;
 
       // 2D data
       if (nDims == 2)
@@ -606,10 +608,6 @@ int main(int argc, char* argv[])
         vtkm::Vec<ValueType, 3> origin(0, 0, (blockIndex * blockSize));
         vtkm::Vec<ValueType, 3> spacing(1, 1, 1);
         ds = dsb.Create(vdims, origin, spacing);
-
-        //localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(blockIndex, 0, 0));
-        //localBlockOriginsPortal.Set(localBlockIndex, vtkm::Id3((blockStart / blockSliceSize), 0, 0));
-        //localBlockSizesPortal.Set(localBlockIndex, vtkm::Id3(currBlockSize, dims[1], dims[2]));
 
         localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(0, 0, blockIndex));
         localBlockOriginsPortal.Set(localBlockIndex,

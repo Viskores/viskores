@@ -61,6 +61,7 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshBoundary.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshStructureMarchingCubes.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/marchingcubes_3D/Types.h>
 
@@ -92,6 +93,8 @@ public:
   MeshStructureMarchingCubes<DeviceTag> PrepareForExecution(DeviceTag) const;
 
   Mesh_DEM_Triangulation_3D_MarchingCubes(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices);
+
+  MeshBoundary3DExec GetMeshBoundaryExecutionObject() const;
 
 private:
   bool useGetMax; // Define the behavior ofr the PrepareForExecution function
@@ -165,6 +168,13 @@ MeshStructureMarchingCubes<DeviceTag>
                                                linkVertexConnectionsEighteen,
                                                inCubeConnectionsSix,
                                                inCubeConnectionsEighteen);
+}
+
+template <typename T, typename StorageType>
+MeshBoundary3DExec
+Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::GetMeshBoundaryExecutionObject() const
+{
+  return MeshBoundary3DExec(this->nRows, this->nCols, this->nSlices, this->sortOrder);
 }
 
 } // namespace contourtree_augmented

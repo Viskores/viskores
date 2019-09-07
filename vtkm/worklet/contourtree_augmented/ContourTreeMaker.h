@@ -90,7 +90,6 @@
 //VTKM includes
 #include <vtkm/Types.h>
 #include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -139,11 +138,14 @@ public:
   // computes the hyperarcs in the contour tree
   void ComputeHyperAndSuperStructure();
 
-  // computes the regular arcs in the contour tree
+  // computes the regular arcs in the contour tree. Augment the contour tree with all regular vertices.
   void ComputeRegularStructure(MeshExtrema& meshExtrema);
 
-  template <class Mesh>
-  void ComputeRegularStructure(MeshExtrema& meshExtrema, const Mesh& mesh);
+  // compute the parital regular arcs by augmenting the contour tree with the relevant vertices on the boundary
+  template <class Mesh, class MeshBoundaryExecObj>
+  void ComputeBoundaryRegularStructure(MeshExtrema& meshExtrema,
+                                       const Mesh& mesh,
+                                       const MeshBoundaryExecObj& meshBoundary);
 
   // routine that augments the join & split tree with each other's supernodes
   //              the augmented trees will be stored in the joinSuperarcs / mergeSuperarcs arrays
@@ -306,12 +308,17 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
     contourTree.whenTransferred, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
-  auto getLastValue = [](const IdArrayType& ah) -> vtkm::Id {
-    return vtkm::cont::ArrayGetValue(ah.GetNumberOfValues() - 1, ah);
-  };
-
-  vtkm::Id nHypernodes = getLastValue(newHypernodePosition) +
-    oneIfHypernodeFunctor(getLastValue(contourTree.whenTransferred));
+  vtkm::Id nHypernodes = 0;
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> temp;
+    temp.Allocate(2);
+    vtkm::cont::Algorithm::CopySubRange(
+      newHypernodePosition, newHypernodePosition.GetNumberOfValues() - 1, 1, temp);
+    vtkm::cont::Algorithm::CopySubRange(
+      contourTree.whenTransferred, contourTree.whenTransferred.GetNumberOfValues() - 1, 1, temp, 1);
+    auto portal = temp.GetPortalControl();
+    nHypernodes = portal.Get(0) + oneIfHypernodeFunctor(portal.Get(1));
+  }
 
   IdArrayType newHypernodes;
   newHypernodes.Allocate(nHypernodes);
@@ -434,10 +441,12 @@ void InitIdArrayTypeNoSuchElement(IdArrayType& idArray, vtkm::Id size)
   vtkm::cont::Algorithm::Copy(noSuchElementArray, idArray);
 }
 
-template <class Mesh>
-void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema, const Mesh& mesh)
+template <class Mesh, class MeshBoundaryExecObj>
+void ContourTreeMaker::ComputeBoundaryRegularStructure(
+  MeshExtrema& meshExtrema,
+  const Mesh& mesh,
+  const MeshBoundaryExecObj& meshBoundaryExecObj)
 { // ComputeRegularStructure()
-
   // First step - use the superstructure to set the superparent for all supernodes
   auto supernodesIndex = vtkm::cont::ArrayHandleIndex(contourTree.supernodes.GetNumberOfValues());
   IdArrayType superparents;
@@ -453,11 +462,7 @@ void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema, const M
   // Second step - for all remaining (regular) nodes, locate the superarc to which they belong
   contourtree_maker_inc_ns::ComputeRegularStructure_LocateSuperarcsOnBoundary
     locateSuperarcsOnBoundaryWorklet(contourTree.hypernodes.GetNumberOfValues(),
-                                     contourTree.supernodes.GetNumberOfValues(),
-                                     mesh.nRows,
-                                     mesh.nCols,
-                                     mesh.nSlices,
-                                     mesh.nDims);
+                                     contourTree.supernodes.GetNumberOfValues());
   this->Invoke(locateSuperarcsOnBoundaryWorklet,
                superparents,                // (input/output)
                contourTree.whenTransferred, // (input)
@@ -467,7 +472,7 @@ void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema, const M
                contourTree.supernodes,      // (input)
                meshExtrema.peaks,           // (input)
                meshExtrema.pits,            // (input)
-               mesh.sortOrder);             // (input)
+               meshBoundaryExecObj);        // (input)
 
   // We have now set the superparent correctly for each node, and need to sort them to get the correct regular arcs
   // DAVID "ContourTreeMaker.h" line 338
@@ -493,7 +498,6 @@ void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema, const M
   vtkm::cont::Algorithm::CopyIf(
     superparents, superparents, tmpsuperparents, ContourTreeNoSuchElementSuperParents());
   vtkm::cont::Algorithm::Copy(tmpsuperparents, superparents);
-  //superparents.erase(std::remove(superparents.begin(), superparents.end(), NO_SUCH_ELEMENT), superparents.end());
 
   // Create array for sorting
   IdArrayType augmentnodes_sorted;
@@ -505,7 +509,6 @@ void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema, const M
   vtkm::cont::Algorithm::Sort(
     augmentnodes_sorted,
     contourtree_maker_inc_ns::ContourTreeNodeComparator(superparents, contourTree.superarcs));
-
   // now set the arcs based on the array
   InitIdArrayTypeNoSuchElement(contourTree.augmentarcs,
                                contourTree.augmentnodes.GetNumberOfValues());
@@ -518,10 +521,8 @@ void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema, const M
                contourTree.supernodes,   // (input)
                toCompressed,             // (input)
                contourTree.augmentarcs); // (output)
-
-  DebugPrint("Regular Structure Computed", __FILE__, __LINE__);
+  DebugPrint("Regular Boundary Structure Computed", __FILE__, __LINE__);
 } // ComputeRegularStructure()
-
 
 
 // routine that augments the join & split tree with each other's supernodes

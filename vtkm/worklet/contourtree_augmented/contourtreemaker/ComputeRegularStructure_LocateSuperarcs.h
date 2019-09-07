@@ -398,6 +398,10 @@ public:
 
 }; // ComputeRegularStructure_LocateSuperarcs.h
 
+
+
+// TODO This algorithm looks to be a 3d/2d volume algorithm that is iterating 'points' and concerned about being on the 'boundary'. This would be better suited as WorkletMapPointNeighborhood as it can provide the boundary condition logic for you.
+
 // Worklet for the second step of template <class Mesh> void ContourTreeMaker::ComputeRegularStructure ---
 // for all remaining (regular) nodes on the boundary, locate the superarc to which they belong
 class ComputeRegularStructure_LocateSuperarcsOnBoundary : public vtkm::worklet::WorkletMapField
@@ -411,7 +415,7 @@ public:
                                 WholeArrayIn contourTreeSupernodes,      // (input)
                                 WholeArrayIn meshExtremaPeaks,           // (input)
                                 WholeArrayIn meshExtremaPits,            // (input)
-                                FieldIn meshSortOrderPortal);            // (input)
+                                ExecObject meshBoundary);                // (input)
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
@@ -424,52 +428,13 @@ public:
 
   // Default Constructor
   VTKM_EXEC_CONT
-  ComputeRegularStructure_LocateSuperarcsOnBoundary(vtkm::Id NumHypernodes,
-                                                    vtkm::Id NumSupernodes,
-                                                    vtkm::Id _nRows,
-                                                    vtkm::Id _nCols,
-                                                    vtkm::Id _nSlices,
-                                                    vtkm::Id _nDims)
+  ComputeRegularStructure_LocateSuperarcsOnBoundary(vtkm::Id NumHypernodes, vtkm::Id NumSupernodes)
     : numHypernodes(NumHypernodes)
     , numSupernodes(NumSupernodes)
-    , nRows(_nRows)
-    , nCols(_nCols)
-    , nSlices(_nSlices)
-    , nDims(_nDims)
   {
   }
 
-  vtkm::Id vertexRow(const vtkm::Id v) const { return (v % (nRows * nCols)) / nCols; }
-  vtkm::Id vertexColumn(const vtkm::Id v) const { return v % nCols; }
-  vtkm::Id vertexSlice(const vtkm::Id v) const { return v / (nRows * nCols); }
-
-  bool liesOnBoundary(const vtkm::Id meshSortOrderValue) const
-  {
-    if (nDims == 2)
-      return liesOnBoundary2(meshSortOrderValue);
-    else
-      return liesOnBoundary3(meshSortOrderValue);
-  }
-
-  bool liesOnBoundary2(const vtkm::Id meshSortOrderValue) const
-  {
-    const vtkm::Id v = meshSortOrderValue;
-    const vtkm::Id row = vertexRow(v);
-    const vtkm::Id col = vertexColumn(v);
-    return (row == 0) || (col == 0) || (row == nRows - 1) || (col == nCols - 1);
-  }
-
-  bool liesOnBoundary3(const vtkm::Id meshSortOrderValue) const
-  {
-    const vtkm::Id v = meshSortOrderValue;
-    const vtkm::Id row = vertexRow(v);
-    const vtkm::Id col = vertexColumn(v);
-    const vtkm::Id sli = vertexSlice(v);
-    return (row == 0) || (col == 0) || (sli == 0) || (row == nRows - 1) || (col == nCols - 1) ||
-      (sli == nSlices - 1);
-  }
-
-  template <typename InOutFieldPortalType, typename InFieldPortalType>
+  template <typename InOutFieldPortalType, typename InFieldPortalType, typename MeshBoundaryType>
   VTKM_EXEC void operator()(const InOutFieldPortalType& contourTreeSuperparentsPortal,
                             const vtkm::Id node,
                             const InFieldPortalType& contourTreeWhenTransferredPortal,
@@ -479,12 +444,11 @@ public:
                             const InFieldPortalType& contourTreeSupernodesPortal,
                             const InFieldPortalType& meshExtremaPeaksPortal,
                             const InFieldPortalType& meshExtremaPitsPortal,
-                            const vtkm::Id& meshSortOrderValue) const
+                            const MeshBoundaryType& meshBoundary) const
   {
     // per node
     // if the superparent is already set, it's a supernode, so skip it.
-    if (noSuchElement(contourTreeSuperparentsPortal.Get(node)) &&
-        liesOnBoundary(meshSortOrderValue))
+    if (noSuchElement(contourTreeSuperparentsPortal.Get(node)) && meshBoundary.liesOnBoundary(node))
     { // regular nodes only
       // we will need to prune top and bottom until one of them prunes past the node
       vtkm::Id top = meshExtremaPeaksPortal.Get(node);

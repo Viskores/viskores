@@ -98,8 +98,12 @@ public:
   {
     return isThis(idx) ? this->thisVectorPortal.Get(maskedIndex(idx))
                        : this->otherVectorPortal.Get(maskedIndex(idx));
-    //std::cout<<"CV: idx="<<idx<<" isThis(idx)="<<isThis(idx)<<" maskedIndex(idx)="<<maskedIndex(idx)<<" thisSize="<<thisVectorPortal.GetNumberOfValues()<<" otherSize="<<otherVectorPortal.GetNumberOfValues()<<" thisVal="<< this->thisVectorPortal.Get(maskedIndex(idx))<<" otherVal="<<this->otherVectorPortal.Get(maskedIndex(idx))<< " result="<<val<<std::endl;
-    //return val;
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Id GetNumberOfValues() const
+  {
+    return thisVectorPortal.GetNumberOfValues() + otherVectorPortal.GetNumberOfValues();
   }
 
 private:
@@ -122,6 +126,11 @@ public:
   CombinedVector<T, DeviceTag> PrepareForExecution(DeviceTag) const
   {
     return CombinedVector<T, DeviceTag>(this->thisVector, this->otherVector);
+  }
+
+  vtkm::Id GetNumberOfValues() const
+  {
+    return thisVector.GetNumberOfValues() + otherVector.GetNumberOfValues();
   }
 
 private:

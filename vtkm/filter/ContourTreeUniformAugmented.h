@@ -80,7 +80,7 @@ class ContourTreePPP2 : public vtkm::filter::FilterCell<ContourTreePPP2>
 public:
   using SupportedTypes = vtkm::TypeListTagScalarAll;
   VTKM_CONT
-  ContourTreePPP2(bool useMarchingCubes = false, bool computeRegularStructure = true);
+  ContourTreePPP2(bool useMarchingCubes = false, unsigned int computeRegularStructure = 1);
 
   // Define the spatial decomposition of the data in case we run in parallel with a multi-block dataset
   VTKM_CONT
@@ -131,8 +131,8 @@ private:
                vtkm::Id nslices) const;
 
   bool UseMarchingCubes;
-  // 0=no augmentation, 1=full augmentation
-  bool ComputeRegularStructure;
+  // 0=no augmentation, 1=full augmentation, 2=boundary augmentation
+  unsigned int ComputeRegularStructure;
   // Store timings about the contour tree computation
   std::vector<std::pair<std::string, vtkm::Float64>> Timings;
 

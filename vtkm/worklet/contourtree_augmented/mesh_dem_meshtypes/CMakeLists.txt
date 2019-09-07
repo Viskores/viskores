@@ -16,6 +16,7 @@ set(headers
   MeshStructureFreudenthal3D.h
   MeshStructureMarchingCubes.h
   MeshStructureContourTreeMesh.h
+  MeshBoundary.h
   )
 
 #----------------------------------------------------------------------------

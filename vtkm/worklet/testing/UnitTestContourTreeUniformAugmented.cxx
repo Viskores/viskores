@@ -100,7 +100,7 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType meshSortOrder;
     vtkm::Id numIterations;
     const bool useMarchingCubes = false;
-    const bool computeRegularStructure = true;
+    const int computeRegularStructure = 1;
 
     contourTreeWorklet.Run(field,
                            timings,
@@ -173,7 +173,7 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType meshSortOrder;
     vtkm::Id numIterations;
     const bool useMarchingCubes = false;
-    const bool computeRegularStructure = true;
+    const int computeRegularStructure = 1;
 
     contourTreeWorklet.Run(field,
                            timings,
@@ -253,7 +253,7 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType meshSortOrder;
     vtkm::Id numIterations;
     const bool useMarchingCubes = true;
-    const bool computeRegularStructure = true;
+    const int computeRegularStructure = 1;
 
     contourTreeWorklet.Run(field,
                            timings,

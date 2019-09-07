@@ -211,7 +211,9 @@ inline void ContourTree::PrintContent() const
   printHeader(hypernodes.GetNumberOfValues());
   printIndices("Hypernodes", hypernodes);
   printIndices("Hyperarcs", hyperarcs);
-  std::cout << std::endl;
+  printHeader(augmentnodes.GetNumberOfValues());
+  printIndices("Augmentnodes", augmentnodes);
+  printIndices("Augmentarcs", augmentarcs);
 }
 
 void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum)
