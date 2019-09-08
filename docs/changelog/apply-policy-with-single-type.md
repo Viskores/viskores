@@ -17,12 +17,15 @@ have to compile for this array once.
 
 This is done through a new version of `ApplyPolicy`. This version takes a
 type of the array as its first template argument, which must be specified.
-    
+
 This requires having a list of potential storage to try. It will use that
 to construct an `ArrayHandleMultiplexer` containing all potential types.
 This list of storages comes from the policy. A `StorageList` item was added
-to the policy.
-    
+to the policy. It is also sometimes necessary for a filter to provide its
+own special storage types. Thus, an `AdditionalFieldStorage` type was added
+to `Filter` which is set to a `ListTag` of storage types that should be
+added to those specified by the policy.
+
 Types are automatically converted. So if you ask for a `vtkm::Float64` and
 field contains a `vtkm::Float32`, it will the array wrapped in an
 `ArrayHandleCast` to give the expected type.
@@ -33,12 +36,12 @@ result is just going to follow the type of the field.
 
 ``` cpp
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet MyFilter::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   vtkm::cont::CoordinateSystem coords = inDataSet.GetCoordianteSystem();
-  auto coordsArray = vtkm::filter::ApplyPolicy<T>(coords, policy);
+  auto coordsArray = vtkm::filter::ApplyPolicy<T>(coords, policy, *this);
 ```

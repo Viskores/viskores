@@ -12,6 +12,8 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
+#include <vtkm/filter/PolicyBase.h>
+
 namespace vtkm
 {
 namespace filter
@@ -27,18 +29,17 @@ inline VTKM_CONT Tube::Tube()
 //-----------------------------------------------------------------------------
 template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet Tube::DoExecute(const vtkm::cont::DataSet& input,
-                                                     vtkm::filter::PolicyBase<Policy>)
+                                                     vtkm::filter::PolicyBase<Policy> policy)
 {
   this->Worklet.SetCapping(this->Capping);
   this->Worklet.SetNumberOfSides(this->NumberOfSides);
   this->Worklet.SetRadius(this->Radius);
 
+  auto originalPoints = vtkm::filter::ApplyPolicy<vtkm::Vec3f>(
+    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()), policy, *this);
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
-  this->Worklet.Run(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
-                    input.GetCellSet(),
-                    newPoints,
-                    newCells);
+  this->Worklet.Run(originalPoints, input.GetCellSet(), newPoints, newCells);
 
   vtkm::cont::DataSet outData;
   vtkm::cont::CoordinateSystem outCoords("coordinates", newPoints);
