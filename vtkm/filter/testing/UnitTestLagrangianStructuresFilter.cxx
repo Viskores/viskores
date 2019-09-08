@@ -17,7 +17,39 @@
 
 namespace auxiliary
 {
-vtkm::FloatDefault vecData[200 * 3] = {
+enum class Option
+{
+  _2D = 0,
+  _3D
+};
+
+void ValidateLCSFilterResult(const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& vtkmOutput,
+                             const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& visitOutput,
+                             const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& expDiff)
+{
+  VTKM_TEST_ASSERT(vtkmOutput.GetNumberOfValues() == visitOutput.GetNumberOfValues(),
+                   "Wrong number of values");
+
+  const vtkm::FloatDefault tolerance = static_cast<vtkm::FloatDefault>(1.0e-05);
+
+  auto vtkmPortal = vtkmOutput.GetPortalConstControl();
+  auto visitPortal = visitOutput.GetPortalConstControl();
+  auto diffPortal = expDiff.GetPortalConstControl();
+
+  for (vtkm::Id index = 0; index < vtkmOutput.GetNumberOfValues(); index++)
+  {
+    auto vtkm = vtkmPortal.Get(index);
+    auto visit = visitPortal.Get(index);
+    auto exp = diffPortal.Get(index);
+    auto diff = vtkm::Abs(vtkm - visit);
+    std::stringstream message;
+    message << "Calculated o/p is not correct, \n"
+            << "VTKM : " << vtkm << ", VISIT : " << visit << ", RES : " << vtkm::Abs(diff - exp);
+    VTKM_TEST_ASSERT(vtkm::Abs(diff - exp) <= tolerance || diff < tolerance, message.str());
+  }
+}
+
+vtkm::FloatDefault vecData2D[200 * 3] = {
   0.000000f,  0.000000f,  0.000000f,  -0.032369f, 0.000000f,  0.000000f,  -0.061107f, 0.000000f,
   0.000000f,  -0.083145f, 0.000000f,  0.000000f,  -0.096136f, 0.000000f,  0.000000f,  -0.098712f,
   0.000000f,  0.000000f,  -0.090620f, 0.000000f,  0.000000f,  -0.072751f, -0.000000f, 0.000000f,
@@ -95,7 +127,57 @@ vtkm::FloatDefault vecData[200 * 3] = {
   0.000000f,  0.000000f,  -0.032369f, 0.000000f,  0.000000f,  -0.000000f, 0.000000f,  0.000000f
 };
 
-vtkm::FloatDefault visitData[200] = {
+vtkm::FloatDefault vecData3D[125 * 3] = {
+  -1.359000f, -1.359000f, -1.359000f, -1.359000f, -0.136603f, -0.056133f, -1.359000f, -0.300565f,
+  -1.704760f, -1.359000f, -1.143790f, -0.278636f, -1.359000f, 0.513701f,  -0.945288f, -0.056133f,
+  -1.359000f, -0.136603f, -0.056133f, -0.136603f, 1.166260f,  -0.056133f, -0.300565f, -0.482370f,
+  -0.056133f, -1.143790f, 0.943757f,  -0.056133f, 0.513701f,  0.277104f,  -1.704760f, -1.359000f,
+  -0.300565f, -1.704760f, -0.136603f, 1.002290f,  -1.704760f, -0.300565f, -0.646332f, -1.704760f,
+  -1.143790f, 0.779793f,  -1.704760f, 0.513701f,  0.113142f,  -0.278636f, -1.359000f, -1.143790f,
+  -0.278636f, -0.136603f, 0.159074f,  -0.278636f, -0.300565f, -1.489550f, -0.278636f, -1.143790f,
+  -0.063429f, -0.278636f, 0.513701f,  -0.730080f, -0.945288f, -1.359000f, 0.513701f,  -0.945288f,
+  -0.136603f, 1.816560f,  -0.945288f, -0.300565f, 0.167933f,  -0.945288f, -1.143790f, 1.594060f,
+  -0.945288f, 0.513701f,  0.927407f,  -0.136603f, -0.056133f, -1.359000f, -0.136603f, 1.166260f,
+  -0.056133f, -0.136603f, 1.002290f,  -1.704760f, -0.136603f, 0.159074f,  -0.278636f, -0.136603f,
+  1.816560f,  -0.945288f, 1.166260f,  -0.056133f, -0.136603f, 1.166260f,  1.166260f,  1.166260f,
+  1.166260f,  1.002290f,  -0.482370f, 1.166260f,  0.159074f,  0.943757f,  1.166260f,  1.816560f,
+  0.277104f,  -0.482370f, -0.056133f, -0.300565f, -0.482370f, 1.166260f,  1.002290f,  -0.482370f,
+  1.002290f,  -0.646332f, -0.482370f, 0.159074f,  0.779793f,  -0.482370f, 1.816560f,  0.113142f,
+  0.943757f,  -0.056133f, -1.143790f, 0.943757f,  1.166260f,  0.159074f,  0.943757f,  1.002290f,
+  -1.489550f, 0.943757f,  0.159074f,  -0.063429f, 0.943757f,  1.816560f,  -0.730080f, 0.277104f,
+  -0.056133f, 0.513701f,  0.277104f,  1.166260f,  1.816560f,  0.277104f,  1.002290f,  0.167933f,
+  0.277104f,  0.159074f,  1.594060f,  0.277104f,  1.816560f,  0.927407f,  -0.300565f, -1.704760f,
+  -1.359000f, -0.300565f, -0.482370f, -0.056133f, -0.300565f, -0.646332f, -1.704760f, -0.300565f,
+  -1.489550f, -0.278636f, -0.300565f, 0.167933f,  -0.945288f, 1.002290f,  -1.704760f, -0.136603f,
+  1.002290f,  -0.482370f, 1.166260f,  1.002290f,  -0.646332f, -0.482370f, 1.002290f,  -1.489550f,
+  0.943757f,  1.002290f,  0.167933f,  0.277104f,  -0.646332f, -1.704760f, -0.300565f, -0.646332f,
+  -0.482370f, 1.002290f,  -0.646332f, -0.646332f, -0.646332f, -0.646332f, -1.489550f, 0.779793f,
+  -0.646332f, 0.167933f,  0.113142f,  0.779792f,  -1.704760f, -1.143790f, 0.779792f,  -0.482370f,
+  0.159074f,  0.779792f,  -0.646332f, -1.489550f, 0.779792f,  -1.489550f, -0.063429f, 0.779792f,
+  0.167933f,  -0.730080f, 0.113142f,  -1.704760f, 0.513701f,  0.113142f,  -0.482370f, 1.816560f,
+  0.113142f,  -0.646332f, 0.167933f,  0.113142f,  -1.489550f, 1.594060f,  0.113142f,  0.167933f,
+  0.927407f,  -1.143790f, -0.278636f, -1.359000f, -1.143790f, 0.943757f,  -0.056133f, -1.143790f,
+  0.779793f,  -1.704760f, -1.143790f, -0.063429f, -0.278636f, -1.143790f, 1.594060f,  -0.945288f,
+  0.159074f,  -0.278636f, -0.136603f, 0.159074f,  0.943757f,  1.166260f,  0.159074f,  0.779793f,
+  -0.482370f, 0.159074f,  -0.063429f, 0.943757f,  0.159074f,  1.594060f,  0.277104f,  -1.489550f,
+  -0.278636f, -0.300565f, -1.489550f, 0.943757f,  1.002290f,  -1.489550f, 0.779793f,  -0.646332f,
+  -1.489550f, -0.063429f, 0.779793f,  -1.489550f, 1.594060f,  0.113142f,  -0.063428f, -0.278636f,
+  -1.143790f, -0.063428f, 0.943757f,  0.159074f,  -0.063428f, 0.779793f,  -1.489550f, -0.063428f,
+  -0.063429f, -0.063429f, -0.063428f, 1.594060f,  -0.730080f, -0.730080f, -0.278636f, 0.513701f,
+  -0.730080f, 0.943757f,  1.816560f,  -0.730080f, 0.779793f,  0.167933f,  -0.730080f, -0.063429f,
+  1.594060f,  -0.730080f, 1.594060f,  0.927407f,  0.513701f,  -0.945288f, -1.359000f, 0.513701f,
+  0.277104f,  -0.056133f, 0.513701f,  0.113142f,  -1.704760f, 0.513701f,  -0.730080f, -0.278636f,
+  0.513701f,  0.927407f,  -0.945288f, 1.816560f,  -0.945288f, -0.136603f, 1.816560f,  0.277104f,
+  1.166260f,  1.816560f,  0.113142f,  -0.482370f, 1.816560f,  -0.730080f, 0.943757f,  1.816560f,
+  0.927407f,  0.277104f,  0.167933f,  -0.945288f, -0.300565f, 0.167933f,  0.277104f,  1.002290f,
+  0.167933f,  0.113142f,  -0.646332f, 0.167933f,  -0.730080f, 0.779793f,  0.167933f,  0.927407f,
+  0.113142f,  1.594060f,  -0.945288f, -1.143790f, 1.594060f,  0.277104f,  0.159074f,  1.594060f,
+  0.113142f,  -1.489550f, 1.594060f,  -0.730080f, -0.063429f, 1.594060f,  0.927407f,  -0.730080f,
+  0.927407f,  -0.945288f, 0.513701f,  0.927407f,  0.277104f,  1.816560f,  0.927407f,  0.113142f,
+  0.167933f,  0.927407f,  -0.730080f, 1.594060f,  0.927407f,  0.927407f,  0.927407f
+};
+
+vtkm::FloatDefault visitData2D[200] = {
   0.175776f, 0.193068f, 0.184354f, 0.162709f, 0.156567f, 0.165079f, 0.183523f, 0.176101f, 0.182635f,
   0.150985f, 0.127186f, 0.173021f, 0.173493f, 0.160812f, 0.124465f, 0.110838f, 0.135879f, 0.184853f,
   0.193068f, 0.000007f, 0.157161f, 0.144306f, 0.108385f, 0.086895f, 0.073086f, 0.092054f, 0.109178f,
@@ -121,7 +203,24 @@ vtkm::FloatDefault visitData[200] = {
   0.161986f, 0.000001f
 };
 
-vtkm::FloatDefault diffData[200] = {
+vtkm::FloatDefault visitData3D[125] = {
+  0.000000f, 0.246171f, 0.026549f, 0.051611f, 0.165443f, 0.246171f, 0.071890f, 0.157521f, 0.224824f,
+  0.165498f, 0.026549f, 0.177905f, 0.082937f, 0.107466f, 0.149497f, 0.051611f, 0.209922f, 0.057065f,
+  0.176006f, 0.095284f, 0.165443f, 0.093980f, 0.106193f, 0.132160f, 0.155382f, 0.246171f, 0.071890f,
+  0.177905f, 0.209922f, 0.093980f, 0.071890f, 0.035283f, 0.059712f, 0.068458f, 0.091744f, 0.157521f,
+  0.059712f, 0.031083f, 0.161508f, 0.145593f, 0.224824f, 0.068458f, 0.076021f, 0.112219f, 0.054363f,
+  0.165498f, 0.091744f, 0.074956f, 0.052716f, 0.000000f, 0.026549f, 0.157521f, 0.082937f, 0.057065f,
+  0.106193f, 0.177905f, 0.059712f, 0.031083f, 0.076021f, 0.074956f, 0.082937f, 0.031083f, 0.144075f,
+  0.013539f, 0.036500f, 0.107466f, 0.161508f, 0.013539f, 0.074017f, 0.199354f, 0.149497f, 0.145593f,
+  0.036500f, 0.130521f, 0.126838f, 0.051611f, 0.224824f, 0.107466f, 0.176006f, 0.132160f, 0.209922f,
+  0.068458f, 0.161508f, 0.112219f, 0.052716f, 0.057065f, 0.076021f, 0.013539f, 0.074018f, 0.130521f,
+  0.176006f, 0.112219f, 0.074017f, 0.156035f, 0.116269f, 0.095284f, 0.054363f, 0.199354f, 0.116269f,
+  0.092932f, 0.165443f, 0.165498f, 0.149497f, 0.095284f, 0.155382f, 0.093980f, 0.091744f, 0.145593f,
+  0.054363f, 0.000000f, 0.106193f, 0.074956f, 0.036500f, 0.199354f, 0.126838f, 0.132161f, 0.052716f,
+  0.130521f, 0.116269f, 0.092932f, 0.155382f, 0.000000f, 0.126838f, 0.092932f, 0.000000f
+};
+
+vtkm::FloatDefault diffData2D[200] = {
   0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.002152f, 0.003656f, 0.021269f,
   0.020149f, 0.043948f, 0.011656f, 0.006264f, 0.020559f, 0.040614f, 0.045728f, 0.026829f, 0.000501f,
   0.000000f, 0.175769f, 0.000001f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f, 0.000000f,
@@ -147,65 +246,91 @@ vtkm::FloatDefault diffData[200] = {
   0.040531f, 0.173409f
 };
 
-using Scalar = vtkm::FloatDefault;
-using Field = vtkm::Vec<Scalar, 3>;
+vtkm::FloatDefault diffData3D[125] = {
+  0.000018f, 0.000000f, 0.000000f, 0.000000f, 0.000063f, 0.000000f, 0.000000f, 0.000001f, 0.000000f,
+  0.000074f, 0.000000f, 0.000001f, 0.000001f, 0.000010f, 0.000204f, 0.000000f, 0.000006f, 0.002958f,
+  0.019681f, 0.000105f, 0.000067f, 0.001084f, 0.079343f, 0.132158f, 0.155378f, 0.000000f, 0.000000f,
+  0.000001f, 0.000006f, 0.001084f, 0.000000f, 0.027930f, 0.000000f, 0.000000f, 0.000006f, 0.000000f,
+  0.000000f, 0.000000f, 0.000004f, 0.000027f, 0.000000f, 0.000000f, 0.000001f, 0.000000f, 0.000025f,
+  0.000078f, 0.000014f, 0.016555f, 0.040407f, 0.000007f, 0.000000f, 0.000001f, 0.000001f, 0.002958f,
+  0.015710f, 0.000001f, 0.000000f, 0.000000f, 0.000001f, 0.016554f, 0.000001f, 0.000000f, 0.000000f,
+  0.000015f, 0.000057f, 0.000010f, 0.000003f, 0.000027f, 0.000039f, 0.000006f, 0.000228f, 0.000023f,
+  0.000098f, 0.000084f, 0.000015f, 0.000000f, 0.000000f, 0.000008f, 0.000015f, 0.001319f, 0.000006f,
+  0.000000f, 0.000004f, 0.000000f, 0.000029f, 0.002958f, 0.000001f, 0.000027f, 0.000090f, 0.000207f,
+  0.019681f, 0.000000f, 0.000169f, 0.000002f, 0.000043f, 0.000112f, 0.000020f, 0.000011f, 0.000015f,
+  0.000001f, 0.000067f, 0.000069f, 0.000160f, 0.000088f, 0.000227f, 0.001084f, 0.000003f, 0.000030f,
+  0.000028f, 0.000001f, 0.079343f, 0.016555f, 0.000104f, 0.000011f, 0.000030f, 0.132159f, 0.040438f,
+  0.000389f, 0.000078f, 0.000003f, 0.155380f, 0.000001f, 0.000060f, 0.000001f, 0.000001f
+};
 
-void ValidateLCSFilterResult(const vtkm::cont::ArrayHandle<Scalar>& vtkmOutput,
-                             const vtkm::cont::ArrayHandle<Scalar>& visitOutput,
-                             const vtkm::cont::ArrayHandle<Scalar>& expDiff)
+void PopulateData(std::vector<vtkm::Vec3f>& fieldVec,
+                  std::vector<vtkm::FloatDefault>& visitVec,
+                  std::vector<vtkm::FloatDefault>& diffVec,
+                  const Option option)
 {
-  VTKM_TEST_ASSERT(vtkmOutput.GetNumberOfValues() == 200, "Wrong number of values");
-
-  auto vtkmPortal = vtkmOutput.GetPortalConstControl();
-  auto visitPortal = visitOutput.GetPortalConstControl();
-  auto diffPortal = expDiff.GetPortalConstControl();
-
-  for (vtkm::Id index = 0; index < 200; index++)
+  switch (option)
   {
-    auto vtkm = vtkmPortal.Get(index);
-    auto visit = visitPortal.Get(index);
-    auto diff = vtkm::Abs(vtkm - visit);
-    auto exp = diffPortal.Get(index);
-    VTKM_TEST_ASSERT(diff <= (vtkm::Abs(exp) + vtkm::Epsilon<Scalar>()),
-                     "Calculated o/p is not as expected");
+    case Option::_2D:
+    {
+      vtkm::Id elements = 200;
+      for (vtkm::Id index = 0; index < elements; index++)
+      {
+        vtkm::Id flatidx = index * 3;
+        vtkm::Vec3f field;
+        field[0] = auxiliary::vecData2D[flatidx];
+        field[1] = auxiliary::vecData2D[++flatidx];
+        field[2] = auxiliary::vecData2D[++flatidx];
+        fieldVec.push_back(field);
+        vtkm::FloatDefault diff = auxiliary::diffData2D[index];
+        diffVec.push_back(diff);
+        vtkm::FloatDefault visit = auxiliary::visitData2D[index];
+        visitVec.push_back(visit);
+      }
+    }
+    break;
+    case Option::_3D:
+    {
+      vtkm::Id elements = 125;
+      for (vtkm::Id index = 0; index < elements; index++)
+      {
+        vtkm::Id flatidx = index * 3;
+        vtkm::Vec3f field;
+        field[0] = auxiliary::vecData3D[flatidx];
+        field[1] = auxiliary::vecData3D[++flatidx];
+        field[2] = auxiliary::vecData3D[++flatidx];
+        fieldVec.push_back(field);
+        vtkm::FloatDefault diff = auxiliary::diffData3D[index];
+        diffVec.push_back(diff);
+        vtkm::FloatDefault visit = auxiliary::visitData3D[index];
+        visitVec.push_back(visit);
+      }
+      break;
+    }
   }
 }
 }
 
-void TestLagrangianStructures()
+void Test2DLCS()
 {
-  using Scalar = vtkm::FloatDefault;
-  using Field = vtkm::Vec<Scalar, 3>;
-
   /*Construct dataset and vector field*/
   vtkm::cont::DataSet inputData;
   vtkm::Id2 dims(20, 10);
-  vtkm::Vec<Scalar, 2> origin(0.0f, 0.0f);
-  vtkm::Vec<Scalar, 2> spacing;
-  spacing[0] = 2.0f / static_cast<Scalar>(dims[0] - 1);
-  spacing[1] = 1.0f / static_cast<Scalar>(dims[1] - 1);
+  vtkm::Vec2f origin(0.0f, 0.0f);
+  vtkm::Vec2f spacing;
+  spacing[0] = 2.0f / static_cast<vtkm::FloatDefault>(dims[0] - 1);
+  spacing[1] = 1.0f / static_cast<vtkm::FloatDefault>(dims[1] - 1);
   vtkm::cont::DataSetBuilderUniform dataBuilder;
   inputData = dataBuilder.Create(dims, origin, spacing);
 
-  std::vector<Scalar> diffVec;
-  std::vector<Scalar> visitVec;
-  std::vector<Field> fieldVec;
-  for (vtkm::Id index = 0; index < 200; index++)
-  {
-    vtkm::Id flatidx = index * 3;
-    Field field;
-    field[0] = auxiliary::vecData[flatidx];
-    field[1] = auxiliary::vecData[++flatidx];
-    field[2] = auxiliary::vecData[++flatidx];
-    fieldVec.push_back(field);
-    Scalar diff = auxiliary::diffData[index];
-    diffVec.push_back(diff);
-    Scalar visit = auxiliary::visitData[index];
-    visitVec.push_back(visit);
-  }
-  vtkm::cont::ArrayHandle<Scalar> diffHandle = vtkm::cont::make_ArrayHandle(diffVec);
-  vtkm::cont::ArrayHandle<Scalar> visitHandle = vtkm::cont::make_ArrayHandle(visitVec);
-  vtkm::cont::ArrayHandle<Field> fieldHandle = vtkm::cont::make_ArrayHandle(fieldVec);
+  std::vector<vtkm::FloatDefault> diffVec;
+  std::vector<vtkm::FloatDefault> visitVec;
+  std::vector<vtkm::Vec3f> fieldVec;
+
+  auxiliary::PopulateData(fieldVec, visitVec, diffVec, auxiliary::Option::_2D);
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> diffHandle = vtkm::cont::make_ArrayHandle(diffVec);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> visitHandle = vtkm::cont::make_ArrayHandle(visitVec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldHandle = vtkm::cont::make_ArrayHandle(fieldVec);
   vtkm::cont::DataSetFieldAdd fieldAdder;
   fieldAdder.AddPointField(inputData, "velocity", fieldHandle);
 
@@ -213,13 +338,55 @@ void TestLagrangianStructures()
   lagrangianStructures.SetStepSize(0.025f);
   lagrangianStructures.SetNumberOfSteps(500);
   lagrangianStructures.SetAdvectionTime(0.025f * 500);
-  lagrangianStructures.SetAdvectionTime(0.025f * 500);
   lagrangianStructures.SetActiveField("velocity");
   vtkm::cont::DataSet outputData = lagrangianStructures.Execute(inputData);
 
-  vtkm::cont::ArrayHandle<Scalar> FTLEField;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> FTLEField;
   outputData.GetField("FTLE").GetData().CopyTo(FTLEField);
   auxiliary::ValidateLCSFilterResult(FTLEField, visitHandle, diffHandle);
+}
+
+void Test3DLCS()
+{
+  /*Construct dataset and vector field*/
+  vtkm::cont::DataSet inputData;
+  vtkm::Id3 dims(5, 5, 5);
+  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec3f spacing;
+  spacing[0] = 10.0f / static_cast<vtkm::FloatDefault>(dims[0] - 1);
+  spacing[1] = 10.0f / static_cast<vtkm::FloatDefault>(dims[1] - 1);
+  spacing[2] = 10.0f / static_cast<vtkm::FloatDefault>(dims[2] - 1);
+  vtkm::cont::DataSetBuilderUniform dataBuilder;
+  inputData = dataBuilder.Create(dims, origin, spacing);
+
+  std::vector<vtkm::FloatDefault> diffVec;
+  std::vector<vtkm::FloatDefault> visitVec;
+  std::vector<vtkm::Vec3f> fieldVec;
+
+  auxiliary::PopulateData(fieldVec, visitVec, diffVec, auxiliary::Option::_3D);
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> diffHandle = vtkm::cont::make_ArrayHandle(diffVec);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> visitHandle = vtkm::cont::make_ArrayHandle(visitVec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldHandle = vtkm::cont::make_ArrayHandle(fieldVec);
+  vtkm::cont::DataSetFieldAdd fieldAdder;
+  fieldAdder.AddPointField(inputData, "velocity", fieldHandle);
+
+  vtkm::filter::LagrangianStructures lagrangianStructures;
+  lagrangianStructures.SetStepSize(0.01f);
+  lagrangianStructures.SetNumberOfSteps(500);
+  lagrangianStructures.SetAdvectionTime(0.01f * 500);
+  lagrangianStructures.SetActiveField("velocity");
+  vtkm::cont::DataSet outputData = lagrangianStructures.Execute(inputData);
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> FTLEField;
+  outputData.GetField("FTLE").GetData().CopyTo(FTLEField);
+  auxiliary::ValidateLCSFilterResult(FTLEField, visitHandle, diffHandle);
+}
+
+void TestLagrangianStructures()
+{
+  Test2DLCS();
+  Test3DLCS();
 }
 
 int UnitTestLagrangianStructuresFilter(int argc, char* argv[])
