@@ -32,3 +32,8 @@ using NewVec1 =
 using NewVec1 =
   typename vtkm::VecTraits<NestedVec>::template ReplaceBaseComponentType<vtkm::Float64>;
 ```
+
+This functionality replaces the functionality in `vtkm::BaseComponent`. Unfortunately,
+`vtkm::BaseComponent` did not have the ability to replace the base component and
+there was no straightforward way to implement that outside of `VecTraits`.
+

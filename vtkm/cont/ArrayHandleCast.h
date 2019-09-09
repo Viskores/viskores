@@ -14,8 +14,8 @@
 
 #include <vtkm/cont/Logging.h>
 
-#include <vtkm/BaseComponent.h>
 #include <vtkm/Range.h>
+#include <vtkm/VecTraits.h>
 
 #include <limits>
 
@@ -70,8 +70,8 @@ private:
   {
 #ifdef VTKM_ENABLE_LOGGING
     using DstValueType = T;
-    using SrcComp = typename vtkm::BaseComponent<SrcValueType>::Type;
-    using DstComp = typename vtkm::BaseComponent<DstValueType>::Type;
+    using SrcComp = typename vtkm::VecTraits<SrcValueType>::BaseComponentType;
+    using DstComp = typename vtkm::VecTraits<DstValueType>::BaseComponentType;
     using SrcLimits = std::numeric_limits<SrcComp>;
     using DstLimits = std::numeric_limits<DstComp>;
 

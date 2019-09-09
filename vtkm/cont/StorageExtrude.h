@@ -12,7 +12,7 @@
 
 #include <vtkm/internal/IndicesExtrude.h>
 
-#include <vtkm/BaseComponent.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/ErrorBadType.h>
 
@@ -371,7 +371,7 @@ struct VTKM_ALWAYS_EXPORT StorageTagExtrude
 template <typename T>
 class Storage<T, internal::StorageTagExtrude>
 {
-  using BaseT = typename BaseComponent<T>::Type;
+  using BaseT = typename VecTraits<T>::BaseComponentType;
   using HandleType = vtkm::cont::ArrayHandle<BaseT>;
   using TPortalType = typename HandleType::PortalConstControl;
 
@@ -461,7 +461,7 @@ private:
 template <typename T, typename Device>
 class VTKM_ALWAYS_EXPORT ArrayTransfer<T, internal::StorageTagExtrude, Device>
 {
-  using BaseT = typename BaseComponent<T>::Type;
+  using BaseT = typename VecTraits<T>::BaseComponentType;
   using TPortalType = decltype(vtkm::cont::ArrayHandle<BaseT>{}.PrepareForInput(Device{}));
 
 public:

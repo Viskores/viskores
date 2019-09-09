@@ -10,7 +10,7 @@
 
 #include <vtkm/worklet/ScalarsToColors.h>
 
-#include <vtkm/BaseComponent.h>
+#include <vtkm/VecTraits.h>
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 
@@ -54,7 +54,7 @@ void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
 {
   using namespace vtkm::worklet::colorconversion;
   //If our shift is 0 and our scale == 1 no need to apply them
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
@@ -76,7 +76,7 @@ void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
                           vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const
 {
   using namespace vtkm::worklet::colorconversion;
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
@@ -101,7 +101,7 @@ void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>
   //
   using namespace vtkm::worklet::colorconversion;
   //If our shift is 0 and our scale == 1 no need to apply them
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
@@ -126,7 +126,7 @@ void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>
 {
 
   using namespace vtkm::worklet::colorconversion;
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
