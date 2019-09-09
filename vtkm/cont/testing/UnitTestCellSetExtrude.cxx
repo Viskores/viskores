@@ -13,8 +13,9 @@
 #include <vtkm/cont/ArrayHandleExtrudeCoords.h>
 #include <vtkm/cont/CellSetExtrude.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CellAverage.h>
+
 #include <vtkm/filter/PointAverage.h>
+#include <vtkm/filter/PointAverage.hxx>
 #include <vtkm/filter/PolicyExtrude.h>
 
 namespace

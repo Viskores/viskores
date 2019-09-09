@@ -264,7 +264,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
 //----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
+VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
@@ -284,7 +284,7 @@ inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
 //----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
+VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
   const vtkm::cont::PartitionedDataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {

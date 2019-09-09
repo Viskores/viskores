@@ -17,19 +17,12 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT PointAverage::PointAverage()
-  : vtkm::filter::FilterCell<PointAverage>()
-  , Worklet()
-{
-}
-
-//-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (!fieldMetadata.IsCellField())
   {

@@ -328,7 +328,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
         extract.SetFieldsToPass(this->GetActiveFieldName(),
                                 vtkm::filter::FieldSelection::MODE_EXCLUDE);
 
-      auto output = extract.Execute(input, vtkm::filter::GhostCellRemovePolicy());
+      auto output = extract.Execute(input);
       return output;
     }
   }

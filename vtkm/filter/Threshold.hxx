@@ -45,14 +45,6 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT Threshold::Threshold()
-  : vtkm::filter::FilterDataSetWithField<Threshold>()
-  , LowerValue(0)
-  , UpperValue(0)
-{
-}
-
-//-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Threshold::DoExecute(
   const vtkm::cont::DataSet& input,
@@ -71,31 +63,6 @@ inline VTKM_CONT vtkm::cont::DataSet Threshold::DoExecute(
   output.SetCellSet(cellOut);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   return output;
-}
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Threshold::DoMapField(vtkm::cont::DataSet& result,
-                                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                            const vtkm::filter::FieldMetadata& fieldMeta,
-                                            vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  if (fieldMeta.IsPointField())
-  {
-    //we copy the input handle to the result dataset, reusing the metadata
-    result.AddField(fieldMeta.AsField(input));
-    return true;
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input);
-    result.AddField(fieldMeta.AsField(out));
-    return true;
-  }
-  else
-  {
-    return false;
-  }
 }
 }
 }

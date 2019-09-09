@@ -46,7 +46,7 @@ inline VTKM_CONT FilterField<Derived>::~FilterField()
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
+VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
@@ -67,7 +67,7 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
+VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::Field& field,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
@@ -89,7 +89,7 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
+VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::CoordinateSystem& field,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)

@@ -11,6 +11,8 @@
 #ifndef vtk_m_filter_Threshold_h
 #define vtk_m_filter_Threshold_h
 
+#include <vtkm/filter/vtkm_filter_export.h>
+
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/Threshold.h>
 
@@ -28,13 +30,10 @@ namespace filter
 /// filter is an permutation of the input dataset.
 ///
 /// You can threshold either on point or cell fields
-class Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
+class VTKM_ALWAYS_EXPORT Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
 {
 public:
   using SupportedTypes = vtkm::TypeListTagScalarAll;
-
-  VTKM_CONT
-  Threshold();
 
   VTKM_CONT
   void SetLowerThreshold(vtkm::Float64 value) { this->LowerValue = value; }
@@ -58,16 +57,36 @@ public:
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
+                            vtkm::filter::PolicyBase<DerivedPolicy>)
+  {
+    if (fieldMeta.IsPointField())
+    {
+      //we copy the input handle to the result dataset, reusing the metadata
+      result.AddField(fieldMeta.AsField(input));
+      return true;
+    }
+    else if (fieldMeta.IsCellField())
+    {
+      vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input);
+      result.AddField(fieldMeta.AsField(out));
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
 
 private:
-  double LowerValue;
-  double UpperValue;
+  double LowerValue = 0;
+  double UpperValue = 0;
   vtkm::worklet::Threshold Worklet;
 };
+
+#ifndef vtkm_filter_Threshold_cxx
+VTKM_FILTER_EXPORT_EXECUTE_METHOD(Threshold);
+#endif
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/Threshold.hxx>
 
 #endif // vtk_m_filter_Threshold_h
