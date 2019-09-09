@@ -76,7 +76,7 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   vtkm::cont::DataSet result;
 
   vtkm::cont::CastAndCall(
-    vtkm::filter::ApplyPolicy(field, policy, vtkm::filter::FilterTraits<Derived>()),
+    vtkm::filter::ApplyPolicyFieldActive(field, policy, vtkm::filter::FilterTraits<Derived>()),
     internal::ResolveFieldTypeAndExecute(),
     static_cast<Derived*>(this),
     input,

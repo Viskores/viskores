@@ -65,7 +65,7 @@ inline VTKM_CONT vtkm::cont::DataSet Threshold::DoExecute(
 
   ThresholdRange predicate(this->GetLowerThreshold(), this->GetUpperThreshold());
   vtkm::cont::DynamicCellSet cellOut = this->Worklet.Run(
-    vtkm::filter::ApplyPolicy(cells, policy), field, fieldMeta.GetAssociation(), predicate);
+    vtkm::filter::ApplyPolicyCellSet(cells, policy), field, fieldMeta.GetAssociation(), predicate);
 
   vtkm::cont::DataSet output;
   output.SetCellSet(cellOut);

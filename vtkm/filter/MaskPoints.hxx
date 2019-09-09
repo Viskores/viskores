@@ -52,7 +52,7 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::MaskPoints worklet;
 
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy), this->Stride);
+  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy), this->Stride);
 
   // create the output dataset
   vtkm::cont::DataSet output;

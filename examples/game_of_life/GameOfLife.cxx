@@ -122,7 +122,7 @@ public:
 
     //Update the game state
     this->Invoke(
-      UpdateLifeState{}, vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
+      UpdateLifeState{}, vtkm::filter::ApplyPolicyCellSet(cells, policy), prevstate, state, colors);
 
     //save the results
     vtkm::cont::DataSet output;

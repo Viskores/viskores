@@ -49,7 +49,7 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
   }
   else
   { // Clean the grid
-    auto deducedCellSet = vtkm::filter::ApplyPolicy(inCellSet, policy);
+    auto deducedCellSet = vtkm::filter::ApplyPolicyCellSet(inCellSet, policy);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
 
     this->Invoke(worklet::CellDeepCopy::CountCellPoints{}, deducedCellSet, numIndices);

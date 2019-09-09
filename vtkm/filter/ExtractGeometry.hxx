@@ -90,7 +90,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
                     this->ExtractInside,
                     this->ExtractBoundaryCells,
                     this->ExtractOnlyBoundaryCells);
-  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(worker);
+  vtkm::filter::ApplyPolicyCellSet(cells, policy).CastAndCall(worker);
 
   // create the output dataset
   vtkm::cont::DataSet output;

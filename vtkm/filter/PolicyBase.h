@@ -228,16 +228,26 @@ using ArrayHandleMultiplexerForStorageList = vtkm::cont::ArrayHandleMultiplexerF
 } // namespace internal
 
 //-----------------------------------------------------------------------------
+/// \brief Get an array from a `Field` that is not the active field.
+///
+/// Use this form for getting a `Field` when you don't know the type and it is not
+/// (necessarily) the "active" field of the filter. It is generally used for arrays
+/// passed to the `DoMapField` method of filters.
+///
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename DerivedPolicy::FieldTypeList> ApplyPolicy(
-  const vtkm::cont::Field& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename DerivedPolicy::FieldTypeList>
+ApplyPolicyFieldNotActive(const vtkm::cont::Field& field, vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   using TypeList = typename DerivedPolicy::FieldTypeList;
   return field.GetData().ResetTypes(TypeList());
 }
 
 //-----------------------------------------------------------------------------
+/// \brief Get an `ArrayHandle` of a specific type from a `Field`.
+///
+/// Use this form of `ApplyPolicy` when you know what the value type of a field is or
+/// (more likely) there is a type you are going to cast it to anyway.
+///
 template <typename T, typename DerivedPolicy, typename FilterType>
 VTKM_CONT internal::ArrayHandleMultiplexerForStorageList<
   T,
@@ -255,13 +265,18 @@ ApplyPolicyFieldOfType(const vtkm::cont::Field& field,
 }
 
 //-----------------------------------------------------------------------------
+/// \brief Get an array from a `Field` that follows the types of an active field.
+///
+/// Use this form for getting a `Field` to build the types that are appropriate for
+/// the active field of this filter.
+///
 template <typename DerivedPolicy, typename FilterType>
 VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename vtkm::filter::DeduceFilterFieldTypes<
   DerivedPolicy,
   typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList>::TypeList>
-ApplyPolicy(const vtkm::cont::Field& field,
-            vtkm::filter::PolicyBase<DerivedPolicy>,
-            vtkm::filter::FilterTraits<FilterType>)
+ApplyPolicyFieldActive(const vtkm::cont::Field& field,
+                       vtkm::filter::PolicyBase<DerivedPolicy>,
+                       vtkm::filter::FilterTraits<FilterType>)
 {
   using FilterTypes = typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList;
   using TypeList =
@@ -269,20 +284,27 @@ ApplyPolicy(const vtkm::cont::Field& field,
   return field.GetData().ResetTypes(TypeList());
 }
 
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename ListOfTypes>
-VTKM_CONT vtkm::cont::VariantArrayHandleBase<
-  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, ListOfTypes>::TypeList>
-ApplyPolicy(const vtkm::cont::Field& field, vtkm::filter::PolicyBase<DerivedPolicy>, ListOfTypes)
-{
-  using TypeList =
-    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, ListOfTypes>::TypeList;
-  return field.GetData().ResetTypes(TypeList());
-}
+////-----------------------------------------------------------------------------
+///// \brief Get an array from a `Field` limited to a given set of types.
+/////
+//template <typename DerivedPolicy, typename ListOfTypes>
+//VTKM_CONT vtkm::cont::VariantArrayHandleBase<
+//  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, ListOfTypes>::TypeList>
+//ApplyPolicyFieldOfTypes(
+//  const vtkm::cont::Field& field, vtkm::filter::PolicyBase<DerivedPolicy>, ListOfTypes)
+//{
+//  using TypeList =
+//    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, ListOfTypes>::TypeList;
+//  return field.GetData().ResetTypes(TypeList());
+//}
 
 //-----------------------------------------------------------------------------
+/// \brief Ge a cell set from a `DynamicCellSet` object.
+///
+/// Adjusts the types of `CellSet`s to support those types specified in a policy.
+///
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::AllCellSetList> ApplyPolicy(
+VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::AllCellSetList> ApplyPolicyCellSet(
   const vtkm::cont::DynamicCellSet& cellset,
   vtkm::filter::PolicyBase<DerivedPolicy>)
 {
@@ -291,20 +313,30 @@ VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::AllCellSetList>
 }
 
 //-----------------------------------------------------------------------------
+/// \brief Get a structured cell set from a `DynamicCellSet` object.
+///
+/// Adjusts the types of `CellSet`s to support those structured cell set types
+/// specified in a policy.
+///
 template <typename DerivedPolicy>
 VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::StructuredCellSetList>
-ApplyPolicyStructured(const vtkm::cont::DynamicCellSet& cellset,
-                      vtkm::filter::PolicyBase<DerivedPolicy>)
+ApplyPolicyCellSetStructured(const vtkm::cont::DynamicCellSet& cellset,
+                             vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   using CellSetList = typename DerivedPolicy::StructuredCellSetList;
   return cellset.ResetCellSetList(CellSetList());
 }
 
 //-----------------------------------------------------------------------------
+/// \brief Get an unstructured cell set from a `DynamicCellSet` object.
+///
+/// Adjusts the types of `CellSet`s to support those unstructured cell set types
+/// specified in a policy.
+///
 template <typename DerivedPolicy>
 VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::UnstructuredCellSetList>
-ApplyPolicyUnstructured(const vtkm::cont::DynamicCellSet& cellset,
-                        vtkm::filter::PolicyBase<DerivedPolicy>)
+ApplyPolicyCellSetUnstructured(const vtkm::cont::DynamicCellSet& cellset,
+                               vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   using CellSetList = typename DerivedPolicy::UnstructuredCellSetList;
   return cellset.ResetCellSetList(CellSetList());

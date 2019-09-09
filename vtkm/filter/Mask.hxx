@@ -54,7 +54,7 @@ inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& 
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   vtkm::cont::DynamicCellSet cellOut;
   CallWorklet workletCaller(this->Stride, cellOut, this->Worklet);
-  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(workletCaller);
+  vtkm::filter::ApplyPolicyCellSet(cells, policy).CastAndCall(workletCaller);
 
   // create the output dataset
   vtkm::cont::DataSet output;
