@@ -91,6 +91,10 @@ struct ScopedCudaStackSize
     cudaDeviceSetLimit(cudaLimitStackSize, this->OldStackSize);
   }
 
+  // Disable copy
+  ScopedCudaStackSize(const ScopedCudaStackSize&) = delete;
+  ScopedCudaStackSize& operator=(const ScopedCudaStackSize&) = delete;
+
 private:
   std::size_t OldStackSize;
 };
