@@ -15,5 +15,5 @@ find_package(VTKm REQUIRED QUIET)
 add_executable(Lagrangian lagrangian.cxx ABCfield.h)
 target_link_libraries(Lagrangian PRIVATE vtkm_filter)
 vtkm_add_target_information(Lagrangian
-                            MODIFY_CUDA_FLAGS
+                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES lagrangian.cxx)

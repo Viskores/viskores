@@ -29,5 +29,5 @@ set(srcs
 add_executable(MultiBackend ${srcs} ${headers})
 target_link_libraries(MultiBackend PRIVATE vtkm_filter Threads::Threads)
 vtkm_add_target_information(MultiBackend
-                            MODIFY_CUDA_FLAGS
+                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES ${srcs})

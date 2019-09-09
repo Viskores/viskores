@@ -17,6 +17,6 @@ find_package(VTKm REQUIRED QUIET)
 
 add_executable(Temporal_Advection TemporalAdvection.cxx)
 vtkm_add_target_information(Temporal_Advection
-                            MODIFY_CUDA_FLAGS
+                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES TemporalAdvection.cxx)
 target_link_libraries(Temporal_Advection PRIVATE vtkm_filter)

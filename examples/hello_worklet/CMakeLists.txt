@@ -17,5 +17,5 @@ add_executable(HelloWorklet HelloWorklet.cxx)
 target_link_libraries(HelloWorklet PRIVATE vtkm_filter)
 
 vtkm_add_target_information(HelloWorklet
-                            MODIFY_CUDA_FLAGS
+                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES HelloWorklet.cxx)

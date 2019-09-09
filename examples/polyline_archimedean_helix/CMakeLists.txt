@@ -13,8 +13,8 @@ project(PolyLineArchimedeanHelix CXX)
 find_package(VTKm REQUIRED QUIET)
 if (VTKm_ENABLE_RENDERING)
     add_executable(PolyLineArchimedeanHelix PolyLineArchimedeanHelix.cxx)
-    if(TARGET vtkm::cuda)
-        set_source_files_properties(PolyLineArchimedeanHelix.cxx PROPERTIES LANGUAGE "CUDA")
-    endif()
-    target_link_libraries(PolyLineArchimedeanHelix PRIVATE vtkm_filter vtkm_cont vtkm_rendering)
+    vtkm_add_target_information(PolyLineArchimedeanHelix
+                                DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
+                                DEVICE_SOURCES PolyLineArchimedeanHelix.cxx)
+    target_link_libraries(PolyLineArchimedeanHelix PRIVATE vtkm_filter vtkm_rendering)
 endif()

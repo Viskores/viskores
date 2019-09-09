@@ -19,6 +19,7 @@ target_link_libraries(CosmoCenterFinder PRIVATE vtkm_filter)
 target_link_libraries(CosmoHaloFinder PRIVATE vtkm_filter)
 
 vtkm_add_target_information(CosmoCenterFinder CosmoHaloFinder
+                            DROP_UNUSED_SYMBOLS
                             MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES
                               CosmoCenterFinder.cxx CosmoHaloFinder.cxx)

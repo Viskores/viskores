@@ -17,5 +17,5 @@ add_executable(Clipping Clipping.cxx)
 target_link_libraries(Clipping PRIVATE vtkm_filter)
 
 vtkm_add_target_information(Clipping
-                            MODIFY_CUDA_FLAGS
+                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES Clipping.cxx)
