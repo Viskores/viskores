@@ -120,7 +120,6 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 2, 2> tensor, vtkm::Vec<T, 2>& eigen)
   // Assume a symetric matrix
   // a b
   // b c
-
   T a = j1[0];
   T b = j1[1];
   T c = j2[1];
@@ -129,16 +128,9 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 2, 2> tensor, vtkm::Vec<T, 2>& eigen)
   T det = a * c - b * b;
   T sqrtr = vtkm::Sqrt(trace * trace - det);
 
-  // Order the largest first to match VTK
+  // Arrange eigen values from largest to smallest.
   eigen[0] = trace + sqrtr;
   eigen[1] = trace - sqrtr;
-}
-
-template <typename T>
-VTKM_EXEC_CONT inline void cswap(T& v1, T& v2)
-{
-  if (v2 < v1)
-    vtkm::Swap(v1, v2);
 }
 
 template <typename T>
@@ -189,14 +181,17 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
   sinphi = vtkm::Sin(phi);
   cosphi = vtkm::Cos(phi);
 
-  // Sorted in decreasing order.
   T w0 = x + 2.0f * sqrtr * cosphi;
   T w1 = x - sqrtr * (cosphi - sqrt3 * sinphi);
   T w2 = x - sqrtr * (cosphi + sqrt3 * sinphi);
 
-  cswap(w0, w1);
-  cswap(w0, w2);
-  cswap(w1, w2);
+  // Arrange eigen values from largest to smallest.
+  if (w1 > w0)
+    vtkm::Swap(w0, w1);
+  if (w2 > w0)
+    vtkm::Swap(w0, w2);
+  if (w2 > w1)
+    vtkm::Swap(w1, w2);
 
   eigen[0] = w0;
   eigen[1] = w1;
