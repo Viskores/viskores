@@ -31,12 +31,18 @@ int main(int argc, char** argv)
   // These example with these datasets can be used for this example as :
   // ./Temporal_Advection DoubleGyre_0.vtk 0.0 DoubleGyre_5.vtk 5.0
   //                      velocity 500 0.025 pathlines.vtk
-  std::cout << "Parameters are [options] "
-            << "<dataset slice 1> <time 1> "
-            << "<dataset slice 2> <time 2> "
-            << "<field name> <num steps> <step size> <output dataset>" << std::endl;
+  std::cout
+    << "Parameters : [options] slice1 time1 slice2 time2 field num_steps step_size output\n"
+    << "slice1 : Time slice 1, sample data in vtk-m/data/temporal_datasets/Double_Gyre0.vtk\n"
+    << "time1 : simulation time for slice 1, for sample data use 0.0\n"
+    << "slice2 : Time slice 2, sample data in vtk-m/data/temporal_datasets/Double_Gyre5.vtk\n"
+    << "time2 : simulation time for slice 2, for sample data use 5.0\n"
+    << "field : active velocity field in the data set, for sample data use 'velocity'\n"
+    << "num_steps : maximum number of steps for advection, for sample data use 500\n"
+    << "step_size : the size of a single step during advection, for sample data use 0.025\n"
+    << "output : the name of the output file" << std::endl;
 
-  if (argc < 7)
+  if (argc < 8)
   {
     std::cout << "Wrong number of parameters provided" << std::endl;
     exit(EXIT_FAILURE);
@@ -49,12 +55,13 @@ int main(int argc, char** argv)
   vtkm::Float32 stepSize;
 
   datasetName1 = std::string(argv[1]);
-  time1 = atof(argv[2]);
+  time1 = static_cast<vtkm::FloatDefault>(atof(argv[2]));
   datasetName2 = std::string(argv[3]);
-  time2 = atof(argv[4]);
-  numSteps = atoi(argv[5]);
-  stepSize = static_cast<vtkm::Float32>(atof(argv[6]));
-  outputName = std::string(argv[7]);
+  time2 = static_cast<vtkm::FloatDefault>(atof(argv[4]));
+  fieldName = std::string(argv[5]);
+  numSteps = atoi(argv[6]);
+  stepSize = static_cast<vtkm::Float32>(atof(argv[7]));
+  outputName = std::string(argv[8]);
 
   vtkm::io::reader::VTKDataSetReader reader1(datasetName1);
   vtkm::cont::DataSet ds1 = reader1.ReadDataSet();
@@ -69,7 +76,7 @@ int main(int argc, char** argv)
   // Instantiate the filter by providing necessary parameters.
   // Necessary parameters are :
   vtkm::filter::Pathline pathlineFilter;
-  pathlineFilter.SetActiveField("velocity");
+  pathlineFilter.SetActiveField(fieldName);
   // 1. The current and next time slice. The current time slice is passed
   //    through the parameter to the Execute method.
   pathlineFilter.SetNextDataSet(ds2);
