@@ -41,8 +41,8 @@ inline VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(
     inDataSet.GetField(this->ScalarFactorFieldName, this->ScalarFactorFieldAssociation);
   vtkm::cont::ArrayHandle<vecType> result;
   this->Worklet.Run(field,
-                    vtkm::filter::ApplyPolicy<vecType>(normalF, policy, *this),
-                    vtkm::filter::ApplyPolicy<T>(sfF, policy, *this),
+                    vtkm::filter::ApplyPolicyFieldOfType<vecType>(normalF, policy, *this),
+                    vtkm::filter::ApplyPolicyFieldOfType<T>(sfF, policy, *this),
                     this->ScaleAmount,
                     result);
 

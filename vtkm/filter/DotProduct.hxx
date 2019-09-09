@@ -43,7 +43,8 @@ inline VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(
   {
     secondaryField = inDataSet.GetField(this->SecondaryFieldName, this->SecondaryFieldAssociation);
   }
-  auto secondary = vtkm::filter::ApplyPolicy<vtkm::Vec<T, 3>>(secondaryField, policy, *this);
+  auto secondary =
+    vtkm::filter::ApplyPolicyFieldOfType<vtkm::Vec<T, 3>>(secondaryField, policy, *this);
 
   vtkm::cont::ArrayHandle<T> output;
   this->Invoke(vtkm::worklet::DotProduct{}, primary, secondary, output);

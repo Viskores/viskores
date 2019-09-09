@@ -36,8 +36,10 @@ inline VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(
   vtkm::cont::Field vectorF =
     inDataSet.GetField(this->VectorFieldName, this->VectorFieldAssociation);
   vtkm::cont::ArrayHandle<vecType> result;
-  this->Worklet.Run(
-    field, vtkm::filter::ApplyPolicy<vecType>(vectorF, policy, *this), this->Scale, result);
+  this->Worklet.Run(field,
+                    vtkm::filter::ApplyPolicyFieldOfType<vecType>(vectorF, policy, *this),
+                    this->Scale,
+                    result);
 
   return CreateResult(inDataSet, result, this->GetOutputFieldName(), fieldMetadata);
 }

@@ -35,7 +35,7 @@ inline VTKM_CONT vtkm::cont::DataSet Tube::DoExecute(const vtkm::cont::DataSet& 
   this->Worklet.SetNumberOfSides(this->NumberOfSides);
   this->Worklet.SetRadius(this->Radius);
 
-  auto originalPoints = vtkm::filter::ApplyPolicy<vtkm::Vec3f>(
+  auto originalPoints = vtkm::filter::ApplyPolicyFieldOfType<vtkm::Vec3f>(
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()), policy, *this);
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;

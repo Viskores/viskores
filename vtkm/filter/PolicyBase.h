@@ -243,9 +243,9 @@ VTKM_CONT internal::ArrayHandleMultiplexerForStorageList<
   T,
   vtkm::ListTagJoin<typename vtkm::filter::FilterTraits<FilterType>::AdditionalFieldStorage,
                     typename DerivedPolicy::StorageList>>
-ApplyPolicy(const vtkm::cont::Field& field,
-            vtkm::filter::PolicyBase<DerivedPolicy>,
-            const FilterType&)
+ApplyPolicyFieldOfType(const vtkm::cont::Field& field,
+                       vtkm::filter::PolicyBase<DerivedPolicy>,
+                       const FilterType&)
 {
   using ArrayHandleMultiplexerType = internal::ArrayHandleMultiplexerForStorageList<
     T,
