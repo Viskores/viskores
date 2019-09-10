@@ -25,6 +25,8 @@ struct GhostCellClassifyPolicy : vtkm::filter::PolicyBase<GhostCellClassifyPolic
 class GhostCellClassify : public vtkm::filter::FilterDataSet<GhostCellClassify>
 {
 public:
+  using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8>;
+
   VTKM_CONT
   GhostCellClassify();
 

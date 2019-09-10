@@ -68,16 +68,17 @@ void TestStructured()
   std::cout << "Testing ghost cells for structured datasets." << std::endl;
 
   // specify some 2d tests: {numI, numJ, numK, numGhostLayers}.
-  std::vector<std::vector<vtkm::Id>> tests2D = { { 8, 4, 0, 1 },  { 5, 5, 0, 1 },  { 10, 10, 0, 1 },
-                                                 { 10, 5, 0, 1 }, { 5, 10, 0, 1 }, { 20, 10, 0, 1 },
-                                                 { 10, 20, 0, 1 } };
-  std::vector<std::vector<vtkm::Id>> tests3D = { { 8, 8, 10, 1 },   { 5, 5, 5, 1 },
-                                                 { 10, 10, 10, 1 }, { 10, 5, 10, 1 },
-                                                 { 5, 10, 10, 1 },  { 20, 10, 10, 1 },
-                                                 { 10, 20, 10, 1 } };
   std::vector<std::vector<vtkm::Id>> tests1D = {
     { 8, 0, 0, 1 }, { 5, 0, 0, 1 }, { 10, 0, 0, 1 }, { 20, 0, 0, 1 }
   };
+  std::vector<std::vector<vtkm::Id>> tests2D = { { 8, 4, 0, 1 },  { 5, 5, 0, 1 },  { 10, 10, 0, 1 },
+                                                 { 10, 5, 0, 1 }, { 5, 10, 0, 1 }, { 20, 10, 0, 1 },
+                                                 { 10, 20, 0, 1 } };
+  std::vector<std::vector<vtkm::Id>> tests3D = { { 8, 8, 10, 1 },     { 5, 5, 5, 1 },
+                                                 { 10, 10, 10, 1 },   { 10, 5, 10, 1 },
+                                                 { 5, 10, 10, 1 },    { 20, 10, 10, 1 },
+                                                 { 10, 20, 10, 1 },   { 1024, 512, 512, 1 },
+                                                 { 1024, 768, 10, 1 } };
 
   std::vector<std::vector<vtkm::Id>> tests;
 
@@ -119,7 +120,7 @@ void TestStructured()
 
         vtkm::Id numNormalCells = 0;
         auto portal = ghostArray.GetPortalConstControl();
-        const vtkm::UInt8 normalCell = static_cast<vtkm::UInt8>(vtkm::CellClassification::NORMAL);
+        constexpr vtkm::UInt8 normalCell = vtkm::CellClassification::NORMAL;
         for (vtkm::Id i = 0; i < numCells; i++)
           if (portal.Get(i) == normalCell)
             numNormalCells++;

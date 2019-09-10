@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_worklet_WorkletPointNeigborhood_h
-#define vtk_m_worklet_WorkletPointNeigborhood_h
+#ifndef vtk_m_worklet_WorkletPointNeighborhood_h
+#define vtk_m_worklet_WorkletPointNeighborhood_h
 
 /// \brief Worklet for volume algorithms that require a neighborhood
 ///

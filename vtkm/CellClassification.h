@@ -13,7 +13,7 @@
 namespace vtkm
 {
 
-enum struct CellClassification
+enum CellClassification : vtkm::UInt8
 {
   NORMAL = 0,       //Valid cell
   GHOST = 1 << 0,   //Ghost cell

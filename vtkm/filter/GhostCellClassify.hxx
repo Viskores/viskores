@@ -15,9 +15,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleConstant.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 namespace
 {
@@ -25,101 +24,68 @@ struct TypeUInt8 : vtkm::ListTagBase<vtkm::UInt8>
 {
 };
 
-class SetStructuredGhostCells1D : public vtkm::worklet::WorkletMapField
+class SetStructuredGhostCells1D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  SetStructuredGhostCells1D(const vtkm::Id& dim, const vtkm::Id& numLayers = 1)
-    : Dim(dim)
-    , NumLayers(numLayers)
-    , Range(NumLayers, Dim - NumLayers)
+  SetStructuredGhostCells1D(vtkm::IdComponent numLayers = 1)
+    : NumLayers(numLayers)
   {
   }
 
-  using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(CellSetIn, FieldOut);
+  using ExecutionSignature = void(Boundary, _2);
 
-  template <typename T>
-  VTKM_EXEC void operator()(const vtkm::Id& cellIndex, T& value) const
+  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary, vtkm::UInt8& value) const
   {
-    value = (Range.Contains(cellIndex) ? NormalCell : DuplicateCell);
+    const bool notOnBoundary = boundary.IsRadiusInXBoundary(this->NumLayers);
+    value = (notOnBoundary) ? vtkm::CellClassification::NORMAL : vtkm::CellClassification::GHOST;
   }
 
 private:
-  vtkm::Id Dim;
-  vtkm::Id NumLayers;
-  vtkm::RangeId Range;
-  static constexpr vtkm::UInt8 NormalCell =
-    static_cast<vtkm::UInt8>(vtkm::CellClassification::NORMAL);
-  static constexpr vtkm::UInt8 DuplicateCell =
-    static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
+  vtkm::IdComponent NumLayers;
 };
 
-class SetStructuredGhostCells2D : public vtkm::worklet::WorkletMapField
+class SetStructuredGhostCells2D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  SetStructuredGhostCells2D(const vtkm::Id2& dims, const vtkm::Id& numLayers = 1)
-    : Dims(dims)
-    , NumLayers(numLayers)
-    , Range(NumLayers, Dims[0] - NumLayers, NumLayers, Dims[1] - NumLayers)
+  SetStructuredGhostCells2D(vtkm::IdComponent numLayers = 1)
+    : NumLayers(numLayers)
   {
   }
 
-  using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(CellSetIn, FieldOut);
+  using ExecutionSignature = void(Boundary, _2);
 
-  template <typename T>
-  VTKM_EXEC void operator()(const vtkm::Id& cellIndex, T& value) const
+  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary, vtkm::UInt8& value) const
   {
-    vtkm::Id2 ij(cellIndex % Dims[0], cellIndex / Dims[0]);
-
-    value = (Range.Contains(ij) ? NormalCell : DuplicateCell);
+    const bool notOnBoundary = boundary.IsRadiusInXBoundary(this->NumLayers) &&
+      boundary.IsRadiusInYBoundary(this->NumLayers);
+    value = (notOnBoundary) ? vtkm::CellClassification::NORMAL : vtkm::CellClassification::GHOST;
   }
 
 private:
-  vtkm::Id2 Dims;
-  vtkm::Id NumLayers;
-  vtkm::RangeId2 Range;
-  static constexpr vtkm::UInt8 NormalCell =
-    static_cast<vtkm::UInt8>(vtkm::CellClassification::NORMAL);
-  static constexpr vtkm::UInt8 DuplicateCell =
-    static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
+  vtkm::IdComponent NumLayers;
 };
 
-class SetStructuredGhostCells3D : public vtkm::worklet::WorkletMapField
+class SetStructuredGhostCells3D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  SetStructuredGhostCells3D(const vtkm::Id3& dims, const vtkm::Id& numLayers = 1)
-    : Dims(dims)
-    , NumLayers(numLayers)
-    , Range(NumLayers,
-            Dims[0] - NumLayers,
-            NumLayers,
-            Dims[1] - NumLayers,
-            NumLayers,
-            Dims[2] - NumLayers)
+  SetStructuredGhostCells3D(vtkm::IdComponent numLayers = 1)
+    : NumLayers(numLayers)
   {
   }
 
-  using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(CellSetIn, FieldOut);
+  using ExecutionSignature = void(Boundary, _2);
 
-  template <typename T>
-  VTKM_EXEC void operator()(const vtkm::Id& cellIndex, T& value) const
+  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary, vtkm::UInt8& value) const
   {
-    vtkm::Id3 ijk(
-      cellIndex % Dims[0], (cellIndex / Dims[0]) % Dims[1], cellIndex / (Dims[0] * Dims[1]));
-
-    value = (Range.Contains(ijk) ? NormalCell : DuplicateCell);
+    const bool notOnBoundary = boundary.IsRadiusInBoundary(this->NumLayers);
+    value = (notOnBoundary) ? vtkm::CellClassification::NORMAL : vtkm::CellClassification::GHOST;
   }
 
 private:
-  vtkm::Id3 Dims;
-  vtkm::Id NumLayers;
-  vtkm::RangeId3 Range;
-  static constexpr vtkm::UInt8 NormalCell =
-    static_cast<vtkm::UInt8>(vtkm::CellClassification::NORMAL);
-  static constexpr vtkm::UInt8 DuplicateCell =
-    static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
+  vtkm::IdComponent NumLayers;
 };
 };
 
@@ -137,11 +103,8 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
                                                                   vtkm::filter::PolicyBase<Policy>)
 {
   const vtkm::cont::DynamicCellSet& cellset = input.GetCellSet();
-  vtkm::Id numCells = cellset.GetNumberOfCells();
-  vtkm::cont::ArrayHandleIndex indexArray(numCells);
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
-
-  ghosts.Allocate(numCells);
+  const vtkm::Id numCells = cellset.GetNumberOfCells();
 
   //Structured cases are easy...
   if (cellset.template IsType<vtkm::cont::CellSetStructured<1>>())
@@ -150,8 +113,12 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
       throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
 
     vtkm::cont::CellSetStructured<1> cellset1d = cellset.Cast<vtkm::cont::CellSetStructured<1>>();
-    SetStructuredGhostCells1D structuredGhosts1D(cellset1d.GetCellDimensions());
-    this->Invoke(structuredGhosts1D, indexArray, ghosts);
+
+    //We use the dual of the cellset since we are using the PointNeighborhood worklet
+    vtkm::cont::CellSetStructured<3> dual;
+    const auto dim = cellset1d.GetCellDimensions();
+    dual.SetPointDimensions(vtkm::Id3{ dim, 1, 1 });
+    this->Invoke(SetStructuredGhostCells1D{}, dual, ghosts);
   }
   else if (cellset.template IsType<vtkm::cont::CellSetStructured<2>>())
   {
@@ -159,8 +126,12 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
       throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
 
     vtkm::cont::CellSetStructured<2> cellset2d = cellset.Cast<vtkm::cont::CellSetStructured<2>>();
-    SetStructuredGhostCells2D structuredGhosts2D(cellset2d.GetCellDimensions());
-    this->Invoke(structuredGhosts2D, indexArray, ghosts);
+
+    //We use the dual of the cellset since we are using the PointNeighborhood worklet
+    vtkm::cont::CellSetStructured<3> dual;
+    const auto dims = cellset2d.GetCellDimensions();
+    dual.SetPointDimensions(vtkm::Id3{ dims[0], dims[1], 1 });
+    this->Invoke(SetStructuredGhostCells2D{}, dual, ghosts);
   }
   else if (cellset.template IsType<vtkm::cont::CellSetStructured<3>>())
   {
@@ -168,8 +139,11 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
       throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
 
     vtkm::cont::CellSetStructured<3> cellset3d = cellset.Cast<vtkm::cont::CellSetStructured<3>>();
-    SetStructuredGhostCells3D structuredGhosts3D(cellset3d.GetCellDimensions());
-    this->Invoke(structuredGhosts3D, indexArray, ghosts);
+
+    //We use the dual of the cellset since we are using the PointNeighborhood worklet
+    vtkm::cont::CellSetStructured<3> dual;
+    dual.SetPointDimensions(cellset3d.GetCellDimensions());
+    this->Invoke(SetStructuredGhostCells3D{}, dual, ghosts);
   }
   else
   {
