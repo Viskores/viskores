@@ -41,6 +41,7 @@ struct ArrayPortalMultiplexerGetNumberOfValuesFunctor
 
 struct ArrayPortalMultiplexerGetFunctor
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PortalType>
   VTKM_EXEC_CONT typename PortalType::ValueType operator()(const PortalType& portal,
                                                            vtkm::Id index) const noexcept
@@ -51,6 +52,7 @@ struct ArrayPortalMultiplexerGetFunctor
 
 struct ArrayPortalMultiplexerSetFunctor
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PortalType>
   VTKM_EXEC_CONT void operator()(const PortalType& portal,
                                  vtkm::Id index,
@@ -211,6 +213,20 @@ public:
   {
   }
 
+  VTKM_CONT bool IsValid() const { return this->ArrayHandleVariant.IsValid(); }
+
+  template <typename S>
+  VTKM_CONT void SetArray(vtkm::cont::ArrayHandle<ValueType, S>&& rhs)
+  {
+    this->ArrayHandleVariant = std::move(rhs);
+  }
+
+  template <typename S>
+  VTKM_CONT void SetArray(const vtkm::cont::ArrayHandle<ValueType, S>& src)
+  {
+    this->ArrayHandleVariant = src;
+  }
+
 private:
   struct GetPortalFunctor
   {
@@ -243,22 +259,56 @@ public:
 
   VTKM_CONT vtkm::Id GetNumberOfValues() const
   {
-    return this->ArrayHandleVariant.CastAndCall(detail::MultiplexerGetNumberOfValuesFunctor{});
+    if (this->IsValid())
+    {
+      return this->ArrayHandleVariant.CastAndCall(detail::MultiplexerGetNumberOfValuesFunctor{});
+    }
+    else
+    {
+      return 0;
+    }
   }
 
   VTKM_CONT void Allocate(vtkm::Id numberOfValues)
   {
-    this->ArrayHandleVariant.CastAndCall(detail::MultiplexerAllocateFunctor{}, numberOfValues);
+    if (this->IsValid())
+    {
+      this->ArrayHandleVariant.CastAndCall(detail::MultiplexerAllocateFunctor{}, numberOfValues);
+    }
+    else if (numberOfValues > 0)
+    {
+      throw vtkm::cont::ErrorBadValue(
+        "Attempted to allocate an ArrayHandleMultiplexer with no underlying array.");
+    }
+    else
+    {
+      // Special case, OK to perform "0" allocation on invalid array.
+    }
   }
 
   VTKM_CONT void Shrink(vtkm::Id numberOfValues)
   {
-    this->ArrayHandleVariant.CastAndCall(detail::MultiplexerShrinkFunctor{}, numberOfValues);
+    if (this->IsValid())
+    {
+      this->ArrayHandleVariant.CastAndCall(detail::MultiplexerShrinkFunctor{}, numberOfValues);
+    }
+    else if (numberOfValues > 0)
+    {
+      throw vtkm::cont::ErrorBadValue(
+        "Attempted to allocate an ArrayHandleMultiplexer with no underlying array.");
+    }
+    else
+    {
+      // Special case, OK to perform "0" allocation on invalid array.
+    }
   }
 
   VTKM_CONT void ReleaseResources()
   {
-    this->ArrayHandleVariant.CastAndCall(detail::MultiplexerReleaseResourcesFunctor{});
+    if (this->IsValid())
+    {
+      this->ArrayHandleVariant.CastAndCall(detail::MultiplexerReleaseResourcesFunctor{});
+    }
   }
 
   VTKM_CONT ArrayHandleVariantType& GetArrayHandleVariant() { return this->ArrayHandleVariant; }
@@ -462,7 +512,30 @@ public:
     : Superclass(StorageType(std::move(rhs)))
   {
   }
+
+  VTKM_CONT bool IsValid() const { return this->GetStorage().IsValid(); }
+
+  template <typename S>
+  VTKM_CONT void SetArray(vtkm::cont::ArrayHandle<ValueType, S>&& rhs)
+  {
+    this->GetStorage().SetArray(std::move(rhs));
+  }
+
+  template <typename S>
+  VTKM_CONT void SetArray(const vtkm::cont::ArrayHandle<ValueType, S>& src)
+  {
+    this->GetStorage().SetArray(src);
+  }
 };
+
+/// \brief Converts a \c vtkm::ListTag to an \c ArrayHandleMultiplexer
+///
+/// The argument of this template must be a vtkm::ListTag and furthermore all the types in
+/// the list tag must be some type of \c ArrayHandle. The templated type gets aliased to
+/// an \c ArrayHandleMultiplexer that can store any of these ArrayHandle types.
+///
+template <typename ListTag>
+using ArrayHandleMultiplexerFromListTag = vtkm::ListTagApply<ListTag, ArrayHandleMultiplexer>;
 
 } // namespace cont
 

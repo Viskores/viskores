@@ -150,7 +150,7 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   {
     outputCells = this->Worklet.Run(&ivalues[0],
                                     static_cast<vtkm::Id>(ivalues.size()),
-                                    vtkm::filter::ApplyPolicy(cells, policy),
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy),
                                     coords.GetData(),
                                     field,
                                     vertices,
@@ -160,7 +160,7 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   {
     outputCells = this->Worklet.Run(&ivalues[0],
                                     static_cast<vtkm::Id>(ivalues.size()),
-                                    vtkm::filter::ApplyPolicy(cells, policy),
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy),
                                     coords.GetData(),
                                     field,
                                     vertices);

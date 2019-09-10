@@ -103,13 +103,10 @@ struct ListTagEmpty : detail::ListRoot
 
 /// A tag that is a construction of two other tags joined together. This struct
 /// can be subclassed and still behave like a list tag.
-template <typename ListTag1, typename ListTag2>
+template <typename... ListTags>
 struct ListTagJoin : detail::ListRoot
 {
-  VTKM_IS_LIST_TAG(ListTag1);
-  VTKM_IS_LIST_TAG(ListTag2);
-  using list = typename detail::ListJoin<internal::ListTagAsBrigandList<ListTag1>,
-                                         internal::ListTagAsBrigandList<ListTag2>>::type;
+  using list = typename detail::ListJoin<internal::ListTagAsBrigandList<ListTags>...>::type;
 };
 
 

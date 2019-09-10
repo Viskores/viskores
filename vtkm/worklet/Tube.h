@@ -536,18 +536,16 @@ public:
   VTKM_CONT
   void SetRadius(vtkm::FloatDefault r) { this->Radius = r; }
 
-  VTKM_CONT
-  void Run(const vtkm::cont::CoordinateSystem& coords,
-           const vtkm::cont::DynamicCellSet& cellset,
-           vtkm::cont::ArrayHandle<vtkm::Vec3f>& newPoints,
-           vtkm::cont::CellSetSingleType<>& newCells)
+  template <typename Storage>
+  VTKM_CONT void Run(const vtkm::cont::ArrayHandle<vtkm::Vec3f, Storage>& coords,
+                     const vtkm::cont::DynamicCellSet& cellset,
+                     vtkm::cont::ArrayHandle<vtkm::Vec3f>& newPoints,
+                     vtkm::cont::CellSetSingleType<>& newCells)
   {
-    using ExplCoordsType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
     using NormalsType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
-    if (!(coords.GetData().IsType<ExplCoordsType>() &&
-          (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()) ||
-           cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))))
+    if (!cellset.IsSameType(vtkm::cont::CellSetExplicit<>()) &&
+        !cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
       throw vtkm::cont::ErrorBadValue("Tube filter only supported for polyline data.");
     }
@@ -574,11 +572,10 @@ public:
     vtkm::cont::Algorithm::ScanExclusive(segPerPolyline, segOffset);
 
     //Generate normals at each point on all polylines
-    ExplCoordsType inCoords = coords.GetData().Cast<ExplCoordsType>();
     NormalsType normals;
     normals.Allocate(totalPolylinePts);
     vtkm::worklet::DispatcherMapTopology<GenerateNormals> genNormalsDisp;
-    genNormalsDisp.Invoke(cellset, inCoords, polylinePtOffset, normals);
+    genNormalsDisp.Invoke(cellset, coords, polylinePtOffset, normals);
 
     //Generate the tube points
     newPoints.Allocate(totalTubePts);
@@ -586,7 +583,7 @@ public:
     GeneratePoints genPts(this->Capping, this->NumSides, this->Radius);
     vtkm::worklet::DispatcherMapTopology<GeneratePoints> genPtsDisp(genPts);
     genPtsDisp.Invoke(cellset,
-                      inCoords,
+                      coords,
                       normals,
                       tubePointOffsets,
                       polylinePtOffset,

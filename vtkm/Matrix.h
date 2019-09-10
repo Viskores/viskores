@@ -541,6 +541,7 @@ private:
 
 public:
   using ComponentType = T;
+  using BaseComponentType = typename vtkm::VecTraits<T>::BaseComponentType;
   static constexpr vtkm::IdComponent NUM_COMPONENTS = NumRow * NumCol;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
@@ -567,6 +568,15 @@ public:
   {
     GetComponent(matrix, component) = value;
   }
+
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::Matrix<NewComponentType, NumRow, NumCol>;
+
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType =
+    vtkm::Matrix<typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<NewComponentType>,
+                 NumRow,
+                 NumCol>;
 };
 
 //---------------------------------------------------------------------------

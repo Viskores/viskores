@@ -33,13 +33,13 @@ inline VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   using vecType = vtkm::Vec<T, 3>;
-  auto vectorF = inDataSet.GetField(this->VectorFieldName, this->VectorFieldAssociation);
+  vtkm::cont::Field vectorF =
+    inDataSet.GetField(this->VectorFieldName, this->VectorFieldAssociation);
   vtkm::cont::ArrayHandle<vecType> result;
-  this->Worklet.Run(
-    field,
-    vtkm::filter::ApplyPolicy(vectorF, policy, vtkm::filter::FilterTraits<WarpVector>()),
-    this->Scale,
-    result);
+  this->Worklet.Run(field,
+                    vtkm::filter::ApplyPolicyFieldOfType<vecType>(vectorF, policy, *this),
+                    this->Scale,
+                    result);
 
   return CreateResult(inDataSet, result, this->GetOutputFieldName(), fieldMetadata);
 }

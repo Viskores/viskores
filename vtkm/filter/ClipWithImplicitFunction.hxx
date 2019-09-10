@@ -35,7 +35,7 @@ inline vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
-    vtkm::filter::ApplyPolicy(cells, policy), this->Function, inputCoords, this->Invert);
+    vtkm::filter::ApplyPolicyCellSet(cells, policy), this->Function, inputCoords, this->Invert);
 
   // compute output coordinates
   auto outputCoordsArray = this->Worklet.ProcessPointField(inputCoords.GetData());

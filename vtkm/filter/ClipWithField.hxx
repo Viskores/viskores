@@ -48,7 +48,7 @@ inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
-    vtkm::filter::ApplyPolicy(cells, policy), field, this->ClipValue, this->Invert);
+    vtkm::filter::ApplyPolicyCellSet(cells, policy), field, this->ClipValue, this->Invert);
 
   //create the output data
   vtkm::cont::DataSet output;
