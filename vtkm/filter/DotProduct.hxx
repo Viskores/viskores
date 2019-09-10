@@ -51,17 +51,5 @@ inline VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(
 
   return CreateResult(inDataSet, output, this->GetOutputFieldName(), fieldMetadata);
 }
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool DotProduct::DoMapField(vtkm::cont::DataSet& result,
-                                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                             const vtkm::filter::FieldMetadata& fieldMeta,
-                                             vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  //we copy the input handle to the result dataset, reusing the metadata
-  result.AddField(fieldMeta.AsField(input));
-  return true;
-}
 }
 } // namespace vtkm::filter
