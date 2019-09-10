@@ -41,6 +41,7 @@ struct ArrayPortalMultiplexerGetNumberOfValuesFunctor
 
 struct ArrayPortalMultiplexerGetFunctor
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PortalType>
   VTKM_EXEC_CONT typename PortalType::ValueType operator()(const PortalType& portal,
                                                            vtkm::Id index) const noexcept
@@ -51,6 +52,7 @@ struct ArrayPortalMultiplexerGetFunctor
 
 struct ArrayPortalMultiplexerSetFunctor
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PortalType>
   VTKM_EXEC_CONT void operator()(const PortalType& portal,
                                  vtkm::Id index,
