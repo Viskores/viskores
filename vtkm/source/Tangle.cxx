@@ -76,8 +76,7 @@ vtkm::cont::DataSet Tangle::Execute() const
 {
   vtkm::cont::DataSet dataSet;
 
-  const vtkm::Id3 vdims{ this->Dims +
-                         vtkm::Id3{ 1, 1, 1 } }; //(dims[0] + 1, dims[1] + 1, dims[2] + 1);
+  const vtkm::Id3 vdims{ this->Dims + vtkm::Id3{ 1, 1, 1 } };
 
   vtkm::FloatDefault mins[3] = { -1.0f, -1.0f, -1.0f };
   vtkm::FloatDefault maxs[3] = { 1.0f, 1.0f, 1.0f };
