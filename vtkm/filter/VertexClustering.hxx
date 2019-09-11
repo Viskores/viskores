@@ -32,7 +32,7 @@ inline VTKM_CONT vtkm::cont::DataSet VertexClustering::DoExecute(
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
   vtkm::cont::DataSet outDataSet =
-    this->Worklet.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
+    this->Worklet.Run(vtkm::filter::ApplyPolicyCellSetUnstructured(input.GetCellSet(), policy),
                       input.GetCoordinateSystem(),
                       bounds,
                       this->GetNumberOfDivisions());

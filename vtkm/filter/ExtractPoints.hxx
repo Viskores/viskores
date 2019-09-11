@@ -56,7 +56,7 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::ExtractPoints worklet;
 
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
+  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
                            coords.GetData(),
                            this->Function,
                            this->ExtractInside);

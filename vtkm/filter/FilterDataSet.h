@@ -48,7 +48,6 @@ public:
   // Association::WHOLE_MESH -> (I think this is points)
   // Association::POINTS -> map using point mapping
   // Association::CELL_SET -> how do we map this?
-  // Association::LOGICAL_DIM -> unable to map?
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,

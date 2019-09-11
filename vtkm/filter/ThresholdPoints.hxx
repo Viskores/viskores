@@ -159,20 +159,22 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
   {
     case THRESHOLD_BELOW:
     {
-      outCellSet = worklet.Run(
-        vtkm::filter::ApplyPolicy(cells, policy), field, ValuesBelow(this->GetLowerThreshold()));
+      outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+                               field,
+                               ValuesBelow(this->GetLowerThreshold()));
       break;
     }
     case THRESHOLD_ABOVE:
     {
-      outCellSet = worklet.Run(
-        vtkm::filter::ApplyPolicy(cells, policy), field, ValuesAbove(this->GetUpperThreshold()));
+      outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+                               field,
+                               ValuesAbove(this->GetUpperThreshold()));
       break;
     }
     case THRESHOLD_BETWEEN:
     default:
     {
-      outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
+      outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
                                field,
                                ValuesBetween(this->GetLowerThreshold(), this->GetUpperThreshold()));
       break;

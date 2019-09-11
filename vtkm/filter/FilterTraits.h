@@ -35,6 +35,7 @@ struct FilterTraits
 {
   using InputFieldTypeList =
     decltype(detail::as_list(std::declval<typename Filter::SupportedTypes>()));
+  using AdditionalFieldStorage = typename Filter::AdditionalFieldStorage;
 };
 
 template <typename DerivedPolicy, typename ListOfTypes>

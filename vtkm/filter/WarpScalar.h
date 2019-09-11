@@ -32,6 +32,11 @@ public:
   // WarpScalar can only applies to Float and Double Vec3 arrays
   using SupportedTypes = vtkm::TypeListTagFieldVec3;
 
+  // WarpScalar often operates on a constant normal value
+  using AdditionalFieldStorage =
+    vtkm::ListTagBase<vtkm::cont::ArrayHandleConstant<vtkm::Vec3f_32>::StorageTag,
+                      vtkm::cont::ArrayHandleConstant<vtkm::Vec3f_64>::StorageTag>;
+
   VTKM_CONT
   WarpScalar(vtkm::FloatDefault scaleAmount);
 

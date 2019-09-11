@@ -33,7 +33,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::Id> component;
 
   vtkm::worklet::connectivity::ImageConnectivity().Run(
-    vtkm::filter::ApplyPolicy(input.GetCellSet(), policy), field, component);
+    vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy), field, component);
 
   auto result = CreateResult(input, component, this->GetOutputFieldName(), fieldMetadata);
   return result;

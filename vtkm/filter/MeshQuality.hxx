@@ -114,7 +114,7 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
   vtkm::cont::ArrayHandle<T> outArray;
   vtkm::cont::ArrayHandle<CellMetric> cellMetrics = vtkm::cont::make_ArrayHandle(CellTypeMetrics);
   this->Invoke(QualityWorklet{},
-               vtkm::filter::ApplyPolicy(cellSet, policy),
+               vtkm::filter::ApplyPolicyCellSet(cellSet, policy),
                cellShapeCounts,
                cellMetrics,
                points,

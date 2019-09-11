@@ -78,7 +78,7 @@ struct PointGradient : public vtkm::worklet::WorkletVisitPointsWithCells
 
     if (numCells != 0)
     {
-      using BaseGradientType = typename vtkm::BaseComponent<ValueType>::Type;
+      using BaseGradientType = typename vtkm::VecTraits<ValueType>::BaseComponentType;
       const BaseGradientType invNumCells =
         static_cast<BaseGradientType>(1.) / static_cast<BaseGradientType>(numCells);
 

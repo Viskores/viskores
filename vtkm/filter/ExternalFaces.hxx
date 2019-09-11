@@ -61,7 +61,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
   }
   else
   {
-    this->Worklet.Run(vtkm::filter::ApplyPolicyUnstructured(cells, policy), outCellSet);
+    this->Worklet.Run(vtkm::filter::ApplyPolicyCellSetUnstructured(cells, policy), outCellSet);
   }
 
   //3. Check the fields of the dataset to see what kinds of fields are present so
