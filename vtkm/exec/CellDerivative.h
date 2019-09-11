@@ -11,11 +11,11 @@
 #define vtk_m_exec_Derivative_h
 
 #include <vtkm/Assert.h>
-#include <vtkm/BaseComponent.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
+#include <vtkm/VecTraits.h>
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/exec/CellInterpolate.h>
@@ -341,7 +341,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor2D
   CellShapeTag)
 {
   using FieldType = typename FieldVecType::ComponentType;
-  using BaseFieldType = typename BaseComponent<FieldType>::Type;
+  using BaseFieldType = typename vtkm::VecTraits<FieldType>::BaseComponentType;
 
   // We have an underdetermined system in 3D, so create a 2D space in the
   // plane that the polygon sits.
@@ -523,7 +523,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 2);
 
   using FieldType = typename FieldVecType::ComponentType;
-  using BaseComponentType = typename BaseComponent<FieldType>::Type;
+  using BaseComponentType = typename vtkm::VecTraits<FieldType>::BaseComponentType;
 
   FieldType deltaField(field[1] - field[0]);
   vtkm::Vec<BaseComponentType, 3> vec(wCoords[1] - wCoords[0]);
@@ -571,7 +571,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   }
 
   using FieldType = typename FieldVecType::ComponentType;
-  using BaseComponentType = typename BaseComponent<FieldType>::Type;
+  using BaseComponentType = typename vtkm::VecTraits<FieldType>::BaseComponentType;
 
   ParametricCoordType dt;
   dt = static_cast<ParametricCoordType>(1) / static_cast<ParametricCoordType>(numPoints - 1);
@@ -690,7 +690,7 @@ template <typename ValueType, typename WCoordType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivative(const vtkm::Vec<ValueType, 3>& field,
                                                      const vtkm::Vec<WCoordType, 3>& wCoords)
 {
-  using BaseComponentType = typename BaseComponent<ValueType>::Type;
+  using BaseComponentType = typename vtkm::VecTraits<ValueType>::BaseComponentType;
 
   // The scalar values of the three points in a triangle completely specify a
   // linear field (with constant gradient) assuming the field is constant in
@@ -769,83 +769,86 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   return detail::TriangleDerivative(field, wpoints);
 }
 
-//-----------------------------------------------------------------------------
-template <typename ParametricCoordType>
-VTKM_EXEC void PolygonComputeIndices(const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-                                     vtkm::IdComponent numPoints,
-                                     vtkm::IdComponent& firstPointIndex,
-                                     vtkm::IdComponent& secondPointIndex)
+namespace detail
 {
-  ParametricCoordType angle;
-  if ((vtkm::Abs(pcoords[0] - 0.5f) < 4 * vtkm::Epsilon<ParametricCoordType>()) &&
-      (vtkm::Abs(pcoords[1] - 0.5f) < 4 * vtkm::Epsilon<ParametricCoordType>()))
+
+//-----------------------------------------------------------------------------
+template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
+VTKM_EXEC void PolygonSubTriangle(const FieldVecType& inField,
+                                  const WorldCoordType& inWCoords,
+                                  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                  vtkm::Vec<typename FieldVecType::ComponentType, 3>& outField,
+                                  vtkm::Vec<typename WorldCoordType::ComponentType, 3>& outWCoords,
+                                  const vtkm::exec::FunctorBase& worklet)
+{
+  // To find the gradient in a polygon (of 5 or more points), we will extract a small triangle near
+  // the desired parameteric coordinates (pcoords). We return the field values (outField) and world
+  // coordinates (outWCoords) for this triangle, which is all that is needed to find the gradient
+  // in a triangle.
+  //
+  // The trangle will be "pointing" away from the center of the polygon, and pcoords will be placed
+  // at the apex of the triangle. This is because if pcoords is at or near the edge of the polygon,
+  // we do not want to push any of the points over the edge, and it is not trivial to determine
+  // exactly where the edge of the polygon is.
+
+  // First point is right at pcoords
+  outField[0] = vtkm::exec::CellInterpolate(inField, pcoords, vtkm::CellShapeTagPolygon{}, worklet);
+  outWCoords[0] =
+    vtkm::exec::CellInterpolate(inWCoords, pcoords, vtkm::CellShapeTagPolygon{}, worklet);
+
+  // Find the unit vector pointing from the center of the polygon to pcoords
+  vtkm::Vec<ParametricCoordType, 2> radialVector = { pcoords[0] - 0.5f, pcoords[1] - 0.5f };
+  ParametricCoordType magnitudeSquared = vtkm::MagnitudeSquared(radialVector);
+  if (magnitudeSquared > 8 * vtkm::Epsilon<ParametricCoordType>())
   {
-    angle = 0;
+    radialVector = vtkm::RSqrt(magnitudeSquared) * radialVector;
   }
   else
   {
-    angle = vtkm::ATan2(pcoords[1] - 0.5f, pcoords[0] - 0.5f);
-    if (angle < 0)
-    {
-      angle += static_cast<ParametricCoordType>(2 * vtkm::Pi());
-    }
+    // pcoords is in the center of the polygon. Just point in an arbitrary direction
+    radialVector = { 1.0, 0.0 };
   }
 
-  const ParametricCoordType deltaAngle =
-    static_cast<ParametricCoordType>(2 * vtkm::Pi() / numPoints);
-  firstPointIndex = static_cast<vtkm::IdComponent>(vtkm::Floor(angle / deltaAngle));
-  secondPointIndex = firstPointIndex + 1;
-  if (secondPointIndex == numPoints)
-  {
-    secondPointIndex = 0;
-  }
+  // We want the two points away from pcoords to be back toward the center but moved at 45 degrees
+  // off the radius. Simple geometry shows us that the (not quite unit) vectors of those two
+  // directions are (-radialVector[1] - radialVector[0], radialVector[0] - radialVector[1]) and
+  // (radialVector[1] - radialVector[0], -radialVector[0] - radialVector[1]).
+  //
+  //  *\ (-radialVector[1], radialVector[0])                                           //
+  //  |  \                                                                             //
+  //  |    \ (-radialVector[1] - radialVector[0], radialVector[0] - radialVector[1])   //
+  //  |      \                                                                         //
+  //  +-------* radialVector                                                           //
+  //  |      /                                                                         //
+  //  |    / (radialVector[1] - radialVector[0], -radialVector[0] - radialVector[1])   //
+  //  |  /                                                                             //
+  //  */ (radialVector[1], -radialVector[0])                                           //
+
+  // This scaling value is somewhat arbitrary. It is small enough to be "close" to the selected
+  // point and small enough to be guaranteed to be inside the polygon, but large enough to to
+  // get an accurate gradient.
+  static constexpr ParametricCoordType scale = 0.05f;
+
+  vtkm::Vec<ParametricCoordType, 3> backPcoord = {
+    pcoords[0] + scale * (-radialVector[1] - radialVector[0]),
+    pcoords[1] + scale * (radialVector[0] - radialVector[1]),
+    0
+  };
+  outField[1] =
+    vtkm::exec::CellInterpolate(inField, backPcoord, vtkm::CellShapeTagPolygon{}, worklet);
+  outWCoords[1] =
+    vtkm::exec::CellInterpolate(inWCoords, backPcoord, vtkm::CellShapeTagPolygon{}, worklet);
+
+  backPcoord = { pcoords[0] + scale * (radialVector[1] - radialVector[0]),
+                 pcoords[1] + scale * (-radialVector[0] - radialVector[1]),
+                 0 };
+  outField[2] =
+    vtkm::exec::CellInterpolate(inField, backPcoord, vtkm::CellShapeTagPolygon{}, worklet);
+  outWCoords[2] =
+    vtkm::exec::CellInterpolate(inWCoords, backPcoord, vtkm::CellShapeTagPolygon{}, worklet);
 }
 
-//-----------------------------------------------------------------------------
-template <typename FieldVecType, typename WorldCoordType>
-VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> PolygonDerivative(
-  const FieldVecType& field,
-  const WorldCoordType& wCoords,
-  vtkm::IdComponent numPoints,
-  vtkm::IdComponent firstPointIndex,
-  vtkm::IdComponent secondPointIndex)
-{
-  // If we are here, then there are 5 or more points on this polygon.
-
-  // Arrange the points such that they are on the circle circumscribed in the
-  // unit square from 0 to 1. That is, the point are on the circle centered at
-  // coordinate 0.5,0.5 with radius 0.5. The polygon is divided into regions
-  // defined by they triangle fan formed by the points around the center. This
-  // is C0 continuous but not necessarily C1 continuous. It is also possible to
-  // have a non 1 to 1 mapping between parametric coordinates world coordinates
-  // if the polygon is not planar or convex.
-
-  using FieldType = typename FieldVecType::ComponentType;
-  using WCoordType = typename WorldCoordType::ComponentType;
-
-  // Find the interpolation for the center point.
-  FieldType fieldCenter = field[0];
-  WCoordType wcoordCenter = wCoords[0];
-  for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; pointIndex++)
-  {
-    fieldCenter = fieldCenter + field[pointIndex];
-    wcoordCenter = wcoordCenter + wCoords[pointIndex];
-  }
-  fieldCenter = fieldCenter * FieldType(1.0f / static_cast<float>(numPoints));
-  wcoordCenter = wcoordCenter * WCoordType(1.0f / static_cast<float>(numPoints));
-
-  // Set up parameters for triangle that pcoords is in
-  vtkm::Vec<FieldType, 3> triangleField(
-    fieldCenter, field[firstPointIndex], field[secondPointIndex]);
-
-  vtkm::Vec<WCoordType, 3> triangleWCoords(
-    wcoordCenter, wCoords[firstPointIndex], wCoords[secondPointIndex]);
-
-  // Now use the triangle derivative. pcoords is actually invalid for the
-  // triangle, but that does not matter as the derivative for a triangle does
-  // not depend on it.
-  return detail::TriangleDerivative(triangleField, triangleWCoords);
-}
+} // namespace detail
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
@@ -873,9 +876,10 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
       return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagQuad(), worklet);
   }
 
-  vtkm::IdComponent firstPointIndex, secondPointIndex;
-  PolygonComputeIndices(pcoords, numPoints, firstPointIndex, secondPointIndex);
-  return PolygonDerivative(field, wCoords, numPoints, firstPointIndex, secondPointIndex);
+  vtkm::Vec<typename FieldVecType::ComponentType, 3> triangleField;
+  vtkm::Vec<typename WorldCoordType::ComponentType, 3> triangleWCoords;
+  detail::PolygonSubTriangle(field, wCoords, pcoords, triangleField, triangleWCoords, worklet);
+  return detail::TriangleDerivative(triangleField, triangleWCoords);
 }
 
 //-----------------------------------------------------------------------------
@@ -994,7 +998,7 @@ template <typename ValueType, typename WorldCoordType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivative(const vtkm::Vec<ValueType, 4>& field,
                                                   const vtkm::Vec<WorldCoordType, 4>& wCoords)
 {
-  using BaseComponentType = typename BaseComponent<ValueType>::Type;
+  using BaseComponentType = typename vtkm::VecTraits<ValueType>::BaseComponentType;
 
   // The scalar values of the four points in a tetrahedron completely specify a
   // linear field (with constant gradient). The field, defined by the 3-vector

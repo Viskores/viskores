@@ -238,11 +238,6 @@ struct TestEqualCellSet
     vtkm::TopologyElementTagCell visitTopo{};
     vtkm::TopologyElementTagPoint incidentTopo{};
 
-    if (cs1.GetName() != cs2.GetName())
-    {
-      result.PushMessage("names don't match");
-      return;
-    }
     if (cs1.GetNumberOfPoints() != cs2.GetNumberOfPoints())
     {
       result.PushMessage("number of points don't match");
@@ -285,11 +280,6 @@ struct TestEqualCellSet
                   const vtkm::cont::CellSetStructured<DIMENSION>& cs2,
                   TestEqualResult& result) const
   {
-    if (cs1.GetName() != cs2.GetName())
-    {
-      result.PushMessage("names don't match");
-      return;
-    }
     if (cs1.GetPointDimensions() != cs2.GetPointDimensions())
     {
       result.PushMessage("point dimensions don't match");
@@ -348,15 +338,6 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
     return result;
   }
 
-  if (f1.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
-  {
-    if (f1.GetAssocCellSet() != f2.GetAssocCellSet())
-    {
-      result.PushMessage("associated cellset names don't match");
-      return result;
-    }
-  }
-
   result =
     test_equal_ArrayHandles(f1.GetData().ResetTypes(fTtypes), f2.GetData().ResetTypes(fTtypes));
   if (!result)
@@ -392,20 +373,12 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
     }
   }
 
-  if (ds1.GetNumberOfCellSets() != ds2.GetNumberOfCellSets())
+  result = test_equal_CellSets(ds1.GetCellSet().ResetCellSetList(ctypes),
+                               ds2.GetCellSet().ResetCellSetList(ctypes));
+  if (!result)
   {
-    result.PushMessage("number of cellsets don't match");
+    result.PushMessage(std::string("cellsets don't match"));
     return result;
-  }
-  for (vtkm::IdComponent i = 0; i < ds1.GetNumberOfCellSets(); ++i)
-  {
-    result = test_equal_CellSets(ds1.GetCellSet(i).ResetCellSetList(ctypes),
-                                 ds2.GetCellSet(i).ResetCellSetList(ctypes));
-    if (!result)
-    {
-      result.PushMessage(std::string("cellsets don't match at index ") + std::to_string(i));
-      return result;
-    }
   }
 
   if (ds1.GetNumberOfFields() != ds2.GetNumberOfFields())

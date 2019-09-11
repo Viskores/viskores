@@ -79,18 +79,17 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inD
 
 /// Use this function if you want to explicit construct a Cell field and have a ArrayHandle
 /// that holds the data for the field.
-template <typename T, typename Storage, typename CellSetTags>
+template <typename T, typename Storage>
 inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
-  const std::string& fieldName,
-  const vtkm::cont::DynamicCellSetBase<CellSetTags>& cellSet)
+  const std::string& fieldName)
 {
   VTKM_ASSERT(!fieldName.empty());
 
   vtkm::cont::DataSet clone;
   clone.CopyStructure(inDataSet);
-  clone.AddField(vtkm::cont::make_FieldCell(fieldName, cellSet.GetName(), fieldArray));
+  clone.AddField(vtkm::cont::make_FieldCell(fieldName, fieldArray));
 
   // Sanity check.
   VTKM_ASSERT(clone.HasCellField(fieldName));
@@ -99,18 +98,16 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
 
 /// Use this function if you want to explicit construct a Cell field and have a VariantArrayHandle
 /// that holds the data for the field.
-template <typename CellSetTags>
 inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::VariantArrayHandle& fieldArray,
-  const std::string& fieldName,
-  const vtkm::cont::DynamicCellSetBase<CellSetTags>& cellSet)
+  const std::string& fieldName)
 {
   VTKM_ASSERT(!fieldName.empty());
 
   vtkm::cont::DataSet clone;
   clone.CopyStructure(inDataSet);
-  clone.AddField(vtkm::cont::make_FieldCell(fieldName, cellSet.GetName(), fieldArray));
+  clone.AddField(vtkm::cont::make_FieldCell(fieldName, fieldArray));
 
   // Sanity check.
   VTKM_ASSERT(clone.HasCellField(fieldName));

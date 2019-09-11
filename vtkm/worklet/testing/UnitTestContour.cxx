@@ -168,13 +168,13 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
                                      vtkm::cont::Field::Association::POINTS,
                                      vtkm::cont::VariantArrayHandle(distanceToOther)));
 
-  CellSet cellSet("cells");
+  CellSet cellSet;
   cellSet.Fill((dim + 1) * (dim + 1) * (dim + 1), HexTag::Id, HexTraits::NUM_POINTS, connectivity);
 
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
-  dataSet.AddField(vtkm::cont::Field(
-    "cellvar", vtkm::cont::Field::Association::CELL_SET, "cells", cellFieldArray));
+  dataSet.AddField(
+    vtkm::cont::Field("cellvar", vtkm::cont::Field::Association::CELL_SET, cellFieldArray));
 
   return dataSet;
 }

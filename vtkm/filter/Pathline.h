@@ -33,7 +33,7 @@ public:
   Pathline();
 
   VTKM_CONT
-  void SetPreviousTime(vtkm::worklet::particleadvection::ScalarType t) { this->PreviousTime = t; }
+  void SetCurrentTime(vtkm::worklet::particleadvection::ScalarType t) { this->CurrentTime = t; }
   VTKM_CONT
   void SetNextTime(vtkm::worklet::particleadvection::ScalarType t) { this->NextTime = t; }
 
@@ -67,7 +67,7 @@ public:
 private:
   vtkm::worklet::Streamline Worklet;
   vtkm::worklet::particleadvection::ScalarType StepSize;
-  vtkm::worklet::particleadvection::ScalarType PreviousTime;
+  vtkm::worklet::particleadvection::ScalarType CurrentTime;
   vtkm::worklet::particleadvection::ScalarType NextTime;
   vtkm::cont::DataSet NextDataSet;
   vtkm::Id NumberOfSteps;

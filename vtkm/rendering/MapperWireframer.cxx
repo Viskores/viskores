@@ -282,7 +282,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     conn.Allocate(numCells * 2);
     vtkm::worklet::DispatcherMapField<CreateConnectivity>(CreateConnectivity()).Invoke(iter, conn);
 
-    vtkm::cont::CellSetSingleType<> newCellSet("cells");
+    vtkm::cont::CellSetSingleType<> newCellSet;
     newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
     cellSet = vtkm::cont::DynamicCellSet(newCellSet);
   }
@@ -303,7 +303,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     // running the external faces filter on the input cell set.
     vtkm::cont::DataSet dataSet;
     dataSet.AddCoordinateSystem(actualCoords);
-    dataSet.AddCellSet(inCellSet);
+    dataSet.SetCellSet(inCellSet);
     dataSet.AddField(inScalarField);
     vtkm::filter::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);

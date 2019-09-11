@@ -90,7 +90,7 @@ vtkm::cont::DataSet MakeCosmo_2DDataSet_0()
     numindices.push_back(1);
     conn.push_back(pt);
   }
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 xLocation[nCells] = { 1, 1, 2, 1, 3, 1, 1, 3, 2, 3, 4, 3, 5, 5, 4, 5, 6 };
@@ -149,7 +149,7 @@ vtkm::cont::DataSet MakeCosmo_3DDataSet_0()
     numindices.push_back(1);
     conn.push_back(pt);
   }
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 xLocation[nCells] = { 20.8125f, 29.6871f, 29.724f,  29.6783f, 29.7051f,
@@ -188,7 +188,7 @@ void TestCosmo_2DHaloFind()
 
   // Create the input 2D particle dataset
   vtkm::cont::DataSet dataSet = MakeCosmo_2DDataSet_0();
-  vtkm::Id nCells = dataSet.GetCellSet(0).GetNumberOfCells();
+  vtkm::Id nCells = dataSet.GetNumberOfCells();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray;
@@ -240,7 +240,7 @@ void TestCosmo_3DHaloFind()
 
   // Create the input 3D particle dataset
   vtkm::cont::DataSet dataSet = MakeCosmo_3DDataSet_0();
-  vtkm::Id nCells = dataSet.GetCellSet(0).GetNumberOfCells();
+  vtkm::Id nCells = dataSet.GetNumberOfCells();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray;
@@ -292,7 +292,7 @@ void TestCosmo_3DCenterFind()
 
   // Create the input 3D particle dataset
   vtkm::cont::DataSet dataSet = MakeCosmo_3DDataSet_0();
-  vtkm::Id nCells = dataSet.GetCellSet(0).GetNumberOfCells();
+  vtkm::Id nCells = dataSet.GetNumberOfCells();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray;

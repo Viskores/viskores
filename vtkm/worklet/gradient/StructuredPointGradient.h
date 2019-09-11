@@ -47,7 +47,7 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
                             GradientOutType& outputGradient) const
   {
     using CoordType = typename PointsIn::ValueType;
-    using CT = typename vtkm::BaseComponent<CoordType>::Type;
+    using CT = typename vtkm::VecTraits<CoordType>::BaseComponentType;
     using OT = typename GradientOutType::ComponentType;
 
     vtkm::Vec<CT, 3> xi, eta, zeta;

@@ -174,10 +174,10 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   dataSet.AddField(
     vtkm::cont::Field("distanceToOther", vtkm::cont::Field::Association::POINTS, distanceToOther));
 
-  CellSet cellSet("cells");
+  CellSet cellSet;
   cellSet.Fill(coordinates.GetNumberOfValues(), HexTag::Id, HexTraits::NUM_POINTS, connectivity);
 
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
   return dataSet;
 }
@@ -199,8 +199,6 @@ void TestContourUniformGrid()
 
   auto result = mc.Execute(dataSet);
   {
-    VTKM_TEST_ASSERT(result.GetNumberOfCellSets() == 1,
-                     "Wrong number of cellsets in the output dataset");
     VTKM_TEST_ASSERT(result.GetNumberOfCoordinateSystems() == 1,
                      "Wrong number of coordinate systems in the output dataset");
     //since normals is on we have one field
@@ -273,10 +271,6 @@ void TestContourCustomPolicy()
   mc.SetFieldsToPass({ "distanceToOrigin", "distanceToOther" });
   vtkm::cont::DataSet outputData = mc.Execute(dataSet, PolicyRadiantDataSet{});
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
                    "Wrong number of fields in the output dataset");
 

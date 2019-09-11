@@ -15,14 +15,15 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellLocator.h>
-#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
+#include <vtkm/cont/CellLocatorUniformBins.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
+#include <vtkm/worklet/particleadvection/EvaluatorStatus.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
@@ -31,12 +32,6 @@ namespace worklet
 {
 namespace particleadvection
 {
-enum class EvaluatorStatus
-{
-  SUCCESS = 0,
-  OUTSIDE_SPATIAL_BOUNDS,
-  OUTSIDE_TEMPORAL_BOUNDS
-};
 
 template <typename DeviceAdapter, typename FieldArrayType>
 class ExecutionGridEvaluator
@@ -163,33 +158,39 @@ public:
         this->Locator = std::make_shared<vtkm::cont::CellLocatorRectilinearGrid>(locator);
       }
       else
-        throw vtkm::cont::ErrorInternal("Cells are not structured.");
-
+      {
+        // Default to using an locator for explicit meshes.
+        vtkm::cont::CellLocatorUniformBins locator;
+        locator.SetCoordinates(coordinates);
+        locator.SetCellSet(cellset);
+        locator.Update();
+        this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
+      }
       vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
-      vtkm::cont::CellLocatorBoundingIntervalHierarchy locator;
+      vtkm::cont::CellLocatorUniformBins locator;
       locator.SetCoordinates(coordinates);
       locator.SetCellSet(cellset);
       locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorBoundingIntervalHierarchy>(locator);
-      vtkm::cont::SingleCellExplicitInterpolationHelper interpolationHelper(cellset);
+      this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
+      vtkm::cont::SingleCellTypeInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
-        std::make_shared<vtkm::cont::SingleCellExplicitInterpolationHelper>(interpolationHelper);
+        std::make_shared<vtkm::cont::SingleCellTypeInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
-      vtkm::cont::CellLocatorBoundingIntervalHierarchy locator;
+      vtkm::cont::CellLocatorUniformBins locator;
       locator.SetCoordinates(coordinates);
       locator.SetCellSet(cellset);
       locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorBoundingIntervalHierarchy>(locator);
-      vtkm::cont::CellExplicitInterpolationHelper interpolationHelper(cellset);
+      this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
+      vtkm::cont::ExplicitCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
-        std::make_shared<vtkm::cont::CellExplicitInterpolationHelper>(interpolationHelper);
+        std::make_shared<vtkm::cont::ExplicitCellInterpolationHelper>(interpolationHelper);
     }
     else
       throw vtkm::cont::ErrorInternal("Unsupported cellset type.");

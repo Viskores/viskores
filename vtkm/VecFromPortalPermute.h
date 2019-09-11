@@ -136,6 +136,7 @@ struct VecTraits<vtkm::VecFromPortalPermute<IndexVecType, PortalType>>
   using VecType = vtkm::VecFromPortalPermute<IndexVecType, PortalType>;
 
   using ComponentType = typename VecType::ComponentType;
+  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
 

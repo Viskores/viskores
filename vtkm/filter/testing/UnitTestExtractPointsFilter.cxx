@@ -38,14 +38,13 @@ public:
     extractPoints.SetCompactPoints(true);
 
     vtkm::cont::DataSet output = extractPoints.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27),
-                     "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractPoints filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 99.0f,
@@ -71,17 +70,16 @@ public:
     extractPoints.SetCompactPoints(true);
 
     vtkm::cont::DataSet output = extractPoints.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 98),
-                     "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 98), "Wrong result for ExtractPoints");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractPoints filter");
 
-    for (vtkm::Id i = 0; i < output.GetCellSet(0).GetNumberOfPoints(); i++)
+    for (vtkm::Id i = 0; i < output.GetCellSet().GetNumberOfPoints(); i++)
     {
       VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(i) == 0.0f,
                        "Wrong point field data");
@@ -104,8 +102,7 @@ public:
     extractPoints.SetExtractInside(true);
 
     vtkm::cont::DataSet output = extractPoints.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27),
-                     "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
   }
 
   void TestExplicitByBox0() const
@@ -124,8 +121,7 @@ public:
     extractPoints.SetExtractInside(true);
 
     vtkm::cont::DataSet output = extractPoints.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
-                     "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8), "Wrong result for ExtractPoints");
   }
 
   void TestExplicitByBox1() const
@@ -144,8 +140,7 @@ public:
     extractPoints.SetExtractInside(false);
 
     vtkm::cont::DataSet output = extractPoints.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 3),
-                     "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 3), "Wrong result for ExtractPoints");
   }
 
   void operator()() const

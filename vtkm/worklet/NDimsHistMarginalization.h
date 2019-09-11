@@ -66,7 +66,7 @@ public:
     //total variables
     vtkm::Id numOfVariable = static_cast<vtkm::Id>(binId.size());
 
-    const vtkm::Id numberOfValues = freqsIn.GetPortalConstControl().GetNumberOfValues();
+    const vtkm::Id numberOfValues = freqsIn.GetNumberOfValues();
     vtkm::cont::ArrayHandleConstant<vtkm::Id> constant0Array(0, numberOfValues);
     vtkm::cont::ArrayHandle<vtkm::Id> bin1DIndex;
     vtkm::cont::ArrayCopy(constant0Array, bin1DIndex);
@@ -74,13 +74,15 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
     vtkm::cont::ArrayCopy(freqsIn, freqs);
     vtkm::Id numMarginalVariables = 0; //count num of marginal variables
+    const auto marginalPortal = marginalVariables.GetPortalConstControl();
+    const auto numBinsPortal = numberOfBins.GetPortalConstControl();
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
-      if (marginalVariables.GetPortalConstControl().Get(i) == true)
+      if (marginalPortal.Get(i) == true)
       {
         // Worklet to calculate 1D index for marginal variables
         numMarginalVariables++;
-        const vtkm::Id nFieldBins = numberOfBins.GetPortalControl().Get(i);
+        const vtkm::Id nFieldBins = numBinsPortal.Get(i);
         vtkm::worklet::histogram::To1DIndex binWorklet(nFieldBins);
         vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::To1DIndex> to1DIndexDispatcher(
           binWorklet);
@@ -121,9 +123,9 @@ public:
     vtkm::Id marginalVarIdx = numMarginalVariables - 1;
     for (vtkm::Id i = numOfVariable - 1; i >= 0; i--)
     {
-      if (marginalVariables.GetPortalConstControl().Get(i) == true)
+      if (marginalPortal.Get(i) == true)
       {
-        const vtkm::Id nFieldBins = numberOfBins.GetPortalControl().Get(i);
+        const vtkm::Id nFieldBins = numBinsPortal.Get(i);
         vtkm::worklet::histogram::ConvertHistBinToND binWorklet(nFieldBins);
         vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND>
           convertHistBinToNDDispatcher(binWorklet);
@@ -147,7 +149,7 @@ public:
     //total variables
     vtkm::Id numOfVariable = static_cast<vtkm::Id>(binId.size());
 
-    const vtkm::Id numberOfValues = freqsIn.GetPortalConstControl().GetNumberOfValues();
+    const vtkm::Id numberOfValues = freqsIn.GetNumberOfValues();
     vtkm::cont::ArrayHandleConstant<vtkm::Id> constant0Array(0, numberOfValues);
     vtkm::cont::ArrayHandle<vtkm::Id> bin1DIndex;
     vtkm::cont::ArrayCopy(constant0Array, bin1DIndex);
@@ -155,13 +157,15 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
     vtkm::cont::ArrayCopy(freqsIn, freqs);
     vtkm::Id numMarginalVariables = 0; //count num of marginal variables
+    const auto marginalPortal = marginalVariables.GetPortalConstControl();
+    const auto numBinsPortal = numberOfBins.GetPortalConstControl();
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
-      if (marginalVariables.GetPortalConstControl().Get(i) == true)
+      if (marginalPortal.Get(i) == true)
       {
         // Worklet to calculate 1D index for marginal variables
         numMarginalVariables++;
-        const vtkm::Id nFieldBins = numberOfBins.GetPortalControl().Get(i);
+        const vtkm::Id nFieldBins = numBinsPortal.Get(i);
         vtkm::worklet::histogram::To1DIndex binWorklet(nFieldBins);
         vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::To1DIndex> to1DIndexDispatcher(
           binWorklet);
@@ -181,9 +185,9 @@ public:
     vtkm::Id marginalVarIdx = numMarginalVariables - 1;
     for (vtkm::Id i = numOfVariable - 1; i >= 0; i--)
     {
-      if (marginalVariables.GetPortalConstControl().Get(i) == true)
+      if (marginalPortal.Get(i) == true)
       {
-        const vtkm::Id nFieldBins = numberOfBins.GetPortalControl().Get(i);
+        const vtkm::Id nFieldBins = numBinsPortal.Get(i);
         vtkm::worklet::histogram::ConvertHistBinToND binWorklet(nFieldBins);
         vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::ConvertHistBinToND>
           convertHistBinToNDDispatcher(binWorklet);

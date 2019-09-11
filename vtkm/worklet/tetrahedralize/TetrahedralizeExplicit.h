@@ -103,18 +103,16 @@ public:
 
   template <typename CellSetType>
   vtkm::cont::CellSetSingleType<> Run(
-    const CellSetType& cellSet,
+    const CellSetType& vtkmNotUsed(cellSet),
     vtkm::cont::ArrayHandle<vtkm::IdComponent>& vtkmNotUsed(outCellsPerCell))
   {
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
-
-    return outCellSet;
+    return vtkm::cont::CellSetSingleType<>();
   }
 
   vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<>& cellSet,
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    vtkm::cont::CellSetSingleType<> outCellSet;
 
     // Input topology
     auto inShapes =

@@ -12,6 +12,7 @@
 #define vtk_m_worklet_ComputeNDHistogram_h
 
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 
@@ -94,7 +95,7 @@ public:
   template <typename T, typename Storage>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
-    const vtkm::Vec<T, 2> initValue(field.GetPortalConstControl().Get(0));
+    const vtkm::Vec<T, 2> initValue(vtkm::cont::ArrayGetValue(0, field));
     vtkm::Vec<T, 2> minMax = vtkm::cont::Algorithm::Reduce(field, initValue, vtkm::MinAndMax<T>());
     MinMax.Min = static_cast<vtkm::Float64>(minMax[0]);
     MinMax.Max = static_cast<vtkm::Float64>(minMax[1]);

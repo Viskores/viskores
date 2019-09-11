@@ -101,12 +101,12 @@ vtkm::cont::DataSet Tangle::Execute() const
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   static constexpr vtkm::IdComponent ndim = 3;
-  vtkm::cont::CellSetStructured<ndim> cellSet("cells");
+  vtkm::cont::CellSetStructured<ndim> cellSet;
   cellSet.SetPointDimensions(vdims);
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
   dataSet.AddField(vtkm::cont::make_FieldPoint("nodevar", pointFieldArray));
-  dataSet.AddField(vtkm::cont::make_FieldCell("cellvar", "cells", cellFieldArray));
+  dataSet.AddField(vtkm::cont::make_FieldCell("cellvar", cellFieldArray));
 
   return dataSet;
 }

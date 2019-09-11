@@ -51,7 +51,6 @@ set(unit_tests
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayHandleVirtual.cxx
-  UnitTestVariantArrayHandle.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestCellLocatorGeneral.cxx
   UnitTestCellSet.cxx
@@ -72,7 +71,7 @@ set(unit_tests
   UnitTestInitialize.cxx
   UnitTestLogging.cxx
   UnitTestMoveConstructors.cxx
-  UnitTestMultiBlock.cxx
+  UnitTestPartitionedDataSet.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestRuntimeDeviceNames.cxx
   UnitTestScopedRuntimeDeviceTracker.cxx
@@ -81,6 +80,7 @@ set(unit_tests
   UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
   UnitTestTryExecute.cxx
+  UnitTestVariantArrayHandle.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)

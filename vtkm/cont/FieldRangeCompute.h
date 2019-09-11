@@ -12,7 +12,7 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include <vtkm/cont/FieldRangeCompute.hxx>
 
@@ -20,9 +20,10 @@ namespace vtkm
 {
 namespace cont
 {
-/// \brief Compute ranges for fields in a DataSet or MultiBlock.
+/// \brief Compute ranges for fields in a DataSet or PartitionedDataSet.
 ///
-/// These methods to compute ranges for fields in a dataset or a multiblock.
+/// These methods to compute ranges for fields in a single dataset or a
+/// partitioned dataset.
 /// When using VTK-m in a hybrid-parallel environment with distributed processing,
 /// this class uses ranges for locally available data alone. Use FieldRangeGlobalCompute
 /// to compute ranges globally across all ranks even in distributed mode.
@@ -51,28 +52,30 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
 //@}
 
 //{@
-/// Returns the range for a field from a multiblock. If the field is not present on any
-/// of the blocks, an empty ArrayHandle will be returned. If the field is present on some blocks,
-/// but not all, those blocks without the field are skipped.
+/// Returns the range for a field from a PartitionedDataSet. If the field is
+/// not present on any of the partitions, an empty ArrayHandle will be
+/// returned. If the field is present on some partitions, but not all, those
+/// partitions without the field are skipped.
 ///
-/// The returned array handle will have as many values as the maximum number of components for
-/// the selected field across all blocks.
+/// The returned array handle will have as many values as the maximum number of
+/// components for the selected field across all partitions.
+///
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
-  const vtkm::cont::MultiBlock& multiblock,
+  const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
 template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
-  const vtkm::cont::MultiBlock& multiblock,
+  const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
   vtkm::cont::Field::Association assoc,
   TypeList)
 {
   VTKM_IS_LIST_TAG(TypeList);
-  return vtkm::cont::detail::FieldRangeComputeImpl(multiblock, name, assoc, TypeList());
+  return vtkm::cont::detail::FieldRangeComputeImpl(pds, name, assoc, TypeList());
 }
 
 //@}

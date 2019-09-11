@@ -56,6 +56,12 @@ private:
     return dst;
   }
 
+  template <typename T>
+  VTKM_EXEC_CONT static T BitCast(T&& src)
+  {
+    return std::forward<T>(src);
+  }
+
 public:
   // Note about Load and Store implementations:
   //
@@ -127,6 +133,11 @@ public:
   }
 
 #define VTKM_ATOMIC_OPS_FOR_TYPE(vtkmType, winType, suffix)                                        \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkmType Add(vtkmType* addr, vtkmType arg)     \
+  {                                                                                                \
+    return BitCast<vtkmType>(_InterlockedExchangeAdd##suffix(                                      \
+      reinterpret_cast<volatile winType*>(addr), BitCast<winType>(arg)));                          \
+  }                                                                                                \
   VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static vtkmType Not(vtkmType* addr)                   \
   {                                                                                                \
     return Xor(addr, static_cast<vtkmType>(~vtkmType{ 0u }));                                      \
@@ -172,6 +183,10 @@ public:
   VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static void Store(type* addr, type value)             \
   {                                                                                                \
     return __atomic_store_n(addr, value, __ATOMIC_RELEASE);                                        \
+  }                                                                                                \
+  VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static type Add(type* addr, type arg)                 \
+  {                                                                                                \
+    return __atomic_fetch_add(addr, arg, __ATOMIC_SEQ_CST);                                        \
   }                                                                                                \
   VTKM_SUPPRESS_EXEC_WARNINGS VTKM_EXEC_CONT static type Not(type* addr)                           \
   {                                                                                                \

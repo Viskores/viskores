@@ -22,11 +22,9 @@ DataSetBuilderExplicitIterative::DataSetBuilderExplicitIterative()
 
 
 VTKM_CONT
-void DataSetBuilderExplicitIterative::Begin(const std::string& coordName,
-                                            const std::string& cellName)
+void DataSetBuilderExplicitIterative::Begin(const std::string& coordName)
 {
   this->coordNm = coordName;
-  this->cellNm = cellName;
   this->points.resize(0);
   this->shapes.resize(0);
   this->numIdx.resize(0);
@@ -38,11 +36,11 @@ VTKM_CONT
 vtkm::cont::DataSet DataSetBuilderExplicitIterative::Create()
 {
   DataSetBuilderExplicit dsb;
-  return dsb.Create(points, shapes, numIdx, connectivity, coordNm, cellNm);
+  return dsb.Create(points, shapes, numIdx, connectivity, coordNm);
 }
 
 VTKM_CONT
-vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Vec3f_32& pt)
+vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Vec3f& pt)
 {
   points.push_back(pt);
   vtkm::Id id = static_cast<vtkm::Id>(points.size());
@@ -51,9 +49,9 @@ vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Vec3f_32& pt)
 }
 
 VTKM_CONT
-vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Float32& x,
-                                                   const vtkm::Float32& y,
-                                                   const vtkm::Float32& z)
+vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::FloatDefault& x,
+                                                   const vtkm::FloatDefault& y,
+                                                   const vtkm::FloatDefault& z)
 {
   points.push_back(vtkm::make_Vec(x, y, z));
   vtkm::Id id = static_cast<vtkm::Id>(points.size());

@@ -14,6 +14,7 @@
 #include <vtkm/worklet/wavelets/WaveletDWT.h>
 
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayGetValues.h>
 
 namespace vtkm
 {
@@ -428,7 +429,7 @@ public:
       WaveletBase::DeviceSort(sortedArray);
 
       vtkm::Id n = coeffLen - static_cast<vtkm::Id>(static_cast<vtkm::Float64>(coeffLen) / ratio);
-      vtkm::Float64 nthVal = static_cast<vtkm::Float64>(sortedArray.GetPortalConstControl().Get(n));
+      vtkm::Float64 nthVal = static_cast<vtkm::Float64>(vtkm::cont::ArrayGetValue(n, sortedArray));
       if (nthVal < 0.0)
       {
         nthVal *= -1.0;

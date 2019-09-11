@@ -32,8 +32,7 @@ public:
     thresholdPoints.SetFieldsToPass("pointvar");
     auto output = thresholdPoints.Execute(dataset);
 
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11),
-                     "Wrong result for ThresholdPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 11), "Wrong result for ThresholdPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 25),
                      "Wrong number of points for ThresholdPoints");
 
@@ -56,8 +55,7 @@ public:
     thresholdPoints.SetFieldsToPass("pointvar");
     auto output = thresholdPoints.Execute(dataset);
 
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27),
-                     "Wrong result for ThresholdPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27), "Wrong result for ThresholdPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 27),
                      "Wrong number of points for ThresholdPoints");
 
@@ -80,8 +78,7 @@ public:
     thresholdPoints.SetFieldsToPass("pointvar");
     auto output = thresholdPoints.Execute(dataset);
 
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 6),
-                     "Wrong result for ThresholdPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 6), "Wrong result for ThresholdPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 6),
                      "Wrong number of points for ThresholdPoints");
 
@@ -105,8 +102,7 @@ public:
     auto output = thresholdPoints.Execute(dataset);
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 0),
-                     "Wrong result for ThresholdPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 0), "Wrong result for ThresholdPoints");
   }
 
   void operator()() const

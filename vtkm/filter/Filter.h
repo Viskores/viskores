@@ -14,7 +14,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Invoker.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/FieldSelection.h>
@@ -50,21 +50,22 @@ namespace filter
 /// vtkm::cont::DataSet dsInput = ...
 /// auto outputDS = filter.Execute(dsInput);
 ///
-/// // or, execute on a vtkm::cont::MultiBlock
-/// vtkm::cont::MultiBlock mbInput = ...
+/// // or, execute on a vtkm::cont::PartitionedDataSet
+/// vtkm::cont::PartitionedDataSet mbInput = ...
 /// auto outputMB = filter.Execute(mbInput);
 /// \endcode
 ///
-/// `Execute` methods take in the input dataset or multiblock to process and
-/// return the result. The type of the result is same as the input type, thus
-/// `Execute(DataSet&)` returns a DataSet while `Execute(MultiBlock&)` returns a
-/// MultiBlock.
+/// `Execute` methods take in the input DataSet or PartitionedDataSet to
+/// process and return the result. The type of the result is same as the input
+/// type, thus `Execute(DataSet&)` returns a DataSet while
+/// `Execute(PartitionedDataSet&)` returns a PartitionedDataSet.
 ///
 /// The implementation for `Execute(DataSet&)` is merely provided for
-/// convenience. Internally, it creates MultiBlock with a single block for the
-/// input and then forwards the call to `Execute(MultiBlock&)`. The method
-/// returns the first block, if any, from the MultiBlock returned by the
-/// forwarded call. If the MultiBlock returned has more than 1 block, then
+/// convenience. Internally, it creates a PartitionedDataSet with a single
+/// partition for the input and then forwards the call to
+/// `Execute(PartitionedDataSet&)`. The method returns the first partition, if
+/// any, from the PartitionedDataSet returned by the forwarded call. If the
+/// PartitionedDataSet returned has more than 1 partition, then
 /// `vtkm::cont::ErrorFilterExecution` will be thrown.
 ///
 /// \section FilterSubclassing Subclassing
@@ -83,22 +84,22 @@ namespace filter
 /// \code{cpp}
 ///
 /// template <typename DerivedPolicy>
-/// void PreExecute(const vtkm::cont::MultiBlock& input,
+/// void PreExecute(const vtkm::cont::PartitionedDataSet& input,
 ///           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 ///
 /// template <typename DerivedPolicy>
-/// void PostExecute(const vtkm::cont::MultiBlock& input, vtkm::cont::MultiBlock& output
+/// void PostExecute(const vtkm::cont::PartitionedDataSet& input, vtkm::cont::PartitionedDataSet& output
 ///           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 ///
 /// \endcode
 ///
 /// As the name suggests, these are called and the beginning and before the end
 /// of an `Filter::Execute` call. Most filters that don't need to handle
-/// multiblock datasets specially, e.g. clip, cut, iso-contour, need not worry
+/// PartitionedDataSet specially, e.g. clip, cut, iso-contour, need not worry
 /// about these methods or provide any implementation. If, however, your filter
 /// needs do to some initialization e.g. allocation buffers to accumulate
-/// results, or finalization e.g. reduce results across all blocks, then these
-/// methods provide convenient hooks for the same.
+/// results, or finalization e.g. reduce results across all partitions, then
+/// these methods provide convenient hooks for the same.
 ///
 /// \subsection FilterPrepareForExecution PrepareForExecution
 ///
@@ -108,11 +109,11 @@ namespace filter
 /// available; which one to implement depends on the nature of the filter.
 ///
 /// Let's consider simple filters that do not need to do anything special to
-/// handle multiblock datasets e.g. clip, contour, etc. These are the filters
-/// where executing the filter on a MultiBlock simply means executing the filter
-/// on one block at a time and packing the output for each iteration info the
-/// result MultiBlock. For such filters, one must implement the following
-/// signature.
+/// handle PartitionedDataSet e.g. clip, contour, etc. These are the filters
+/// where executing the filter on a PartitionedDataSet simply means executing
+/// the filter on one partition at a time and packing the output for each
+/// iteration info the result PartitionedDataSet. For such filters, one must
+/// implement the following signature.
 ///
 /// \code{cpp}
 ///
@@ -127,21 +128,22 @@ namespace filter
 /// result and return it.  If there are any errors, the subclass must throw an
 /// exception (e.g. `vtkm::cont::ErrorFilterExecution`).
 ///
-/// In this case, the Filter superclass handles iterating over multiple blocks
-/// in the input MultiBlock and calling `PrepareForExecution` iteratively.
+/// In this case, the Filter superclass handles iterating over multiple
+/// partitions in the input PartitionedDataSet and calling
+/// `PrepareForExecution` iteratively.
 ///
 /// The aforementioned approach is also suitable for filters that need special
-/// handling for multiblock datasets which can be modelled as PreExecute and
+/// handling for PartitionedDataSets which can be modelled as PreExecute and
 /// PostExecute steps (e.g. `vtkm::filter::Histogram`).
 ///
 /// For more complex filters, like streamlines, particle tracking, where the
-/// processing of multiblock datasets cannot be modelled as a reduction of the
+/// processing of PartitionedDataSets cannot be modelled as a reduction of the
 /// results, one can implement the following signature.
 ///
 /// \code{cpp}
 /// template <typename DerivedPolicy>
-/// vtkm::cont::MultiBlock PrepareForExecution(
-///         const vtkm::cont::MultiBlock& input,
+/// vtkm::cont::PartitionedDataSet PrepareForExecution(
+///         const vtkm::cont::PartitionedDataSet& input,
 ///         const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 /// \endcode
 ///
@@ -163,8 +165,9 @@ namespace filter
 ///
 /// \endcode
 ///
-/// When present, this method will be called after each block execution to map
-/// an input field from the corresponding input block to the output block.
+/// When present, this method will be called after each partition execution to
+/// map an input field from the corresponding input partition to the output
+/// partition.
 ///
 template <typename Derived>
 class Filter
@@ -176,13 +179,22 @@ public:
   VTKM_CONT
   ~Filter();
 
-  //@{
   /// \brief Specify which subset of types a filter supports.
   ///
   /// A filter is able to state what subset of types it supports
   /// by default. By default we use ListTagUniversal to represent that the
   /// filter accepts all types specified by the users provided policy
   using SupportedTypes = vtkm::ListTagUniversal;
+
+  /// \brief Specify which additional field storage to support.
+  ///
+  /// When a filter gets a field value from a DataSet, it has to determine what type
+  /// of storage the array has. Typically this is taken from the policy passed to
+  /// the filter's execute. In some cases it is useful to support additional types.
+  /// For example, the filter might make sense to support ArrayHandleIndex or
+  /// ArrayHandleConstant. If so, the storage of those additional types should be
+  /// listed here.
+  using AdditionalFieldStorage = vtkm::ListTagEmpty;
 
   //@{
   /// \brief Specify which fields get passed from input to output.
@@ -235,14 +247,15 @@ public:
   //@}
 
   //@{
-  /// Executes the filter on the input MultiBlock and produces a result MultiBlock.
+  /// Executes the filter on the input PartitionedDataSet and produces a result PartitionedDataSet.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
-  VTKM_CONT vtkm::cont::MultiBlock Execute(const vtkm::cont::MultiBlock& input);
+  VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input);
 
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::MultiBlock Execute(const vtkm::cont::MultiBlock& input,
-                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::PartitionedDataSet Execute(
+    const vtkm::cont::PartitionedDataSet& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
   //@}
 
   /// Map fields from input dataset to output.

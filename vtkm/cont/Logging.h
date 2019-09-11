@@ -431,6 +431,7 @@ VTKM_CONT_EXPORT
 VTKM_CONT
 std::string GetStackTrace(vtkm::Int32 skip = 0);
 
+//@{
 /// Convert a size in bytes to a human readable string (e.g. "64 bytes",
 /// "1.44 MiB", "128 GiB", etc). @a prec controls the fixed point precision
 /// of the stringified number.
@@ -438,11 +439,26 @@ VTKM_CONT_EXPORT
 VTKM_CONT
 std::string GetHumanReadableSize(vtkm::UInt64 bytes, int prec = 2);
 
+template <typename T>
+VTKM_CONT inline std::string GetHumanReadableSize(T&& bytes, int prec = 2)
+{
+  return GetHumanReadableSize(static_cast<vtkm::UInt64>(std::forward<T>(bytes)), prec);
+}
+//@}
+
+//@{
 /// Returns "%1 (%2 bytes)" where %1 is the result from GetHumanReadableSize
 /// and two is the exact number of bytes.
 VTKM_CONT_EXPORT
 VTKM_CONT
 std::string GetSizeString(vtkm::UInt64 bytes, int prec = 2);
+
+template <typename T>
+VTKM_CONT inline std::string GetSizeString(T&& bytes, int prec = 2)
+{
+  return GetSizeString(static_cast<vtkm::UInt64>(std::forward<T>(bytes)), prec);
+}
+//@}
 
 /**
  * Use RTTI information to retrieve the name of the type T. If logging is

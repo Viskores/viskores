@@ -44,7 +44,7 @@ public:
 
     vtkm::cont::ArrayCopy(strideArray, this->ValidCellIds);
 
-    return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
+    return OutputType(this->ValidCellIds, cellSet);
   }
 
   //----------------------------------------------------------------------------

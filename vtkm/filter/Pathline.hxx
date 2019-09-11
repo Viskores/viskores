@@ -48,9 +48,8 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
   }
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
-  const vtkm::cont::DynamicCellSet& cells2 =
-    this->NextDataSet.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::DynamicCellSet& cells2 = this->NextDataSet.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   const vtkm::cont::CoordinateSystem& coords2 =
@@ -69,7 +68,7 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
   GridEvalType eval(
-    coords, cells, field, this->PreviousTime, coords2, cells2, field2, this->NextTime);
+    coords, cells, field, this->CurrentTime, coords2, cells2, field2, this->NextTime);
   RK4Type rk4(eval, static_cast<vtkm::worklet::particleadvection::ScalarType>(this->StepSize));
 
   vtkm::worklet::Streamline streamline;
@@ -81,7 +80,7 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
 
   vtkm::cont::DataSet outData;
   vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
-  outData.AddCellSet(res.polyLines);
+  outData.SetCellSet(res.polyLines);
   outData.AddCoordinateSystem(outputCoords);
 
   return outData;

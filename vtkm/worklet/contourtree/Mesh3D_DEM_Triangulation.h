@@ -73,6 +73,7 @@
 #ifndef vtkm_worklet_contourtree_mesh3d_dem_triangulation_h
 #define vtkm_worklet_contourtree_mesh3d_dem_triangulation_h
 
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
@@ -201,8 +202,8 @@ void Mesh3D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
   vtkm::cont::Algorithm::ScanExclusive(isCritical, inverseIndex);
 
   // now we can compute how many critical points we carry forward
-  vtkm::Id nCriticalPoints = inverseIndex.GetPortalConstControl().Get(nVertices - 1) +
-    isCritical.GetPortalConstControl().Get(nVertices - 1);
+  vtkm::Id nCriticalPoints = vtkm::cont::ArrayGetValue(nVertices - 1, inverseIndex) +
+    vtkm::cont::ArrayGetValue(nVertices - 1, isCritical);
 
   // allocate space for the join graph vertex arrays
   mergeGraph.AllocateVertexArrays(nCriticalPoints);
@@ -235,8 +236,8 @@ void Mesh3D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
   // now we need to compute the firstEdge array from the outdegrees
   vtkm::cont::Algorithm::ScanExclusive(mergeGraph.outdegree, mergeGraph.firstEdge);
 
-  vtkm::Id nCriticalEdges = mergeGraph.firstEdge.GetPortalConstControl().Get(nCriticalPoints - 1) +
-    mergeGraph.outdegree.GetPortalConstControl().Get(nCriticalPoints - 1);
+  vtkm::Id nCriticalEdges = vtkm::cont::ArrayGetValue(nCriticalPoints - 1, mergeGraph.firstEdge) +
+    vtkm::cont::ArrayGetValue(nCriticalPoints - 1, mergeGraph.outdegree);
 
   // now we allocate the edge arrays
   mergeGraph.AllocateEdgeArrays(nCriticalEdges);

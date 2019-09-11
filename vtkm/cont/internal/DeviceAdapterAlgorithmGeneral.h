@@ -16,10 +16,10 @@
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleStreaming.h>
+#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/cont/internal/DeviceAdapterAtomicArrayImplementation.h>
 #include <vtkm/cont/internal/FunctorsGeneral.h>
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
@@ -661,6 +661,7 @@ public:
     vtkm::Id numValues = input.GetNumberOfValues();
     if (numValues <= 0)
     {
+      output.Shrink(0);
       return initialValue;
     }
 
@@ -685,6 +686,50 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     return DerivedAlgorithm::ScanExclusive(
+      input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
+  }
+
+  //--------------------------------------------------------------------------
+  // Scan Exclusive Extend
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static void ScanExtended(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output,
+                                     BinaryFunctor binaryFunctor,
+                                     const T& initialValue)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    vtkm::Id numValues = input.GetNumberOfValues();
+    if (numValues <= 0)
+    {
+      output.Allocate(1);
+      output.GetPortalControl().Set(0, initialValue);
+      return;
+    }
+
+    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> inclusiveScan;
+    T result = DerivedAlgorithm::ScanInclusive(input, inclusiveScan, binaryFunctor);
+
+    auto inputPortal = inclusiveScan.PrepareForInput(DeviceAdapterTag());
+    auto outputPortal = output.PrepareForOutput(numValues + 1, DeviceAdapterTag());
+
+    InclusiveToExtendedKernel<decltype(inputPortal), decltype(outputPortal), BinaryFunctor>
+      inclusiveToExtended(inputPortal,
+                          outputPortal,
+                          binaryFunctor,
+                          initialValue,
+                          binaryFunctor(initialValue, result));
+
+    DerivedAlgorithm::Schedule(inclusiveToExtended, numValues + 1);
+  }
+
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static void ScanExtended(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    DerivedAlgorithm::ScanExtended(
       input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
   }
 

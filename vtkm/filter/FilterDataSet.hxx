@@ -23,8 +23,7 @@ namespace filter
 //----------------------------------------------------------------------------
 template <typename Derived>
 inline VTKM_CONT FilterDataSet<Derived>::FilterDataSet()
-  : CellSetIndex(0)
-  , CoordinateSystemIndex(0)
+  : CoordinateSystemIndex(0)
 {
 }
 
@@ -59,7 +58,7 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
   using Traits = vtkm::filter::FilterTraits<Derived>;
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy, Traits()), functor);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, Traits()), functor);
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been

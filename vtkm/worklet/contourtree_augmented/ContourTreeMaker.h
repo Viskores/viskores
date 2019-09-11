@@ -89,6 +89,7 @@
 //VTKM includes
 #include <vtkm/Types.h>
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -310,17 +311,12 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
     contourTree.whenTransferred, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
-  vtkm::Id nHypernodes = 0;
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> temp;
-    temp.Allocate(2);
-    vtkm::cont::Algorithm::CopySubRange(
-      newHypernodePosition, newHypernodePosition.GetNumberOfValues() - 1, 1, temp);
-    vtkm::cont::Algorithm::CopySubRange(
-      contourTree.whenTransferred, contourTree.whenTransferred.GetNumberOfValues() - 1, 1, temp, 1);
-    auto portal = temp.GetPortalControl();
-    nHypernodes = portal.Get(0) + oneIfHypernodeFunctor(portal.Get(1));
-  }
+  auto getLastValue = [](const IdArrayType& ah) -> vtkm::Id {
+    return vtkm::cont::ArrayGetValue(ah.GetNumberOfValues() - 1, ah);
+  };
+
+  vtkm::Id nHypernodes = getLastValue(newHypernodePosition) +
+    oneIfHypernodeFunctor(getLastValue(contourTree.whenTransferred));
 
   IdArrayType newHypernodes;
   newHypernodes.Allocate(nHypernodes);

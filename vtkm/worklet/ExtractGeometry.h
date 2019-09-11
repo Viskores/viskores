@@ -114,8 +114,7 @@ public:
     template <typename CellSetType>
     void operator()(const CellSetType& cellset) const
     {
-      vtkm::cont::CellSetPermutation<CellSetType> permCellSet(
-        *this->ValidIds, cellset, cellset.GetName());
+      vtkm::cont::CellSetPermutation<CellSetType> permCellSet(*this->ValidIds, cellset);
       *this->Output = permCellSet;
     }
   };
@@ -130,7 +129,7 @@ public:
 
     vtkm::cont::ArrayCopy(cellIds, this->ValidCellIds);
 
-    return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
+    return OutputType(this->ValidCellIds, cellSet);
   }
 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -156,8 +155,7 @@ public:
     vtkm::cont::Algorithm::CopyIf(indices, passFlags, this->ValidCellIds);
 
     // generate the cellset
-    return vtkm::cont::CellSetPermutation<CellSetType>(
-      this->ValidCellIds, cellSet, cellSet.GetName());
+    return vtkm::cont::CellSetPermutation<CellSetType>(this->ValidCellIds, cellSet);
   }
 
   template <typename ValueType, typename StorageTagIn>

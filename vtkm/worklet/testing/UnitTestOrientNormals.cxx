@@ -43,6 +43,7 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 namespace
 {
@@ -128,6 +129,12 @@ struct ValidateNormals
                   bool checkCells,
                   const std::string& normalsName = "normals")
   {
+    // Temporarily enable the serial device for workaround in ValidateNormals,
+    // which requires the serial device. This can be refactored once #377 is
+    // fixed.
+    vtkm::cont::ScopedRuntimeDeviceTracker tracker(vtkm::cont::DeviceAdapterTagSerial{},
+                                                   vtkm::cont::RuntimeDeviceTrackerMode::Enable);
+
     vtkm::cont::Field pointNormals;
     vtkm::cont::Field cellNormals;
 
@@ -157,7 +164,7 @@ struct ValidateNormals
     , CheckCells(checkCells)
   {
     // FIXME This would be much simplier if we had a GetPointCells() method on
-    // cell sets....
+    // cell sets.... #377 will simplify this.
     // Build the connectivity table on any device, then get a portal for serial
     // so we can do lookups on the CPU.
     this->Cells.GetConnectivityArray(vtkm::TopologyElementTagCell{},

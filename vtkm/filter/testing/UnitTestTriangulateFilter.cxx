@@ -28,8 +28,7 @@ public:
     vtkm::filter::Triangulate triangulate;
     triangulate.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = triangulate.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 32),
-                     "Wrong result for Triangulate");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 32), "Wrong result for Triangulate");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 25),
                      "Wrong number of points for Triangulate");
 
@@ -49,8 +48,7 @@ public:
     vtkm::filter::Triangulate triangulate;
     triangulate.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = triangulate.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 14),
-                     "Wrong result for Triangulate");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 14), "Wrong result for Triangulate");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 16),
                      "Wrong number of points for Triangulate");
 

@@ -85,6 +85,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
@@ -433,8 +434,8 @@ void ChainGraph<T, StorageType>::CompactActiveEdges()
   // now we do a reduction to compute the offsets of each vertex
   vtkm::cont::ArrayHandle<vtkm::Id> newPosition;
   vtkm::cont::Algorithm::ScanExclusive(newOutdegree, newPosition);
-  vtkm::Id nNewEdges = newPosition.GetPortalControl().Get(nActiveVertices - 1) +
-    newOutdegree.GetPortalControl().Get(nActiveVertices - 1);
+  vtkm::Id nNewEdges = vtkm::cont::ArrayGetValue(nActiveVertices - 1, newPosition) +
+    vtkm::cont::ArrayGetValue(nActiveVertices - 1, newOutdegree);
 
   // create a temporary vector for copying
   vtkm::cont::ArrayHandle<vtkm::Id> newActiveEdges;
@@ -540,8 +541,8 @@ void ChainGraph<T, StorageType>::TransferSaddleStarts()
 
   // 3. now compute the new offsets in the newFirstEdge array
   vtkm::cont::Algorithm::ScanExclusive(newOutdegree, newFirstEdge);
-  nEdgesToSort = newFirstEdge.GetPortalControl().Get(nActiveVertices - 1) +
-    newOutdegree.GetPortalControl().Get(nActiveVertices - 1);
+  nEdgesToSort = vtkm::cont::ArrayGetValue(nActiveVertices - 1, newFirstEdge) +
+    vtkm::cont::ArrayGetValue(nActiveVertices - 1, newOutdegree);
 
   edgeSorter.ReleaseResources();
   edgeSorter.Allocate(nEdgesToSort);

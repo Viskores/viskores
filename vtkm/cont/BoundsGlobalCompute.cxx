@@ -13,7 +13,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include <numeric> // for std::accumulate
 
@@ -50,10 +50,10 @@ vtkm::Bounds BoundsGlobalCompute(const vtkm::cont::DataSet& dataset,
 
 //-----------------------------------------------------------------------------
 VTKM_CONT
-vtkm::Bounds BoundsGlobalCompute(const vtkm::cont::MultiBlock& multiblock,
+vtkm::Bounds BoundsGlobalCompute(const vtkm::cont::PartitionedDataSet& pds,
                                  vtkm::Id coordinate_system_index)
 {
-  return detail::MergeBoundsGlobal(vtkm::cont::BoundsCompute(multiblock, coordinate_system_index));
+  return detail::MergeBoundsGlobal(vtkm::cont::BoundsCompute(pds, coordinate_system_index));
 }
 
 //-----------------------------------------------------------------------------
@@ -65,9 +65,9 @@ vtkm::Bounds BoundsGlobalCompute(const vtkm::cont::DataSet& dataset, const std::
 
 //-----------------------------------------------------------------------------
 VTKM_CONT
-vtkm::Bounds BoundsGlobalCompute(const vtkm::cont::MultiBlock& multiblock, const std::string& name)
+vtkm::Bounds BoundsGlobalCompute(const vtkm::cont::PartitionedDataSet& pds, const std::string& name)
 {
-  return detail::MergeBoundsGlobal(vtkm::cont::BoundsCompute(multiblock, name));
+  return detail::MergeBoundsGlobal(vtkm::cont::BoundsCompute(pds, name));
 }
 }
 }

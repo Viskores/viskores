@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_cont_AssignerMultiBlock_h
-#define vtk_m_cont_AssignerMultiBlock_h
+#ifndef vtk_m_cont_AssignerPartitionedDataSet_h
+#define vtk_m_cont_AssignerPartitionedDataSet_h
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
@@ -31,31 +31,32 @@ namespace vtkm
 namespace cont
 {
 
-class MultiBlock;
+class PartitionedDataSet;
 
-/// \brief Assigner for `MultiBlock` blocks.
+/// \brief Assigner for PartitionedDataSet partitions.
 ///
-/// `AssignerMultiBlock` is a `vtkmdiy::StaticAssigner` implementation that uses
-/// `MultiBlock`'s block distribution to build global-id/rank associations
-/// needed for several `diy` operations.
-/// It uses a contiguous assignment strategy to map blocks to global ids i.e.
-/// blocks on rank 0 come first, then rank 1, etc. Any rank may have 0 blocks.
+/// `AssignerPartitionedDataSet` is a `vtkmdiy::StaticAssigner` implementation
+/// that uses `PartitionedDataSet`'s partition distribution to build
+/// global-id/rank associations needed for several `diy` operations.
+/// It uses a contiguous assignment strategy to map partitions to global ids,
+/// i.e. partitions on rank 0 come first, then rank 1, etc. Any rank may have 0
+/// partitions.
 ///
-/// AssignerMultiBlock uses collectives in the constructor hence it is
+/// AssignerPartitionedDataSet uses collectives in the constructor hence it is
 /// essential it gets created on all ranks irrespective of whether the rank has
-/// any blocks.
+/// any partitions.
 ///
-class VTKM_CONT_EXPORT AssignerMultiBlock : public vtkmdiy::StaticAssigner
+class VTKM_CONT_EXPORT AssignerPartitionedDataSet : public vtkmdiy::StaticAssigner
 {
 public:
-  /// Initialize the assigner using a multiblock dataset.
+  /// Initialize the assigner using a partitioned dataset.
   /// This may initialize collective operations to populate the assigner with
-  /// information about blocks on all ranks.
+  /// information about partitions on all ranks.
   VTKM_CONT
-  AssignerMultiBlock(const vtkm::cont::MultiBlock& mb);
+  AssignerPartitionedDataSet(const vtkm::cont::PartitionedDataSet& pds);
 
   VTKM_CONT
-  AssignerMultiBlock(vtkm::Id num_blocks);
+  AssignerPartitionedDataSet(vtkm::Id num_partitions);
 
   ///@{
   /// vtkmdiy::Assigner API implementation.
@@ -66,7 +67,7 @@ public:
   int rank(int gid) const override;
   //@}
 private:
-  std::vector<vtkm::Id> IScanBlockCounts;
+  std::vector<vtkm::Id> IScanPartitionCounts;
 };
 }
 }

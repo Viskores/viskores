@@ -136,7 +136,7 @@ template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::DataSet& input,
                                                                   vtkm::filter::PolicyBase<Policy>)
 {
-  const vtkm::cont::DynamicCellSet& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cellset = input.GetCellSet();
   vtkm::Id numCells = cellset.GetNumberOfCells();
   vtkm::cont::ArrayHandleIndex indexArray(numCells);
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
@@ -176,17 +176,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     throw vtkm::cont::ErrorFilterExecution("Unsupported cellset type for GhostCellClassify.");
   }
 
-  return CreateResultFieldCell(input, ghosts, "vtkmGhostCells", cellset);
-}
-
-template <typename ValueType, typename Storage, typename Policy>
-inline VTKM_CONT bool GhostCellClassify::DoMapField(
-  vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<ValueType, Storage>&,
-  const vtkm::filter::FieldMetadata&,
-  vtkm::filter::PolicyBase<Policy>)
-{
-  return true;
+  return CreateResultFieldCell(input, ghosts, "vtkmGhostCells");
 }
 }
 }

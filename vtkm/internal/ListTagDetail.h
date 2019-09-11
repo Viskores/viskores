@@ -44,10 +44,10 @@ struct UniversalTag
 };
 
 //-----------------------------------------------------------------------------
-template <typename ListTag1, typename ListTag2>
+template <typename... ListTags>
 struct ListJoin
 {
-  using type = brigand::append<ListTag1, ListTag2>;
+  using type = brigand::append<ListTags...>;
 };
 
 template <typename ListTag>

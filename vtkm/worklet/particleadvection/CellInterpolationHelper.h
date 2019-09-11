@@ -15,6 +15,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecVariable.h>
 
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/exec/CellInterpolate.h>
 
@@ -99,18 +100,18 @@ private:
 };
 
 template <typename DeviceAdapter>
-class SingleCellExplicitInterpolationHelper : public vtkm::exec::CellInterpolationHelper
+class SingleCellTypeInterpolationHelper : public vtkm::exec::CellInterpolationHelper
 {
   using ConnType = vtkm::cont::ArrayHandle<vtkm::Id>;
   using ConnPortalType = typename ConnType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
 public:
-  SingleCellExplicitInterpolationHelper() = default;
+  SingleCellTypeInterpolationHelper() = default;
 
   VTKM_CONT
-  SingleCellExplicitInterpolationHelper(vtkm::UInt8 cellShape,
-                                        vtkm::IdComponent pointsPerCell,
-                                        const ConnType& connectivity)
+  SingleCellTypeInterpolationHelper(vtkm::UInt8 cellShape,
+                                    vtkm::IdComponent pointsPerCell,
+                                    const ConnType& connectivity)
     : CellShape(cellShape)
     , PointsPerCell(pointsPerCell)
     , Connectivity(connectivity.PrepareForInput(DeviceAdapter()))
@@ -139,7 +140,7 @@ private:
 };
 
 template <typename DeviceAdapter>
-class CellExplicitInterpolationHelper : public vtkm::exec::CellInterpolationHelper
+class ExplicitCellInterpolationHelper : public vtkm::exec::CellInterpolationHelper
 {
   using ShapeType = vtkm::cont::ArrayHandle<vtkm::UInt8>;
   using NumIdxType = vtkm::cont::ArrayHandle<vtkm::IdComponent>;
@@ -152,10 +153,10 @@ class CellExplicitInterpolationHelper : public vtkm::exec::CellInterpolationHelp
   using ConnPortalType = typename ConnType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
 public:
-  CellExplicitInterpolationHelper() = default;
+  ExplicitCellInterpolationHelper() = default;
 
   VTKM_CONT
-  CellExplicitInterpolationHelper(const ShapeType& shape,
+  ExplicitCellInterpolationHelper(const ShapeType& shape,
                                   const NumIdxType& numIdx,
                                   const OffsetType& offset,
                                   const ConnType& connectivity)
@@ -236,7 +237,7 @@ public:
         cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
     }
     else
-      throw vtkm::cont::ErrorBadType("Cell set is not structured type");
+      throw vtkm::cont::ErrorBadType("Cell set is not of type CellSetStructured");
   }
 
   VTKM_CONT
@@ -264,43 +265,42 @@ private:
   mutable HandleType ExecHandle;
 };
 
-class SingleCellExplicitInterpolationHelper : public vtkm::cont::CellInterpolationHelper
+class SingleCellTypeInterpolationHelper : public vtkm::cont::CellInterpolationHelper
 {
 public:
   using SingleExplicitType = vtkm::cont::CellSetSingleType<>;
 
-  SingleCellExplicitInterpolationHelper() = default;
+  SingleCellTypeInterpolationHelper() = default;
 
   VTKM_CONT
-  SingleCellExplicitInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
+  SingleCellTypeInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
   {
     if (cellSet.IsSameType(SingleExplicitType()))
     {
       SingleExplicitType CellSet = cellSet.Cast<SingleExplicitType>();
-      CellShape =
-        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
-          .GetPortalConstControl()
-          .Get(0);
-      PointsPerCell =
-        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
-          .GetPortalConstControl()
-          .Get(0);
+
+      const auto cellShapes =
+        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      const auto numIndices =
+        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+
+      CellShape = vtkm::cont::ArrayGetValue(0, cellShapes);
+      PointsPerCell = vtkm::cont::ArrayGetValue(0, numIndices);
       Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
                                                   vtkm::TopologyElementTagPoint());
     }
     else
-      throw vtkm::cont::ErrorBadType("Cell set is not CellSetSingleType");
+      throw vtkm::cont::ErrorBadType("Cell set is not of type CellSetSingleType");
   }
 
-  struct SingleCellExplicitFunctor
+  struct SingleCellTypeFunctor
   {
     template <typename DeviceAdapter>
-    VTKM_CONT bool operator()(
-      DeviceAdapter,
-      const vtkm::cont::SingleCellExplicitInterpolationHelper& contInterpolator,
-      HandleType& execInterpolator) const
+    VTKM_CONT bool operator()(DeviceAdapter,
+                              const vtkm::cont::SingleCellTypeInterpolationHelper& contInterpolator,
+                              HandleType& execInterpolator) const
     {
-      using ExecutionType = vtkm::exec::SingleCellExplicitInterpolationHelper<DeviceAdapter>;
+      using ExecutionType = vtkm::exec::SingleCellTypeInterpolationHelper<DeviceAdapter>;
       ExecutionType* execObject = new ExecutionType(
         contInterpolator.CellShape, contInterpolator.PointsPerCell, contInterpolator.Connectivity);
       execInterpolator.Reset(execObject);
@@ -312,11 +312,11 @@ public:
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
     vtkm::cont::DeviceAdapterId deviceId) const override
   {
-    const bool success = vtkm::cont::TryExecuteOnDevice(
-      deviceId, SingleCellExplicitFunctor(), *this, this->ExecHandle);
+    const bool success =
+      vtkm::cont::TryExecuteOnDevice(deviceId, SingleCellTypeFunctor(), *this, this->ExecHandle);
     if (!success)
     {
-      throwFailedRuntimeDeviceTransfer("SingleCellExplicitInterpolationHelper", deviceId);
+      throwFailedRuntimeDeviceTransfer("SingleCellTypeInterpolationHelper", deviceId);
     }
     return this->ExecHandle.PrepareForExecution(deviceId);
   }
@@ -328,13 +328,13 @@ private:
   mutable HandleType ExecHandle;
 };
 
-class CellExplicitInterpolationHelper : public vtkm::cont::CellInterpolationHelper
+class ExplicitCellInterpolationHelper : public vtkm::cont::CellInterpolationHelper
 {
 public:
-  CellExplicitInterpolationHelper() = default;
+  ExplicitCellInterpolationHelper() = default;
 
   VTKM_CONT
-  CellExplicitInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
+  ExplicitCellInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
   {
     if (cellSet.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
@@ -349,17 +349,17 @@ public:
                                                   vtkm::TopologyElementTagPoint());
     }
     else
-      throw vtkm::cont::ErrorBadType("Cell set is not CellSetSingleType");
+      throw vtkm::cont::ErrorBadType("Cell set is not of type CellSetExplicit");
   }
 
-  struct SingleCellExplicitFunctor
+  struct ExplicitCellFunctor
   {
     template <typename DeviceAdapter>
     VTKM_CONT bool operator()(DeviceAdapter,
-                              const vtkm::cont::CellExplicitInterpolationHelper& contInterpolator,
+                              const vtkm::cont::ExplicitCellInterpolationHelper& contInterpolator,
                               HandleType& execInterpolator) const
     {
-      using ExecutionType = vtkm::exec::CellExplicitInterpolationHelper<DeviceAdapter>;
+      using ExecutionType = vtkm::exec::ExplicitCellInterpolationHelper<DeviceAdapter>;
       ExecutionType* execObject = new ExecutionType(contInterpolator.Shape,
                                                     contInterpolator.NumIdx,
                                                     contInterpolator.Offset,
@@ -373,11 +373,11 @@ public:
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
     vtkm::cont::DeviceAdapterId deviceId) const override
   {
-    const bool success = vtkm::cont::TryExecuteOnDevice(
-      deviceId, SingleCellExplicitFunctor(), *this, this->ExecHandle);
+    const bool success =
+      vtkm::cont::TryExecuteOnDevice(deviceId, ExplicitCellFunctor(), *this, this->ExecHandle);
     if (!success)
     {
-      throwFailedRuntimeDeviceTransfer("SingleCellExplicitInterpolationHelper", deviceId);
+      throwFailedRuntimeDeviceTransfer("ExplicitCellInterpolationHelper", deviceId);
     }
     return this->ExecHandle.PrepareForExecution(deviceId);
   }

@@ -10,6 +10,12 @@
 #ifndef vtk_m_cont_FieldRangeCompute_hxx
 #define vtk_m_cont_FieldRangeCompute_hxx
 
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/PartitionedDataSet.h>
+
+#include <vtkm/Range.h>
+
 #include <numeric> // for std::accumulate
 
 namespace vtkm
@@ -42,26 +48,27 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeComputeImpl(
 
 template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeComputeImpl(
-  const vtkm::cont::MultiBlock& multiblock,
+  const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
   vtkm::cont::Field::Association assoc,
   TypeList)
 {
   std::vector<vtkm::Range> result_vector = std::accumulate(
-    multiblock.begin(),
-    multiblock.end(),
+    pds.begin(),
+    pds.end(),
     std::vector<vtkm::Range>(),
     [&](const std::vector<vtkm::Range>& accumulated_value, const vtkm::cont::DataSet& dataset) {
-      vtkm::cont::ArrayHandle<vtkm::Range> block_range =
+      vtkm::cont::ArrayHandle<vtkm::Range> partition_range =
         vtkm::cont::detail::FieldRangeComputeImpl(dataset, name, assoc, TypeList());
 
       std::vector<vtkm::Range> result = accumulated_value;
 
-      // if the current block has more components than we have seen so far,
+      // if the current partition has more components than we have seen so far,
       // resize the result to fit all components.
-      result.resize(std::max(result.size(), static_cast<size_t>(block_range.GetNumberOfValues())));
+      result.resize(
+        std::max(result.size(), static_cast<size_t>(partition_range.GetNumberOfValues())));
 
-      auto portal = block_range.GetPortalConstControl();
+      auto portal = partition_range.GetPortalConstControl();
       std::transform(vtkm::cont::ArrayPortalToIteratorBegin(portal),
                      vtkm::cont::ArrayPortalToIteratorEnd(portal),
                      result.begin(),

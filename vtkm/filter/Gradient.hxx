@@ -49,7 +49,7 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
@@ -69,14 +69,14 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
   if (this->ComputePointGradient)
   {
     vtkm::worklet::PointGradient gradient;
-    outArray =
-      gradient.Run(vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields);
+    outArray = gradient.Run(
+      vtkm::filter::ApplyPolicyCellSet(cells, policy), coords, inField, gradientfields);
   }
   else
   {
     vtkm::worklet::CellGradient gradient;
-    outArray =
-      gradient.Run(vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields);
+    outArray = gradient.Run(
+      vtkm::filter::ApplyPolicyCellSet(cells, policy), coords, inField, gradientfields);
   }
   if (!this->RowOrdering)
   {
@@ -91,22 +91,22 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
                                                     : vtkm::cont::Field::Association::CELL_SET);
   vtkm::cont::DataSet result;
   result.CopyStructure(input);
-  result.AddField(vtkm::cont::make_Field(outputName, fieldAssociation, cells.GetName(), outArray));
+  result.AddField(vtkm::cont::Field{ outputName, fieldAssociation, outArray });
 
   if (this->GetComputeDivergence() && isVector)
   {
-    result.AddField(vtkm::cont::make_Field(
-      this->GetDivergenceName(), fieldAssociation, cells.GetName(), gradientfields.Divergence));
+    result.AddField(
+      vtkm::cont::Field{ this->GetDivergenceName(), fieldAssociation, gradientfields.Divergence });
   }
   if (this->GetComputeVorticity() && isVector)
   {
-    result.AddField(vtkm::cont::make_Field(
-      this->GetVorticityName(), fieldAssociation, cells.GetName(), gradientfields.Vorticity));
+    result.AddField(
+      vtkm::cont::Field{ this->GetVorticityName(), fieldAssociation, gradientfields.Vorticity });
   }
   if (this->GetComputeQCriterion() && isVector)
   {
-    result.AddField(vtkm::cont::make_Field(
-      this->GetQCriterionName(), fieldAssociation, cells.GetName(), gradientfields.QCriterion));
+    result.AddField(
+      vtkm::cont::Field{ this->GetQCriterionName(), fieldAssociation, gradientfields.QCriterion });
   }
   return result;
 }

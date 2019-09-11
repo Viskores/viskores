@@ -10,7 +10,7 @@
 #include <vtkm/filter/Histogram.h>
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <algorithm>
@@ -79,32 +79,34 @@ void AddField(vtkm::cont::DataSet& dataset,
 }
 }
 
-static void TestMultiBlockHistogram()
+static void TestPartitionedDataSetHistogram()
 {
   // init random seed.
   std::srand(100);
 
-  vtkm::cont::MultiBlock mb;
+  vtkm::cont::PartitionedDataSet mb;
 
-  vtkm::cont::DataSet block0;
-  AddField<double>(block0, 0.0, 100.0, 1024, "double");
-  mb.AddBlock(block0);
+  vtkm::cont::DataSet partition0;
+  AddField<double>(partition0, 0.0, 100.0, 1024, "double");
+  mb.AppendPartition(partition0);
 
-  vtkm::cont::DataSet block1;
-  AddField<int>(block1, 100, 1000, 1024, "double");
-  mb.AddBlock(block1);
+  vtkm::cont::DataSet partition1;
+  AddField<int>(partition1, 100, 1000, 1024, "double");
+  mb.AppendPartition(partition1);
 
-  vtkm::cont::DataSet block2;
-  AddField<double>(block2, 100.0, 500.0, 1024, "double");
-  mb.AddBlock(block2);
+  vtkm::cont::DataSet partition2;
+  AddField<double>(partition2, 100.0, 500.0, 1024, "double");
+  mb.AppendPartition(partition2);
 
   vtkm::filter::Histogram histogram;
   histogram.SetActiveField("double");
   auto result = histogram.Execute(mb);
-  VTKM_TEST_ASSERT(result.GetNumberOfBlocks() == 1, "Expecting 1 block.");
+  VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == 1, "Expecting 1 partition.");
 
-  auto bins =
-    result.GetBlock(0).GetField("histogram").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Id>>();
+  auto bins = result.GetPartition(0)
+                .GetField("histogram")
+                .GetData()
+                .Cast<vtkm::cont::ArrayHandle<vtkm::Id>>();
   VTKM_TEST_ASSERT(bins.GetNumberOfValues() == 10, "Expecting 10 bins.");
   auto count = std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(bins.GetPortalConstControl()),
                                vtkm::cont::ArrayPortalToIteratorEnd(bins.GetPortalConstControl()),
@@ -120,7 +122,7 @@ static void TestMultiBlockHistogram()
   std::cout << std::endl;
 };
 
-int UnitTestMultiBlockHistogramFilter(int argc, char* argv[])
+int UnitTestPartitionedDataSetHistogramFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestMultiBlockHistogram, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestPartitionedDataSetHistogram, argc, argv);
 }

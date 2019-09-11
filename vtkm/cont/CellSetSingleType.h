@@ -46,8 +46,8 @@ class VTKM_ALWAYS_EXPORT CellSetSingleType
 
 public:
   VTKM_CONT
-  CellSetSingleType(const std::string& name = std::string())
-    : Superclass(name)
+  CellSetSingleType()
+    : Superclass()
     , ExpectedNumberOfCellsAdded(-1)
     , CellShapeAsId(CellShapeTagEmpty::Id)
     , NumberOfPointsPerCell(0)
@@ -64,9 +64,27 @@ public:
   }
 
   VTKM_CONT
+  CellSetSingleType(Thisclass&& src) noexcept : Superclass(std::forward<Superclass>(src)),
+                                                ExpectedNumberOfCellsAdded(-1),
+                                                CellShapeAsId(src.CellShapeAsId),
+                                                NumberOfPointsPerCell(src.NumberOfPointsPerCell)
+  {
+  }
+
+
+  VTKM_CONT
   Thisclass& operator=(const Thisclass& src)
   {
     this->Superclass::operator=(src);
+    this->CellShapeAsId = src.CellShapeAsId;
+    this->NumberOfPointsPerCell = src.NumberOfPointsPerCell;
+    return *this;
+  }
+
+  VTKM_CONT
+  Thisclass& operator=(Thisclass&& src) noexcept
+  {
+    this->Superclass::operator=(std::forward<Superclass>(src));
     this->CellShapeAsId = src.CellShapeAsId;
     this->NumberOfPointsPerCell = src.NumberOfPointsPerCell;
     return *this;
@@ -224,7 +242,7 @@ public:
 
   virtual void PrintSummary(std::ostream& out) const override
   {
-    out << "   CellSetSingleType: " << this->Name << " Type " << this->CellShapeAsId << std::endl;
+    out << "   CellSetSingleType ShapeType " << this->CellShapeAsId << std::endl;
     out << "   VisitCellsWithPoints: " << std::endl;
     this->Data->VisitCellsWithPoints.PrintSummary(out);
     out << "   VisitPointsWithCells: " << std::endl;
@@ -304,7 +322,6 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    vtkmdiy::save(bb, cs.GetName());
     vtkmdiy::save(bb, cs.GetNumberOfPoints());
     vtkmdiy::save(bb, cs.GetCellShape(0));
     vtkmdiy::save(bb, cs.GetNumberOfPointsInCell(0));
@@ -314,8 +331,6 @@ public:
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
-    std::string name;
-    vtkmdiy::load(bb, name);
     vtkm::Id numberOfPoints = 0;
     vtkmdiy::load(bb, numberOfPoints);
     vtkm::UInt8 shape;
@@ -325,7 +340,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST> connectivity;
     vtkmdiy::load(bb, connectivity);
 
-    cs = Type(name);
+    cs = Type{};
     cs.Fill(numberOfPoints, shape, count, connectivity);
   }
 };

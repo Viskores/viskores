@@ -234,9 +234,7 @@ void TryCellSetPermutation()
   vtkm::Id permutationArray[] = { 2, 0, 1 };
 
   vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>, vtkm::cont::ArrayHandle<vtkm::Id>>
-    cellSet(vtkm::cont::make_ArrayHandle(permutationArray, 3),
-            originalCellSet,
-            originalCellSet.GetName());
+    cellSet(vtkm::cont::make_ArrayHandle(permutationArray, 3), originalCellSet);
 
   vtkm::UInt8 expectedCellShapes[] = { vtkm::CELL_SHAPE_TETRA,
                                        vtkm::CELL_SHAPE_HEXAHEDRON,

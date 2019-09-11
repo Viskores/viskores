@@ -38,11 +38,11 @@ inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("CellMeasures expects point field input.");
   }
 
-  const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
+  const auto& cellset = input.GetCellSet();
   vtkm::cont::ArrayHandle<T> outArray;
 
   this->Invoke(vtkm::worklet::CellMeasure<IntegrationType>{},
-               vtkm::filter::ApplyPolicy(cellset, policy),
+               vtkm::filter::ApplyPolicyCellSet(cellset, policy),
                points,
                outArray);
 
@@ -52,7 +52,7 @@ inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
     // Default name is name of input.
     outputName = "measure";
   }
-  return CreateResultFieldCell(input, outArray, outputName, cellset);
+  return CreateResultFieldCell(input, outArray, outputName);
 }
 }
 } // namespace vtkm::filter

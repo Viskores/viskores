@@ -26,7 +26,6 @@ public:
   FieldMetadata()
     : Name()
     , Association(vtkm::cont::Field::Association::ANY)
-    , CellSetName()
   {
   }
 
@@ -34,7 +33,6 @@ public:
   FieldMetadata(const vtkm::cont::Field& f)
     : Name(f.GetName())
     , Association(f.GetAssociation())
-    , CellSetName(f.GetAssocCellSet())
   {
   }
 
@@ -42,7 +40,6 @@ public:
   FieldMetadata(const vtkm::cont::CoordinateSystem& sys)
     : Name(sys.GetName())
     , Association(sys.GetAssociation())
-    , CellSetName(sys.GetAssocCellSet())
   {
   }
 
@@ -58,23 +55,13 @@ public:
   VTKM_CONT
   vtkm::cont::Field::Association GetAssociation() const { return this->Association; }
 
-  VTKM_CONT
-  const std::string& GetCellSetName() const { return this->CellSetName; }
-
   /// Construct a new field with the same association as stored in this FieldMetaData
   /// but with a new name
   template <typename T, typename StorageTag>
   VTKM_CONT vtkm::cont::Field AsField(const std::string& name,
                                       const vtkm::cont::ArrayHandle<T, StorageTag>& handle) const
   {
-    if (this->IsCellField())
-    {
-      return vtkm::cont::Field(name, this->Association, this->CellSetName, handle);
-    }
-    else
-    {
-      return vtkm::cont::Field(name, this->Association, handle);
-    }
+    return vtkm::cont::Field(name, this->Association, handle);
   }
   /// Construct a new field with the same association as stored in this FieldMetaData
   /// but with a new name
@@ -82,14 +69,7 @@ public:
   vtkm::cont::Field AsField(const std::string& name,
                             const vtkm::cont::VariantArrayHandle& handle) const
   {
-    if (this->IsCellField())
-    {
-      return vtkm::cont::Field(name, this->Association, this->CellSetName, handle);
-    }
-    else
-    {
-      return vtkm::cont::Field(name, this->Association, handle);
-    }
+    return vtkm::cont::Field(name, this->Association, handle);
   }
 
   /// Construct a new field with the same association and name as stored in this FieldMetaData
@@ -107,7 +87,6 @@ public:
 private:
   std::string Name; ///< name of field
   vtkm::cont::Field::Association Association;
-  std::string CellSetName; ///< only populate if assoc is cells
 };
 }
 }

@@ -41,12 +41,12 @@ namespace
 vtkm::cont::DataSet GenerateDataSet()
 {
   auto ds = vtkm::cont::testing::MakeTestDataSet{}.Make3DExplicitDataSetPolygonal();
-  const auto numCells = ds.GetCellSet().GetNumberOfCells();
+  const auto numCells = ds.GetNumberOfCells();
 
   vtkm::cont::ArrayHandle<MyNormalT> cellNormals;
   vtkm::cont::Algorithm::Fill(cellNormals, MyNormalT{ 1., 0., 0. }, numCells);
 
-  ds.AddField(vtkm::cont::make_FieldCell("normals", ds.GetCellSet().GetName(), cellNormals));
+  ds.AddField(vtkm::cont::make_FieldCell("normals", cellNormals));
   return ds;
 }
 
@@ -119,7 +119,7 @@ void DoTest()
 
   vtkm::cont::DataSet result;
   result.AddCoordinateSystem(ds.GetCoordinateSystem());
-  result.AddCellSet(newCells);
+  result.SetCellSet(newCells);
   for (vtkm::Id i = 0; i < ds.GetNumberOfFields(); ++i)
   {
     result.AddField(ds.GetField(i));

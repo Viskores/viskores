@@ -61,14 +61,14 @@ inline VTKM_CONT vtkm::cont::DataSet Threshold::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   ThresholdRange predicate(this->GetLowerThreshold(), this->GetUpperThreshold());
   vtkm::cont::DynamicCellSet cellOut = this->Worklet.Run(
-    vtkm::filter::ApplyPolicy(cells, policy), field, fieldMeta.GetAssociation(), predicate);
+    vtkm::filter::ApplyPolicyCellSet(cells, policy), field, fieldMeta.GetAssociation(), predicate);
 
   vtkm::cont::DataSet output;
-  output.AddCellSet(cellOut);
+  output.SetCellSet(cellOut);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   return output;
 }

@@ -243,17 +243,16 @@ public:
 
   VTKM_CONT
   CellSetPermutation(const PermutationArrayHandleType& validCellIds,
-                     const OriginalCellSetType& cellset,
-                     const std::string& name = std::string())
-    : CellSet(name)
+                     const OriginalCellSetType& cellset)
+    : CellSet()
     , ValidCellIds(validCellIds)
     , FullCellSet(cellset)
   {
   }
 
   VTKM_CONT
-  CellSetPermutation(const std::string& name = std::string())
-    : CellSet(name)
+  CellSetPermutation()
+    : CellSet()
     , ValidCellIds()
     , FullCellSet()
   {
@@ -446,17 +445,15 @@ private:
 public:
   VTKM_CONT
   CellSetPermutation(const PermutationArrayHandleType2& validCellIds,
-                     const CellSetPermutation<CellSetType, PermutationArrayHandleType1>& cellset,
-                     const std::string& name = std::string())
+                     const CellSetPermutation<CellSetType, PermutationArrayHandleType1>& cellset)
     : Superclass(vtkm::cont::make_ArrayHandlePermutation(validCellIds, cellset.GetValidCellIds()),
-                 cellset.GetFullCellSet(),
-                 name)
+                 cellset.GetFullCellSet())
   {
   }
 
   VTKM_CONT
-  CellSetPermutation(const std::string& name = std::string())
-    : Superclass(name)
+  CellSetPermutation()
+    : Superclass()
   {
   }
 
@@ -474,25 +471,13 @@ public:
 template <typename OriginalCellSet, typename PermutationArrayHandleType>
 vtkm::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType> make_CellSetPermutation(
   const PermutationArrayHandleType& cellIndexMap,
-  const OriginalCellSet& cellSet,
-  const std::string& name)
-{
-  VTKM_IS_CELL_SET(OriginalCellSet);
-  VTKM_IS_ARRAY_HANDLE(PermutationArrayHandleType);
-
-  return vtkm::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType>(
-    cellIndexMap, cellSet, name);
-}
-
-template <typename OriginalCellSet, typename PermutationArrayHandleType>
-vtkm::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType> make_CellSetPermutation(
-  const PermutationArrayHandleType& cellIndexMap,
   const OriginalCellSet& cellSet)
 {
   VTKM_IS_CELL_SET(OriginalCellSet);
   VTKM_IS_ARRAY_HANDLE(PermutationArrayHandleType);
 
-  return vtkm::cont::make_CellSetPermutation(cellIndexMap, cellSet, cellSet.GetName());
+  return vtkm::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType>(cellIndexMap,
+                                                                                     cellSet);
 }
 }
 } // namespace vtkm::cont
@@ -529,21 +514,18 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    vtkmdiy::save(bb, cs.GetName());
     vtkmdiy::save(bb, cs.GetFullCellSet());
     vtkmdiy::save(bb, cs.GetValidCellIds());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
-    std::string name;
-    vtkmdiy::load(bb, name);
     CSType fullCS;
     vtkmdiy::load(bb, fullCS);
     AHValidCellIds validCellIds;
     vtkmdiy::load(bb, validCellIds);
 
-    cs = make_CellSetPermutation(validCellIds, fullCS, name);
+    cs = make_CellSetPermutation(validCellIds, fullCS);
   }
 };
 

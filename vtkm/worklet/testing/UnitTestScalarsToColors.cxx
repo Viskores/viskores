@@ -80,7 +80,7 @@ vtkm::Vec4ui_8 as_color<vtkm::Vec4ui_8>(vtkm::Float32 v, vtkm::Float32 alpha)
 template <typename T>
 vtkm::cont::ArrayHandle<T> make_data(const vtkm::Range& r)
 {
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   vtkm::Float32 shift, scale;
   vtkm::worklet::colorconversion::ComputeShiftScale(r, shift, scale);
   const bool shiftscale = vtkm::worklet::colorconversion::needShiftScale(BaseT{}, shift, scale);

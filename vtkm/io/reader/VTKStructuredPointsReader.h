@@ -50,8 +50,7 @@ private:
     this->DataFile->Stream >> tag;
     if (tag == "FIELD")
     {
-      std::string name;
-      this->ReadFields(name, &visitBounds);
+      this->ReadGlobalFields(&visitBounds);
       this->DataFile->Stream >> tag;
     }
     if (visitBounds.empty())
@@ -74,7 +73,7 @@ private:
     this->DataFile->Stream >> tag >> origin[0] >> origin[1] >> origin[2] >> std::ws;
     internal::parseAssert(tag == "ORIGIN");
 
-    this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
+    this->DataSet.SetCellSet(internal::CreateCellSetStructured(dim));
     this->DataSet.AddCoordinateSystem(
       vtkm::cont::CoordinateSystem("coordinates", dim, origin, spacing));
 

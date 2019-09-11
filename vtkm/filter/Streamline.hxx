@@ -47,7 +47,7 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
   }
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
@@ -56,7 +56,6 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
-  //todo: add check for rectilinear.
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
@@ -64,16 +63,15 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
   GridEvalType eval(coords, cells, field);
   RK4Type rk4(eval, static_cast<vtkm::worklet::particleadvection::ScalarType>(this->StepSize));
 
-  vtkm::worklet::Streamline streamline;
   vtkm::worklet::StreamlineResult res;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds, seedArray);
-  res = Worklet.Run(rk4, seedArray, this->NumberOfSteps);
+  res = this->Worklet.Run(rk4, seedArray, this->NumberOfSteps);
 
   vtkm::cont::DataSet outData;
   vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
-  outData.AddCellSet(res.polyLines);
+  outData.SetCellSet(res.polyLines);
   outData.AddCoordinateSystem(outputCoords);
 
   return outData;

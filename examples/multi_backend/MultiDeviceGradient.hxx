@@ -32,7 +32,7 @@ int determine_cuda_gpu_count()
   return count;
 }
 
-void process_block_tbb(RuntimeTaskQueue& queue)
+void process_partition_tbb(RuntimeTaskQueue& queue)
 {
   //Step 1. Set the device adapter to this thread to TBB.
   //This makes sure that any vtkm::filters used by our
@@ -56,11 +56,11 @@ void process_block_tbb(RuntimeTaskQueue& queue)
 
     //Step 4. Notify the queue that we finished processing this task
     queue.completedTask();
-    std::cout << "finished a block on tbb (" << std::this_thread::get_id() << ")" << std::endl;
+    std::cout << "finished a partition on tbb (" << std::this_thread::get_id() << ")" << std::endl;
   }
 }
 
-void process_block_openMP(RuntimeTaskQueue& queue)
+void process_partition_openMP(RuntimeTaskQueue& queue)
 {
   //Step 1. Set the device adapter to this thread to TBB.
   //This makes sure that any vtkm::filters used by our
@@ -84,11 +84,11 @@ void process_block_openMP(RuntimeTaskQueue& queue)
 
     //Step 4. Notify the queue that we finished processing this task
     queue.completedTask();
-    std::cout << "finished a block on tbb (" << std::this_thread::get_id() << ")" << std::endl;
+    std::cout << "finished a partition on tbb (" << std::this_thread::get_id() << ")" << std::endl;
   }
 }
 
-void process_block_cuda(RuntimeTaskQueue& queue, int gpuId)
+void process_partition_cuda(RuntimeTaskQueue& queue, int gpuId)
 {
   //Step 1. Set the device adapter to this thread to cuda.
   //This makes sure that any vtkm::filters used by our
@@ -113,7 +113,7 @@ void process_block_cuda(RuntimeTaskQueue& queue, int gpuId)
 
     //Step 4. Notify the queue that we finished processing this task
     queue.completedTask();
-    std::cout << "finished a block on cuda (" << std::this_thread::get_id() << ")" << std::endl;
+    std::cout << "finished a partition on cuda (" << std::this_thread::get_id() << ")" << std::endl;
   }
 }
 
@@ -149,10 +149,10 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
       //The number of workers per GPU is purely arbitrary currently,
       //but in general we want multiple of them so we can overlap compute
       //and transfer
-      this->Workers.emplace_back(std::bind(process_block_cuda, std::ref(this->Queue), i));
-      this->Workers.emplace_back(std::bind(process_block_cuda, std::ref(this->Queue), i));
-      this->Workers.emplace_back(std::bind(process_block_cuda, std::ref(this->Queue), i));
-      this->Workers.emplace_back(std::bind(process_block_cuda, std::ref(this->Queue), i));
+      this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
+      this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
+      this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
+      this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
     }
   }
   //Step 3. Launch a worker that will use openMP (if enabled).
@@ -161,7 +161,7 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
   else if (runOnOpenMP)
   {
     std::cout << "adding a openMP worker" << std::endl;
-    this->Workers.emplace_back(std::bind(process_block_openMP, std::ref(this->Queue)));
+    this->Workers.emplace_back(std::bind(process_partition_openMP, std::ref(this->Queue)));
   }
   //Step 4. Launch a worker that will use tbb (if enabled).
   //The threads share a queue object so we need to explicitly pass it
@@ -169,7 +169,7 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
   else if (runOnTbb)
   {
     std::cout << "adding a tbb worker" << std::endl;
-    this->Workers.emplace_back(std::bind(process_block_tbb, std::ref(this->Queue)));
+    this->Workers.emplace_back(std::bind(process_partition_tbb, std::ref(this->Queue)));
   }
 }
 
@@ -187,49 +187,50 @@ VTKM_CONT MultiDeviceGradient::~MultiDeviceGradient()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::MultiBlock MultiDeviceGradient::PrepareForExecution(
-  const vtkm::cont::MultiBlock& mb,
+inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForExecution(
+  const vtkm::cont::PartitionedDataSet& pds,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  //Step 1. Say that we have no more to submit for this multi block
+  //Step 1. Say that we have no more to submit for this PartitionedDataSet
   //This is needed to happen for each execute as we want to support
   //the same filter being used for multiple inputs
   this->Queue.reset();
 
-  //Step 2. Construct the multi-block we are going to fill. The size signature
-  //to MultiBlock just reserves size
-  vtkm::cont::MultiBlock output;
-  output.AddBlocks(std::vector<vtkm::cont::DataSet>(static_cast<size_t>(mb.GetNumberOfBlocks())));
-  vtkm::cont::MultiBlock* outPtr = &output;
+  //Step 2. Construct the PartitionedDataSet we are going to fill. The size
+  //signature to PartitionedDataSet just reserves size
+  vtkm::cont::PartitionedDataSet output;
+  output.AppendPartitions(
+    std::vector<vtkm::cont::DataSet>(static_cast<size_t>(pds.GetNumberOfPartitions())));
+  vtkm::cont::PartitionedDataSet* outPtr = &output;
 
 
-  //Step 3. Construct the filter we want to run on each block
+  //Step 3. Construct the filter we want to run on each partition
   vtkm::filter::Gradient gradient;
   gradient.SetComputePointGradient(this->GetComputePointGradient());
   gradient.SetActiveField(this->GetActiveFieldName());
 
-  //Step 3b. Post 1 block up as work and block intil it is
+  //Step 3b. Post 1 partition up as work and block until it is
   //complete. This is needed as currently constructing the virtual
   //Point Coordinates is not thread safe.
-  auto block = mb.cbegin();
+  auto partition = pds.cbegin();
   {
-    vtkm::cont::DataSet input = *block;
+    vtkm::cont::DataSet input = *partition;
     this->Queue.push( //build a lambda that is the work to do
       [=]() {
         vtkm::filter::Gradient perThreadGrad = gradient;
 
         vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
-        outPtr->ReplaceBlock(0, result);
+        outPtr->ReplacePartition(0, result);
       });
     this->Queue.waitForAllTasksToComplete();
-    block++;
+    partition++;
   }
 
   vtkm::Id index = 1;
-  for (; block != mb.cend(); ++block)
+  for (; partition != pds.cend(); ++partition)
   {
-    vtkm::cont::DataSet input = *block;
-    //Step 4. For each input block construct a lambda
+    vtkm::cont::DataSet input = *partition;
+    //Step 4. For each input partition construct a lambda
     //and add it to the queue for workers to take. This
     //will allows us to have multiple works execute in a non
     //blocking manner
@@ -238,7 +239,7 @@ inline VTKM_CONT vtkm::cont::MultiBlock MultiDeviceGradient::PrepareForExecution
         vtkm::filter::Gradient perThreadGrad = gradient;
 
         vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
-        outPtr->ReplaceBlock(index, result);
+        outPtr->ReplacePartition(index, result);
       });
     index++;
   }

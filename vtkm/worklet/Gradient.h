@@ -114,7 +114,7 @@ struct GradientOutputFields : public vtkm::cont::ExecutionObjectBase
 {
 
   using ValueType = T;
-  using BaseTType = typename vtkm::BaseComponent<T>::Type;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
 
   template <typename DeviceAdapter>
   struct ExecutionTypes

@@ -56,7 +56,7 @@ function(vtkm_unit_tests)
   set(test_prog)
 
 
-  set(per_device_command_line_arguments "")
+  set(per_device_command_line_arguments "NONE")
   set(per_device_suffix "")
   set(per_device_timeout 180)
   set(per_device_serial FALSE)
@@ -65,7 +65,6 @@ function(vtkm_unit_tests)
   if(enable_all_backends)
     set(per_device_command_line_arguments --device=serial)
     set(per_device_suffix "SERIAL")
-
     if (VTKm_ENABLE_CUDA)
       list(APPEND per_device_command_line_arguments --device=cuda)
       list(APPEND per_device_suffix "CUDA")
@@ -131,8 +130,14 @@ function(vtkm_unit_tests)
 
   target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
 
-  foreach(index RANGE per_device_command_line_arguments)
-    if(per_device_command_line_arguments STREQUAL "")
+  list(LENGTH per_device_command_line_arguments number_of_devices)
+  foreach(index RANGE ${number_of_devices})
+    if(index EQUAL number_of_devices)
+      #RANGE is inclusive on both sides, and we want it to be
+      #exclusive on the end ( e.g. for(i=0; i < n; ++i))
+      break()
+    endif()
+    if(per_device_command_line_arguments STREQUAL "NONE")
       set(device_command_line_argument ${per_device_command_line_arguments})
       set(upper_backend ${per_device_suffix})
       set(timeout       ${per_device_timeout})
