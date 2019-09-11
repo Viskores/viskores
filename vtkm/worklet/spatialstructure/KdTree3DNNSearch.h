@@ -194,7 +194,7 @@ public:
            const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag2>& qc_Handle,
            vtkm::cont::ArrayHandle<vtkm::Id>& nnId_Handle,
            vtkm::cont::ArrayHandle<CoordType>& nnDis_Handle,
-           DeviceAdapter id)
+           DeviceAdapter)
   {
     //fill the nnDis_Handle handle array with max values before running
     auto intialValue = std::numeric_limits<CoordType>::max();
@@ -204,28 +204,14 @@ public:
 
 //set up stack size for cuda environment
 #ifdef VTKM_CUDA
-    std::size_t stackSizeBackup(0);
-    (void)stackSizeBackup;
-    if (id.GetValue() == VTKM_DEVICE_ADAPTER_CUDA)
-    {
-      cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
-      cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 16);
-    }
-#else
-    (void)id;
+    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    (void)stack;
 #endif
 
     NearestNeighborSearch3DWorklet nns3dWorklet;
     vtkm::worklet::DispatcherMapField<NearestNeighborSearch3DWorklet> nns3DDispatcher(nns3dWorklet);
     nns3DDispatcher.Invoke(
       qc_Handle, pointId_Handle, splitId_Handle, coordi_Handle, nnId_Handle, nnDis_Handle);
-
-#ifdef VTKM_CUDA
-    if (id.GetValue() == VTKM_DEVICE_ADAPTER_CUDA)
-    {
-      cudaDeviceSetLimit(cudaLimitStackSize, stackSizeBackup);
-    }
-#endif
   }
 };
 }

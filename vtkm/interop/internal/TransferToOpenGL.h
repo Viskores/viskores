@@ -53,7 +53,7 @@ public:
     if (this->Size != numberOfValues)
     {
       this->Size = numberOfValues;
-      T* storage = new T[this->Size];
+      T* storage = new T[static_cast<std::size_t>(this->Size)];
       this->TempStorage.reset(reinterpret_cast<vtkm::UInt8*>(storage));
     }
   }

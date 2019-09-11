@@ -40,10 +40,11 @@ void TestCosmoHaloFinder(const char* fileName)
   // Read in number of particles and locations
   int nParticles;
   inFile >> nParticles;
+  std::size_t size = static_cast<std::size_t>(nParticles);
 
-  float* xLocation = new float[nParticles];
-  float* yLocation = new float[nParticles];
-  float* zLocation = new float[nParticles];
+  float* xLocation = new float[size];
+  float* yLocation = new float[size];
+  float* zLocation = new float[size];
   std::cout << "Running Halo Finder on " << nParticles << std::endl;
 
   for (vtkm::Id p = 0; p < nParticles; p++)

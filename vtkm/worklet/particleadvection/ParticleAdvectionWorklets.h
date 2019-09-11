@@ -124,6 +124,12 @@ public:
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
     ParticleType particles(seedArray, stepsTaken, statusArray, timeArray, maxSteps);
 
+#ifdef VTKM_CUDA
+    // This worklet needs some extra space on CUDA.
+    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    (void)stack;
+#endif // VTKM_CUDA
+
     //Invoke particle advection worklet
     ParticleWorkletDispatchType particleWorkletDispatch;
     particleWorkletDispatch.Invoke(idxArray, integrator, particles);
@@ -185,6 +191,12 @@ private:
     using ParticleWorkletDispatchType = typename vtkm::worklet::DispatcherMapField<
       vtkm::worklet::particleadvection::ParticleAdvectWorklet>;
     using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles;
+
+#ifdef VTKM_CUDA
+    // This worklet needs some extra space on CUDA.
+    vtkm::cont::cuda::ScopedCudaStackSize stack(4 * 1024);
+    (void)stack;
+#endif // VTKM_CUDA
 
     vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
     vtkm::cont::ArrayCopy(stepsTaken, initialStepsTaken);

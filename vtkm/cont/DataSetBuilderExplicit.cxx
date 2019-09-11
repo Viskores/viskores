@@ -40,7 +40,7 @@ vtkm::cont::DataSet DataSetBuilderExplicitIterative::Create()
 }
 
 VTKM_CONT
-vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Vec3f_32& pt)
+vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Vec3f& pt)
 {
   points.push_back(pt);
   vtkm::Id id = static_cast<vtkm::Id>(points.size());
@@ -49,9 +49,9 @@ vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Vec3f_32& pt)
 }
 
 VTKM_CONT
-vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::Float32& x,
-                                                   const vtkm::Float32& y,
-                                                   const vtkm::Float32& z)
+vtkm::Id DataSetBuilderExplicitIterative::AddPoint(const vtkm::FloatDefault& x,
+                                                   const vtkm::FloatDefault& y,
+                                                   const vtkm::FloatDefault& z)
 {
   points.push_back(vtkm::make_Vec(x, y, z));
   vtkm::Id id = static_cast<vtkm::Id>(points.size());
