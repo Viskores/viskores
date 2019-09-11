@@ -23,8 +23,6 @@ namespace worklet
 
 struct ParticleAdvectionResult
 {
-  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
-
   ParticleAdvectionResult()
     : positions()
     , status()
@@ -33,7 +31,7 @@ struct ParticleAdvectionResult
   {
   }
 
-  ParticleAdvectionResult(const vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& pos,
+  ParticleAdvectionResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
                           const vtkm::cont::ArrayHandle<vtkm::Id>& stat,
                           const vtkm::cont::ArrayHandle<vtkm::Id>& steps)
     : positions(pos)
@@ -42,10 +40,10 @@ struct ParticleAdvectionResult
   {
   }
 
-  ParticleAdvectionResult(const vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& pos,
+  ParticleAdvectionResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
                           const vtkm::cont::ArrayHandle<vtkm::Id>& stat,
                           const vtkm::cont::ArrayHandle<vtkm::Id>& steps,
-                          const vtkm::cont::ArrayHandle<ScalarType>& timeArray)
+                          const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& timeArray)
     : positions(pos)
     , status(stat)
     , stepsTaken(steps)
@@ -53,17 +51,15 @@ struct ParticleAdvectionResult
   {
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> positions;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> positions;
   vtkm::cont::ArrayHandle<vtkm::Id> status;
   vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken;
-  vtkm::cont::ArrayHandle<ScalarType> times;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> times;
 };
 
 class ParticleAdvection
 {
 public:
-  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
-
   ParticleAdvection() {}
 
   template <typename IntegratorType, typename FieldType, typename PointStorage>
@@ -74,14 +70,14 @@ public:
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
 
     vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken;
-    vtkm::cont::ArrayHandle<ScalarType> timeArray;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> timeArray;
 
     //Allocate status and steps arrays.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> init(0, numSeeds);
     vtkm::cont::ArrayCopy(init, stepsTaken);
 
     //Allocate memory to store the time for temporal integration.
-    vtkm::cont::ArrayHandleConstant<ScalarType> time(0, numSeeds);
+    vtkm::cont::ArrayHandleConstant<vtkm::FloatDefault> time(0, numSeeds);
     vtkm::cont::ArrayCopy(time, timeArray);
 
     return Run(it, pts, stepsTaken, timeArray, nSteps);
@@ -95,9 +91,9 @@ public:
   {
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
 
-    vtkm::cont::ArrayHandle<ScalarType> timeArray;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> timeArray;
     //Allocate memory to store the time for temporal integration.
-    vtkm::cont::ArrayHandleConstant<ScalarType> time(0, numSeeds);
+    vtkm::cont::ArrayHandleConstant<vtkm::FloatDefault> time(0, numSeeds);
     timeArray.Allocate(numSeeds);
     vtkm::cont::ArrayCopy(time, timeArray);
 
@@ -106,9 +102,9 @@ public:
 
   template <typename IntegratorType>
   ParticleAdvectionResult Run(const IntegratorType& it,
-                              vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& pts,
+                              vtkm::cont::ArrayHandle<vtkm::Vec3f>& pts,
                               vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
-                              vtkm::cont::ArrayHandle<ScalarType>& inputTime,
+                              vtkm::cont::ArrayHandle<vtkm::FloatDefault>& inputTime,
                               const vtkm::Id& nSteps)
   {
     vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType> worklet;
@@ -130,10 +126,10 @@ public:
   ParticleAdvectionResult Run(const IntegratorType& it,
                               vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
                               vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
-                              vtkm::cont::ArrayHandle<ScalarType>& inputTime,
+                              vtkm::cont::ArrayHandle<vtkm::FloatDefault>& inputTime,
                               const vtkm::Id& nSteps)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> ptsCopy;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> ptsCopy;
     vtkm::cont::ArrayCopy(pts, ptsCopy);
     return Run(it, ptsCopy, inputSteps, inputTime, nSteps);
   }
@@ -141,9 +137,6 @@ public:
 
 struct StreamlineResult
 {
-  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
-  using VectorType = vtkm::Vec<ScalarType, 3>;
-
   StreamlineResult()
     : positions()
     , polyLines()
@@ -153,7 +146,7 @@ struct StreamlineResult
   {
   }
 
-  StreamlineResult(const vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& pos,
+  StreamlineResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
                    const vtkm::cont::CellSetExplicit<>& lines,
                    const vtkm::cont::ArrayHandle<vtkm::Id>& stat,
                    const vtkm::cont::ArrayHandle<vtkm::Id>& steps)
@@ -164,11 +157,11 @@ struct StreamlineResult
   {
   }
 
-  StreamlineResult(const vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& pos,
+  StreamlineResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
                    const vtkm::cont::CellSetExplicit<>& lines,
                    const vtkm::cont::ArrayHandle<vtkm::Id>& stat,
                    const vtkm::cont::ArrayHandle<vtkm::Id>& steps,
-                   const vtkm::cont::ArrayHandle<ScalarType>& timeArray)
+                   const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& timeArray)
 
     : positions(pos)
     , polyLines(lines)
@@ -178,18 +171,16 @@ struct StreamlineResult
   {
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> positions;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> positions;
   vtkm::cont::CellSetExplicit<> polyLines;
   vtkm::cont::ArrayHandle<vtkm::Id> status;
   vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken;
-  vtkm::cont::ArrayHandle<ScalarType> times;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> times;
 };
 
 class Streamline
 {
 public:
-  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
-
   Streamline() {}
 
   template <typename IntegratorType, typename FieldType, typename PointStorage>
@@ -209,8 +200,8 @@ public:
     vtkm::cont::ArrayCopy(zero, steps);
 
     //Allocate memory to store the time for temporal integration.
-    vtkm::cont::ArrayHandle<ScalarType> timeArray;
-    vtkm::cont::ArrayHandleConstant<ScalarType> time(0, numSeeds);
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> timeArray;
+    vtkm::cont::ArrayHandleConstant<vtkm::FloatDefault> time(0, numSeeds);
     vtkm::cont::ArrayCopy(time, timeArray);
 
     return Run(it, seedArray, steps, timeArray, nSteps);
@@ -230,8 +221,8 @@ public:
     vtkm::cont::ArrayCopy(statusOK, status);
 
     //Allocate memory to store the time for temporal integration.
-    vtkm::cont::ArrayHandle<ScalarType> timeArray;
-    vtkm::cont::ArrayHandleConstant<ScalarType> time(0, numSeeds);
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> timeArray;
+    vtkm::cont::ArrayHandleConstant<vtkm::FloatDefault> time(0, numSeeds);
     vtkm::cont::ArrayCopy(time, timeArray);
 
     return Run(it, seedArray, inputSteps, timeArray, nSteps);
@@ -239,14 +230,14 @@ public:
 
   template <typename IntegratorType>
   StreamlineResult Run(const IntegratorType& it,
-                       vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& seedArray,
+                       vtkm::cont::ArrayHandle<vtkm::Vec3f>& seedArray,
                        vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
-                       vtkm::cont::ArrayHandle<ScalarType>& inputTime,
+                       vtkm::cont::ArrayHandle<vtkm::FloatDefault>& inputTime,
                        const vtkm::Id& nSteps)
   {
     vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType> worklet;
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> positions;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> positions;
     vtkm::cont::CellSetExplicit<> polyLines;
 
     //Allocate and initialize status array.
@@ -264,10 +255,10 @@ public:
   StreamlineResult Run(const IntegratorType& it,
                        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& seedArray,
                        vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
-                       vtkm::cont::ArrayHandle<ScalarType>& inputTime,
+                       vtkm::cont::ArrayHandle<vtkm::FloatDefault>& inputTime,
                        const vtkm::Id& nSteps)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> seedCopy;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> seedCopy;
     vtkm::cont::ArrayCopy(seedArray, seedCopy);
     return Run(it, seedCopy, inputSteps, inputTime, nSteps);
   }

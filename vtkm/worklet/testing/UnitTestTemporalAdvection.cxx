@@ -145,7 +145,7 @@ void GenerateValidity(const vtkm::Id numOfEntries,
 
 void TestTemporalEvaluators()
 {
-  using ScalarType = vtkm::worklet::particleadvection::ScalarType;
+  using ScalarType = vtkm::FloatDefault;
   using PointType = vtkm::Vec<ScalarType, 3>;
   using FieldHandle = vtkm::cont::ArrayHandle<PointType>;
   using EvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;

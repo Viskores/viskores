@@ -30,19 +30,16 @@ class LagrangianStructures : public vtkm::filter::FilterDataSetWithField<Lagrang
 public:
   using SupportedTypes = vtkm::TypeListTagFieldVec3;
 
-  using Scalar = vtkm::worklet::particleadvection::ScalarType;
-  using Vector = vtkm::Vec<Scalar, 3>;
-
   LagrangianStructures();
 
-  void SetStepSize(Scalar s) { this->StepSize = s; }
-  Scalar GetStepSize() { return this->StepSize; }
+  void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
+  vtkm::FloatDefault GetStepSize() { return this->StepSize; }
 
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
   vtkm::Id GetNumberOfSteps() { return this->NumberOfSteps; }
 
-  void SetAdvectionTime(Scalar advectionTime) { this->AdvectionTime = advectionTime; }
-  Scalar GetAdvectionTime() { return this->AdvectionTime; }
+  void SetAdvectionTime(vtkm::FloatDefault advectionTime) { this->AdvectionTime = advectionTime; }
+  vtkm::FloatDefault GetAdvectionTime() { return this->AdvectionTime; }
 
   void SetUseAuxiliaryGrid(bool useAuxiliaryGrid) { this->UseAuxiliaryGrid = useAuxiliaryGrid; }
   bool GetUseAuxiliaryGrid() { return this->UseAuxiliaryGrid; }
@@ -56,11 +53,11 @@ public:
   void SetOutputFieldName(std::string outputFieldName) { this->OutputFieldName = outputFieldName; }
   std::string GetOutputFieldName() { return this->OutputFieldName; }
 
-  inline void SetFlowMapOutput(vtkm::cont::ArrayHandle<Vector>& flowMap)
+  inline void SetFlowMapOutput(vtkm::cont::ArrayHandle<vtkm::Vec3f>& flowMap)
   {
     this->FlowMapOutput = flowMap;
   }
-  inline vtkm::cont::ArrayHandle<Vector> GetFlowMapOutput() { return this->FlowMapOutput; }
+  inline vtkm::cont::ArrayHandle<vtkm::Vec3f> GetFlowMapOutput() { return this->FlowMapOutput; }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -78,14 +75,14 @@ public:
                             vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
-  Scalar StepSize;
+  vtkm::FloatDefault StepSize;
   vtkm::Id NumberOfSteps;
-  Scalar AdvectionTime;
+  vtkm::FloatDefault AdvectionTime;
   bool UseAuxiliaryGrid = false;
   vtkm::Id3 AuxiliaryDims;
   bool UseFlowMapOutput = false;
   std::string OutputFieldName;
-  vtkm::cont::ArrayHandle<Vector> FlowMapOutput;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> FlowMapOutput;
 };
 
 } // namespace filter
