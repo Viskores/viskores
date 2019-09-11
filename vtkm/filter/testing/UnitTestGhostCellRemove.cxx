@@ -33,8 +33,8 @@ static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostCellArray(vtkm::Id nx
   if (nz > 0)
     numCells *= nz;
 
-  vtkm::UInt8 normalCell = static_cast<vtkm::UInt8>(vtkm::CellClassification::NORMAL);
-  vtkm::UInt8 duplicateCell = static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST);
+  constexpr vtkm::UInt8 normalCell = vtkm::CellClassification::NORMAL;
+  constexpr vtkm::UInt8 duplicateCell = vtkm::CellClassification::GHOST;
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
   ghosts.Allocate(numCells);
@@ -261,10 +261,9 @@ void TestGhostCellRemove()
           if (rt == "all")
             ghostCellRemoval.RemoveAllGhost();
           else if (rt == "byType")
-            ghostCellRemoval.RemoveByType(
-              static_cast<vtkm::UInt8>(vtkm::CellClassification::GHOST));
+            ghostCellRemoval.RemoveByType(vtkm::CellClassification::GHOST);
 
-          auto output = ghostCellRemoval.Execute(ds, vtkm::filter::GhostCellRemovePolicy());
+          auto output = ghostCellRemoval.Execute(ds);
           vtkm::Id numCells = output.GetNumberOfCells();
 
           //Validate the output.
@@ -305,7 +304,7 @@ void TestGhostCellRemove()
 
           vtkm::filter::GhostCellRemove ghostCellRemoval;
           ghostCellRemoval.RemoveGhostField();
-          auto output = ghostCellRemoval.Execute(ds, vtkm::filter::GhostCellRemovePolicy());
+          auto output = ghostCellRemoval.Execute(ds);
           VTKM_TEST_ASSERT(output.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                            "Wrong cell type for explicit conversion");
         }
