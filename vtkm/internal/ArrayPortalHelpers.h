@@ -19,8 +19,11 @@ namespace vtkm
 namespace internal
 {
 
+namespace detail
+{
+
 template <typename PortalType>
-struct PortalSupportsGets
+struct PortalSupportsGetsImpl
 {
   template <typename U, typename S = decltype(std::declval<U>().Get(vtkm::Id{}))>
   static std::true_type has(int);
@@ -30,7 +33,7 @@ struct PortalSupportsGets
 };
 
 template <typename PortalType>
-struct PortalSupportsSets
+struct PortalSupportsSetsImpl
 {
   template <typename U,
             typename S = decltype(std::declval<U>().Set(vtkm::Id{},
@@ -40,6 +43,16 @@ struct PortalSupportsSets
   static std::false_type has(...);
   using type = decltype(has<PortalType>(0));
 };
+
+} // namespace detail
+
+template <typename PortalType>
+using PortalSupportsGets =
+  typename detail::PortalSupportsGetsImpl<typename std::decay<PortalType>::type>::type;
+
+template <typename PortalType>
+using PortalSupportsSets =
+  typename detail::PortalSupportsSetsImpl<typename std::decay<PortalType>::type>::type;
 }
 } // namespace vtkm::internal
 

@@ -39,6 +39,7 @@ set(unit_tests
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
+  UnitTestArrayHandleDecorator.cxx
   UnitTestArrayHandleDiscard.cxx
   UnitTestArrayHandleExtractComponent.cxx
   UnitTestArrayHandleExtrude.cxx
