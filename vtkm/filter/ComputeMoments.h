@@ -32,6 +32,7 @@ public:
   {
     this->RadiusDiscrete = _radius;
   }
+
   VTKM_CONT void SetRadiusReal(vtkm::Vec<double, 3> _radius) { this->RadiusReal = _radius; }
 
   VTKM_CONT void SetOrder(vtkm::Int32 _order) { this->Order = _order; }
