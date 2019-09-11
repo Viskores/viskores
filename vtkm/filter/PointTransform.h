@@ -21,34 +21,47 @@ namespace filter
 /// \brief
 ///
 /// Generate scalar field from a dataset.
-template <typename S>
-class PointTransform : public vtkm::filter::FilterField<PointTransform<S>>
+class PointTransform : public vtkm::filter::FilterField<PointTransform>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   PointTransform();
 
-  void SetTranslation(const S& tx, const S& ty, const S& tz);
+  void SetTranslation(const vtkm::FloatDefault& tx,
+                      const vtkm::FloatDefault& ty,
+                      const vtkm::FloatDefault& tz);
 
-  void SetTranslation(const vtkm::Vec<S, 3>& v);
+  void SetTranslation(const vtkm::Vec3f& v);
 
-  void SetRotation(const S& angleDegrees, const vtkm::Vec<S, 3>& axis);
+  void SetRotation(const vtkm::FloatDefault& angleDegrees, const vtkm::Vec3f& axis);
 
-  void SetRotation(const S& angleDegrees, const S& rx, const S& ry, const S& rz);
+  void SetRotation(const vtkm::FloatDefault& angleDegrees,
+                   const vtkm::FloatDefault& rx,
+                   const vtkm::FloatDefault& ry,
+                   const vtkm::FloatDefault& rz);
 
-  void SetRotationX(const S& angleDegrees);
+  void SetRotationX(const vtkm::FloatDefault& angleDegrees);
 
-  void SetRotationY(const S& angleDegrees);
+  void SetRotationY(const vtkm::FloatDefault& angleDegrees);
 
-  void SetRotationZ(const S& angleDegrees);
+  void SetRotationZ(const vtkm::FloatDefault& angleDegrees);
 
-  void SetScale(const S& s);
+  void SetScale(const vtkm::FloatDefault& s);
 
-  void SetScale(const S& sx, const S& sy, const S& sz);
+  void SetScale(const vtkm::FloatDefault& sx,
+                const vtkm::FloatDefault& sy,
+                const vtkm::FloatDefault& sz);
 
-  void SetScale(const vtkm::Vec<S, 3>& v);
+  void SetScale(const vtkm::Vec3f& v);
 
-  void SetTransform(const vtkm::Matrix<S, 4, 4>& mtx);
+  void SetTransform(const vtkm::Matrix<vtkm::FloatDefault, 4, 4>& mtx);
+
+  void SetChangeCoordinateSystem(bool flag);
+  bool GetChangeCoordinateSystem() const;
+
+
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -57,19 +70,14 @@ public:
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
-  vtkm::worklet::PointTransform<S> Worklet;
-};
-
-template <typename S>
-class FilterTraits<PointTransform<S>>
-{
-public:
-  //PointTransformation can only convert Float and Double Vec3 arrays
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
+  vtkm::worklet::PointTransform<vtkm::FloatDefault> Worklet;
+  bool ChangeCoordinateSystem;
 };
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_PointTransform_hxx
 #include <vtkm/filter/PointTransform.hxx>
+#endif
 
 #endif // vtk_m_filter_PointTransform_h

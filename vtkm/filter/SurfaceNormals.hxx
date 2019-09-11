@@ -8,9 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/filter/SurfaceNormals.h>
+
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
+
+#include <vtkm/worklet/OrientNormals.h>
 #include <vtkm/worklet/SurfaceNormals.h>
+#include <vtkm/worklet/TriangleWinding.h>
 
 namespace vtkm
 {
@@ -58,6 +62,9 @@ inline SurfaceNormals::SurfaceNormals()
   : GenerateCellNormals(false)
   , NormalizeCellNormals(true)
   , GeneratePointNormals(true)
+  , AutoOrientNormals(false)
+  , FlipNormals(false)
+  , Consistency(true)
 {
   this->SetUseCoordinateSystemAsField(true);
 }
@@ -76,39 +83,68 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("No normals selected.");
   }
 
-  const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
+  const auto cellset = vtkm::filter::ApplyPolicyCellSetUnstructured(input.GetCellSet(), policy);
+  const auto& coords = input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()).GetData();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> faceNormals;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> faceNormals;
   vtkm::worklet::FacetedSurfaceNormals faceted;
   faceted.SetNormalize(this->NormalizeCellNormals);
-  faceted.Run(vtkm::filter::ApplyPolicy(cellset, policy), points, faceNormals);
+  faceted.Run(cellset, points, faceNormals);
 
   vtkm::cont::DataSet result;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> pointNormals;
   if (this->GeneratePointNormals)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> pointNormals;
     vtkm::worklet::SmoothSurfaceNormals smooth;
-    smooth.Run(vtkm::filter::ApplyPolicy(cellset, policy), faceNormals, pointNormals);
+    smooth.Run(cellset, faceNormals, pointNormals);
 
-    result = internal::CreateResult(input,
-                                    pointNormals,
-                                    internal::ComputePointNormalsName(this),
-                                    vtkm::cont::Field::Association::POINTS);
+
+    result = CreateResultFieldPoint(input, pointNormals, internal::ComputePointNormalsName(this));
     if (this->GenerateCellNormals)
     {
-      result.AddField(vtkm::cont::Field(internal::ComputeCellNormalsName(this),
-                                        vtkm::cont::Field::Association::CELL_SET,
-                                        cellset.GetName(),
-                                        faceNormals));
+      result.AddField(
+        vtkm::cont::make_FieldCell(internal::ComputeCellNormalsName(this), faceNormals));
     }
   }
   else
   {
-    result = internal::CreateResult(input,
-                                    faceNormals,
-                                    internal::ComputeCellNormalsName(this),
-                                    vtkm::cont::Field::Association::CELL_SET,
-                                    cellset.GetName());
+    result = CreateResultFieldCell(input, faceNormals, internal::ComputeCellNormalsName(this));
+  }
+
+  if (this->AutoOrientNormals)
+  {
+    using Orient = vtkm::worklet::OrientNormals;
+
+    if (this->GenerateCellNormals && this->GeneratePointNormals)
+    {
+      Orient::RunPointAndCellNormals(cellset, coords, pointNormals, faceNormals);
+    }
+    else if (this->GenerateCellNormals)
+    {
+      Orient::RunCellNormals(cellset, coords, faceNormals);
+    }
+    else if (this->GeneratePointNormals)
+    {
+      Orient::RunPointNormals(cellset, coords, pointNormals);
+    }
+
+    if (this->FlipNormals)
+    {
+      if (this->GenerateCellNormals)
+      {
+        Orient::RunFlipNormals(faceNormals);
+      }
+      if (this->GeneratePointNormals)
+      {
+        Orient::RunFlipNormals(pointNormals);
+      }
+    }
+  }
+
+  if (this->Consistency && this->GenerateCellNormals)
+  {
+    auto newCells = vtkm::worklet::TriangleWinding::Run(cellset, coords, faceNormals);
+    result.SetCellSet(newCells); // Overwrite the cellset in the result
   }
 
   return result;

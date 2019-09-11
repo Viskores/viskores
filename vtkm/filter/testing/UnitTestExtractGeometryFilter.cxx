@@ -27,8 +27,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.f, 3.f, 3.f);
+    vtkm::Vec3f minPoint(1.f, 1.f, 1.f);
+    vtkm::Vec3f maxPoint(3.f, 3.f, 3.f);
     auto box = vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
@@ -39,8 +39,7 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
     vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
-                     "Wrong result for ExtractGeometry");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
@@ -55,8 +54,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.f, 3.f, 3.f);
+    vtkm::Vec3f minPoint(1.f, 1.f, 1.f);
+    vtkm::Vec3f maxPoint(3.f, 3.f, 3.f);
     auto box = vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
@@ -67,8 +66,7 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
     vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
-                     "Wrong result for ExtractGeometry");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
@@ -83,8 +81,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.5f, 0.5f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.5f, 3.5f, 3.5f);
+    vtkm::Vec3f minPoint(0.5f, 0.5f, 0.5f);
+    vtkm::Vec3f maxPoint(3.5f, 3.5f, 3.5f);
     auto box = vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
@@ -95,8 +93,7 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
     vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 64),
-                     "Wrong result for ExtractGeometry");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 64), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
@@ -110,8 +107,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.5f, 0.5f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.5f, 3.5f, 3.5f);
+    vtkm::Vec3f minPoint(0.5f, 0.5f, 0.5f);
+    vtkm::Vec3f maxPoint(3.5f, 3.5f, 3.5f);
     auto box = vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
@@ -122,8 +119,7 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(true);
 
     vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
-                     "Wrong result for ExtractGeometry");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);

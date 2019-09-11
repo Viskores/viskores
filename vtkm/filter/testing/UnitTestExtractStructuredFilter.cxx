@@ -35,9 +35,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 9),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 9),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -46,11 +46,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 71.0f,
                      "Wrong point field data");
@@ -74,9 +73,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -85,11 +84,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 99.0f,
                      "Wrong point field data");
@@ -115,9 +113,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 125),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 125),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 64),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 64),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -126,11 +124,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(31) == 99.0f,
                      "Wrong point field data");
@@ -155,9 +152,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -166,11 +163,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 15.0f,
@@ -194,9 +190,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 64),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 64),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 27),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -205,11 +201,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 99.0f,
                      "Wrong point field data");
@@ -235,9 +230,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -246,11 +241,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 90.0f,
                      "Wrong point field data");
@@ -276,9 +270,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 9),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 9),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -287,11 +281,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 90.0f,
                      "Wrong point field data");
@@ -316,9 +309,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -327,11 +320,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 0.0f,
@@ -356,9 +348,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 8),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 8),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 1),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -367,11 +359,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(7) == 97.0f,
@@ -395,9 +386,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 18),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 18),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -406,11 +397,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(4) == 99.0f,
@@ -437,9 +427,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 4),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 4),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 1),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -448,11 +438,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(3) == 4.0f, "Wrong point field data");
@@ -475,9 +464,9 @@ public:
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 8),
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 8),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 1),
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
@@ -486,11 +475,10 @@ public:
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfPoints(), outPointData.GetNumberOfValues()),
+      test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
-    VTKM_TEST_ASSERT(
-      test_equal(output.GetCellSet(0).GetNumberOfCells(), outCellData.GetNumberOfValues()),
-      "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(7) == 10.0f,

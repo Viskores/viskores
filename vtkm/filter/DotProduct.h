@@ -22,6 +22,9 @@ namespace filter
 class DotProduct : public vtkm::filter::FilterField<DotProduct>
 {
 public:
+  //currently the DotProduct filter only works on vector data.
+  using SupportedTypes = TypeListTagVecCommon;
+
   VTKM_CONT
   DotProduct();
 
@@ -126,24 +129,11 @@ public:
     const vtkm::filter::FieldMetadata& fieldMeta,
     vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
-
 private:
   std::string SecondaryFieldName;
   vtkm::cont::Field::Association SecondaryFieldAssociation;
   bool UseCoordinateSystemAsSecondaryField;
   vtkm::Id SecondaryCoordinateSystemIndex;
-};
-
-template <>
-class FilterTraits<DotProduct>
-{ //currently the DotProduct filter only works on vector data.
-public:
-  using InputFieldTypeList = TypeListTagVecCommon;
 };
 }
 } // namespace vtkm::filter

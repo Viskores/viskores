@@ -24,7 +24,7 @@ void TriangleExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells)
   vtkm::rendering::internal::RunTriangulator(cells, this->Triangles, numberOfTriangles);
 }
 
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> TriangleExtractor::GetTriangles()
+vtkm::cont::ArrayHandle<vtkm::Id4> TriangleExtractor::GetTriangles()
 {
   return this->Triangles;
 }

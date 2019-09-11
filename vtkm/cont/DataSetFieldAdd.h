@@ -30,7 +30,7 @@ public:
                             const std::string& fieldName,
                             const vtkm::cont::VariantArrayHandle& field)
   {
-    dataSet.AddField(Field(fieldName, vtkm::cont::Field::Association::POINTS, field));
+    dataSet.AddField(make_FieldPoint(fieldName, field));
   }
 
   template <typename T, typename Storage>
@@ -38,7 +38,7 @@ public:
                                       const std::string& fieldName,
                                       const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    dataSet.AddField(Field(fieldName, vtkm::cont::Field::Association::POINTS, field));
+    dataSet.AddField(make_FieldPoint(fieldName, field));
   }
 
   template <typename T>
@@ -64,85 +64,36 @@ public:
   VTKM_CONT
   static void AddCellField(vtkm::cont::DataSet& dataSet,
                            const std::string& fieldName,
-                           const vtkm::cont::VariantArrayHandle& field,
-                           const std::string& cellSetName)
+                           const vtkm::cont::VariantArrayHandle& field)
   {
-    dataSet.AddField(
-      Field(fieldName, vtkm::cont::Field::Association::CELL_SET, cellSetName, field));
+    dataSet.AddField(make_FieldCell(fieldName, field));
   }
 
   template <typename T, typename Storage>
   VTKM_CONT static void AddCellField(vtkm::cont::DataSet& dataSet,
                                      const std::string& fieldName,
-                                     const vtkm::cont::ArrayHandle<T, Storage>& field,
-                                     const std::string& cellSetName)
+                                     const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    dataSet.AddField(
-      Field(fieldName, vtkm::cont::Field::Association::CELL_SET, cellSetName, field));
+    dataSet.AddField(make_FieldCell(fieldName, field));
   }
 
   template <typename T>
   VTKM_CONT static void AddCellField(vtkm::cont::DataSet& dataSet,
                                      const std::string& fieldName,
-                                     const std::vector<T>& field,
-                                     const std::string& cellSetName)
+                                     const std::vector<T>& field)
+  {
+    dataSet.AddField(
+      make_Field(fieldName, vtkm::cont::Field::Association::CELL_SET, field, vtkm::CopyFlag::On));
+  }
+
+  template <typename T>
+  VTKM_CONT static void AddCellField(vtkm::cont::DataSet& dataSet,
+                                     const std::string& fieldName,
+                                     const T* field,
+                                     const vtkm::Id& n)
   {
     dataSet.AddField(make_Field(
-      fieldName, vtkm::cont::Field::Association::CELL_SET, cellSetName, field, vtkm::CopyFlag::On));
-  }
-
-  template <typename T>
-  VTKM_CONT static void AddCellField(vtkm::cont::DataSet& dataSet,
-                                     const std::string& fieldName,
-                                     const T* field,
-                                     const vtkm::Id& n,
-                                     const std::string& cellSetName)
-  {
-    dataSet.AddField(make_Field(fieldName,
-                                vtkm::cont::Field::Association::CELL_SET,
-                                cellSetName,
-                                field,
-                                n,
-                                vtkm::CopyFlag::On));
-  }
-
-  VTKM_CONT
-  static void AddCellField(vtkm::cont::DataSet& dataSet,
-                           const std::string& fieldName,
-                           const vtkm::cont::VariantArrayHandle& field,
-                           vtkm::Id cellSetIndex = 0)
-  {
-    std::string cellSetName = dataSet.GetCellSet(cellSetIndex).GetName();
-    DataSetFieldAdd::AddCellField(dataSet, fieldName, field, cellSetName);
-  }
-  template <typename T, typename Storage>
-  VTKM_CONT static void AddCellField(vtkm::cont::DataSet& dataSet,
-                                     const std::string& fieldName,
-                                     const vtkm::cont::ArrayHandle<T, Storage>& field,
-                                     vtkm::Id cellSetIndex = 0)
-  {
-    std::string cellSetName = dataSet.GetCellSet(cellSetIndex).GetName();
-    DataSetFieldAdd::AddCellField(dataSet, fieldName, field, cellSetName);
-  }
-  template <typename T>
-  VTKM_CONT static void AddCellField(vtkm::cont::DataSet& dataSet,
-                                     const std::string& fieldName,
-                                     const std::vector<T>& field,
-                                     vtkm::Id cellSetIndex = 0)
-  {
-    std::string cellSetName = dataSet.GetCellSet(cellSetIndex).GetName();
-    DataSetFieldAdd::AddCellField(dataSet, fieldName, field, cellSetName);
-  }
-
-  template <typename T>
-  VTKM_CONT static void AddCellField(vtkm::cont::DataSet& dataSet,
-                                     const std::string& fieldName,
-                                     const T* field,
-                                     const vtkm::Id& n,
-                                     vtkm::Id cellSetIndex = 0)
-  {
-    std::string cellSetName = dataSet.GetCellSet(cellSetIndex).GetName();
-    DataSetFieldAdd::AddCellField(dataSet, fieldName, field, n, cellSetName);
+      fieldName, vtkm::cont::Field::Association::CELL_SET, field, n, vtkm::CopyFlag::On));
   }
 };
 }

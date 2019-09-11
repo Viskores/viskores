@@ -105,7 +105,7 @@ if sortOpt:
       keys = sorted(keys, key=lambda k: benchmarks[k].mean)
 
 print("# Summary: (%s)"%filename)
-print("%-9s\t%-9s\t%-s"%("Mean", "Stdev", "Benchmark (type)"))
+print("%-9s\t%-9s\t%-9s\t%-s"%("Mean", "Stdev", "Stdev%", "Benchmark (type)"))
 for key in keys:
   data = benchmarks[key]
-  print("%9.6f\t%9.6f\t%s (%s)"%(data.mean, data.stdDev, key.name, key.type))
+  print("%9.6f\t%9.6f\t%9.6f\t%s (%s)"%(data.mean, data.stdDev, data.stdDev / data.mean * 100., key.name, key.type))

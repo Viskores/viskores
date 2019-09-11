@@ -46,7 +46,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
 
 inline vtkm::cont::DataSet make_SingleTypeDataSet()
 {
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coordinates;
   coordinates.push_back(CoordType(0, 0, 0));
   coordinates.push_back(CoordType(1, 0, 0));
@@ -95,7 +95,7 @@ void TestDataSet_Explicit()
 
   //get the cellset single type from the dataset
   vtkm::cont::CellSetSingleType<> cellSet;
-  dataSet.GetCellSet(0).CopyTo(cellSet);
+  dataSet.GetCellSet().CopyTo(cellSet);
 
   //verify that we can create a subset of a singlset
   using SubsetType = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>>;
@@ -105,13 +105,13 @@ void TestDataSet_Explicit()
   subset.PrintSummary(std::cout);
 
   using ExecObjectType = SubsetType::ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial,
-                                                    vtkm::TopologyElementTagPoint,
-                                                    vtkm::TopologyElementTagCell>::ExecObjectType;
+                                                    vtkm::TopologyElementTagCell,
+                                                    vtkm::TopologyElementTagPoint>::ExecObjectType;
 
   ExecObjectType execConnectivity;
   execConnectivity = subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                                            vtkm::TopologyElementTagPoint(),
-                                            vtkm::TopologyElementTagCell());
+                                            vtkm::TopologyElementTagCell(),
+                                            vtkm::TopologyElementTagPoint());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
@@ -141,7 +141,7 @@ void TestDataSet_Structured2D()
   vtkm::cont::ArrayHandle<vtkm::Id> validCellIds = vtkm::cont::make_ArrayHandle(validIds);
 
   vtkm::cont::CellSetStructured<2> cellSet;
-  dataSet.GetCellSet(0).CopyTo(cellSet);
+  dataSet.GetCellSet().CopyTo(cellSet);
 
   //verify that we can create a subset of a 2d UniformDataSet
   vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>> subset;
@@ -154,7 +154,7 @@ void TestDataSet_Structured2D()
 
   //verify that PrepareForInput exists
   subset.PrepareForInput(
-    DeviceAdapterTag(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    DeviceAdapterTag(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
@@ -183,7 +183,7 @@ void TestDataSet_Structured3D()
   vtkm::cont::ArrayHandle<vtkm::Id> validCellIds = vtkm::cont::make_ArrayHandle(validIds);
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  dataSet.GetCellSet(0).CopyTo(cellSet);
+  dataSet.GetCellSet().CopyTo(cellSet);
 
   //verify that we can create a subset of a 2d UniformDataSet
   vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>> subset;
@@ -193,8 +193,8 @@ void TestDataSet_Structured3D()
 
   //verify that PrepareForInput exists
   subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                         vtkm::TopologyElementTagPoint(),
-                         vtkm::TopologyElementTagCell());
+                         vtkm::TopologyElementTagCell(),
+                         vtkm::TopologyElementTagPoint());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;

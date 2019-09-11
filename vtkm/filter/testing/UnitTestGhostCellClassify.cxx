@@ -106,13 +106,10 @@ void TestStructured()
         auto output = addGhost.Execute(ds, vtkm::filter::GhostCellClassifyPolicy());
 
         //Validate the output.
-        VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1, "Wrong number of cell sets in output");
-        VTKM_TEST_ASSERT(
-          output.HasField("vtkmGhostCells", vtkm::cont::Field::Association::CELL_SET),
-          "Ghost cells array not found in output");
-        vtkm::Id numCells = output.GetCellSet(0).GetNumberOfCells();
-        auto fieldArray =
-          output.GetField("vtkmGhostCells", vtkm::cont::Field::Association::CELL_SET).GetData();
+        VTKM_TEST_ASSERT(output.HasCellField("vtkmGhostCells"),
+                         "Ghost cells array not found in output");
+        vtkm::Id numCells = output.GetNumberOfCells();
+        auto fieldArray = output.GetCellField("vtkmGhostCells").GetData();
         VTKM_TEST_ASSERT(fieldArray.GetNumberOfValues() == numCells,
                          "Wrong number of values in ghost cell array");
 

@@ -33,7 +33,7 @@ void WaveletGeneratorTest()
   }
 
   {
-    auto cells = ds.GetCellSet(ds.GetCellSetIndex("cells"));
+    auto cells = ds.GetCellSet();
     VTKM_TEST_ASSERT(test_equal(cells.GetNumberOfCells(), 8000), "Incorrect number of cells.");
   }
 
@@ -41,7 +41,7 @@ void WaveletGeneratorTest()
   {
     using ScalarHandleType = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
 
-    auto field = ds.GetField("scalars", vtkm::cont::Field::Association::POINTS);
+    auto field = ds.GetPointField("scalars");
     auto dynData = field.GetData();
     VTKM_TEST_ASSERT(dynData.IsType<ScalarHandleType>(), "Invalid scalar handle type.");
     ScalarHandleType handle = dynData.Cast<ScalarHandleType>();

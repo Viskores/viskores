@@ -130,4 +130,5 @@ function(vtkm_test_against_install dir)
 
   set_tests_properties(${build_name} PROPERTIES LABELS ${test_label} )
   set_tests_properties(${build_name} PROPERTIES FIXTURES_REQUIRED vtkm_installed)
+  set_tests_properties(${build_name} PROPERTIES TIMEOUT 600)
 endfunction()

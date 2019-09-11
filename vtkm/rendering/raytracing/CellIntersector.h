@@ -35,7 +35,7 @@ VTKM_EXEC_CONT inline void IntersectZoo(T xpoints[8],
 {
   // Some precalc for water tight intersections
   vtkm::Vec<T, 3> s;
-  vtkm::Vec<vtkm::Int32, 3> k;
+  vtkm::Vec3i_32 k;
   WaterTight intersector;
   intersector.FindDir(dir, s, k);
   CellTables tables;
@@ -82,7 +82,7 @@ VTKM_EXEC_CONT inline void IntersectHex(T xpoints[8],
 {
   // Some precalc for water tight intersections
   vtkm::Vec<T, 3> s;
-  vtkm::Vec<vtkm::Int32, 3> k;
+  vtkm::Vec3i_32 k;
   WaterTight intersector;
   intersector.FindDir(dir, s, k);
 
@@ -137,7 +137,7 @@ VTKM_EXEC_CONT inline void IntersectTet(T xpoints[8],
 {
   // Some precalc for water tight intersections
   vtkm::Vec<T, 3> s;
-  vtkm::Vec<vtkm::Int32, 3> k;
+  vtkm::Vec3i_32 k;
   WaterTight intersector;
   intersector.FindDir(dir, s, k);
 
@@ -180,7 +180,7 @@ VTKM_EXEC_CONT inline void IntersectWedge(T xpoints[8],
 {
   // Some precalc for water tight intersections
   vtkm::Vec<T, 3> s;
-  vtkm::Vec<vtkm::Int32, 3> k;
+  vtkm::Vec3i_32 k;
   WaterTight intersector;
   intersector.FindDir(dir, s, k);
   // TODO: try two sepate loops to see performance impact

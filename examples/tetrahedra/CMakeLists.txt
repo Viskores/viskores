@@ -7,34 +7,22 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
-cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
 project(Tetrahedra CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
-vtkm_find_gl(OPTIONAL GL GLUT GLEW)
 
-if(TARGET OpenGL::GL AND
-   TARGET GLUT::GLUT AND
-   TARGET GLEW::GLEW)
+add_executable(Tetrahedralize Tetrahedralize.cxx)
+target_link_libraries(Tetrahedralize PRIVATE vtkm_filter)
 
-  set(gl_libs OpenGL::GL OpenGL::GLU GLEW::GLEW GLUT::GLUT)
+vtkm_add_target_information(Tetrahedralize
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES Tetrahedralize.cxx)
 
-  add_executable(TetrahedralizeExplicitGrid TetrahedralizeExplicitGrid.cxx)
-  add_executable(TriangulateExplicitGrid TriangulateExplicitGrid.cxx)
-  add_executable(TetrahedralizeUniformGrid TetrahedralizeUniformGrid.cxx)
-  add_executable(TriangulateUniformGrid TriangulateUniformGrid.cxx)
+add_executable(Triangulate Triangulate.cxx)
+target_link_libraries(Triangulate PRIVATE vtkm_filter)
 
-  target_link_libraries(TetrahedralizeExplicitGrid PRIVATE vtkm_filter ${gl_libs})
-  target_link_libraries(TriangulateExplicitGrid PRIVATE vtkm_filter ${gl_libs})
-  target_link_libraries(TetrahedralizeUniformGrid PRIVATE vtkm_filter ${gl_libs})
-  target_link_libraries(TriangulateUniformGrid PRIVATE vtkm_filter ${gl_libs})
-
-  if(TARGET vtkm::cuda)
-  set_source_files_properties(TetrahedralizeExplicitGrid.cxx
-                              TriangulateExplicitGrid.cxx
-                              TetrahedralizeUniformGrid.cxx
-                              TriangulateUniformGrid.cxx PROPERTIES LANGUAGE "CUDA")
-  endif()
-
-endif()
+vtkm_add_target_information(Triangulate
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES Triangulate.cxx)

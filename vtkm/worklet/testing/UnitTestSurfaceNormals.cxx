@@ -16,7 +16,7 @@
 namespace
 {
 
-using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
 void TestFacetedSurfaceNormals(const vtkm::cont::DataSet& dataset, NormalsArrayHandle& normals)
 {
@@ -25,11 +25,10 @@ void TestFacetedSurfaceNormals(const vtkm::cont::DataSet& dataset, NormalsArrayH
   vtkm::worklet::FacetedSurfaceNormals faceted;
   faceted.Run(dataset.GetCellSet(), dataset.GetCoordinateSystem().GetData(), normals);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
-    { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f }, { 0.707f, 0.500f, -0.500f },
-    { 0.000f, -0.707f, -0.707f }, { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
-    { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f }
-  };
+  vtkm::Vec3f expected[8] = { { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f },
+                              { 0.707f, 0.500f, -0.500f },  { 0.000f, -0.707f, -0.707f },
+                              { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
+                              { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f } };
   auto portal = normals.GetPortalConstControl();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect faceNormals array length");
   for (vtkm::Id i = 0; i < 8; ++i)
@@ -48,12 +47,10 @@ void TestSmoothSurfaceNormals(const vtkm::cont::DataSet& dataset,
   vtkm::worklet::SmoothSurfaceNormals smooth;
   smooth.Run(dataset.GetCellSet(), faceNormals, pointNormals);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
-    { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
-    { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
-    { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
-    { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f }
-  };
+  vtkm::Vec3f expected[8] = { { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
+                              { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
+                              { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
+                              { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f } };
   auto portal = pointNormals.GetPortalConstControl();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect pointNormals array length");
   for (vtkm::Id i = 0; i < 8; ++i)

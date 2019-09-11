@@ -35,6 +35,7 @@ private:
   vtkm::Bounds Bounds;
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;
+  bool Is3D = true;
 
   mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
 };

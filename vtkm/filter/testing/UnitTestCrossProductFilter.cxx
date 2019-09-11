@@ -73,17 +73,14 @@ void createVectors(std::size_t numPts,
   }
 }
 
-void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field1,
-                 const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field2,
+void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field1,
+                 const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field2,
                  const vtkm::cont::DataSet& result)
 {
-  VTKM_TEST_ASSERT(result.HasField("crossproduct", vtkm::cont::Field::Association::POINTS),
-                   "Output field is missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("crossproduct"), "Output field is missing.");
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> outputArray;
-  result.GetField("crossproduct", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(outputArray);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> outputArray;
+  result.GetPointField("crossproduct").GetData().CopyTo(outputArray);
 
   auto v1Portal = field1.GetPortalConstControl();
   auto v2Portal = field2.GetPortalConstControl();
@@ -96,13 +93,12 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>
 
   for (vtkm::Id j = 0; j < outputArray.GetNumberOfValues(); j++)
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> v1 = v1Portal.Get(j);
-    vtkm::Vec<vtkm::FloatDefault, 3> v2 = v2Portal.Get(j);
-    vtkm::Vec<vtkm::FloatDefault, 3> res = outPortal.Get(j);
+    vtkm::Vec3f v1 = v1Portal.Get(j);
+    vtkm::Vec3f v2 = v2Portal.Get(j);
+    vtkm::Vec3f res = outPortal.Get(j);
 
     //Make sure result is orthogonal each input vector. Need to normalize to compare with zero.
-    vtkm::Vec<vtkm::FloatDefault, 3> v1N(vtkm::Normal(v1)), v2N(vtkm::Normal(v1)),
-      resN(vtkm::Normal(res));
+    vtkm::Vec3f v1N(vtkm::Normal(v1)), v2N(vtkm::Normal(v1)), resN(vtkm::Normal(res));
     VTKM_TEST_ASSERT(test_equal(vtkm::Dot(resN, v1N), vtkm::FloatDefault(0.0)),
                      "Wrong result for cross product");
     VTKM_TEST_ASSERT(test_equal(vtkm::Dot(resN, v2N), vtkm::FloatDefault(0.0)),
@@ -130,10 +126,10 @@ void TestCrossProduct()
     vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
     vtkm::Id nVerts = dataSet.GetCoordinateSystem(0).GetNumberOfPoints();
 
-    std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> vecs1, vecs2;
+    std::vector<vtkm::Vec3f> vecs1, vecs2;
     createVectors(static_cast<std::size_t>(nVerts), i, vecs1, vecs2);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> field1, field2;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> field1, field2;
     field1 = vtkm::cont::make_ArrayHandle(vecs1);
     field2 = vtkm::cont::make_ArrayHandle(vecs2);
 

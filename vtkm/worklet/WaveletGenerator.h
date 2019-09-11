@@ -37,7 +37,7 @@ struct Worker : public vtkm::exec::FunctorBase
 {
   using OutputHandleType = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using OutputPortalType = decltype(std::declval<OutputHandleType>().PrepareForOutput(0, Device()));
-  using Vec3F = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using Vec3F = vtkm::Vec3f;
 
   Vec3F Center;
   Vec3F Spacing;
@@ -158,7 +158,7 @@ struct runWorker
  */
 class WaveletGenerator
 {
-  using Vec3F = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using Vec3F = vtkm::Vec3f;
 
   Vec3F Center;
   Vec3F Spacing;
@@ -225,7 +225,7 @@ public:
     vtkm::cont::CoordinateSystem coords{ "coords", dims, origin, this->Spacing };
 
     // And cells:
-    vtkm::cont::CellSetStructured<3> cellSet{ "cells" };
+    vtkm::cont::CellSetStructured<3> cellSet;
     cellSet.SetPointDimensions(dims);
 
     // Scalars, too
@@ -234,7 +234,7 @@ public:
     // Compile the dataset:
     vtkm::cont::DataSet dataSet;
     dataSet.AddCoordinateSystem(coords);
-    dataSet.AddCellSet(cellSet);
+    dataSet.SetCellSet(cellSet);
     dataSet.AddField(field);
 
     return dataSet;
@@ -269,7 +269,7 @@ public:
                                    dims,
                                    this->MaximumValue,
                                    temp2);
-    return vtkm::cont::Field(name, vtkm::cont::Field::Association::POINTS, output);
+    return vtkm::cont::make_FieldPoint(name, output);
   }
 
 private:

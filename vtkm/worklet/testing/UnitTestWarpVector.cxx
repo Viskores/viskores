@@ -42,7 +42,7 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetExplicit<> cellSet("cells");
+  vtkm::cont::CellSetExplicit<> cellSet;
   cellSet.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {
@@ -55,7 +55,7 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
     }
   }
   cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
   return dataSet;
 }
 }
@@ -63,7 +63,7 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
 void TestWarpVector()
 {
   std::cout << "Testing WarpVector Worklet" << std::endl;
-  using vecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using vecType = vtkm::Vec3f;
 
   vtkm::cont::DataSet ds = MakeWarpVectorTestDataSet<vtkm::FloatDefault>();
   vtkm::cont::ArrayHandle<vecType> result;

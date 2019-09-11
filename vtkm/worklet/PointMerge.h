@@ -13,7 +13,6 @@
 #include <vtkm/worklet/AverageByKey.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
-#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/RemoveUnusedPoints.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -25,6 +24,7 @@
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
+#include <vtkm/cont/Invoker.h>
 
 #include <vtkm/Bounds.h>
 #include <vtkm/Hash.h>
@@ -42,8 +42,8 @@ public:
   // This class can take point worldCoords as inputs and return the bin index of the enclosing bin.
   class BinLocator : public vtkm::cont::ExecutionAndControlObjectBase
   {
-    vtkm::Vec<vtkm::Float64, 3> Offset;
-    vtkm::Vec<vtkm::Float64, 3> Scale;
+    vtkm::Vec3f_64 Offset;
+    vtkm::Vec3f_64 Scale;
 
 #ifdef VTKM_USE_64BIT_IDS
     // IEEE double precision floating point as 53 bits for the significand, so it would not be
@@ -64,12 +64,11 @@ public:
     }
 
     VTKM_CONT
-    static vtkm::Vec<vtkm::Float64, 3> ComputeBinWidths(const vtkm::Bounds& bounds,
-                                                        vtkm::Float64 delta)
+    static vtkm::Vec3f_64 ComputeBinWidths(const vtkm::Bounds& bounds, vtkm::Float64 delta)
     {
-      const vtkm::Vec<vtkm::Float64, 3> boundLengths(
+      const vtkm::Vec3f_64 boundLengths(
         bounds.X.Length() + delta, bounds.Y.Length() + delta, bounds.Z.Length() + delta);
-      vtkm::Vec<vtkm::Float64, 3> binWidths;
+      vtkm::Vec3f_64 binWidths;
       for (vtkm::IdComponent dimIndex = 0; dimIndex < 3; ++dimIndex)
       {
         if (boundLengths[dimIndex] > vtkm::Epsilon64())
@@ -104,8 +103,8 @@ public:
     BinLocator(const vtkm::Bounds& bounds, vtkm::Float64 delta = 0.0)
       : Offset(bounds.X.Min, bounds.Y.Min, bounds.Z.Min)
     {
-      const vtkm::Vec<vtkm::Float64, 3> binWidths = ComputeBinWidths(bounds, delta);
-      this->Scale = vtkm::Vec<vtkm::Float64, 3>(1.0) / binWidths;
+      const vtkm::Vec3f_64 binWidths = ComputeBinWidths(bounds, delta);
+      this->Scale = vtkm::Vec3f_64(1.0) / binWidths;
     }
 
     // Shifts the grid by delta in the specified directions. This will allow the bins to cover
@@ -115,7 +114,7 @@ public:
                          vtkm::Float64 delta,
                          const vtkm::Vec<bool, 3>& directions)
     {
-      const vtkm::Vec<vtkm::Float64, 3> binWidths = ComputeBinWidths(bounds, delta);
+      const vtkm::Vec3f_64 binWidths = ComputeBinWidths(bounds, delta);
       BinLocator shiftedLocator(*this);
       for (vtkm::IdComponent dimIndex = 0; dimIndex < 3; ++dimIndex)
       {
@@ -130,7 +129,7 @@ public:
     template <typename T>
     VTKM_EXEC_CONT vtkm::Id3 FindBin(const vtkm::Vec<T, 3>& worldCoords) const
     {
-      vtkm::Vec<vtkm::Float64, 3> relativeCoords = (worldCoords - this->Offset) * this->Scale;
+      vtkm::Vec3f_64 relativeCoords = (worldCoords - this->Offset) * this->Scale;
 
       return vtkm::Id3(vtkm::Floor(relativeCoords));
     }
@@ -336,7 +335,7 @@ private:
     vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& points, // coordinates, modified to merge close
     vtkm::cont::ArrayHandle<vtkm::Id> indexNeighborMap) // identifies each neighbor group, updated
   {
-    Invoker invoker;
+    vtkm::cont::Invoker invoker;
 
     vtkm::cont::ArrayHandle<vtkm::HashType> hashes;
     invoker(CoordsToHash(), points, binLocator, hashes);
@@ -358,7 +357,7 @@ public:
     const vtkm::Bounds& bounds,                       // Bounds of points
     vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& points) // coordinates, modified to merge close
   {
-    Invoker invoker;
+    vtkm::cont::Invoker invoker;
 
     BinLocator binLocator(bounds, delta);
 
@@ -428,7 +427,7 @@ public:
     vtkm::cont::ArrayHandleVirtualCoordinates& points) // coordinates, modified to merge close
   {
     // Get a cast to a concrete set of point coordiantes so that it can be modified in place
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> concretePoints;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> concretePoints;
     if (points.IsType<decltype(concretePoints)>())
     {
       concretePoints = points.Cast<decltype(concretePoints)>();

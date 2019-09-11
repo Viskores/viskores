@@ -52,7 +52,7 @@ struct FieldWorklet : vtkm::worklet::WorkletMapField
   }
 };
 
-struct TopologyWorklet : vtkm::worklet::WorkletMapCellToPoint
+struct TopologyWorklet : vtkm::worklet::WorkletVisitPointsWithCells
 {
   using ControlSignature = void(CellSetIn,
                                 FieldInPoint inputField,

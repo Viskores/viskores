@@ -48,14 +48,15 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::Da
 
   // Add field one by one
   // (By using AddFieldAndBin(), the length of FieldNames and NumOfBins must be the same)
-  for (size_t i = 0; i < FieldNames.size(); i++)
+  for (size_t i = 0; i < this->FieldNames.size(); i++)
   {
     vtkm::Range rangeField;
     vtkm::Float64 deltaField;
-    ndHistogram.AddField(vtkm::filter::ApplyPolicy(inData.GetField(FieldNames[i]), policy),
-                         NumOfBins[i],
-                         rangeField,
-                         deltaField);
+    ndHistogram.AddField(
+      vtkm::filter::ApplyPolicyFieldNotActive(inData.GetField(this->FieldNames[i]), policy),
+      this->NumOfBins[i],
+      rangeField,
+      deltaField);
     DataRanges.push_back(rangeField);
     BinDeltas.push_back(deltaField);
   }
@@ -67,11 +68,9 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::Da
   vtkm::cont::DataSet outputData;
   for (size_t i = 0; i < binIds.size(); i++)
   {
-    outputData.AddField(
-      vtkm::cont::Field(FieldNames[i], vtkm::cont::Field::Association::POINTS, binIds[i]));
+    outputData.AddField(vtkm::cont::make_FieldPoint(this->FieldNames[i], binIds[i]));
   }
-  outputData.AddField(
-    vtkm::cont::Field("Frequency", vtkm::cont::Field::Association::POINTS, freqs));
+  outputData.AddField(vtkm::cont::make_FieldPoint("Frequency", freqs));
 
   return outputData;
 }

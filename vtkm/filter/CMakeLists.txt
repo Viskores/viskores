@@ -15,9 +15,12 @@ set(headers
   CleanGrid.h
   ClipWithField.h
   ClipWithImplicitFunction.h
+  ComputeMoments.h
+  Contour.h
   ContourTreeUniform.h
   ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
+  CreateResult.h
   CrossProduct.h
   DotProduct.h
   Entropy.h
@@ -40,9 +43,10 @@ set(headers
   Histogram.h
   ImageConnectivity.h
   Lagrangian.h
-  MarchingCubes.h
+  LagrangianStructures.h
   Mask.h
   MaskPoints.h
+  MeshQuality.h
   NDEntropy.h
   NDHistogram.h
   OscillatorSource.h
@@ -56,11 +60,13 @@ set(headers
   Probe.h
   SplitSharpEdges.h
   Streamline.h
+  StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h
   Triangulate.h
+  Tube.h
   VectorMagnitude.h
   VertexClustering.h
   WarpScalar.h
@@ -80,6 +86,8 @@ set(header_template_sources
   CleanGrid.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
+  ComputeMoments.hxx
+  Contour.hxx
   ContourTreeUniform.hxx
   ContourTreeUniformAugmented.hxx
   CoordinateSystemTransform.hxx
@@ -92,7 +100,6 @@ set(header_template_sources
   ExtractStructured.hxx
   FieldToColors.hxx
   Filter.hxx
-  FilterCell.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
@@ -102,9 +109,10 @@ set(header_template_sources
   Histogram.hxx
   ImageConnectivity.hxx
   Lagrangian.hxx
-  MarchingCubes.hxx
+  LagrangianStructures.hxx
   Mask.hxx
   MaskPoints.hxx
+  MeshQuality.hxx
   NDEntropy.hxx
   NDHistogram.hxx
   OscillatorSource.hxx
@@ -115,11 +123,13 @@ set(header_template_sources
   Probe.hxx
   SplitSharpEdges.hxx
   Streamline.hxx
+  StreamSurface.hxx
   SurfaceNormals.hxx
   Tetrahedralize.hxx
   Threshold.hxx
   ThresholdPoints.hxx
   Triangulate.hxx
+  Tube.hxx
   VectorMagnitude.hxx
   VertexClustering.hxx
   WarpScalar.hxx

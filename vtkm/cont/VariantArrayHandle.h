@@ -15,8 +15,9 @@
 #include <vtkm/TypeListTag.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/cont/ArrayHandleMultiplexer.h>
+#include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleVirtual.h>
-
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Logging.h>
@@ -142,6 +143,28 @@ public:
     this->CastAndCall(StorageTagList{}, caster, output);
     return output;
   }
+
+  /// Returns this array cast to a \c ArrayHandleMultiplexer of the given type.
+  /// This will attempt to cast the internal array to each supported type of
+  /// the multiplexer. If none are supported, an invalid ArrayHandleMultiplexer
+  /// is returned.
+  ///
+  /// As a special case, if one of the arrays in the \c ArrayHandleMultiplexer's
+  /// type list is an \c ArrayHandleCast, then the multiplexer will look for type
+  /// type of array being cast rather than an actual cast array.
+  ///
+  ///@{
+  template <typename... T>
+  VTKM_CONT void AsMultiplexer(vtkm::cont::ArrayHandleMultiplexer<T...>& result) const;
+
+  template <typename ArrayHandleMultiplexerType>
+  VTKM_CONT ArrayHandleMultiplexerType AsMultiplexer() const
+  {
+    ArrayHandleMultiplexerType result;
+    this->AsMultiplexer(result);
+    return result;
+  }
+  ///@}
 
   /// Given a references to an ArrayHandle object, casts this array to the
   /// ArrayHandle's type and sets the given ArrayHandle to this array. Throws
@@ -297,6 +320,9 @@ VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::VariantArrayHandleBase<T
   return variant.template Cast<ArrayHandleType>();
 }
 
+//=============================================================================
+// Out of class implementations
+
 namespace detail
 {
 
@@ -373,8 +399,9 @@ template <typename TypeList, typename StorageList>
 struct ListTagDynamicTypes : vtkm::detail::ListRoot
 {
   using crossProduct = typename vtkm::ListCrossProduct<TypeList, StorageList>;
-  // using list = typename crossProduct::list;
-  using list = ::brigand::remove_if<typename crossProduct::list, IsUndefinedStorage<brigand::_1>>;
+  // using list = vtkm::internal::ListTagAsBrigandList<crossProduct>;
+  using list = ::brigand::remove_if<vtkm::internal::ListTagAsBrigandList<crossProduct>,
+                                    IsUndefinedStorage<brigand::_1>>;
 };
 
 
@@ -419,6 +446,100 @@ VTKM_CONT void VariantArrayHandleBase<TypeList>::CastAndCallImpl(std::true_type,
     VTKM_LOG_CAST_FAIL(*this, TypeList);
     detail::ThrowCastAndCallException(ref, typeid(TypeList));
   }
+}
+
+namespace detail
+{
+
+struct VariantArrayHandleTryMultiplexer
+{
+  template <typename T, typename Storage, typename... TypeList, typename... ArrayTypes>
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>&,
+                            const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+                            vtkm::cont::ArrayHandleMultiplexer<ArrayTypes...>& result) const
+  {
+    vtkm::cont::ArrayHandle<T, Storage> targetArray;
+    bool foundArray = false;
+    this->FetchArray(targetArray, self, foundArray, result.IsValid());
+    if (foundArray)
+    {
+      result.SetArray(targetArray);
+    }
+  }
+
+private:
+  template <typename T, typename Storage, typename... TypeList>
+  VTKM_CONT void FetchArrayExact(vtkm::cont::ArrayHandle<T, Storage>& targetArray,
+                                 const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+                                 bool& foundArray) const
+  {
+    using ArrayType = vtkm::cont::ArrayHandle<T, Storage>;
+    if (self.template IsType<ArrayType>())
+    {
+      targetArray = self.template Cast<ArrayType>();
+      foundArray = true;
+    }
+    else
+    {
+      foundArray = false;
+    }
+  }
+
+  template <typename T, typename Storage, typename... TypeList>
+  VTKM_CONT void FetchArray(vtkm::cont::ArrayHandle<T, Storage>& targetArray,
+                            const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+                            bool& foundArray,
+                            bool vtkmNotUsed(foundArrayInPreviousCall)) const
+  {
+    this->FetchArrayExact(targetArray, self, foundArray);
+  }
+
+  // Special condition for transformed arrays (including cast arrays). Instead of pulling out the
+  // transform, pull out the array that is being transformed.
+  template <typename T,
+            typename SrcArray,
+            typename ForwardTransform,
+            typename ReverseTransform,
+            typename... TypeList>
+  VTKM_CONT void FetchArray(
+    vtkm::cont::ArrayHandle<
+      T,
+      vtkm::cont::internal::StorageTagTransform<SrcArray, ForwardTransform, ReverseTransform>>&
+      targetArray,
+    const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+    bool& foundArray,
+    bool foundArrayInPreviousCall) const
+  {
+    // Attempt to get the array itself first
+    this->FetchArrayExact(targetArray, self, foundArray);
+
+    // Try to get the array to be transformed first, but only do so if the array was not already
+    // found in another call to this functor. This is to give precedence to getting the array
+    // exactly rather than creating our own transform.
+    if (!foundArray && !foundArrayInPreviousCall)
+    {
+      SrcArray srcArray;
+      this->FetchArray(srcArray, self, foundArray, foundArrayInPreviousCall);
+      if (foundArray)
+      {
+        targetArray =
+          vtkm::cont::ArrayHandleTransform<SrcArray, ForwardTransform, ReverseTransform>(srcArray);
+      }
+    }
+  }
+};
+
+} // namespace detail
+
+template <typename TypeList>
+template <typename... T>
+inline VTKM_CONT void VariantArrayHandleBase<TypeList>::AsMultiplexer(
+  vtkm::cont::ArrayHandleMultiplexer<T...>& result) const
+{
+  // Make sure IsValid is clear
+  result = vtkm::cont::ArrayHandleMultiplexer<T...>{};
+  vtkm::ListForEach(
+    detail::VariantArrayHandleTryMultiplexer{}, vtkm::ListTagBase<T...>{}, *this, result);
 }
 
 namespace internal

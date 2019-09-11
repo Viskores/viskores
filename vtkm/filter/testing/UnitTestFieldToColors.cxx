@@ -38,14 +38,13 @@ void TestFieldToColors()
   ftc.SetOutputFieldName("colors");
 
   auto rgbaResult = ftc.Execute(ds);
-  VTKM_TEST_ASSERT(rgbaResult.HasField("colors", vtkm::cont::Field::Association::POINTS),
-                   "Field missing.");
-  vtkm::cont::Field Result = rgbaResult.GetField("colors", vtkm::cont::Field::Association::POINTS);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> resultRGBAHandle;
+  VTKM_TEST_ASSERT(rgbaResult.HasPointField("colors"), "Field missing.");
+  vtkm::cont::Field Result = rgbaResult.GetPointField("colors");
+  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> resultRGBAHandle;
   Result.GetData().CopyTo(resultRGBAHandle);
 
   //values confirmed with ParaView 5.4
-  const vtkm::Vec<vtkm::UInt8, 4> correct_diverging_rgba_values[nvals] = {
+  const vtkm::Vec4ui_8 correct_diverging_rgba_values[nvals] = {
     { 0, 0, 255, 255 },     { 59, 76, 192, 255 },   { 122, 157, 248, 255 }, { 191, 211, 246, 255 },
     { 241, 204, 184, 255 }, { 238, 134, 105, 255 }, { 180, 4, 38, 255 },    { 255, 0, 0, 255 }
   };
@@ -60,17 +59,16 @@ void TestFieldToColors()
   //Now verify that we can switching our output mode
   ftc.SetOutputToRGB();
   auto rgbResult = ftc.Execute(ds);
-  VTKM_TEST_ASSERT(rgbResult.HasField("colors", vtkm::cont::Field::Association::POINTS),
-                   "Field missing.");
-  Result = rgbResult.GetField("colors", vtkm::cont::Field::Association::POINTS);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> resultRGBHandle;
+  VTKM_TEST_ASSERT(rgbResult.HasPointField("colors"), "Field missing.");
+  Result = rgbResult.GetPointField("colors");
+  vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> resultRGBHandle;
   Result.GetData().CopyTo(resultRGBHandle);
 
   //values confirmed with ParaView 5.4
-  const vtkm::Vec<vtkm::UInt8, 3> correct_diverging_rgb_values[nvals] = {
-    { 0, 0, 255 },     { 59, 76, 192 },   { 122, 157, 248 }, { 191, 211, 246 },
-    { 241, 204, 184 }, { 238, 134, 105 }, { 180, 4, 38 },    { 255, 0, 0 }
-  };
+  const vtkm::Vec3ui_8 correct_diverging_rgb_values[nvals] = { { 0, 0, 255 },     { 59, 76, 192 },
+                                                               { 122, 157, 248 }, { 191, 211, 246 },
+                                                               { 241, 204, 184 }, { 238, 134, 105 },
+                                                               { 180, 4, 38 },    { 255, 0, 0 } };
   auto portalRGB = resultRGBHandle.GetPortalConstControl();
   for (std::size_t i = 0; i < nvals; ++i)
   {

@@ -44,23 +44,37 @@ void verify_neighbors(NeighborhoodType neighbors, vtkm::Id index, vtkm::Id3 inde
 
   //Verify the boundary flags first
   VTKM_TEST_ASSERT(((index3d[0] != 0) && (index3d[0] != (POINT_DIMS[0] - 1))) ==
-                     boundary->InXBoundary(1),
-                   "Got invalid X boundary");
+                     boundary->IsRadiusInXBoundary(1),
+                   "Got invalid X radius boundary");
   VTKM_TEST_ASSERT(((index3d[1] != 0) && (index3d[1] != (POINT_DIMS[1] - 1))) ==
-                     boundary->InYBoundary(1),
-                   "Got invalid Y boundary");
+                     boundary->IsRadiusInYBoundary(1),
+                   "Got invalid Y radius boundary");
   VTKM_TEST_ASSERT(((index3d[2] != 0) && (index3d[2] != (POINT_DIMS[2] - 1))) ==
-                     boundary->InZBoundary(1),
-                   "Got invalid Z boundary");
+                     boundary->IsRadiusInZBoundary(1),
+                   "Got invalid Z radius boundary");
+
+  VTKM_TEST_ASSERT((index3d[0] != 0) == boundary->IsNeighborInXBoundary(-1),
+                   "Got invalid X negative neighbor boundary");
+  VTKM_TEST_ASSERT((index3d[1] != 0) == boundary->IsNeighborInYBoundary(-1),
+                   "Got invalid Y negative neighbor boundary");
+  VTKM_TEST_ASSERT((index3d[2] != 0) == boundary->IsNeighborInZBoundary(-1),
+                   "Got invalid Z negative neighbor boundary");
+
+  VTKM_TEST_ASSERT((index3d[0] != (POINT_DIMS[0] - 1)) == boundary->IsNeighborInXBoundary(1),
+                   "Got invalid X positive neighbor boundary");
+  VTKM_TEST_ASSERT((index3d[1] != (POINT_DIMS[1] - 1)) == boundary->IsNeighborInYBoundary(1),
+                   "Got invalid Y positive neighbor boundary");
+  VTKM_TEST_ASSERT((index3d[2] != (POINT_DIMS[2] - 1)) == boundary->IsNeighborInZBoundary(1),
+                   "Got invalid Z positive neighbor boundary");
 
   VTKM_TEST_ASSERT(((boundary->MinNeighborIndices(1)[0] == -1) &&
-                    (boundary->MaxNeighborIndices(1)[0] == 1)) == boundary->InXBoundary(1),
+                    (boundary->MaxNeighborIndices(1)[0] == 1)) == boundary->IsRadiusInXBoundary(1),
                    "Got invalid min/max X indices");
   VTKM_TEST_ASSERT(((boundary->MinNeighborIndices(1)[1] == -1) &&
-                    (boundary->MaxNeighborIndices(1)[1] == 1)) == boundary->InYBoundary(1),
+                    (boundary->MaxNeighborIndices(1)[1] == 1)) == boundary->IsRadiusInYBoundary(1),
                    "Got invalid min/max Y indices");
   VTKM_TEST_ASSERT(((boundary->MinNeighborIndices(1)[2] == -1) &&
-                    (boundary->MaxNeighborIndices(1)[2] == 1)) == boundary->InZBoundary(1),
+                    (boundary->MaxNeighborIndices(1)[2] == 1)) == boundary->IsRadiusInZBoundary(1),
                    "Got invalid min/max Z indices");
 
   T forwardX = neighbors.Get(1, 0, 0);
@@ -91,8 +105,8 @@ struct FetchArrayNeighborhoodInTests
 
     vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals;
     connectivityInternals.SetPointDimensions(POINT_DIMS);
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                       vtkm::TopologyElementTagPoint,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                       vtkm::TopologyElementTagCell,
                                        3>
       connectivity(connectivityInternals);
 

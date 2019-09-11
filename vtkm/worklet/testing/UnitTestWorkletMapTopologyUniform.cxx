@@ -25,7 +25,7 @@
 namespace test_uniform
 {
 
-class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
+class MaxPointOrCellValue : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(FieldInCell inCells,
@@ -59,7 +59,7 @@ public:
   }
 };
 
-struct CheckStructuredUniformPointCoords : public vtkm::worklet::WorkletMapPointToCell
+struct CheckStructuredUniformPointCoords : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn topology, FieldInPoint pointCoords);
   using ExecutionSignature = void(_2);
@@ -117,7 +117,7 @@ static void TestMaxPointOrCell()
     // The worklet does not work with general types because
     // of the way we get cell indices. We need to make that
     // part more flexible.
-    dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
     result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
@@ -135,7 +135,7 @@ static void TestAvgPointToCell()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  auto cellset = dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D());
+  auto cellset = dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D());
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(
@@ -188,7 +188,7 @@ static void TestAvgCellToPoint()
     // The worklet does not work with general types because
     // of the way we get cell indices. We need to make that
     // part more flexible.
-    dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
     dataSet.GetField("cellvar"),
     result);
 

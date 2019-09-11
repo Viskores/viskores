@@ -13,8 +13,6 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
-
 namespace vtkm
 {
 namespace filter
@@ -36,11 +34,11 @@ inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // Get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newCoords;
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newCoords;
   vtkm::cont::CellSetExplicit<> newCellset;
 
-  this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
+  this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
                     this->FeatureAngle,
                     field,
                     input.GetCoordinateSystem().GetData(),
@@ -48,7 +46,7 @@ inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
                     newCellset);
 
   vtkm::cont::DataSet output;
-  output.AddCellSet(newCellset);
+  output.SetCellSet(newCellset);
   output.AddCoordinateSystem(
     vtkm::cont::CoordinateSystem(input.GetCoordinateSystem().GetName(), newCoords));
   return output;

@@ -18,6 +18,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -46,7 +47,7 @@ namespace worklet
 struct ExternalFaces
 {
   //Worklet that returns the number of external faces for each structured cell
-  class NumExternalFacesPerStructuredCell : public vtkm::worklet::WorkletMapPointToCell
+  class NumExternalFacesPerStructuredCell : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet,
@@ -56,8 +57,8 @@ struct ExternalFaces
     using InputDomain = _1;
 
     VTKM_CONT
-    NumExternalFacesPerStructuredCell(const vtkm::Vec<vtkm::Float64, 3>& min_point,
-                                      const vtkm::Vec<vtkm::Float64, 3>& max_point)
+    NumExternalFacesPerStructuredCell(const vtkm::Vec3f_64& min_point,
+                                      const vtkm::Vec3f_64& max_point)
       : MinPoint(min_point)
       , MaxPoint(max_point)
     {
@@ -112,13 +113,13 @@ struct ExternalFaces
     }
 
   private:
-    vtkm::Vec<vtkm::Float64, 3> MinPoint;
-    vtkm::Vec<vtkm::Float64, 3> MaxPoint;
+    vtkm::Vec3f_64 MinPoint;
+    vtkm::Vec3f_64 MaxPoint;
   };
 
 
   //Worklet that finds face connectivity for each structured cell
-  class BuildConnectivityStructured : public vtkm::worklet::WorkletMapPointToCell
+  class BuildConnectivityStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet,
@@ -140,8 +141,7 @@ struct ExternalFaces
     }
 
     VTKM_CONT
-    BuildConnectivityStructured(const vtkm::Vec<vtkm::Float64, 3>& min_point,
-                                const vtkm::Vec<vtkm::Float64, 3>& max_point)
+    BuildConnectivityStructured(const vtkm::Vec3f_64& min_point, const vtkm::Vec3f_64& max_point)
       : MinPoint(min_point)
       , MaxPoint(max_point)
     {
@@ -304,12 +304,12 @@ struct ExternalFaces
     }
 
   private:
-    vtkm::Vec<vtkm::Float64, 3> MinPoint;
-    vtkm::Vec<vtkm::Float64, 3> MaxPoint;
+    vtkm::Vec3f_64 MinPoint;
+    vtkm::Vec3f_64 MaxPoint;
   };
 
   //Worklet that returns the number of faces for each cell/shape
-  class NumFacesPerCell : public vtkm::worklet::WorkletMapPointToCell
+  class NumFacesPerCell : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet, FieldOut numFacesInCell);
@@ -324,14 +324,14 @@ struct ExternalFaces
   };
 
   //Worklet that identifies a cell face by a hash value. Not necessarily completely unique.
-  class FaceHash : public vtkm::worklet::WorkletMapPointToCell
+  class FaceHash : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
                                   FieldOut faceHashes,
                                   FieldOut originCells,
                                   FieldOut originFaces);
-    using ExecutionSignature = void(_2, _3, _4, CellShape, FromIndices, InputIndex, VisitIndex);
+    using ExecutionSignature = void(_2, _3, _4, CellShape, PointIndices, InputIndex, VisitIndex);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -559,7 +559,7 @@ public:
     }
   };
 
-  class IsPolyDataCell : public vtkm::worklet::WorkletMapPointToCell
+  class IsPolyDataCell : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet, FieldOut isPolyDataCell);
@@ -573,7 +573,7 @@ public:
     }
   };
 
-  class CountPolyDataCellPoints : public vtkm::worklet::WorkletMapPointToCell
+  class CountPolyDataCellPoints : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -585,7 +585,7 @@ public:
     VTKM_EXEC vtkm::Id operator()(vtkm::Id count) const { return count; }
   };
 
-  class PassPolyDataCells : public vtkm::worklet::WorkletMapPointToCell
+  class PassPolyDataCells : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -679,8 +679,8 @@ public:
                                                  ConnectivityStorage,
                                                  OffsetsStorage>& outCellSet)
   {
-    vtkm::Vec<vtkm::Float64, 3> MinPoint;
-    vtkm::Vec<vtkm::Float64, 3> MaxPoint;
+    vtkm::Vec3f_64 MinPoint;
+    vtkm::Vec3f_64 MaxPoint;
 
     vtkm::Id3 PointDimensions = inCellSet.GetPointDimensions();
 
@@ -691,21 +691,11 @@ public:
     auto coordData = coord.GetData();
     if (coordData.IsType<CartesianArrayHandle>())
     {
-      auto vertices = coordData.Cast<CartesianArrayHandle>();
-
-      MinPoint[0] =
-        static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetFirstPortal().Get(0));
-      MinPoint[1] =
-        static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetSecondPortal().Get(0));
-      MinPoint[2] =
-        static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetThirdPortal().Get(0));
-
-      MaxPoint[0] = static_cast<vtkm::Float64>(
-        vertices.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1));
-      MaxPoint[1] = static_cast<vtkm::Float64>(
-        vertices.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1));
-      MaxPoint[2] = static_cast<vtkm::Float64>(
-        vertices.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1));
+      const auto vertices = coordData.Cast<CartesianArrayHandle>();
+      const auto vertsSize = vertices.GetNumberOfValues();
+      const auto tmp = vtkm::cont::ArrayGetValues({ 0, vertsSize - 1 }, vertices);
+      MinPoint = tmp[0];
+      MaxPoint = tmp[1];
     }
     else
     {
@@ -713,9 +703,9 @@ public:
       auto Coordinates = vertices.GetPortalConstControl();
 
       MinPoint = Coordinates.GetOrigin();
-      vtkm::Vec<vtkm::Float64, 3> spacing = Coordinates.GetSpacing();
+      vtkm::Vec3f_64 spacing = Coordinates.GetSpacing();
 
-      vtkm::Vec<vtkm::Float64, 3> unitLength;
+      vtkm::Vec3f_64 unitLength;
       unitLength[0] = static_cast<vtkm::Float64>(PointDimensions[0] - 1);
       unitLength[1] = static_cast<vtkm::Float64>(PointDimensions[1] - 1);
       unitLength[2] = static_cast<vtkm::Float64>(PointDimensions[2] - 1);

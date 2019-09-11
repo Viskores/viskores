@@ -369,6 +369,62 @@ void TryNewInstance(T, ArrayVariantType originalArray)
   CheckArrayVariant(newArray, vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 }
 
+template <typename T, typename ArrayVariantType>
+void TryAsMultiplexer(T, ArrayVariantType sourceArray)
+{
+  auto originalArray = sourceArray.template Cast<vtkm::cont::ArrayHandle<T>>();
+
+  {
+    std::cout << "Get multiplex array through direct type." << std::endl;
+    using MultiplexerType = vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<T>,
+                                                               vtkm::cont::ArrayHandleConstant<T>>;
+    MultiplexerType multiplexArray = sourceArray.template AsMultiplexer<MultiplexerType>();
+
+    VTKM_TEST_ASSERT(multiplexArray.IsValid());
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.GetPortalConstControl(),
+                                        originalArray.GetPortalConstControl()));
+  }
+
+  {
+    std::cout << "Get multiplex array through cast type." << std::endl;
+    using CastT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::Float64>;
+    using MultiplexerType = vtkm::cont::ArrayHandleMultiplexer<
+      vtkm::cont::ArrayHandle<CastT>,
+      vtkm::cont::ArrayHandleCast<CastT, vtkm::cont::ArrayHandle<T>>>;
+    MultiplexerType multiplexArray = sourceArray.template AsMultiplexer<MultiplexerType>();
+
+    VTKM_TEST_ASSERT(multiplexArray.IsValid());
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.GetPortalConstControl(),
+                                        originalArray.GetPortalConstControl()));
+  }
+
+  {
+    std::cout << "Make sure multiplex array prefers direct array (1st arg)" << std::endl;
+    using MultiplexerType = vtkm::cont::ArrayHandleMultiplexer<
+      vtkm::cont::ArrayHandle<T>,
+      vtkm::cont::ArrayHandleCast<T, vtkm::cont::ArrayHandle<T>>>;
+    MultiplexerType multiplexArray = sourceArray.template AsMultiplexer<MultiplexerType>();
+
+    VTKM_TEST_ASSERT(multiplexArray.IsValid());
+    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 0);
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.GetPortalConstControl(),
+                                        originalArray.GetPortalConstControl()));
+  }
+
+  {
+    std::cout << "Make sure multiplex array prefers direct array (2nd arg)" << std::endl;
+    using MultiplexerType =
+      vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandleCast<T, vtkm::cont::ArrayHandle<T>>,
+                                         vtkm::cont::ArrayHandle<T>>;
+    MultiplexerType multiplexArray = sourceArray.template AsMultiplexer<MultiplexerType>();
+
+    VTKM_TEST_ASSERT(multiplexArray.IsValid());
+    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 1);
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.GetPortalConstControl(),
+                                        originalArray.GetPortalConstControl()));
+  }
+}
+
 template <typename T>
 void TryDefaultType(T)
 {
@@ -377,6 +433,8 @@ void TryDefaultType(T)
   CheckArrayVariant(array, vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 
   TryNewInstance(T(), array);
+
+  TryAsMultiplexer(T(), array);
 }
 
 struct TryBasicVTKmType
@@ -519,9 +577,9 @@ void TestVariantArrayHandle()
   std::cout << "*** vtkm::Float64 *****************" << std::endl;
   TryDefaultType(vtkm::Float64());
   std::cout << "*** vtkm::Vec<Float32,3> **********" << std::endl;
-  TryDefaultType(vtkm::Vec<vtkm::Float32, 3>());
+  TryDefaultType(vtkm::Vec3f_32());
   std::cout << "*** vtkm::Vec<Float64,3> **********" << std::endl;
-  TryDefaultType(vtkm::Vec<vtkm::Float64, 3>());
+  TryDefaultType(vtkm::Vec3f_64());
 
   std::cout << "Try exemplar VTK-m types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryBasicVTKmType());

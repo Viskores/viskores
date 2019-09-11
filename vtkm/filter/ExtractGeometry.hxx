@@ -13,8 +13,6 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
-
 namespace
 {
 
@@ -80,7 +78,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   // extract the input cell set and coordinates
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
@@ -92,12 +90,12 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
                     this->ExtractInside,
                     this->ExtractBoundaryCells,
                     this->ExtractOnlyBoundaryCells);
-  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(worker);
+  vtkm::filter::ApplyPolicyCellSet(cells, policy).CastAndCall(worker);
 
   // create the output dataset
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-  output.AddCellSet(outCells);
+  output.SetCellSet(outCells);
   return output;
 }
 

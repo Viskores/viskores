@@ -25,8 +25,8 @@ template <typename ShapeStorageTag,
 VTKM_CONT CellSetExplicit<ShapeStorageTag,
                           NumIndicesStorageTag,
                           ConnectivityStorageTag,
-                          OffsetsStorageTag>::CellSetExplicit(const std::string& name)
-  : CellSet(name)
+                          OffsetsStorageTag>::CellSetExplicit()
+  : CellSet()
   , Data(std::make_shared<Internals>())
 {
 }
@@ -103,11 +103,11 @@ void CellSetExplicit<ShapeStorageTag,
                      ConnectivityStorageTag,
                      OffsetsStorageTag>::PrintSummary(std::ostream& out) const
 {
-  out << "   ExplicitCellSet: " << this->Name << std::endl;
-  out << "   PointToCell: " << std::endl;
-  this->Data->PointToCell.PrintSummary(out);
-  out << "   CellToPoint: " << std::endl;
-  this->Data->CellToPoint.PrintSummary(out);
+  out << "   ExplicitCellSet: " << std::endl;
+  out << "   VisitCellsWithPoints: " << std::endl;
+  this->Data->VisitCellsWithPoints.PrintSummary(out);
+  out << "   VisitPointsWithCells: " << std::endl;
+  this->Data->VisitPointsWithCells.PrintSummary(out);
 }
 
 template <typename ShapeStorageTag,
@@ -119,8 +119,8 @@ void CellSetExplicit<ShapeStorageTag,
                      ConnectivityStorageTag,
                      OffsetStorageTag>::ReleaseResourcesExecution()
 {
-  this->Data->PointToCell.ReleaseResourcesExecution();
-  this->Data->CellToPoint.ReleaseResourcesExecution();
+  this->Data->VisitCellsWithPoints.ReleaseResourcesExecution();
+  this->Data->VisitPointsWithCells.ReleaseResourcesExecution();
 }
 
 //----------------------------------------------------------------------------
@@ -134,7 +134,7 @@ vtkm::Id CellSetExplicit<ShapeStorageTag,
                          ConnectivityStorageTag,
                          OffsetsStorageTag>::GetNumberOfCells() const
 {
-  return this->Data->PointToCell.GetNumberOfElements();
+  return this->Data->VisitCellsWithPoints.GetNumberOfElements();
 }
 
 template <typename ShapeStorageTag,
@@ -224,7 +224,7 @@ VTKM_CONT vtkm::IdComponent
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
   GetNumberOfPointsInCell(vtkm::Id cellIndex) const
 {
-  return this->Data->PointToCell.NumIndices.GetPortalConstControl().Get(cellIndex);
+  return this->Data->VisitCellsWithPoints.NumIndices.GetPortalConstControl().Get(cellIndex);
 }
 
 template <typename ShapeStorageTag,
@@ -236,7 +236,7 @@ VTKM_CONT vtkm::UInt8 CellSetExplicit<ShapeStorageTag,
                                       ConnectivityStorageTag,
                                       OffsetsStorageTag>::GetCellShape(vtkm::Id cellIndex) const
 {
-  return this->Data->PointToCell.Shapes.GetPortalConstControl().Get(cellIndex);
+  return this->Data->VisitCellsWithPoints.Shapes.GetPortalConstControl().Get(cellIndex);
 }
 
 template <typename ShapeStorageTag,
@@ -248,12 +248,12 @@ VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
   GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id, ItemTupleLength>& ids) const
 {
-  this->Data->PointToCell.BuildIndexOffsets(vtkm::cont::DeviceAdapterTagAny{});
+  this->Data->VisitCellsWithPoints.BuildIndexOffsets(vtkm::cont::DeviceAdapterTagAny{});
   vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
-  vtkm::Id start = this->Data->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
+  vtkm::Id start = this->Data->VisitCellsWithPoints.IndexOffsets.GetPortalConstControl().Get(index);
   for (vtkm::IdComponent i = 0; i < numIndices && i < ItemTupleLength; i++)
   {
-    ids[i] = this->Data->PointToCell.Connectivity.GetPortalConstControl().Get(start + i);
+    ids[i] = this->Data->VisitCellsWithPoints.Connectivity.GetPortalConstControl().Get(start + i);
   }
 }
 
@@ -265,15 +265,17 @@ VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
   GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
 {
-  this->Data->PointToCell.BuildIndexOffsets(vtkm::cont::DeviceAdapterTagAny{});
+  this->Data->VisitCellsWithPoints.BuildIndexOffsets(vtkm::cont::DeviceAdapterTagAny{});
   vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
   ids.Allocate(numIndices);
-  vtkm::Id start = this->Data->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
+  vtkm::Id start = this->Data->VisitCellsWithPoints.IndexOffsets.GetPortalConstControl().Get(index);
   vtkm::cont::ArrayHandle<vtkm::Id>::PortalControl idPortal = ids.GetPortalControl();
-  auto PtCellPortal = this->Data->PointToCell.Connectivity.GetPortalConstControl();
+  auto PtCellPortal = this->Data->VisitCellsWithPoints.Connectivity.GetPortalConstControl();
 
   for (vtkm::IdComponent i = 0; i < numIndices && i < numIndices; i++)
+  {
     idPortal.Set(i, PtCellPortal.Get(start + i));
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -288,10 +290,10 @@ VTKM_CONT void CellSetExplicit<ShapeStorageTag,
                                OffsetsStorageTag>::PrepareToAddCells(vtkm::Id numCells,
                                                                      vtkm::Id connectivityMaxLen)
 {
-  this->Data->PointToCell.Shapes.Allocate(numCells);
-  this->Data->PointToCell.NumIndices.Allocate(numCells);
-  this->Data->PointToCell.Connectivity.Allocate(connectivityMaxLen);
-  this->Data->PointToCell.IndexOffsets.Allocate(numCells);
+  this->Data->VisitCellsWithPoints.Shapes.Allocate(numCells);
+  this->Data->VisitCellsWithPoints.NumIndices.Allocate(numCells);
+  this->Data->VisitCellsWithPoints.Connectivity.Allocate(connectivityMaxLen);
+  this->Data->VisitCellsWithPoints.IndexOffsets.Allocate(numCells);
   this->Data->NumberOfCellsAdded = 0;
   this->Data->ConnectivityAdded = 0;
 }
@@ -314,27 +316,28 @@ CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, O
     throw vtkm::cont::ErrorBadValue("Not enough indices given to CellSetSingleType::AddCell.");
   }
 
-  if (this->Data->NumberOfCellsAdded >= this->Data->PointToCell.Shapes.GetNumberOfValues())
+  if (this->Data->NumberOfCellsAdded >= this->Data->VisitCellsWithPoints.Shapes.GetNumberOfValues())
   {
     throw vtkm::cont::ErrorBadValue("Added more cells then expected.");
   }
   if (this->Data->ConnectivityAdded + numVertices >
-      this->Data->PointToCell.Connectivity.GetNumberOfValues())
+      this->Data->VisitCellsWithPoints.Connectivity.GetNumberOfValues())
   {
     throw vtkm::cont::ErrorBadValue(
       "Connectivity increased passed estimated maximum connectivity.");
   }
 
-  this->Data->PointToCell.Shapes.GetPortalControl().Set(this->Data->NumberOfCellsAdded, cellType);
-  this->Data->PointToCell.NumIndices.GetPortalControl().Set(this->Data->NumberOfCellsAdded,
-                                                            numVertices);
+  this->Data->VisitCellsWithPoints.Shapes.GetPortalControl().Set(this->Data->NumberOfCellsAdded,
+                                                                 cellType);
+  this->Data->VisitCellsWithPoints.NumIndices.GetPortalControl().Set(this->Data->NumberOfCellsAdded,
+                                                                     numVertices);
   for (vtkm::IdComponent iVec = 0; iVec < numVertices; ++iVec)
   {
-    this->Data->PointToCell.Connectivity.GetPortalControl().Set(
+    this->Data->VisitCellsWithPoints.Connectivity.GetPortalControl().Set(
       this->Data->ConnectivityAdded + iVec, Traits::GetComponent(ids, iVec));
   }
-  this->Data->PointToCell.IndexOffsets.GetPortalControl().Set(this->Data->NumberOfCellsAdded,
-                                                              this->Data->ConnectivityAdded);
+  this->Data->VisitCellsWithPoints.IndexOffsets.GetPortalControl().Set(
+    this->Data->NumberOfCellsAdded, this->Data->ConnectivityAdded);
   this->Data->NumberOfCellsAdded++;
   this->Data->ConnectivityAdded += numVertices;
 }
@@ -349,9 +352,9 @@ VTKM_CONT void CellSetExplicit<ShapeStorageTag,
                                OffsetsStorageTag>::CompleteAddingCells(vtkm::Id numPoints)
 {
   this->Data->NumberOfPoints = numPoints;
-  this->Data->PointToCell.Connectivity.Shrink(this->Data->ConnectivityAdded);
-  this->Data->PointToCell.ElementsValid = true;
-  this->Data->PointToCell.IndexOffsetsValid = true;
+  this->Data->VisitCellsWithPoints.Connectivity.Shrink(this->Data->ConnectivityAdded);
+  this->Data->VisitCellsWithPoints.ElementsValid = true;
+  this->Data->VisitCellsWithPoints.IndexOffsetsValid = true;
 
   if (this->Data->NumberOfCellsAdded != this->GetNumberOfCells())
   {
@@ -377,20 +380,20 @@ CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, O
        const vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>& offsets)
 {
   this->Data->NumberOfPoints = numPoints;
-  this->Data->PointToCell.Shapes = cellTypes;
-  this->Data->PointToCell.NumIndices = numIndices;
-  this->Data->PointToCell.Connectivity = connectivity;
+  this->Data->VisitCellsWithPoints.Shapes = cellTypes;
+  this->Data->VisitCellsWithPoints.NumIndices = numIndices;
+  this->Data->VisitCellsWithPoints.Connectivity = connectivity;
 
-  this->Data->PointToCell.ElementsValid = true;
+  this->Data->VisitCellsWithPoints.ElementsValid = true;
 
   if (offsets.GetNumberOfValues() == cellTypes.GetNumberOfValues())
   {
-    this->Data->PointToCell.IndexOffsets = offsets;
-    this->Data->PointToCell.IndexOffsetsValid = true;
+    this->Data->VisitCellsWithPoints.IndexOffsets = offsets;
+    this->Data->VisitCellsWithPoints.IndexOffsetsValid = true;
   }
   else
   {
-    this->Data->PointToCell.IndexOffsetsValid = false;
+    this->Data->VisitCellsWithPoints.IndexOffsetsValid = false;
     if (offsets.GetNumberOfValues() != 0)
     {
       throw vtkm::cont::ErrorBadValue("Explicit cell offsets array unexpected size. "
@@ -398,7 +401,7 @@ CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, O
     }
   }
 
-  this->ResetConnectivity(TopologyElementTagCell{}, TopologyElementTagPoint{});
+  this->ResetConnectivity(TopologyElementTagPoint{}, TopologyElementTagCell{});
 }
 
 //----------------------------------------------------------------------------
@@ -407,19 +410,22 @@ template <typename ShapeStorageTag,
           typename NumIndicesStorageTag,
           typename ConnectivityStorageTag,
           typename OffsetsStorageTag>
-template <typename Device, typename FromTopology, typename ToTopology>
+template <typename Device, typename VisitTopology, typename IncidentTopology>
 auto CellSetExplicit<ShapeStorageTag,
                      NumIndicesStorageTag,
                      ConnectivityStorageTag,
-                     OffsetsStorageTag>::PrepareForInput(Device, FromTopology, ToTopology) const ->
-  typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType
+                     OffsetsStorageTag>::PrepareForInput(Device,
+                                                         VisitTopology,
+                                                         IncidentTopology) const ->
+  typename ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType
 {
-  this->BuildConnectivity(Device{}, FromTopology(), ToTopology());
+  this->BuildConnectivity(Device{}, VisitTopology(), IncidentTopology());
 
-  const auto& connectivity = this->GetConnectivity(FromTopology(), ToTopology());
+  const auto& connectivity = this->GetConnectivity(VisitTopology(), IncidentTopology());
   VTKM_ASSERT(connectivity.ElementsValid);
 
-  using ExecObjType = typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType;
+  using ExecObjType =
+    typename ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType;
   return ExecObjType(connectivity.Shapes.PrepareForInput(Device()),
                      connectivity.NumIndices.PrepareForInput(Device()),
                      connectivity.Connectivity.PrepareForInput(Device()),
@@ -432,63 +438,64 @@ template <typename ShapeStorageTag,
           typename NumIndicesStorageTag,
           typename ConnectivityStorageTag,
           typename OffsetsStorageTag>
-template <typename FromTopology, typename ToTopology>
+template <typename VisitTopology, typename IncidentTopology>
 VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                NumIndicesStorageTag,
                                ConnectivityStorageTag,
-                               OffsetsStorageTag>::GetShapesArray(FromTopology, ToTopology) const
-  -> const typename ConnectivityChooser<FromTopology, ToTopology>::ShapeArrayType&
+                               OffsetsStorageTag>::GetShapesArray(VisitTopology,
+                                                                  IncidentTopology) const -> const
+  typename ConnectivityChooser<VisitTopology, IncidentTopology>::ShapeArrayType&
 {
-  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
-  return this->GetConnectivity(FromTopology(), ToTopology()).Shapes;
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, VisitTopology(), IncidentTopology());
+  return this->GetConnectivity(VisitTopology(), IncidentTopology()).Shapes;
 }
 
 template <typename ShapeStorageTag,
           typename NumIndicesStorageTag,
           typename ConnectivityStorageTag,
           typename OffsetsStorageTag>
-template <typename FromTopology, typename ToTopology>
+template <typename VisitTopology, typename IncidentTopology>
 VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                NumIndicesStorageTag,
                                ConnectivityStorageTag,
-                               OffsetsStorageTag>::GetNumIndicesArray(FromTopology,
-                                                                      ToTopology) const -> const
-  typename ConnectivityChooser<FromTopology, ToTopology>::NumIndicesArrayType&
+                               OffsetsStorageTag>::GetNumIndicesArray(VisitTopology,
+                                                                      IncidentTopology) const
+  -> const typename ConnectivityChooser<VisitTopology, IncidentTopology>::NumIndicesArrayType&
 {
-  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
-  return this->GetConnectivity(FromTopology(), ToTopology()).NumIndices;
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, VisitTopology(), IncidentTopology());
+  return this->GetConnectivity(VisitTopology(), IncidentTopology()).NumIndices;
 }
 
 template <typename ShapeStorageTag,
           typename NumIndicesStorageTag,
           typename ConnectivityStorageTag,
           typename OffsetsStorageTag>
-template <typename FromTopology, typename ToTopology>
+template <typename VisitTopology, typename IncidentTopology>
 VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                NumIndicesStorageTag,
                                ConnectivityStorageTag,
-                               OffsetsStorageTag>::GetConnectivityArray(FromTopology,
-                                                                        ToTopology) const -> const
-  typename ConnectivityChooser<FromTopology, ToTopology>::ConnectivityArrayType&
+                               OffsetsStorageTag>::GetConnectivityArray(VisitTopology,
+                                                                        IncidentTopology) const
+  -> const typename ConnectivityChooser<VisitTopology, IncidentTopology>::ConnectivityArrayType&
 {
-  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
-  return this->GetConnectivity(FromTopology(), ToTopology()).Connectivity;
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, VisitTopology(), IncidentTopology());
+  return this->GetConnectivity(VisitTopology(), IncidentTopology()).Connectivity;
 }
 
 template <typename ShapeStorageTag,
           typename NumIndicesStorageTag,
           typename ConnectivityStorageTag,
           typename OffsetsStorageTag>
-template <typename FromTopology, typename ToTopology>
+template <typename VisitTopology, typename IncidentTopology>
 VTKM_CONT auto CellSetExplicit<ShapeStorageTag,
                                NumIndicesStorageTag,
                                ConnectivityStorageTag,
-                               OffsetsStorageTag>::GetIndexOffsetArray(FromTopology,
-                                                                       ToTopology) const -> const
-  typename ConnectivityChooser<FromTopology, ToTopology>::IndexOffsetArrayType&
+                               OffsetsStorageTag>::GetIndexOffsetArray(VisitTopology,
+                                                                       IncidentTopology) const
+  -> const typename ConnectivityChooser<VisitTopology, IncidentTopology>::IndexOffsetArrayType&
 {
-  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, FromTopology(), ToTopology());
-  return this->GetConnectivity(FromTopology(), ToTopology()).IndexOffsets;
+  this->BuildConnectivity(vtkm::cont::DeviceAdapterTagAny{}, VisitTopology(), IncidentTopology());
+  return this->GetConnectivity(VisitTopology(), IncidentTopology()).IndexOffsets;
 }
 
 //----------------------------------------------------------------------------
@@ -521,13 +528,13 @@ void CellSetExplicit<ShapeStorageTag,
   }
 
   // TODO: implement actual deep-copy of the arrays
-  auto pt = vtkm::TopologyElementTagPoint{};
   auto ct = vtkm::TopologyElementTagCell{};
+  auto pt = vtkm::TopologyElementTagPoint{};
   this->Fill(other->GetNumberOfPoints(),
-             other->GetShapesArray(pt, ct),
-             other->GetNumIndicesArray(pt, ct),
-             other->GetConnectivityArray(pt, ct),
-             other->GetIndexOffsetArray(pt, ct));
+             other->GetShapesArray(ct, pt),
+             other->GetNumIndicesArray(ct, pt),
+             other->GetConnectivityArray(ct, pt),
+             other->GetIndexOffsetArray(ct, pt));
 }
 
 //----------------------------------------------------------------------------
@@ -535,32 +542,33 @@ void CellSetExplicit<ShapeStorageTag,
 namespace detail
 {
 
-template <typename PointToCellConnectivity>
-struct BuildPointToCellConnectivityFunctor
+template <typename VisitCellsWithPointsConnectivity>
+struct BuildVisitCellsWithPointsConnectivityFunctor
 {
-  explicit BuildPointToCellConnectivityFunctor(PointToCellConnectivity& pointToCell)
-    : PointToCell(&pointToCell)
+  explicit BuildVisitCellsWithPointsConnectivityFunctor(VisitCellsWithPointsConnectivity& obj)
+    : VisitCellsWithPoints(&obj)
   {
   }
 
   template <typename Device>
   bool operator()(Device) const
   {
-    this->PointToCell->BuildIndexOffsets(Device());
+    this->VisitCellsWithPoints->BuildIndexOffsets(Device());
     return true;
   }
 
-  PointToCellConnectivity* PointToCell;
+  VisitCellsWithPointsConnectivity* VisitCellsWithPoints;
 };
 
-template <typename PointToCellConnectivity, typename CellToPointConnectivity>
-struct BuildCellToPointConnectivityFunctor
+template <typename VisitCellsWithPointsConnectivity, typename VisitPointsWithCellsConnectivity>
+struct BuildVisitPointsWithCellsConnectivityFunctor
 {
-  BuildCellToPointConnectivityFunctor(PointToCellConnectivity& pointToCell,
-                                      CellToPointConnectivity& cellToPoint,
-                                      vtkm::Id numberOfPoints)
-    : PointToCell(&pointToCell)
-    , CellToPoint(&cellToPoint)
+  BuildVisitPointsWithCellsConnectivityFunctor(
+    VisitCellsWithPointsConnectivity& visitCellsWithPoints,
+    VisitPointsWithCellsConnectivity& visitPointsWithCells,
+    vtkm::Id numberOfPoints)
+    : VisitCellsWithPoints(&visitCellsWithPoints)
+    , VisitPointsWithCells(&visitPointsWithCells)
     , NumberOfPoints(numberOfPoints)
   {
   }
@@ -568,15 +576,15 @@ struct BuildCellToPointConnectivityFunctor
   template <typename Device>
   bool operator()(Device) const
   {
-    this->PointToCell->BuildIndexOffsets(Device());
-    internal::ComputeCellToPointConnectivity(
-      *this->CellToPoint, *this->PointToCell, this->NumberOfPoints, Device());
-    this->CellToPoint->BuildIndexOffsets(Device());
+    this->VisitCellsWithPoints->BuildIndexOffsets(Device());
+    internal::ComputeVisitPointsWithCellsConnectivity(
+      *this->VisitPointsWithCells, *this->VisitCellsWithPoints, this->NumberOfPoints, Device());
+    this->VisitPointsWithCells->BuildIndexOffsets(Device());
     return true;
   }
 
-  PointToCellConnectivity* PointToCell;
-  CellToPointConnectivity* CellToPoint;
+  VisitCellsWithPointsConnectivity* VisitCellsWithPoints;
+  VisitPointsWithCellsConnectivity* VisitPointsWithCells;
   vtkm::Id NumberOfPoints;
 };
 
@@ -589,19 +597,20 @@ template <typename ShapeStorageTag,
 VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
   BuildConnectivity(vtkm::cont::DeviceAdapterId device,
-                    vtkm::TopologyElementTagPoint,
-                    vtkm::TopologyElementTagCell) const
+                    vtkm::TopologyElementTagCell,
+                    vtkm::TopologyElementTagPoint) const
 {
-  using PointToCellConnectivity =
-    typename ConnectivityChooser<vtkm::TopologyElementTagPoint,
-                                 vtkm::TopologyElementTagCell>::ConnectivityType;
+  using VisitCellsWithPointsConnectivity =
+    typename ConnectivityChooser<vtkm::TopologyElementTagCell,
+                                 vtkm::TopologyElementTagPoint>::ConnectivityType;
 
-  VTKM_ASSERT(this->Data->PointToCell.ElementsValid);
-  if (!this->Data->PointToCell.IndexOffsetsValid)
+  VTKM_ASSERT(this->Data->VisitCellsWithPoints.ElementsValid);
+  if (!this->Data->VisitCellsWithPoints.IndexOffsetsValid)
   {
     auto self = const_cast<Thisclass*>(this);
     auto functor =
-      detail::BuildPointToCellConnectivityFunctor<PointToCellConnectivity>(self->Data->PointToCell);
+      detail::BuildVisitCellsWithPointsConnectivityFunctor<VisitCellsWithPointsConnectivity>(
+        self->Data->VisitCellsWithPoints);
     if (!vtkm::cont::TryExecuteOnDevice(device, functor))
     {
       throw vtkm::cont::ErrorExecution("Failed to run BuildConnectivity.");
@@ -616,22 +625,26 @@ template <typename ShapeStorageTag,
 VTKM_CONT void
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
   BuildConnectivity(vtkm::cont::DeviceAdapterId device,
-                    vtkm::TopologyElementTagCell,
-                    vtkm::TopologyElementTagPoint) const
+                    vtkm::TopologyElementTagPoint,
+                    vtkm::TopologyElementTagCell) const
 {
-  using PointToCellConnectivity =
-    typename ConnectivityChooser<vtkm::TopologyElementTagPoint,
-                                 vtkm::TopologyElementTagCell>::ConnectivityType;
-  using CellToPointConnectivity =
+  using VisitCellsWithPointsConnectivity =
     typename ConnectivityChooser<vtkm::TopologyElementTagCell,
                                  vtkm::TopologyElementTagPoint>::ConnectivityType;
+  using VisitPointsWithCellsConnectivity =
+    typename ConnectivityChooser<vtkm::TopologyElementTagPoint,
+                                 vtkm::TopologyElementTagCell>::ConnectivityType;
 
-  if (!this->Data->CellToPoint.ElementsValid || !this->Data->CellToPoint.IndexOffsetsValid)
+  if (!this->Data->VisitPointsWithCells.ElementsValid ||
+      !this->Data->VisitPointsWithCells.IndexOffsetsValid)
   {
     auto self = const_cast<Thisclass*>(this);
     auto functor =
-      detail::BuildCellToPointConnectivityFunctor<PointToCellConnectivity, CellToPointConnectivity>(
-        self->Data->PointToCell, self->Data->CellToPoint, this->Data->NumberOfPoints);
+      detail::BuildVisitPointsWithCellsConnectivityFunctor<VisitCellsWithPointsConnectivity,
+                                                           VisitPointsWithCellsConnectivity>(
+        self->Data->VisitCellsWithPoints,
+        self->Data->VisitPointsWithCells,
+        this->Data->NumberOfPoints);
     if (!vtkm::cont::TryExecuteOnDevice(device, functor))
     {
       throw vtkm::cont::ErrorExecution("Failed to run BuildConnectivity.");

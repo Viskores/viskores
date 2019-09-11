@@ -7,7 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 
 #include <vtkm/cont/ArrayCopy.h>
 
@@ -89,23 +89,21 @@ static vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numCells),
                         cellFieldArray);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
+  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   static constexpr vtkm::IdComponent ndim = 3;
-  vtkm::cont::CellSetStructured<ndim> cellSet("cells");
+  vtkm::cont::CellSetStructured<ndim> cellSet;
   cellSet.SetPointDimensions(vdims);
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
-  dataSet.AddField(
-    vtkm::cont::Field("nodevar", vtkm::cont::Field::Association::POINTS, pointFieldArray));
-  dataSet.AddField(vtkm::cont::Field(
-    "cellvar", vtkm::cont::Field::Association::CELL_SET, "cells", cellFieldArray));
+  dataSet.AddField(vtkm::cont::make_FieldPoint("nodevar", pointFieldArray));
+  dataSet.AddField(vtkm::cont::make_FieldCell("cellvar", cellFieldArray));
 
   return dataSet;
 }
@@ -119,7 +117,7 @@ public:
     vtkm::Id3 dims(4, 4, 4);
     vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-    vtkm::filter::MarchingCubes filter;
+    vtkm::filter::Contour filter;
     filter.SetGenerateNormals(true);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(0, 0.1);

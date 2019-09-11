@@ -76,7 +76,7 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   vtkm::cont::DataSet result;
 
   vtkm::cont::CastAndCall(
-    vtkm::filter::ApplyPolicy(field, policy, vtkm::filter::FilterTraits<Derived>()),
+    vtkm::filter::ApplyPolicyFieldActive(field, policy, vtkm::filter::FilterTraits<Derived>()),
     internal::ResolveFieldTypeAndExecute(),
     static_cast<Derived*>(this),
     input,
@@ -96,13 +96,12 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
 {
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems
-
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
 
   using Traits = vtkm::filter::FilterTraits<Derived>;
-  constexpr bool supportsVec3 = vtkm::ListContains<typename Traits::InputFieldTypeList,
-                                                   vtkm::Vec<vtkm::FloatDefault, 3>>::value;
+  constexpr bool supportsVec3 =
+    vtkm::ListContains<typename Traits::InputFieldTypeList, vtkm::Vec3f>::value;
 
   using supportsCoordinateSystem = std::integral_constant<bool, supportsVec3>;
   vtkm::cont::ConditionalCastAndCall(supportsCoordinateSystem(),

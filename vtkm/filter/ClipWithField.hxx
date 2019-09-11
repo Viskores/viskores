@@ -13,7 +13,6 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm
 {
@@ -43,17 +42,17 @@ inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
   }
 
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   const vtkm::cont::CoordinateSystem& inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
-    vtkm::filter::ApplyPolicy(cells, policy), field, this->ClipValue, this->Invert);
+    vtkm::filter::ApplyPolicyCellSet(cells, policy), field, this->ClipValue, this->Invert);
 
   //create the output data
   vtkm::cont::DataSet output;
-  output.AddCellSet(outputCellSet);
+  output.SetCellSet(outputCellSet);
 
   // Compute the new boundary points and add them to the output:
   auto outputCoordsArray = this->Worklet.ProcessPointField(inputCoords.GetData());

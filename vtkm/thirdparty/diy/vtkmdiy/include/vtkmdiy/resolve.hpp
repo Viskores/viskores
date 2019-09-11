@@ -7,11 +7,11 @@
 namespace diy
 {
     // record master gids in assigner and then lookup the procs for all gids in the links
-    void    fix_links(diy::Master& master, diy::DynamicAssigner& assigner);
+    inline void    fix_links(diy::Master& master, diy::DynamicAssigner& assigner);
 
     // auxiliary functions; could stick them into detail namespace, but they might be useful on their own
-    void    record_local_gids(const diy::Master& master, diy::DynamicAssigner& assigner);
-    void    update_links(diy::Master& master, const diy::DynamicAssigner& assigner);
+    inline void    record_local_gids(const diy::Master& master, diy::DynamicAssigner& assigner);
+    inline void    update_links(diy::Master& master, const diy::DynamicAssigner& assigner);
 }
 
 void
@@ -20,7 +20,7 @@ record_local_gids(const diy::Master& master, diy::DynamicAssigner& assigner)
 {
     // figure out local ranks
     std::vector<std::tuple<int,int>> local_gids;
-    for (int i = 0; i < master.size(); ++i)
+    for (int i = 0; i < static_cast<int>(master.size()); ++i)
         local_gids.emplace_back(std::make_tuple(master.communicator().rank(), master.gid(i)));
 
     assigner.set_ranks(local_gids);
@@ -32,7 +32,7 @@ update_links(diy::Master& master, const diy::DynamicAssigner& assigner)
 {
     // figure out all the gids we need
     std::vector<int> nbr_gids;
-    for (int i = 0; i < master.size(); ++i)
+    for (int i = 0; i < static_cast<int>(master.size()); ++i)
     {
         auto* link = master.link(i);
         for (auto blockid : link->neighbors())
@@ -52,7 +52,7 @@ update_links(diy::Master& master, const diy::DynamicAssigner& assigner)
         gid_to_proc[nbr_gids[i]] = nbr_procs[i];
 
     // fix the procs in links
-    for (int i = 0; i < master.size(); ++i)
+    for (int i = 0; i < static_cast<int>(master.size()); ++i)
     {
         auto* link = master.link(i);
         for (auto& blockid : link->neighbors())

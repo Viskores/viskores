@@ -8,11 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-
-#include <vtkm/filter/WarpScalar.h>
-
 namespace vtkm
 {
 namespace filter
@@ -40,22 +35,18 @@ inline VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   using vecType = vtkm::Vec<T, 3>;
-  auto normalF = inDataSet.GetField(this->NormalFieldName, this->NormalFieldAssociation);
-  auto sfF = inDataSet.GetField(this->ScalarFactorFieldName, this->ScalarFactorFieldAssociation);
+  vtkm::cont::Field normalF =
+    inDataSet.GetField(this->NormalFieldName, this->NormalFieldAssociation);
+  vtkm::cont::Field sfF =
+    inDataSet.GetField(this->ScalarFactorFieldName, this->ScalarFactorFieldAssociation);
   vtkm::cont::ArrayHandle<vecType> result;
-  this->Worklet.Run(
-    field,
-    vtkm::filter::ApplyPolicy(normalF, policy, vtkm::filter::FilterTraits<WarpScalar>()),
-    vtkm::filter::ApplyPolicy(
-      sfF, policy, vtkm::filter::FilterTraits<WarpScalar, WarpScalarScalarFieldTag>()),
-    this->ScaleAmount,
-    result);
+  this->Worklet.Run(field,
+                    vtkm::filter::ApplyPolicyFieldOfType<vecType>(normalF, policy, *this),
+                    vtkm::filter::ApplyPolicyFieldOfType<T>(sfF, policy, *this),
+                    this->ScaleAmount,
+                    result);
 
-  return internal::CreateResult(inDataSet,
-                                result,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet, result, this->GetOutputFieldName(), fieldMetadata);
 }
 }
 }

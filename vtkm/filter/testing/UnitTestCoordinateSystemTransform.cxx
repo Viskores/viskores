@@ -28,7 +28,7 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
 {
   vtkm::cont::DataSet dataSet;
 
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> coordinates;
+  std::vector<vtkm::Vec3f> coordinates;
   const vtkm::Id dim = 5;
   if (cType == CART)
   {
@@ -80,7 +80,7 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetExplicit<> cellSet("cells");
+  vtkm::cont::CellSetExplicit<> cellSet;
   cellSet.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {
@@ -94,7 +94,7 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
   }
   cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
 
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
   return dataSet;
 }
 
@@ -112,8 +112,8 @@ void ValidateCoordTransform(const vtkm::cont::DataSet& ds,
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> p = pointsPortal.Get(i);
-    vtkm::Vec<vtkm::FloatDefault, 3> r = pointsTrnPortal.Get(i);
+    vtkm::Vec3f p = pointsPortal.Get(i);
+    vtkm::Vec3f r = pointsTrnPortal.Get(i);
     bool isEqual = true;
     for (vtkm::IdComponent j = 0; j < 3; j++)
     {

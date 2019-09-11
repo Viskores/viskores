@@ -31,6 +31,8 @@ namespace filter
 class Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
+
   VTKM_CONT
   Threshold();
 
@@ -62,13 +64,6 @@ private:
   double LowerValue;
   double UpperValue;
   vtkm::worklet::Threshold Worklet;
-};
-
-template <>
-class FilterTraits<Threshold>
-{ //currently the threshold filter only works on scalar data.
-public:
-  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

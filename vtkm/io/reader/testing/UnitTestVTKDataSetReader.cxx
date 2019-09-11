@@ -436,11 +436,11 @@ void TestReadingPolyData(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
-  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 8, "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 5, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 8, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 8,
                    "Incorrect number of points (from cell set)");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 6, "Incorrect number of cells");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 6, "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetSingleType<>>(),
                    "Incorrect cellset type");
 }
@@ -454,11 +454,10 @@ void TestReadingStructuredPoints(Format format)
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
   VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 1, "Incorrect number of fields");
-  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 72,
-                   "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 72, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 72,
                    "Incorrect number of points (from cell set)");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 30, "Incorrect number of cells");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 30, "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
                    "Incorrect cellset type");
 }
@@ -472,11 +471,10 @@ void TestReadingStructuredPointsVisIt(Format format)
     vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
     VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 1, "Incorrect number of fields");
-    VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 64,
-                     "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 64, "Incorrect number of points");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 64,
                      "Incorrect number of points (from cell set)");
-    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 27, "Incorrect number of cells");
+    VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 27, "Incorrect number of cells");
     VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
                      "Incorrect cellset type");
   }
@@ -491,11 +489,10 @@ void TestReadingUnstructuredGrid(Format format)
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
   VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
-  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 26,
-                   "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 26, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
                    "Incorrect number of points (from cell set)");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 15, "Incorrect number of cells");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 15, "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                    "Incorrect cellset type");
 }
@@ -508,11 +505,10 @@ void TestReadingUnstructuredGridVisIt(Format format)
     vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
     VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
-    VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 26,
-                     "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 26, "Incorrect number of points");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
                      "Incorrect number of points (from cell set)");
-    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 15, "Incorrect number of cells");
+    VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 15, "Incorrect number of cells");
     VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                      "Incorrect cellset type");
   }
@@ -527,11 +523,10 @@ void TestReadingRectilinearGrid1(Format format)
     vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
     VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
-    VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 125,
-                     "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 125, "Incorrect number of points");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 125,
                      "Incorrect number of points (from cell set)");
-    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 64, "Incorrect number of cells");
+    VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 64, "Incorrect number of cells");
     VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
                      "Incorrect cellset type");
   }
@@ -546,11 +541,10 @@ void TestReadingRectilinearGrid2(Format format)
     vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
     VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
-    VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 24,
-                     "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 24, "Incorrect number of points");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 24,
                      "Incorrect number of points (from cell set)");
-    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 6, "Incorrect number of cells");
+    VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 6, "Incorrect number of cells");
     VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
                      "Incorrect cellset type");
   }
@@ -562,10 +556,10 @@ void TestReadingStructuredGridASCII()
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
   VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
-  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 6, "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 6, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 6,
                    "Incorrect number of points (from cell set)");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 2, "Incorrect number of cells");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 2, "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<2>>(),
                    "Incorrect cellset type");
 }
@@ -576,11 +570,10 @@ void TestReadingStructuredGridBin()
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
   VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
-  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == 18,
-                   "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 18, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 18,
                    "Incorrect number of points (from cell set)");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 4, "Incorrect number of cells");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 4, "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
                    "Incorrect cellset type");
 }

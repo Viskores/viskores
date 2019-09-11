@@ -18,7 +18,6 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
@@ -26,15 +25,16 @@
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 #include <cstring>
-#include <iostream>
 #include <sstream>
 #include <string.h>
 
 static vtkm::Id cycle = 0;
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> BasisParticles;
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> BasisParticlesOriginal;
+static vtkm::cont::ArrayHandle<vtkm::Vec3f_64> BasisParticles;
+static vtkm::cont::ArrayHandle<vtkm::Vec3f_64> BasisParticlesOriginal;
 static vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
 
+namespace
+{
 class ValidityCheck : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -42,7 +42,10 @@ public:
   using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
-  inline VTKM_CONT void SetBounds(vtkm::Bounds b) { bounds = b; }
+  ValidityCheck(vtkm::Bounds b)
+    : bounds(b)
+  {
+  }
 
   template <typename PosType, typename StepType, typename ValidityType>
   VTKM_EXEC void operator()(const PosType& end_point,
@@ -71,6 +74,7 @@ public:
 private:
   vtkm::Bounds bounds;
 };
+}
 
 namespace vtkm
 {
@@ -96,15 +100,13 @@ inline VTKM_CONT Lagrangian::Lagrangian()
 
 //-----------------------------------------------------------------------------
 inline void Lagrangian::WriteDataSet(vtkm::Id cycle,
-                                     std::string filename,
+                                     const std::string& filename,
                                      vtkm::cont::DataSet dataset)
 {
-  std::stringstream file;
-  file << filename << cycle << ".vtk";
-  vtkm::io::writer::VTKDataSetWriter writer(file.str().c_str());
+  std::stringstream file_stream;
+  file_stream << filename << cycle << ".vtk";
+  vtkm::io::writer::VTKDataSetWriter writer(file_stream.str());
   writer.WriteDataSet(dataset);
-  std::cout << "Number of flows in writedataset is : " << dataset.GetCellSet(0).GetNumberOfCells()
-            << std::endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -181,9 +183,9 @@ inline void Lagrangian::InitializeUniformSeeds(const vtkm::cont::DataSet& input)
       for (int z = 0; z < this->SeedRes[2]; z++)
       {
         portal1.Set(count,
-                    vtkm::Vec<vtkm::Float64, 3>(bounds.X.Min + (x * x_spacing),
-                                                bounds.Y.Min + (y * y_spacing),
-                                                bounds.Z.Min + (z * z_spacing)));
+                    vtkm::Vec3f_64(bounds.X.Min + (x * x_spacing),
+                                   bounds.Y.Min + (y * y_spacing),
+                                   bounds.Z.Min + (z * z_spacing)));
         portal2.Set(count, 1);
         count++;
       }
@@ -222,9 +224,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::cont::ArrayCopy(BasisParticles, basisParticleArray);
 
   cycle += 1;
-  std::cout << "Cycle : " << cycle << std::endl;
-  const vtkm::cont::DynamicCellSet& cells =
-    input.GetCellSet(this->GetActiveCoordinateSystemIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
@@ -295,8 +295,8 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     outputData = dataSetBuilder.Create(pointCoordinates, shapes, numIndices, connectivity);
     std::stringstream file_path;
     file_path << "output/basisflows_" << this->rank << "_";
-    std::cout << "Writing basis flows to output/" << std::endl;
-    WriteDataSet(cycle, file_path.str().c_str(), outputData);
+    auto f_path = file_path.str();
+    WriteDataSet(cycle, f_path, outputData);
     if (this->resetParticles)
     {
       InitializeUniformSeeds(input);
@@ -310,10 +310,8 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   }
   else
   {
-    ValidityCheck check;
-    check.SetBounds(bounds);
-    vtkm::worklet::DispatcherMapField<ValidityCheck> dispatcher(check);
-    dispatcher.Invoke(particle_positions, particle_stepstaken, BasisParticlesValidity);
+    ValidityCheck check(bounds);
+    this->Invoke(check, particle_positions, particle_stepstaken, BasisParticlesValidity);
     vtkm::cont::ArrayCopy(particle_positions, BasisParticles);
   }
 

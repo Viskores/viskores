@@ -72,7 +72,7 @@ struct SplitProperties
   }
 }; // struct SplitProperties
 
-struct CellRangesExtracter : public vtkm::worklet::WorkletMapPointToCell
+struct CellRangesExtracter : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   typedef void ControlSignature(CellSetIn,
                                 WholeArrayIn,
@@ -105,7 +105,7 @@ struct CellRangesExtracter : public vtkm::worklet::WorkletMapPointToCell
     rangeX = bounds.X;
     rangeY = bounds.Y;
     rangeZ = bounds.Z;
-    vtkm::Vec<vtkm::FloatDefault, 3> center = bounds.Center();
+    vtkm::Vec3f center = bounds.Center();
     centerX = center[0];
     centerY = center[1];
     centerZ = center[2];
@@ -374,7 +374,7 @@ struct CalculateSplitDirectionFlag : public vtkm::worklet::WorkletMapField
   {
     if (split.Dimension >= 0)
     {
-      const vtkm::Vec<vtkm::FloatDefault, 3> point(x, y, z);
+      const vtkm::Vec3f point(x, y, z);
       const vtkm::FloatDefault& c = point[split.Dimension];
       // We use 0 to signify left child, 1 for right child
       flag = 1 - static_cast<vtkm::Id>(c <= plane);

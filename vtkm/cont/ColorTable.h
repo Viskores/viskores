@@ -513,14 +513,14 @@ public:
   /// vtkm::cont::ColorTableSamplesRGBA samples;
   /// vtkm::cont::ColorTable table("black-body radiation");
   /// table.Sample(256, samples);
-  /// vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+  /// vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
   /// table.Map(input, samples, colors);
   ///
   /// \endcode
   template <typename T, typename S>
   inline bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
                   const vtkm::cont::ColorTableSamplesRGBA& samples,
-                  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+                  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Sample each value through an intermediate lookup/sample table to generate RGB colors
   ///
@@ -534,28 +534,28 @@ public:
   /// vtkm::cont::ColorTableSamplesRGB samples;
   /// vtkm::cont::ColorTable table("black-body radiation");
   /// table.Sample(256, samples);
-  /// vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+  /// vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
   /// table.Map(input, samples, colors);
   ///
   /// \endcode
   template <typename T, typename S>
   inline bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
                   const vtkm::cont::ColorTableSamplesRGB& samples,
-                  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbaOut) const;
+                  vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbaOut) const;
 
   /// \brief Use magnitude of a vector with a sample table to generate RGBA colors
   ///
   template <typename T, int N, typename S>
   inline bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                            const vtkm::cont::ColorTableSamplesRGBA& samples,
-                           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+                           vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Use magnitude of a vector with a sample table to generate RGB colors
   ///
   template <typename T, int N, typename S>
   inline bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                            const vtkm::cont::ColorTableSamplesRGB& samples,
-                           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbaOut) const;
+                           vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbaOut) const;
 
   /// \brief Use a single component of a vector with a sample table to generate RGBA colors
   ///
@@ -563,7 +563,7 @@ public:
   inline bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                            vtkm::IdComponent comp,
                            const vtkm::cont::ColorTableSamplesRGBA& samples,
-                           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+                           vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Use a single component of a vector with a sample table to generate RGB colors
   ///
@@ -571,7 +571,7 @@ public:
   inline bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                            vtkm::IdComponent comp,
                            const vtkm::cont::ColorTableSamplesRGB& samples,
-                           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
+                           vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const;
 
 
   /// \brief Interpolate each value through the color table to generate RGBA colors
@@ -582,7 +582,7 @@ public:
   /// Note: This is more costly than using Sample/Map with the generated intermediate lookup table
   template <typename T, typename S>
   inline bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
-                  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+                  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Interpolate each value through the color table to generate RGB colors
   ///
@@ -592,33 +592,33 @@ public:
   /// Note: This is more costly than using Sample/Map with the generated intermediate lookup table
   template <typename T, typename S>
   inline bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
-                  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
+                  vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const;
 
   /// \brief Use magnitude of a vector to generate RGBA colors
   ///
   template <typename T, int N, typename S>
   inline bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+                           vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Use magnitude of a vector to generate RGB colors
   ///
   template <typename T, int N, typename S>
   inline bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
+                           vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const;
 
   /// \brief Use a single component of a vector to generate RGBA colors
   ///
   template <typename T, int N, typename S>
   inline bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                            vtkm::IdComponent comp,
-                           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+                           vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Use a single component of a vector to generate RGB colors
   ///
   template <typename T, int N, typename S>
   inline bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                            vtkm::IdComponent comp,
-                           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
+                           vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const;
 
 
   /// \brief generate RGB colors using regular spaced samples along the range.
@@ -663,7 +663,7 @@ public:
   ///
   /// Note: This will return false if the number of samples is less than 2
   inline bool Sample(vtkm::Int32 numSamples,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& colors,
+                     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& colors,
                      double tolerance = 0.002) const;
 
   /// \brief generate RGB colors using regular spaced samples along the range.
@@ -678,7 +678,7 @@ public:
   ///
   /// Note: This will return false if the number of samples is less than 2
   inline bool Sample(vtkm::Int32 numSamples,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& colors,
+                     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& colors,
                      double tolerance = 0.002) const;
 
 

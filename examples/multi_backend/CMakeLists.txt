@@ -7,7 +7,7 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
-cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
 project(MultiBackend CXX)
 
 #Find the VTK-m package
@@ -20,18 +20,14 @@ set(headers
   TaskQueue.h
   )
 
-set(device_srcs
-  MultiDeviceGradient.cxx
-  )
-
 set(srcs
-  IOGenerator.cxx
   MultiBackend.cxx
+  MultiDeviceGradient.cxx
+  IOGenerator.cxx
   )
 
-if(TARGET vtkm::cuda)
-  set_source_files_properties(${device_srcs} PROPERTIES LANGUAGE "CUDA")
-endif()
-
-add_executable(MultiBackend ${device_srcs} ${srcs} ${headers})
+add_executable(MultiBackend ${srcs} ${headers})
 target_link_libraries(MultiBackend PRIVATE vtkm_filter Threads::Threads)
+vtkm_add_target_information(MultiBackend
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES ${srcs})

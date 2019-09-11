@@ -86,7 +86,7 @@ endif()
 
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
-  cmake_minimum_required(VERSION 3.9...3.14 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.9...3.15 FATAL_ERROR)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
   add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
@@ -107,7 +107,7 @@ if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
 endif()
 
 if(VTKm_ENABLE_CUDA)
-  cmake_minimum_required(VERSION 3.9...3.14 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.13...3.15 FATAL_ERROR)
   enable_language(CUDA)
 
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
@@ -115,25 +115,24 @@ if(VTKm_ENABLE_CUDA)
     message(FATAL_ERROR "VTK-m CUDA support requires version 9.2+")
   endif()
 
-  #To work around https://gitlab.kitware.com/cmake/cmake/issues/17512
-  #we need to fix the CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES variable
-  if(${CMAKE_VERSION} VERSION_LESS 3.10 AND CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
-    list(APPEND CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
-  endif()
-
-  if (NOT TARGET vtkm_cuda OR NOT TARGET vtkm::cuda)
+ if (NOT TARGET vtkm::cuda)
     add_library(vtkm_cuda INTERFACE)
+    add_library(vtkm::cuda ALIAS vtkm_cuda)
     set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME vtkm::cuda)
-    install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
 
-    # Reserve `INTERFACE_REQUIRES_STATIC_BUILDS` to potential work around issues
+    install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
+    # Reserve `requires_static_builds` to potential work around issues
     # where VTK-m doesn't work when building shared as virtual functions fail
     # inside device code. We don't want to force BUILD_SHARED_LIBS to a specific
     # value as that could impact other projects that embed VTK-m. Instead what
     # we do is make sure that libraries built by vtkm_library() are static
     # if they use CUDA
+    #
+    # This needs to be lower-case for the property to be properly exported
+    # CMake 3.15 we can add `requires_static_builds` to the EXPORT_PROPERTIES
+    # target property to have this automatically exported for us
     set_target_properties(vtkm_cuda PROPERTIES
-      INTERFACE_REQUIRES_STATIC_BUILDS TRUE
+      requires_static_builds TRUE
     )
 
 
@@ -222,13 +221,11 @@ if(VTKm_ENABLE_CUDA)
           set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
                   "device type(s) for cuda[native]")
         else()
-          set(VTKm_CUDA_Architecture "kepler")
+          message(FATAL_ERROR "Error detecting architecture flags for CUDA. Please set VTKm_CUDA_Architecture manually.")
         endif()
       endif()
     endif()
 
-    #since when we are native we can fail, and fall back to "kepler" these have
-    #to happen after, and separately of the native check
     if(VTKm_CUDA_Architecture STREQUAL "fermi")
       set(arch_flags --generate-code=arch=compute_20,code=sm_20)
     elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
@@ -254,13 +251,12 @@ if(VTKm_ENABLE_CUDA)
     string(REPLACE ";" " " arch_flags "${arch_flags}")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
 
-    set_target_properties(vtkm_cuda PROPERTIES INTERFACE_CUDA_Architecture_Flags "${arch_flags}")
+    # This needs to be lower-case for the property to be properly exported
+    # CMake 3.15 we can add `cuda_architecture_flags` to the EXPORT_PROPERTIES
+    # target property to have this automatically exported for us
+    set_target_properties(vtkm_cuda PROPERTIES cuda_architecture_flags "${arch_flags}")
+    set(VTKm_CUDA_Architecture_Flags "${arch_flags}")
   endif()
-
-  if (NOT TARGET vtkm::cuda)
-    add_library(vtkm::cuda ALIAS vtkm_cuda)
-  endif()
-
 endif()
 
 if(NOT TARGET Threads::Threads)

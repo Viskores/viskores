@@ -41,7 +41,7 @@ private:
 
     // Read structured points specific meta-data
     vtkm::Id3 dim;
-    vtkm::Vec<vtkm::Float32, 3> origin, spacing;
+    vtkm::Vec3f_32 origin, spacing;
 
     //Two ways the file can describe the dimensions. The proper way is by
     //using the DIMENSIONS keyword, but VisIt written VTK files spicify data
@@ -50,8 +50,7 @@ private:
     this->DataFile->Stream >> tag;
     if (tag == "FIELD")
     {
-      std::string name;
-      this->ReadFields(name, &visitBounds);
+      this->ReadGlobalFields(&visitBounds);
       this->DataFile->Stream >> tag;
     }
     if (visitBounds.empty())
@@ -74,7 +73,7 @@ private:
     this->DataFile->Stream >> tag >> origin[0] >> origin[1] >> origin[2] >> std::ws;
     internal::parseAssert(tag == "ORIGIN");
 
-    this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
+    this->DataSet.SetCellSet(internal::CreateCellSetStructured(dim));
     this->DataSet.AddCoordinateSystem(
       vtkm::cont::CoordinateSystem("coordinates", dim, origin, spacing));
 

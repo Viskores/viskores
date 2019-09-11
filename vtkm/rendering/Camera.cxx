@@ -58,11 +58,10 @@ vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera3DStruct::CreateProjectionMatrix
 
 vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera2DStruct::CreateViewMatrix() const
 {
-  vtkm::Vec<vtkm::Float32, 3> lookAt(
-    (this->Left + this->Right) / 2.f, (this->Top + this->Bottom) / 2.f, 0.f);
-  vtkm::Vec<vtkm::Float32, 3> position = lookAt;
+  vtkm::Vec3f_32 lookAt((this->Left + this->Right) / 2.f, (this->Top + this->Bottom) / 2.f, 0.f);
+  vtkm::Vec3f_32 position = lookAt;
   position[2] = 1.f;
-  vtkm::Vec<vtkm::Float32, 3> up(0, 1, 0);
+  vtkm::Vec3f_32 up(0, 1, 0);
   vtkm::Matrix<vtkm::Float32, 4, 4> V = MatrixHelpers::ViewMatrix(position, lookAt, up);
   vtkm::Matrix<vtkm::Float32, 4, 4> scaleMatrix = MatrixHelpers::CreateScale(this->XScale, 1, 1);
   V = vtkm::MatrixMultiply(scaleMatrix, V);
@@ -274,13 +273,13 @@ void Camera::ResetToBounds(const vtkm::Bounds& dataBounds,
   db.Z.Min -= viewPadAmount;
 
   // Reset for 3D camera
-  vtkm::Vec<vtkm::Float32, 3> directionOfProjection = this->GetPosition() - this->GetLookAt();
+  vtkm::Vec3f_32 directionOfProjection = this->GetPosition() - this->GetLookAt();
   vtkm::Normalize(directionOfProjection);
 
-  vtkm::Vec<vtkm::Float32, 3> center = db.Center();
+  vtkm::Vec3f_32 center = db.Center();
   this->SetLookAt(center);
 
-  vtkm::Vec<vtkm::Float32, 3> totalExtent;
+  vtkm::Vec3f_32 totalExtent;
   totalExtent[0] = vtkm::Float32(db.X.Length());
   totalExtent[1] = vtkm::Float32(db.Y.Length());
   totalExtent[2] = vtkm::Float32(db.Z.Length());
@@ -317,7 +316,7 @@ void Camera::ResetToBounds(const vtkm::Bounds& dataBounds)
 
 void Camera::Roll(vtkm::Float32 angleDegrees)
 {
-  vtkm::Vec<vtkm::Float32, 3> directionOfProjection = this->GetLookAt() - this->GetPosition();
+  vtkm::Vec3f_32 directionOfProjection = this->GetLookAt() - this->GetPosition();
   vtkm::Matrix<vtkm::Float32, 4, 4> rotateTransform =
     vtkm::Transform3DRotate(angleDegrees, directionOfProjection);
 
@@ -338,7 +337,7 @@ void Camera::Azimuth(vtkm::Float32 angleDegrees)
 
 void Camera::Elevation(vtkm::Float32 angleDegrees)
 {
-  vtkm::Vec<vtkm::Float32, 3> axisOfRotation =
+  vtkm::Vec3f_32 axisOfRotation =
     vtkm::Cross(this->GetPosition() - this->GetLookAt(), this->GetViewUp());
 
   // Translate to the focal point (LookAt), rotate about the defined axis,
@@ -358,7 +357,7 @@ void Camera::Dolly(vtkm::Float32 value)
     return;
   }
 
-  vtkm::Vec<vtkm::Float32, 3> lookAtToPos = this->GetPosition() - this->GetLookAt();
+  vtkm::Vec3f_32 lookAtToPos = this->GetPosition() - this->GetLookAt();
 
   this->SetPosition(this->GetLookAt() + (1.0f / value) * lookAtToPos);
 }

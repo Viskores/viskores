@@ -19,8 +19,8 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/Invoker.h>
 
-#include <vtkm/worklet/Invoker.h>
 #include <vtkm/worklet/ScatterUniform.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -327,7 +327,7 @@ public:
 
     // Get information from input dataset
     vtkm::cont::CellSetStructured<3> inCellSet;
-    InDataSet.GetCellSet(0).CopyTo(inCellSet);
+    InDataSet.GetCellSet().CopyTo(inCellSet);
     vtkm::Id3 vdims = inCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
 
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
@@ -375,7 +375,7 @@ public:
     // Worklet to make the streamlines
     streamline::MakeStreamLines<FieldType> makeStreamLines(timeStep, streamMode, maxSteps, vdims);
 
-    vtkm::worklet::Invoker{}(
+    vtkm::cont::Invoker{}(
       makeStreamLines, fieldArray, seedIdArray, seedPosArray, numIndices, validPoint, streamArray);
 
     // Size of connectivity based on size of returned streamlines
@@ -396,7 +396,7 @@ public:
     vtkm::cont::CellSetExplicit<> outCellSet;
 
     outCellSet.Fill(coordinates.GetNumberOfValues(), cellTypes, numIndices, connectivity);
-    OutDataSet.AddCellSet(outCellSet);
+    OutDataSet.SetCellSet(outCellSet);
     OutDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
     return OutDataSet;

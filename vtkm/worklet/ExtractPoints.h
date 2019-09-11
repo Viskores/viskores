@@ -34,7 +34,7 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Worklet to identify points within volume of interest
-  class ExtractPointsByVOI : public vtkm::worklet::WorkletMapCellToPoint
+  class ExtractPointsByVOI : public vtkm::worklet::WorkletVisitPointsWithCells
   {
   public:
     using ControlSignature = void(CellSetIn cellset,
@@ -51,8 +51,7 @@ public:
     }
 
     VTKM_EXEC
-    bool operator()(const vtkm::Vec<vtkm::Float64, 3>& coordinate,
-                    const vtkm::ImplicitFunction* function) const
+    bool operator()(const vtkm::Vec3f_64& coordinate, const vtkm::ImplicitFunction* function) const
     {
       bool pass = passValue;
       vtkm::Float64 value = function->Value(coordinate);
@@ -77,7 +76,7 @@ public:
     vtkm::cont::ArrayCopy(pointIds, this->ValidPointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    vtkm::cont::CellSetSingleType<> outCellSet;
     outCellSet.Fill(
       cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, this->ValidPointIds);
 
@@ -104,7 +103,7 @@ public:
     vtkm::cont::Algorithm::CopyIf(indices, passFlags, this->ValidPointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    vtkm::cont::CellSetSingleType<> outCellSet;
     outCellSet.Fill(
       cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, this->ValidPointIds);
 

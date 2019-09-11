@@ -12,6 +12,7 @@
 
 #include <vtkm/RangeId3.h>
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -594,7 +595,7 @@ private:
       if (arrays[i].GetNumberOfValues() == 1)
       {
         xyzs[i].Allocate(1);
-        xyzs[i].GetPortalControl().Set(0, arrays[i].GetPortalConstControl().Get(0));
+        xyzs[i].GetPortalControl().Set(0, vtkm::cont::ArrayGetValue(0, arrays[i]));
       }
       else
       {

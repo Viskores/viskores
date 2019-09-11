@@ -58,7 +58,7 @@ private:
 
   static inline vtkm::cont::DataSet make_SingleTypeDataSet()
   {
-    using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+    using CoordType = vtkm::Vec3f_32;
     std::vector<CoordType> coordinates;
     coordinates.push_back(CoordType(0, 0, 0));
     coordinates.push_back(CoordType(1, 0, 0));
@@ -100,15 +100,15 @@ private:
 
     //verify that we can get a CellSetSingleType from a dataset
     vtkm::cont::CellSetSingleType<> cellset;
-    dataSet.GetCellSet(0).CopyTo(cellset);
+    dataSet.GetCellSet().CopyTo(cellset);
 
     //verify that the point to cell connectivity types are correct
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesPointToCell =
-      cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+      cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> numIndicesPointToCell =
-      cellset.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+      cellset.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     vtkm::cont::ArrayHandle<vtkm::Id> connPointToCell =
-      cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+      cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
     VTKM_TEST_ASSERT(shapesPointToCell.GetNumberOfValues() == 3, "Wrong number of shapes");
     VTKM_TEST_ASSERT(numIndicesPointToCell.GetNumberOfValues() == 3, "Wrong number of indices");
@@ -117,11 +117,11 @@ private:
     //verify that the cell to point connectivity types are correct
     //note the handle storage types differ compared to point to cell
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesCellToPoint =
-      cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesCellToPoint =
-      cellset.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      cellset.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
     vtkm::cont::ArrayHandle<vtkm::Id> connCellToPoint =
-      cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
     VTKM_TEST_ASSERT(shapesCellToPoint.GetNumberOfValues() == 5, "Wrong number of shapes");
     VTKM_TEST_ASSERT(numIndicesCellToPoint.GetNumberOfValues() == 5, "Wrong number of indices");

@@ -35,15 +35,15 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
   vtkm::Float64 ydiff = (ymax - ymin) / (static_cast<vtkm::Float64>(DIMS[1] - 1));
   vtkm::Float64 zdiff = (zmax - zmin) / (static_cast<vtkm::Float64>(DIMS[2] - 1));
 
-  vtkm::Vec<vtkm::Float64, 3> ORIGIN(0, 0, 0);
-  vtkm::Vec<vtkm::Float64, 3> SPACING(xdiff, ydiff, zdiff);
+  vtkm::Vec3f_64 ORIGIN(0, 0, 0);
+  vtkm::Vec3f_64 SPACING(xdiff, ydiff, zdiff);
 
   vtkm::cont::DataSet dataset = dsb.Create(DIMS, ORIGIN, SPACING);
   vtkm::cont::DataSetFieldAdd dsf;
 
   vtkm::Id numPoints = DIMS[0] * DIMS[1] * DIMS[2];
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> velocityField;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> velocityField;
   velocityField.Allocate(numPoints);
 
   vtkm::Id count = 0;
@@ -53,7 +53,7 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
     {
       for (vtkm::Id k = 0; k < DIMS[2]; k++)
       {
-        velocityField.GetPortalControl().Set(count, vtkm::Vec<vtkm::Float64, 3>(0.1, 0.1, 0.1));
+        velocityField.GetPortalControl().Set(count, vtkm::Vec3f_64(0.1, 0.1, 0.1));
         count++;
       }
     }
@@ -78,17 +78,15 @@ void TestLagrangianFilterMultiStepInterval()
     vtkm::cont::DataSet extractedBasisFlows = lagrangianFilter2.Execute(input);
     if (i % write_interval == 0)
     {
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCellSets() == 1,
-                       "Wrong number of cell sets in the output dataset.");
       VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset.");
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetCellSet().GetNumberOfCells() == 3375,
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCells() == 3375,
                        "Wrong number of basis flows extracted.");
     }
     else
     {
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCellSets() == 0,
-                       "Wrong number of cell sets in the output dataset.");
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCells() == 0,
+                       "Output dataset should have no cells.");
       VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 0,
                        "Wrong number of coordinate systems in the output dataset.");
     }

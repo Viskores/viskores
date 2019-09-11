@@ -32,7 +32,7 @@ struct TransferFunction : public vtkm::worklet::WorkletMapField
   using ExecutionSignature = void(_1, _2);
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& in, vtkm::Vec<vtkm::UInt8, 3>& output) const
+  VTKM_EXEC void operator()(const T& in, vtkm::Vec3ui_8& output) const
   {
     vtkm::Vec<float, 3> rgb = this->ColorTable->MapThroughColorSpace(static_cast<double>(in));
     output[0] = colorconversion::ColorToUChar(rgb[0]);
@@ -41,7 +41,7 @@ struct TransferFunction : public vtkm::worklet::WorkletMapField
   }
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& in, vtkm::Vec<vtkm::UInt8, 4>& output) const
+  VTKM_EXEC void operator()(const T& in, vtkm::Vec4ui_8& output) const
   {
     vtkm::Vec<float, 3> rgb = this->ColorTable->MapThroughColorSpace(static_cast<double>(in));
     float alpha = this->ColorTable->MapThroughOpacitySpace(static_cast<double>(in));

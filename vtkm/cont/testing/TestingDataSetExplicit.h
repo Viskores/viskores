@@ -58,8 +58,6 @@ private:
     vtkm::cont::testing::MakeTestDataSet tds;
     vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet0();
 
-    VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1, "Incorrect number of cell sets");
-
     VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
 
     // test various field-getting methods and associations
@@ -68,8 +66,7 @@ private:
                      "Association of 'pointvar' was not Association::POINTS");
     try
     {
-      //const vtkm::cont::Field &f2 =
-      ds.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
+      ds.GetCellField("cellvar");
     }
     catch (...)
     {
@@ -78,8 +75,7 @@ private:
 
     try
     {
-      //const vtkm::cont::Field &f3 =
-      ds.GetField("cellvar", vtkm::cont::Field::Association::POINTS);
+      ds.GetPointField("cellvar");
       VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
     }
     catch (vtkm::cont::ErrorBadValue& error)
@@ -93,7 +89,7 @@ private:
 
     // test cell-to-point connectivity
     vtkm::cont::CellSetExplicit<> cellset;
-    ds.GetCellSet(0).CopyTo(cellset);
+    ds.GetCellSet().CopyTo(cellset);
 
     vtkm::Id connectivitySize = 7;
     vtkm::Id numPoints = 5;
@@ -103,11 +99,11 @@ private:
     vtkm::Id correctConnectivity[] = { 0, 0, 1, 0, 1, 1, 1 };
 
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
-      cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices =
-      cellset.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      cellset.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
     vtkm::cont::ArrayHandle<vtkm::Id> conn =
-      cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
     VTKM_TEST_ASSERT(TestArrayHandle(shapes, correctShapes, numPoints), "Got incorrect shapes");
     VTKM_TEST_ASSERT(TestArrayHandle(numIndices, correctNumIndices, numPoints),
@@ -140,7 +136,7 @@ private:
 
     //verify that GetIndices works properly
     vtkm::Id expectedPointIds[4] = { 2, 1, 3, 4 };
-    vtkm::Vec<vtkm::Id, 4> retrievedPointIds;
+    vtkm::Id4 retrievedPointIds;
     cellset.GetIndices(1, retrievedPointIds);
     for (vtkm::IdComponent i = 0; i < 4; i++)
     {

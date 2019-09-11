@@ -103,6 +103,7 @@ struct VecTraits<vtkm::VecVariable<T, MaxSize>>
   using VecType = vtkm::VecVariable<T, MaxSize>;
 
   using ComponentType = typename VecType::ComponentType;
+  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
 
@@ -130,6 +131,14 @@ struct VecTraits<vtkm::VecVariable<T, MaxSize>>
   {
     vector[componentIndex] = value;
   }
+
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::VecVariable<NewComponentType, MaxSize>;
+
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType = vtkm::VecVariable<
+    typename vtkm::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
+    MaxSize>;
 
   template <vtkm::IdComponent destSize>
   VTKM_EXEC_CONT static void CopyInto(const VecType& src, vtkm::Vec<ComponentType, destSize>& dest)

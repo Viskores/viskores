@@ -10,6 +10,7 @@
 #ifndef vtk_m_ImplicitFunction_h
 #define vtk_m_ImplicitFunction_h
 
+#include <vtkm/Bounds.h>
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/VirtualObjectBase.h>
@@ -99,12 +100,19 @@ private:
 
 //============================================================================
 /// \brief Implicit function for a box
+///
+/// \c Box computes the implicit function and/or gradient for a axis-aligned
+/// bounding box. Each side of the box is orthogonal to all other sides
+/// meeting along shared edges and all faces are orthogonal to the x-y-z
+/// coordinate axes.
+
 class VTKM_ALWAYS_EXPORT Box : public ImplicitFunction
 {
 public:
+  /// \brief Construct box with center at (0,0,0) and each side of length 1.0.
   VTKM_EXEC_CONT Box()
-    : MinPoint(Vector(Scalar(0)))
-    , MaxPoint(Vector(Scalar(0)))
+    : MinPoint(Vector(Scalar(-0.5)))
+    , MaxPoint(Vector(Scalar(0.5)))
   {
   }
 
@@ -119,6 +127,8 @@ public:
     , MaxPoint(xmax, ymax, zmax)
   {
   }
+
+  VTKM_CONT Box(const vtkm::Bounds& bounds) { this->SetBounds(bounds); }
 
   VTKM_CONT void SetMinPoint(const Vector& point)
   {
@@ -135,6 +145,19 @@ public:
   VTKM_EXEC_CONT const Vector& GetMinPoint() const { return this->MinPoint; }
 
   VTKM_EXEC_CONT const Vector& GetMaxPoint() const { return this->MaxPoint; }
+
+  VTKM_CONT void SetBounds(const vtkm::Bounds& bounds)
+  {
+    this->SetMinPoint({ Scalar(bounds.X.Min), Scalar(bounds.Y.Min), Scalar(bounds.Z.Min) });
+    this->SetMaxPoint({ Scalar(bounds.X.Max), Scalar(bounds.Y.Max), Scalar(bounds.Z.Max) });
+  }
+
+  VTKM_EXEC_CONT vtkm::Bounds GetBounds() const
+  {
+    return vtkm::Bounds(vtkm::Range(this->MinPoint[0], this->MaxPoint[0]),
+                        vtkm::Range(this->MinPoint[1], this->MaxPoint[1]),
+                        vtkm::Range(this->MinPoint[2], this->MaxPoint[2]));
+  }
 
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
   {
@@ -209,7 +232,7 @@ public:
     vtkm::IdComponent minAxis = 0;
     Scalar dist = 0.0;
     Scalar minDist = vtkm::Infinity32();
-    vtkm::Vec<vtkm::IdComponent, 3> location;
+    vtkm::IdComponent3 location;
     Vector normal(Scalar(0));
     Vector inside(Scalar(0));
     Vector outside(Scalar(0));
@@ -333,13 +356,24 @@ private:
 
 //============================================================================
 /// \brief Implicit function for a cylinder
+///
+/// \c Cylinder computes the implicit function and function gradient
+/// for a cylinder using F(r)=r^2-Radius^2. By default the Cylinder is
+/// centered at the origin and the axis of rotation is along the
+/// y-axis. You can redefine the center and axis of rotation by setting
+/// the Center and Axis data members.
+///
+/// Note that the cylinder is infinite in extent.
+///
 class VTKM_ALWAYS_EXPORT Cylinder final : public vtkm::ImplicitFunction
 {
 public:
+  /// Construct cylinder radius of 0.5; centered at origin with axis
+  /// along y coordinate axis.
   VTKM_EXEC_CONT Cylinder()
     : Center(Scalar(0))
-    , Axis(Scalar(1), Scalar(0), Scalar(0))
-    , Radius(Scalar(0.2))
+    , Axis(Scalar(0), Scalar(1), Scalar(0))
+    , Radius(Scalar(0.5))
   {
   }
 
@@ -352,7 +386,7 @@ public:
 
   VTKM_EXEC_CONT Cylinder(const Vector& center, const Vector& axis, Scalar radius)
     : Center(center)
-    , Axis(axis)
+    , Axis(vtkm::Normal(axis))
     , Radius(radius)
   {
   }
@@ -365,7 +399,7 @@ public:
 
   VTKM_CONT void SetAxis(const Vector& axis)
   {
-    this->Axis = axis;
+    this->Axis = vtkm::Normal(axis);
     this->Modified();
   }
 
@@ -402,6 +436,7 @@ private:
 class VTKM_ALWAYS_EXPORT Frustum final : public vtkm::ImplicitFunction
 {
 public:
+  /// \brief Construct axis-aligned frustum with center at (0,0,0) and each side of length 1.0.
   Frustum() = default;
 
   VTKM_EXEC_CONT Frustum(const Vector points[6], const Vector normals[6])
@@ -465,7 +500,7 @@ public:
       const Vector& v2 = points[planes[i][2]];
 
       this->Points[i] = v0;
-      this->Normals[i] = vtkm::Normal(vtkm::Cross(v2 - v0, v1 - v0));
+      this->Normals[i] = vtkm::Normal(vtkm::TriangleNormal(v0, v1, v2));
     }
     this->Modified();
   }
@@ -502,27 +537,37 @@ public:
   }
 
 private:
-  Vector Points[6];
-  Vector Normals[6];
+  Vector Points[6] = { { -0.5f, 0.0f, 0.0f }, { 0.5f, 0.0f, 0.0f },  { 0.0f, -0.5f, 0.0f },
+                       { 0.0f, 0.5f, 0.0f },  { 0.0f, 0.0f, -0.5f }, { 0.0f, 0.0f, 0.5f } };
+  Vector Normals[6] = { { -1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f },  { 0.0f, -1.0f, 0.0f },
+                        { 0.0f, 1.0f, 0.0f },  { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f, 1.0f } };
 };
 
 //============================================================================
 /// \brief Implicit function for a plane
+///
+/// A plane is defined by a point in the plane and a normal to the plane.
+/// The normal does not have to be a unit vector. The implicit function will
+/// still evaluate to 0 at the plane, but the values outside the plane
+/// (and the gradient) will be scaled by the length of the normal vector.
 class VTKM_ALWAYS_EXPORT Plane final : public vtkm::ImplicitFunction
 {
 public:
+  /// Construct plane passing through origin and normal to z-axis.
   VTKM_EXEC_CONT Plane()
     : Origin(Scalar(0))
     , Normal(Scalar(0), Scalar(0), Scalar(1))
   {
   }
 
+  /// Construct a plane through the origin with the given normal.
   VTKM_EXEC_CONT explicit Plane(const Vector& normal)
     : Origin(Scalar(0))
     , Normal(normal)
   {
   }
 
+  /// Construct a plane through the given point with the given normal.
   VTKM_EXEC_CONT Plane(const Vector& origin, const Vector& normal)
     : Origin(origin)
     , Normal(normal)
@@ -558,15 +603,23 @@ private:
 
 //============================================================================
 /// \brief Implicit function for a sphere
+///
+/// A sphere is defined by its center and a radius.
+///
+/// The value of the sphere implicit function is the square of the distance
+/// from the center biased by the radius (so the surface of the sphere is
+/// at value 0).
 class VTKM_ALWAYS_EXPORT Sphere final : public vtkm::ImplicitFunction
 {
 public:
+  /// Construct sphere with center at (0,0,0) and radius = 0.5.
   VTKM_EXEC_CONT Sphere()
-    : Radius(Scalar(0.2))
+    : Radius(Scalar(0.5))
     , Center(Scalar(0))
   {
   }
 
+  /// Construct a sphere with center at (0,0,0) and the given radius.
   VTKM_EXEC_CONT explicit Sphere(Scalar radius)
     : Radius(radius)
     , Center(Scalar(0))

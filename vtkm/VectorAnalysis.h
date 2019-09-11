@@ -189,6 +189,10 @@ VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 3> C
 /// a triangle and the plane the triangle is on, returns a vector perpendicular
 /// to that triangle/plane.
 ///
+/// Note that the returned vector might not be a unit vector. In fact, the length
+/// is equal to twice the area of the triangle. If you want a unit vector,
+/// send the result through the \c Normal function.
+///
 template <typename T>
 VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 3>
 TriangleNormal(const vtkm::Vec<T, 3>& a, const vtkm::Vec<T, 3>& b, const vtkm::Vec<T, 3>& c)

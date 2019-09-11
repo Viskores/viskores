@@ -30,7 +30,7 @@ public:
   };
 
   template <typename UnaryPredicate>
-  class ThresholdPointField : public vtkm::worklet::WorkletMapCellToPoint
+  class ThresholdPointField : public vtkm::worklet::WorkletVisitPointsWithCells
   {
   public:
     using ControlSignature = void(CellSetIn cellset, FieldInPoint scalars, FieldOutPoint passFlags);
@@ -77,7 +77,7 @@ public:
     vtkm::cont::Algorithm::CopyIf(indices, passFlags, pointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    vtkm::cont::CellSetSingleType<> outCellSet;
     outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, pointIds);
 
     return outCellSet;

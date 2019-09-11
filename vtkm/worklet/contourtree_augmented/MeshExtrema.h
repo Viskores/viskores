@@ -58,7 +58,7 @@
 // local includes
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/worklet/Invoker.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/contourtree_augmented/PointerDoubling.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -79,7 +79,7 @@ namespace contourtree_augmented
 class MeshExtrema
 { // MeshExtrema
 public:
-  vtkm::worklet::Invoker Invoke;
+  vtkm::cont::Invoker Invoke;
   // arrays for peaks & pits
   IdArrayType peaks;
   IdArrayType pits;

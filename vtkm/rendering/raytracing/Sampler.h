@@ -19,7 +19,7 @@ namespace raytracing
 {
 
 template <vtkm::Int32 Base>
-VTKM_EXEC void Halton2D(const vtkm::Int32& sampleNum, vtkm::Vec<vtkm::Float32, 2>& coord)
+VTKM_EXEC void Halton2D(const vtkm::Int32& sampleNum, vtkm::Vec2f_32& coord)
 {
   //generate base2 halton
   vtkm::Float32 x = 0.0f;
@@ -48,8 +48,7 @@ VTKM_EXEC void Halton2D(const vtkm::Int32& sampleNum, vtkm::Vec<vtkm::Float32, 2
 } // Halton2D
 
 VTKM_EXEC
-vtkm::Vec<vtkm::Float32, 3> CosineWeightedHemisphere(const vtkm::Int32& sampleNum,
-                                                     const vtkm::Vec<vtkm::Float32, 3>& normal)
+vtkm::Vec3f_32 CosineWeightedHemisphere(const vtkm::Int32& sampleNum, const vtkm::Vec3f_32& normal)
 {
   //generate orthoganal basis about normal
   int kz = 0;
@@ -67,28 +66,28 @@ vtkm::Vec<vtkm::Float32, 3> CosineWeightedHemisphere(const vtkm::Int32& sampleNu
     else
       kz = 2;
   }
-  vtkm::Vec<vtkm::Float32, 3> notNormal;
+  vtkm::Vec3f_32 notNormal;
   notNormal[0] = 0.f;
   notNormal[1] = 0.f;
   notNormal[2] = 0.f;
   notNormal[kz] = 1.f;
 
-  vtkm::Vec<vtkm::Float32, 3> xAxis = vtkm::Cross(normal, notNormal);
+  vtkm::Vec3f_32 xAxis = vtkm::Cross(normal, notNormal);
   vtkm::Normalize(xAxis);
-  vtkm::Vec<vtkm::Float32, 3> yAxis = vtkm::Cross(normal, xAxis);
+  vtkm::Vec3f_32 yAxis = vtkm::Cross(normal, xAxis);
   vtkm::Normalize(yAxis);
 
-  vtkm::Vec<vtkm::Float32, 2> xy;
+  vtkm::Vec2f_32 xy;
   Halton2D<3>(sampleNum, xy);
   const vtkm::Float32 r = Sqrt(xy[0]);
   const vtkm::Float32 theta = 2 * static_cast<vtkm::Float32>(vtkm::Pi()) * xy[1];
 
-  vtkm::Vec<vtkm::Float32, 3> direction(0.f, 0.f, 0.f);
+  vtkm::Vec3f_32 direction(0.f, 0.f, 0.f);
   direction[0] = r * vtkm::Cos(theta);
   direction[1] = r * vtkm::Sin(theta);
   direction[2] = vtkm::Sqrt(vtkm::Max(0.0f, 1.f - xy[0]));
 
-  vtkm::Vec<vtkm::Float32, 3> sampleDir;
+  vtkm::Vec3f_32 sampleDir;
   sampleDir[0] = vtkm::dot(direction, xAxis);
   sampleDir[1] = vtkm::dot(direction, yAxis);
   sampleDir[2] = vtkm::dot(direction, normal);

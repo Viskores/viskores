@@ -28,7 +28,7 @@ namespace
 
 std::default_random_engine RandomGenerator;
 
-using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
+using PointType = vtkm::Vec3f;
 
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet MakeTestDataSetUniform()
@@ -75,14 +75,14 @@ vtkm::cont::DataSet MakeTestDataSetCurvilinear()
   }
 
   vtkm::cont::DataSet curvi;
-  curvi.AddCellSet(recti.GetCellSet());
+  curvi.SetCellSet(recti.GetCellSet());
   curvi.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", sheared));
 
   return curvi;
 }
 
 //-----------------------------------------------------------------------------
-class ParametricToWorldCoordinates : public vtkm::worklet::WorkletMapPointToCell
+class ParametricToWorldCoordinates : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
@@ -115,7 +115,7 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
                          vtkm::cont::ArrayHandle<PointType>& pcoords,
                          vtkm::cont::ArrayHandle<PointType>& wcoords)
 {
-  vtkm::Id numberOfCells = ds.GetCellSet().GetNumberOfCells();
+  vtkm::Id numberOfCells = ds.GetNumberOfCells();
 
   std::uniform_int_distribution<vtkm::Id> cellIdGen(0, numberOfCells - 1);
   std::uniform_real_distribution<vtkm::FloatDefault> pcoordGen(0.0f, 1.0f);
@@ -150,10 +150,10 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename LocatorType>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+  VTKM_EXEC void operator()(const vtkm::Vec3f& point,
                             const LocatorType& locator,
                             vtkm::Id& cellId,
-                            vtkm::Vec<vtkm::FloatDefault, 3>& pcoords) const
+                            vtkm::Vec3f& pcoords) const
   {
     locator->FindCell(point, cellId, pcoords, *this);
   }

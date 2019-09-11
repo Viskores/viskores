@@ -82,10 +82,10 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
     TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
-                                           1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
+  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
+                      1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
@@ -94,9 +94,9 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
     vtkm::cont::Field("nodevar", vtkm::cont::Field::Association::POINTS, fieldArray));
 
   static constexpr vtkm::IdComponent ndim = 3;
-  vtkm::cont::CellSetStructured<ndim> cellSet("cells");
+  vtkm::cont::CellSetStructured<ndim> cellSet;
   cellSet.SetPointDimensions(vdims);
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
   return dataSet;
 }

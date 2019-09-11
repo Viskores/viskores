@@ -11,7 +11,7 @@
 #ifndef vtk_m_worklet_gradient_GradientOutput_h
 #define vtk_m_worklet_gradient_GradientOutput_h
 
-#include <vtkm/BaseComponent.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TransportTagExecObject.h>
@@ -31,7 +31,7 @@ template <typename T, typename DeviceAdapter>
 struct GradientScalarOutputExecutionObject
 {
   using ValueType = vtkm::Vec<T, 3>;
-  using BaseTType = typename vtkm::BaseComponent<T>::Type;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
 
   struct PortalTypes
   {
@@ -61,7 +61,7 @@ template <typename T>
 struct GradientScalarOutput : public vtkm::cont::ExecutionObjectBase
 {
   using ValueType = vtkm::Vec<T, 3>;
-  using BaseTType = typename vtkm::BaseComponent<T>::Type;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
   template <typename Device>
 
   VTKM_CONT vtkm::exec::GradientScalarOutputExecutionObject<T, Device> PrepareForExecution(
@@ -93,7 +93,7 @@ template <typename T, typename DeviceAdapter>
 struct GradientVecOutputExecutionObject
 {
   using ValueType = vtkm::Vec<T, 3>;
-  using BaseTType = typename vtkm::BaseComponent<T>::Type;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
 
   template <typename FieldType>
   struct PortalTypes
@@ -185,7 +185,7 @@ template <typename T>
 struct GradientVecOutput : public vtkm::cont::ExecutionObjectBase
 {
   using ValueType = vtkm::Vec<T, 3>;
-  using BaseTType = typename vtkm::BaseComponent<T>::Type;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
 
   template <typename Device>
   VTKM_CONT vtkm::exec::GradientVecOutputExecutionObject<T, Device> PrepareForExecution(
@@ -243,17 +243,15 @@ struct GradientOutput : public GradientScalarOutput<T>
 };
 
 template <>
-struct GradientOutput<vtkm::Vec<vtkm::Float32, 3>>
-  : public GradientVecOutput<vtkm::Vec<vtkm::Float32, 3>>
+struct GradientOutput<vtkm::Vec3f_32> : public GradientVecOutput<vtkm::Vec3f_32>
 {
-  using GradientVecOutput<vtkm::Vec<vtkm::Float32, 3>>::GradientVecOutput;
+  using GradientVecOutput<vtkm::Vec3f_32>::GradientVecOutput;
 };
 
 template <>
-struct GradientOutput<vtkm::Vec<vtkm::Float64, 3>>
-  : public GradientVecOutput<vtkm::Vec<vtkm::Float64, 3>>
+struct GradientOutput<vtkm::Vec3f_64> : public GradientVecOutput<vtkm::Vec3f_64>
 {
-  using GradientVecOutput<vtkm::Vec<vtkm::Float64, 3>>::GradientVecOutput;
+  using GradientVecOutput<vtkm::Vec3f_64>::GradientVecOutput;
 };
 }
 } // namespace vtkm::exec

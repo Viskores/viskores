@@ -12,6 +12,10 @@
 
 #include <vtkm/internal/IndicesExtrude.h>
 
+#include <vtkm/VecTraits.h>
+
+#include <vtkm/cont/ErrorBadType.h>
+
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
@@ -67,11 +71,6 @@ struct VTKM_ALWAYS_EXPORT ArrayPortalExtrudePlane
     return result;
   }
 
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const {}
-
   PortalType Portal;
   vtkm::Int32 NumberOfPlanes;
 };
@@ -97,16 +96,13 @@ class VTKM_ALWAYS_EXPORT Storage<T, internal::StorageTagExtrudePlane>
 public:
   using ValueType = T;
 
-  // This is meant to be invalid. Because point arrays are read only, you
-  // should only be able to use the const version.
-  struct PortalType
-  {
-    using ValueType = void*;
-    using IteratorType = void*;
-  };
-
   using PortalConstType =
     vtkm::exec::ArrayPortalExtrudePlane<typename HandleType::PortalConstControl>;
+
+  // Note that this array is read only, so you really should only be getting the const
+  // version of the portal. If you actually try to write to this portal, you will
+  // get an error.
+  using PortalType = PortalConstType;
 
   Storage()
     : Array()
@@ -120,7 +116,11 @@ public:
   {
   }
 
-  PortalType GetPortal() { return PortalType{}; }
+  PortalType GetPortal()
+  {
+    throw vtkm::cont::ErrorBadType(
+      "Extrude ArrayHandles are read only. Cannot get writable portal.");
+  }
 
   PortalConstType GetPortalConst() const
   {
@@ -282,10 +282,6 @@ struct VTKM_ALWAYS_EXPORT ArrayPortalExtrude
   VTKM_EXEC_CONT
   vtkm::Vec<ValueType, 6> GetWedge(const IndicesExtrude& index) const;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const {}
-
   PortalType Portal;
   vtkm::Int32 NumberOfValues;
   vtkm::Int32 NumberOfPlanes;
@@ -375,22 +371,19 @@ struct VTKM_ALWAYS_EXPORT StorageTagExtrude
 template <typename T>
 class Storage<T, internal::StorageTagExtrude>
 {
-  using BaseT = typename BaseComponent<T>::Type;
+  using BaseT = typename VecTraits<T>::BaseComponentType;
   using HandleType = vtkm::cont::ArrayHandle<BaseT>;
   using TPortalType = typename HandleType::PortalConstControl;
 
 public:
   using ValueType = T;
 
-  // This is meant to be invalid. Because point arrays are read only, you
-  // should only be able to use the const version.
-  struct PortalType
-  {
-    using ValueType = void*;
-    using IteratorType = void*;
-  };
-
   using PortalConstType = exec::ArrayPortalExtrude<TPortalType>;
+
+  // Note that this array is read only, so you really should only be getting the const
+  // version of the portal. If you actually try to write to this portal, you will
+  // get an error.
+  using PortalType = PortalConstType;
 
   Storage()
     : Array()
@@ -415,7 +408,11 @@ public:
     VTKM_ASSERT(this->Array.GetNumberOfValues() >= 0);
   }
 
-  PortalType GetPortal() { return PortalType{}; }
+  PortalType GetPortal()
+  {
+    throw vtkm::cont::ErrorBadType(
+      "Extrude ArrayHandles are read only. Cannot get writable portal.");
+  }
 
   PortalConstType GetPortalConst() const
   {
@@ -464,7 +461,7 @@ private:
 template <typename T, typename Device>
 class VTKM_ALWAYS_EXPORT ArrayTransfer<T, internal::StorageTagExtrude, Device>
 {
-  using BaseT = typename BaseComponent<T>::Type;
+  using BaseT = typename VecTraits<T>::BaseComponentType;
   using TPortalType = decltype(vtkm::cont::ArrayHandle<BaseT>{}.PrepareForInput(Device{}));
 
 public:

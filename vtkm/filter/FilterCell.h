@@ -19,27 +19,7 @@ namespace filter
 {
 
 template <class Derived>
-class FilterCell : public vtkm::filter::FilterField<Derived>
-{
-public:
-  VTKM_CONT
-  FilterCell();
-
-  VTKM_CONT
-  ~FilterCell();
-
-  VTKM_CONT
-  void SetActiveCellSetIndex(vtkm::Id index) { this->CellSetIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCellSetIndex() const { return this->CellSetIndex; }
-
-protected:
-  vtkm::Id CellSetIndex;
-};
+using FilterCell = vtkm::filter::FilterField<Derived>;
 }
-} // namespace vtkm::filter
-
-#include <vtkm/filter/FilterCell.hxx>
-
+}
 #endif // vtk_m_filter_CellFilter_h

@@ -24,7 +24,7 @@
 
 #include <vector>
 
-using Coord3D = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Coord3D = vtkm::Vec3f;
 
 const vtkm::Float32 clipValue = 0.5;
 
@@ -118,7 +118,7 @@ void TestClippingExplicit()
   vtkm::worklet::Clip clip;
   bool invertClip = false;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0),
+    clip.Run(ds.GetCellSet(),
              ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
              clipValue,
              invertClip);
@@ -149,8 +149,8 @@ void TestClippingExplicit()
                    "Wrong number of points in cell set.");
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                       vtkm::TopologyElementTagCell()),
+    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint()),
                     expectedConnectivity,
                     connectivitySize),
     "Got incorrect conectivity");
@@ -174,7 +174,7 @@ void TestClippingStructured()
   bool invertClip = false;
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0),
+    clip.Run(ds.GetCellSet(),
              ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
              clipValue,
              invertClip);
@@ -211,8 +211,8 @@ void TestClippingStructured()
                    "Wrong number of points in cell set.");
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                       vtkm::TopologyElementTagCell()),
+    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint()),
                     expectedConnectivity,
                     connectivitySize),
     "Got incorrect conectivity");
@@ -228,7 +228,7 @@ void TestClippingStructured()
 
 void TestClippingWithImplicitFunction()
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
@@ -236,7 +236,7 @@ void TestClippingWithImplicitFunction()
   bool invertClip = false;
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0),
+    clip.Run(ds.GetCellSet(),
              vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
              ds.GetCoordinateSystem("coords"),
              invertClip);
@@ -270,8 +270,8 @@ void TestClippingWithImplicitFunction()
                                                  30.f,   30.f,   -30.f, -30.f };
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                       vtkm::TopologyElementTagCell()),
+    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint()),
                     expectedConnectivity,
                     connectivitySize),
     "Got incorrect conectivity");
@@ -287,7 +287,7 @@ void TestClippingWithImplicitFunction()
 
 void TestClippingWithImplicitFunctionInverted()
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
@@ -295,7 +295,7 @@ void TestClippingWithImplicitFunctionInverted()
   bool invertClip = true;
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0),
+    clip.Run(ds.GetCellSet(),
              vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
              ds.GetCoordinateSystem("coords"),
              invertClip);
@@ -325,8 +325,8 @@ void TestClippingWithImplicitFunctionInverted()
   std::vector<vtkm::Float32> expectedCellvar = { -100.f, 100.f, 30.f, -30.f };
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                       vtkm::TopologyElementTagCell()),
+    TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint()),
                     expectedConnectivity,
                     connectivitySize),
     "Got incorrect conectivity");

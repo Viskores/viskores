@@ -118,12 +118,12 @@ void TryRangeComputeDS(const ValueType& min, const ValueType& max)
 }
 
 template <typename ValueType>
-void TryRangeComputeMB(const ValueType& min, const ValueType& max)
+void TryRangeComputePDS(const ValueType& min, const ValueType& max)
 {
-  std::cout << "Trying type (multiblock): " << vtkm::testing::TypeName<ValueType>::Name()
+  std::cout << "Trying type (PartitionedDataSet): " << vtkm::testing::TypeName<ValueType>::Name()
             << std::endl;
 
-  vtkm::cont::MultiBlock mb;
+  vtkm::cont::PartitionedDataSet mb;
   for (int cc = 0; cc < 5; cc++)
   {
     // let's create a dummy dataset with a bunch of fields.
@@ -132,7 +132,7 @@ void TryRangeComputeMB(const ValueType& min, const ValueType& max)
       dataset,
       "pointvar",
       CreateArray(min, max, ARRAY_SIZE, typename vtkm::TypeTraits<ValueType>::DimensionalityTag()));
-    mb.AddBlock(dataset);
+    mb.AppendPartition(dataset);
   }
 
   vtkm::cont::ArrayHandle<vtkm::Range> ranges = vtkm::cont::FieldRangeCompute(mb, "pointvar");
@@ -146,12 +146,12 @@ static void TestFieldRangeCompute()
 
   TryRangeComputeDS<vtkm::Float64>(0, 1000);
   TryRangeComputeDS<vtkm::Int32>(-1024, 1024);
-  TryRangeComputeDS<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                 vtkm::make_Vec(2048, 2048, 2048));
-  TryRangeComputeMB<vtkm::Float64>(0, 1000);
-  TryRangeComputeMB<vtkm::Int32>(-1024, 1024);
-  TryRangeComputeMB<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                 vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeComputeDS<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                    vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeComputePDS<vtkm::Float64>(0, 1000);
+  TryRangeComputePDS<vtkm::Int32>(-1024, 1024);
+  TryRangeComputePDS<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                     vtkm::make_Vec(2048, 2048, 2048));
 };
 
 int UnitTestFieldRangeCompute(int argc, char* argv[])

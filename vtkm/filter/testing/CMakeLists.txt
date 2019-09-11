@@ -15,6 +15,7 @@ set(unit_tests
   UnitTestCleanGrid.cxx
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
+  UnitTestContourFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
@@ -34,24 +35,27 @@ set(unit_tests
   UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
   UnitTestLagrangianFilter.cxx
-  UnitTestMarchingCubesFilter.cxx
+  UnitTestLagrangianStructuresFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
-  UnitTestMultiBlockFilters.cxx
-  UnitTestMultiBlockHistogramFilter.cxx
+  UnitTestMeshQualityFilter.cxx
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx
+  UnitTestPartitionedDataSetFilters.cxx
+  UnitTestPartitionedDataSetHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
   UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
+  UnitTestStreamSurfaceFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx
   UnitTestThresholdPointsFilter.cxx
   UnitTestTriangulateFilter.cxx
+  UnitTestTubeFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
   UnitTestWarpScalarFilter.cxx

@@ -76,7 +76,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/worklet/Invoker.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/ScatterCounting.h>
 
 #include <vtkm/BinaryPredicates.h>

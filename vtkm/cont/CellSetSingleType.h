@@ -46,8 +46,8 @@ class VTKM_ALWAYS_EXPORT CellSetSingleType
 
 public:
   VTKM_CONT
-  CellSetSingleType(const std::string& name = std::string())
-    : Superclass(name)
+  CellSetSingleType()
+    : Superclass()
     , ExpectedNumberOfCellsAdded(-1)
     , CellShapeAsId(CellShapeTagEmpty::Id)
     , NumberOfPointsPerCell(0)
@@ -64,9 +64,27 @@ public:
   }
 
   VTKM_CONT
+  CellSetSingleType(Thisclass&& src) noexcept : Superclass(std::forward<Superclass>(src)),
+                                                ExpectedNumberOfCellsAdded(-1),
+                                                CellShapeAsId(src.CellShapeAsId),
+                                                NumberOfPointsPerCell(src.NumberOfPointsPerCell)
+  {
+  }
+
+
+  VTKM_CONT
   Thisclass& operator=(const Thisclass& src)
   {
     this->Superclass::operator=(src);
+    this->CellShapeAsId = src.CellShapeAsId;
+    this->NumberOfPointsPerCell = src.NumberOfPointsPerCell;
+    return *this;
+  }
+
+  VTKM_CONT
+  Thisclass& operator=(Thisclass&& src) noexcept
+  {
+    this->Superclass::operator=(std::forward<Superclass>(src));
     this->CellShapeAsId = src.CellShapeAsId;
     this->NumberOfPointsPerCell = src.NumberOfPointsPerCell;
     return *this;
@@ -80,7 +98,7 @@ public:
   {
     this->CellShapeAsId = vtkm::CELL_SHAPE_EMPTY;
 
-    this->Data->PointToCell.Connectivity.Allocate(connectivityMaxLen);
+    this->Data->VisitCellsWithPoints.Connectivity.Allocate(connectivityMaxLen);
 
     this->Data->NumberOfCellsAdded = 0;
     this->Data->ConnectivityAdded = 0;
@@ -101,7 +119,7 @@ public:
     }
 
     if (this->Data->ConnectivityAdded + numVertices >
-        this->Data->PointToCell.Connectivity.GetNumberOfValues())
+        this->Data->VisitCellsWithPoints.Connectivity.GetNumberOfValues())
     {
       throw vtkm::cont::ErrorBadValue(
         "Connectivity increased passed estimated maximum connectivity.");
@@ -131,7 +149,7 @@ public:
     }
     for (vtkm::IdComponent iVert = 0; iVert < numVertices; ++iVert)
     {
-      this->Data->PointToCell.Connectivity.GetPortalControl().Set(
+      this->Data->VisitCellsWithPoints.Connectivity.GetPortalControl().Set(
         this->Data->ConnectivityAdded + iVert, Traits::GetComponent(ids, iVert));
     }
     this->Data->NumberOfCellsAdded++;
@@ -143,19 +161,19 @@ public:
   void CompleteAddingCells(vtkm::Id numPoints)
   {
     this->Data->NumberOfPoints = numPoints;
-    this->PointToCell.Connectivity.Shrink(this->ConnectivityAdded);
+    this->VisitCellsWithPoints.Connectivity.Shrink(this->ConnectivityAdded);
 
     vtkm::Id numCells = this->NumberOfCellsAdded;
 
-    this->PointToCell.Shapes =
+    this->VisitCellsWithPoints.Shapes =
       vtkm::cont::make_ArrayHandleConstant(this->GetCellShape(0), numCells);
-    this->PointToCell.NumIndices =
+    this->VisitCellsWithPoints.NumIndices =
       vtkm::cont::make_ArrayHandleConstant(this->NumberOfPointsPerCell, numCells);
-    this->PointToCell.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
+    this->VisitCellsWithPoints.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
       vtkm::Id(0), static_cast<vtkm::Id>(this->NumberOfPointsPerCell), numCells);
 
-    this->PointToCell.ElementsValid = true;
-    this->PointToCell.IndexOffsetsValid = true;
+    this->VisitCellsWithPoints.ElementsValid = true;
+    this->VisitCellsWithPoints.IndexOffsetsValid = true;
 
     if (this->ExpectedNumberOfCellsAdded != this->GetNumberOfCells())
     {
@@ -179,17 +197,18 @@ public:
     this->CheckNumberOfPointsPerCell(numberOfPointsPerCell);
     const vtkm::Id numCells = connectivity.GetNumberOfValues() / numberOfPointsPerCell;
     VTKM_ASSERT((connectivity.GetNumberOfValues() % numberOfPointsPerCell) == 0);
-    this->Data->PointToCell.Shapes = vtkm::cont::make_ArrayHandleConstant(shapeId, numCells);
-    this->Data->PointToCell.NumIndices =
+    this->Data->VisitCellsWithPoints.Shapes =
+      vtkm::cont::make_ArrayHandleConstant(shapeId, numCells);
+    this->Data->VisitCellsWithPoints.NumIndices =
       vtkm::cont::make_ArrayHandleConstant(numberOfPointsPerCell, numCells);
-    this->Data->PointToCell.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
+    this->Data->VisitCellsWithPoints.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
       vtkm::Id(0), static_cast<vtkm::Id>(numberOfPointsPerCell), numCells);
-    this->Data->PointToCell.Connectivity = connectivity;
+    this->Data->VisitCellsWithPoints.Connectivity = connectivity;
 
-    this->Data->PointToCell.ElementsValid = true;
-    this->Data->PointToCell.IndexOffsetsValid = true;
+    this->Data->VisitCellsWithPoints.ElementsValid = true;
+    this->Data->VisitCellsWithPoints.IndexOffsetsValid = true;
 
-    this->ResetConnectivity(TopologyElementTagCell{}, TopologyElementTagPoint{});
+    this->ResetConnectivity(TopologyElementTagPoint{}, TopologyElementTagCell{});
   }
 
   VTKM_CONT
@@ -223,11 +242,11 @@ public:
 
   virtual void PrintSummary(std::ostream& out) const override
   {
-    out << "   CellSetSingleType: " << this->Name << " Type " << this->CellShapeAsId << std::endl;
-    out << "   PointToCell: " << std::endl;
-    this->Data->PointToCell.PrintSummary(out);
-    out << "   CellToPoint: " << std::endl;
-    this->Data->CellToPoint.PrintSummary(out);
+    out << "   CellSetSingleType ShapeType " << this->CellShapeAsId << std::endl;
+    out << "   VisitCellsWithPoints: " << std::endl;
+    this->Data->VisitCellsWithPoints.PrintSummary(out);
+    out << "   VisitPointsWithCells: " << std::endl;
+    this->Data->VisitPointsWithCells.PrintSummary(out);
   }
 
 private:
@@ -303,18 +322,15 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    vtkmdiy::save(bb, cs.GetName());
     vtkmdiy::save(bb, cs.GetNumberOfPoints());
     vtkmdiy::save(bb, cs.GetCellShape(0));
     vtkmdiy::save(bb, cs.GetNumberOfPointsInCell(0));
     vtkmdiy::save(
-      bb, cs.GetConnectivityArray(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}));
+      bb, cs.GetConnectivityArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{}));
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
-    std::string name;
-    vtkmdiy::load(bb, name);
     vtkm::Id numberOfPoints = 0;
     vtkmdiy::load(bb, numberOfPoints);
     vtkm::UInt8 shape;
@@ -324,7 +340,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST> connectivity;
     vtkmdiy::load(bb, connectivity);
 
-    cs = Type(name);
+    cs = Type{};
     cs.Fill(numberOfPoints, shape, count, connectivity);
   }
 };

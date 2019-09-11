@@ -18,27 +18,31 @@ namespace vtkm
 namespace filter
 {
 
-struct DefaultFieldTag
+template <typename Derived>
+class Filter;
+
+namespace detail
 {
+// template<typename T> vtkm::ListTagBase<T> as_list(T);
+vtkm::ListTagUniversal as_list(vtkm::ListTagUniversal);
+template <typename... T>
+vtkm::ListTagBase<T...> as_list(vtkm::ListTagBase<T...>);
+}
+
+
+template <typename Filter>
+struct FilterTraits
+{
+  using InputFieldTypeList =
+    decltype(detail::as_list(std::declval<typename Filter::SupportedTypes>()));
+  using AdditionalFieldStorage = typename Filter::AdditionalFieldStorage;
 };
 
-template <typename Filter, typename FieldTag = DefaultFieldTag>
-class FilterTraits
-{
-public:
-  // A filter is able to state what subset of types it supports
-  // by default. By default we use ListTagUniversal to represent that the
-  // filter accepts all types specified by the users provided policy
-  using InputFieldTypeList = vtkm::ListTagUniversal;
-};
-
-template <typename DerivedPolicy, typename FilterType, typename FieldTag>
+template <typename DerivedPolicy, typename ListOfTypes>
 struct DeduceFilterFieldTypes
 {
-  using FList = typename vtkm::filter::FilterTraits<FilterType, FieldTag>::InputFieldTypeList;
   using PList = typename DerivedPolicy::FieldTypeList;
-
-  using TypeList = vtkm::ListTagIntersect<FList, PList>;
+  using TypeList = vtkm::ListTagIntersect<ListOfTypes, PList>;
 };
 }
 }

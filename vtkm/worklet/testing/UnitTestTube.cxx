@@ -17,7 +17,7 @@
 namespace
 {
 void appendPts(vtkm::cont::DataSetBuilderExplicitIterative& dsb,
-               const vtkm::Vec<vtkm::FloatDefault, 3>& pt,
+               const vtkm::Vec3f& pt,
                std::vector<vtkm::Id>& ids)
 {
   vtkm::Id pid = dsb.AddPoint(pt);
@@ -29,9 +29,9 @@ void createNonPoly(vtkm::cont::DataSetBuilderExplicitIterative& dsb)
 {
   std::vector<vtkm::Id> ids;
 
-  appendPts(dsb, vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 0), ids);
-  appendPts(dsb, vtkm::Vec<vtkm::FloatDefault, 3>(1, 0, 0), ids);
-  appendPts(dsb, vtkm::Vec<vtkm::FloatDefault, 3>(1, 1, 0), ids);
+  appendPts(dsb, vtkm::Vec3f(0, 0, 0), ids);
+  appendPts(dsb, vtkm::Vec3f(1, 0, 0), ids);
+  appendPts(dsb, vtkm::Vec3f(1, 1, 0), ids);
   dsb.AddCell(vtkm::CELL_SHAPE_TRIANGLE, ids);
 }
 
@@ -51,7 +51,7 @@ vtkm::Id calcNumCells(const std::size_t& numPtIds, const vtkm::Id& numSides, con
 
 void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::Id insertNonPolyPos)
 {
-  using VecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using VecType = vtkm::Vec3f;
 
   vtkm::cont::DataSetBuilderExplicitIterative dsb;
   std::vector<vtkm::Id> ids;
@@ -118,9 +118,12 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
   vtkm::cont::DataSet ds = dsb.Create();
 
   vtkm::worklet::Tube tubeWorklet(capEnds, numSides, radius);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newPoints;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
-  tubeWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), newPoints, newCells);
+  tubeWorklet.Run(ds.GetCoordinateSystem(0).GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
+                  ds.GetCellSet(),
+                  newPoints,
+                  newCells);
 
   VTKM_TEST_ASSERT(newPoints.GetNumberOfValues() == reqNumPts,
                    "Wrong number of points in Tube worklet");
@@ -131,7 +134,7 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
 
 void TestLinearPolylines()
 {
-  using VecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using VecType = vtkm::Vec3f;
 
   //Create a number of linear polylines along a set of directions.
   //We check that the tubes are all copacetic (proper number of cells, points),
@@ -173,9 +176,13 @@ void TestLinearPolylines()
     vtkm::Id reqNumCells = calcNumCells(ids.size(), numSides, capEnds);
 
     vtkm::worklet::Tube tubeWorklet(capEnds, numSides, radius);
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newPoints;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
     vtkm::cont::CellSetSingleType<> newCells;
-    tubeWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(0), newPoints, newCells);
+    tubeWorklet.Run(
+      ds.GetCoordinateSystem(0).GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
+      ds.GetCellSet(),
+      newPoints,
+      newCells);
 
     VTKM_TEST_ASSERT(newPoints.GetNumberOfValues() == reqNumPts,
                      "Wrong number of points in Tube worklet");

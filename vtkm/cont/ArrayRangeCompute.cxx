@@ -73,7 +73,7 @@ VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasic)
 // to determine.
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f,
                                 vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>& array,
   vtkm::cont::DeviceAdapterId)
 {
@@ -81,8 +81,8 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 
   // In this portal we know that the min value is the first entry and the
   // max value is the last entry.
-  vtkm::Vec<vtkm::FloatDefault, 3> minimum = portal.Get(0);
-  vtkm::Vec<vtkm::FloatDefault, 3> maximum = portal.Get(portal.GetNumberOfValues() - 1);
+  vtkm::Vec3f minimum = portal.Get(0);
+  vtkm::Vec3f maximum = portal.Get(portal.GetNumberOfValues() - 1);
 
   vtkm::cont::ArrayHandle<vtkm::Range> rangeArray;
   rangeArray.Allocate(3);

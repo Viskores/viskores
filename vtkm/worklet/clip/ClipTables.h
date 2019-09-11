@@ -2466,7 +2466,7 @@ VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt8 CellEdges[CELL_EDGES_SIZE] = {
 class ClipTables : public vtkm::cont::ExecutionObjectBase
 {
 public:
-  using EdgeVec = vtkm::Vec<vtkm::IdComponent, 2>;
+  using EdgeVec = vtkm::IdComponent2;
 
   template <typename DeviceAdapter>
   class DevicePortal

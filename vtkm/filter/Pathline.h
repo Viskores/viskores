@@ -27,11 +27,13 @@ namespace filter
 class Pathline : public vtkm::filter::FilterDataSetWithField<Pathline>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   Pathline();
 
   VTKM_CONT
-  void SetPreviousTime(vtkm::worklet::particleadvection::ScalarType t) { this->PreviousTime = t; }
+  void SetCurrentTime(vtkm::worklet::particleadvection::ScalarType t) { this->CurrentTime = t; }
   VTKM_CONT
   void SetNextTime(vtkm::worklet::particleadvection::ScalarType t) { this->NextTime = t; }
 
@@ -45,7 +47,7 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& seeds);
+  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds);
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -65,22 +67,11 @@ public:
 private:
   vtkm::worklet::Streamline Worklet;
   vtkm::worklet::particleadvection::ScalarType StepSize;
-  vtkm::worklet::particleadvection::ScalarType PreviousTime;
+  vtkm::worklet::particleadvection::ScalarType CurrentTime;
   vtkm::worklet::particleadvection::ScalarType NextTime;
   vtkm::cont::DataSet NextDataSet;
   vtkm::Id NumberOfSteps;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Seeds;
-};
-
-template <>
-class FilterTraits<Pathline>
-{
-public:
-  struct TypeListTagPathline
-    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
-  {
-  };
-  using InputFieldTypeList = TypeListTagPathline;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
 };
 }
 } // namespace vtkm::filter

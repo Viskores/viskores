@@ -29,7 +29,7 @@ class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>
 
 public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
-  using IndicesFromType = typename ConnectivityType::IndicesType;
+  using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
 
@@ -49,7 +49,7 @@ public:
     this->OutputIndex = index;
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
-    this->IndicesFrom = connectivity.GetIndices(logicalIndex);
+    this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
@@ -70,7 +70,7 @@ public:
     this->OutputIndex = index;
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
-    this->IndicesFrom = connectivity.GetIndices(logicalIndex);
+    this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
@@ -128,7 +128,7 @@ public:
   /// containing the indices to the "from" elements.
   ///
   VTKM_EXEC
-  const IndicesFromType& GetIndicesFrom() const { return this->IndicesFrom; }
+  const IndicesIncidentType& GetIndicesIncident() const { return this->IndicesIncident; }
 
   /// \brief The input indices of the "from" elements in pointer form.
   ///
@@ -140,7 +140,7 @@ public:
   /// not go out of scope, at which time the returned pointer becomes invalid.
   ///
   VTKM_EXEC
-  const IndicesFromType* GetIndicesFromPointer() const { return &this->IndicesFrom; }
+  const IndicesIncidentType* GetIndicesIncidentPointer() const { return &this->IndicesIncident; }
 
   /// \brief The shape of the input cell.
   ///
@@ -158,7 +158,7 @@ private:
   vtkm::IdComponent VisitIndex;
   vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
-  IndicesFromType IndicesFrom;
+  IndicesIncidentType IndicesIncident;
   //CellShapeTag CellShape;
   vtkm::Id GlobalThreadIndexOffset;
 };
@@ -171,7 +171,7 @@ class ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>>
 
 public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
-  using IndicesFromType = typename ConnectivityType::IndicesType;
+  using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -191,7 +191,7 @@ public:
     this->OutputIndex = index;
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
-    this->IndicesFrom = connectivity.GetIndices(logicalIndex);
+    this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
@@ -209,7 +209,7 @@ public:
     this->OutputIndex = index;
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
-    this->IndicesFrom = connectivity.GetIndices(logicalIndex);
+    this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
@@ -266,7 +266,7 @@ public:
   /// containing the indices to the "from" elements.
   ///
   VTKM_EXEC
-  const IndicesFromType& GetIndicesFrom() const { return this->IndicesFrom; }
+  const IndicesIncidentType& GetIndicesIncident() const { return this->IndicesIncident; }
 
   /// \brief The input indices of the "from" elements in pointer form.
   ///
@@ -278,7 +278,7 @@ public:
   /// not go out of scope, at which time the returned pointer becomes invalid.
   ///
   VTKM_EXEC
-  const IndicesFromType* GetIndicesFromPointer() const { return &this->IndicesFrom; }
+  const IndicesIncidentType* GetIndicesIncidentPointer() const { return &this->IndicesIncident; }
 
   /// \brief The shape of the input cell.
   ///
@@ -296,7 +296,7 @@ private:
   vtkm::IdComponent VisitIndex;
   vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
-  IndicesFromType IndicesFrom;
+  IndicesIncidentType IndicesIncident;
   //CellShapeTag CellShape;
   vtkm::Id GlobalThreadIndexOffset;
 };

@@ -80,18 +80,18 @@ int main(int argc, char* argv[])
   const vtkm::Id num_bins = static_cast<vtkm::Id>(std::atoi(argv[1]));
   const vtkm::Id numVals = 1024;
 
-  vtkm::cont::MultiBlock mb;
+  vtkm::cont::PartitionedDataSet pds;
   vtkm::cont::DataSet ds;
   vtkm::cont::DataSetFieldAdd::AddPointField(ds, "pointvar", CreateArray(-1024, 1024, numVals));
-  mb.AddBlock(ds);
+  pds.AppendPartition(ds);
 
   example::HistogramMPI histogram;
   histogram.SetActiveField("pointvar");
   histogram.SetNumberOfBins(std::max<vtkm::Id>(1, num_bins));
-  vtkm::cont::MultiBlock result = histogram.Execute(mb);
+  vtkm::cont::PartitionedDataSet result = histogram.Execute(pds);
 
   vtkm::cont::ArrayHandle<vtkm::Id> bins;
-  result.GetBlock(0).GetField("histogram").GetData().CopyTo(bins);
+  result.GetPartition(0).GetField("histogram").GetData().CopyTo(bins);
   auto binPortal = bins.GetPortalConstControl();
   if (rank == 0)
   {

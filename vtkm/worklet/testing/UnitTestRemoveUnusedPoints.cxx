@@ -17,7 +17,7 @@ namespace
 
 vtkm::cont::CellSetExplicit<> CreateInputCellSet()
 {
-  vtkm::cont::CellSetExplicit<> cellSet("cells");
+  vtkm::cont::CellSetExplicit<> cellSet;
   cellSet.PrepareToAddCells(2, 7);
   cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::make_Vec<vtkm::Id>(0, 2, 4));
   cellSet.AddCell(vtkm::CELL_SHAPE_QUAD, 4, vtkm::make_Vec<vtkm::Id>(4, 2, 6, 8));
@@ -37,13 +37,13 @@ void CheckOutputCellSet(const vtkm::cont::CellSetExplicit<>& cellSet,
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(0) == 3, "Wrong num points");
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(1) == 4, "Wrong num points");
 
-  vtkm::Vec<vtkm::Id, 3> pointIds3;
+  vtkm::Id3 pointIds3;
   cellSet.GetIndices(0, pointIds3);
   VTKM_TEST_ASSERT(pointIds3[0] == 0, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds3[1] == 1, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds3[2] == 2, "Wrong point id for cell");
 
-  vtkm::Vec<vtkm::Id, 4> pointIds4;
+  vtkm::Id4 pointIds4;
   cellSet.GetIndices(1, pointIds4);
   VTKM_TEST_ASSERT(pointIds4[0] == 2, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds4[1] == 1, "Wrong point id for cell");

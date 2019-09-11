@@ -10,8 +10,6 @@
 
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm
 {
@@ -38,15 +36,12 @@ inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("Cell field expected.");
   }
 
-  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet(this->GetActiveCellSetIndex());
+  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet();
 
   //todo: we need to ask the policy what storage type we should be using
   //If the input is implicit, we should know what to fall back to
   vtkm::cont::ArrayHandle<T> outArray;
-
-  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointAverage> dispatcher(this->Worklet);
-
-  dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellSet, policy), inField, outArray);
+  this->Invoke(this->Worklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy), inField, outArray);
 
   std::string outputName = this->GetOutputFieldName();
   if (outputName.empty())
@@ -55,8 +50,7 @@ inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
     outputName = fieldMetadata.GetName();
   }
 
-  return internal::CreateResult(
-    input, outArray, outputName, vtkm::cont::Field::Association::POINTS, cellSet.GetName());
+  return CreateResultFieldPoint(input, outArray, outputName);
 }
 }
 } // namespace vtkm::filter

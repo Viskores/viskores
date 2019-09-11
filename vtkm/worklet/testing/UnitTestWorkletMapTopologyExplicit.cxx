@@ -25,7 +25,7 @@
 namespace test_explicit
 {
 
-class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
+class MaxPointOrCellValue : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(FieldInCell inCells,
@@ -82,7 +82,7 @@ static void TestMaxPointOrCell()
   std::cout << "Testing MaxPointOfCell worklet" << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
-  auto cellset = dataSet.GetCellSet(0).Cast<vtkm::cont::CellSetExplicit<>>();
+  auto cellset = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 

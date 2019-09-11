@@ -25,6 +25,7 @@
 
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/testing/Testing.h>
@@ -154,6 +155,40 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
 
   TestVecTypeWritableImpl<NUM_COMPONENTS, NonConstT>(
     inVector, vectorCopy, outVector, typename VecIsWritable<NonConstT>::type());
+
+  // Compiler checks for base component types
+  using BaseComponentType = typename vtkm::VecTraits<T>::BaseComponentType;
+  VTKM_STATIC_ASSERT((std::is_same<typename vtkm::TypeTraits<BaseComponentType>::DimensionalityTag,
+                                   vtkm::TypeTraitsScalarTag>::value));
+  VTKM_STATIC_ASSERT((std::is_same<typename vtkm::VecTraits<ComponentType>::BaseComponentType,
+                                   BaseComponentType>::value));
+
+  // Compiler checks for replacing component types
+  using ReplaceWithVecComponent =
+    typename vtkm::VecTraits<T>::template ReplaceComponentType<vtkm::Vec<char, 2>>;
+  VTKM_STATIC_ASSERT(
+    (std::is_same<typename vtkm::TypeTraits<T>::DimensionalityTag,
+                  vtkm::TypeTraitsVectorTag>::value &&
+     std::is_same<typename vtkm::VecTraits<ReplaceWithVecComponent>::ComponentType,
+                  vtkm::Vec<char, 2>>::value) ||
+    (std::is_same<typename vtkm::TypeTraits<T>::DimensionalityTag,
+                  vtkm::TypeTraitsScalarTag>::value &&
+     std::is_same<typename vtkm::VecTraits<ReplaceWithVecComponent>::ComponentType, char>::value));
+  VTKM_STATIC_ASSERT(
+    (std::is_same<typename vtkm::VecTraits<ReplaceWithVecComponent>::BaseComponentType,
+                  char>::value));
+  using ReplaceBaseComponent =
+    typename vtkm::VecTraits<ReplaceWithVecComponent>::template ReplaceBaseComponentType<short>;
+  VTKM_STATIC_ASSERT(
+    (std::is_same<typename vtkm::TypeTraits<T>::DimensionalityTag,
+                  vtkm::TypeTraitsVectorTag>::value &&
+     std::is_same<typename vtkm::VecTraits<ReplaceBaseComponent>::ComponentType,
+                  vtkm::Vec<short, 2>>::value) ||
+    (std::is_same<typename vtkm::TypeTraits<T>::DimensionalityTag,
+                  vtkm::TypeTraitsScalarTag>::value &&
+     std::is_same<typename vtkm::VecTraits<ReplaceBaseComponent>::ComponentType, short>::value));
+  VTKM_STATIC_ASSERT((
+    std::is_same<typename vtkm::VecTraits<ReplaceBaseComponent>::BaseComponentType, short>::value));
 }
 
 inline void CheckVecComponentsTag(vtkm::VecTraitsTagMultipleComponents)

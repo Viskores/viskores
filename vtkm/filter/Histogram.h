@@ -25,6 +25,8 @@ namespace filter
 class Histogram : public vtkm::filter::FilterField<Histogram>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
+
   //Construct a histogram with a default of 10 bins
   VTKM_CONT
   Histogram();
@@ -63,16 +65,16 @@ public:
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //@{
-  /// when operating on vtkm::cont::MultiBlock, we
+  /// when operating on vtkm::cont::PartitionedDataSet, we
   /// want to do processing across ranks as well. Just adding pre/post handles
   /// for the same does the trick.
   template <typename DerivedPolicy>
-  VTKM_CONT void PreExecute(const vtkm::cont::MultiBlock& input,
+  VTKM_CONT void PreExecute(const vtkm::cont::PartitionedDataSet& input,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT void PostExecute(const vtkm::cont::MultiBlock& input,
-                             vtkm::cont::MultiBlock& output,
+  VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,
+                             vtkm::cont::PartitionedDataSet& output,
                              const vtkm::filter::PolicyBase<DerivedPolicy>&);
   //@}
 
@@ -81,15 +83,6 @@ private:
   vtkm::Float64 BinDelta;
   vtkm::Range ComputedRange;
   vtkm::Range Range;
-};
-
-template <>
-class FilterTraits<Histogram>
-{ //currently the Histogram filter only works on scalar data.
-  //this mainly has to do with getting the ranges for each bin
-  //would require returning a more complex value type
-public:
-  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

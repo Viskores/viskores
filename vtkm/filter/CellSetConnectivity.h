@@ -11,9 +11,7 @@
 #ifndef vtkm_m_filter_CellSetConnectivity_h
 #define vtkm_m_filter_CellSetConnectivity_h
 
-
 #include <vtkm/filter/FilterCell.h>
-#include <vtkm/worklet/connectivities/CellSetConnectivity.h>
 
 namespace vtkm
 {
@@ -22,6 +20,7 @@ namespace filter
 class CellSetConnectivity : public vtkm::filter::FilterCell<CellSetConnectivity>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
   VTKM_CONT CellSetConnectivity();
 
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -30,20 +29,9 @@ public:
                                           const vtkm::filter::FieldMetadata& fieldMetadata,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>&);
 };
-
-template <>
-class FilterTraits<vtkm::filter::CellSetConnectivity>
-{
-public:
-  struct InputFieldTypeList : vtkm::TypeListTagScalarAll
-  {
-  };
-};
 }
 }
 
-#ifndef vtkm_m_filter_CellSetConnectivity_hxx
 #include <vtkm/filter/CellSetConnectivity.hxx>
-#endif
 
 #endif //vtkm_m_filter_CellSetConnectivity_h

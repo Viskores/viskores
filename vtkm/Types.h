@@ -678,12 +678,13 @@ public:
   }
 
 public:
-  inline VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfComponents() const { return NUM_COMPONENTS; }
-
-  inline VTKM_EXEC_CONT const ComponentType& operator[](vtkm::IdComponent idx) const
+  inline VTKM_EXEC_CONT constexpr vtkm::IdComponent GetNumberOfComponents() const
   {
-    VTKM_ASSERT(idx >= 0);
-    VTKM_ASSERT(idx < NUM_COMPONENTS);
+    return NUM_COMPONENTS;
+  }
+
+  inline VTKM_EXEC_CONT constexpr const ComponentType& operator[](vtkm::IdComponent idx) const
+  {
     return this->Components[idx];
   }
 
@@ -854,8 +855,16 @@ public:
     return *this;
   }
 
+  inline VTKM_EXEC_CONT constexpr vtkm::IdComponent GetNumberOfComponents() const
+  {
+    return NUM_COMPONENTS;
+  }
+
   VTKM_EXEC_CONT
-  ComponentType operator[](vtkm::IdComponent vtkmNotUsed(idx)) const { return ComponentType(); }
+  constexpr ComponentType operator[](vtkm::IdComponent vtkmNotUsed(idx)) const
+  {
+    return ComponentType();
+  }
 
   VTKM_EXEC_CONT
   bool operator==(const Vec<T, NUM_COMPONENTS>& vtkmNotUsed(other)) const { return true; }
@@ -912,8 +921,96 @@ public:
   }
 };
 
-/// Id2 corresponds to a 2-dimensional index
+/// \brief Id2 corresponds to a 2-dimensional index.
+///
 using Id2 = vtkm::Vec<vtkm::Id, 2>;
+
+/// \brief IdComponent2 corresponds to an index to a local (small) 2-d array or equivalent.
+///
+using IdComponent2 = vtkm::Vec<vtkm::IdComponent, 2>;
+
+/// \brief Vec2f corresponds to a 2-dimensional vector of floating point values.
+///
+/// Each floating point value is of the default precision (i.e. vtkm::FloatDefault). It is
+/// typedef for vtkm::Vec<vtkm::FloatDefault, 2>.
+///
+using Vec2f = vtkm::Vec<vtkm::FloatDefault, 2>;
+
+/// \brief Vec2f_32 corresponds to a 2-dimensional vector of 32-bit floating point values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Float32, 2>.
+///
+using Vec2f_32 = vtkm::Vec<vtkm::Float32, 2>;
+
+/// \brief Vec2f_64 corresponds to a 2-dimensional vector of 64-bit floating point values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Float64, 2>.
+///
+using Vec2f_64 = vtkm::Vec<vtkm::Float64, 2>;
+
+/// \brief Vec2i corresponds to a 2-dimensional vector of integer values.
+///
+/// Each integer value is of the default precision (i.e. vtkm::Id).
+///
+using Vec2i = vtkm::Vec<vtkm::Id, 2>;
+
+/// \brief Vec2i_8 corresponds to a 2-dimensional vector of 8-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int32, 2>.
+///
+using Vec2i_8 = vtkm::Vec<vtkm::Int8, 2>;
+
+/// \brief Vec2i_16 corresponds to a 2-dimensional vector of 16-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int32, 2>.
+///
+using Vec2i_16 = vtkm::Vec<vtkm::Int16, 2>;
+
+/// \brief Vec2i_32 corresponds to a 2-dimensional vector of 32-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int32, 2>.
+///
+using Vec2i_32 = vtkm::Vec<vtkm::Int32, 2>;
+
+/// \brief Vec2i_64 corresponds to a 2-dimensional vector of 64-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int64, 2>.
+///
+using Vec2i_64 = vtkm::Vec<vtkm::Int64, 2>;
+
+/// \brief Vec2ui corresponds to a 2-dimensional vector of unsigned integer values.
+///
+/// Each integer value is of the default precision (following vtkm::Id).
+///
+#ifdef VTKM_USE_64BIT_IDS
+using Vec2ui = vtkm::Vec<vtkm::UInt64, 2>;
+#else
+using Vec2ui = vtkm::Vec<vtkm::UInt32, 2>;
+#endif
+
+/// \brief Vec2ui_8 corresponds to a 2-dimensional vector of 8-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt32, 2>.
+///
+using Vec2ui_8 = vtkm::Vec<vtkm::UInt8, 2>;
+
+/// \brief Vec2ui_16 corresponds to a 2-dimensional vector of 16-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt32, 2>.
+///
+using Vec2ui_16 = vtkm::Vec<vtkm::UInt16, 2>;
+
+/// \brief Vec2ui_32 corresponds to a 2-dimensional vector of 32-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt32, 2>.
+///
+using Vec2ui_32 = vtkm::Vec<vtkm::UInt32, 2>;
+
+/// \brief Vec2ui_64 corresponds to a 2-dimensional vector of 64-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt64, 2>.
+///
+using Vec2ui_64 = vtkm::Vec<vtkm::UInt64, 2>;
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT Vec<T, 3> : public detail::VecBase<T, 3, Vec<T, 3>>
@@ -940,9 +1037,98 @@ public:
   }
 };
 
-/// Id3 corresponds to a 3-dimensional index for 3d arrays.  Note that
-/// the precision of each index may be less than vtkm::Id.
+/// \brief Id3 corresponds to a 3-dimensional index for 3d arrays.
+///
+/// Note that the precision of each index may be less than vtkm::Id.
+///
 using Id3 = vtkm::Vec<vtkm::Id, 3>;
+
+/// \brief IdComponent2 corresponds to an index to a local (small) 3-d array or equivalent.
+///
+using IdComponent3 = vtkm::Vec<vtkm::IdComponent, 3>;
+
+/// \brief Vec3f corresponds to a 3-dimensional vector of floating point values.
+///
+/// Each floating point value is of the default precision (i.e. vtkm::FloatDefault). It is
+/// typedef for vtkm::Vec<vtkm::FloatDefault, 3>.
+///
+using Vec3f = vtkm::Vec<vtkm::FloatDefault, 3>;
+
+/// \brief Vec3f_32 corresponds to a 3-dimensional vector of 32-bit floating point values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Float32, 3>.
+///
+using Vec3f_32 = vtkm::Vec<vtkm::Float32, 3>;
+
+/// \brief Vec3f_64 corresponds to a 3-dimensional vector of 64-bit floating point values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Float64, 3>.
+///
+using Vec3f_64 = vtkm::Vec<vtkm::Float64, 3>;
+
+/// \brief Vec3i corresponds to a 3-dimensional vector of integer values.
+///
+/// Each integer value is of the default precision (i.e. vtkm::Id).
+///
+using Vec3i = vtkm::Vec<vtkm::Id, 3>;
+
+/// \brief Vec3i_8 corresponds to a 3-dimensional vector of 8-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int32, 3>.
+///
+using Vec3i_8 = vtkm::Vec<vtkm::Int8, 3>;
+
+/// \brief Vec3i_16 corresponds to a 3-dimensional vector of 16-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int32, 3>.
+///
+using Vec3i_16 = vtkm::Vec<vtkm::Int16, 3>;
+
+/// \brief Vec3i_32 corresponds to a 3-dimensional vector of 32-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int32, 3>.
+///
+using Vec3i_32 = vtkm::Vec<vtkm::Int32, 3>;
+
+/// \brief Vec3i_64 corresponds to a 3-dimensional vector of 64-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int64, 3>.
+///
+using Vec3i_64 = vtkm::Vec<vtkm::Int64, 3>;
+
+/// \brief Vec3ui corresponds to a 3-dimensional vector of unsigned integer values.
+///
+/// Each integer value is of the default precision (following vtkm::Id).
+///
+#ifdef VTKM_USE_64BIT_IDS
+using Vec3ui = vtkm::Vec<vtkm::UInt64, 3>;
+#else
+using Vec3ui = vtkm::Vec<vtkm::UInt32, 3>;
+#endif
+
+/// \brief Vec3ui_8 corresponds to a 3-dimensional vector of 8-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt32, 3>.
+///
+using Vec3ui_8 = vtkm::Vec<vtkm::UInt8, 3>;
+
+/// \brief Vec3ui_16 corresponds to a 3-dimensional vector of 16-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt32, 3>.
+///
+using Vec3ui_16 = vtkm::Vec<vtkm::UInt16, 3>;
+
+/// \brief Vec3ui_32 corresponds to a 3-dimensional vector of 32-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt32, 3>.
+///
+using Vec3ui_32 = vtkm::Vec<vtkm::UInt32, 3>;
+
+/// \brief Vec3ui_64 corresponds to a 3-dimensional vector of 64-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt64, 3>.
+///
+using Vec3ui_64 = vtkm::Vec<vtkm::UInt64, 3>;
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT Vec<T, 4> : public detail::VecBase<T, 4, Vec<T, 4>>
@@ -968,6 +1154,97 @@ public:
   {
   }
 };
+
+/// \brief Id4 corresponds to a 4-dimensional index.
+///
+using Id4 = vtkm::Vec<vtkm::Id, 4>;
+
+/// \brief IdComponent4 corresponds to an index to a local (small) 4-d array or equivalent.
+///
+using IdComponent4 = vtkm::Vec<vtkm::IdComponent, 4>;
+
+/// \brief Vec4f corresponds to a 4-dimensional vector of floating point values.
+///
+/// Each floating point value is of the default precision (i.e. vtkm::FloatDefault). It is
+/// typedef for vtkm::Vec<vtkm::FloatDefault, 4>.
+///
+using Vec4f = vtkm::Vec<vtkm::FloatDefault, 4>;
+
+/// \brief Vec4f_32 corresponds to a 4-dimensional vector of 32-bit floating point values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Float32, 4>.
+///
+using Vec4f_32 = vtkm::Vec<vtkm::Float32, 4>;
+
+/// \brief Vec4f_64 corresponds to a 4-dimensional vector of 64-bit floating point values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Float64, 4>.
+///
+using Vec4f_64 = vtkm::Vec<vtkm::Float64, 4>;
+
+/// \brief Vec4i corresponds to a 4-dimensional vector of integer values.
+///
+/// Each integer value is of the default precision (i.e. vtkm::Id).
+///
+using Vec4i = vtkm::Vec<vtkm::Id, 4>;
+
+/// \brief Vec4i_8 corresponds to a 4-dimensional vector of 8-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int32, 4>.
+///
+using Vec4i_8 = vtkm::Vec<vtkm::Int8, 4>;
+
+/// \brief Vec4i_16 corresponds to a 4-dimensional vector of 16-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int32, 4>.
+///
+using Vec4i_16 = vtkm::Vec<vtkm::Int16, 4>;
+
+/// \brief Vec4i_32 corresponds to a 4-dimensional vector of 32-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int32, 4>.
+///
+using Vec4i_32 = vtkm::Vec<vtkm::Int32, 4>;
+
+/// \brief Vec4i_64 corresponds to a 4-dimensional vector of 64-bit integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::Int64, 4>.
+///
+using Vec4i_64 = vtkm::Vec<vtkm::Int64, 4>;
+
+/// \brief Vec4ui corresponds to a 4-dimensional vector of unsigned integer values.
+///
+/// Each integer value is of the default precision (following vtkm::Id).
+///
+#ifdef VTKM_USE_64BIT_IDS
+using Vec4ui = vtkm::Vec<vtkm::UInt64, 4>;
+#else
+using Vec4ui = vtkm::Vec<vtkm::UInt32, 4>;
+#endif
+
+/// \brief Vec4ui_8 corresponds to a 4-dimensional vector of 8-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt32, 4>.
+///
+using Vec4ui_8 = vtkm::Vec<vtkm::UInt8, 4>;
+
+/// \brief Vec4ui_16 corresponds to a 4-dimensional vector of 16-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt32, 4>.
+///
+using Vec4ui_16 = vtkm::Vec<vtkm::UInt16, 4>;
+
+/// \brief Vec4ui_32 corresponds to a 4-dimensional vector of 32-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt32, 4>.
+///
+using Vec4ui_32 = vtkm::Vec<vtkm::UInt32, 4>;
+
+/// \brief Vec4ui_64 corresponds to a 4-dimensional vector of 64-bit unsigned integer values.
+///
+/// It is typedef for vtkm::Vec<vtkm::UInt64, 4>.
+///
+using Vec4ui_64 = vtkm::Vec<vtkm::UInt64, 4>;
 
 /// Initializes and returns a Vec containing all the arguments. The arguments should all be the
 /// same type or compile issues will occur.

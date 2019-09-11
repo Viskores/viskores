@@ -191,6 +191,18 @@
 /// \param deviceId The device tag / id for the device on which the functor
 /// failed.
 
+/// \def VTKM_DEFINE_USER_LOG_LEVEL(name, offset)
+/// \brief Convenience macro for creating a custom log level that is usable
+/// in the other macros.  If logging is disabled this macro does nothing.
+/// \param name The name to give the new log level
+/// \param offset The offset from the vtkm::cont::LogLevel::UserFirst value
+/// from the LogLevel enum.  Additionally moduloed against the
+/// vtkm::cont::LogLevel::UserLast value
+/// \note This macro is to be used for quickly setting log levels.  For a
+/// more maintainable solution it is recommended to create a custom enum class
+/// and then cast appropriately, as described here:
+/// https://gitlab.kitware.com/vtk/vtk-m/issues/358#note_550157
+
 #if defined(VTKM_ENABLE_LOGGING)
 
 #define VTKM_LOG_S(level, ...) VLOG_S(static_cast<loguru::Verbosity>(level)) << __VA_ARGS__
@@ -237,6 +249,14 @@
   VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Failing device: " << deviceId.GetName());               \
   VTKM_LOG_S(vtkm::cont::LogLevel::Error, "The failing device has been disabled.")
 
+// Custom log level
+#define VTKM_DEFINE_USER_LOG_LEVEL(name, offset)                                                   \
+  static constexpr vtkm::cont::LogLevel name = static_cast<vtkm::cont::LogLevel>(                  \
+    static_cast<typename std::underlying_type<vtkm::cont::LogLevel>::type>(                        \
+      vtkm::cont::LogLevel::UserFirst) +                                                           \
+    offset % static_cast<typename std::underlying_type<vtkm::cont::LogLevel>::type>(               \
+               vtkm::cont::LogLevel::UserLast))
+
 #else // VTKM_ENABLE_LOGGING
 
 #define VTKM_LOG_S(level, ...)
@@ -248,6 +268,7 @@
 #define VTKM_LOG_ERROR_CONTEXT(desc, data)
 #define VTKM_LOG_CAST_SUCC(inObj, outObj)
 #define VTKM_LOG_CAST_FAIL(inObj, outType)
+#define VTKM_DEFINE_USER_LOG_LEVEL(name, offset)
 
 // Always emitted. When logging is disabled, std::cerr is used.
 
@@ -410,6 +431,7 @@ VTKM_CONT_EXPORT
 VTKM_CONT
 std::string GetStackTrace(vtkm::Int32 skip = 0);
 
+//@{
 /// Convert a size in bytes to a human readable string (e.g. "64 bytes",
 /// "1.44 MiB", "128 GiB", etc). @a prec controls the fixed point precision
 /// of the stringified number.
@@ -417,11 +439,26 @@ VTKM_CONT_EXPORT
 VTKM_CONT
 std::string GetHumanReadableSize(vtkm::UInt64 bytes, int prec = 2);
 
+template <typename T>
+VTKM_CONT inline std::string GetHumanReadableSize(T&& bytes, int prec = 2)
+{
+  return GetHumanReadableSize(static_cast<vtkm::UInt64>(std::forward<T>(bytes)), prec);
+}
+//@}
+
+//@{
 /// Returns "%1 (%2 bytes)" where %1 is the result from GetHumanReadableSize
 /// and two is the exact number of bytes.
 VTKM_CONT_EXPORT
 VTKM_CONT
 std::string GetSizeString(vtkm::UInt64 bytes, int prec = 2);
+
+template <typename T>
+VTKM_CONT inline std::string GetSizeString(T&& bytes, int prec = 2)
+{
+  return GetSizeString(static_cast<vtkm::UInt64>(std::forward<T>(bytes)), prec);
+}
+//@}
 
 /**
  * Use RTTI information to retrieve the name of the type T. If logging is

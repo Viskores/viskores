@@ -70,7 +70,7 @@ void TestKdTreeBuildNNS(vtkm::cont::DeviceAdapterId deviceId)
   vtkm::Int32 nTrainingPoints = 1000;
   vtkm::Int32 nTestingPoint = 1000;
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> coordi;
+  std::vector<vtkm::Vec3f_32> coordi;
 
   ///// randomly generate training points/////
   std::default_random_engine dre;
@@ -90,7 +90,7 @@ void TestKdTreeBuildNNS(vtkm::cont::DeviceAdapterId deviceId)
 
   //Nearest Neighbor worklet Testing
   /// randomly generate testing points /////
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
+  std::vector<vtkm::Vec3f_32> qcVec;
   for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
   {
     qcVec.push_back(vtkm::make_Vec(dr(dre), dr(dre), dr(dre)));

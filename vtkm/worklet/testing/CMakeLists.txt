@@ -18,6 +18,7 @@ set(unit_tests
   UnitTestCellSetDualGraph.cxx
   UnitTestCellMeasure.cxx
   UnitTestClipping.cxx
+  UnitTestContour.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestContourTreeUniformAugmented.cxx
   UnitTestCoordinateSystemTransform.cxx
@@ -36,7 +37,6 @@ set(unit_tests
   UnitTestKdTreeBuildNNS.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
-  UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
   UnitTestMaskIndices.cxx
   UnitTestMaskPoints.cxx
@@ -45,6 +45,7 @@ set(unit_tests
   UnitTestNDimsEntropy.cxx
   UnitTestNDimsHistogram.cxx
   UnitTestNDimsHistMarginalization.cxx
+  UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx
@@ -59,11 +60,13 @@ set(unit_tests
   UnitTestSplitSharpEdges.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
+  UnitTestStreamSurface.cxx
   UnitTestSurfaceNormals.cxx
   UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
   UnitTestThresholdPoints.cxx
+  UnitTestTriangleWinding.cxx
   UnitTestTriangulate.cxx
   UnitTestTube.cxx
   UnitTestWholeCellSetIn.cxx

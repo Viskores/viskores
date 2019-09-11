@@ -47,7 +47,7 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
                             GradientOutType& outputGradient) const
   {
     using CoordType = typename PointsIn::ValueType;
-    using CT = typename vtkm::BaseComponent<CoordType>::Type;
+    using CT = typename vtkm::VecTraits<CoordType>::BaseComponentType;
     using OT = typename GradientOutType::ComponentType;
 
     vtkm::Vec<CT, 3> xi, eta, zeta;
@@ -57,9 +57,9 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
     T deta = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
     T dzeta = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
 
-    dxi = (boundary.InXBoundary(1) ? dxi * 0.5f : dxi);
-    deta = (boundary.InYBoundary(1) ? deta * 0.5f : deta);
-    dzeta = (boundary.InZBoundary(1) ? dzeta * 0.5f : dzeta);
+    dxi = (boundary.IsRadiusInXBoundary(1) ? dxi * 0.5f : dxi);
+    deta = (boundary.IsRadiusInYBoundary(1) ? deta * 0.5f : deta);
+    dzeta = (boundary.IsRadiusInZBoundary(1) ? dzeta * 0.5f : dzeta);
 
     outputGradient[0] = static_cast<OT>(xi[0] * dxi + eta[0] * deta + zeta[0] * dzeta);
     outputGradient[1] = static_cast<OT>(xi[1] * dxi + eta[1] * deta + zeta[1] * dzeta);
@@ -84,9 +84,9 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
 
     CoordType r = inputPoints.Portal.GetSpacing();
 
-    r[0] = (boundary.InXBoundary(1) ? r[0] * 0.5f : r[0]);
-    r[1] = (boundary.InYBoundary(1) ? r[1] * 0.5f : r[1]);
-    r[2] = (boundary.InZBoundary(1) ? r[2] * 0.5f : r[2]);
+    r[0] = (boundary.IsRadiusInXBoundary(1) ? r[0] * 0.5f : r[0]);
+    r[1] = (boundary.IsRadiusInYBoundary(1) ? r[1] * 0.5f : r[1]);
+    r[2] = (boundary.IsRadiusInZBoundary(1) ? r[2] * 0.5f : r[2]);
 
     const T dx = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
     const T dy = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
@@ -113,9 +113,9 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
     CoordType eta = inputPoints.Get(0, 1, 0) - inputPoints.Get(0, -1, 0);
     CoordType zeta = inputPoints.Get(0, 0, 1) - inputPoints.Get(0, 0, -1);
 
-    xi = (boundary.InXBoundary(1) ? xi * 0.5f : xi);
-    eta = (boundary.InYBoundary(1) ? eta * 0.5f : eta);
-    zeta = (boundary.InZBoundary(1) ? zeta * 0.5f : zeta);
+    xi = (boundary.IsRadiusInXBoundary(1) ? xi * 0.5f : xi);
+    eta = (boundary.IsRadiusInYBoundary(1) ? eta * 0.5f : eta);
+    zeta = (boundary.IsRadiusInZBoundary(1) ? zeta * 0.5f : zeta);
 
     CT aj = xi[0] * eta[1] * zeta[2] + xi[1] * eta[2] * zeta[0] + xi[2] * eta[0] * zeta[1] -
       xi[2] * eta[1] * zeta[0] - xi[1] * eta[0] * zeta[2] - xi[0] * eta[2] * zeta[1];

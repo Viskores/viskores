@@ -16,6 +16,8 @@
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
+#include <vtkm/internal/ArrayPortalHelpers.h>
+
 #include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
 
 namespace vtkm
@@ -148,7 +150,8 @@ public:
   VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const
   {
-    return this->Portal.Set(index, this->InverseFunctor(value));
+    using call_supported_t = typename vtkm::internal::PortalSupportsSets<PortalType>::type;
+    this->Set(call_supported_t(), index, value);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -157,6 +160,14 @@ public:
 
 private:
   InverseFunctorType InverseFunctor;
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  inline void Set(std::true_type, vtkm::Id index, const ValueType& value) const
+  {
+    this->Portal.Set(index, this->InverseFunctor(value));
+  }
+  VTKM_EXEC_CONT inline void Set(std::false_type, vtkm::Id, const ValueType&) const {}
 };
 }
 }
@@ -274,18 +285,15 @@ class Storage<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueT
 public:
   using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
 
-  // This is meant to be invalid. Because Transform arrays are read only, you
-  // should only be able to use the const version.
-  struct PortalType
-  {
-    using ValueType = void*;
-    using IteratorType = void*;
-  };
-
   using PortalConstType =
     vtkm::exec::internal::ArrayPortalTransform<ValueType,
                                                typename ArrayHandleType::PortalConstControl,
                                                typename FunctorManager::FunctorType>;
+
+  // Note that this array is read only, so you really should only be getting the const
+  // version of the portal. If you actually try to write to this portal, you will
+  // get an error.
+  using PortalType = PortalConstType;
 
   VTKM_CONT
   Storage()

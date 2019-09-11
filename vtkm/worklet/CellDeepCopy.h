@@ -28,7 +28,7 @@ namespace worklet
 ///
 struct CellDeepCopy
 {
-  struct CountCellPoints : vtkm::worklet::WorkletMapPointToCell
+  struct CountCellPoints : vtkm::worklet::WorkletVisitCellsWithPoints
   {
     using ControlSignature = void(CellSetIn inputTopology, FieldOut numPointsInCell);
     using ExecutionSignature = _2(PointCount);
@@ -37,7 +37,7 @@ struct CellDeepCopy
     vtkm::IdComponent operator()(vtkm::IdComponent numPoints) const { return numPoints; }
   };
 
-  struct PassCellStructure : vtkm::worklet::WorkletMapPointToCell
+  struct PassCellStructure : vtkm::worklet::WorkletVisitCellsWithPoints
   {
     using ControlSignature = void(CellSetIn inputTopology, FieldOut shapes, FieldOut pointIndices);
     using ExecutionSignature = void(CellShape, PointIndices, _2, _3);
@@ -92,7 +92,7 @@ struct CellDeepCopy
 
     vtkm::cont::
       CellSetExplicit<ShapeStorage, NumIndicesStorage, ConnectivityStorage, OffsetsStorage>
-        newCellSet(inCellSet.GetName());
+        newCellSet;
     newCellSet.Fill(inCellSet.GetNumberOfPoints(), shapes, numIndices, connectivity, offsets);
     outCellSet = newCellSet;
   }

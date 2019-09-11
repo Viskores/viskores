@@ -36,7 +36,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Output data set permutation
     vtkm::worklet::Mask maskCells;
@@ -62,7 +62,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Output data set with cell set permuted
     vtkm::worklet::Mask maskCells;
@@ -89,7 +89,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Output data set with cell set permuted
     vtkm::worklet::Mask maskCells;

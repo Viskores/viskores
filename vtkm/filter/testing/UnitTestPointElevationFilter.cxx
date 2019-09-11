@@ -20,7 +20,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
 {
   vtkm::cont::DataSet dataSet;
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> coordinates;
+  std::vector<vtkm::Vec3f_32> coordinates;
   const vtkm::Id dim = 5;
   for (vtkm::Id j = 0; j < dim; ++j)
   {
@@ -37,7 +37,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetExplicit<> cellSet("cells");
+  vtkm::cont::CellSetExplicit<> cellSet;
   cellSet.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {
@@ -51,7 +51,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   }
   cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
 
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
   return dataSet;
 }
 }
@@ -72,13 +72,10 @@ void TestPointElevationNoPolicy()
   auto result = filter.Execute(inputData);
 
   //verify the result
-  VTKM_TEST_ASSERT(result.HasField("height", vtkm::cont::Field::Association::POINTS),
-                   "Output field missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("height"), "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetField("height", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(resultArrayHandle);
+  result.GetPointField("height").GetData().CopyTo(resultArrayHandle);
   auto coordinates = inputData.GetCoordinateSystem().GetData();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
@@ -106,13 +103,10 @@ void TestPointElevationWithPolicy()
   auto result = filter.Execute(inputData, p);
 
   //verify the result
-  VTKM_TEST_ASSERT(result.HasField("elevation", vtkm::cont::Field::Association::POINTS),
-                   "Output field has wrong association");
+  VTKM_TEST_ASSERT(result.HasPointField("elevation"), "Output field has wrong association");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetField("elevation", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(resultArrayHandle);
+  result.GetPointField("elevation").GetData().CopyTo(resultArrayHandle);
   auto coordinates = inputData.GetCoordinateSystem().GetData();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {

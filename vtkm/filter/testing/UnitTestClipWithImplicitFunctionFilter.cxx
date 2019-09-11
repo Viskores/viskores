@@ -16,7 +16,7 @@
 namespace
 {
 
-using Coord3D = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Coord3D = vtkm::Vec3f;
 
 vtkm::cont::DataSet MakeTestDatasetStructured()
 {
@@ -47,7 +47,7 @@ void TestClipStructured()
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::filter::ClipWithImplicitFunction clip;
@@ -56,13 +56,11 @@ void TestClipStructured()
 
   vtkm::cont::DataSet outputData = clip.Execute(ds);
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 8,
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 8,
                    "Wrong number of cells in the output dataset");
 
   vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
@@ -86,7 +84,7 @@ void TestClipStructuredInverted()
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::filter::ClipWithImplicitFunction clip;
@@ -96,13 +94,9 @@ void TestClipStructuredInverted()
   clip.SetFieldsToPass("scalars");
   auto outputData = clip.Execute(ds);
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 4,
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 4,
                    "Wrong number of cells in the output dataset");
 
   vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();

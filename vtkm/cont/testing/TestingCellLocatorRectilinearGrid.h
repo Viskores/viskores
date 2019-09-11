@@ -35,7 +35,7 @@ public:
   using RectilinearPortalType =
     typename RectilinearType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Vec<vtkm::Id, 3>& dims, const RectilinearType& coords)
+  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Id3& dims, const RectilinearType& coords)
     : Bounds(bounds)
     , Dims(dims)
   {
@@ -55,30 +55,39 @@ public:
   {
     if (!Bounds.Contains(point))
       return -1;
-    vtkm::Vec<vtkm::Id, 3> logical(-1, -1, -1);
+    vtkm::Id3 logical(-1, -1, -1);
     // Linear search in the coordinates.
     vtkm::Id index;
     /*Get floor X location*/
-    for (index = 0; index < this->Dims[0] - 1; index++)
-      if (xAxis.Get(index) <= point[0] && point[0] < xAxis.Get(index + 1))
-      {
-        logical[0] = index;
-        break;
-      }
+    if (point[0] == xAxis.Get(this->Dims[0] - 1))
+      logical[0] = this->Dims[0] - 1;
+    else
+      for (index = 0; index < this->Dims[0] - 1; index++)
+        if (xAxis.Get(index) <= point[0] && point[0] < xAxis.Get(index + 1))
+        {
+          logical[0] = index;
+          break;
+        }
     /*Get floor Y location*/
-    for (index = 0; index < this->Dims[1] - 1; index++)
-      if (yAxis.Get(index) <= point[1] && point[1] < yAxis.Get(index + 1))
-      {
-        logical[1] = index;
-        break;
-      }
+    if (point[1] == yAxis.Get(this->Dims[1] - 1))
+      logical[1] = this->Dims[1] - 1;
+    else
+      for (index = 0; index < this->Dims[1] - 1; index++)
+        if (yAxis.Get(index) <= point[1] && point[1] < yAxis.Get(index + 1))
+        {
+          logical[1] = index;
+          break;
+        }
     /*Get floor Z location*/
-    for (index = 0; index < this->Dims[2] - 1; index++)
-      if (zAxis.Get(index) <= point[2] && point[2] < zAxis.Get(index + 1))
-      {
-        logical[2] = index;
-        break;
-      }
+    if (point[2] == zAxis.Get(this->Dims[2] - 1))
+      logical[2] = this->Dims[2] - 1;
+    else
+      for (index = 0; index < this->Dims[2] - 1; index++)
+        if (zAxis.Get(index) <= point[2] && point[2] < zAxis.Get(index + 1))
+        {
+          logical[2] = index;
+          break;
+        }
     if (logical[0] == -1 || logical[1] == -1 || logical[2] == -1)
       return -1;
     return logical[2] * (Dims[0] - 1) * (Dims[1] - 1) + logical[1] * (Dims[0] - 1) + logical[0];
@@ -98,7 +107,7 @@ public:
 
 private:
   vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::Id, 3> Dims;
+  vtkm::Id3 Dims;
   AxisPortalType xAxis;
   AxisPortalType yAxis;
   AxisPortalType zAxis;
@@ -136,15 +145,11 @@ public:
     vtkm::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
     vtkm::cont::DynamicCellSet cellSet = dataset.GetCellSet();
     vtkm::Bounds bounds = coords.GetBounds();
-    std::cout << "X bounds : " << bounds.X.Min << " to " << bounds.X.Max << std::endl;
-    std::cout << "Y bounds : " << bounds.Y.Min << " to " << bounds.Y.Max << std::endl;
-    std::cout << "Z bounds : " << bounds.Z.Min << " to " << bounds.Z.Max << std::endl;
-    vtkm::Vec<vtkm::Id, 3> dims =
+    vtkm::Id3 dims =
       cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
-    std::cout << "Dimensions of dataset : " << dims << std::endl;
 
     // Generate some sample points.
-    using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
+    using PointType = vtkm::Vec3f;
     std::vector<PointType> pointsVec;
     std::default_random_engine dre;
     std::uniform_real_distribution<vtkm::Float32> xCoords(0.0f, 4.0f);
@@ -180,7 +185,6 @@ public:
     {
       VTKM_TEST_ASSERT(matchPortal.Get(index), "Points do not match");
     }
-    std::cout << "Test finished successfully." << std::endl;
   }
 
   void operator()() const

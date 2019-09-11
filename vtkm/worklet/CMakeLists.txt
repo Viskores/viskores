@@ -33,21 +33,26 @@ set(headers
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
-  Invoker.h
   KdTree3D.h
   KernelSplatter.h
   Keys.h
+  LagrangianStructures.h
   Magnitude.h
-  MarchingCubes.h
+  Contour.h
   Mask.h
   MaskIndices.h
   MaskNone.h
   MaskPoints.h
   MaskSelect.h
+  MeshQuality.h
   NDimsEntropy.h
   NDimsHistMarginalization.h
   NDimsHistogram.h
   Normalize.h
+  OrientCellNormals.h
+  OrientNormals.h
+  OrientPointNormals.h
+  OrientPointAndCellNormals.h
   OscillatorSource.h
   ParticleAdvection.h
   PointAverage.h
@@ -65,10 +70,12 @@ set(headers
   SplitSharpEdges.h
   StableSortIndices.h
   StreamLineUniformGrid.h
+  StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h
+  TriangleWinding.h
   Triangulate.h
   Tube.h
   VertexClustering.h
@@ -119,6 +126,8 @@ add_subdirectory(contourtree_augmented)
 add_subdirectory(cosmotools)
 add_subdirectory(gradient)
 add_subdirectory(histogram)
+add_subdirectory(lcs)
+add_subdirectory(moments)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
 add_subdirectory(tetrahedralize)
@@ -132,7 +141,7 @@ vtkm_library(
   SOURCES ${sources_no_device}
   TEMPLATE_SOURCES ${header_impls}
   HEADERS ${headers}
-  WRAP_FOR_CUDA ${sources_device}
+  DEVICE_SOURCES ${sources_device}
   )
 target_link_libraries(vtkm_worklet PUBLIC vtkm_cont)
 

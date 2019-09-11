@@ -23,6 +23,8 @@ namespace filter
 class ThresholdPoints : public vtkm::filter::FilterDataSetWithField<ThresholdPoints>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
+
   VTKM_CONT
   ThresholdPoints();
 
@@ -71,13 +73,6 @@ private:
 
   bool CompactPoints;
   vtkm::filter::CleanGrid Compactor;
-};
-
-template <>
-class FilterTraits<ThresholdPoints>
-{ //currently the threshold filter only works on scalar data.
-public:
-  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

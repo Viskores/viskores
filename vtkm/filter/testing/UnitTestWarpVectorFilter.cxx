@@ -54,7 +54,7 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
 class PolicyWarpVector : public vtkm::filter::PolicyBase<PolicyWarpVector>
 {
 public:
-  using vecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using vecType = vtkm::Vec3f;
   struct TypeListTagWarpVectorTags
     : vtkm::ListTagBase<vtkm::cont::ArrayHandleConstant<vecType>::StorageTag,
                         vtkm::cont::ArrayHandle<vecType>::StorageTag>
@@ -65,13 +65,10 @@ public:
 
 void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataSet& result)
 {
-  VTKM_TEST_ASSERT(result.HasField("warpvector", vtkm::cont::Field::Association::POINTS),
-                   "Output filed WarpVector is missing");
-  using vecType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  VTKM_TEST_ASSERT(result.HasPointField("warpvector"), "Output filed WarpVector is missing");
+  using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
-  result.GetField("warpvector", vtkm::cont::Field::Association::POINTS)
-    .GetData()
-    .CopyTo(outputArray);
+  result.GetPointField("warpvector").GetData().CopyTo(outputArray);
   auto outPortal = outputArray.GetPortalConstControl();
 
   for (vtkm::Id j = 0; j < dim; ++j)

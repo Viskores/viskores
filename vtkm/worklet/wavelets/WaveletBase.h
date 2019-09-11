@@ -16,6 +16,7 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 
 namespace vtkm
 {
@@ -225,13 +226,13 @@ public:
   template <typename ArrayType>
   typename ArrayType::ValueType DeviceMax(const ArrayType& array)
   {
-    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
+    typename ArrayType::ValueType initVal = vtkm::cont::ArrayGetValue(0, array);
     return vtkm::cont::Algorithm::Reduce(array, initVal, maxFunctor());
   }
   template <typename ArrayType>
   typename ArrayType::ValueType DeviceMin(const ArrayType& array)
   {
-    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
+    typename ArrayType::ValueType initVal = vtkm::cont::ArrayGetValue(0, array);
     return vtkm::cont::Algorithm::Reduce(array, initVal, minFunctor());
   }
 

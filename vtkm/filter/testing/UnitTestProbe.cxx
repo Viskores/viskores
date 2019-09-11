@@ -48,11 +48,11 @@ vtkm::cont::DataSet MakeGeometryDataSet()
 vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& uds)
 {
   vtkm::cont::DataSet eds;
-  vtkm::cont::CellSetExplicit<> cs(uds.GetCellSet().GetName());
+  vtkm::cont::CellSetExplicit<> cs;
   vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs);
-  eds.AddCellSet(cs);
+  eds.SetCellSet(cs);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> points;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> points;
   vtkm::cont::ArrayCopy(uds.GetCoordinateSystem().GetData(), points);
   eds.AddCoordinateSystem(
     vtkm::cont::CoordinateSystem(uds.GetCoordinateSystem().GetName(), points));

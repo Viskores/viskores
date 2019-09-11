@@ -15,6 +15,10 @@ include(VTKmCPUVectorization)
 include(VTKmMPI)
 
 #-----------------------------------------------------------------------------
+# INTERNAL FUNCTIONS
+# No promises when used from outside VTK-m
+
+#-----------------------------------------------------------------------------
 # Utility to build a kit name from the current directory.
 function(vtkm_get_kit_name kitvar)
   # Will this always work?  It should if ${CMAKE_CURRENT_SOURCE_DIR} is
@@ -49,43 +53,6 @@ function(vtkm_pyexpander_generated_file generated_file_name)
       )
   endif()
 endfunction(vtkm_pyexpander_generated_file)
-
-#-----------------------------------------------------------------------------
-# This function is not needed by the core infrastructure of VTK-m
-# as we now require CMake 3.11 on windows, and for tests we compile a single
-# executable for all backends, instead of compiling for each backend.
-# It is currently kept around so that examples which haven't been updated
-# continue to work
-function(vtkm_compile_as_cuda output)
-  # We can't use set_source_files_properties(<> PROPERTIES LANGUAGE "CUDA")
-  # for the following reasons:
-  #
-  # 1. As of CMake 3.10 MSBuild cuda language support has a bug where files
-  #    aren't passed to nvcc with the explicit '-x cu' flag which will cause
-  #    them to be compiled without CUDA actually enabled.
-  # 2. If the source file is used by multiple targets(libraries/executable)
-  #    they will all see the source file marked as being CUDA. This will cause
-  #    tests / examples that reuse sources with different backends to use CUDA
-  #    by mistake
-  #
-  # The result of this is that instead we will use file(GENERATE ) to construct
-  # a proxy cu file
-  set(_cuda_srcs )
-  foreach(_to_be_cuda_file ${ARGN})
-    get_filename_component(_fname_ext "${_to_be_cuda_file}" EXT)
-    if(_fname_ext STREQUAL ".cu")
-      list(APPEND _cuda_srcs "${_to_be_cuda_file}")
-    else()
-      get_filename_component(_cuda_fname "${_to_be_cuda_file}" NAME_WE)
-      get_filename_component(_not_cuda_fullpath "${_to_be_cuda_file}" ABSOLUTE)
-      list(APPEND _cuda_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu")
-      file(GENERATE
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu
-            CONTENT "#include \"${_not_cuda_fullpath}\"")
-    endif()
-  endforeach()
-  set(${output} ${_cuda_srcs} PARENT_SCOPE)
-endfunction()
 
 #-----------------------------------------------------------------------------
 function(vtkm_generate_export_header lib_name)
@@ -124,7 +91,6 @@ function(vtkm_generate_export_header lib_name)
       DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
       )
   endif()
-
 endfunction(vtkm_generate_export_header)
 
 #-----------------------------------------------------------------------------
@@ -145,21 +111,150 @@ function(vtkm_declare_headers)
 endfunction(vtkm_declare_headers)
 
 #-----------------------------------------------------------------------------
+# FORWARD FACING API
+
+#-----------------------------------------------------------------------------
+# Pass to consumers extra compile flags they need to add to CMAKE_CUDA_FLAGS
+# to have CUDA compatibility.
+#
+# This is required as currently the -sm/-gencode flags when specified inside
+# COMPILE_OPTIONS / target_compile_options are not propagated to the device
+# linker. Instead they must be specified in CMAKE_CUDA_FLAGS
+#
+#
+# add_library(lib_that_uses_vtkm ...)
+# vtkm_add_cuda_flags(CMAKE_CUDA_FLAGS)
+# target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
+#
+function(vtkm_get_cuda_flags settings_var)
+  if(TARGET vtkm::cuda)
+    get_property(arch_flags
+      TARGET    vtkm::cuda
+      PROPERTY  cuda_architecture_flags)
+    set(${settings_var} "${${settings_var}} ${arch_flags}" PARENT_SCOPE)
+  endif()
+endfunction()
+
+
+#-----------------------------------------------------------------------------
+# Add a relevant information to target that wants to use VTK-m.
+#
+# This is a higher order function to allow build-systems that use VTK-m
+# to compose add_library/add_executable and the required information to have
+# VTK-m enabled.
+#
+# vtkm_add_target_information(
+#   target
+#   [ MODIFY_CUDA_FLAGS ]
+#   [ EXTENDS_VTKM ]
+#   [ DEVICE_SOURCES <source_list>
+#   )
+#
+# Usage:
+#   add_library(lib_that_uses_vtkm STATIC a.cxx)
+#   vtkm_add_target_information(lib_that_uses_vtkm
+#                               MODIFY_CUDA_FLAGS
+#                               DEVICE_SOURCES a.cxx
+#                               )
+#   target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
+#
+#  MODIFY_CUDA_FLAGS: If enabled will add the required -arch=<ver> flags
+#  that VTK-m was compiled with. This functionality is also provided by the
+#  the standalone `vtkm_get_cuda_flags` function.
+#
+#  DEVICE_SOURCES: The collection of source files that are used by `target` that
+#  need to be marked as going to a special compiler for certain device adapters
+#  such as CUDA.
+#
+#  EXTENDS_VTKM: Some programming models have restrictions on how types can be used,
+#  passed across library boundaries, and derived from.
+#  For example CUDA doesn't allow device side calls across dynamic library boundaries,
+#  and requires all polymorphic classes to be reachable at dynamic library/executable
+#  link time.
+#
+#  To accommodate these restrictions we need to handle the following allowable
+#  use-cases:
+#   Object library: do nothing, zero restrictions
+#   Executable: do nothing, zero restrictions
+#   Static library: do nothing, zero restrictions
+#   Dynamic library:
+#     -> Wanting to use VTK-m as implementation detail, doesn't expose VTK-m
+#        types to consumers. This is supported no matter if CUDA is enabled.
+#     -> Wanting to extend VTK-m and provide these types to consumers.
+#        This is only supported when CUDA isn't enabled. Otherwise we need to ERROR!
+#     -> Wanting to pass known VTK-m types across library boundaries for others
+#        to use in filters/worklets.
+#        This is only supported when CUDA isn't enabled. Otherwise we need to ERROR!
+#
+#  For most consumers they can ignore the `EXTENDS_VTKM` property as the default
+#  will be correct.
+#
+#
+function(vtkm_add_target_information uses_vtkm_target)
+  set(options MODIFY_CUDA_FLAGS EXTENDS_VTKM)
+  set(multiValueArgs DEVICE_SOURCES)
+  cmake_parse_arguments(VTKm_TI
+    "${options}" "${oneValueArgs}" "${multiValueArgs}"
+    ${ARGN}
+    )
+
+  # Validate that following:
+  #   - We are building with CUDA enabled.
+  #   - We are building a VTK-m library or a library that wants cross library
+  #     device calls.
+  #
+  # This is required as CUDA currently doesn't support device side calls across
+  # dynamic library boundaries.
+  if(TARGET vtkm::cuda)
+    get_target_property(lib_type ${uses_vtkm_target} TYPE)
+    get_target_property(requires_static vtkm::cuda requires_static_builds)
+
+    if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY" AND VTKm_TI_EXTENDS_VTKM)
+      #We provide different error messages based on if we are building VTK-m
+      #or being called by a consumer of VTK-m. We use PROJECT_NAME so that we
+      #produce the correct error message when VTK-m is a subdirectory include
+      #of another project
+      if(PROJECT_NAME STREQUAL "VTKm")
+        message(SEND_ERROR "${uses_vtkm_target} needs to be built STATIC as CUDA doesn't"
+              " support virtual methods across dynamic library boundaries. You"
+              " need to set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+      else()
+        message(SEND_ERROR "${uses_vtkm_target} needs to be built STATIC as CUDA doesn't"
+                " support virtual methods across dynamic library boundaries. You"
+                " should either explicitly call add_library with the `STATIC` keyword"
+                " or set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+      endif()
+    endif()
+
+    set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
+  endif()
+
+  set_target_properties(${uses_vtkm_target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(${uses_vtkm_target} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+  if(VTKm_TI_MODIFY_CUDA_FLAGS)
+    vtkm_get_cuda_flags(CMAKE_CUDA_FLAGS)
+    set(CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} PARENT_SCOPE)
+  endif()
+endfunction()
+
+
+#-----------------------------------------------------------------------------
 # Add a VTK-m library. The name of the library will match the "kit" name
 # (e.g. vtkm_rendering) unless the NAME argument is given.
 #
 # vtkm_library(
-#   [NAME <name>]
+#   [ NAME <name> ]
 #   [ OBJECT | STATIC | SHARED ]
 #   SOURCES <source_list>
 #   TEMPLATE_SOURCES <.hxx >
 #   HEADERS <header list>
-#   [WRAP_FOR_CUDA <source_list>]
+#   [ DEVICE_SOURCES <source_list> ]
 #   )
 function(vtkm_library)
   set(options OBJECT STATIC SHARED)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES WRAP_FOR_CUDA)
+  set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES DEVICE_SOURCES)
   cmake_parse_arguments(VTKm_LIB
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -183,45 +278,21 @@ function(vtkm_library)
               ${VTKm_LIB_SOURCES}
               ${VTKm_LIB_HEADERS}
               ${VTKm_LIB_TEMPLATE_SOURCES}
-              ${VTKm_LIB_WRAP_FOR_CUDA}
+              ${VTKm_LIB_DEVICE_SOURCES}
               )
-
-  # Validate that following:
-  #   - We are building with CUDA enabled.
-  #   - We are building a VTK-m library or a library that wants cross library
-  #     device calls.
-  #
-  # This is required as CUDA currently doesn't support device side calls across
-  # dynamic library boundaries.
-  if(TARGET vtkm::cuda)
-    get_target_property(lib_type ${lib_name} TYPE)
-    get_target_property(requires_static vtkm::cuda INTERFACE_REQUIRES_STATIC_BUILDS)
-    if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY")
-      message(FATAL_ERROR "${lib_name} Needs to be built STATIC as CUDA doesn't"
-              " support virtual methods across dynamic library boundaries. You"
-              " need to set the CMake option BUILD_SHARED_LIBS to OFF.")
-    endif()
-
-    # We are a validate target type for CUDA compilation, so mark all the requested
-    # sources to be compiled by CUDA
-    set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} PROPERTIES LANGUAGE "CUDA")
+  vtkm_add_target_information(${lib_name}
+                              EXTENDS_VTKM
+                              DEVICE_SOURCES ${VTKm_LIB_DEVICE_SOURCES}
+                              )
+  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+    set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
+    set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
   endif()
-
-  #when building either static or shared we want pic code
-  set_target_properties(${lib_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-  #specify when building with cuda we want separable compilation
-  set_property(TARGET ${lib_name} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-
   #specify where to place the built library
   set_property(TARGET ${lib_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${lib_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${lib_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
-  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
-    set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
-    set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
-  endif()
 
   # allow the static cuda runtime find the driver (libcuda.dyllib) at runtime.
   if(APPLE)
@@ -268,209 +339,3 @@ function(vtkm_library)
     )
 
 endfunction(vtkm_library)
-
-#-----------------------------------------------------------------------------
-# Declare unit tests, which should be in the same directory as a kit
-# (package, module, whatever you call it).  Usage:
-#
-# vtkm_unit_tests(
-#   NAME
-#   SOURCES <source_list>
-#   BACKEND <type>
-#   LIBRARIES <dependent_library_list>
-#   DEFINES <target_compile_definitions>
-#   TEST_ARGS <argument_list>
-#   MPI
-#   ALL_BACKENDS
-#   <options>
-#   )
-#
-# [BACKEND]: mark all source files as being compiled with the proper defines
-#            to make this backend the default backend
-#            If the backend is specified as CUDA it will also imply all
-#            sources should be treated as CUDA sources
-#            The backend name will also be added to the executable name
-#            so you can test multiple backends easily
-#
-# [LIBRARIES] : extra libraries that this set of tests need to link too
-#
-# [DEFINES]   : extra defines that need to be set for all unit test sources
-#
-# [TEST_ARGS] : arguments that should be passed on the command line to the
-#               test executable
-#
-# [MPI]       : when specified, the tests should be run in parallel if
-#               MPI is enabled.
-# [ALL_BACKENDS] : when specified, the tests would test against all enabled
-#                  backends. BACKEND argument would be ignored.
-#
-function(vtkm_unit_tests)
-  if (NOT VTKm_ENABLE_TESTING)
-    return()
-  endif()
-
-  set(options)
-  set(global_options ${options} MPI ALL_BACKENDS)
-  set(oneValueArgs BACKEND NAME)
-  set(multiValueArgs SOURCES LIBRARIES DEFINES TEST_ARGS)
-  cmake_parse_arguments(VTKm_UT
-    "${global_options}" "${oneValueArgs}" "${multiValueArgs}"
-    ${ARGN}
-    )
-  vtkm_parse_test_options(VTKm_UT_SOURCES "${options}" ${VTKm_UT_SOURCES})
-
-  set(test_prog)
-  set(backend ${VTKm_UT_BACKEND})
-
-  set(enable_all_backends ${VTKm_UT_ALL_BACKENDS})
-  set(all_backends Serial)
-  if (VTKm_ENABLE_CUDA)
-    list(APPEND all_backends Cuda)
-  endif()
-  if (VTKm_ENABLE_TBB)
-    list(APPEND all_backends TBB)
-  endif()
-  if (VTKm_ENABLE_OPENMP)
-    list(APPEND all_backends OpenMP)
-  endif()
-
-  if(VTKm_UT_NAME)
-    set(test_prog "${VTKm_UT_NAME}")
-  else()
-    vtkm_get_kit_name(kit)
-    set(test_prog "UnitTests_${kit}")
-  endif()
-
-  if(backend)
-    set(test_prog "${test_prog}_${backend}")
-    set(all_backends ${backend})
-  elseif(NOT enable_all_backends)
-    set (all_backends "NO_BACKEND")
-  endif()
-
-  if(VTKm_UT_MPI)
-    # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
-    set(test_prog "${test_prog}_mpi")
-    set(extraArgs EXTRA_INCLUDE "vtkm/cont/testing/Testing.h"
-                  FUNCTION "vtkm::cont::testing::Environment env")
-  else()
-    set(extraArgs)
-  endif()
-
-  #the creation of the test source list needs to occur before the labeling as
-  #cuda. This is so that we get the correctly named entry points generated
-  create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES} ${extraArgs})
-  #if all backends are enabled, we can use cuda compiler to handle all possible backends.
-  if(TARGET vtkm::cuda AND (backend STREQUAL "Cuda" OR enable_all_backends))
-    set_source_files_properties(${VTKm_UT_SOURCES} PROPERTIES LANGUAGE "CUDA")
-  endif()
-
-  add_executable(${test_prog} ${test_prog}.cxx ${VTKm_UT_SOURCES})
-  set_property(TARGET ${test_prog} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-
-  set_property(TARGET ${test_prog} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
-  set_property(TARGET ${test_prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
-  set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
-
-  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
-    set_property(TARGET ${test_prog} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
-    set_property(TARGET ${test_prog} PROPERTY CXX_VISIBILITY_PRESET "hidden")
-  endif()
-
-
-  #Starting in CMake 3.13, cmake will properly drop duplicate libraries
-  #from the link line so this workaround can be dropped
-  if (CMAKE_VERSION VERSION_LESS 3.13 AND "vtkm_rendering" IN_LIST VTKm_UT_LIBRARIES)
-    list(REMOVE_ITEM VTKm_UT_LIBRARIES "vtkm_cont")
-    target_link_libraries(${test_prog} PRIVATE ${VTKm_UT_LIBRARIES})
-  else()
-    target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
-  endif()
-
-  target_compile_definitions(${test_prog} PRIVATE ${VTKm_UT_DEFINES})
-
-  foreach(current_backend ${all_backends})
-    set (device_command_line_argument --device=${current_backend})
-    if (current_backend STREQUAL "NO_BACKEND")
-      set (current_backend "")
-      set(device_command_line_argument "")
-    endif()
-    string(TOUPPER "${current_backend}" upper_backend)
-    foreach (test ${VTKm_UT_SOURCES})
-      get_filename_component(tname ${test} NAME_WE)
-      if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
-        add_test(NAME ${tname}${upper_backend}
-          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
-                  $<TARGET_FILE:${test_prog}> ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
-                  ${MPIEXEC_POSTFLAGS}
-          )
-      else()
-        add_test(NAME ${tname}${upper_backend}
-          COMMAND ${test_prog} ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
-          )
-      endif()
-
-      #determine the timeout for all the tests based on the backend. CUDA tests
-      #generally require more time because of kernel generation.
-      if (current_backend STREQUAL "Cuda")
-        set(timeout 1500)
-      else()
-        set(timeout 180)
-      endif()
-      if(current_backend STREQUAL "OpenMP")
-        #We need to have all OpenMP tests run serially as they
-        #will uses all the system cores, and we will cause a N*N thread
-        #explosion which causes the tests to run slower than when run
-        #serially
-        set(run_serial True)
-      else()
-        set(run_serial False)
-      endif()
-
-      set_tests_properties("${tname}${upper_backend}" PROPERTIES
-        TIMEOUT ${timeout}
-        RUN_SERIAL ${run_serial}
-      )
-
-      set_tests_properties("${tname}${upper_backend}" PROPERTIES
-        FAIL_REGULAR_EXPRESSION "runtime error"
-      )
-
-    endforeach (test)
-  endforeach(current_backend)
-
-endfunction(vtkm_unit_tests)
-
-# -----------------------------------------------------------------------------
-# vtkm_parse_test_options(varname options)
-#   INTERNAL: Parse options specified for individual tests.
-#
-#   Parses the arguments to separate out options specified after the test name
-#   separated by a comma e.g.
-#
-#   TestName,Option1,Option2
-#
-#   For every option in options, this will set _TestName_Option1,
-#   _TestName_Option2, etc in the parent scope.
-#
-function(vtkm_parse_test_options varname options)
-  set(names)
-  foreach(arg IN LISTS ARGN)
-    set(test_name ${arg})
-    set(test_options)
-    if(test_name AND "x${test_name}" MATCHES "^x([^,]*),(.*)$")
-      set(test_name "${CMAKE_MATCH_1}")
-      string(REPLACE "," ";" test_options "${CMAKE_MATCH_2}")
-    endif()
-    foreach(opt IN LISTS test_options)
-      list(FIND options "${opt}" index)
-      if(index EQUAL -1)
-        message(WARNING "Unknown option '${opt}' specified for test '${test_name}'")
-      else()
-        set(_${test_name}_${opt} TRUE PARENT_SCOPE)
-      endif()
-    endforeach()
-    list(APPEND names ${test_name})
-  endforeach()
-  set(${varname} ${names} PARENT_SCOPE)
-endfunction()

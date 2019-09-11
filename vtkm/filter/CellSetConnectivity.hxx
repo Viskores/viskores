@@ -11,9 +11,8 @@
 #ifndef vtkm_m_filter_CellSetConnectivity_hxx
 #define vtkm_m_filter_CellSetConnectivity_hxx
 
-#include <vtkm/filter/CellSetConnectivity.h>
-#include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/filter/CreateResult.h>
+#include <vtkm/worklet/connectivities/CellSetConnectivity.h>
 
 namespace vtkm
 {
@@ -35,14 +34,9 @@ inline VTKM_CONT vtkm::cont::DataSet CellSetConnectivity::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::Id> component;
 
   vtkm::worklet::connectivity::CellSetConnectivity().Run(
-    vtkm::filter::ApplyPolicy(input.GetCellSet(this->GetActiveCellSetIndex()), policy), component);
+    vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy), component);
 
-  auto result = internal::CreateResult(input,
-                                       component,
-                                       this->GetOutputFieldName(),
-                                       vtkm::cont::Field::Association::CELL_SET,
-                                       fieldMetadata.GetCellSetName());
-  return result;
+  return CreateResult(input, component, this->GetOutputFieldName(), fieldMetadata);
 }
 }
 }

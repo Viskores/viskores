@@ -65,16 +65,16 @@ inline VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
   DeduceCellSet triangulate(this->Worklet, outCellSet);
 
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy), triangulate);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy), triangulate);
 
   // create the output dataset
   vtkm::cont::DataSet output;
-  output.AddCellSet(outCellSet);
+  output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
   return output;

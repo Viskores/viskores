@@ -91,13 +91,14 @@
 //VTKM includes
 #include <vtkm/Types.h>
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/worklet/Invoker.h>
+#include <vtkm/cont/Invoker.h>
 
 
 namespace active_graph_inc_ns = vtkm::worklet::contourtree_augmented::active_graph_inc;
@@ -113,8 +114,15 @@ namespace contourtree_augmented
 
 class ActiveGraph
 { // class ActiveGraph
+
+  template <typename T, typename S>
+  static T GetLastValue(const vtkm::cont::ArrayHandle<T, S>& ah)
+  {
+    return vtkm::cont::ArrayGetValue(ah.GetNumberOfValues() - 1, ah);
+  }
+
 public:
-  vtkm::worklet::Invoker Invoke;
+  vtkm::cont::Invoker Invoke;
 
   // we also need the orientation of the edges (i.e. is it join or split)
   bool isJoinGraph;
@@ -281,16 +289,8 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   vtkm::cont::Algorithm::ScanExclusive(oneIfCriticalArrayHandle, inverseIndex);
 
   // now we can compute how many critical points we carry forward
-  vtkm::Id nCriticalPoints = 0;
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> temp;
-    temp.Allocate(2);
-    vtkm::cont::Algorithm::CopySubRange(
-      inverseIndex, inverseIndex.GetNumberOfValues() - 1, 1, temp);
-    vtkm::cont::Algorithm::CopySubRange(outDegrees, outDegrees.GetNumberOfValues() - 1, 1, temp, 1);
-    auto portal = temp.GetPortalControl();
-    nCriticalPoints = portal.Get(0) + oneIfCriticalFunctor(portal.Get(1));
-  }
+  vtkm::Id nCriticalPoints =
+    this->GetLastValue(inverseIndex) + oneIfCriticalFunctor(this->GetLastValue(outDegrees));
 
   // we need to keep track of what the index of each vertex is in the active graph
   // for most vertices, this should have the NO_SUCH_VERTEX flag set
@@ -329,15 +329,8 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   // VTKM Version of the prefix sum
   vtkm::cont::Algorithm::ScanExclusive(outdegree, firstEdge);
   // Compute the number of critical edges
-  vtkm::Id nCriticalEdges = 0;
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> temp;
-    temp.Allocate(2);
-    vtkm::cont::Algorithm::CopySubRange(firstEdge, firstEdge.GetNumberOfValues() - 1, 1, temp);
-    vtkm::cont::Algorithm::CopySubRange(outdegree, outdegree.GetNumberOfValues() - 1, 1, temp, 1);
-    auto portal = temp.GetPortalControl();
-    nCriticalEdges = portal.Get(0) + portal.Get(1);
-  }
+
+  vtkm::Id nCriticalEdges = this->GetLastValue(firstEdge) + this->GetLastValue(outdegree);
 
   AllocateEdgeArrays(nCriticalEdges);
 
@@ -458,17 +451,7 @@ void ActiveGraph::TransferSaddleStarts()
   // VTK:M version of the prefix sum
   vtkm::cont::Algorithm::ScanExclusive(newOutdegree, newFirstEdge);
 
-  vtkm::Id nEdgesToSort = 0;
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> temp;
-    temp.Allocate(2);
-    vtkm::cont::Algorithm::CopySubRange(
-      newFirstEdge, newFirstEdge.GetNumberOfValues() - 1, 1, temp);
-    vtkm::cont::Algorithm::CopySubRange(
-      newOutdegree, newOutdegree.GetNumberOfValues() - 1, 1, temp, 1);
-    auto portal = temp.GetPortalControl();
-    nEdgesToSort = portal.Get(0) + portal.Get(1);
-  }
+  vtkm::Id nEdgesToSort = this->GetLastValue(newFirstEdge) + this->GetLastValue(newOutdegree);
 
   // now we write only the active saddle edges to the sorting array
   edgeSorter
@@ -570,16 +553,8 @@ void ActiveGraph::CompactActiveEdges()
   // newPosition.Allocate(nActiveVertices);   // Not necessary. ScanExclusive takes care of this.
   vtkm::cont::Algorithm::ScanExclusive(newOutdegree, newPosition);
 
-  vtkm::Id nNewEdges = 0;
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> temp;
-    temp.Allocate(2);
-    vtkm::cont::Algorithm::CopySubRange(newPosition, nActiveVertices - 1, 1, temp);
-    vtkm::cont::Algorithm::CopySubRange(newOutdegree, nActiveVertices - 1, 1, temp, 1);
-    auto portal = temp.GetPortalControl();
-    nNewEdges = portal.Get(0) + portal.Get(1);
-  }
-
+  vtkm::Id nNewEdges = vtkm::cont::ArrayGetValue(nActiveVertices - 1, newPosition) +
+    vtkm::cont::ArrayGetValue(nActiveVertices - 1, newOutdegree);
 
   // create a temporary vector for copying
   IdArrayType newActiveEdges;
@@ -676,16 +651,9 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
     hyperarcs, oneIfSupernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfSupernodeArrayHandle, newSupernodePosition);
 
-  nSupernodes = 0;
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> temp;
-    temp.Allocate(2);
-    vtkm::cont::Algorithm::CopySubRange(
-      newSupernodePosition, newSupernodePosition.GetNumberOfValues() - 1, 1, temp);
-    vtkm::cont::Algorithm::CopySubRange(hyperarcs, hyperarcs.GetNumberOfValues() - 1, 1, temp, 1);
-    auto portal = temp.GetPortalControl();
-    nSupernodes = portal.Get(0) + oneIfSupernodeFunctor(portal.Get(1));
-  }
+  nSupernodes =
+    this->GetLastValue(newSupernodePosition) + oneIfSupernodeFunctor(this->GetLastValue(hyperarcs));
+
   tree.supernodes.ReleaseResources();
   tree.supernodes.Allocate(nSupernodes);
 
@@ -706,16 +674,8 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
     hyperarcs, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
-  nHypernodes = 0;
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> temp;
-    temp.Allocate(2);
-    vtkm::cont::Algorithm::CopySubRange(
-      newHypernodePosition, newHypernodePosition.GetNumberOfValues() - 1, 1, temp);
-    vtkm::cont::Algorithm::CopySubRange(hyperarcs, hyperarcs.GetNumberOfValues() - 1, 1, temp, 1);
-    auto portal = temp.GetPortalControl();
-    nHypernodes = portal.Get(0) + oneIfHypernodeFunctor(portal.Get(1));
-  }
+  nHypernodes =
+    this->GetLastValue(newHypernodePosition) + oneIfHypernodeFunctor(this->GetLastValue(hyperarcs));
 
   tree.hypernodes.ReleaseResources();
   tree.hypernodes.Allocate(globalIndex.GetNumberOfValues());

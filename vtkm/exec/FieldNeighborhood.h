@@ -83,7 +83,7 @@ struct FieldNeighborhood<vtkm::internal::ArrayPortalUniformPointCoordinates>
   }
 
   VTKM_EXEC
-  ValueType Get(const vtkm::Vec<vtkm::IdComponent, 3>& ijk) const
+  ValueType Get(const vtkm::IdComponent3& ijk) const
   {
     return Portal.Get(this->Boundary->NeighborIndexToFullIndexClamp(ijk));
   }

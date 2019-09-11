@@ -30,10 +30,10 @@
 #include <vtkm/cont/internal/OptionParser.h>
 
 #include <vtkm/filter/CellAverage.h>
+#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/Gradient.h>
-#include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>
@@ -133,10 +133,7 @@ static bool ReducedOptions;
 
 // Limit the filter executions to only consider the following types, otherwise
 // compile times and binary sizes are nuts.
-using FieldTypes = vtkm::ListTagBase<vtkm::Float32,
-                                     vtkm::Float64,
-                                     vtkm::Vec<vtkm::Float32, 3>,
-                                     vtkm::Vec<vtkm::Float64, 3>>;
+using FieldTypes = vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
 using StructuredCellList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
 
@@ -145,7 +142,7 @@ using UnstructuredCellList =
 
 using AllCellList = vtkm::ListTagJoin<StructuredCellList, UnstructuredCellList>;
 
-using CoordinateList = vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
+using CoordinateList = vtkm::ListTagBase<vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
 class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
 {
@@ -471,12 +468,12 @@ class BenchmarkFilters
   VTKM_MAKE_BENCHMARK(WarpVector, BenchWarpVector);
 
   template <typename, typename DeviceAdapter>
-  struct BenchMarchingCubes
+  struct BenchContour
   {
-    vtkm::filter::MarchingCubes Filter;
+    vtkm::filter::Contour Filter;
 
     VTKM_CONT
-    BenchMarchingCubes(vtkm::Id numIsoVals, bool mergePoints, bool normals, bool fastNormals)
+    BenchContour(vtkm::Id numIsoVals, bool mergePoints, bool normals, bool fastNormals)
       : Filter()
     {
       this->Filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
@@ -513,25 +510,25 @@ class BenchmarkFilters
     std::string Description() const
     {
       std::ostringstream desc;
-      desc << "MarchingCubes numIsoVal=" << this->Filter.GetNumberOfIsoValues() << " "
+      desc << "Contour numIsoVal=" << this->Filter.GetNumberOfIsoValues() << " "
            << "mergePoints=" << this->Filter.GetMergeDuplicatePoints() << " "
            << "normals=" << this->Filter.GetGenerateNormals() << " "
            << "fastNormals=" << this->Filter.GetComputeFastNormalsForStructured();
       return desc.str();
     }
   };
-  VTKM_MAKE_BENCHMARK(MarchingCubes1FFF, BenchMarchingCubes, 1, false, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes3FFF, BenchMarchingCubes, 3, false, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes12FFF, BenchMarchingCubes, 12, false, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes1TFF, BenchMarchingCubes, 1, true, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes3TFF, BenchMarchingCubes, 3, true, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes12TFF, BenchMarchingCubes, 12, true, false, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes1FTF, BenchMarchingCubes, 1, false, true, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes3FTF, BenchMarchingCubes, 3, false, true, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes12FTF, BenchMarchingCubes, 12, false, true, false);
-  VTKM_MAKE_BENCHMARK(MarchingCubes1FTT, BenchMarchingCubes, 1, false, true, true);
-  VTKM_MAKE_BENCHMARK(MarchingCubes3FTT, BenchMarchingCubes, 3, false, true, true);
-  VTKM_MAKE_BENCHMARK(MarchingCubes12FTT, BenchMarchingCubes, 12, false, true, true);
+  VTKM_MAKE_BENCHMARK(Contour1FFF, BenchContour, 1, false, false, false);
+  VTKM_MAKE_BENCHMARK(Contour3FFF, BenchContour, 3, false, false, false);
+  VTKM_MAKE_BENCHMARK(Contour12FFF, BenchContour, 12, false, false, false);
+  VTKM_MAKE_BENCHMARK(Contour1TFF, BenchContour, 1, true, false, false);
+  VTKM_MAKE_BENCHMARK(Contour3TFF, BenchContour, 3, true, false, false);
+  VTKM_MAKE_BENCHMARK(Contour12TFF, BenchContour, 12, true, false, false);
+  VTKM_MAKE_BENCHMARK(Contour1FTF, BenchContour, 1, false, true, false);
+  VTKM_MAKE_BENCHMARK(Contour3FTF, BenchContour, 3, false, true, false);
+  VTKM_MAKE_BENCHMARK(Contour12FTF, BenchContour, 12, false, true, false);
+  VTKM_MAKE_BENCHMARK(Contour1FTT, BenchContour, 1, false, true, true);
+  VTKM_MAKE_BENCHMARK(Contour3FTT, BenchContour, 3, false, true, true);
+  VTKM_MAKE_BENCHMARK(Contour12FTT, BenchContour, 12, false, true, true);
 
   template <typename, typename DeviceAdapter>
   struct BenchExternalFaces
@@ -658,14 +655,14 @@ class BenchmarkFilters
         { // Why does CastAndCall insist on making the cellset const?
           using CellSetT = vtkm::cont::CellSetExplicit<T1, T2, T3, T4>;
           CellSetT& mcellSet = const_cast<CellSetT&>(cellSet);
-          mcellSet.ResetConnectivity(vtkm::TopologyElementTagCell{},
-                                     vtkm::TopologyElementTagPoint{});
+          mcellSet.ResetConnectivity(vtkm::TopologyElementTagPoint{},
+                                     vtkm::TopologyElementTagCell{});
         }
 
         Timer timer{ DeviceAdapter() };
         timer.Start();
         cellSet.PrepareForInput(
-          DeviceAdapter(), vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
+          DeviceAdapter(), vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
         this->Time = timer.GetElapsedTime();
       }
     };
@@ -750,26 +747,26 @@ public:
     {
       if (ReducedOptions)
       {
-        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FTT, dummyTypes, id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(MarchingCubes1FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes1TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes3TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes1FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes1FTT, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes3FTT, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(MarchingCubes12FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour3FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour3TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12TFF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour3FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FTF, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour1FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour3FTT, dummyTypes, id);
+        VTKM_RUN_BENCHMARK(Contour12FTT, dummyTypes, id);
       }
     }
     if (benches & BenchmarkName::EXTERNAL_FACES)
@@ -816,8 +813,8 @@ public:
   using ExecutionSignature = _2(_1);
 
   vtkm::Bounds Bounds;
-  vtkm::Vec<vtkm::Float64, 3> Center;
-  vtkm::Vec<vtkm::Float64, 3> Scale;
+  vtkm::Vec3f_64 Center;
+  vtkm::Vec3f_64 Scale;
 
   VTKM_CONT
   PointVectorGenerator(const vtkm::Bounds& bounds)
@@ -833,7 +830,7 @@ public:
   VTKM_EXEC vtkm::Vec<T, 3> operator()(vtkm::Vec<T, 3> val) const
   {
     using Vec3T = vtkm::Vec<T, 3>;
-    using Vec3F64 = vtkm::Vec<vtkm::Float64, 3>;
+    using Vec3F64 = vtkm::Vec3f_64;
 
     Vec3F64 valF64{ val };
     Vec3F64 periodic = (valF64 - this->Center) * this->Scale;
@@ -933,7 +930,7 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
     auto coords = InputDataSet.GetCoordinateSystem();
     auto bounds = coords.GetBounds();
     auto points = coords.GetData();
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> pvecs;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> pvecs;
 
     PointVectorGenerator worklet(bounds);
     vtkm::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);

@@ -162,12 +162,12 @@ void TryRangeGlobalComputeDS(const ValueType& min, const ValueType& max)
 }
 
 template <typename ValueType>
-void TryRangeGlobalComputeMB(const ValueType& min, const ValueType& max)
+void TryRangeGlobalComputePDS(const ValueType& min, const ValueType& max)
 {
   vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  PRINT_INFO("Trying type (multiblock): " << vtkm::testing::TypeName<ValueType>::Name());
+  PRINT_INFO("Trying type (PartitionedDataSet): " << vtkm::testing::TypeName<ValueType>::Name());
 
-  vtkm::cont::MultiBlock mb;
+  vtkm::cont::PartitionedDataSet mb;
   for (int cc = 0; cc < 5; cc++)
   {
     // let's create a dummy dataset with a bunch of fields.
@@ -176,7 +176,7 @@ void TryRangeGlobalComputeMB(const ValueType& min, const ValueType& max)
       dataset,
       "pointvar",
       CreateArray(min, max, ARRAY_SIZE, typename vtkm::TypeTraits<ValueType>::DimensionalityTag()));
-    mb.AddBlock(dataset);
+    mb.AppendPartition(dataset);
   }
 
   vtkm::cont::ArrayHandle<vtkm::Range> ranges = vtkm::cont::FieldRangeGlobalCompute(mb, "pointvar");
@@ -193,12 +193,12 @@ static void TestFieldRangeGlobalCompute()
 
   TryRangeGlobalComputeDS<vtkm::Float64>(0, 1000);
   TryRangeGlobalComputeDS<vtkm::Int32>(-1024, 1024);
-  TryRangeGlobalComputeDS<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                       vtkm::make_Vec(2048, 2048, 2048));
-  TryRangeGlobalComputeMB<vtkm::Float64>(0, 1000);
-  TryRangeGlobalComputeMB<vtkm::Int32>(-1024, 1024);
-  TryRangeGlobalComputeMB<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                       vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeGlobalComputeDS<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                          vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeGlobalComputePDS<vtkm::Float64>(0, 1000);
+  TryRangeGlobalComputePDS<vtkm::Int32>(-1024, 1024);
+  TryRangeGlobalComputePDS<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                           vtkm::make_Vec(2048, 2048, 2048));
 };
 }
 

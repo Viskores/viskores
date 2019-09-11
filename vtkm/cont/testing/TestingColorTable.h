@@ -162,12 +162,12 @@ public:
     constexpr int data[nvals] = { -1, 0, 1, 2 };
     auto field = vtkm::cont::make_ArrayHandle(data, nvals);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //verify that we clamp the values to the expected range
-    const vtkm::Vec<vtkm::UInt8, 3> correct[nvals] = {
+    const vtkm::Vec3ui_8 correct[nvals] = {
       { 0, 255, 0 }, { 0, 255, 0 }, { 255, 0, 255 }, { 255, 0, 255 }
     };
     auto portal = colors.GetPortalConstControl();
@@ -193,13 +193,13 @@ public:
     constexpr int data[nvals] = { -2, -1, 2, 3 };
     auto field = vtkm::cont::make_ArrayHandle(data, nvals);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //verify that both the above and below range colors are used,
     //and that the default value of both is 0,0,0
-    const vtkm::Vec<vtkm::UInt8, 3> correct_range_defaults[nvals] = {
+    const vtkm::Vec3ui_8 correct_range_defaults[nvals] = {
       { 0, 0, 0 }, { 0, 255, 0 }, { 255, 0, 255 }, { 0, 0, 0 }
     };
     auto portal = colors.GetPortalConstControl();
@@ -216,7 +216,7 @@ public:
     table.SetBelowRangeColor(vtkm::Vec<float, 3>{ 0.0f, 0.0f, 1.0f }); //green
     const bool ran2 = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran2, "color table failed to execute");
-    const vtkm::Vec<vtkm::UInt8, 3> correct_custom_range_colors[nvals] = {
+    const vtkm::Vec3ui_8 correct_custom_range_colors[nvals] = {
       { 0, 0, 255 }, { 0, 255, 0 }, { 255, 0, 255 }, { 255, 0, 0 }
     };
     portal = colors.GetPortalConstControl();
@@ -256,15 +256,14 @@ public:
     constexpr int data[nvals] = { 0, 10, 20, 30, 40, 50 };
     auto field = vtkm::cont::make_ArrayHandle(data, nvals);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     const bool ran = newTable.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec<vtkm::UInt8, 3> correct_lab_values[nvals] = {
-      { 0, 0, 255 },     { 105, 69, 204 }, { 126, 109, 153 },
-      { 156, 151, 117 }, { 207, 202, 87 }, { 255, 255, 0 }
-    };
+    const vtkm::Vec3ui_8 correct_lab_values[nvals] = { { 0, 0, 255 },     { 105, 69, 204 },
+                                                       { 126, 109, 153 }, { 156, 151, 117 },
+                                                       { 207, 202, 87 },  { 255, 255, 0 } };
     auto portal = colors.GetPortalConstControl();
     for (std::size_t i = 0; i < nvals; ++i)
     {
@@ -292,14 +291,14 @@ public:
     constexpr vtkm::Id nvals = 3;
     constexpr float data[nvals] = { 10.0f, -5.0f, -15.0f };
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle(data, nvals);
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
-    const vtkm::Vec<vtkm::UInt8, 3> correct_rgb_values[nvals] = { { 0, 0, 128 },
-                                                                  { 0, 128, 255 },
-                                                                  { 128, 255, 255 } };
+    const vtkm::Vec3ui_8 correct_rgb_values[nvals] = { { 0, 0, 128 },
+                                                       { 0, 128, 255 },
+                                                       { 128, 255, 255 } };
     auto portal = colors.GetPortalConstControl();
     for (std::size_t i = 0; i < nvals; ++i)
     {
@@ -337,13 +336,13 @@ public:
     constexpr vtkm::Id nvals = 6;
     constexpr int data[nvals] = { 0, 10, 20, 30, 40, 50 };
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle(data, nvals);
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec<vtkm::UInt8, 4> correct_diverging_values[nvals] = {
+    const vtkm::Vec4ui_8 correct_diverging_values[nvals] = {
       { 59, 76, 192, 0 },     { 124, 159, 249, 51 },  { 192, 212, 245, 102 },
       { 242, 203, 183, 153 }, { 238, 133, 104, 204 }, { 180, 4, 38, 255 }
     };
@@ -383,15 +382,15 @@ public:
     constexpr vtkm::Id nvals = 6;
     constexpr float data[nvals] = { 0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f };
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle(data, nvals);
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec<vtkm::UInt8, 3> correct_hsv_values[nvals] = { { 0, 0, 255 },   { 0, 204, 255 },
-                                                                  { 0, 255, 102 }, { 102, 255, 0 },
-                                                                  { 255, 204, 0 }, { 255, 0, 0 } };
+    const vtkm::Vec3ui_8 correct_hsv_values[nvals] = { { 0, 0, 255 },   { 0, 204, 255 },
+                                                       { 0, 255, 102 }, { 102, 255, 0 },
+                                                       { 255, 204, 0 }, { 255, 0, 0 } };
     auto portal = colors.GetPortalConstControl();
     for (std::size_t i = 0; i < nvals; ++i)
     {
@@ -400,13 +399,13 @@ public:
                        "incorrect value when interpolating between values");
     }
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors_rgb;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors_rgb;
     table.SetColorSpace(vtkm::cont::ColorSpace::RGB);
     table.Map(field, colors_rgb);
 
-    const vtkm::Vec<vtkm::UInt8, 3> correct_rgb_values[nvals] = { { 0, 0, 255 },   { 51, 0, 204 },
-                                                                  { 102, 0, 153 }, { 153, 0, 102 },
-                                                                  { 204, 0, 51 },  { 255, 0, 0 } };
+    const vtkm::Vec3ui_8 correct_rgb_values[nvals] = { { 0, 0, 255 },   { 51, 0, 204 },
+                                                       { 102, 0, 153 }, { 153, 0, 102 },
+                                                       { 204, 0, 51 },  { 255, 0, 0 } };
     auto rgb_portal = colors_rgb.GetPortalConstControl();
     for (std::size_t i = 0; i < nvals; ++i)
     {
@@ -444,16 +443,15 @@ public:
     constexpr vtkm::Id nvals = 6;
     constexpr float data[nvals] = { 0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f };
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle(data, nvals);
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec<vtkm::UInt8, 4> correct_opacity_values[nvals] = {
-      { 0, 0, 0, 0 },  { 0, 0, 0, 1 },   { 0, 0, 0, 11 },
-      { 0, 0, 0, 52 }, { 0, 0, 0, 203 }, { 0, 0, 0, 255 }
-    };
+    const vtkm::Vec4ui_8 correct_opacity_values[nvals] = { { 0, 0, 0, 0 },   { 0, 0, 0, 1 },
+                                                           { 0, 0, 0, 11 },  { 0, 0, 0, 52 },
+                                                           { 0, 0, 0, 203 }, { 0, 0, 0, 255 } };
     auto portal = colors.GetPortalConstControl();
     for (std::size_t i = 0; i < nvals; ++i)
     {
@@ -477,15 +475,15 @@ public:
     constexpr double data[3] = { 0.0, 0.5, 1.0 };
     auto samples = vtkm::cont::make_ArrayHandle(data, nvals);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     TransferFunction transfer(table.PrepareForExecution(DeviceAdapterTag{}));
     vtkm::worklet::DispatcherMapField<TransferFunction> dispatcher(transfer);
     dispatcher.SetDevice(DeviceAdapterTag());
     dispatcher.Invoke(samples, colors);
 
-    const vtkm::Vec<vtkm::UInt8, 4> correct_sampling_points[nvals] = { { 14, 28, 31, 255 },
-                                                                       { 21, 150, 21, 255 },
-                                                                       { 255, 251, 230, 255 } };
+    const vtkm::Vec4ui_8 correct_sampling_points[nvals] = { { 14, 28, 31, 255 },
+                                                            { 21, 150, 21, 255 },
+                                                            { 255, 251, 230, 255 } };
 
     auto portal = colors.GetPortalConstControl();
     for (std::size_t i = 0; i < nvals; ++i)
@@ -505,13 +503,13 @@ public:
     VTKM_TEST_ASSERT((table.GetNumberOfPoints() == 21),
                      "loading linear green table failed with number of control points");
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     constexpr vtkm::Id nvals = 3;
     table.Sample(3, colors);
 
-    const vtkm::Vec<vtkm::UInt8, 4> correct_sampling_points[nvals] = { { 14, 28, 31, 255 },
-                                                                       { 21, 150, 21, 255 },
-                                                                       { 255, 251, 230, 255 } };
+    const vtkm::Vec4ui_8 correct_sampling_points[nvals] = { { 14, 28, 31, 255 },
+                                                            { 21, 150, 21, 255 },
+                                                            { 255, 251, 230, 255 } };
     auto portal = colors.GetPortalConstControl();
     for (std::size_t i = 0; i < nvals; ++i)
     {
@@ -538,16 +536,16 @@ public:
     constexpr vtkm::Id nvals = 8;
     constexpr int data[nvals] = { -1, 0, 10, 20, 30, 40, 50, 60 };
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle(data, nvals);
     const bool ran = table.Map(field, samples, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec<vtkm::UInt8, 3> correct_diverging_values[nvals] = {
-      { 0, 0, 255 },     { 59, 76, 192 },   { 122, 157, 248 }, { 191, 211, 246 },
-      { 241, 204, 184 }, { 238, 134, 105 }, { 180, 4, 38 },    { 255, 0, 0 }
-    };
+    const vtkm::Vec3ui_8 correct_diverging_values[nvals] = { { 0, 0, 255 },     { 59, 76, 192 },
+                                                             { 122, 157, 248 }, { 191, 211, 246 },
+                                                             { 241, 204, 184 }, { 238, 134, 105 },
+                                                             { 180, 4, 38 },    { 255, 0, 0 } };
     auto portal = colors.GetPortalConstControl();
     for (std::size_t i = 0; i < nvals; ++i)
     {

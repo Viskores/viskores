@@ -35,6 +35,9 @@ namespace filter
 class SplitSharpEdges : public vtkm::filter::FilterDataSetWithField<SplitSharpEdges>
 {
 public:
+  // SplitSharpEdges filter needs cell normals to decide split.
+  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+
   VTKM_CONT
   SplitSharpEdges();
 
@@ -60,13 +63,6 @@ public:
 private:
   vtkm::FloatDefault FeatureAngle;
   vtkm::worklet::SplitSharpEdges Worklet;
-};
-
-template <>
-class FilterTraits<SplitSharpEdges>
-{ // SplitSharpEdges filter needs cell normals to decide split.
-public:
-  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 } // namespace vtkm::filter

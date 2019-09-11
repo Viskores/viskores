@@ -15,14 +15,15 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellLocator.h>
-#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
+#include <vtkm/cont/CellLocatorUniformBins.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
+#include <vtkm/worklet/particleadvection/EvaluatorStatus.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
@@ -64,52 +65,50 @@ public:
     Locator->FindCell(point, cellId, parametric, tmp);
     return cellId != -1;
   }
+
   VTKM_EXEC
   bool IsWithinTemporalBoundary(const vtkm::FloatDefault vtkmNotUsed(time)) const { return true; }
+
   VTKM_EXEC
-  void GetSpatialBoundary(vtkm::Vec<vtkm::FloatDefault, 3>& dir,
-                          vtkm::Vec<ScalarType, 3>& boundary) const
-  {
-    // Based on the direction of the velocity we need to be able to tell where
-    // the particle will exit the domain from to actually push it out of domain.
-    boundary[0] = static_cast<ScalarType>(dir[0] > 0 ? this->Bounds.X.Max : this->Bounds.X.Min);
-    boundary[1] = static_cast<ScalarType>(dir[1] > 0 ? this->Bounds.Y.Max : this->Bounds.Y.Min);
-    boundary[2] = static_cast<ScalarType>(dir[2] > 0 ? this->Bounds.Z.Max : this->Bounds.Z.Min);
-  }
+  vtkm::Bounds GetSpatialBoundary() const { return this->Bounds; }
+
   VTKM_EXEC_CONT
-  void GetTemporalBoundary(vtkm::FloatDefault& boundary) const
+  vtkm::FloatDefault GetTemporalBoundary(vtkm::Id direction) const
   {
     // Return the time of the newest time slice
-    boundary = 0;
+    return direction > 0 ? vtkm::Infinity<vtkm::FloatDefault>()
+                         : vtkm::NegativeInfinity<vtkm::FloatDefault>();
   }
 
   template <typename Point>
-  VTKM_EXEC bool Evaluate(const Point& pos, vtkm::FloatDefault vtkmNotUsed(time), Point& out) const
+  VTKM_EXEC EvaluatorStatus Evaluate(const Point& pos,
+                                     vtkm::FloatDefault vtkmNotUsed(time),
+                                     Point& out) const
   {
     return this->Evaluate(pos, out);
   }
 
   template <typename Point>
-  VTKM_EXEC bool Evaluate(const Point point, Point& out) const
+  VTKM_EXEC EvaluatorStatus Evaluate(const Point& point, Point& out) const
   {
     vtkm::Id cellId;
     Point parametric;
     vtkm::exec::FunctorBase tmp;
     Locator->FindCell(point, cellId, parametric, tmp);
     if (cellId == -1)
-      return false;
+      return EvaluatorStatus::OUTSIDE_SPATIAL_BOUNDS;
 
     vtkm::UInt8 cellShape;
     vtkm::IdComponent nVerts;
     vtkm::VecVariable<vtkm::Id, 8> ptIndices;
-    vtkm::VecVariable<vtkm::Vec<vtkm::FloatDefault, 3>, 8> fieldValues;
+    vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
     InterpolationHelper->GetCellInfo(cellId, cellShape, nVerts, ptIndices);
 
     for (vtkm::IdComponent i = 0; i < nVerts; i++)
       fieldValues.Append(Field.Get(ptIndices[i]));
     out = vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, tmp);
 
-    return true;
+    return EvaluatorStatus::SUCCESS;
   }
 
 private:
@@ -127,7 +126,8 @@ public:
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using StructuredType = vtkm::cont::CellSetStructured<3>;
+  using Structured2DType = vtkm::cont::CellSetStructured<2>;
+  using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
   VTKM_CONT
   GridEvaluator() = default;
@@ -139,7 +139,7 @@ public:
     : Vectors(field)
     , Bounds(coordinates.GetBounds())
   {
-    if (cellset.IsSameType(StructuredType()))
+    if (cellset.IsSameType(Structured2DType()) || cellset.IsSameType(Structured3DType()))
     {
       if (coordinates.GetData().IsType<UniformType>())
       {
@@ -149,8 +149,7 @@ public:
         locator.Update();
         this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformGrid>(locator);
       }
-      else if (coordinates.GetData().IsType<RectilinearType>() &&
-               cellset.IsSameType(StructuredType()))
+      else if (coordinates.GetData().IsType<RectilinearType>())
       {
         vtkm::cont::CellLocatorRectilinearGrid locator;
         locator.SetCoordinates(coordinates);
@@ -159,33 +158,39 @@ public:
         this->Locator = std::make_shared<vtkm::cont::CellLocatorRectilinearGrid>(locator);
       }
       else
-        throw vtkm::cont::ErrorInternal("Cells are not structured.");
-
+      {
+        // Default to using an locator for explicit meshes.
+        vtkm::cont::CellLocatorUniformBins locator;
+        locator.SetCoordinates(coordinates);
+        locator.SetCellSet(cellset);
+        locator.Update();
+        this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
+      }
       vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
-      vtkm::cont::CellLocatorBoundingIntervalHierarchy locator;
+      vtkm::cont::CellLocatorUniformBins locator;
       locator.SetCoordinates(coordinates);
       locator.SetCellSet(cellset);
       locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorBoundingIntervalHierarchy>(locator);
-      vtkm::cont::SingleCellExplicitInterpolationHelper interpolationHelper(cellset);
+      this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
+      vtkm::cont::SingleCellTypeInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
-        std::make_shared<vtkm::cont::SingleCellExplicitInterpolationHelper>(interpolationHelper);
+        std::make_shared<vtkm::cont::SingleCellTypeInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
-      vtkm::cont::CellLocatorBoundingIntervalHierarchy locator;
+      vtkm::cont::CellLocatorUniformBins locator;
       locator.SetCoordinates(coordinates);
       locator.SetCellSet(cellset);
       locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorBoundingIntervalHierarchy>(locator);
-      vtkm::cont::CellExplicitInterpolationHelper interpolationHelper(cellset);
+      this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
+      vtkm::cont::ExplicitCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
-        std::make_shared<vtkm::cont::CellExplicitInterpolationHelper>(interpolationHelper);
+        std::make_shared<vtkm::cont::ExplicitCellInterpolationHelper>(interpolationHelper);
     }
     else
       throw vtkm::cont::ErrorInternal("Unsupported cellset type.");

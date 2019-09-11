@@ -9,7 +9,7 @@
 //============================================================================
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 
 #include <vtkm/worklet/connectivities/ImageConnectivity.h>
 
@@ -37,13 +37,12 @@ public:
     vtkm::cont::DataSetBuilderUniform builder;
     vtkm::cont::DataSet data = builder.Create(vtkm::Id3(8, 4, 1));
 
-    auto colorField =
-      vtkm::cont::make_Field("color", vtkm::cont::Field::Association::POINTS, pixels);
+    auto colorField = vtkm::cont::make_FieldPoint("color", vtkm::cont::make_ArrayHandle(pixels));
     data.AddField(colorField);
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
     vtkm::worklet::connectivity::ImageConnectivity().Run(
-      data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
+      data.GetCellSet().Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
 
     std::vector<vtkm::Id> componentExpected = { 0, 1, 2, 1, 1, 3, 3, 4, 0, 1, 1, 1, 3, 3, 3, 4,
                                                 1, 1, 3, 3, 3, 4, 3, 4, 1, 1, 3, 3, 4, 4, 4, 4 };
@@ -76,7 +75,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
     vtkm::worklet::connectivity::ImageConnectivity().Run(
-      data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
+      data.GetCellSet().Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
 
     std::vector<vtkm::UInt8> componentExpected = { 0, 1, 1, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 1, 1, 2,
                                                    0, 1, 1, 0, 0, 1, 1, 2, 0, 1, 0, 0, 0, 1, 1, 2,

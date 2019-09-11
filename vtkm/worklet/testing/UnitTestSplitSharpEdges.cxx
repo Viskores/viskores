@@ -17,9 +17,9 @@
 namespace
 {
 
-using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
-const vtkm::Vec<vtkm::FloatDefault, 3> expectedCoords[24] = {
+const vtkm::Vec3f expectedCoords[24] = {
   { 0.0, 0.0, 0.0 }, { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 }, { 0.0, 1.0, 0.0 },
   { 1.0, 1.0, 0.0 }, { 1.0, 1.0, 1.0 }, { 0.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 },
   { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 0.0 }, { 1.0, 0.0, 1.0 }, { 1.0, 0.0, 1.0 }, { 0.0, 0.0, 1.0 },
@@ -42,7 +42,7 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
 
   const int nVerts = 8;
   const int nCells = 6;
-  using CoordType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using CoordType = vtkm::Vec3f;
   std::vector<CoordType> coords = {
     CoordType(0, 0, 0), // 0
     CoordType(1, 0, 0), // 1
@@ -97,14 +97,14 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
   conn.push_back(1);
 
   //Create the dataset.
-  dataSet = dsb.Create(coords, shapes, numIndices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numIndices, conn, "coordinates");
 
   vtkm::FloatDefault vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.3f, 70.3f, 80.3f };
   vtkm::FloatDefault cellvar[nCells] = { 100.1f, 200.2f, 300.3f, 400.4f, 500.5f, 600.6f };
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddPointField(dataSet, "pointvar", vars, nVerts);
-  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
+  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells);
 
   return dataSet;
 }
@@ -116,7 +116,7 @@ void TestSplitSharpEdgesSplitEveryEdge(vtkm::cont::DataSet& simpleCube,
 { // Split every edge
   vtkm::FloatDefault featureAngle = 89.0;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newCoords;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newCoords;
   vtkm::cont::CellSetExplicit<> newCellset;
 
   splitSharpEdges.Run(simpleCube.GetCellSet(),
@@ -161,7 +161,7 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
 { // Do nothing
   vtkm::FloatDefault featureAngle = 91.0;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> newCoords;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newCoords;
   vtkm::cont::CellSetExplicit<> newCellset;
 
   splitSharpEdges.Run(simpleCube.GetCellSet(),
@@ -190,8 +190,8 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
                      "result value does not match expected value");
   }
 
-  const auto& connectivityArray = newCellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                                  vtkm::TopologyElementTagCell());
+  const auto& connectivityArray = newCellset.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                                  vtkm::TopologyElementTagPoint());
   auto connectivityArrayPortal = connectivityArray.GetPortalConstControl();
   for (int i = 0; i < connectivityArray.GetNumberOfValues(); i++)
   {

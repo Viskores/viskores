@@ -40,17 +40,15 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
                      const vtkm::Bounds& bounds)
 {
   //Verify basics..
-  VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1, "Wrong number of cell sets.");
   VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Wrong number of fields.");
   VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
-  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == numPoints,
-                   "Wrong number of coordinates.");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells, "Wrong number of cells.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numPoints, "Wrong number of coordinates.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == numCells, "Wrong number of cells.");
 
   // test various field-getting methods and associations
   try
   {
-    ds.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
+    ds.GetCellField("cellvar");
   }
   catch (...)
   {
@@ -59,7 +57,7 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
 
   try
   {
-    ds.GetField("pointvar", vtkm::cont::Field::Association::POINTS);
+    ds.GetPointField("pointvar");
   }
   catch (...)
   {

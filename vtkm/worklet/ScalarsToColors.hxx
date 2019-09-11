@@ -10,7 +10,7 @@
 
 #include <vtkm/worklet/ScalarsToColors.h>
 
-#include <vtkm/BaseComponent.h>
+#include <vtkm/VecTraits.h>
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 
@@ -50,11 +50,11 @@ inline bool needShiftScale(T, vtkm::Float32, vtkm::Float32)
 ///
 template <typename T, typename S>
 void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
-                          vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const
+                          vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const
 {
   using namespace vtkm::worklet::colorconversion;
   //If our shift is 0 and our scale == 1 no need to apply them
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
@@ -73,10 +73,10 @@ void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
 ///
 template <typename T, typename S>
 void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
-                          vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const
+                          vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const
 {
   using namespace vtkm::worklet::colorconversion;
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
@@ -94,15 +94,14 @@ void ScalarsToColors::Run(const vtkm::cont::ArrayHandle<T, S>& values,
 /// \brief Use magnitude of a vector to generate RGBA colors
 ///
 template <typename T, int N, typename S>
-void ScalarsToColors::RunMagnitude(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const
+void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                                   vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const
 {
   //magnitude is a complex situation. the default scale factor is incorrect
   //
   using namespace vtkm::worklet::colorconversion;
   //If our shift is 0 and our scale == 1 no need to apply them
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
@@ -123,11 +122,11 @@ void ScalarsToColors::RunMagnitude(
 ///
 template <typename T, int N, typename S>
 void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const
+                                   vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const
 {
 
   using namespace vtkm::worklet::colorconversion;
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   const bool shiftscale = needShiftScale(BaseT{}, this->Shift, this->Scale);
   if (shiftscale)
   {
@@ -147,10 +146,9 @@ void ScalarsToColors::RunMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>
 /// \brief Use a single component of a vector to generate RGBA colors
 ///
 template <typename T, int N, typename S>
-void ScalarsToColors::RunComponent(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-  vtkm::IdComponent comp,
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const
+void ScalarsToColors::RunComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                                   vtkm::IdComponent comp,
+                                   vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const
 {
   this->Run(vtkm::cont::make_ArrayHandleTransform(values, colorconversion::ComponentPortal(comp)),
             rgbaOut);
@@ -161,7 +159,7 @@ void ScalarsToColors::RunComponent(
 template <typename T, int N, typename S>
 void ScalarsToColors::RunComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                                    vtkm::IdComponent comp,
-                                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const
+                                   vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const
 {
   this->Run(vtkm::cont::make_ArrayHandleTransform(values, colorconversion::ComponentPortal(comp)),
             rgbOut);

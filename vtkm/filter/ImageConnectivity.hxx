@@ -8,13 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ImageConnectivity_hxx
-#define vtk_m_filter_ImageConnectivity_hxx
-
-#include <vtkm/filter/ImageConnectivity.h>
-#include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-
 namespace vtkm
 {
 namespace filter
@@ -32,26 +25,18 @@ inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
   const vtkm::filter::FieldMetadata& fieldMetadata,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  if (fieldMetadata.GetAssociation() != vtkm::cont::Field::Association::POINTS)
+  if (!fieldMetadata.IsPointField())
   {
-    throw vtkm::cont::ErrorBadValue("Active field for ImageConnectivity must be a cell field.");
+    throw vtkm::cont::ErrorBadValue("Active field for ImageConnectivity must be a point field.");
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id> component;
 
   vtkm::worklet::connectivity::ImageConnectivity().Run(
-    vtkm::filter::ApplyPolicy(input.GetCellSet(this->GetActiveCellSetIndex()), policy),
-    field,
-    component);
+    vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy), field, component);
 
-  auto result = internal::CreateResult(input,
-                                       component,
-                                       this->GetOutputFieldName(),
-                                       vtkm::cont::Field::Association::POINTS,
-                                       fieldMetadata.GetCellSetName());
+  auto result = CreateResult(input, component, this->GetOutputFieldName(), fieldMetadata);
   return result;
 }
 }
 }
-
-#endif //vtk_m_filter_ImageConnectivity_hxx

@@ -33,32 +33,32 @@ struct ShiftScaleToRGB : public vtkm::worklet::WorkletMapField
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const T& in) const
+  VTKM_EXEC vtkm::Vec3ui_8 operator()(const T& in) const
   { //vtkScalarsToColorsLuminanceToRGB
     vtkm::Float32 l = (static_cast<vtkm::Float32>(in) + this->Shift) * this->Scale;
     colorconversion::Clamp(l);
-    return vtkm::Vec<vtkm::UInt8, 3>{ static_cast<vtkm::UInt8>(l + 0.5f) };
+    return vtkm::Vec3ui_8{ static_cast<vtkm::UInt8>(l + 0.5f) };
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const vtkm::Vec<T, 2>& in) const
+  VTKM_EXEC vtkm::Vec3ui_8 operator()(const vtkm::Vec<T, 2>& in) const
   { //vtkScalarsToColorsLuminanceAlphaToRGB (which actually doesn't exist in vtk)
     return this->operator()(in[0]);
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const vtkm::Vec<T, 3>& in) const
+  VTKM_EXEC vtkm::Vec3ui_8 operator()(const vtkm::Vec<T, 3>& in) const
   { //vtkScalarsToColorsRGBToRGB
-    vtkm::Vec<vtkm::Float32, 3> rgb(in);
-    rgb = (rgb + vtkm::Vec<vtkm::Float32, 3>(this->Shift)) * this->Scale;
+    vtkm::Vec3f_32 rgb(in);
+    rgb = (rgb + vtkm::Vec3f_32(this->Shift)) * this->Scale;
     colorconversion::Clamp(rgb);
-    return vtkm::Vec<vtkm::UInt8, 3>{ static_cast<vtkm::UInt8>(rgb[0] + 0.5f),
-                                      static_cast<vtkm::UInt8>(rgb[1] + 0.5f),
-                                      static_cast<vtkm::UInt8>(rgb[2] + 0.5f) };
+    return vtkm::Vec3ui_8{ static_cast<vtkm::UInt8>(rgb[0] + 0.5f),
+                           static_cast<vtkm::UInt8>(rgb[1] + 0.5f),
+                           static_cast<vtkm::UInt8>(rgb[2] + 0.5f) };
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const vtkm::Vec<T, 4>& in) const
+  VTKM_EXEC vtkm::Vec3ui_8 operator()(const vtkm::Vec<T, 4>& in) const
   { //vtkScalarsToColorsRGBAToRGB
     return this->operator()(vtkm::Vec<T, 3>{ in[0], in[1], in[2] });
   }

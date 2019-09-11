@@ -44,10 +44,10 @@ struct UniversalTag
 };
 
 //-----------------------------------------------------------------------------
-template <typename ListTag1, typename ListTag2>
+template <typename... ListTags>
 struct ListJoin
 {
-  using type = brigand::append<ListTag1, ListTag2>;
+  using type = brigand::append<ListTags...>;
 };
 
 template <typename ListTag>
@@ -117,6 +117,40 @@ struct ListContainsImpl
   using find_result = brigand::find<List, std::is_same<brigand::_1, Type>>;
   using size = brigand::size<find_result>;
   static constexpr bool value = (size::value != 0);
+};
+
+//-----------------------------------------------------------------------------
+template <typename BrigandList>
+struct ListSizeImpl;
+
+template <typename... Ts>
+struct ListSizeImpl<brigand::list<Ts...>>
+{
+  static constexpr vtkm::IdComponent value = vtkm::IdComponent{ sizeof...(Ts) };
+};
+
+//-----------------------------------------------------------------------------
+template <typename Type, typename RemainingList, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl;
+
+template <typename Type, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl<Type, brigand::list<>, NumBefore>
+{
+  // Could not find index.
+  static constexpr vtkm::IdComponent value = -1;
+};
+
+template <typename Type, typename T1, typename... RemainingList, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl<Type, brigand::list<T1, RemainingList...>, NumBefore>
+{
+  static constexpr vtkm::IdComponent value =
+    ListIndexOfImpl<Type, brigand::list<RemainingList...>, NumBefore + 1>::value;
+};
+
+template <typename Type, typename... RemainingList, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl<Type, brigand::list<Type, RemainingList...>, NumBefore>
+{
+  static constexpr vtkm::IdComponent value = NumBefore;
 };
 
 //-----------------------------------------------------------------------------

@@ -11,11 +11,11 @@
 # If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX.
 # We require CMake 3.11 with the MSVC generator as the $<COMPILE_LANGUAGE:>
 # generator expression is not supported on older versions.
-cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
 project (VTKm)
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-  cmake_minimum_required(VERSION 3.11...3.14 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.11...3.15 FATAL_ERROR)
 endif()
 
 # Update module path
@@ -82,13 +82,18 @@ vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
-vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
-
 vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
 vtkm_option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
+if (NOT DEFINED VTKm_ENABLE_TESTING)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+      vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
+    else()
+      vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" OFF)
+    endif()
+endif()
 
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
@@ -110,7 +115,7 @@ vtkm_option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no hea
 # VTK does.
 vtkm_option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
 
-vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
+vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" OFF)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 # This flag can be used to prevent VTK-m from exporting its warning flags in its
@@ -143,6 +148,9 @@ include(VTKmCompilerFlags)
 
 
 #-----------------------------------------------------------------------------
+# We include the wrappers unconditionally as VTK-m expects the function to
+# always exist (and early terminate when testing is disabled).
+include(testing/VTKmTestWrappers)
 if (VTKm_ENABLE_TESTING)
   enable_testing()
   # Only include CTest if it has not been included by a superproject. The
@@ -154,6 +162,7 @@ if (VTKm_ENABLE_TESTING)
     # VTKm_ENABLE_TESTING.
     mark_as_advanced(BUILD_TESTING)
   endif()
+
 
   configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
@@ -187,7 +196,7 @@ add_subdirectory(vtkm)
 #-----------------------------------------------------------------------------
 # Build documentation
 if (VTKm_ENABLE_DOCUMENTATION)
-  include(CMake/VTKmBuildDocumentation.cmake)
+  include(VTKmBuildDocumentation)
 endif()
 
 #-----------------------------------------------------------------------------

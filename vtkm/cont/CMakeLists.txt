@@ -11,6 +11,7 @@
 set(headers
   Algorithm.h
   ArrayCopy.h
+  ArrayGetValues.h
   ArrayHandle.h
   ArrayHandleBitField.h
   ArrayHandleCartesianProduct.h
@@ -27,8 +28,10 @@ set(headers
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
+  ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
+  ArrayHandleSOA.h
   ArrayHandleStreaming.h
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
@@ -40,7 +43,7 @@ set(headers
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayRangeCompute.h
-  AssignerMultiBlock.h
+  AssignerPartitionedDataSet.h
   AtomicArray.h
   BitField.h
   BoundsCompute.h
@@ -88,8 +91,9 @@ set(headers
   FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
   Initialize.h
+  Invoker.h
   Logging.h
-  MultiBlock.h
+  PartitionedDataSet.h
   PointLocator.h
   PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
@@ -126,6 +130,7 @@ set(template_sources
 
 set(sources
   ArrayHandle.cxx
+  ArrayHandleSOA.cxx
   ColorTablePresets.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
@@ -147,7 +152,7 @@ set(sources
   set(device_sources
   ArrayHandleVirtual.cxx
   ArrayRangeCompute.cxx
-  AssignerMultiBlock.cxx
+  AssignerPartitionedDataSet.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
   CellLocator.cxx
@@ -170,7 +175,7 @@ set(sources
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
-  MultiBlock.cxx
+  PartitionedDataSet.cxx
   PointLocator.cxx
   PointLocatorUniformGrid.cxx
   RuntimeDeviceInformation.cxx
@@ -183,7 +188,7 @@ vtkm_library( NAME vtkm_cont
               SOURCES ${sources}
               TEMPLATE_SOURCES ${template_sources}
               HEADERS ${headers}
-              WRAP_FOR_CUDA ${device_sources}
+              DEVICE_SOURCES ${device_sources}
             )
 
 add_subdirectory(internal)

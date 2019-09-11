@@ -28,15 +28,14 @@ namespace vtkm
 namespace exec
 {
 
-template <typename DeviceAdapter>
+template <typename DeviceAdapter, vtkm::IdComponent dimensions>
 class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid final : public vtkm::exec::CellLocator
 {
 private:
-  using FromType = vtkm::TopologyElementTagPoint;
-  using ToType = vtkm::TopologyElementTagCell;
-  using CellSetPortal = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                           vtkm::TopologyElementTagCell,
-                                                           3>;
+  using VisitType = vtkm::TopologyElementTagCell;
+  using IncidentType = vtkm::TopologyElementTagPoint;
+  using CellSetPortal = vtkm::exec::ConnectivityStructured<VisitType, IncidentType, dimensions>;
+
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
@@ -48,27 +47,31 @@ public:
   VTKM_CONT
   CellLocatorRectilinearGrid(const vtkm::Id planeSize,
                              const vtkm::Id rowSize,
-                             const vtkm::cont::CellSetStructured<3>& cellSet,
+                             const vtkm::cont::CellSetStructured<dimensions>& cellSet,
                              const RectilinearType& coords,
                              DeviceAdapter)
     : PlaneSize(planeSize)
     , RowSize(rowSize)
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), FromType(), ToType()))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType()))
     , Coords(coords.PrepareForInput(DeviceAdapter()))
     , PointDimensions(cellSet.GetPointDimensions())
   {
-    this->AxisPortals[0] = Coords.GetFirstPortal();
-    this->AxisPortals[1] = Coords.GetSecondPortal();
-    this->AxisPortals[2] = Coords.GetThirdPortal();
-
+    this->AxisPortals[0] = this->Coords.GetFirstPortal();
     this->MinPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(0);
-    this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
-    this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
+    this->MaxPoint[0] =
+      coords.GetPortalConstControl().GetFirstPortal().Get(this->PointDimensions[0] - 1);
 
-    this->MaxPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1);
+    this->AxisPortals[1] = this->Coords.GetSecondPortal();
+    this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
     this->MaxPoint[1] =
-      coords.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1);
-    this->MaxPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1);
+      coords.GetPortalConstControl().GetSecondPortal().Get(this->PointDimensions[1] - 1);
+    if (dimensions == 3)
+    {
+      this->AxisPortals[2] = this->Coords.GetThirdPortal();
+      this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
+      this->MaxPoint[2] =
+        coords.GetPortalConstControl().GetThirdPortal().Get(this->PointDimensions[2] - 1);
+    }
   }
 
   VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept
@@ -78,33 +81,37 @@ public:
   }
 
   VTKM_EXEC
-  inline bool IsInside(const vtkm::Vec<vtkm::FloatDefault, 3>& point) const
+  inline bool IsInside(const vtkm::Vec3f& point) const
   {
     bool inside = true;
     if (point[0] < this->MinPoint[0] || point[0] > this->MaxPoint[0])
       inside = false;
     if (point[1] < this->MinPoint[1] || point[1] > this->MaxPoint[1])
       inside = false;
-    if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
-      inside = false;
+    if (dimensions == 3)
+    {
+      if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
+        inside = false;
+    }
     return inside;
   }
 
   VTKM_EXEC
-  void FindCell(const vtkm::Vec<vtkm::FloatDefault, 3>& point,
+  void FindCell(const vtkm::Vec3f& point,
                 vtkm::Id& cellId,
-                vtkm::Vec<vtkm::FloatDefault, 3>& parametric,
+                vtkm::Vec3f& parametric,
                 const vtkm::exec::FunctorBase& worklet) const override
   {
-    if (!IsInside(point))
+    (void)worklet; //suppress unused warning
+    if (!this->IsInside(point))
     {
       cellId = -1;
       return;
     }
 
     // Get the Cell Id from the point.
-    vtkm::Vec<vtkm::Id, 3> logicalCell(0, 0, 0);
-    for (vtkm::Int32 dim = 0; dim < 3; ++dim)
+    vtkm::Id3 logicalCell(0, 0, 0);
+    for (vtkm::Int32 dim = 0; dim < dimensions; ++dim)
     {
       //
       // When searching for points, we consider the max value of the cell
@@ -113,51 +120,36 @@ public:
       //
       if (point[dim] == MaxPoint[dim])
       {
-        logicalCell[dim] = PointDimensions[dim] - 2;
+        logicalCell[dim] = this->PointDimensions[dim] - 2;
         continue;
       }
 
-      bool found = false;
-      vtkm::FloatDefault minVal = this->AxisPortals[dim].Get(logicalCell[dim]);
-      const vtkm::Id searchDir = (point[dim] - minVal >= 0.f) ? 1 : -1;
-      vtkm::FloatDefault maxVal = this->AxisPortals[dim].Get(logicalCell[dim] + 1);
-
-      while (!found)
+      vtkm::Id minIndex = 0;
+      vtkm::Id maxIndex = this->PointDimensions[dim] - 1;
+      vtkm::FloatDefault minVal;
+      vtkm::FloatDefault maxVal;
+      minVal = this->AxisPortals[dim].Get(minIndex);
+      maxVal = this->AxisPortals[dim].Get(maxIndex);
+      while (maxIndex > minIndex + 1)
       {
-        if (point[dim] >= minVal && point[dim] < maxVal)
+        vtkm::Id midIndex = (minIndex + maxIndex) / 2;
+        vtkm::FloatDefault midVal = this->AxisPortals[dim].Get(midIndex);
+        if (point[dim] <= midVal)
         {
-          found = true;
-          continue;
-        }
-
-        logicalCell[dim] += searchDir;
-        vtkm::Id nextCellId = searchDir == 1 ? logicalCell[dim] + 1 : logicalCell[dim];
-        vtkm::FloatDefault next = this->AxisPortals[dim].Get(nextCellId);
-        if (searchDir == 1)
-        {
-          minVal = maxVal;
-          maxVal = next;
+          maxIndex = midIndex;
+          maxVal = midVal;
         }
         else
         {
-          maxVal = minVal;
-          minVal = next;
+          minIndex = midIndex;
+          minVal = midVal;
         }
       }
+      logicalCell[dim] = minIndex;
+      parametric[dim] = (point[dim] - minVal) / (maxVal - minVal);
     }
-
     // Get the actual cellId, from the logical cell index of the cell
     cellId = logicalCell[2] * this->PlaneSize + logicalCell[1] * this->RowSize + logicalCell[0];
-
-    bool success = false;
-    using IndicesType = typename CellSetPortal::IndicesType;
-    IndicesType cellPointIndices = this->CellSet.GetIndices(cellId);
-    vtkm::VecFromPortalPermute<IndicesType, RectilinearPortalType> cellPoints(&cellPointIndices,
-                                                                              Coords);
-    auto cellShape = this->CellSet.GetCellShape(cellId);
-    // Get Parametric Coordinates from the cell, for the point.
-    parametric = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-      cellPoints, point, cellShape, success, worklet);
   }
 
 private:
@@ -167,9 +159,9 @@ private:
   CellSetPortal CellSet;
   RectilinearPortalType Coords;
   AxisPortalType AxisPortals[3];
-  vtkm::Id3 PointDimensions;
-  vtkm::Vec<vtkm::FloatDefault, 3> MinPoint;
-  vtkm::Vec<vtkm::FloatDefault, 3> MaxPoint;
+  vtkm::Vec<vtkm::Id, dimensions> PointDimensions;
+  vtkm::Vec3f MinPoint;
+  vtkm::Vec3f MaxPoint;
 };
 } //namespace exec
 } //namespace vtkm

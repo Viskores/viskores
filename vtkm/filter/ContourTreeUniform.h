@@ -57,7 +57,7 @@
 #ifndef vtk_m_filter_ContourTreeUniform_h
 #define vtk_m_filter_ContourTreeUniform_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/FilterCell.h>
 
 namespace vtkm
 {
@@ -70,9 +70,11 @@ namespace filter
 /// peak of contour
 /// Based on the algorithm presented in the paper:
 //  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
-class ContourTreeMesh2D : public vtkm::filter::FilterField<ContourTreeMesh2D>
+class ContourTreeMesh2D : public vtkm::filter::FilterCell<ContourTreeMesh2D>
 {
 public:
+  using SupportedTypes = TypeListTagScalarAll;
+
   VTKM_CONT
   ContourTreeMesh2D();
 
@@ -84,22 +86,17 @@ public:
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 };
 
-template <>
-class FilterTraits<ContourTreeMesh2D>
-{
-public:
-  using InputFieldTypeList = TypeListTagScalarAll;
-};
-
 /// \brief Construct the ContourTree for a 3D Mesh
 ///
 /// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and
 /// peak of contour
 /// Based on the algorithm presented in the paper:
 //  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
-class ContourTreeMesh3D : public vtkm::filter::FilterField<ContourTreeMesh3D>
+class ContourTreeMesh3D : public vtkm::filter::FilterCell<ContourTreeMesh3D>
 {
 public:
+  using SupportedTypes = TypeListTagScalarAll;
+
   VTKM_CONT
   ContourTreeMesh3D();
 
@@ -109,13 +106,6 @@ public:
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-};
-
-template <>
-class FilterTraits<ContourTreeMesh3D>
-{
-public:
-  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

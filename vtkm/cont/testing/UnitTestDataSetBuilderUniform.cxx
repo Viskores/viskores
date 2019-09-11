@@ -31,17 +31,16 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
                      vtkm::Bounds bounds)
 {
   //Verify basics..
-  VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1, "Wrong number of cell sets.");
+
   VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Wrong number of fields.");
   VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
-  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetNumberOfPoints() == numPoints,
-                   "Wrong number of coordinates.");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells, "Wrong number of cells.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numPoints, "Wrong number of coordinates.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == numCells, "Wrong number of cells.");
 
   // test various field-getting methods and associations
   try
   {
-    ds.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
+    ds.GetCellField("cellvar");
   }
   catch (...)
   {
@@ -50,7 +49,7 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
 
   try
   {
-    ds.GetField("pointvar", vtkm::cont::Field::Association::POINTS);
+    ds.GetPointField("pointvar");
   }
   catch (...)
   {
@@ -63,21 +62,21 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
   if (dim == 1)
   {
     vtkm::cont::CellSetStructured<1> cellSet;
-    ds.GetCellSet(0).CopyTo(cellSet);
+    ds.GetCellSet().CopyTo(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_LINE, "Wrong element type");
   }
   else if (dim == 2)
   {
     vtkm::cont::CellSetStructured<2> cellSet;
-    ds.GetCellSet(0).CopyTo(cellSet);
+    ds.GetCellSet().CopyTo(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Wrong element type");
   }
   else if (dim == 3)
   {
     vtkm::cont::CellSetStructured<3> cellSet;
-    ds.GetCellSet(0).CopyTo(cellSet);
+    ds.GetCellSet().CopyTo(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong element type");
   }

@@ -235,44 +235,39 @@ struct TestEqualCellSet
     const vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>& cs2,
     TestEqualResult& result) const
   {
-    vtkm::TopologyElementTagPoint p2cFrom{};
-    vtkm::TopologyElementTagCell p2cTo{};
+    vtkm::TopologyElementTagCell visitTopo{};
+    vtkm::TopologyElementTagPoint incidentTopo{};
 
-    if (cs1.GetName() != cs2.GetName())
-    {
-      result.PushMessage("names don't match");
-      return;
-    }
     if (cs1.GetNumberOfPoints() != cs2.GetNumberOfPoints())
     {
       result.PushMessage("number of points don't match");
       return;
     }
 
-    result = test_equal_ArrayHandles(cs1.GetShapesArray(p2cFrom, p2cTo),
-                                     cs2.GetShapesArray(p2cFrom, p2cTo));
+    result = test_equal_ArrayHandles(cs1.GetShapesArray(visitTopo, incidentTopo),
+                                     cs2.GetShapesArray(visitTopo, incidentTopo));
     if (!result)
     {
       result.PushMessage("shapes arrays don't match");
       return;
     }
 
-    result = test_equal_ArrayHandles(cs1.GetNumIndicesArray(p2cFrom, p2cTo),
-                                     cs2.GetNumIndicesArray(p2cFrom, p2cTo));
+    result = test_equal_ArrayHandles(cs1.GetNumIndicesArray(visitTopo, incidentTopo),
+                                     cs2.GetNumIndicesArray(visitTopo, incidentTopo));
     if (!result)
     {
       result.PushMessage("counts arrays don't match");
       return;
     }
-    result = test_equal_ArrayHandles(cs1.GetConnectivityArray(p2cFrom, p2cTo),
-                                     cs2.GetConnectivityArray(p2cFrom, p2cTo));
+    result = test_equal_ArrayHandles(cs1.GetConnectivityArray(visitTopo, incidentTopo),
+                                     cs2.GetConnectivityArray(visitTopo, incidentTopo));
     if (!result)
     {
       result.PushMessage("connectivity arrays don't match");
       return;
     }
-    result = test_equal_ArrayHandles(cs1.GetIndexOffsetArray(p2cFrom, p2cTo),
-                                     cs2.GetIndexOffsetArray(p2cFrom, p2cTo));
+    result = test_equal_ArrayHandles(cs1.GetIndexOffsetArray(visitTopo, incidentTopo),
+                                     cs2.GetIndexOffsetArray(visitTopo, incidentTopo));
     if (!result)
     {
       result.PushMessage("offsets arrays don't match");
@@ -285,11 +280,6 @@ struct TestEqualCellSet
                   const vtkm::cont::CellSetStructured<DIMENSION>& cs2,
                   TestEqualResult& result) const
   {
-    if (cs1.GetName() != cs2.GetName())
-    {
-      result.PushMessage("names don't match");
-      return;
-    }
     if (cs1.GetPointDimensions() != cs2.GetPointDimensions())
     {
       result.PushMessage("point dimensions don't match");
@@ -348,23 +338,6 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
     return result;
   }
 
-  if (f1.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
-  {
-    if (f1.GetAssocCellSet() != f2.GetAssocCellSet())
-    {
-      result.PushMessage("associated cellset names don't match");
-      return result;
-    }
-  }
-  else if (f1.GetAssociation() == vtkm::cont::Field::Association::LOGICAL_DIM)
-  {
-    if (f1.GetAssocLogicalDim() != f2.GetAssocLogicalDim())
-    {
-      result.PushMessage("associated logical dims don't match");
-      return result;
-    }
-  }
-
   result =
     test_equal_ArrayHandles(f1.GetData().ResetTypes(fTtypes), f2.GetData().ResetTypes(fTtypes));
   if (!result)
@@ -400,20 +373,12 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
     }
   }
 
-  if (ds1.GetNumberOfCellSets() != ds2.GetNumberOfCellSets())
+  result = test_equal_CellSets(ds1.GetCellSet().ResetCellSetList(ctypes),
+                               ds2.GetCellSet().ResetCellSetList(ctypes));
+  if (!result)
   {
-    result.PushMessage("number of cellsets don't match");
+    result.PushMessage(std::string("cellsets don't match"));
     return result;
-  }
-  for (vtkm::IdComponent i = 0; i < ds1.GetNumberOfCellSets(); ++i)
-  {
-    result = test_equal_CellSets(ds1.GetCellSet(i).ResetCellSetList(ctypes),
-                                 ds2.GetCellSet(i).ResetCellSetList(ctypes));
-    if (!result)
-    {
-      result.PushMessage(std::string("cellsets don't match at index ") + std::to_string(i));
-      return result;
-    }
   }
 
   if (ds1.GetNumberOfFields() != ds2.GetNumberOfFields())

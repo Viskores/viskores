@@ -87,8 +87,18 @@ endif()
 
 # Load the library exports, but only if not compiling VTK-m itself
 set_and_check(VTKm_CONFIG_DIR "@PACKAGE_VTKm_INSTALL_CONFIG_DIR@")
+set(VTKM_FROM_INSTALL_DIR FALSE)
 if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@VTKm_BINARY_DIR@")
+  set(VTKM_FROM_INSTALL_DIR TRUE)
   include(${VTKm_CONFIG_DIR}/VTKmTargets.cmake)
+endif()
+
+# Once we can require CMake 3.15 for all cuda builds we can
+# replace this with setting `cuda_architecture_flags` as part of the
+# EXPORT_PROPERTIES of the vtkm_cuda target
+if(VTKm_ENABLE_CUDA AND VTKM_FROM_INSTALL_DIR)
+  set_target_properties(vtkm::cuda PROPERTIES cuda_architecture_flags "@VTKm_CUDA_Architecture_Flags@")
+  set_target_properties(vtkm::cuda PROPERTIES requires_static_builds TRUE)
 endif()
 
 # VTKm requires some CMake Find modules not included with CMake, so
@@ -96,8 +106,8 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
 if(VTKm_ENABLE_CUDA)
-  if (CMAKE_VERSION VERSION_LESS "3.9")
-    message(FATAL_ERROR "VTK-m with CUDA requires CMake 3.9+")
+  if (CMAKE_VERSION VERSION_LESS 3.13)
+    message(FATAL_ERROR "VTK-m with CUDA requires CMake 3.13+")
   endif()
 endif()
 

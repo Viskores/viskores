@@ -8,16 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Field_to_Colors_hxx
-#define vtk_m_filter_Field_to_Colors_hxx
-
-#include <vtkm/filter/FieldToColors.h>
-
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ColorTable.hxx>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
-
 
 namespace vtkm
 {
@@ -152,7 +145,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
 
 
   std::string outputName = this->GetOutputFieldName();
-  if (outputName == "")
+  if (outputName.empty())
   {
     // Default name is name of input_colors.
     outputName = fieldMetadata.GetName() + "_colors";
@@ -164,7 +157,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
   using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
   if (this->OutputMode == RGBA)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> output;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> output;
 
     bool ran = false;
     switch (this->InputMode)
@@ -208,11 +201,11 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
     {
       throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
     }
-    outField = vtkm::cont::Field(outputName, vtkm::cont::Field::Association::POINTS, output);
+    outField = vtkm::cont::make_FieldPoint(outputName, output);
   }
   else
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> output;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> output;
 
     bool ran = false;
     switch (this->InputMode)
@@ -256,13 +249,11 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
     {
       throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
     }
-    outField = vtkm::cont::Field(outputName, vtkm::cont::Field::Association::POINTS, output);
+    outField = vtkm::cont::make_FieldPoint(outputName, output);
   }
 
 
-  return internal::CreateResult(input, outField);
+  return CreateResult(input, outField);
 }
 }
 } // namespace vtkm::filter
-
-#endif //vtk_m_filter_Field_to_Colors_hxx

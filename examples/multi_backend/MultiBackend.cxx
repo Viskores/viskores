@@ -12,7 +12,7 @@
 #include <thread>
 
 #include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include "IOGenerator.h"
 #include "MultiDeviceGradient.h"
@@ -22,9 +22,9 @@
 //
 //At a high level we have 2 primary threads, an IO thread and a Worker thread
 //The IO thread will generate all data using the vtk-m serial device, and
-//will post this data to a worker queue as a vtk-m multiblock.
-//The Worker thread will pull down these vtk-m multiblock data and run a
-//vtk-m filter on the multiblock.
+//will post this data to a worker queue as a vtk-m partitioned dataset.
+//The Worker thread will pull down these vtk-m data and run a
+//vtk-m filter on the partitions.
 //The vtk-m filter it runs will itself have a worker pool which it will
 //distribute work too. The number of workers is based on what device adapters
 //are enabled but uses the following logic:
@@ -38,7 +38,7 @@
 //and single GPU we should expect that we will have 2 primary 'main loop'
 //threads, and 5 threads for heavy 'task' work.
 
-void multiblock_processing(TaskQueue<vtkm::cont::MultiBlock>& queue);
+void partition_processing(TaskQueue<vtkm::cont::PartitionedDataSet>& queue);
 int main(int argc, char** argv)
 {
   auto opts =
@@ -48,9 +48,9 @@ int main(int argc, char** argv)
   //Step 1. Construct the two primary 'main loops'. The threads
   //share a queue object so we need to explicitly pass it
   //by reference (the std::ref call)
-  TaskQueue<vtkm::cont::MultiBlock> queue;
+  TaskQueue<vtkm::cont::PartitionedDataSet> queue;
   std::thread io(io_generator, std::ref(queue), 6);
-  std::thread worker(multiblock_processing, std::ref(queue));
+  std::thread worker(partition_processing, std::ref(queue));
 
   //Step N. Wait for the work to finish
   io.join();
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 }
 
 //=================================================================
-void multiblock_processing(TaskQueue<vtkm::cont::MultiBlock>& queue)
+void partition_processing(TaskQueue<vtkm::cont::PartitionedDataSet>& queue)
 {
   //Step 1. Construct the gradient filter outside the work loop
   //so that we can reuse the thread pool it constructs
@@ -67,41 +67,37 @@ void multiblock_processing(TaskQueue<vtkm::cont::MultiBlock>& queue)
   gradient.SetComputePointGradient(true);
   while (queue.hasTasks())
   {
-    //Step 2. grab the next multi-block skipping any that are empty
+    //Step 2. grab the next partition skipping any that are empty
     //as empty ones can be returned when the queue is about
     //to say it has no work
-    vtkm::cont::MultiBlock mb = queue.pop();
-    if (mb.GetNumberOfBlocks() == 0)
+    vtkm::cont::PartitionedDataSet pds = queue.pop();
+    if (pds.GetNumberOfPartitions() == 0)
     {
       continue;
     }
 
-    //Step 3. Get the first field name from the multi-block
-    std::string fieldName = mb.GetBlock(0).GetField(0).GetName();
+    //Step 3. Get the first field name from the partition
+    std::string fieldName = pds.GetPartition(0).GetField(0).GetName();
 
     //Step 4. Run a multi device gradient
     gradient.SetActiveField(fieldName);
-    vtkm::cont::MultiBlock result = gradient.Execute(mb);
-    std::cout << "finished processing a multi-block" << std::endl;
+    vtkm::cont::PartitionedDataSet result = gradient.Execute(pds);
+    std::cout << "finished processing a partitioned dataset" << std::endl;
 
-    //Step 5. Verify each block has a "Gradients" field
-    for (auto&& block : result)
+    //Step 5. Verify each partition has a "Gradients" field
+    for (auto&& partition : result)
     {
       // std::cout << std::endl << std::endl << std::endl;
-      // std::cout << "block: " << std::endl;
-      // block.PrintSummary(std::cout);
-      try
+      // std::cout << "partition: " << std::endl;
+      // partition.PrintSummary(std::cout);
+      if (!partition.HasField("Gradients", vtkm::cont::Field::Association::POINTS))
       {
-        const auto& field = block.GetField("Gradients", vtkm::cont::Field::Association::POINTS);
-        (void)field;
-      }
-      catch (const vtkm::cont::ErrorBadValue& error)
-      {
-        std::cerr << "gradient filter failed!" << std::endl;
+        std::cerr << "Gradient filter failed!" << std::endl;
+        std::cerr << "Missing Gradient field on output partition." << std::endl;
         break;
       }
     }
   }
 
-  std::cout << "multiblock_processing finished" << std::endl;
+  std::cout << "partition_processing finished" << std::endl;
 }

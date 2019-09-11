@@ -19,8 +19,8 @@ namespace vtkm
 namespace cont
 {
 
-CellSetExtrude::CellSetExtrude(const std::string& name)
-  : vtkm::cont::CellSet(name)
+CellSetExtrude::CellSetExtrude()
+  : vtkm::cont::CellSet()
   , IsPeriodic(false)
   , NumberOfPointsPerPlane(0)
   , NumberOfCellsPerPlane(0)
@@ -33,9 +33,8 @@ CellSetExtrude::CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
                                vtkm::Int32 numberOfPointsPerPlane,
                                vtkm::Int32 numberOfPlanes,
                                const vtkm::cont::ArrayHandle<vtkm::Int32>& nextNode,
-                               bool periodic,
-                               const std::string& name)
-  : vtkm::cont::CellSet(name)
+                               bool periodic)
+  : vtkm::cont::CellSet()
   , IsPeriodic(periodic)
   , NumberOfPointsPerPlane(numberOfPointsPerPlane)
   , NumberOfCellsPerPlane(
@@ -44,6 +43,81 @@ CellSetExtrude::CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
   , Connectivity(conn)
   , NextNode(nextNode)
   , ReverseConnectivityBuilt(false)
+{
+}
+
+
+CellSetExtrude::CellSetExtrude(const CellSetExtrude& src)
+  : CellSet(src)
+  , IsPeriodic(src.IsPeriodic)
+  , NumberOfPointsPerPlane(src.NumberOfPointsPerPlane)
+  , NumberOfCellsPerPlane(src.NumberOfCellsPerPlane)
+  , NumberOfPlanes(src.NumberOfPlanes)
+  , Connectivity(src.Connectivity)
+  , NextNode(src.NextNode)
+  , ReverseConnectivityBuilt(src.ReverseConnectivityBuilt)
+  , RConnectivity(src.RConnectivity)
+  , ROffsets(src.ROffsets)
+  , RCounts(src.RCounts)
+  , PrevNode(src.PrevNode)
+{
+}
+
+CellSetExtrude::CellSetExtrude(CellSetExtrude&& src) noexcept
+  : CellSet(std::forward<CellSet>(src)),
+    IsPeriodic(src.IsPeriodic),
+    NumberOfPointsPerPlane(src.NumberOfPointsPerPlane),
+    NumberOfCellsPerPlane(src.NumberOfCellsPerPlane),
+    NumberOfPlanes(src.NumberOfPlanes),
+    Connectivity(std::move(src.Connectivity)),
+    NextNode(std::move(src.NextNode)),
+    ReverseConnectivityBuilt(src.ReverseConnectivityBuilt),
+    RConnectivity(std::move(src.RConnectivity)),
+    ROffsets(std::move(src.ROffsets)),
+    RCounts(std::move(src.RCounts)),
+    PrevNode(std::move(src.PrevNode))
+{
+}
+
+CellSetExtrude& CellSetExtrude::operator=(const CellSetExtrude& src)
+{
+  this->CellSet::operator=(src);
+
+  this->IsPeriodic = src.IsPeriodic;
+  this->NumberOfPointsPerPlane = src.NumberOfPointsPerPlane;
+  this->NumberOfCellsPerPlane = src.NumberOfCellsPerPlane;
+  this->NumberOfPlanes = src.NumberOfPlanes;
+  this->Connectivity = src.Connectivity;
+  this->NextNode = src.NextNode;
+  this->ReverseConnectivityBuilt = src.ReverseConnectivityBuilt;
+  this->RConnectivity = src.RConnectivity;
+  this->ROffsets = src.ROffsets;
+  this->RCounts = src.RCounts;
+  this->PrevNode = src.PrevNode;
+
+  return *this;
+}
+
+CellSetExtrude& CellSetExtrude::operator=(CellSetExtrude&& src) noexcept
+{
+  this->CellSet::operator=(std::forward<CellSet>(src));
+
+  this->IsPeriodic = src.IsPeriodic;
+  this->NumberOfPointsPerPlane = src.NumberOfPointsPerPlane;
+  this->NumberOfCellsPerPlane = src.NumberOfCellsPerPlane;
+  this->NumberOfPlanes = src.NumberOfPlanes;
+  this->Connectivity = std::move(src.Connectivity);
+  this->NextNode = std::move(src.NextNode);
+  this->ReverseConnectivityBuilt = src.ReverseConnectivityBuilt;
+  this->RConnectivity = std::move(src.RConnectivity);
+  this->ROffsets = std::move(src.ROffsets);
+  this->RCounts = std::move(src.RCounts);
+  this->PrevNode = std::move(src.PrevNode);
+
+  return *this;
+}
+
+CellSetExtrude::~CellSetExtrude()
 {
 }
 
@@ -95,8 +169,8 @@ vtkm::IdComponent CellSetExtrude::GetNumberOfPointsInCell(vtkm::Id) const
 void CellSetExtrude::GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const
 {
   auto conn = this->PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
-                                    vtkm::TopologyElementTagPoint{},
-                                    vtkm::TopologyElementTagCell{});
+                                    vtkm::TopologyElementTagCell{},
+                                    vtkm::TopologyElementTagPoint{});
   auto indices = conn.GetIndices(id);
   for (int i = 0; i < 6; ++i)
   {
@@ -167,7 +241,7 @@ vtkm::Id2 CellSetExtrude::GetSchedulingRange(vtkm::TopologyElementTagPoint) cons
 
 void CellSetExtrude::PrintSummary(std::ostream& out) const
 {
-  out << "   vtkmCellSetSingleType: " << this->Name << std::endl;
+  out << "   vtkmCellSetSingleType: " << std::endl;
   out << "   NumberOfCellsPerPlane: " << this->NumberOfCellsPerPlane << std::endl;
   out << "   NumberOfPointsPerPlane: " << this->NumberOfPointsPerPlane << std::endl;
   out << "   NumberOfPlanes: " << this->NumberOfPlanes << std::endl;

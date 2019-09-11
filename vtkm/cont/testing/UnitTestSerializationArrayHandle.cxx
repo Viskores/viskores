@@ -21,6 +21,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
+#include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayHandleSwizzle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -64,8 +65,7 @@ inline void RunTest(const T& obj)
 //-----------------------------------------------------------------------------
 constexpr vtkm::Id ArraySize = 10;
 
-using TestTypesList =
-  vtkm::ListTagBase<vtkm::Int8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
+using TestTypesList = vtkm::ListTagBase<vtkm::Int8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f>;
 
 template <typename T, typename S>
 inline vtkm::cont::VariantArrayHandleBase<vtkm::ListTagAppendUnique<TestTypesList, T>>
@@ -80,6 +80,18 @@ struct TestArrayHandleBasic
   void operator()(T) const
   {
     auto array = RandomArrayHandle<T>::Make(ArraySize);
+    RunTest(array);
+    RunTest(MakeTestVariantArrayHandle(array));
+  }
+};
+
+struct TestArrayHandleSOA
+{
+  template <typename T>
+  void operator()(T) const
+  {
+    vtkm::cont::ArrayHandleSOA<T> array;
+    vtkm::cont::ArrayCopy(RandomArrayHandle<T>::Make(ArraySize), array);
     RunTest(array);
     RunTest(MakeTestVariantArrayHandle(array));
   }
@@ -106,6 +118,15 @@ struct TestArrayHandleCast
   {
     auto array =
       vtkm::cont::make_ArrayHandleCast<T>(RandomArrayHandle<vtkm::Int8>::Make(ArraySize));
+    RunTest(array);
+    RunTest(MakeTestVariantArrayHandle(array));
+  }
+
+  template <typename T, vtkm::IdComponent N>
+  void operator()(vtkm::Vec<T, N>) const
+  {
+    auto array = vtkm::cont::make_ArrayHandleCast<vtkm::Vec<T, N>>(
+      RandomArrayHandle<vtkm::Vec<vtkm::Int8, N>>::Make(ArraySize));
     RunTest(array);
     RunTest(MakeTestVariantArrayHandle(array));
   }
@@ -305,11 +326,10 @@ struct TestArrayHandleSwizzle
   template <typename T>
   void operator()(T) const
   {
-    static const vtkm::Vec<vtkm::IdComponent, 2> map2s[6] = { { 0, 1 }, { 0, 2 }, { 1, 0 },
-                                                              { 1, 2 }, { 2, 0 }, { 2, 1 } };
-    static const vtkm::Vec<vtkm::IdComponent, 3> map3s[6] = {
-      { 0, 1, 2 }, { 0, 2, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 }
-    };
+    static const vtkm::IdComponent2 map2s[6] = { { 0, 1 }, { 0, 2 }, { 1, 0 },
+                                                 { 1, 2 }, { 2, 0 }, { 2, 1 } };
+    static const vtkm::IdComponent3 map3s[6] = { { 0, 1, 2 }, { 0, 2, 1 }, { 1, 0, 2 },
+                                                 { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
 
     auto numOutComps = RandomValue<vtkm::IdComponent>::Make(2, 3);
     switch (numOutComps)
@@ -385,8 +405,8 @@ struct TestArrayHandleTransform
 vtkm::cont::ArrayHandleUniformPointCoordinates MakeRandomArrayHandleUniformPointCoordinates()
 {
   auto dimensions = RandomValue<vtkm::Id3>::Make(1, 3);
-  auto origin = RandomValue<vtkm::Vec<vtkm::FloatDefault, 3>>::Make();
-  auto spacing = RandomValue<vtkm::Vec<vtkm::FloatDefault, 3>>::Make(0.1f, 10.0f);
+  auto origin = RandomValue<vtkm::Vec3f>::Make();
+  auto spacing = RandomValue<vtkm::Vec3f>::Make(0.1f, 10.0f);
   return vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing);
 }
 
@@ -416,8 +436,8 @@ void TestArrayHandleVirtualCoordinates()
           RandomArrayHandle<vtkm::FloatDefault>::Make(ArraySize)));
       break;
     default:
-      array = vtkm::cont::ArrayHandleVirtualCoordinates(
-        RandomArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>::Make(ArraySize));
+      array =
+        vtkm::cont::ArrayHandleVirtualCoordinates(RandomArrayHandle<vtkm::Vec3f>::Make(ArraySize));
       break;
   }
 
@@ -443,6 +463,9 @@ void TestArrayHandleSerialization()
 {
   std::cout << "Testing ArrayHandleBasic\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleBasic(), TestTypesList());
+
+  std::cout << "Testing ArrayHandleSOA\n";
+  vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesList());
 
   std::cout << "Testing ArrayHandleCartesianProduct\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleCartesianProduct(), TestTypesList());

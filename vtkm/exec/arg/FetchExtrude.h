@@ -13,7 +13,7 @@
 #include <vtkm/exec/ConnectivityExtrude.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
-#include <vtkm/exec/arg/FromIndices.h>
+#include <vtkm/exec/arg/IncidentElementIndices.h>
 
 //optimized fetches for ArrayPortalExtrude for
 // - 3D Scheduling
@@ -28,7 +28,7 @@ namespace arg
 //Optimized fetch for point ids when iterating the cells ConnectivityExtrude
 template <typename FetchType, typename Device, typename ExecObjectType>
 struct Fetch<FetchType,
-             vtkm::exec::arg::AspectTagFromIndices,
+             vtkm::exec::arg::AspectTagIncidentElementIndices,
              vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>,
              ExecObjectType>
 {
@@ -42,7 +42,7 @@ struct Fetch<FetchType,
   ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
     // std::cout << "opimized fetch for point ids" << std::endl;
-    const auto& xgcidx = indices.GetIndicesFrom();
+    const auto& xgcidx = indices.GetIndicesIncident();
     const vtkm::Id offset1 = (xgcidx.Planes[0] * xgcidx.NumberOfPointsPerPlane);
     const vtkm::Id offset2 = (xgcidx.Planes[1] * xgcidx.NumberOfPointsPerPlane);
     ValueType result;
@@ -78,7 +78,7 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
   ValueType Load(const ThreadIndicesType& indices, const PortalType& portal)
   {
     // std::cout << "opimized fetch for point values" << std::endl;
-    const auto& xgcidx = indices.GetIndicesFrom();
+    const auto& xgcidx = indices.GetIndicesIncident();
     const vtkm::Id offset1 = (xgcidx.Planes[0] * xgcidx.NumberOfPointsPerPlane);
     const vtkm::Id offset2 = (xgcidx.Planes[1] * xgcidx.NumberOfPointsPerPlane);
     ValueType result;
@@ -115,7 +115,7 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
   ValueType Load(const ThreadIndicesType& indices, const vtkm::exec::ArrayPortalExtrude<T>& points)
   {
     // std::cout << "opimized fetch for point coordinates" << std::endl;
-    return points.GetWedge(indices.GetIndicesFrom());
+    return points.GetWedge(indices.GetIndicesIncident());
   }
 
   VTKM_EXEC
@@ -144,7 +144,7 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
                  const vtkm::exec::ArrayPortalExtrudePlane<T>& portal)
   {
     // std::cout << "opimized fetch for point coordinates" << std::endl;
-    return portal.GetWedge(indices.GetIndicesFrom());
+    return portal.GetWedge(indices.GetIndicesIncident());
   }
 
   VTKM_EXEC

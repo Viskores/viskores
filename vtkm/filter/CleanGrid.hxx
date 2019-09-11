@@ -8,9 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_CleanGrid_hxx
-#define vtk_m_filter_CleanGrid_hxx
-
 #include <vtkm/filter/CleanGrid.h>
 
 #include <vtkm/worklet/CellDeepCopy.h>
@@ -38,29 +35,49 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
                                                           vtkm::filter::PolicyBase<Policy> policy)
 {
   using CellSetType = vtkm::cont::CellSetExplicit<>;
-  using VecId = std::vector<CellSetType>::size_type;
-
-  VecId numCellSets = static_cast<VecId>(inData.GetNumberOfCellSets());
-  std::vector<CellSetType> outputCellSets(numCellSets);
+  using VecId = std::size_t;
 
   VecId activeCoordIndex = static_cast<VecId>(this->GetActiveCoordinateSystemIndex());
 
+  CellSetType outputCellSet;
   // Do a deep copy of the cells to new CellSetExplicit structures
-  for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; ++cellSetIndex)
+  const vtkm::cont::DynamicCellSet& inCellSet = inData.GetCellSet();
+  if (inCellSet.IsType<CellSetType>())
   {
-    vtkm::cont::DynamicCellSet inCellSet =
-      inData.GetCellSet(static_cast<vtkm::IdComponent>(cellSetIndex));
-    if (inCellSet.IsType<CellSetType>())
-    {
-      // Is expected type, do a shallow copy
-      outputCellSets[cellSetIndex] = inCellSet.Cast<CellSetType>();
-    }
-    else
-    {
-      vtkm::worklet::CellDeepCopy::Run(vtkm::filter::ApplyPolicy(inCellSet, policy),
-                                       outputCellSets[cellSetIndex]);
-    }
+    // Is expected type, do a shallow copy
+    outputCellSet = inCellSet.Cast<CellSetType>();
   }
+  else
+  { // Clean the grid
+    auto deducedCellSet = vtkm::filter::ApplyPolicyCellSet(inCellSet, policy);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
+
+    this->Invoke(worklet::CellDeepCopy::CountCellPoints{}, deducedCellSet, numIndices);
+
+    vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
+    vtkm::cont::ArrayHandle<vtkm::Id> offsets;
+    vtkm::Id connectivitySize;
+    vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connectivitySize);
+    numIndices.ReleaseResourcesExecution();
+
+    vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+    connectivity.Allocate(connectivitySize);
+
+    this->Invoke(worklet::CellDeepCopy::PassCellStructure{},
+                 deducedCellSet,
+                 shapes,
+                 vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
+    shapes.ReleaseResourcesExecution();
+    offsets.ReleaseResourcesExecution();
+    connectivity.ReleaseResourcesExecution();
+
+    outputCellSet.Fill(
+      deducedCellSet.GetNumberOfPoints(), shapes, numIndices, connectivity, offsets);
+
+    //Release the input grid from the execution space
+    deducedCellSet.ReleaseResourcesExecution();
+  }
+
 
   VecId numCoordSystems = static_cast<VecId>(inData.GetNumberOfCoordinateSystems());
   std::vector<vtkm::cont::CoordinateSystem> outputCoordinateSystems(numCoordSystems);
@@ -76,16 +93,10 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
   if (this->GetCompactPointFields())
   {
     this->PointCompactor.FindPointsStart();
-    for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; cellSetIndex++)
-    {
-      this->PointCompactor.FindPoints(outputCellSets[cellSetIndex]);
-    }
+    this->PointCompactor.FindPoints(outputCellSet);
     this->PointCompactor.FindPointsEnd();
 
-    for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; ++cellSetIndex)
-    {
-      outputCellSets[cellSetIndex] = this->PointCompactor.MapCellSet(outputCellSets[cellSetIndex]);
-    }
+    outputCellSet = this->PointCompactor.MapCellSet(outputCellSet);
 
     for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
     {
@@ -127,24 +138,18 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
       }
     }
 
-    for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; ++cellSetIndex)
-    {
-      outputCellSets[cellSetIndex] = this->PointMerger.MapCellSet(outputCellSets[cellSetIndex]);
-    }
+    outputCellSet = this->PointMerger.MapCellSet(outputCellSet);
   }
 
   // Optionally remove degenerate cells
   if (this->GetRemoveDegenerateCells())
   {
-    outputCellSets[activeCoordIndex] = this->CellCompactor.Run(outputCellSets[activeCoordIndex]);
+    outputCellSet = this->CellCompactor.Run(outputCellSet);
   }
 
   // Construct resulting data set with new cell sets
   vtkm::cont::DataSet outData;
-  for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; cellSetIndex++)
-  {
-    outData.AddCellSet(outputCellSets[cellSetIndex]);
-  }
+  outData.SetCellSet(outputCellSet);
 
   // Pass the coordinate systems
   for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
@@ -192,5 +197,3 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
 }
 }
 }
-
-#endif //vtk_m_filter_CleanGrid_hxx

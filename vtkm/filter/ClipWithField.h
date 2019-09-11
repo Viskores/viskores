@@ -27,6 +27,8 @@ namespace filter
 class ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
 {
 public:
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
+
   VTKM_CONT
   ClipWithField();
 
@@ -57,13 +59,6 @@ private:
   vtkm::Float64 ClipValue;
   vtkm::worklet::Clip Worklet;
   bool Invert;
-};
-
-template <>
-class FilterTraits<ClipWithField>
-{ //currently the Clip filter only works on scalar data.
-public:
-  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

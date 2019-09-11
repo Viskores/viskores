@@ -215,12 +215,12 @@ static inline VTKM_EXEC void ParametricCoordinatesCenter(vtkm::IdComponent numPo
 /// of points.
 ///
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> ParametricCoordinatesCenter(
+static inline VTKM_EXEC vtkm::Vec3f ParametricCoordinatesCenter(
   vtkm::IdComponent numPoints,
   CellShapeTag shape,
   const vtkm::exec::FunctorBase& worklet)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
+  vtkm::Vec3f pcoords;
   ParametricCoordinatesCenter(numPoints, pcoords, shape, worklet);
   return pcoords;
 }
@@ -597,13 +597,13 @@ static inline VTKM_EXEC void ParametricCoordinatesPoint(vtkm::IdComponent numPoi
 /// the given number of points.
 ///
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> ParametricCoordinatesPoint(
+static inline VTKM_EXEC vtkm::Vec3f ParametricCoordinatesPoint(
   vtkm::IdComponent numPoints,
   vtkm::IdComponent pointIndex,
   CellShapeTag shape,
   const vtkm::exec::FunctorBase& worklet)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
+  vtkm::Vec3f pcoords;
   ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, shape, worklet);
   return pcoords;
 }
@@ -855,9 +855,9 @@ WorldCoordinatesToParametricCoordinatesQuad(const WorldCoordVector& pointWCoords
 }
 } // namespace detail
 
-static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParametricCoordinates(
+static inline VTKM_EXEC vtkm::Vec3f WorldCoordinatesToParametricCoordinates(
   const vtkm::VecAxisAlignedPointCoordinates<2>& pointWCoords,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
+  const vtkm::Vec3f& wcoords,
   vtkm::CellShapeTagQuad,
   bool& success,
   const FunctorBase&)
@@ -1141,9 +1141,9 @@ WorldCoordinatesToParametricCoordinates3D(const WorldCoordVector& pointWCoords,
 }
 } // detail
 
-static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParametricCoordinates(
+static inline VTKM_EXEC vtkm::Vec3f WorldCoordinatesToParametricCoordinates(
   const vtkm::VecAxisAlignedPointCoordinates<3>& pointWCoords,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
+  const vtkm::Vec3f& wcoords,
   vtkm::CellShapeTagHexahedron,
   bool& success,
   const FunctorBase&)

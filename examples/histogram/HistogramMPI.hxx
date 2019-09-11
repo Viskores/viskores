@@ -8,12 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/FieldHistogram.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/AssignerMultiBlock.h>
+#include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
@@ -144,7 +143,7 @@ inline VTKM_CONT vtkm::cont::DataSet HistogramMPI::DoExecute(
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT void HistogramMPI::PreExecute(const vtkm::cont::MultiBlock& input,
+inline VTKM_CONT void HistogramMPI::PreExecute(const vtkm::cont::PartitionedDataSet& input,
                                                const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   if (this->Range.IsNonEmpty())
@@ -165,15 +164,15 @@ inline VTKM_CONT void HistogramMPI::PreExecute(const vtkm::cont::MultiBlock& inp
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT void HistogramMPI::PostExecute(const vtkm::cont::MultiBlock&,
-                                                vtkm::cont::MultiBlock& result,
+inline VTKM_CONT void HistogramMPI::PostExecute(const vtkm::cont::PartitionedDataSet&,
+                                                vtkm::cont::PartitionedDataSet& result,
                                                 const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   // iterate and compute HistogramMPI for each local block.
-  detail::DistributedHistogram helper(result.GetNumberOfBlocks());
-  for (vtkm::Id cc = 0; cc < result.GetNumberOfBlocks(); ++cc)
+  detail::DistributedHistogram helper(result.GetNumberOfPartitions());
+  for (vtkm::Id cc = 0; cc < result.GetNumberOfPartitions(); ++cc)
   {
-    auto& ablock = result.GetBlock(cc);
+    auto& ablock = result.GetPartition(cc);
     helper.SetLocalHistogram(cc, ablock.GetField(this->GetOutputFieldName()));
   }
 
@@ -183,6 +182,6 @@ inline VTKM_CONT void HistogramMPI::PostExecute(const vtkm::cont::MultiBlock&,
                            helper.ReduceAll(this->NumberOfBins));
   output.AddField(rfield);
 
-  result = vtkm::cont::MultiBlock(output);
+  result = vtkm::cont::PartitionedDataSet(output);
 }
 } // namespace example

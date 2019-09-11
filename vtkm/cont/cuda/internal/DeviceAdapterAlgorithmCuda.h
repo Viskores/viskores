@@ -27,7 +27,6 @@
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 #include <vtkm/cont/cuda/internal/AtomicInterfaceExecutionCuda.h>
-#include <vtkm/cont/cuda/internal/DeviceAdapterAtomicArrayImplementationCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTimerImplementationCuda.h>
@@ -68,6 +67,38 @@ namespace cont
 {
 namespace cuda
 {
+
+/// \brief RAII helper for temporarily changing CUDA stack size in an
+/// exception-safe way.
+struct ScopedCudaStackSize
+{
+  ScopedCudaStackSize(std::size_t newStackSize)
+  {
+    cudaDeviceGetLimit(&this->OldStackSize, cudaLimitStackSize);
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "Temporarily changing Cuda stack size from "
+                 << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(this->OldStackSize))
+                 << " to "
+                 << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(newStackSize)));
+    cudaDeviceSetLimit(cudaLimitStackSize, newStackSize);
+  }
+
+  ~ScopedCudaStackSize()
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "Restoring Cuda stack size to " << vtkm::cont::GetHumanReadableSize(
+                 static_cast<vtkm::UInt64>(this->OldStackSize)));
+    cudaDeviceSetLimit(cudaLimitStackSize, this->OldStackSize);
+  }
+
+  // Disable copy
+  ScopedCudaStackSize(const ScopedCudaStackSize&) = delete;
+  ScopedCudaStackSize& operator=(const ScopedCudaStackSize&) = delete;
+
+private:
+  std::size_t OldStackSize;
+};
+
 /// \brief Represents how to schedule 1D, 2D, and 3D Cuda kernels
 ///
 /// \c ScheduleParameters represents how VTK-m should schedule different
@@ -320,7 +351,11 @@ private:
       vtkm::Int32 rVal = this->LocalPopCount;
       for (int delta = 1; delta < activeSize; delta *= 2)
       {
-        rVal += activeLanes.shfl_down(rVal, delta);
+        const vtkm::Int32 shflVal = activeLanes.shfl_down(rVal, delta);
+        if (activeRank + delta < activeSize)
+        {
+          rVal += shflVal;
+        }
       }
 
       if (activeRank == 0)
@@ -511,7 +546,11 @@ private:
       vtkm::Int32 rVal = this->LocalPopCount;
       for (int delta = 1; delta < activeSize; delta *= 2)
       {
-        rVal += activeLanes.shfl_down(rVal, delta);
+        const vtkm::Int32 shflVal = activeLanes.shfl_down(rVal, delta);
+        if (activeRank + delta < activeSize)
+        {
+          rVal += shflVal;
+        }
       }
 
       if (activeRank == 0)

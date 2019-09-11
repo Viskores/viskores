@@ -11,7 +11,6 @@
 #define vtk_m_examples_histogram_HistogramMPI_h
 
 #include <vtkm/filter/FilterField.h>
-#include <vtkm/filter/FilterTraits.h>
 
 namespace example
 {
@@ -23,6 +22,11 @@ namespace example
 class HistogramMPI : public vtkm::filter::FilterField<HistogramMPI>
 {
 public:
+  //currently the HistogramMPI filter only works on scalar data.
+  //this mainly has to do with getting the ranges for each bin
+  //would require returning a more complex value type
+  using SupportedTypes = vtkm::TypeListTagScalarAll;
+
   //Construct a HistogramMPI with a default of 10 bins
   VTKM_CONT
   HistogramMPI();
@@ -61,16 +65,16 @@ public:
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //@{
-  /// when operating on vtkm::cont::MultiBlock, we
+  /// when operating on vtkm::cont::PartitionedDataSet, we
   /// want to do processing across ranks as well. Just adding pre/post handles
   /// for the same does the trick.
   template <typename DerivedPolicy>
-  VTKM_CONT void PreExecute(const vtkm::cont::MultiBlock& input,
+  VTKM_CONT void PreExecute(const vtkm::cont::PartitionedDataSet& input,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT void PostExecute(const vtkm::cont::MultiBlock& input,
-                             vtkm::cont::MultiBlock& output,
+  VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,
+                             vtkm::cont::PartitionedDataSet& output,
                              const vtkm::filter::PolicyBase<DerivedPolicy>&);
   //@}
 
@@ -81,23 +85,6 @@ private:
   vtkm::Range Range;
 };
 } // namespace example
-
-namespace vtkm
-{
-namespace filter
-{
-template <>
-class FilterTraits<example::HistogramMPI>
-{ //currently the HistogramMPI filter only works on scalar data.
-  //this mainly has to do with getting the ranges for each bin
-  //would require returning a more complex value type
-public:
-  using InputFieldTypeList = vtkm::TypeListTagScalarAll;
-};
-}
-} // namespace vtkm::filter
-
-
 
 #include "HistogramMPI.hxx"
 

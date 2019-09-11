@@ -52,14 +52,12 @@ public:
     ANY,
     WHOLE_MESH,
     POINTS,
-    CELL_SET,
-    LOGICAL_DIM
+    CELL_SET
   };
 
   VTKM_CONT
   Field() = default;
 
-  /// constructors for points / whole mesh
   VTKM_CONT
   Field(std::string name, Association association, const vtkm::cont::VariantArrayHandle& data);
 
@@ -68,38 +66,6 @@ public:
                   Association association,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
     : Field(name, association, vtkm::cont::VariantArrayHandle{ data })
-  {
-  }
-
-  /// constructors for cell set associations
-  VTKM_CONT
-  Field(std::string name,
-        Association association,
-        const std::string& cellSetName,
-        const vtkm::cont::VariantArrayHandle& data);
-
-  template <typename T, typename Storage>
-  VTKM_CONT Field(std::string name,
-                  Association association,
-                  const std::string& cellSetName,
-                  const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, cellSetName, vtkm::cont::VariantArrayHandle{ data })
-  {
-  }
-
-  /// constructors for logical dimension associations
-  VTKM_CONT
-  Field(std::string name,
-        Association association,
-        vtkm::IdComponent logicalDim,
-        const vtkm::cont::VariantArrayHandle& data);
-
-  template <typename T, typename Storage>
-  VTKM_CONT Field(std::string name,
-                  Association association,
-                  vtkm::IdComponent logicalDim,
-                  const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, logicalDim, vtkm::cont::VariantArrayHandle{ data })
   {
   }
 
@@ -113,10 +79,11 @@ public:
 
   VTKM_CONT const std::string& GetName() const { return this->Name; }
   VTKM_CONT Association GetAssociation() const { return this->FieldAssociation; }
-  VTKM_CONT std::string GetAssocCellSet() const { return this->AssocCellSetName; }
-  VTKM_CONT vtkm::IdComponent GetAssocLogicalDim() const { return this->AssocLogicalDim; }
   const vtkm::cont::VariantArrayHandle& GetData() const;
   vtkm::cont::VariantArrayHandle& GetData();
+
+  VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::CELL_SET; }
+  VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::POINTS; }
 
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
 
@@ -176,9 +143,6 @@ private:
   std::string Name; ///< name of field
 
   Association FieldAssociation = Association::ANY;
-  std::string AssocCellSetName;      ///< only populate if assoc is cells
-  vtkm::IdComponent AssocLogicalDim; ///< only populate if assoc is logical dim
-
   vtkm::cont::VariantArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag = true;
@@ -205,6 +169,7 @@ void CastAndCall(const vtkm::cont::Field& field, Functor&& f, Args&&... args)
   vtkm::cont::CastAndCall(field.GetData(), std::forward<Functor>(f), std::forward<Args>(args)...);
 }
 
+
 //@{
 /// Convenience functions to build fields from C style arrays and std::vector
 template <typename T>
@@ -226,51 +191,36 @@ vtkm::cont::Field make_Field(std::string name,
   return vtkm::cont::Field(name, association, vtkm::cont::make_ArrayHandle(data, copy));
 }
 
-template <typename T>
-vtkm::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             const std::string& cellSetName,
-                             const T* data,
-                             vtkm::Id size,
-                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
-{
-  return vtkm::cont::Field(
-    name, association, cellSetName, vtkm::cont::make_ArrayHandle(data, size, copy));
-}
-
-template <typename T>
-vtkm::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             const std::string& cellSetName,
-                             const std::vector<T>& data,
-                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
-{
-  return vtkm::cont::Field(
-    name, association, cellSetName, vtkm::cont::make_ArrayHandle(data, copy));
-}
-
-template <typename T>
-vtkm::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             vtkm::IdComponent logicalDim,
-                             const T* data,
-                             vtkm::Id size,
-                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
-{
-  return vtkm::cont::Field(
-    name, association, logicalDim, vtkm::cont::make_ArrayHandle(data, size, copy));
-}
-
-template <typename T>
-vtkm::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             vtkm::IdComponent logicalDim,
-                             const std::vector<T>& data,
-                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
-{
-  return vtkm::cont::Field(name, association, logicalDim, vtkm::cont::make_ArrayHandle(data, copy));
-}
 //@}
+
+/// Convenience function to build point fields from vtkm::cont::ArrayHandle
+template <typename T, typename S>
+vtkm::cont::Field make_FieldPoint(std::string name, const vtkm::cont::ArrayHandle<T, S>& data)
+{
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::POINTS, data);
+}
+
+/// Convenience function to build point fields from vtkm::cont::VariantArrayHandle
+inline vtkm::cont::Field make_FieldPoint(std::string name,
+                                         const vtkm::cont::VariantArrayHandle& data)
+{
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::POINTS, data);
+}
+
+/// Convenience function to build cell fields from vtkm::cont::ArrayHandle
+template <typename T, typename S>
+vtkm::cont::Field make_FieldCell(std::string name, const vtkm::cont::ArrayHandle<T, S>& data)
+{
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, data);
+}
+
+
+/// Convenience function to build cell fields from vtkm::cont::VariantArrayHandle
+inline vtkm::cont::Field make_FieldCell(std::string name,
+                                        const vtkm::cont::VariantArrayHandle& data)
+{
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, data);
+}
 
 } // namespace cont
 } // namespace vtkm
@@ -328,14 +278,6 @@ public:
 
     vtkmdiy::save(bb, field.GetName());
     vtkmdiy::save(bb, static_cast<int>(field.GetAssociation()));
-    if (field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
-    {
-      vtkmdiy::save(bb, field.GetAssocCellSet());
-    }
-    else if (field.GetAssociation() == vtkm::cont::Field::Association::LOGICAL_DIM)
-    {
-      vtkmdiy::save(bb, field.GetAssocLogicalDim());
-    }
     vtkmdiy::save(bb, field.GetData().ResetTypes(TypeList{}));
   }
 
@@ -350,26 +292,8 @@ public:
 
     auto assoc = static_cast<vtkm::cont::Field::Association>(assocVal);
     vtkm::cont::VariantArrayHandleBase<TypeList> data;
-    if (assoc == vtkm::cont::Field::Association::CELL_SET)
-    {
-      std::string assocCellSetName;
-      vtkmdiy::load(bb, assocCellSetName);
-      vtkmdiy::load(bb, data);
-      field =
-        vtkm::cont::Field(name, assoc, assocCellSetName, vtkm::cont::VariantArrayHandle(data));
-    }
-    else if (assoc == vtkm::cont::Field::Association::LOGICAL_DIM)
-    {
-      vtkm::IdComponent assocLogicalDim;
-      vtkmdiy::load(bb, assocLogicalDim);
-      vtkmdiy::load(bb, data);
-      field = vtkm::cont::Field(name, assoc, assocLogicalDim, vtkm::cont::VariantArrayHandle(data));
-    }
-    else
-    {
-      vtkmdiy::load(bb, data);
-      field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
-    }
+    vtkmdiy::load(bb, data);
+    field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
   }
 };
 

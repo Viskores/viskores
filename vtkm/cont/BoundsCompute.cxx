@@ -11,7 +11,7 @@
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include <numeric> // for std::accumulate
 
@@ -31,14 +31,15 @@ vtkm::Bounds BoundsCompute(const vtkm::cont::DataSet& dataset, vtkm::Id coordina
 
 //-----------------------------------------------------------------------------
 VTKM_CONT
-vtkm::Bounds BoundsCompute(const vtkm::cont::MultiBlock& multiblock,
+vtkm::Bounds BoundsCompute(const vtkm::cont::PartitionedDataSet& pds,
                            vtkm::Id coordinate_system_index)
 {
-  return std::accumulate(multiblock.begin(),
-                         multiblock.end(),
+  return std::accumulate(pds.begin(),
+                         pds.end(),
                          vtkm::Bounds(),
-                         [=](const vtkm::Bounds& val, const vtkm::cont::DataSet& block) {
-                           return val + vtkm::cont::BoundsCompute(block, coordinate_system_index);
+                         [=](const vtkm::Bounds& val, const vtkm::cont::DataSet& partition) {
+                           return val +
+                             vtkm::cont::BoundsCompute(partition, coordinate_system_index);
                          });
 }
 
@@ -59,13 +60,13 @@ vtkm::Bounds BoundsCompute(const vtkm::cont::DataSet& dataset, const std::string
 
 //-----------------------------------------------------------------------------
 VTKM_CONT
-vtkm::Bounds BoundsCompute(const vtkm::cont::MultiBlock& multiblock, const std::string& name)
+vtkm::Bounds BoundsCompute(const vtkm::cont::PartitionedDataSet& pds, const std::string& name)
 {
-  return std::accumulate(multiblock.begin(),
-                         multiblock.end(),
+  return std::accumulate(pds.begin(),
+                         pds.end(),
                          vtkm::Bounds(),
-                         [=](const vtkm::Bounds& val, const vtkm::cont::DataSet& block) {
-                           return val + vtkm::cont::BoundsCompute(block, name);
+                         [=](const vtkm::Bounds& val, const vtkm::cont::DataSet& partition) {
+                           return val + vtkm::cont::BoundsCompute(partition, name);
                          });
 }
 }

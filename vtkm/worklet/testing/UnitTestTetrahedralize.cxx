@@ -35,7 +35,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet0();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
 
     // Convert uniform hexahedra to tetrahedra
     vtkm::worklet::Tetrahedralize tetrahedralize;
@@ -44,7 +44,7 @@ public:
     // Create the output dataset with same coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataSet.GetCoordinateSystem(0));
-    outDataSet.AddCellSet(outCellSet);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 5),
                      "Wrong result for Tetrahedralize filter");
@@ -63,7 +63,7 @@ public:
     // Create the input explicit cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
 
     // Convert explicit cells to tetrahedra
@@ -73,7 +73,7 @@ public:
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataSet.GetCoordinateSystem(0));
-    outDataSet.AddCellSet(outCellSet);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11),
                      "Wrong result for Tetrahedralize filter");

@@ -51,15 +51,15 @@ template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input,
                                                      vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   vtkm::cont::DynamicCellSet cellOut;
   CallWorklet workletCaller(this->Stride, cellOut, this->Worklet);
-  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(workletCaller);
+  vtkm::filter::ApplyPolicyCellSet(cells, policy).CastAndCall(workletCaller);
 
   // create the output dataset
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-  output.AddCellSet(cellOut);
+  output.SetCellSet(cellOut);
   return output;
 }
 

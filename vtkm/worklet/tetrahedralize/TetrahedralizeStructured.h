@@ -36,7 +36,7 @@ namespace tetrahedralize
 // Worklet to turn hexahedra into tetrahedra
 // Vertices remain the same and each cell is processed with needing topology
 //
-class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
+class TetrahedralizeCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset, FieldOutCell connectivityOut);
@@ -79,7 +79,7 @@ public:
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    vtkm::cont::CellSetSingleType<> outCellSet;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
     vtkm::worklet::DispatcherMapTopology<tetrahedralize::TetrahedralizeCell> dispatcher;

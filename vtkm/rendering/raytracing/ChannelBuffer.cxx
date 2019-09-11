@@ -376,7 +376,7 @@ struct NormalizeFunctor
   template <typename Device>
   bool operator()(Device vtkmNotUsed(device))
   {
-    vtkm::cont::Field asField("name meaningless", vtkm::cont::Field::Association::POINTS, Input);
+    auto asField = vtkm::cont::make_FieldPoint("name meaningless", this->Input);
     vtkm::Range range;
     asField.GetRange(&range);
     Precision minScalar = static_cast<Precision>(range.Min);
@@ -430,8 +430,7 @@ template <typename Precision>
 void ChannelBuffer<Precision>::Normalize(bool invert)
 {
 
-  vtkm::cont::Field asField(
-    "name meaningless", vtkm::cont::Field::Association::POINTS, this->Buffer);
+  auto asField = vtkm::cont::make_FieldPoint("name meaningless", this->Buffer);
   vtkm::Range range;
   asField.GetRange(&range);
   Precision minScalar = static_cast<Precision>(range.Min);

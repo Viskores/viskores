@@ -35,18 +35,6 @@ public:
 
   using SchedulingRangeType = typename InternalsType::SchedulingRangeType;
 
-  CellSetStructured(const std::string& name = std::string())
-    : CellSet(name)
-    , Structure()
-  {
-  }
-
-  CellSetStructured(const Thisclass& src);
-  CellSetStructured(Thisclass&& src) noexcept;
-
-  Thisclass& operator=(const Thisclass& src);
-  Thisclass& operator=(Thisclass&& src) noexcept;
-
   vtkm::Id GetNumberOfCells() const override { return this->Structure.GetNumberOfCells(); }
 
   vtkm::Id GetNumberOfPoints() const override { return this->Structure.GetNumberOfPoints(); }
@@ -115,18 +103,19 @@ public:
   template <typename TopologyElement>
   SchedulingRangeType GetSchedulingRange(TopologyElement) const;
 
-  template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
+  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
   struct ExecutionTypes
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
-    using ExecObjectType = vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>;
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(VisitTopology);
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(IncidentTopology);
+    using ExecObjectType =
+      vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
   };
 
-  template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
-  typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType
-    PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const;
+  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
+  typename ExecutionTypes<DeviceAdapter, VisitTopology, IncidentTopology>::ExecObjectType
+    PrepareForInput(DeviceAdapter, VisitTopology, IncidentTopology) const;
 
   void PrintSummary(std::ostream& out) const override;
 
@@ -173,20 +162,17 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
-    vtkmdiy::save(bb, cs.GetName());
     vtkmdiy::save(bb, cs.GetPointDimensions());
     vtkmdiy::save(bb, cs.GetGlobalPointIndexStart());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
-    std::string name;
-    vtkmdiy::load(bb, name);
     typename Type::SchedulingRangeType dims, start;
     vtkmdiy::load(bb, dims);
     vtkmdiy::load(bb, start);
 
-    cs = Type(name);
+    cs = Type{};
     cs.SetPointDimensions(dims);
     cs.SetGlobalPointIndexStart(start);
   }

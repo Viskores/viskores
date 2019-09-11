@@ -21,7 +21,7 @@ namespace internal
 {
 
 void RunTriangulator(const vtkm::cont::DynamicCellSet& cellSet,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
+                     vtkm::cont::ArrayHandle<vtkm::Id4>& indices,
                      vtkm::Id& numberOfTriangles)
 {
   vtkm::rendering::Triangulator triangulator;

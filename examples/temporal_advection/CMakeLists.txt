@@ -9,15 +9,14 @@
 ##============================================================================
 
 #Find the VTK-m package
-cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
 project(TemporalAdvection CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
 add_executable(Temporal_Advection TemporalAdvection.cxx)
+vtkm_add_target_information(Temporal_Advection
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES TemporalAdvection.cxx)
 target_link_libraries(Temporal_Advection PRIVATE vtkm_filter)
-
-if(TARGET vtkm::cuda)
-  set_source_files_properties(TemporalAdvection.cxx PROPERTIES LANGUAGE "CUDA")
-endif()

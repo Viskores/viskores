@@ -32,7 +32,7 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
 {
   vtkm::cont::DataSet dataSet;
 
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> coordinates;
+  std::vector<vtkm::Vec3f> coordinates;
   const vtkm::Id dim = 5;
   if (cType == CART)
   {
@@ -84,7 +84,7 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetExplicit<> cellSet("cells");
+  vtkm::cont::CellSetExplicit<> cellSet;
   cellSet.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {
@@ -98,15 +98,14 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
   }
   cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
 
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
   return dataSet;
 }
 
-void ValidateCoordTransform(
-  const vtkm::cont::CoordinateSystem& coords,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& transform,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& doubleTransform,
-  const std::vector<bool>& isAngle)
+void ValidateCoordTransform(const vtkm::cont::CoordinateSystem& coords,
+                            const vtkm::cont::ArrayHandle<vtkm::Vec3f>& transform,
+                            const vtkm::cont::ArrayHandle<vtkm::Vec3f>& doubleTransform,
+                            const std::vector<bool>& isAngle)
 {
   auto points = coords.GetData();
   VTKM_TEST_ASSERT(points.GetNumberOfValues() == transform.GetNumberOfValues() &&
@@ -119,8 +118,8 @@ void ValidateCoordTransform(
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> p = pointsPortal.Get(i);
-    vtkm::Vec<vtkm::FloatDefault, 3> r = resultsPortal.Get(i);
+    vtkm::Vec3f p = pointsPortal.Get(i);
+    vtkm::Vec3f r = resultsPortal.Get(i);
     bool isEqual = true;
     for (vtkm::IdComponent j = 0; j < 3; j++)
     {
@@ -143,8 +142,8 @@ void TestCoordinateSystemTransform()
   vtkm::cont::DataSet dsCart = MakeTestDataSet(CART);
   vtkm::worklet::CylindricalCoordinateTransform cylTrn;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> carToCylPts;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> revResult;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> carToCylPts;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> revResult;
 
   cylTrn.SetCartesianToCylindrical();
   cylTrn.Run(dsCart.GetCoordinateSystem(), carToCylPts);
@@ -156,7 +155,7 @@ void TestCoordinateSystemTransform()
 
   //Test cylindrical to cartesian
   vtkm::cont::DataSet dsCyl = MakeTestDataSet(CYL);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> cylToCarPts;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> cylToCarPts;
   cylTrn.SetCylindricalToCartesian();
   cylTrn.Run(dsCyl.GetCoordinateSystem(), cylToCarPts);
 
@@ -168,7 +167,7 @@ void TestCoordinateSystemTransform()
   //Spherical transform
   //Test cartesian to sph
   vtkm::worklet::SphericalCoordinateTransform sphTrn;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> carToSphPts;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> carToSphPts;
 
   sphTrn.SetCartesianToSpherical();
   sphTrn.Run(dsCart.GetCoordinateSystem(), carToSphPts);
@@ -179,7 +178,7 @@ void TestCoordinateSystemTransform()
     dsCart.GetCoordinateSystem(), carToSphPts, revResult, { false, true, true });
 
   //Test spherical to cartesian
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> sphToCarPts;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> sphToCarPts;
   vtkm::cont::DataSet dsSph = MakeTestDataSet(SPH);
 
   sphTrn.SetSphericalToCartesian();

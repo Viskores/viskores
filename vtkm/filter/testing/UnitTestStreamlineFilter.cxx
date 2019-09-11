@@ -16,12 +16,11 @@
 
 namespace
 {
-vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dims,
-                                  const vtkm::Vec<vtkm::FloatDefault, 3>& vec)
+vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dims, const vtkm::Vec3f& vec)
 {
   vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
 
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> vectorField(static_cast<std::size_t>(numPoints));
+  std::vector<vtkm::Vec3f> vectorField(static_cast<std::size_t>(numPoints));
   for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
     vectorField[i] = vec;
 
@@ -37,14 +36,14 @@ vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dims,
 void TestStreamline()
 {
   const vtkm::Id3 dims(5, 5, 5);
-  const vtkm::Vec<vtkm::FloatDefault, 3> vecX(1, 0, 0);
+  const vtkm::Vec3f vecX(1, 0, 0);
 
   vtkm::cont::DataSet ds = CreateDataSet(dims, vecX);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> seedArray;
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds(3);
-  seeds[0] = vtkm::Vec<vtkm::FloatDefault, 3>(.2f, 1.0f, .2f);
-  seeds[1] = vtkm::Vec<vtkm::FloatDefault, 3>(.2f, 2.0f, .2f);
-  seeds[2] = vtkm::Vec<vtkm::FloatDefault, 3>(.2f, 3.0f, .2f);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> seedArray;
+  std::vector<vtkm::Vec3f> seeds(3);
+  seeds[0] = vtkm::Vec3f(.2f, 1.0f, .2f);
+  seeds[1] = vtkm::Vec3f(.2f, 2.0f, .2f);
+  seeds[2] = vtkm::Vec3f(.2f, 3.0f, .2f);
 
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
@@ -58,8 +57,6 @@ void TestStreamline()
   auto output = streamline.Execute(ds);
 
   //Validate the result is correct.
-  VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
 
@@ -73,23 +70,23 @@ void TestStreamline()
 void TestPathline()
 {
   const vtkm::Id3 dims(5, 5, 5);
-  const vtkm::Vec<vtkm::FloatDefault, 3> vecX(1, 0, 0);
-  const vtkm::Vec<vtkm::FloatDefault, 3> vecY(0, 1, 0);
+  const vtkm::Vec3f vecX(1, 0, 0);
+  const vtkm::Vec3f vecY(0, 1, 0);
 
   vtkm::cont::DataSet ds1 = CreateDataSet(dims, vecX);
   vtkm::cont::DataSet ds2 = CreateDataSet(dims, vecY);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> seedArray;
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds(3);
-  seeds[0] = vtkm::Vec<vtkm::FloatDefault, 3>(.2f, 1.0f, .2f);
-  seeds[1] = vtkm::Vec<vtkm::FloatDefault, 3>(.2f, 2.0f, .2f);
-  seeds[2] = vtkm::Vec<vtkm::FloatDefault, 3>(.2f, 3.0f, .2f);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> seedArray;
+  std::vector<vtkm::Vec3f> seeds(3);
+  seeds[0] = vtkm::Vec3f(.2f, 1.0f, .2f);
+  seeds[1] = vtkm::Vec3f(.2f, 2.0f, .2f);
+  seeds[2] = vtkm::Vec3f(.2f, 3.0f, .2f);
 
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
   vtkm::filter::Pathline pathline;
 
-  pathline.SetPreviousTime(0.0f);
+  pathline.SetCurrentTime(0.0f);
   pathline.SetNextTime(1.0f);
   pathline.SetNextDataSet(ds2);
   pathline.SetStepSize(0.05f);
@@ -100,11 +97,6 @@ void TestPathline()
   auto output = pathline.Execute(ds1);
 
   //Validate the result is correct.
-  VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
-  VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
-
   vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
   VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 60, "Wrong number of coordinates");
 

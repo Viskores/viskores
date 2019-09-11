@@ -171,22 +171,22 @@ InputType CallPrepareForExecutionInternal(std::true_type,
 }
 
 //--------------------------------------------------------------------------------
-// specialization for MultiBlock input when `PrepareForExecution` is not provided
+// specialization for PartitionedDataSet input when `PrepareForExecution` is not provided
 // by the subclass. we iterate over blocks and execute for each block
 // individually.
 template <typename Derived, typename DerivedPolicy>
-vtkm::cont::MultiBlock CallPrepareForExecutionInternal(
+vtkm::cont::PartitionedDataSet CallPrepareForExecutionInternal(
   std::false_type,
   Derived* self,
-  const vtkm::cont::MultiBlock& input,
+  const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  vtkm::cont::MultiBlock output;
+  vtkm::cont::PartitionedDataSet output;
   for (const auto& inBlock : input)
   {
     vtkm::cont::DataSet outBlock = CallPrepareForExecution(self, inBlock, policy);
     CallMapFieldOntoOutput(self, inBlock, outBlock, policy);
-    output.AddBlock(outBlock);
+    output.AppendPartition(outBlock);
   }
   return output;
 }
@@ -234,7 +234,8 @@ void CallPostExecute(Derived* self,
 //----------------------------------------------------------------------------
 template <typename Derived>
 inline VTKM_CONT Filter<Derived>::Filter()
-  : FieldsToPass(vtkm::filter::FieldSelection::MODE_ALL)
+  : Invoke()
+  , FieldsToPass(vtkm::filter::FieldSelection::MODE_ALL)
 {
 }
 
@@ -253,8 +254,8 @@ inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(const vtkm::cont::
 
 //----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT vtkm::cont::MultiBlock Filter<Derived>::Execute(
-  const vtkm::cont::MultiBlock& input)
+inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
+  const vtkm::cont::PartitionedDataSet& input)
 {
   return this->Execute(input, vtkm::filter::PolicyDefault());
 }
@@ -271,23 +272,24 @@ inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
     vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeToString<Derived>().c_str());
 
   Derived* self = static_cast<Derived*>(this);
-  vtkm::cont::MultiBlock output = self->Execute(vtkm::cont::MultiBlock(input), policy);
-  if (output.GetNumberOfBlocks() > 1)
+  vtkm::cont::PartitionedDataSet output =
+    self->Execute(vtkm::cont::PartitionedDataSet(input), policy);
+  if (output.GetNumberOfPartitions() > 1)
   {
     throw vtkm::cont::ErrorFilterExecution("Expecting at most 1 block.");
   }
-  return output.GetNumberOfBlocks() == 1 ? output.GetBlock(0) : vtkm::cont::DataSet();
+  return output.GetNumberOfPartitions() == 1 ? output.GetPartition(0) : vtkm::cont::DataSet();
 }
 
 //----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::MultiBlock Filter<Derived>::Execute(
-  const vtkm::cont::MultiBlock& input,
+inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
+  const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
-                 "Filter (MultiBlock): '%s'",
+                 "Filter (PartitionedDataSet): '%s'",
                  vtkm::cont::TypeToString<Derived>().c_str());
 
   Derived* self = static_cast<Derived*>(this);
@@ -296,7 +298,7 @@ inline VTKM_CONT vtkm::cont::MultiBlock Filter<Derived>::Execute(
   internal::CallPreExecute(self, input, policy);
 
   // Call `PrepareForExecution` (which should probably be renamed at some point)
-  vtkm::cont::MultiBlock output = internal::CallPrepareForExecution(self, input, policy);
+  vtkm::cont::PartitionedDataSet output = internal::CallPrepareForExecution(self, input, policy);
 
   // Call `Derived::PostExecute<DerivedPolicy>(input, output, policy)` if defined.
   internal::CallPostExecute(self, input, output, policy);

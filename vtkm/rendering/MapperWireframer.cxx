@@ -67,9 +67,9 @@ public:
 
   using ExecutionSignature = void(_1, _2, _3, _4);
   template <typename ScalarType>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& inCoord,
+  VTKM_EXEC void operator()(const vtkm::Vec3f_32& inCoord,
                             const ScalarType& scalar,
-                            vtkm::Vec<vtkm::Float32, 3>& outCoord,
+                            vtkm::Vec3f_32& outCoord,
                             vtkm::Float32& fieldOut) const
   {
     //
@@ -99,7 +99,7 @@ public:
 #pragma warning(push)
 #pragma warning(disable : 4127) //conditional expression is constant
 #endif
-struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
+struct EdgesCounter : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn cellSet, FieldOutCell numEdges);
   using ExecutionSignature = _2(CellShape shape, PointCount numPoints);
@@ -120,7 +120,7 @@ struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
   }
 }; // struct EdgesCounter
 
-struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
+struct EdgesExtracter : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn cellSet, FieldOutCell edgeIndices);
   using ExecutionSignature = void(CellShape, PointIndices, VisitIndex, _2);
@@ -253,14 +253,13 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   if (is1D)
   {
 
-    bool isSupportedField =
-      inScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
+    const bool isSupportedField = inScalarField.IsFieldPoint();
     if (!isSupportedField)
     {
       throw vtkm::cont::ErrorBadValue(
         "WireFramer: field must be associated with points for 1D cell set");
     }
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> newCoords;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> newCoords;
     vtkm::cont::ArrayHandle<vtkm::Float32> newScalars;
     //
     // Convert the cell set into something we can draw
@@ -283,7 +282,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     conn.Allocate(numCells * 2);
     vtkm::worklet::DispatcherMapField<CreateConnectivity>(CreateConnectivity()).Invoke(iter, conn);
 
-    vtkm::cont::CellSetSingleType<> newCellSet("cells");
+    vtkm::cont::CellSetSingleType<> newCellSet;
     newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
     cellSet = vtkm::cont::DynamicCellSet(newCellSet);
   }
@@ -304,7 +303,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     // running the external faces filter on the input cell set.
     vtkm::cont::DataSet dataSet;
     dataSet.AddCoordinateSystem(actualCoords);
-    dataSet.AddCellSet(inCellSet);
+    dataSet.SetCellSet(inCellSet);
     dataSet.AddField(inScalarField);
     vtkm::filter::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
@@ -316,7 +315,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
 
   // Extract unique edges from the cell set.
   vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> edgeIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id2> edgeIndices;
   vtkm::worklet::DispatcherMapTopology<EdgesCounter>().Invoke(cellSet, counts);
   vtkm::worklet::DispatcherMapTopology<EdgesExtracter> extractDispatcher(
     EdgesExtracter::MakeScatter(counts));

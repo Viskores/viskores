@@ -15,6 +15,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecVariable.h>
 
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/exec/CellInterpolate.h>
 
@@ -49,9 +50,10 @@ public:
   StructuredCellInterpolationHelper() = default;
 
   VTKM_CONT
-  StructuredCellInterpolationHelper(vtkm::Id3 cellDims, vtkm::Id3 pointDims)
+  StructuredCellInterpolationHelper(vtkm::Id3 cellDims, vtkm::Id3 pointDims, bool is3D)
     : CellDims(cellDims)
     , PointDims(pointDims)
+    , Is3D(is3D)
   {
   }
 
@@ -62,42 +64,54 @@ public:
                    vtkm::VecVariable<vtkm::Id, 8>& indices) const override
   {
     vtkm::Id3 logicalCellId;
-    logicalCellId[0] = cellId % CellDims[0];
-    logicalCellId[1] = (cellId / CellDims[0]) % CellDims[1];
-    logicalCellId[2] = cellId / (CellDims[0] * CellDims[1]);
-
-    indices.Append((logicalCellId[2] * PointDims[1] + logicalCellId[1]) * PointDims[0] +
-                   logicalCellId[0]);
-    indices.Append(indices[0] + 1);
-    indices.Append(indices[1] + PointDims[0]);
-    indices.Append(indices[2] - 1);
-    indices.Append(indices[0] + PointDims[0] * PointDims[1]);
-    indices.Append(indices[4] + 1);
-    indices.Append(indices[5] + PointDims[0]);
-    indices.Append(indices[6] - 1);
-
-    cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON);
-    numVerts = 8;
+    logicalCellId[0] = cellId % this->CellDims[0];
+    logicalCellId[1] = (cellId / this->CellDims[0]) % this->CellDims[1];
+    if (this->Is3D)
+    {
+      logicalCellId[2] = cellId / (this->CellDims[0] * this->CellDims[1]);
+      indices.Append((logicalCellId[2] * this->PointDims[1] + logicalCellId[1]) *
+                       this->PointDims[0] +
+                     logicalCellId[0]);
+      indices.Append(indices[0] + 1);
+      indices.Append(indices[1] + this->PointDims[0]);
+      indices.Append(indices[2] - 1);
+      indices.Append(indices[0] + this->PointDims[0] * this->PointDims[1]);
+      indices.Append(indices[4] + 1);
+      indices.Append(indices[5] + this->PointDims[0]);
+      indices.Append(indices[6] - 1);
+      cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON);
+      numVerts = 8;
+    }
+    else
+    {
+      indices.Append(logicalCellId[1] * this->PointDims[0] + logicalCellId[0]);
+      indices.Append(indices[0] + 1);
+      indices.Append(indices[1] + this->PointDims[0]);
+      indices.Append(indices[2] - 1);
+      cellShape = static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_QUAD);
+      numVerts = 4;
+    }
   }
 
 private:
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
+  bool Is3D = true;
 };
 
 template <typename DeviceAdapter>
-class SingleCellExplicitInterpolationHelper : public vtkm::exec::CellInterpolationHelper
+class SingleCellTypeInterpolationHelper : public vtkm::exec::CellInterpolationHelper
 {
   using ConnType = vtkm::cont::ArrayHandle<vtkm::Id>;
   using ConnPortalType = typename ConnType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
 public:
-  SingleCellExplicitInterpolationHelper() = default;
+  SingleCellTypeInterpolationHelper() = default;
 
   VTKM_CONT
-  SingleCellExplicitInterpolationHelper(vtkm::UInt8 cellShape,
-                                        vtkm::IdComponent pointsPerCell,
-                                        const ConnType& connectivity)
+  SingleCellTypeInterpolationHelper(vtkm::UInt8 cellShape,
+                                    vtkm::IdComponent pointsPerCell,
+                                    const ConnType& connectivity)
     : CellShape(cellShape)
     , PointsPerCell(pointsPerCell)
     , Connectivity(connectivity.PrepareForInput(DeviceAdapter()))
@@ -126,7 +140,7 @@ private:
 };
 
 template <typename DeviceAdapter>
-class CellExplicitInterpolationHelper : public vtkm::exec::CellInterpolationHelper
+class ExplicitCellInterpolationHelper : public vtkm::exec::CellInterpolationHelper
 {
   using ShapeType = vtkm::cont::ArrayHandle<vtkm::UInt8>;
   using NumIdxType = vtkm::cont::ArrayHandle<vtkm::IdComponent>;
@@ -139,10 +153,10 @@ class CellExplicitInterpolationHelper : public vtkm::exec::CellInterpolationHelp
   using ConnPortalType = typename ConnType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
 public:
-  CellExplicitInterpolationHelper() = default;
+  ExplicitCellInterpolationHelper() = default;
 
   VTKM_CONT
-  CellExplicitInterpolationHelper(const ShapeType& shape,
+  ExplicitCellInterpolationHelper(const ShapeType& shape,
                                   const NumIdxType& numIdx,
                                   const OffsetType& offset,
                                   const ConnType& connectivity)
@@ -196,21 +210,34 @@ public:
 class StructuredCellInterpolationHelper : public vtkm::cont::CellInterpolationHelper
 {
 public:
-  using StructuredType = vtkm::cont::CellSetStructured<3>;
+  using Structured2DType = vtkm::cont::CellSetStructured<2>;
+  using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
   StructuredCellInterpolationHelper() = default;
 
   VTKM_CONT
   StructuredCellInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
   {
-    if (cellSet.IsSameType(StructuredType()))
+    if (cellSet.IsSameType(Structured2DType()))
     {
-      CellDims = cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-      PointDims =
-        cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+      this->Is3D = false;
+      vtkm::Id2 cellDims =
+        cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      vtkm::Id2 pointDims =
+        cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+      this->CellDims = vtkm::Id3(cellDims[0], cellDims[1], 0);
+      this->PointDims = vtkm::Id3(pointDims[0], pointDims[1], 1);
+    }
+    else if (cellSet.IsSameType(Structured3DType()))
+    {
+      this->Is3D = true;
+      this->CellDims =
+        cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      this->PointDims =
+        cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
     }
     else
-      throw vtkm::cont::ErrorBadType("Cell set is not 3D structured type");
+      throw vtkm::cont::ErrorBadType("Cell set is not of type CellSetStructured");
   }
 
   VTKM_CONT
@@ -225,7 +252,7 @@ public:
     }
 
     using ExecutionType = vtkm::exec::StructuredCellInterpolationHelper;
-    ExecutionType* execObject = new ExecutionType(this->CellDims, this->PointDims);
+    ExecutionType* execObject = new ExecutionType(this->CellDims, this->PointDims, this->Is3D);
     this->ExecHandle.Reset(execObject);
 
     return this->ExecHandle.PrepareForExecution(deviceId);
@@ -234,46 +261,46 @@ public:
 private:
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
+  bool Is3D = true;
   mutable HandleType ExecHandle;
 };
 
-class SingleCellExplicitInterpolationHelper : public vtkm::cont::CellInterpolationHelper
+class SingleCellTypeInterpolationHelper : public vtkm::cont::CellInterpolationHelper
 {
 public:
   using SingleExplicitType = vtkm::cont::CellSetSingleType<>;
 
-  SingleCellExplicitInterpolationHelper() = default;
+  SingleCellTypeInterpolationHelper() = default;
 
   VTKM_CONT
-  SingleCellExplicitInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
+  SingleCellTypeInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
   {
     if (cellSet.IsSameType(SingleExplicitType()))
     {
       SingleExplicitType CellSet = cellSet.Cast<SingleExplicitType>();
-      CellShape =
-        CellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())
-          .GetPortalConstControl()
-          .Get(0);
-      PointsPerCell =
-        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())
-          .GetPortalConstControl()
-          .Get(0);
-      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                  vtkm::TopologyElementTagCell());
+
+      const auto cellShapes =
+        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      const auto numIndices =
+        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+
+      CellShape = vtkm::cont::ArrayGetValue(0, cellShapes);
+      PointsPerCell = vtkm::cont::ArrayGetValue(0, numIndices);
+      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                  vtkm::TopologyElementTagPoint());
     }
     else
-      throw vtkm::cont::ErrorBadType("Cell set is not CellSetSingleType");
+      throw vtkm::cont::ErrorBadType("Cell set is not of type CellSetSingleType");
   }
 
-  struct SingleCellExplicitFunctor
+  struct SingleCellTypeFunctor
   {
     template <typename DeviceAdapter>
-    VTKM_CONT bool operator()(
-      DeviceAdapter,
-      const vtkm::cont::SingleCellExplicitInterpolationHelper& contInterpolator,
-      HandleType& execInterpolator) const
+    VTKM_CONT bool operator()(DeviceAdapter,
+                              const vtkm::cont::SingleCellTypeInterpolationHelper& contInterpolator,
+                              HandleType& execInterpolator) const
     {
-      using ExecutionType = vtkm::exec::SingleCellExplicitInterpolationHelper<DeviceAdapter>;
+      using ExecutionType = vtkm::exec::SingleCellTypeInterpolationHelper<DeviceAdapter>;
       ExecutionType* execObject = new ExecutionType(
         contInterpolator.CellShape, contInterpolator.PointsPerCell, contInterpolator.Connectivity);
       execInterpolator.Reset(execObject);
@@ -285,11 +312,11 @@ public:
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
     vtkm::cont::DeviceAdapterId deviceId) const override
   {
-    const bool success = vtkm::cont::TryExecuteOnDevice(
-      deviceId, SingleCellExplicitFunctor(), *this, this->ExecHandle);
+    const bool success =
+      vtkm::cont::TryExecuteOnDevice(deviceId, SingleCellTypeFunctor(), *this, this->ExecHandle);
     if (!success)
     {
-      throwFailedRuntimeDeviceTransfer("SingleCellExplicitInterpolationHelper", deviceId);
+      throwFailedRuntimeDeviceTransfer("SingleCellTypeInterpolationHelper", deviceId);
     }
     return this->ExecHandle.PrepareForExecution(deviceId);
   }
@@ -301,38 +328,38 @@ private:
   mutable HandleType ExecHandle;
 };
 
-class CellExplicitInterpolationHelper : public vtkm::cont::CellInterpolationHelper
+class ExplicitCellInterpolationHelper : public vtkm::cont::CellInterpolationHelper
 {
 public:
-  CellExplicitInterpolationHelper() = default;
+  ExplicitCellInterpolationHelper() = default;
 
   VTKM_CONT
-  CellExplicitInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
+  ExplicitCellInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
   {
     if (cellSet.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
       vtkm::cont::CellSetExplicit<> CellSet = cellSet.Cast<vtkm::cont::CellSetExplicit<>>();
       Shape =
-        CellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+        CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
       NumIdx =
-        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
-      Offset = CellSet.GetIndexOffsetArray(vtkm::TopologyElementTagPoint(),
-                                           vtkm::TopologyElementTagCell());
-      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                  vtkm::TopologyElementTagCell());
+        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      Offset = CellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell(),
+                                           vtkm::TopologyElementTagPoint());
+      Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                  vtkm::TopologyElementTagPoint());
     }
     else
-      throw vtkm::cont::ErrorBadType("Cell set is not CellSetSingleType");
+      throw vtkm::cont::ErrorBadType("Cell set is not of type CellSetExplicit");
   }
 
-  struct SingleCellExplicitFunctor
+  struct ExplicitCellFunctor
   {
     template <typename DeviceAdapter>
     VTKM_CONT bool operator()(DeviceAdapter,
-                              const vtkm::cont::CellExplicitInterpolationHelper& contInterpolator,
+                              const vtkm::cont::ExplicitCellInterpolationHelper& contInterpolator,
                               HandleType& execInterpolator) const
     {
-      using ExecutionType = vtkm::exec::CellExplicitInterpolationHelper<DeviceAdapter>;
+      using ExecutionType = vtkm::exec::ExplicitCellInterpolationHelper<DeviceAdapter>;
       ExecutionType* execObject = new ExecutionType(contInterpolator.Shape,
                                                     contInterpolator.NumIdx,
                                                     contInterpolator.Offset,
@@ -346,11 +373,11 @@ public:
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
     vtkm::cont::DeviceAdapterId deviceId) const override
   {
-    const bool success = vtkm::cont::TryExecuteOnDevice(
-      deviceId, SingleCellExplicitFunctor(), *this, this->ExecHandle);
+    const bool success =
+      vtkm::cont::TryExecuteOnDevice(deviceId, ExplicitCellFunctor(), *this, this->ExecHandle);
     if (!success)
     {
-      throwFailedRuntimeDeviceTransfer("SingleCellExplicitInterpolationHelper", deviceId);
+      throwFailedRuntimeDeviceTransfer("ExplicitCellInterpolationHelper", deviceId);
     }
     return this->ExecHandle.PrepareForExecution(deviceId);
   }

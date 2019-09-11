@@ -7,7 +7,7 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
-cmake_minimum_required(VERSION 3.8...3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
 project(CosmoTools CXX)
 
 #Find the VTK-m package
@@ -18,6 +18,9 @@ add_executable(CosmoHaloFinder CosmoHaloFinder.cxx)
 target_link_libraries(CosmoCenterFinder PRIVATE vtkm_filter)
 target_link_libraries(CosmoHaloFinder PRIVATE vtkm_filter)
 
-if(TARGET vtkm::cuda)
-  set_source_files_properties(CosmoCenterFinder.cxx CosmoCenterFinder.cxx PROPERTIES LANGUAGE "CUDA")
-endif()
+vtkm_add_target_information(CosmoCenterFinder
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES CosmoCenterFinder.cxx)
+vtkm_add_target_information(CosmoHaloFinder
+                            MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES CosmoHaloFinder.cxx)

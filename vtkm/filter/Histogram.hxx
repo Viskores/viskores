@@ -8,17 +8,15 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/FieldHistogram.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/AssignerMultiBlock.h>
+#include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
 #include <vtkm/cont/Serialization.h>
-#include <vtkm/filter/internal/CreateResult.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 
@@ -107,7 +105,7 @@ public:
       []() -> void* { return new vtkm::cont::ArrayHandle<vtkm::Id>(); },
       [](void* ptr) { delete static_cast<vtkm::cont::ArrayHandle<vtkm::Id>*>(ptr); });
 
-    vtkm::cont::AssignerMultiBlock assigner(numLocalBlocks);
+    vtkm::cont::AssignerPartitionedDataSet assigner(numLocalBlocks);
     vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds> decomposer(
       /*dims*/ 1, vtkmdiy::interval(0, assigner.nblocks() - 1), assigner.nblocks());
     decomposer.decompose(comm.rank(), assigner, master);
@@ -208,7 +206,7 @@ inline VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::MultiBlock& input,
+inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet& input,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   using TypeList = typename DerivedPolicy::FieldTypeList;
@@ -230,15 +228,15 @@ inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::MultiBlock& input,
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT void Histogram::PostExecute(const vtkm::cont::MultiBlock&,
-                                             vtkm::cont::MultiBlock& result,
+inline VTKM_CONT void Histogram::PostExecute(const vtkm::cont::PartitionedDataSet&,
+                                             vtkm::cont::PartitionedDataSet& result,
                                              const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   // iterate and compute histogram for each local block.
-  detail::DistributedHistogram helper(result.GetNumberOfBlocks());
-  for (vtkm::Id cc = 0; cc < result.GetNumberOfBlocks(); ++cc)
+  detail::DistributedHistogram helper(result.GetNumberOfPartitions());
+  for (vtkm::Id cc = 0; cc < result.GetNumberOfPartitions(); ++cc)
   {
-    auto& ablock = result.GetBlock(cc);
+    auto& ablock = result.GetPartition(cc);
     helper.SetLocalHistogram(cc, ablock.GetField(this->GetOutputFieldName()));
   }
 
@@ -247,7 +245,7 @@ inline VTKM_CONT void Histogram::PostExecute(const vtkm::cont::MultiBlock&,
     this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, helper.ReduceAll());
   output.AddField(rfield);
 
-  result = vtkm::cont::MultiBlock(output);
+  result = vtkm::cont::PartitionedDataSet(output);
 }
 }
 } // namespace vtkm::filter

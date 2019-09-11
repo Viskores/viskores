@@ -35,7 +35,7 @@ public:
     vtkm::cont::ArrayCopy(strideArray, pointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType<> outCellSet("cells");
+    vtkm::cont::CellSetSingleType<> outCellSet;
     outCellSet.Fill(numberOfInputPoints, vtkm::CellShapeTagVertex::Id, 1, pointIds);
 
     return outCellSet;
