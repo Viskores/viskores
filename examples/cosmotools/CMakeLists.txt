@@ -18,9 +18,7 @@ add_executable(CosmoHaloFinder CosmoHaloFinder.cxx)
 target_link_libraries(CosmoCenterFinder PRIVATE vtkm_filter)
 target_link_libraries(CosmoHaloFinder PRIVATE vtkm_filter)
 
-vtkm_add_target_information(CosmoCenterFinder
+vtkm_add_target_information(CosmoCenterFinder CosmoHaloFinder
                             MODIFY_CUDA_FLAGS
-                            DEVICE_SOURCES CosmoCenterFinder.cxx)
-vtkm_add_target_information(CosmoHaloFinder
-                            MODIFY_CUDA_FLAGS
-                            DEVICE_SOURCES CosmoHaloFinder.cxx)
+                            DEVICE_SOURCES
+                              CosmoCenterFinder.cxx CosmoHaloFinder.cxx)
