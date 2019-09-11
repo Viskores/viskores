@@ -134,7 +134,7 @@ void VTKM_NEVER_EXPORT FunctorTiling3DExecute(void* f,
 //
 // Note: The worklet and invocation must have a lifetime that is at least
 // as long as the Task
-class VTKM_ALWAYS_EXPORT TaskTiling1D : public vtkm::exec::TaskBase
+class VTKM_NEVER_EXPORT TaskTiling1D : public vtkm::exec::TaskBase
 {
 public:
   TaskTiling1D()
@@ -226,7 +226,7 @@ protected:
 //
 // Note: The worklet and invocation must have a lifetime that is at least
 // as long as the Task
-class VTKM_ALWAYS_EXPORT TaskTiling3D : public vtkm::exec::TaskBase
+class VTKM_NEVER_EXPORT TaskTiling3D : public vtkm::exec::TaskBase
 {
 public:
   TaskTiling3D()
