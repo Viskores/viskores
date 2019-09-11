@@ -86,8 +86,8 @@ void TestPathline()
 
   vtkm::filter::Pathline pathline;
 
-  pathline.SetCurrentTime(0);
-  pathline.SetNextTime(1);
+  pathline.SetPreviousTime(0.0f);
+  pathline.SetNextTime(1.0f);
   pathline.SetNextDataSet(ds2);
   pathline.SetStepSize(static_cast<vtkm::FloatDefault>(0.05f));
   pathline.SetNumberOfSteps(20);
