@@ -129,12 +129,6 @@ public:
     const vtkm::filter::FieldMetadata& fieldMeta,
     vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
-
 private:
   std::string SecondaryFieldName;
   vtkm::cont::Field::Association SecondaryFieldAssociation;

@@ -178,15 +178,5 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
 
   return CreateResultFieldCell(input, ghosts, "vtkmGhostCells");
 }
-
-template <typename ValueType, typename Storage, typename Policy>
-inline VTKM_CONT bool GhostCellClassify::DoMapField(
-  vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<ValueType, Storage>&,
-  const vtkm::filter::FieldMetadata&,
-  vtkm::filter::PolicyBase<Policy>)
-{
-  return true;
-}
 }
 }
