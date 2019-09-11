@@ -314,10 +314,16 @@ public:
   /// \endcode
   ///
   template <class Func>
-  static VTKM_CONT int Run(Func function, int argc, char* argv[])
+  static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
-
-    vtkm::cont::InitLogging(argc, argv);
+    if (argc == 0 || argv == nullptr)
+    {
+      vtkm::cont::InitLogging();
+    }
+    else
+    {
+      vtkm::cont::InitLogging(argc, argv);
+    }
 
     try
     {

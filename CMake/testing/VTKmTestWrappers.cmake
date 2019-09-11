@@ -97,6 +97,9 @@ function(vtkm_unit_tests)
     set(test_prog "UnitTests_${kit}")
   endif()
 
+  # For Testing Purposes, we will set the default logging level to INFO
+  list(APPEND vtkm_default_test_log_level "-v" "INFO")
+
   if(VTKm_UT_MPI)
     # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
     set(test_prog "${test_prog}_mpi")
@@ -156,12 +159,13 @@ function(vtkm_unit_tests)
       if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
         add_test(NAME ${tname}${upper_backend}
           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
-                  $<TARGET_FILE:${test_prog}> ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
-                  ${MPIEXEC_POSTFLAGS}
+                  $<TARGET_FILE:${test_prog}> ${tname} ${device_command_line_argument}
+                  ${vtkm_default_test_log_level} ${VTKm_UT_TEST_ARGS} ${MPIEXEC_POSTFLAGS}
           )
       else()
         add_test(NAME ${tname}${upper_backend}
-          COMMAND ${test_prog} ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
+          COMMAND ${test_prog} ${tname} ${device_command_line_argument}
+                  ${vtkm_default_test_log_level} ${VTKm_UT_TEST_ARGS}
           )
       endif()
 
