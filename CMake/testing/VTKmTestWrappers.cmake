@@ -111,7 +111,9 @@ function(vtkm_unit_tests)
   create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES} ${extraArgs})
 
   add_executable(${test_prog} ${test_prog}.cxx ${VTKm_UT_SOURCES})
+  vtkm_add_drop_unused_function_flags(${test_prog})
   target_compile_definitions(${test_prog} PRIVATE ${VTKm_UT_DEFINES})
+
 
   #if all backends are enabled, we can use cuda compiler to handle all possible backends.
   set(device_sources )

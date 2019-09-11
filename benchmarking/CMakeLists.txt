@@ -19,12 +19,15 @@ function(add_benchmark)
 
   add_executable(${exe_name} ${VTKm_AB_FILE})
   target_link_libraries(${exe_name} PRIVATE ${VTKm_AB_LIBS})
+  vtkm_add_drop_unused_function_flags(${exe_name})
+  vtkm_add_target_information(${exe_name})
+
   set_target_properties(${exe_name} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
     CXX_VISIBILITY_PRESET "hidden"
     CUDA_VISIBILITY_PRESET "hidden"
-    CUDA_SEPARABLE_COMPILATION ON
   )
+
   vtkm_add_target_information(${exe_name} DEVICE_SOURCES ${VTKm_AB_FILE})
 endfunction()
 

@@ -41,6 +41,23 @@ target_link_libraries(vtkm_compiler_flags
 # setup that we need C++11 support
 target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
 
+# setup our static libraries so that a separate ELF section
+# is generated for each function. This allows for the linker to
+# remove unused sections. This allows for programs that use VTK-m
+# to have the smallest binary impact as they can drop any VTK-m symbol
+# they don't use.
+if(VTKM_COMPILER_IS_MSVC)
+  target_compile_options(vtkm_compiler_flags INTERFACE /Gy)
+  if(TARGET vtkm::cuda)
+    target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/Gy">)
+  endif()
+elseif(NOT VTKM_COMPILER_IS_PGI) #can't find an equivalant PGI flag
+  target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-ffunction-sections>)
+  if(TARGET vtkm::cuda)
+    target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-ffunction-sections>)
+  endif()
+endif()
+
 # Enable large object support so we can have 2^32 addressable sections
 if(VTKM_COMPILER_IS_MSVC)
   target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/bigobj>)

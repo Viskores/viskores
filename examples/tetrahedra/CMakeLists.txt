@@ -20,6 +20,7 @@ add_executable(Triangulate Triangulate.cxx)
 target_link_libraries(Triangulate PRIVATE vtkm_filter)
 
 vtkm_add_target_information(Tetrahedralize Triangulate
+                            DROP_UNUSED_SYMBOLS
                             MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES
                               Tetrahedralize.cxx Triangulate.cxx)

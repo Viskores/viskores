@@ -8,9 +8,10 @@ compilation units compile correctly.
 ```cmake
  vtkm_add_target_information(
    target[s]
+   [ DROP_UNUSED_SYMBOLS ]
    [ MODIFY_CUDA_FLAGS ]
    [ EXTENDS_VTKM ]
-   [ DEVICE_SOURCES <source_list>
+   [ DEVICE_SOURCES <source_list> ]
    )
 ```
  Usage:
@@ -25,6 +26,15 @@ compilation units compile correctly.
 
 ## Options to vtkm_add_target_information
 
+  - DROP_UNUSED_SYMBOLS: If enabled will apply the appropiate link
+  flags to drop unused VTK-m symbols. This works as VTK-m is compiled with
+  -ffunction-sections which allows for the linker to remove unused functions.
+  If you are building a program that loads runtime plugins that can call
+  VTK-m this most likely shouldn't be used as symbols the plugin expects
+  to exist will be removed.
+  Enabling this will help keep library sizes down when using static builds
+  of VTK-m as only the functions you call will be kept. This can have a
+  dramatic impact on the size of the resulting executable / shared library.
   - MODIFY_CUDA_FLAGS: If enabled will add the required -arch=<ver> flags
   that VTK-m was compiled with. If you have multiple libraries that use
   VTK-m calling `vtkm_add_target_information` multiple times with
@@ -56,3 +66,15 @@ compilation units compile correctly.
       to use in filters/worklets. This is only supported when CUDA isn't enabled. Otherwise we need to ERROR!
 
     For most consumers they can ignore the `EXTENDS_VTKM` property as the default will be correct.
+
+The `vtkm_add_target_information` higher order function leverages the `vtkm_add_drop_unused_function_flags` and
+`vtkm_get_cuda_flags` functions which can be used by VTK-m consuming applications.
+
+The `vtkm_add_drop_unused_function_flags` function implements all the behavior of `DROP_UNUSED_SYMBOLS` for a single
+target.
+
+The `vtkm_get_cuda_flags` function implements a general form of `MODIFY_CUDA_FLAGS` but instead of modiyfing
+the `CMAKE_CUDA_FLAGS` it will add the flags to any variable passed to it.
+
+
+

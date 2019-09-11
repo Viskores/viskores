@@ -135,6 +135,36 @@ function(vtkm_get_cuda_flags settings_var)
   endif()
 endfunction()
 
+#-----------------------------------------------------------------------------
+# Add to a target linker flags that allow unused VTK-m functions to be dropped,
+# which helps keep binary sizes down. This works as VTK-m is compiled with
+# ffunction-sections which allows for the linker to remove unused functions.
+# If you are building a program that loads runtime plugins that can call
+# VTK-m this most likely shouldn't be used as symbols the plugin expects
+# to exist will be removed.
+#
+# add_library(lib_that_uses_vtkm ...)
+# vtkm_add_drop_unused_function_flags(lib_that_uses_vtkm)
+# target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
+#
+function(vtkm_add_drop_unused_function_flags uses_vtkm_target)
+  get_target_property(lib_type ${uses_vtkm_target} TYPE)
+  if(${lib_type} STREQUAL "SHARED_LIBRARY" OR
+     ${lib_type} STREQUAL "MODULE_LIBRARY" OR
+     ${lib_type} STREQUAL "EXECUTABLE" )
+
+    if(APPLE)
+      #OSX Linker uses a different flag for this
+      set_property(TARGET ${uses_vtkm_target} APPEND_STRING PROPERTY
+        LINK_FLAGS " -Wl,-dead_strip")
+    elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
+      set_property(TARGET ${uses_vtkm_target} APPEND_STRING PROPERTY
+        LINK_FLAGS " -Wl,--gc-sections")
+    endif()
+
+  endif()
+endfunction()
+
 
 #-----------------------------------------------------------------------------
 # Add a relevant information to target that wants to use VTK-m.
@@ -146,18 +176,31 @@ endfunction()
 #
 # vtkm_add_target_information(
 #   target[s]
+#   [ DROP_UNUSED_SYMBOLS ]
 #   [ MODIFY_CUDA_FLAGS ]
 #   [ EXTENDS_VTKM ]
-#   [ DEVICE_SOURCES <source_list>
+#   [ DEVICE_SOURCES <source_list> ]
 #   )
 #
 # Usage:
 #   add_library(lib_that_uses_vtkm STATIC a.cxx)
 #   vtkm_add_target_information(lib_that_uses_vtkm
+#                               DROP_UNUSED_SYMBOLS
 #                               MODIFY_CUDA_FLAGS
 #                               DEVICE_SOURCES a.cxx
 #                               )
 #   target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
+#
+#  DROP_UNUSED_SYMBOLS: If enabled will apply the appropiate link
+#  flags to drop unused VTK-m symbols. This works as VTK-m is compiled with
+#  -ffunction-sections which allows for the linker to remove unused functions.
+#  If you are building a program that loads runtime plugins that can call
+#  VTK-m this most likely shouldn't be used as symbols the plugin expects
+#  to exist will be removed.
+#  Enabling this will help keep library sizes down when using static builds
+#  of VTK-m as only the functions you call will be kept. This can have a
+#  dramatic impact on the size of the resulting executable / shared library.
+#
 #
 #  MODIFY_CUDA_FLAGS: If enabled will add the required -arch=<ver> flags
 #  that VTK-m was compiled with. If you have multiple libraries that use
@@ -196,7 +239,7 @@ endfunction()
 #
 #
 function(vtkm_add_target_information uses_vtkm_target)
-  set(options MODIFY_CUDA_FLAGS EXTENDS_VTKM)
+  set(options DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS EXTENDS_VTKM)
   set(multiValueArgs DEVICE_SOURCES)
   cmake_parse_arguments(VTKm_TI
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
@@ -219,6 +262,12 @@ function(vtkm_add_target_information uses_vtkm_target)
   # set the required target properties
   set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+  if(VTKm_TI_DROP_UNUSED_SYMBOLS)
+    foreach(target IN LISTS targets)
+      vtkm_add_drop_unused_function_flags(${target})
+    endforeach()
+  endif()
 
   # Validate that following:
   #   - We are building with CUDA enabled.
