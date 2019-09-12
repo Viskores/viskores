@@ -101,3 +101,6 @@ add_subdirectory(interop)
 #-----------------------------------------------------------------------------
 #add the io folder
 add_subdirectory(io)
+
+#add the source folder
+add_subdirectory(source)

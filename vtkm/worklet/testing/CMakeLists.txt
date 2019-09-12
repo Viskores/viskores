@@ -89,7 +89,7 @@ set(unit_tests
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
-  LIBRARIES vtkm_worklet
+  LIBRARIES vtkm_worklet vtkm_source
   ALL_BACKENDS
   )
 if (TARGET vtkm::cuda)
