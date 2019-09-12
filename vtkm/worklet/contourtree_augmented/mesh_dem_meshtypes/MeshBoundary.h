@@ -88,7 +88,7 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   MeshBoundary2D(vtkm::Id nrows, vtkm::Id ncols, const IdArrayType& sortOrder)
     : MeshStructure(mesh_dem::MeshStructure2D<DeviceTag>(nrows, ncols))
   {
@@ -151,7 +151,7 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   MeshBoundary3D(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices, const IdArrayType& sortOrder)
     : MeshStructure(mesh_dem::MeshStructure3D<DeviceTag>(nrows, ncols, nslices))
   {
@@ -216,7 +216,7 @@ public:
   VTKM_EXEC_CONT
   MeshBoundaryContourTreeMesh() {}
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   MeshBoundaryContourTreeMesh(const IdArrayType& globalMeshIndex,
                               vtkm::Id totalNRows,
                               vtkm::Id totalNCols,
