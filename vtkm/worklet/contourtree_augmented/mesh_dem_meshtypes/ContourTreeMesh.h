@@ -654,7 +654,7 @@ void ContourTreeMesh<FieldType>::mergeWith(ContourTreeMesh<FieldType>& other)
       std::inplace_merge(
         neighboursBegin, neighboursBegin + combinedOtherStartIndexPortal.Get(vtx), neighboursEnd);
       auto it = std::unique(neighboursBegin, neighboursEnd);
-      combinedOtherStartIndexPortal.Set(vtx, neighboursEnd - it);
+      combinedOtherStartIndexPortal.Set(vtx, static_cast<vtkm::Id>(neighboursEnd - it));
       while (it != neighboursEnd)
         *(it++) = NO_SUCH_ELEMENT;
     }
