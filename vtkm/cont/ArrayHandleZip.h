@@ -376,6 +376,7 @@ VTKM_CONT vtkm::cont::ArrayHandleZip<FirstHandleType, SecondHandleType> make_Arr
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -441,5 +442,6 @@ struct Serialization<
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleZip_h

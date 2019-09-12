@@ -51,6 +51,7 @@ std::string GetVariadicSerializableTypeString(const T&)
 
 } // internal
 
+/// @cond SERIALIZATION
 template <>
 struct SerializableTypeString<vtkm::Int8>
 {
@@ -174,5 +175,6 @@ struct SerializableTypeString<vtkm::Pair<T1, T2>>
 };
 }
 } // vtkm::cont
+/// @endcond SERIALIZATION
 
 #endif // vtk_m_cont_SerializableTypeString_h

@@ -92,6 +92,7 @@ vtkm::cont::ArrayHandleExtrudeField<T> make_ArrayHandleExtrudeField(
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -141,5 +142,6 @@ public:
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif

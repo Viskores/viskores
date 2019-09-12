@@ -75,6 +75,7 @@ vtkm::cont::ArrayHandleConstant<T> make_ArrayHandleConstant(T value, vtkm::Id nu
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -108,5 +109,6 @@ struct Serialization<vtkm::cont::ArrayHandleConstant<T>>
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleConstant_h

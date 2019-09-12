@@ -100,6 +100,7 @@ vtkm::cont::ArrayHandleExtrudeCoords<T> make_ArrayHandleExtrudeCoords(
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -149,5 +150,6 @@ public:
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif

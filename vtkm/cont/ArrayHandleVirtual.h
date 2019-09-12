@@ -223,6 +223,7 @@ VTKM_CONT inline ArrayHandleType Cast(
 }
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 template <typename T>
 struct SerializableTypeString<vtkm::cont::ArrayHandleVirtual<T>>
 {

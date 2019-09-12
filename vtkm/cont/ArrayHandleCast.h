@@ -154,6 +154,7 @@ VTKM_CONT
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 
 namespace vtkm
 {
@@ -203,5 +204,6 @@ struct Serialization<vtkm::cont::ArrayHandleCast<T, AH>>
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif // vtk_m_cont_ArrayHandleCast_h

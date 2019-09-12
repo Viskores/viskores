@@ -71,6 +71,7 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace mangled_diy_namespace
 {
 
@@ -151,5 +152,6 @@ public:
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif // vtk_m_cont_ArrayHandleVirtualCoordinates_h

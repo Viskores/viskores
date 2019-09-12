@@ -715,7 +715,7 @@ VTKM_CONT ArrayHandleCompositeVector<ArrayTs...> make_ArrayHandleCompositeVector
 
 //=============================================================================
 // Specializations of serialization related classes
-
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -829,5 +829,6 @@ struct Serialization<vtkm::cont::ArrayHandle<
 {
 };
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_ArrayHandleCompositeVector_h

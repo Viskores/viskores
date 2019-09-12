@@ -614,6 +614,7 @@ VTKM_CONT
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 
 namespace vtkm
 {
