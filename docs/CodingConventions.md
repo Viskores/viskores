@@ -15,7 +15,7 @@ coding and because we expect vtkm to have continual interaction with VTK.
     form. Various copyright specific details are referenced in the LICENSE.txt
     file.
 
-    ```
+```
 //==========================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
@@ -25,7 +25,7 @@ coding and because we expect vtkm to have continual interaction with VTK.
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //==========================================================================
-    ```
+```
 
   + The CopyrightStatement test checks all files for a similar statement.
     The test will print out a suggested text that can be copied and pasted
@@ -41,21 +41,20 @@ coding and because we expect vtkm to have continual interaction with VTK.
     directory, with non alphanumeric characters, such as / and . replaced
     with underscores. The `#endif` part of the guard at the bottom of the
     file should include the guard name in a comment. For example, the
-    vtkm/cont/ArrayHandle.h header contains the guard
-
-    ```cpp
-  #ifndef vtk_m_cont_ArrayHandle_h
-  #define vtk_m_cont_ArrayHandle_h
-    ```
-    at the top and
-    ```cpp
-  #endif //vtk_m_cont_ArrayHandle_h
-    ```
-    at the bottom.
+    vtkm/cont/ArrayHandle.h header contains the guard demostrated below.
 
     The unique use of vtk_m over vtkm is to allow auto-complete engines the
     ability to differentiate between the header guards and VTKM_ macros
     that are used within the code base.
+
+```cpp
+#ifndef vtk_m_cont_ArrayHandle_h
+#define vtk_m_cont_ArrayHandle_h
+
+// All ArrayHandle code here
+
+#endif //vtk_m_cont_ArrayHandle_h
+```
 
   + The VTK-m toolkit has several nested namespaces. The declaration of
     each namespace should be on its own line, and the code inside the
@@ -64,7 +63,7 @@ coding and because we expect vtkm to have continual interaction with VTK.
     the namespace. Namespaces can be grouped as desired. The following is a
     valid use of namespaces.
 
-    ```cpp
+```cpp
 namespace vtkm {
 namespace cont {
 namespace detail {
@@ -73,7 +72,7 @@ class InternalClass;
 class ExposedClass;
 }
 } // namespace vtkm::cont
-    ```
+```
 
   + Multiple inheritance is not allowed in VTK-m classes.
 
@@ -170,7 +169,7 @@ for (auto v : vector)
     or detail class clearly associated with it, the reference can be
     shortened to `internal::` or `detail::`.
 
-  + use `this->` inside of methods when accessing class methods and
+  + Use `this->` inside of methods when accessing class methods and
     instance variables to distinguish between local variables and instance
     variables.
 
