@@ -143,7 +143,7 @@ int TestCellSetExtrude()
   try
   {
     avg.SetActiveField("cfield");
-    auto result = avg.Execute(dataset, PolicyExtrude{});
+    auto result = avg.Execute(dataset, vtkm::filter::PolicyExtrude{});
     VTKM_TEST_ASSERT(result.HasPointField("cfield"), "filter resulting dataset should be valid");
   }
   catch (const vtkm::cont::Error& err)
