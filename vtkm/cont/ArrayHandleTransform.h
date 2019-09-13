@@ -92,16 +92,6 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
-  {
-#if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
-    VTKM_ASSERT(false &&
-                "Cannot write to read-only transform array. (No inverse transform given.)");
-#endif
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
   const PortalType& GetPortal() const { return this->Portal; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -120,6 +110,8 @@ template <typename ValueType_,
 class VTKM_ALWAYS_EXPORT ArrayPortalTransform
   : public ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>
 {
+  using Writable = vtkm::internal::PortalSupportsSets<PortalType_>;
+
 public:
   using Superclass = ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>;
   using PortalType = PortalType_;
@@ -147,11 +139,11 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
-    using call_supported_t = typename vtkm::internal::PortalSupportsSets<PortalType>::type;
-    this->Set(call_supported_t(), index, value);
+    this->Portal.Set(index, this->InverseFunctor(value));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -160,14 +152,6 @@ public:
 
 private:
   InverseFunctorType InverseFunctor;
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  inline void Set(std::true_type, vtkm::Id index, const ValueType& value) const
-  {
-    this->Portal.Set(index, this->InverseFunctor(value));
-  }
-  VTKM_EXEC_CONT inline void Set(std::false_type, vtkm::Id, const ValueType&) const {}
 };
 }
 }
