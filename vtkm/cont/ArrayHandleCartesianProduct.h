@@ -37,6 +37,14 @@ public:
   using PortalTypeSecond = PortalTypeSecond_;
   using PortalTypeThird = PortalTypeThird_;
 
+  using set_supported_p1 = vtkm::internal::PortalSupportsSets<PortalTypeFirst>;
+  using set_supported_p2 = vtkm::internal::PortalSupportsSets<PortalTypeSecond>;
+  using set_supported_p3 = vtkm::internal::PortalSupportsSets<PortalTypeThird>;
+
+  using Writable = std::integral_constant<bool,
+                                          set_supported_p1::value && set_supported_p2::value &&
+                                            set_supported_p3::value>;
+
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalCartesianProduct()
@@ -97,9 +105,11 @@ public:
       this->PortalFirst.Get(i1), this->PortalSecond.Get(i2), this->PortalThird.Get(i3));
   }
 
+
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->GetNumberOfValues());
