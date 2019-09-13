@@ -15,7 +15,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/worklet/WaveletGenerator.h>
+#include <vtkm/source/Wavelet.h>
 
 namespace
 {
@@ -115,13 +115,11 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
 vtkm::cont::DataSet Make3DWavelet()
 {
 
-  vtkm::worklet::WaveletGenerator wavelet;
-  wavelet.SetMinimumExtent({ -25 });
-  wavelet.SetMaximumExtent({ 25 });
+  vtkm::source::Wavelet wavelet({ -25 }, { 25 });
   wavelet.SetFrequency({ 60, 30, 40 });
   wavelet.SetMagnitude({ 5 });
 
-  vtkm::cont::DataSet result = wavelet.GenerateDataSet();
+  vtkm::cont::DataSet result = wavelet.Execute();
   return result;
 }
 

@@ -11,11 +11,13 @@
 set(headers
   Source.h
   Tangle.h
+  Wavelet.h
   )
 
 set(device_sources
   Source.cxx
   Tangle.cxx
+  Wavelet.cxx
   )
 
 vtkm_library(NAME vtkm_source

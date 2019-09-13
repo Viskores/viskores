@@ -13,7 +13,7 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 
-void WaveletGeneratorTest()
+void WaveletSourceTest()
 {
   vtkm::cont::Timer timer;
   timer.Start();
@@ -27,7 +27,7 @@ void WaveletGeneratorTest()
   std::cout << "Default wavelet took " << time << "s.\n";
 
   {
-    auto coords = ds.GetCoordinateSystem("coords");
+    auto coords = ds.GetCoordinateSystem("coordinates");
     auto data = coords.GetData();
     VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261), "Incorrect number of points.");
   }
@@ -63,7 +63,7 @@ void WaveletGeneratorTest()
   }
 }
 
-int UnitTestWaveletGenerator(int argc, char* argv[])
+int UnitTestWaveletSource(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(WaveletGeneratorTest, argc, argv);
+  return vtkm::cont::testing::Testing::Run(WaveletSourceTest, argc, argv);
 }
