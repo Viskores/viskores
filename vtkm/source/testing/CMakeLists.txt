@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestTangleSource.cxx
   UnitTestWaveletSource.cxx
  )
 
