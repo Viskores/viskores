@@ -17,7 +17,18 @@ namespace vtkm
 {
 namespace source
 {
-class Tangle : public vtkm::source::Source
+/**
+ * @brief The Tangle source creates a uniform dataset.
+ *
+ * This class generates a predictable uniform grid dataset with an
+ * interesting set of point and cell scalar arrays, which is useful
+ * for testing and benchmarking.
+ *
+ * The Execute method creates a complete structured dataset that have a
+ * point field named 'nodevar', and a cell field named 'cellvar'.
+ *
+**/
+class VTKM_SOURCE_EXPORT Tangle final : public vtkm::source::Source
 {
 public:
   VTKM_CONT
@@ -26,7 +37,6 @@ public:
   {
   }
 
-  VTKM_SOURCE_EXPORT
   vtkm::cont::DataSet Execute() const;
 
 private:
@@ -35,4 +45,4 @@ private:
 } //namespace source
 } //namespace vtkm
 
-#endif //VTKM_TANGLE_H
+#endif //vtk_m_source_Tangle_h
