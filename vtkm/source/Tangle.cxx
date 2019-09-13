@@ -17,51 +17,39 @@ namespace source
 {
 namespace tangle
 {
-class TangleField : public vtkm::worklet::WorkletMapField
+class TangleField : public vtkm::worklet::WorkletVisitPointsWithCells
 {
 public:
-  using ControlSignature = void(FieldIn vertexId, FieldOut v);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(CellSetIn, FieldOut v);
+  using ExecutionSignature = void(ThreadIndices, _2);
   using InputDomain = _1;
 
-  const vtkm::Id xdim, ydim, zdim;
-  const vtkm::FloatDefault xmin, ymin, zmin, xmax, ymax, zmax;
-  const vtkm::Id cellsPerLayer;
+  const vtkm::Vec3f CellDimsf;
+  const vtkm::Vec3f Mins;
+  const vtkm::Vec3f Maxs;
 
   VTKM_CONT
-  TangleField(const vtkm::Id3 dims,
-              const vtkm::FloatDefault mins[3],
-              const vtkm::FloatDefault maxs[3])
-    : xdim(dims[0])
-    , ydim(dims[1])
-    , zdim(dims[2])
-    , xmin(mins[0])
-    , ymin(mins[1])
-    , zmin(mins[2])
-    , xmax(maxs[0])
-    , ymax(maxs[1])
-    , zmax(maxs[2])
-    , cellsPerLayer((xdim) * (ydim))
+  TangleField(const vtkm::Id3& cdims, const vtkm::Vec3f& mins, const vtkm::Vec3f& maxs)
+    : CellDimsf(static_cast<vtkm::FloatDefault>(cdims[0]),
+                static_cast<vtkm::FloatDefault>(cdims[1]),
+                static_cast<vtkm::FloatDefault>(cdims[2]))
+    , Mins(mins)
+    , Maxs(maxs)
   {
   }
 
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertexId, vtkm::Float32& v) const
+  template <typename ThreadIndexType>
+  VTKM_EXEC void operator()(const ThreadIndexType& threadIndex, vtkm::Float32& v) const
   {
-    const vtkm::Id x = vertexId % (xdim);
-    const vtkm::Id y = (vertexId / (xdim)) % (ydim);
-    const vtkm::Id z = vertexId / cellsPerLayer;
+    //We are operating on a 3d structured grid. This means that the threadIndex has
+    //efficiently computed the i,j,k of the point current point for us
+    const vtkm::Id3 ijk = threadIndex.GetInputIndex3D();
+    const vtkm::Vec3f xyzf = static_cast<vtkm::Vec3f>(ijk) / this->CellDimsf;
 
-    const vtkm::FloatDefault fx =
-      static_cast<vtkm::FloatDefault>(x) / static_cast<vtkm::FloatDefault>(xdim - 1);
-    const vtkm::FloatDefault fy =
-      static_cast<vtkm::FloatDefault>(y) / static_cast<vtkm::FloatDefault>(xdim - 1);
-    const vtkm::FloatDefault fz =
-      static_cast<vtkm::FloatDefault>(z) / static_cast<vtkm::FloatDefault>(xdim - 1);
-
-    const vtkm::Float32 xx = 3.0f * vtkm::Float32(xmin + (xmax - xmin) * (fx));
-    const vtkm::Float32 yy = 3.0f * vtkm::Float32(ymin + (ymax - ymin) * (fy));
-    const vtkm::Float32 zz = 3.0f * vtkm::Float32(zmin + (zmax - zmin) * (fz));
+    const vtkm::Vec3f_32 values = 3.0f * vtkm::Vec3f_32(Mins + (Maxs - Mins) * xyzf);
+    const vtkm::Float32& xx = values[0];
+    const vtkm::Float32& yy = values[1];
+    const vtkm::Float32& zz = values[2];
 
     v = (xx * xx * xx * xx - 5.0f * xx * xx + yy * yy * yy * yy - 5.0f * yy * yy +
          zz * zz * zz * zz - 5.0f * zz * zz + 11.8f) *
@@ -73,36 +61,33 @@ public:
 
 vtkm::cont::DataSet Tangle::Execute() const
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   vtkm::cont::DataSet dataSet;
 
-  const vtkm::Id3 vdims{ this->Dims + vtkm::Id3{ 1, 1, 1 } };
+  const vtkm::Id3 pdims{ this->Dims + vtkm::Id3{ 1, 1, 1 } };
+  const vtkm::Vec3f mins = { -1.0f, -1.0f, -1.0f };
+  const vtkm::Vec3f maxs = { 1.0f, 1.0f, 1.0f };
 
-  vtkm::FloatDefault mins[3] = { -1.0f, -1.0f, -1.0f };
-  vtkm::FloatDefault maxs[3] = { 1.0f, 1.0f, 1.0f };
-
-  vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-  vtkm::cont::ArrayHandleIndex vertexCountImplicitArray(vdims[0] * vdims[1] * vdims[2]);
-
-  this->Invoke(tangle::TangleField{ vdims, mins, maxs }, vertexCountImplicitArray, pointFieldArray);
-
-  vtkm::Id numCells = Dims[0] * Dims[1] * Dims[2];
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numCells),
-                        cellFieldArray);
-
-  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(Dims[0]),
-                      1.0f / static_cast<vtkm::FloatDefault>(Dims[1]),
-                      1.0f / static_cast<vtkm::FloatDefault>(Dims[2]));
-
-  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
-
-  static constexpr vtkm::IdComponent ndim = 3;
-  vtkm::cont::CellSetStructured<ndim> cellSet;
-  cellSet.SetPointDimensions(vdims);
+  vtkm::cont::CellSetStructured<3> cellSet;
+  cellSet.SetPointDimensions(pdims);
   dataSet.SetCellSet(cellSet);
 
+  vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
+  this->Invoke(tangle::TangleField{ this->Dims, mins, maxs }, cellSet, pointFieldArray);
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
+  vtkm::cont::ArrayCopy(
+    vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, cellSet.GetNumberOfCells()),
+    cellFieldArray);
+
+  const vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
+  const vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(this->Dims[0]),
+                            1.0f / static_cast<vtkm::FloatDefault>(this->Dims[1]),
+                            1.0f / static_cast<vtkm::FloatDefault>(this->Dims[2]));
+
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(pdims, origin, spacing);
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
   dataSet.AddField(vtkm::cont::make_FieldPoint("nodevar", pointFieldArray));
   dataSet.AddField(vtkm::cont::make_FieldCell("cellvar", cellFieldArray));
 
