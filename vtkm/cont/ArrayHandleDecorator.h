@@ -79,10 +79,9 @@ public:
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const { return this->Functor(index); }
 
-  VTKM_EXEC_CONT
   template <typename ReadOnly_ = ReadOnly,
             typename = typename std::enable_if<!ReadOnly_::value>::type>
-  void Set(vtkm::Id index, const ValueType& value) const
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     this->InverseFunctor(index, value);
   }
