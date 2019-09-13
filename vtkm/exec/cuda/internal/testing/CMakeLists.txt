@@ -12,4 +12,4 @@ set(unit_tests
   UnitTestTextureMemorySupport.cu
   UnitTestTaskStrided.cu
   )
-vtkm_unit_tests(SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests} LABEL "CUDA")
