@@ -8,22 +8,12 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(headers
-  Source.h
-  Tangle.h
-  )
+set(unit_tests
+  UnitTestWaveletSource.cxx
+ )
 
-set(device_sources
-  Source.cxx
-  Tangle.cxx
-  )
-
-vtkm_library(NAME vtkm_source
-  DEVICE_SOURCES ${device_sources}
-  HEADERS ${headers}
-  )
-
-target_link_libraries(vtkm_source PUBLIC vtkm_cont)
-
-#-----------------------------------------------------------------------------
-add_subdirectory(testing)
+vtkm_unit_tests(
+  SOURCES ${unit_tests}
+  LIBRARIES vtkm_source
+  ALL_BACKENDS
+)

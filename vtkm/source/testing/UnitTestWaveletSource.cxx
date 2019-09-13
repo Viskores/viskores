@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/WaveletGenerator.h>
+#include <vtkm/source/Wavelet.h>
 
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -18,8 +18,8 @@ void WaveletGeneratorTest()
   vtkm::cont::Timer timer;
   timer.Start();
 
-  vtkm::worklet::WaveletGenerator gen;
-  vtkm::cont::DataSet ds = gen.GenerateDataSet();
+  vtkm::source::Wavelet source;
+  vtkm::cont::DataSet ds = source.Execute();
 
 
   double time = timer.GetElapsedTime();

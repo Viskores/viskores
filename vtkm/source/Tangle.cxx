@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/source/Tangle.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -71,7 +71,6 @@ public:
 };
 } // namespace tangle
 
-VTKM_SOURCE_EXPORT
 vtkm::cont::DataSet Tangle::Execute() const
 {
   vtkm::cont::DataSet dataSet;
@@ -83,9 +82,8 @@ vtkm::cont::DataSet Tangle::Execute() const
 
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
   vtkm::cont::ArrayHandleIndex vertexCountImplicitArray(vdims[0] * vdims[1] * vdims[2]);
-  vtkm::worklet::DispatcherMapField<tangle::TangleField> tangleFieldDispatcher(
-    tangle::TangleField(vdims, mins, maxs));
-  tangleFieldDispatcher.Invoke(vertexCountImplicitArray, pointFieldArray);
+
+  this->Invoke(tangle::TangleField{ vdims, mins, maxs }, vertexCountImplicitArray, pointFieldArray);
 
   vtkm::Id numCells = Dims[0] * Dims[1] * Dims[2];
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;

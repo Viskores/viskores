@@ -82,7 +82,6 @@ set(headers
   WarpScalar.h
   WarpVector.h
   WaveletCompressor.h
-  WaveletGenerator.h
   WorkletMapField.h
   WorkletMapTopology.h
   WorkletPointNeighborhood.h
