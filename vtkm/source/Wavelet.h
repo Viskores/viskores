@@ -94,7 +94,8 @@ public:
   vtkm::cont::DataSet Execute() const;
 
 private:
-  vtkm::cont::Field GeneratePointField(const std::string& name) const;
+  vtkm::cont::Field GeneratePointField(const vtkm::cont::CellSetStructured<3>& cellset,
+                                       const std::string& name) const;
 
   vtkm::Vec3f Center;
   vtkm::Vec3f Spacing;
