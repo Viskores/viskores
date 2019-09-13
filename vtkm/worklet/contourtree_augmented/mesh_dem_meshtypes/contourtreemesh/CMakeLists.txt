@@ -2,12 +2,21 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
-##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
+##
+##  Copyright 2016 Sandia Corporation.
+##  Copyright 2016 UT-Battelle, LLC.
+##  Copyright 2016 Los Alamos National Security.
+##
+##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+##  the U.S. Government retains certain rights in this software.
+##
+##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+##  Laboratory (LANL), the U.S. Government retains certain rights in
+##  this software.
 ##============================================================================
-
 ## Copyright (c) 2018, The Regents of the University of California, through
 ## Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 ## from the U.S. Dept. of Energy).  All rights reserved.
@@ -41,7 +50,7 @@
 ##=============================================================================
 ##
 ##  This code is an extension of the algorithm presented in the paper:
-##  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
+##  Parallel Peak Pruning for Scalable SMP Contour Tree Computation
 ##  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
 ##  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 ##  (LDAV), October 2016, Baltimore, Maryland.
@@ -50,46 +59,22 @@
 ##  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 ##  Oliver Ruebel (LBNL)
 ##==============================================================================
-cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
 
-# Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
+set(headers
+  ArcComparator.h
+  CombinedVectorDifferentFromNext.h
+  CompressNeighboursWorklet.h
+  ComputeMaxNeighboursWorklet.h
+  FindStartIndexWorklet.h
+  ReplaceArcNumWithToVertexWorklet.h
+  CombinedVector.h
+  CombinedSimulatedSimplicityIndexComparator.h
+  InitToCombinedSortOrderArraysWorklet.h
+  CombinedOtherStartIndexNNeighboursWorklet.h
+  SubtractAssignWorklet.h
+  UpdateCombinedNeighboursWorklet.h
+  MergeCombinedOtherStartIndexWorklet.h
+ )
 
-####################################
-# Serial
-####################################
-add_executable(ContourTree_Augmented ContourTreeApp.cxx)
-target_link_libraries(ContourTree_Augmented vtkm_filter)
-vtkm_add_target_information(ContourTree_Augmented
-                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
-                            DEVICE_SOURCES ContourTreeApp.cxx)
-
-option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
-if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
-  target_compile_definitions(ContourTree_Augmented PRIVATE "DEBUG_PRINT")
-endif()
-
-if (TARGET vtkm::tbb)
-  target_compile_definitions(ContourTree_Augmented PRIVATE "ENABLE_SET_NUM_THREADS")
-endif()
-
-####################################
-# MPI
-####################################
-if (VTKm_ENABLE_MPI)
-  add_executable(ContourTree_Augmented_MPI ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_Augmented_MPI vtkm_filter)
-  vtkm_add_target_information(ContourTree_Augmented_MPI
-                              MODIFY_CUDA_FLAGS
-                              DEVICE_SOURCES ContourTreeApp.cxx)
-  target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "WITH_MPI")
-
-  option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
-  if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
-    target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "DEBUG_PRINT")
-  endif()
-
-  if (TARGET vtkm::tbb)
-    target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "ENABLE_SET_NUM_THREADS")
-  endif()
-endif()
+#-----------------------------------------------------------------------------
+vtkm_declare_headers(${headers})

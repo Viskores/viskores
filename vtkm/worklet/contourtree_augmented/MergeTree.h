@@ -59,6 +59,8 @@
 // local includes
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
+
 
 //VTKM includes
 #include <vtkm/Types.h>
@@ -123,7 +125,13 @@ public:
   // debug routine
   void DebugPrint(const char* message, const char* fileName, long lineNum);
 
-  // debug routine for printing the tree
+  // debug routine for printing the tree for contourtree meshes
+  template <typename FieldType>
+  void DebugPrintTree(const char* message,
+                      const char* fileName,
+                      long lineNum,
+                      const ContourTreeMesh<FieldType>& mesh);
+  // debug routine for printing the tree for regular meshes
   template <typename MeshType>
   void DebugPrintTree(const char* message,
                       const char* fileName,
@@ -189,6 +197,21 @@ inline void MergeTree::DebugPrint(const char* message, const char* fileName, lon
   (void)lineNum;
 #endif
 } // DebugPrint()
+
+
+template <typename FieldType>
+inline void MergeTree::DebugPrintTree(const char* message,
+                                      const char* fileName,
+                                      long lineNum,
+                                      const ContourTreeMesh<FieldType>& mesh)
+{
+  (void)mesh; // prevent unused parameter warning
+  std::cout << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
+            << lineNum << std::endl;
+  std::cout << std::left << std::string(message) << std::endl;
+  std::cout << "MergeTree::DebugPrintTree not implemented for ContourTreeMesh" << std::endl;
+}
+
 
 
 template <typename MeshType>

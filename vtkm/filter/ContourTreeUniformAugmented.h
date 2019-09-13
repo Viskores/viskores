@@ -61,6 +61,7 @@
 
 #include <utility>
 #include <vector>
+#include <vtkm/Bounds.h>
 #include <vtkm/filter/FilterCell.h>
 
 namespace vtkm
@@ -68,13 +69,26 @@ namespace vtkm
 namespace filter
 {
 
+namespace detail
+{
+class MultiBlockContourTreeHelper;
+} // namespace detail
+
 
 class ContourTreePPP2 : public vtkm::filter::FilterCell<ContourTreePPP2>
 {
 public:
   using SupportedTypes = vtkm::TypeListTagScalarAll;
   VTKM_CONT
-  ContourTreePPP2(bool useMarchingCubes = false, bool computeRegularStructure = true);
+  ContourTreePPP2(bool useMarchingCubes = false, unsigned int computeRegularStructure = 1);
+
+  // Define the spatial decomposition of the data in case we run in parallel with a multi-block dataset
+  VTKM_CONT
+  void SetSpatialDecomposition(vtkm::Id3 blocksPerDim,
+                               vtkm::Id3 globalSize,
+                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
+                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
+                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes);
 
   // Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -83,20 +97,55 @@ public:
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
+  //@{
+  /// when operating on vtkm::cont::MultiBlock we want to
+  /// do processing across ranks as well. Just adding pre/post handles
+  /// for the same does the trick.
+  template <typename DerivedPolicy>
+  VTKM_CONT void PreExecute(const vtkm::cont::PartitionedDataSet& input,
+                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+
+  template <typename DerivedPolicy>
+  VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,
+                             vtkm::cont::PartitionedDataSet& output,
+                             const vtkm::filter::PolicyBase<DerivedPolicy>&);
+
+  template <typename T, typename StorageType, typename DerivedPolicy>
+  VTKM_CONT void DoPostExecute(
+    const vtkm::cont::PartitionedDataSet& input,
+    vtkm::cont::PartitionedDataSet& output,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::cont::ArrayHandle<T, StorageType>&, // dummy parameter to get the type
+    vtkm::filter::PolicyBase<DerivedPolicy> policy);
+
   const vtkm::worklet::contourtree_augmented::ContourTree& GetContourTree() const;
   const vtkm::worklet::contourtree_augmented::IdArrayType& GetSortOrder() const;
   vtkm::Id GetNumIterations() const;
   const std::vector<std::pair<std::string, vtkm::Float64>>& GetTimings() const;
 
 private:
+  // Given the input dataset determine the number of rows, cols, and slices
+  void getDims(const vtkm::cont::DataSet& input,
+               vtkm::Id& nrows,
+               vtkm::Id& ncols,
+               vtkm::Id nslices) const;
+
   bool UseMarchingCubes;
-  bool ComputeRegularStructure;
+  // 0=no augmentation, 1=full augmentation, 2=boundary augmentation
+  unsigned int ComputeRegularStructure;
+  // Store timings about the contour tree computation
   std::vector<std::pair<std::string, vtkm::Float64>> Timings;
 
-  vtkm::worklet::contourtree_augmented::ContourTree ContourTreeData; // The contour tree
-  vtkm::Id NumIterations; // Number of iterations used to compute the contour tree
-  vtkm::worklet::contourtree_augmented::IdArrayType
-    MeshSortOrder; // Array with the sorted order of the mesh vertices
+  // TODO Should the additional fields below be add to the vtkm::filter::ResultField and what is the best way to represent them
+  // Additional result fields not included in the vtkm::filter::ResultField returned by DoExecute
+  // The contour tree
+  vtkm::worklet::contourtree_augmented::ContourTree ContourTreeData;
+  // Number of iterations used to compute the contour tree
+  vtkm::Id NumIterations;
+  // Array with the sorted order of the mesh vertices
+  vtkm::worklet::contourtree_augmented::IdArrayType MeshSortOrder;
+  // Helper object to help with the parallel merge when running with DIY in parallel with MulitBlock data
+  detail::MultiBlockContourTreeHelper* MultiBlockTreeHelper;
 };
 
 
@@ -133,8 +182,9 @@ struct GetRowsColsSlices
     throw vtkm::cont::ErrorBadValue("Expected 2D or 3D structured cell cet! ");
   }
 };
-}
-} // namespace vtkm::filter
+
+} // namespace filter
+} // namespace vtkm
 
 #include <vtkm/filter/ContourTreeUniformAugmented.hxx>
 

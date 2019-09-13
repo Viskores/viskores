@@ -92,7 +92,8 @@ public:
     const IdArrayType& branchSaddle,
     const IdArrayType& branchParent,
     const IdArrayType& sortOrder,
-    const vtkm::cont::ArrayHandle<T, StorageType>& dataField);
+    const vtkm::cont::ArrayHandle<T, StorageType>& dataField,
+    bool dataFieldIsSorted);
 
   // Simplify branch composition down to target size (i.e., consisting of targetSize branches)
   void simplifyToSize(vtkm::Id targetSize, bool usePersistenceSorter = true);
@@ -179,7 +180,8 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   const IdArrayType& branchSaddle,
   const IdArrayType& branchParent,
   const IdArrayType& sortOrder,
-  const vtkm::cont::ArrayHandle<T, StorageType>& dataField)
+  const vtkm::cont::ArrayHandle<T, StorageType>& dataField,
+  bool dataFieldIsSorted)
 { // ComputeBranchDecomposition()
   auto branchMinimumPortal = branchMinimum.GetPortalConstControl();
   auto branchMaximumPortal = branchMaximum.GetPortalConstControl();
@@ -190,23 +192,23 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   auto dataFieldPortal = dataField.GetPortalConstControl();
   vtkm::Id nBranches = branchSaddle.GetNumberOfValues();
   std::vector<Branch<T>*> branches;
-  Branch<T>* root;
-  branches.reserve(nBranches);
+  Branch<T>* root = nullptr;
+  branches.reserve(static_cast<std::size_t>(nBranches));
 
   for (int branchID = 0; branchID < nBranches; ++branchID)
     branches.push_back(new Branch<T>);
 
   // Reconstruct explicit branch decomposition from array representation
-  for (int branchID = 0; branchID < nBranches; ++branchID)
+  for (std::size_t branchID = 0; branchID < static_cast<std::size_t>(nBranches); ++branchID)
   {
-    if (!noSuchElement(branchSaddlePortal.Get(branchID)))
+    if (!noSuchElement(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID))))
     {
-      branches[branchID]->saddle =
-        maskedIndex(supernodesPortal.Get(maskedIndex(branchSaddlePortal.Get(branchID))));
-      vtkm::Id branchMin =
-        maskedIndex(supernodesPortal.Get(maskedIndex(branchMinimumPortal.Get(branchID))));
-      vtkm::Id branchMax =
-        maskedIndex(supernodesPortal.Get(maskedIndex(branchMaximumPortal.Get(branchID))));
+      branches[branchID]->saddle = maskedIndex(
+        supernodesPortal.Get(maskedIndex(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID)))));
+      vtkm::Id branchMin = maskedIndex(supernodesPortal.Get(
+        maskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID)))));
+      vtkm::Id branchMax = maskedIndex(supernodesPortal.Get(
+        maskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID)))));
       if (branchMin < branches[branchID]->saddle)
         branches[branchID]->extremum = branchMin;
       else if (branchMax > branches[branchID]->saddle)
@@ -220,23 +222,35 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
     else
     {
       branches[branchID]->saddle =
-        supernodesPortal.Get(maskedIndex(branchMinimumPortal.Get(branchID)));
+        supernodesPortal.Get(maskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID))));
       branches[branchID]->extremum =
-        supernodesPortal.Get(maskedIndex(branchMaximumPortal.Get(branchID)));
+        supernodesPortal.Get(maskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID))));
+    }
+
+    if (dataFieldIsSorted)
+    {
+      branches[branchID]->saddleVal = dataFieldPortal.Get(branches[branchID]->saddle);
+      branches[branchID]->extremumVal = dataFieldPortal.Get(branches[branchID]->extremum);
+    }
+    else
+    {
+      branches[branchID]->saddleVal =
+        dataFieldPortal.Get(sortOrderPortal.Get(branches[branchID]->saddle));
+      branches[branchID]->extremumVal =
+        dataFieldPortal.Get(sortOrderPortal.Get(branches[branchID]->extremum));
     }
 
     branches[branchID]->saddle = sortOrderPortal.Get(branches[branchID]->saddle);
     branches[branchID]->extremum = sortOrderPortal.Get(branches[branchID]->extremum);
-    branches[branchID]->saddleVal = dataFieldPortal.Get(branches[branchID]->saddle);
-    branches[branchID]->extremumVal = dataFieldPortal.Get(branches[branchID]->extremum);
 
-    if (noSuchElement(branchParentPortal.Get(branchID)))
+    if (noSuchElement(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))
     {
       root = branches[branchID]; // No parent -> this is the root branch
     }
     else
     {
-      branches[branchID]->parent = branches[maskedIndex(branchParentPortal.Get(branchID))];
+      branches[branchID]->parent = branches[static_cast<size_t>(
+        maskedIndex(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))];
       branches[branchID]->parent->children.push_back(branches[branchID]);
     }
   }
@@ -247,10 +261,14 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   auto superparentsPortal = contourTreeSuperparents.GetPortalConstControl();
   for (vtkm::Id i = 0; i < contourTreeSuperparents.GetNumberOfValues(); i++)
   {
-    branches[maskedIndex(whichBranchPortal.Get(maskedIndex(superparentsPortal.Get(i))))]
+    branches[static_cast<size_t>(
+               maskedIndex(whichBranchPortal.Get(maskedIndex(superparentsPortal.Get(i)))))]
       ->volume++; // Increment volume
   }
-  root->removeSymbolicPerturbation();
+  if (root)
+  {
+    root->removeSymbolicPerturbation();
+  }
 
   return root;
 } // ComputeBranchDecomposition()
@@ -267,7 +285,7 @@ void Branch<T>::simplifyToSize(vtkm::Id targetSize, bool usePersistenceSorter)
   q.push_back(this);
 
   std::vector<Branch<T>*> active;
-  while (active.size() < targetSize && !q.empty())
+  while (active.size() < static_cast<std::size_t>(targetSize) && !q.empty())
   {
     if (usePersistenceSorter)
     {
@@ -367,7 +385,7 @@ Branch<T>::~Branch()
 template <typename T>
 void Branch<T>::getRelevantValues(int type, T eps, std::vector<T>& values) const
 { // getRelevantValues()
-  double val;
+  T val;
 
   bool isMax = false;
   if (extremumVal > saddleVal)
@@ -380,7 +398,7 @@ void Branch<T>::getRelevantValues(int type, T eps, std::vector<T>& values) const
       val = saddleVal + (isMax ? +eps : -eps);
       break;
     case 1:
-      val = 0.5 * (extremumVal + saddleVal);
+      val = T(0.5f) * (extremumVal + saddleVal);
       break;
     case 2:
       val = extremumVal + (isMax ? -eps : +eps);
@@ -406,7 +424,7 @@ void Branch<T>::accumulateIntervals(int type, T eps, PiecewiseLinearFunction<T>&
       val = saddleVal + (isMax ? +eps : -eps);
       break;
     case 1:
-      val = 0.5 * (extremumVal + saddleVal);
+      val = T(0.5f) * (extremumVal + saddleVal);
       break;
     case 2:
       val = extremumVal + (isMax ? -eps : +eps);

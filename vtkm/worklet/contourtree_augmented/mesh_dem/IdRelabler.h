@@ -2,10 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -50,11 +60,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
+#ifndef vtkm_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
+#define vtkm_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
 
-#include <vtkm/Types.h>
-
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
@@ -65,44 +75,56 @@ namespace contourtree_augmented
 namespace mesh_dem
 {
 
-// Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructure2D
+
+class IdRelabler
 {
 public:
   VTKM_EXEC_CONT
-  MeshStructure2D()
-    : nRows(0)
-    , nCols(0)
+  IdRelabler()
+    : inputStartRow(0)
+    , inputStartCol(0)
+    , inputStartSlice(0)
+    , inputNRows(1)
+    , inputNCols(1)
+    , outputNRows(1)
+    , outputNCols(1)
   {
   }
 
   VTKM_EXEC_CONT
-  MeshStructure2D(vtkm::Id nrows, vtkm::Id ncols)
-    : nRows(nrows)
-    , nCols(ncols)
+  IdRelabler(vtkm::Id iSR,
+             vtkm::Id iSC,
+             vtkm::Id iSS,
+             vtkm::Id iNR,
+             vtkm::Id iNC,
+             vtkm::Id oNR,
+             vtkm::Id oNC)
+    : inputStartRow(iSR)
+    , inputStartCol(iSC)
+    , inputStartSlice(iSS)
+    , inputNRows(iNR)
+    , inputNCols(iNC)
+    , outputNRows(oNR)
+    , outputNCols(oNC)
   {
   }
 
-  // number of mesh vertices
   VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols); }
+  vtkm::Id operator()(vtkm::Id v) const
+  {
+    vtkm::Id r = inputStartRow + ((v % (inputNRows * inputNCols)) / inputNCols);
+    vtkm::Id c = inputStartCol + (v % inputNCols);
+    vtkm::Id s = inputStartSlice + v / (inputNRows * inputNCols);
 
-  // vertex row - integer divide by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexRow(vtkm::Id v) const { return v / nCols; }
+    return (s * outputNRows + r) * outputNCols + c;
+  }
 
-  // verteck column -- integer modulus by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
+private:
+  vtkm::Id inputStartRow, inputStartCol, inputStartSlice;
+  vtkm::Id inputNRows, inputNCols;
+  vtkm::Id outputNRows, outputNCols;
+};
 
-  //vertex ID - row * ncols + col
-  VTKM_EXEC
-  inline vtkm::Id vertexId(vtkm::Id r, vtkm::Id c) const { return r * nCols + c; }
-
-  vtkm::Id nRows, nCols;
-
-}; // MeshStructure2D
 
 } // namespace mesh_dem
 } // namespace contourtree_augmented

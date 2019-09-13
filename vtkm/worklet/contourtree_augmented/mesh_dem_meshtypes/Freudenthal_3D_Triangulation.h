@@ -61,6 +61,7 @@
 
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshBoundary.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshStructureFreudenthal3D.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/freudenthal_3D/Types.h>
 
@@ -88,6 +89,8 @@ public:
   MeshStructureFreudenthal3D<DeviceTag> PrepareForExecution(DeviceTag) const;
 
   Mesh_DEM_Triangulation_3D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices);
+
+  MeshBoundary3DExec GetMeshBoundaryExecutionObject() const;
 
 private:
   bool useGetMax; // Define the behavior ofr the PrepareForExecution function
@@ -131,11 +134,19 @@ MeshStructureFreudenthal3D<DeviceTag>
                                                m3d_freudenthal::N_INCIDENT_EDGES,
                                                this->useGetMax,
                                                this->sortIndices,
+                                               this->sortOrder,
                                                edgeBoundaryDetectionMasks,
                                                neighbourOffsets,
                                                linkComponentCaseTable);
 }
 
+
+template <typename T, typename StorageType>
+MeshBoundary3DExec
+Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::GetMeshBoundaryExecutionObject() const
+{
+  return MeshBoundary3DExec(this->nRows, this->nCols, this->nSlices, this->sortOrder);
+}
 
 } // namespace contourtree_augmented
 } // worklet

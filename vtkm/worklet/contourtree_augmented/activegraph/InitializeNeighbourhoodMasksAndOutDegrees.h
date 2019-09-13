@@ -74,7 +74,7 @@ public:
     ExecObject meshStructure,         // (input) execution object with the mesh structure
     WholeArrayOut neighbourhoodMasks, // (output) neighbourhoodMask for each vertex
     WholeArrayOut outDegrees);        // (outpur) outDegress for each vertex
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
+  typedef void ExecutionSignature(_1, _2, _3, _4);
   using InputDomain = _1;
 
   // Default Constructor
@@ -93,22 +93,20 @@ public:
 
   template <typename MeshStructureType, typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& sortIndex,
-                            const vtkm::Id vertexIndex,
                             const MeshStructureType& meshStructure,
                             const OutFieldPortalType& neighbourhoodMasksPortal,
                             const OutFieldPortalType& outDegreesPortal) const
   {
     const vtkm::Pair<vtkm::Id, vtkm::Id>& maskAndDegree =
-      meshStructure.GetNeighbourComponentsMaskAndDegree(vertexIndex, isJoinGraph);
+      meshStructure.GetNeighbourComponentsMaskAndDegree(sortIndex, isJoinGraph);
     neighbourhoodMasksPortal.Set(sortIndex, maskAndDegree.first);
     outDegreesPortal.Set(sortIndex, maskAndDegree.second);
 
     // In serial this worklet implements the following operation
-    // for (indexType vertex = 0; vertex < mesh.sortIndices.GetNumberOfValues(); ++vertex)
-    // {
-    //   indexType sortIndex = mesh.sortIndices[vertex];
-    //   std::tie(neighbourhoodMasks[sortIndex], outDegrees[sortIndex]) = mesh.GetNeighbourComponentsMaskAndDegree(vertex, isJoinGraph);
-    // }
+    // for (indexType sortIndex = 0; sortIndex < mesh.GetNumberOfVertices(); ++sortIndex)
+    //    {
+    //       std::tie(neighbourhoodMasks[sortIndex], outDegrees[sortIndex]) = mesh.GetNeighbourComponentsMaskAndDegree(sortIndex, isJoinGraph);
+    //    }
   }
 
 private:

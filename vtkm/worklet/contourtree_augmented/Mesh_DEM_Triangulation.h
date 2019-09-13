@@ -82,6 +82,7 @@
 
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem/IdRelabler.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem/SimulatedSimplicityComperator.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem/SortIndices.h>
 
@@ -120,6 +121,9 @@ public:
     , nDims(2)
   {
   }
+
+  // Getter function for nVertices
+  vtkm::Id GetNumberOfVertices() const { return nVertices; }
 
   // sorts the data and initializes the sortIndex & indexReverse
   void SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values);

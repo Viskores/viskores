@@ -2,10 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -50,11 +60,13 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
+#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
+#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
 
-#include <vtkm/Types.h>
-
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/contourtreemesh/CombinedVector.h>
 
 namespace vtkm
 {
@@ -62,49 +74,47 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem
+namespace mesh_dem_contourtree_mesh_inc
 {
 
-// Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructure2D
+// transform functor to compute if element i is different from element i+1 in an arrays. The resulting array should hence
+// be 1 element shorter than the input arrays
+template <typename T, typename DeviceAdapter>
+class CombinedVectorDifferentFromNext
 {
 public:
+  typedef typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
+    DeviceAdapter>::PortalConst sortOrderPortalType;
+
   VTKM_EXEC_CONT
-  MeshStructure2D()
-    : nRows(0)
-    , nCols(0)
+  CombinedVectorDifferentFromNext()
+    : dataArray()
   {
   }
 
-  VTKM_EXEC_CONT
-  MeshStructure2D(vtkm::Id nrows, vtkm::Id ncols)
-    : nRows(nrows)
-    , nCols(ncols)
+  VTKM_CONT
+  CombinedVectorDifferentFromNext(CombinedVector<T, DeviceAdapter>* inDataArray,
+                                  const IdArrayType& sortOrder)
+    : dataArray(inDataArray)
   {
+    overallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
   }
 
-  // number of mesh vertices
   VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols); }
+  vtkm::Id operator()(vtkm::Id i) const
+  {
+    vtkm::Id currGlobalIdx = (*dataArray)[overallSortOrderPortal.Get(i)];
+    vtkm::Id nextGlobalIdx = (*dataArray)[overallSortOrderPortal.Get(i + 1)];
+    return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
+  }
 
-  // vertex row - integer divide by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexRow(vtkm::Id v) const { return v / nCols; }
+private:
+  sortOrderPortalType overallSortOrderPortal;
+  const CombinedVector<T, DeviceAdapter>* dataArray;
+};
 
-  // verteck column -- integer modulus by columns
-  VTKM_EXEC
-  inline vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
 
-  //vertex ID - row * ncols + col
-  VTKM_EXEC
-  inline vtkm::Id vertexId(vtkm::Id r, vtkm::Id c) const { return r * nCols + c; }
-
-  vtkm::Id nRows, nCols;
-
-}; // MeshStructure2D
-
-} // namespace mesh_dem
+} // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

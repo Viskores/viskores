@@ -134,7 +134,7 @@ inline void MeshExtrema::BuildRegularChains(bool isMaximal)
   IdArrayType& extrema = isMaximal ? peaks : pits;
 
   // Create the PointerDoubling worklet and corresponding dispatcher
-  PointerDoubling pointerDoubler;
+  vtkm::worklet::contourtree_augmented::PointerDoubling pointerDoubler;
 
   // Iterate to perform pointer-doubling to build chains to extrema (i.e., maxima or minima)
   // depending on whether we are computing a JoinTree or a SplitTree
@@ -152,13 +152,14 @@ inline void MeshExtrema::SetStarts(MeshType& mesh, bool isMaximal)
 {
   mesh.setPrepareForExecutionBehavior(isMaximal);
   mesh_extrema_inc_ns::SetStarts setStartsWorklet;
+  vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.nVertices);
   if (isMaximal)
   {
-    this->Invoke(setStartsWorklet, mesh.sortIndices, mesh, peaks);
+    this->Invoke(setStartsWorklet, sortIndexArray, mesh, peaks);
   }
   else
   {
-    this->Invoke(setStartsWorklet, mesh.sortIndices, mesh, pits);
+    this->Invoke(setStartsWorklet, sortIndexArray, mesh, pits);
   }
   DebugPrint("Regular Starts Set", __FILE__, __LINE__);
 }
