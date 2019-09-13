@@ -29,6 +29,8 @@ include(VTKmWrappers)
 #
 # [DEFINES]   : extra defines that need to be set for all unit test sources
 #
+# [LABEL]     : CTest Label to associate to this set of tests
+#
 # [TEST_ARGS] : arguments that should be passed on the command line to the
 #               test executable
 #
@@ -45,7 +47,7 @@ function(vtkm_unit_tests)
 
   set(options)
   set(global_options ${options} MPI ALL_BACKENDS)
-  set(oneValueArgs BACKEND NAME)
+  set(oneValueArgs BACKEND NAME LABEL)
   set(multiValueArgs SOURCES LIBRARIES DEFINES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
     "${global_options}" "${oneValueArgs}" "${multiValueArgs}"
@@ -170,6 +172,7 @@ function(vtkm_unit_tests)
       endif()
 
       set_tests_properties("${tname}${upper_backend}" PROPERTIES
+        LABELS "${upper_backend};${VTKm_UT_LABEL}"
         TIMEOUT ${timeout}
         RUN_SERIAL ${run_serial}
         FAIL_REGULAR_EXPRESSION "runtime error"

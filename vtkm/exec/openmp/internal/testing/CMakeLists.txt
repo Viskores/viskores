@@ -12,4 +12,4 @@ set(unit_tests
   UnitTestTaskTilingOpenMP.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests} LABEL "OPENMP")
