@@ -362,6 +362,7 @@ make_ArrayHandlePermutation(IndexArrayHandleType indexArray, ValueArrayHandleTyp
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -427,5 +428,6 @@ struct Serialization<
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandlePermutation_h

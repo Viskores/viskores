@@ -422,6 +422,7 @@ VTKM_CONT
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -489,5 +490,6 @@ struct Serialization<
 {
 };
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleCartesianProduct_h

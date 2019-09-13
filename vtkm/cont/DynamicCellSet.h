@@ -338,6 +338,7 @@ struct DynamicCellSetCheck<vtkm::cont::DynamicCellSetBase<CellSetList>>
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace mangled_diy_namespace
 {
 
@@ -410,5 +411,6 @@ public:
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_DynamicCellSet_h

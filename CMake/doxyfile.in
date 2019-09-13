@@ -144,16 +144,19 @@ EXCLUDE                += @VTKm_SOURCE_DIR@/vtkm/exec/cuda/internal/ExecutionPol
 
 EXCLUDE_SYMLINKS       = NO
 
-EXCLUDE_PATTERNS       = */testing/*
+EXCLUDE_PATTERNS       = */benchmarking/*
 EXCLUDE_PATTERNS       += */examples/*
+EXCLUDE_PATTERNS       += */testing/*
+EXCLUDE_PATTERNS       += */thirdparty/*
 EXCLUDE_PATTERNS       += UnitTest*
-EXCLUDE_PATTERNS       += */vtkmdiy/fmt/*
-EXCLUDE_PATTERNS       += */vtkmdiy/thread/*
 
 EXCLUDE_SYMBOLS        = thrust
-EXCLUDE_SYMBOLS        += detail
-EXCLUDE_SYMBOLS        += placeholders
 EXCLUDE_SYMBOLS        += benchmarking
+EXCLUDE_SYMBOLS        += detail
+EXCLUDE_SYMBOLS        += internal
+EXCLUDE_SYMBOLS        += kx
+EXCLUDE_SYMBOLS        += placeholders
+EXCLUDE_SYMBOLS        += *VTK_M_*_EXPORT*
 
 EXAMPLE_PATH           =
 

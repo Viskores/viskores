@@ -300,6 +300,7 @@ VTKM_CONT ArrayHandleExtractComponent<ArrayHandleType> make_ArrayHandleExtractCo
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -362,5 +363,6 @@ struct Serialization<
 {
 };
 } // diy
+/// @endcond SERIALIZATION
 
 #endif // vtk_m_cont_ArrayHandleExtractComponent_h

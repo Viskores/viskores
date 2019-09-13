@@ -46,6 +46,12 @@
  * vtkm::cont::cuda includes the code to implement the VTK-m Control Environment
  * for the CUDA-based device adapter.
  *
+ * \namespace vtkm::cont::openmp
+ * \brief OPenMP implementation for Control Environment.
+ *
+ * vtkm::cont::openmp includes the code to implement the VTK-m Control Environment
+ * for the OpenMP-based device adapter.
+ *
  * \namespace vtkm::cont::serial
  * \brief Serial implementation for Control Environment.
  *
@@ -70,6 +76,12 @@
  *
  * vtkm::exec::cuda includes the code to implement the VTK-m Execution Environment
  * for the CUDA-based device adapter.
+ *
+* \namespace vtkm::exec::openmp
+ * \brief CUDA implementation for Execution Environment.
+ *
+ * vtkm::exec::openmp includes the code to implement the VTK-m Execution Environment
+ * for the OpenMP device adapter.
  *
  * \namespace vtkm::exec::serial
  * \brief CUDA implementation for Execution Environment.
@@ -104,7 +116,7 @@
  * vtkm and OpenGL.
  *
  * \namespace vtkm::io
- * \brief VTK-m IO
+ * \brief VTK-m File input and output classes
  *
  * vtkm::io defines API for basic reading of VTK files. Intended to be used for
  * examples and testing.
@@ -113,6 +125,11 @@
  * \brief VTK-m Rendering
  *
  * vtkm::rendering defines API for
+ *
+ * \namespace vtkm::source
+ * \brief VTK-m Input source such as Wavelet
+ *
+ * vtkm::source is the collection of predefined sources that generate data.
  *
  * \namespace vtkm::testing
  * \brief Internal testing classes

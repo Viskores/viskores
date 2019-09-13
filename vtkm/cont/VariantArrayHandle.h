@@ -557,6 +557,7 @@ struct DynamicTransformTraits<vtkm::cont::VariantArrayHandleBase<TypeList>>
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace mangled_diy_namespace
 {
 
@@ -626,6 +627,7 @@ public:
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 
 #endif //vtk_m_virts_VariantArrayHandle_h

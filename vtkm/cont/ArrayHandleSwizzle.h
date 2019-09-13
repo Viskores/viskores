@@ -388,6 +388,7 @@ make_ArrayHandleSwizzle(const ArrayHandleType& array,
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -451,5 +452,6 @@ struct Serialization<vtkm::cont::ArrayHandle<
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif // vtk_m_cont_ArrayHandleSwizzle_h

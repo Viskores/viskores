@@ -675,6 +675,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -716,6 +717,7 @@ struct Serialization<vtkm::cont::ArrayHandle<T>>
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #ifndef vtk_m_cont_ArrayHandle_hxx
 #include <vtkm/cont/ArrayHandle.hxx>

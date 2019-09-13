@@ -51,6 +51,7 @@ public:
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 
 namespace vtkm
 {
@@ -89,5 +90,6 @@ struct Serialization<vtkm::cont::ArrayHandleIndex>
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleIndex_h
