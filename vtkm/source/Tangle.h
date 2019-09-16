@@ -31,6 +31,7 @@ namespace source
 class VTKM_SOURCE_EXPORT Tangle final : public vtkm::source::Source
 {
 public:
+  ///Construct a Tangle with Cell Dimensions
   VTKM_CONT
   Tangle(vtkm::Id3 dims)
     : Dims(dims)

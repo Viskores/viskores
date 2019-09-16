@@ -9,12 +9,14 @@
 ##============================================================================
 
 set(headers
+  Oscillator.h
   Source.h
   Tangle.h
   Wavelet.h
   )
 
 set(device_sources
+  Oscillator.cxx
   Source.cxx
   Tangle.cxx
   Wavelet.cxx

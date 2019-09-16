@@ -14,7 +14,7 @@ project(Oscillator CXX)
 find_package(VTKm REQUIRED QUIET)
 
 add_executable(Oscillator Oscillator.cxx)
-target_link_libraries(Oscillator PRIVATE vtkm_filter)
+target_link_libraries(Oscillator PRIVATE vtkm_source)
 vtkm_add_target_information(Oscillator
                             DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES Oscillator.cxx)
