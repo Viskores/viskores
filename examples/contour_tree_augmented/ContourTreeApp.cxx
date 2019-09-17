@@ -525,7 +525,7 @@ int main(int argc, char* argv[])
     dsf.AddPointField(inDataSet, "values", values);
   }
 #else  // Create a multi-block dataset for multi-block DIY-paralle processing
-  vtkm::cont::MultiBlock inDataSet; // Multi-block variant of the input dataset
+  vtkm::cont::PartitionedDataSet inDataSet; // Partitioned variant of the input dataset
   vtkm::Id3 blocksPerDim =
     nDims == 3 ? vtkm::Id3(1, 1, numBlocks) : vtkm::Id3(1, numBlocks, 1); // Decompose the data into
   vtkm::Id3 globalSize = nDims == 3 ? vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
@@ -622,7 +622,7 @@ int main(int argc, char* argv[])
 
       vtkm::cont::DataSetFieldAdd dsf;
       dsf.AddPointField(ds, "values", subValues);
-      inDataSet.AddBlock(ds);
+      inDataSet.AppendPartition(ds);
     }
   }
 #endif // WITH_MPI construct input dataset
@@ -726,7 +726,7 @@ int main(int argc, char* argv[])
 // TODO Can we cast the handle we get from GetData() instead of doing a CopyTo?
 #ifdef WITH_MPI
       vtkm::cont::ArrayHandle<ValueType> dataField;
-      result.GetBlocks()[0].GetField(0).GetData().CopyTo(dataField);
+      result.GetPartitions()[0].GetField(0).GetData().CopyTo(dataField);
       bool dataFieldIsSorted = true;
 #else
       vtkm::cont::ArrayHandle<ValueType> dataField;
