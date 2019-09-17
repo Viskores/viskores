@@ -5,7 +5,7 @@
  * used components of a triangle. For example,
  * area, side lengths, and so forth.
  *
- * These definitions can be found starting on 
+ * These definitions can be found starting on
  * page 17 of the Verdict manual.
  *
  * This file contains a set of functions which
@@ -97,11 +97,11 @@ VTKM_EXEC Scalar GetTriangleL2Magnitude(const CollectionOfPoints& pts)
 
 /**
  *  Returns the Max of the magnitude of each vector which makes up the sides of the triangle.
- *  
+ *
  *  That is to say, the length of the longest side.
- *  
+ *
  *  \param [in] pts The three points which define the verticies of the triangle.
- *  
+ *
  *  \return Returns the max of the triangle side lengths.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
@@ -116,11 +116,11 @@ VTKM_EXEC Scalar GetTriangleLMax(const CollectionOfPoints& pts)
 
 /**
  *  Returns the Min of the magnitude of each vector which makes up the sides of the triangle.
- *  
+ *
  *  That is to say, the length of the shortest side.
- *  
+ *
  *  \param [in] pts The three points which define the verticies of the triangle.
- *  
+ *
  *  \return Returns the max of the triangle side lengths.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
@@ -135,9 +135,9 @@ VTKM_EXEC Scalar GetTriangleLMin(const CollectionOfPoints& pts)
 
 /**
  *  Returns the area of the triangle.
- *  
+ *
  *  \param [in] pts The three points which define the verticies of the triangle.
- *  
+ *
  *  \return Returns the are of the triangle..
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
@@ -153,9 +153,9 @@ VTKM_EXEC Scalar GetTriangleArea(const CollectionOfPoints& pts)
 
 /**
  *  Returns the radius of a circle inscribed within the given triangle. This is commonly denoted as 'r'.
- *  
+ *
  *  \param [in] pts The three points which define the verticies of the triangle.
- *  
+ *
  *  \return Returns the inradius.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
@@ -172,9 +172,9 @@ VTKM_EXEC Scalar GetTriangleInradius(const CollectionOfPoints& pts)
 
 /**
  *  Returns the radius of a circle circumscribed around the given triangle. This is commonly denoted as 'R'.
- *  
+ *
  *  \param [in] pts The three points which define the verticies of the triangle.
- *  
+ *
  *  \return Returns the circumradius.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>

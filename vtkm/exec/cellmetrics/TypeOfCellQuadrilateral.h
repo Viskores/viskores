@@ -3,9 +3,9 @@
 /**
  * The Verdict manual defines a set of commonly
  * used components of a quadrilateral (quad). For example,
- * area, side lengths, and so forth. 
+ * area, side lengths, and so forth.
  *
- * These definitions can be found starting on 
+ * These definitions can be found starting on
  * page 32 of the Verdict manual.
  *
  * This file contains a set of functions which

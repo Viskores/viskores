@@ -3,9 +3,9 @@
 /**
  * The Verdict manual defines a set of commonly
  * used components of a hexahedra (hex). For example,
- * area, edge lengths, and so forth. 
+ * area, edge lengths, and so forth.
  *
- * These definitions can be found starting on 
+ * These definitions can be found starting on
  * page 77 of the Verdict manual.
  *
  * This file contains a set of functions which
@@ -590,7 +590,7 @@ VTKM_EXEC Vector GetHexX3(const CollectionOfPoints& pts)
  * Returns the A_i matrix defined in the verdict manual.
  *
  *  \param [in] pts The eight points which define the Hex.
- *  \param [in] index The index of A to load.  
+ *  \param [in] index The index of A to load.
  *  \return Returns the vector.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
@@ -675,7 +675,7 @@ VTKM_EXEC vtkm::Vec<Vector, 3> GetHexAi(const CollectionOfPoints& pts, const vtk
  * Returns ||A_i||^2 as defined in the verdict manual.
  *
  *  \param [in] pts The eight points which define the Hex.
- *  \param [in] index The index of A to load.  
+ *  \param [in] index The index of A to load.
  *  \return Returns the vector.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
@@ -695,7 +695,7 @@ VTKM_EXEC Scalar GetHexAiNormSquared(const CollectionOfPoints& pts, const vtkm::
  * Returns ||adj(A_i)||^2 as defined in the verdict manual.
  *
  *  \param [in] pts The eight points which define the Hex.
- *  \param [in] index The index of A to load.  
+ *  \param [in] index The index of A to load.
  *  \return Returns the vector.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
@@ -715,7 +715,7 @@ VTKM_EXEC Scalar GetHexAiAdjNormSquared(const CollectionOfPoints& pts, const vtk
  * Returns alpha_i, the determinant of A_i, as defined in the verdict manual.
  *
  *  \param [in] pts The eight points which define the Hex.
- *  \param [in] index The index of A to load.  
+ *  \param [in] index The index of A to load.
  *  \return Returns the vector.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
@@ -731,7 +731,7 @@ VTKM_EXEC Scalar GetHexAlphai(const CollectionOfPoints& pts, const vtkm::Id& ind
  * Returns hat{A}_i, the "normalized" version of A_i, as defined in the verdict manual.
  *
  *  \param [in] pts The eight points which define the Hex.
- *  \param [in] index The index of A to load.  
+ *  \param [in] index The index of A to load.
  *  \return Returns the vector.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
@@ -751,7 +751,7 @@ VTKM_EXEC vtkm::Vec<Vector, 3> GetHexAiHat(const CollectionOfPoints& pts, const 
  * Returns hat{alpha}_i, the determinant of hat{A}_i, as defined in the verdict manual.
  *
  *  \param [in] pts The eight points which define the Hex.
- *  \param [in] index The index of A to load.  
+ *  \param [in] index The index of A to load.
  *  \return Returns the vector.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
