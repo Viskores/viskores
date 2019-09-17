@@ -17,6 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#include <stdio.h>
 #include <string>
 #include <typeinfo>
 #include <vector>
@@ -189,17 +190,21 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
 
 template <typename T>
 std::vector<std::string> TestMeshQualityFilter(const vtkm::cont::DataSet& input,
-                                               const std::vector<vtkm::Float64>& expectedVals,
+                                               const std::vector<vtkm::FloatDefault>& expectedVals,
                                                T filter)
 {
+  fprintf(stderr, "In TMQF\n");
   std::vector<std::string> errors;
   vtkm::cont::DataSet output;
   try
   {
+    fprintf(stderr, "Try execute\n");
     output = filter.Execute(input);
+    fprintf(stderr, "Complete execute\n");
   }
   catch (vtkm::cont::ErrorExecution&)
   {
+    fprintf(stderr, "Catch error\n");
     errors.push_back("Error occured while executing filter. Exiting...");
     return errors;
   }
@@ -232,7 +237,7 @@ void CheckForErrors(const std::vector<std::string>& messages)
 
 int TestMeshQuality()
 {
-  using FloatVec = std::vector<vtkm::Float64>;
+  using FloatVec = std::vector<vtkm::FloatDefault>;
   using PairVec = std::vector<vtkm::Pair<vtkm::UInt8, vtkm::filter::CellMetric>>;
   using StringVec = std::vector<std::string>;
   using CharVec = std::vector<vtkm::UInt8>;
@@ -254,75 +259,51 @@ int TestMeshQuality()
   std::cout << "Testing MeshQuality filter: Volume metric"
             << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
 
-  //Assign a cell metric to compute for each different
-  //shape type that may exist in the input dataset. If no metric
-  //is specified for a shape type, then it is assumed to be EMPTY
-  //and no metric is computed.
-  testedShapes = { vtkm::CELL_SHAPE_TETRA,   vtkm::CELL_SHAPE_HEXAHEDRON, vtkm::CELL_SHAPE_WEDGE,
-                   vtkm::CELL_SHAPE_PYRAMID, vtkm::CELL_SHAPE_POLYGON,    vtkm::CELL_SHAPE_LINE,
-                   vtkm::CELL_SHAPE_QUAD,    vtkm::CELL_SHAPE_TRIANGLE };
-  shapeMetricPairs.clear();
-  for (auto s : testedShapes)
-    shapeMetricPairs.push_back(vtkm::make_Pair(s, vtkm::filter::CellMetric::VOLUME));
-
   //The ground truth metric value for each cell in the input dataset.
   //These values are generated from VisIt using the equivalent pseudocolor
   //mesh quality metric.
   expectedValues = { 1, 1, 0.0100042, 0.0983333, 0.0732667, 0.0845833, -0.5, -0.5, 0,
                      0, 1, 1,         1.5,       0.7071068, 2,         1,    0.5,  1 };
 
-  filter.reset(new QualityFilter(shapeMetricPairs));
+  filter.reset(new QualityFilter(vtkm::filter::CellMetric::VOLUME));
   std::vector<std::string> errors =
     TestMeshQualityFilter<QualityFilter>(input, expectedValues, *filter);
   std::cout << "Volume metric test: ";
   CheckForErrors(errors);
 
   /***************************************************
-   * Test 2: Edge Ratio metric
-   ***************************************************/
-
-  std::cout << "\nTesting MeshQuality filter: Edge Ratio metric"
-            << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
-
-  testedShapes = { vtkm::CELL_SHAPE_TETRA,   vtkm::CELL_SHAPE_HEXAHEDRON, vtkm::CELL_SHAPE_WEDGE,
-                   vtkm::CELL_SHAPE_PYRAMID, vtkm::CELL_SHAPE_POLYGON,    vtkm::CELL_SHAPE_LINE,
-                   vtkm::CELL_SHAPE_QUAD,    vtkm::CELL_SHAPE_TRIANGLE };
-
-  shapeMetricPairs.clear();
-  for (auto s : testedShapes)
-    shapeMetricPairs.push_back(vtkm::make_Pair(s, vtkm::filter::CellMetric::EDGE_RATIO));
-
-  expectedValues = { 1, 1, 2.55938, 1.80027, 2.59323, 1.73099, 1.41421, 1.41421, 0,
-                     0, 1, 1,       2.12132, 2.44949, 2,       1,       1.41421, 1.41421 };
-
-  filter.reset(new QualityFilter(shapeMetricPairs));
-  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, *filter);
-  std::cout << "Edge ratio metric test: ";
-  CheckForErrors(errors);
-
-  /***************************************************
-   * Test 3: Diagonal Ratio metric
+   * Test 2: Diagonal Ratio metric
    ***************************************************/
 
   std::cout << "Testing MeshQuality filter: Diagonal Ratio metric"
             << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
 
-  testedShapes = { vtkm::CELL_SHAPE_HEXAHEDRON, vtkm::CELL_SHAPE_POLYGON, vtkm::CELL_SHAPE_QUAD };
-
-  shapeMetricPairs.clear();
-  for (auto s : testedShapes)
-    shapeMetricPairs.push_back(vtkm::make_Pair(s, vtkm::filter::CellMetric::DIAGONAL_RATIO));
 
   expectedValues = { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 2.23607 };
 
-  filter.reset(new QualityFilter(shapeMetricPairs));
+  filter.reset(new QualityFilter(vtkm::filter::CellMetric::DIAGONAL_RATIO));
   errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, *filter);
   std::cout << "Diagonal ratio metric test: ";
   CheckForErrors(errors);
 
+  /***************************************************
+   * Test 3: Jacobian metric
+   ***************************************************/
+
+  std::cout << "Testing MeshQuality filter: Jacobian metric"
+            << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+
+
+  expectedValues = { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 2.23607 };
+
+  filter.reset(new QualityFilter(vtkm::filter::CellMetric::JACOBIAN));
+  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, *filter);
+  std::cout << "Jacobian metric test: ";
+  CheckForErrors(errors);
+
 #if 0
   /***************************************************
-   * Test 4: Oddy metric
+   * Test 5: Oddy metric
    ***************************************************/
 
   std::cout << "Testing MeshQuality filter: Oddy metric"
