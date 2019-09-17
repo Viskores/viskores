@@ -48,7 +48,7 @@ template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (this->UseCoordinateSystemAsField)
   {
@@ -70,7 +70,7 @@ template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::Field& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
@@ -92,7 +92,7 @@ template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::CoordinateSystem& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems

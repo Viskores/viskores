@@ -77,26 +77,23 @@ public:
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,
-                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
-    const vtkm::cont::DataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
+                                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::Field& field,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
+                                                    const vtkm::cont::Field& field,
+                                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //How do we specify float/double coordinate types?
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::CoordinateSystem& field,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
+                                                    const vtkm::cont::CoordinateSystem& field,
+                                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   std::string OutputFieldName;
   vtkm::Id CoordinateSystemIndex;

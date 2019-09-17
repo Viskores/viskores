@@ -243,7 +243,7 @@ public:
 
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input,
-                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                                        vtkm::filter::PolicyBase<DerivedPolicy> policy);
   //@}
 
   //@{
@@ -253,9 +253,8 @@ public:
   VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input);
 
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::PartitionedDataSet Execute(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input,
+                                                   vtkm::filter::PolicyBase<DerivedPolicy> policy);
   //@}
 
   /// Map fields from input dataset to output.
@@ -264,7 +263,7 @@ public:
   template <typename DerivedPolicy>
   VTKM_CONT void MapFieldsToPass(const vtkm::cont::DataSet& input,
                                  vtkm::cont::DataSet& output,
-                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                                 vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   /// Specify the vtkm::cont::Invoker to be used to execute worklets by
   /// this filter instance. Overriding the default allows callers to control

@@ -147,7 +147,7 @@ template <typename Derived, typename DerivedPolicy>
 void CallMapFieldOntoOutput(Derived* self,
                             const vtkm::cont::DataSet& input,
                             vtkm::cont::DataSet& output,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+                            vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   using call_supported_t = typename SupportsMapFieldOntoOutput<Derived, DerivedPolicy>::type;
   CallMapFieldOntoOutputInternal(call_supported_t(), self, input, output, policy);
@@ -266,7 +266,7 @@ template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
   const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   VTKM_LOG_SCOPE(
     vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeToString<Derived>().c_str());
@@ -286,7 +286,7 @@ template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
   const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
                  "Filter (PartitionedDataSet): '%s'",
@@ -311,7 +311,7 @@ template <typename DerivedPolicy>
 inline VTKM_CONT void Filter<Derived>::MapFieldsToPass(
   const vtkm::cont::DataSet& input,
   vtkm::cont::DataSet& output,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   Derived* self = static_cast<Derived*>(this);
   for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
