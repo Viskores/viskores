@@ -641,7 +641,7 @@ int main(int argc, char* argv[])
   filter.SetActiveField("values");
 
   // Execute the contour tree analysis. NOTE: If MPI is used the result  will be
-  // a vtkm::cont::MultiBlock instead of a vtkm::cont::DataSet
+  // a vtkm::cont::PartitionedDataSet instead of a vtkm::cont::DataSet
   auto result = filter.Execute(inDataSet);
 
   currTime = totalTime.GetElapsedTime();
