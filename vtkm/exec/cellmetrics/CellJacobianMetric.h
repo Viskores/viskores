@@ -1,3 +1,4 @@
+
 //============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
@@ -21,17 +22,20 @@
 #define vtk_m_exec_cellmetrics_Jacobian_h
 
 /*
- * Mesh quality metric functions that computes the jacobian of mesh cells.
- * The jacobian of a cell is defined as the determinant of the Jociabian matrix 
+ * Mesh quality metric functions that computes the Jacobian of mesh cells.
  *
  * These metric computations are adapted from the VTK implementation of the Verdict library,
- * which provides a set of mesh/cell metrics for evaluating the geometric qualities of regions 
- * of mesh spaces. 
+ * which provides a set of mesh/cell metrics for evaluating the geometric qualities of regions
+ * of mesh spaces.
  *
  * See: The Verdict Library Reference Manual (for per-cell-type metric formulae)
  * See: vtk/ThirdParty/verdict/vtkverdict (for VTK code implementation of this metric)
  */
 
+#include "TypeOfCellHexahedral.h"
+#include "TypeOfCellQuadrilateral.h"
+#include "TypeOfCellTetrahedral.h"
+#include "TypeOfCellTriangle.h"
 #include "vtkm/CellShape.h"
 #include "vtkm/CellTraits.h"
 #include "vtkm/VecTraits.h"
@@ -47,63 +51,9 @@ namespace exec
 namespace cellmetrics
 {
 
-using FloatType = vtkm::FloatDefault;
-
-template <typename OutType, typename VecType>
-VTKM_EXEC inline OutType CellJacobianMetricOfQuad(const VecType& edgeCalculations,
-                                                  const VecType& axes)
-{
-  const vtkm::Id numCalculations = edgeCalculations.GetNumberOfComponents();
-
-  //Compare partitions of quad to find min
-  using axesType = typename VecType::ComponentType;
-  axesType centerCalculation = vtkm::Cross(axes[0], axes[1]);
-  vtkm::Normalize(centerCalculation);
-
-  OutType currCalculation, minCalculation = vtkm::Infinity<OutType>();
-
-  for (vtkm::IdComponent i = 0; i < numCalculations; i++)
-  {
-    currCalculation = vtkm::Dot(edgeCalculations[i], centerCalculation);
-    if (currCalculation < minCalculation)
-      minCalculation = currCalculation;
-  }
-  if (minCalculation > 0)
-    return vtkm::Min(minCalculation, vtkm::Infinity<OutType>()); //normal case
-
-  return vtkm::Max(minCalculation, OutType(-1) * vtkm::Infinity<OutType>());
-}
-
-template <typename OutType, typename VecType>
-VTKM_EXEC inline OutType CellJacobianMetricOfHex(const VecType& matrices)
-{
-  const vtkm::IdComponent numMatrices = matrices.GetNumberOfComponents();
-
-  //Compare determinants to find min
-  OutType currDeterminant, minDeterminant;
-  //principle axes matrix computed outside of for loop to avoid un-necessary if statement
-  minDeterminant =
-    (OutType)vtkm::Dot(matrices[numMatrices - 1][0],
-                       vtkm::Cross(matrices[numMatrices - 1][1], matrices[numMatrices - 1][2]));
-  minDeterminant /= 64.0;
-  for (vtkm::IdComponent i = 0; i < numMatrices - 1; i++)
-  {
-    currDeterminant =
-      (OutType)vtkm::Dot(matrices[i][0], vtkm::Cross(matrices[i][1], matrices[i][2]));
-    if (currDeterminant < minDeterminant)
-      minDeterminant = currDeterminant;
-  }
-
-  if (minDeterminant > 0)
-    return vtkm::Min(minDeterminant, vtkm::Infinity<OutType>()); //normal case
-
-  return vtkm::Max(minDeterminant, vtkm::NegativeInfinity<OutType>());
-}
-
-
 // ========================= Unsupported cells ==================================
 
-// By default, cells have zero shape unless the shape type template is specialized below.
+// By default, cells return the metric 0.0 unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
                                      const PointCoordVecType& pts,
@@ -116,63 +66,9 @@ VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
   return OutType(0.0);
 }
 
-template <typename OutType, typename PointCoordVecType>
-VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
-                                     const PointCoordVecType& pts,
-                                     vtkm::CellShapeTagPolygon,
-                                     const vtkm::exec::FunctorBase& worklet)
-{
-  switch (numPts)
-  {
-    case 4:
-      return CellJacobianMetric<OutType>(numPts, pts, vtkm::CellShapeTagQuad(), worklet);
-    default:
-      break;
-  }
-  return OutType(-1.0);
-}
-
-template <typename OutType, typename PointCoordVecType>
-VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent&,
-                                     const PointCoordVecType&,
-                                     vtkm::CellShapeTagLine,
-                                     const vtkm::exec::FunctorBase& worklet)
-{
-  UNUSED(worklet);
-  return OutType(-1.0);
-}
-
-template <typename OutType, typename PointCoordVecType>
-VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent&,
-                                     const PointCoordVecType&,
-                                     vtkm::CellShapeTagTriangle,
-                                     const vtkm::exec::FunctorBase& worklet)
-{
-  UNUSED(worklet);
-  return OutType(-1.0);
-}
-
-template <typename OutType, typename PointCoordVecType>
-VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent&,
-                                     const PointCoordVecType&,
-                                     vtkm::CellShapeTagWedge,
-                                     const vtkm::exec::FunctorBase& worklet)
-{
-  UNUSED(worklet);
-  return OutType(-1.0);
-}
-
-template <typename OutType, typename PointCoordVecType>
-VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent&,
-                                     const PointCoordVecType&,
-                                     vtkm::CellShapeTagPyramid,
-                                     const vtkm::exec::FunctorBase& worklet)
-{
-  UNUSED(worklet);
-  return OutType(-1.0);
-}
 // ========================= 2D cells ==================================
-// Compute the jacobian of a quadrilateral.
+
+// Compute the Jacobian of a quadrilateral.
 // Formula: min{Jacobian at each vertex}
 // Equals 1 for a unit square
 // Acceptable range: [0,FLOAT_MAX]
@@ -190,24 +86,25 @@ VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
     return OutType(0.0);
   }
 
+  using Scalar = OutType;
+  using CollectionOfPoints = PointCoordVecType;
+  using Vector = typename PointCoordVecType::ComponentType;
 
-  //The 4 edges of a quadrilateral
-  using Edge = typename PointCoordVecType::ComponentType;
-  const Edge QuadEdges[4] = { pts[1] - pts[0], pts[2] - pts[1], pts[3] - pts[2], pts[0] - pts[3] };
-  const Edge QuadAxes[2] = { QuadEdges[0] - (pts[2] - pts[3]), QuadEdges[1] - (pts[3] - pts[0]) };
-  const Edge QuadEdgesToUse[4] = { vtkm::Cross(QuadEdges[3], QuadEdges[0]),
-                                   vtkm::Cross(QuadEdges[0], QuadEdges[1]),
-                                   vtkm::Cross(QuadEdges[1], QuadEdges[2]),
-                                   vtkm::Cross(QuadEdges[2], QuadEdges[3]) };
-  return vtkm::exec::cellmetrics::CellJacobianMetricOfQuad<OutType>(
-    vtkm::make_VecC(QuadEdgesToUse, 4), vtkm::make_VecC(QuadAxes, 2));
+  const Scalar alpha0 = GetQuadAlpha0<Scalar, Vector, CollectionOfPoints>(pts);
+  const Scalar alpha1 = GetQuadAlpha1<Scalar, Vector, CollectionOfPoints>(pts);
+  const Scalar alpha2 = GetQuadAlpha2<Scalar, Vector, CollectionOfPoints>(pts);
+  const Scalar alpha3 = GetQuadAlpha3<Scalar, Vector, CollectionOfPoints>(pts);
+
+  const Scalar q = vtkm::Min(alpha0, vtkm::Min(alpha1, vtkm::Min(alpha2, alpha3)));
+
+  return q;
 }
 
 // ============================= 3D Volume cells ==================================
-// Compute the jacobian of a hexahedron.
-// Formula: min{ {Alpha_i}, Alpha_8*/64}
-//	-Alpha_i -> jacobian determinant at respective vertex
-//	-Alpha_8 -> jacobian at center
+// Compute the Jacobian of a hexahedron.
+// Formula: min{ {Alpha_i for i in 1..7}, Alpha_8/64}
+//  -Alpha_i -> Jacobian determinant at respective vertex
+//  -Alpha_8 -> Jacobian at center
 // Equals 1 for a unit cube
 // Acceptable Range: [0, FLOAT_MAX]
 // Normal Range: [0, FLOAT_MAX]
@@ -224,31 +121,37 @@ VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
     return OutType(0.0);
   }
 
+  using Scalar = OutType;
+  using CollectionOfPoints = PointCoordVecType;
+  using Vector = typename PointCoordVecType::ComponentType;
 
-  //The 12 edges of a hexahedron
-  using Edge = typename PointCoordVecType::ComponentType;
-  Edge HexEdges[12] = { pts[1] - pts[0], pts[2] - pts[1], pts[3] - pts[2], pts[3] - pts[0],
-                        pts[4] - pts[0], pts[5] - pts[1], pts[6] - pts[2], pts[7] - pts[3],
-                        pts[5] - pts[4], pts[6] - pts[5], pts[7] - pts[6], pts[7] - pts[4] };
-  Edge principleXAxis = HexEdges[0] + (pts[2] - pts[3]) + HexEdges[8] + (pts[6] - pts[7]);
-  Edge principleYAxis = HexEdges[3] + HexEdges[1] + HexEdges[11] + HexEdges[9];
-  Edge principleZAxis = HexEdges[5] + HexEdges[6] + HexEdges[7] + HexEdges[8];
+  const Scalar alpha0 = GetHexAlphai<Scalar, Vector, CollectionOfPoints>(pts, vtkm::Id(0));
+  const Scalar alpha1 = GetHexAlphai<Scalar, Vector, CollectionOfPoints>(pts, vtkm::Id(1));
+  const Scalar alpha2 = GetHexAlphai<Scalar, Vector, CollectionOfPoints>(pts, vtkm::Id(2));
+  const Scalar alpha3 = GetHexAlphai<Scalar, Vector, CollectionOfPoints>(pts, vtkm::Id(3));
+  const Scalar alpha4 = GetHexAlphai<Scalar, Vector, CollectionOfPoints>(pts, vtkm::Id(4));
+  const Scalar alpha5 = GetHexAlphai<Scalar, Vector, CollectionOfPoints>(pts, vtkm::Id(5));
+  const Scalar alpha6 = GetHexAlphai<Scalar, Vector, CollectionOfPoints>(pts, vtkm::Id(6));
+  const Scalar alpha7 = GetHexAlphai<Scalar, Vector, CollectionOfPoints>(pts, vtkm::Id(7));
+  const Scalar alpha8 = GetHexAlphai<Scalar, Vector, CollectionOfPoints>(pts, vtkm::Id(8));
+  const Scalar alpha8Div64 = alpha8 / Scalar(64.0);
 
-  const Edge hexMatrices[9][3] = { { HexEdges[0], HexEdges[3], HexEdges[4] },
-                                   { HexEdges[1], -1 * HexEdges[0], HexEdges[5] },
-                                   { HexEdges[2], -1 * HexEdges[1], HexEdges[6] },
-                                   { -1 * HexEdges[3], -1 * HexEdges[2], HexEdges[7] },
-                                   { HexEdges[11], HexEdges[8], -1 * HexEdges[4] },
-                                   { -1 * HexEdges[8], HexEdges[9], -1 * HexEdges[5] },
-                                   { -1 * HexEdges[9], HexEdges[10], -1 * HexEdges[6] },
-                                   { -1 * HexEdges[10], -1 * HexEdges[11], -1 * HexEdges[7] },
-                                   { principleXAxis, principleYAxis, principleZAxis } };
-  return vtkm::exec::cellmetrics::CellJacobianMetricOfHex<OutType>(
-    vtkm::make_VecC(hexMatrices, 12));
+  const Scalar q = vtkm::Min(
+    alpha0,
+    vtkm::Min(
+      alpha1,
+      vtkm::Min(
+        alpha2,
+        vtkm::Min(
+          alpha3,
+          vtkm::Min(alpha4,
+                    vtkm::Min(alpha5, vtkm::Min(alpha6, vtkm::Min(alpha7, alpha8Div64))))))));
+
+  return q;
 }
 
-// Compute the jacobian of a tetrahedron.
-// Formula: (L2 * L0) * L3
+// Compute the Jacobian of a tetrahedron.
+// Formula: (L2 x L0) * L3
 // Equals Sqrt(2) / 2 for unit equilateral tetrahedron
 // Acceptable Range: [0, FLOAT_MAX]
 // Normal Range: [0, FLOAT_MAX]
@@ -261,18 +164,24 @@ VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Jacobian metric requires 4 points");
+    worklet.RaiseError("Jacobian metric (tetra) requires 4 points");
     return OutType(0.0);
   }
 
-  //the 3 edges we need
-  using Edge = typename PointCoordVecType::ComponentType;
-  const Edge EdgesNeeded[3] = { pts[1] - pts[0], pts[0] - pts[2], pts[3] - pts[0] };
-  return (OutType)vtkm::Dot(vtkm::Cross(EdgesNeeded[1], EdgesNeeded[0]), EdgesNeeded[2]);
-}
+  using Scalar = OutType;
+  using CollectionOfPoints = PointCoordVecType;
+  using Vector = typename PointCoordVecType::ComponentType;
 
+  const Vector L0 = GetTetraL0<Scalar, Vector, CollectionOfPoints>(pts);
+  const Vector L2 = GetTetraL2<Scalar, Vector, CollectionOfPoints>(pts);
+  const Vector L3 = GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts);
+
+  const Scalar q = vtkm::Dot(vtkm::Cross(L2, L0), L3);
+
+  return q;
+}
 } // namespace cellmetrics
 } // namespace exec
 } // namespace vtkm
 
-#endif // vtk_m_exec_cellmetrics_CellEdgeRatioMetric_h
+#endif // vtk_m_exec_cellmetrics_CellJacobianMetric_h

@@ -31,8 +31,8 @@
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
 //Adapted from vtkm/cont/testing/MakeTestDataSet.h
-//Modified the content of the Make3DExplicitDataSetZoo() function
-inline vtkm::cont::DataSet Make3DExplicitDataSet()
+//Modified the content of the MakeExplicitDataSetZoo() function
+inline vtkm::cont::DataSet MakeExplicitDataSet()
 {
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetBuilderExplicit dsb;
@@ -40,14 +40,11 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   using CoordType = vtkm::Vec3f_64;
 
   std::vector<CoordType> coords = {
-    { 0.00, 0.00, 0.00 }, { 1.00, 0.00, 0.00 }, { 2.00, 0.00, 0.00 }, { 0.00, 0.00, 1.00 },
-    { 1.00, 0.00, 1.00 }, { 2.00, 0.00, 1.00 }, { 0.00, 1.00, 0.00 }, { 1.00, 1.00, 0.00 },
-    { 2.00, 1.00, 0.00 }, { 0.00, 1.00, 1.00 }, { 1.00, 1.00, 1.00 }, { 2.00, 1.00, 1.00 },
-    { 0.00, 2.00, 0.00 }, { 1.00, 2.00, 0.00 }, { 2.00, 2.00, 0.00 }, { 0.00, 2.00, 1.00 },
-    { 1.00, 2.00, 1.00 }, { 2.00, 2.00, 1.00 }, { 1.00, 3.00, 1.00 }, { 2.75, 0.00, 1.00 },
-    { 3.00, 0.00, 0.75 }, { 3.00, 0.25, 1.00 }, { 3.00, 1.00, 1.00 }, { 3.00, 1.00, 0.00 },
-    { 2.57, 2.00, 1.00 }, { 3.00, 1.75, 1.00 }, { 3.00, 1.75, 0.75 }, { 3.00, 0.00, 0.00 },
-    { 2.57, 0.42, 0.57 }, { 2.59, 1.43, 0.71 }
+    { 0, 0, 0 },  { 3, 0, 0 },  { 2, 2, 0 },  { 4, 0, 0 },  { 7, 0, 0 },  { 7, 2, 0 },
+    { 6, 2, 0 },  { 8, 0, 0 },  { 11, 0, 0 }, { 9, 2, 0 },  { 9, 1, 1 },  { 9, 3, 0 },
+    { 11, 3, 0 }, { 11, 5, 0 }, { 9, 5, 0 },  { 10, 4, 1 }, { 12, 0, 0 }, { 12, 3, 0 },
+    { 12, 2, 1 }, { 15, 0, 0 }, { 15, 3, 0 }, { 15, 1, 1 }, { 16, 0, 0 }, { 18, 0, 0 },
+    { 18, 2, 0 }, { 16, 2, 0 }, { 17, 1, 1 }, { 19, 1, 1 }, { 19, 3, 1 }, { 17, 3, 1 }
   };
 
   std::vector<vtkm::UInt8> shapes;
@@ -56,145 +53,64 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
 
   //Construct the shapes/cells of the dataset
   //This is a zoo of points, lines, polygons, and polyhedra
-  shapes.push_back(vtkm::CELL_SHAPE_HEXAHEDRON);
-  numindices.push_back(8);
+  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
+  numindices.push_back(3);
   conn.push_back(0);
+  conn.push_back(1);
+  conn.push_back(2);
+
+  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
+  numindices.push_back(4);
   conn.push_back(3);
   conn.push_back(4);
-  conn.push_back(1);
+  conn.push_back(5);
   conn.push_back(6);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(7);
+  conn.push_back(8);
   conn.push_back(9);
   conn.push_back(10);
-  conn.push_back(7);
+
+  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  numindices.push_back(5);
+  conn.push_back(11);
+  conn.push_back(12);
+  conn.push_back(13);
+  conn.push_back(14);
+  conn.push_back(15);
+
+  shapes.push_back(vtkm::CELL_SHAPE_WEDGE);
+  numindices.push_back(6);
+  conn.push_back(16);
+  conn.push_back(17);
+  conn.push_back(18);
+  conn.push_back(19);
+  conn.push_back(20);
+  conn.push_back(21);
 
   shapes.push_back(vtkm::CELL_SHAPE_HEXAHEDRON);
   numindices.push_back(8);
-  conn.push_back(1);
-  conn.push_back(4);
-  conn.push_back(5);
-  conn.push_back(2);
-  conn.push_back(7);
-  conn.push_back(10);
-  conn.push_back(11);
-  conn.push_back(8);
-
-  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
-  numindices.push_back(4);
-  conn.push_back(24);
-  conn.push_back(26);
-  conn.push_back(25);
-  conn.push_back(29);
-
-  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
-  numindices.push_back(4);
-  conn.push_back(8);
-  conn.push_back(17);
-  conn.push_back(11);
-  conn.push_back(29);
-
-  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
-  numindices.push_back(5);
-  conn.push_back(24);
-  conn.push_back(17);
-  conn.push_back(8);
-  conn.push_back(23);
-  conn.push_back(29);
-
-  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
-  numindices.push_back(5);
-  conn.push_back(25);
   conn.push_back(22);
-  conn.push_back(11);
-  conn.push_back(17);
+  conn.push_back(23);
+  conn.push_back(24);
+  conn.push_back(25);
+  conn.push_back(26);
+  conn.push_back(27);
+  conn.push_back(28);
   conn.push_back(29);
-
-  shapes.push_back(vtkm::CELL_SHAPE_WEDGE);
-  numindices.push_back(6);
-  conn.push_back(8);
-  conn.push_back(14);
-  conn.push_back(17);
-  conn.push_back(7);
-  conn.push_back(13);
-  conn.push_back(16);
-
-  shapes.push_back(vtkm::CELL_SHAPE_WEDGE);
-  numindices.push_back(6);
-  conn.push_back(11);
-  conn.push_back(8);
-  conn.push_back(17);
-  conn.push_back(10);
-  conn.push_back(7);
-  conn.push_back(16);
-
-  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
-  numindices.push_back(1);
-  conn.push_back(0);
-
-  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
-  numindices.push_back(1);
-  conn.push_back(29);
-
-  shapes.push_back(vtkm::CELL_SHAPE_LINE);
-  numindices.push_back(2);
-  conn.push_back(0);
-  conn.push_back(1);
-
-  shapes.push_back(vtkm::CELL_SHAPE_LINE);
-  numindices.push_back(2);
-  conn.push_back(15);
-  conn.push_back(16);
-
-  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
-  numindices.push_back(3);
-  conn.push_back(2);
-  conn.push_back(4);
-  conn.push_back(15);
-
-  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
-  numindices.push_back(3);
-  conn.push_back(5);
-  conn.push_back(6);
-  conn.push_back(7);
-
-  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
-  numindices.push_back(4);
-  conn.push_back(0);
-  conn.push_back(3);
-  conn.push_back(5);
-  conn.push_back(2);
-
-  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
-  numindices.push_back(4);
-  conn.push_back(5);
-  conn.push_back(4);
-  conn.push_back(10);
-  conn.push_back(11);
-
-  shapes.push_back(vtkm::CELL_SHAPE_POLYGON);
-  numindices.push_back(3);
-  conn.push_back(4);
-  conn.push_back(7);
-  conn.push_back(1);
-
-  shapes.push_back(vtkm::CELL_SHAPE_POLYGON);
-  numindices.push_back(4);
-  conn.push_back(1);
-  conn.push_back(6);
-  conn.push_back(7);
-  conn.push_back(2);
 
   dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   return dataSet;
 }
 
-template <typename T>
-std::vector<std::string> TestMeshQualityFilter(const vtkm::cont::DataSet& input,
-                                               const std::vector<vtkm::FloatDefault>& expectedVals,
-                                               const std::string& outputname,
-                                               T filter)
+bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
+                           const std::vector<vtkm::FloatDefault>& expectedVals,
+                           const std::string& outputname,
+                           vtkm::filter::MeshQuality& filter)
 {
-  std::vector<std::string> errors;
   vtkm::cont::DataSet output;
   try
   {
@@ -202,168 +118,93 @@ std::vector<std::string> TestMeshQualityFilter(const vtkm::cont::DataSet& input,
   }
   catch (vtkm::cont::ErrorExecution&)
   {
-    errors.push_back("Error occured while executing filter. Exiting...");
-    return errors;
+    return true;
   }
 
   //Test the computed metric values (for all cells) and expected metric
   //values for equality.
-  vtkm::cont::testing::TestEqualResult result = vtkm::cont::testing::test_equal_ArrayHandles(
-    vtkm::cont::make_ArrayHandle(expectedVals), output.GetField(outputname).GetData());
-  if (!result)
-    result.PushMessage(std::string("Data doesn't match"));
-
-  return result.GetMessages();
-}
-
-//Either an error occurred during execution of the
-//filter, or mismatches exist between the expected output
-//and the computed filter output.
-void CheckForErrors(const std::vector<std::string>& messages)
-{
-  if (!messages.empty())
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+  output.GetField(outputname).GetData().CopyTo(values);
+  auto portal1 = values.GetPortalConstControl();
+  if (portal1.GetNumberOfValues() != (vtkm::Id)expectedVals.size())
   {
-    std::cout << "FAIL\n";
-    for (std::string m : messages)
-      std::cout << m << "\n";
+    printf("Number of expected values for %s does not match.\n", outputname.c_str());
+    return true;
   }
-  else
-    std::cout << "SUCCESS\n";
+
+  std::vector<std::string> cellTypes = { "triangle", "quadrilateral", "tetrahedron",
+                                         "pyramid",  "wedge",         "hexahedron" };
+  bool anyFailures = false;
+  for (unsigned long i = 0; i < expectedVals.size(); i++)
+  {
+    vtkm::Id id = (vtkm::Id)i;
+    if (portal1.Get(id) != expectedVals[i])
+    {
+      printf("Metric \"%s\" for cell type \"%s\" does not match.  Expected %f and got %f\n",
+             outputname.c_str(),
+             cellTypes[i].c_str(),
+             expectedVals[i],
+             portal1.Get(id));
+      anyFailures = true;
+    }
+  }
+  return anyFailures;
 }
 
 int TestMeshQuality()
 {
   using FloatVec = std::vector<vtkm::FloatDefault>;
-  using PairVec = std::vector<vtkm::Pair<vtkm::UInt8, vtkm::filter::CellMetric>>;
-  using StringVec = std::vector<std::string>;
-  using CharVec = std::vector<vtkm::UInt8>;
-  using QualityFilter = vtkm::filter::MeshQuality;
 
   //Test variables
-  vtkm::cont::DataSet input = Make3DExplicitDataSet();
-  std::unique_ptr<QualityFilter> filter;
-  std::string metricSuffix;
-  StringVec fieldNames;
-  CharVec testedShapes;
-  PairVec shapeMetricPairs;
-  FloatVec expectedValues;
+  vtkm::cont::DataSet input = MakeExplicitDataSet();
 
-  /***************************************************
-   * Test 1: Volume metric
-   ***************************************************/
+  int numFailures = 0;
+  bool testFailed = false;
 
-  std::cout << "Testing MeshQuality filter: Volume metric"
-            << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+  std::vector<FloatVec> expectedValues;
+  std::vector<vtkm::filter::CellMetric> metrics;
+  std::vector<std::string> metricName;
 
-  //The ground truth metric value for each cell in the input dataset.
-  //These values are generated from VisIt using the equivalent pseudocolor
-  //mesh quality metric.
-  expectedValues = { 1,
-                     1,
-                     (vtkm::FloatDefault)0.0100042,
-                     (vtkm::FloatDefault)0.0983333,
-                     (vtkm::FloatDefault)0.0732667,
-                     (vtkm::FloatDefault)0.0845833,
-                     -0.5,
-                     -0.5,
-                     0,
-                     0,
-                     1,
-                     1,
-                     1.5,
-                     (vtkm::FloatDefault)0.7071068,
-                     2,
-                     1,
-                     0.5,
-                     1 };
+  /*
+  FloatVec volumeExpectedValues = { 0, 0, 1, (float) 1.333333333, 4, 4 };
+  expectedValues.push_back(volumeExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::VOLUME);
+  metricName.push_back("volume");
+ */
 
-  filter.reset(new QualityFilter(vtkm::filter::CellMetric::VOLUME));
-  std::vector<std::string> errors =
-    TestMeshQualityFilter<QualityFilter>(input, expectedValues, "volume", *filter);
-  std::cout << "Volume metric test: ";
-  CheckForErrors(errors);
+  FloatVec jacobianExpectedValues = { 0, 2, 6, 0, 0, 4 };
+  expectedValues.push_back(jacobianExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::JACOBIAN);
+  metricName.push_back("jacobian");
 
-  /***************************************************
-   * Test 2: Diagonal Ratio metric
-   ***************************************************/
+  /*
+  FloatVec diagonalRatioExpectedValues = { -1, -1, -1, -1, -1, (float) 0.39 };
+  expectedValues.push_back(diagonalRatioExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::DIAGONAL_RATIO);
+  metricName.push_back("diagonalRatio");
+ */
 
-  std::cout << "Testing MeshQuality filter: Diagonal Ratio metric"
-            << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+  unsigned long numTests = metrics.size();
+  for (unsigned long i = 0; i < numTests; i++)
+  {
+    printf("Testing metric %s\n", metricName[i].c_str());
+    vtkm::filter::MeshQuality filter(metrics[i]);
+    testFailed = TestMeshQualityFilter(input, expectedValues[i], metricName[i], filter);
+    if (testFailed)
+    {
+      numFailures++;
+      printf("\ttest \"%s\" failed\n", metricName[i].c_str());
+    }
+    else
+      printf("\t... passed\n");
+  }
 
-
-  expectedValues = {
-    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, (vtkm::FloatDefault)2.23607
-  };
-
-  filter.reset(new QualityFilter(vtkm::filter::CellMetric::DIAGONAL_RATIO));
-  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, "diagonalRatio", *filter);
-  std::cout << "Diagonal ratio metric test: ";
-  CheckForErrors(errors);
-
-  /***************************************************
-   * Test 3: Jacobian metric
-   ***************************************************/
-
-  std::cout << "Testing MeshQuality filter: Jacobian metric"
-            << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
-
-
-  expectedValues = {
-    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, (vtkm::FloatDefault)2.23607
-  };
-
-  filter.reset(new QualityFilter(vtkm::filter::CellMetric::JACOBIAN));
-  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, "jacobian", *filter);
-  std::cout << "Jacobian metric test: ";
-  CheckForErrors(errors);
-
-#if 0
-  /***************************************************
-   * Test 5: Oddy metric
-   ***************************************************/
-
-  std::cout << "Testing MeshQuality filter: Oddy metric"
-            << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
-
-  testedShapes = {vtkm::CELL_SHAPE_HEXAHEDRON, vtkm::CELL_SHAPE_POLYGON,
-                  vtkm::CELL_SHAPE_QUAD};
-
-  shapeMetricPairs.clear();
-  for (auto s : testedShapes)
-    shapeMetricPairs.push_back(vtkm::make_Pair(s, vtkm::filter::CellMetric::ODDY));
-  expectedValues = {0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 1.125, 0,
-                    0, 2.5}; /*(all cells, volume value)*/
-
-  filter.reset(new QualityFilter(shapeMetricPairs));
-  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, *filter);
-  std::cout << "Oddy metric test: ";
-  CheckForErrors(errors);
-
-  /***************************************************
-   * Test 4: Relative Size Squared metric
-   ***************************************************/
-
-  std::cout << "Testing MeshQuality filter: Relative Size Squared metric"
-            << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
-
-  testedShapes = {vtkm::CELL_SHAPE_HEXAHEDRON, vtkm::CELL_SHAPE_POLYGON,
-                  vtkm::CELL_SHAPE_QUAD, vtkm::CELL_SHAPE_TRIANGLE,
-                  vtkm::CELL_SHAPE_TETRA};
-
-  shapeMetricPairs.clear();
-  for (auto s : testedShapes)
-    shapeMetricPairs.push_back(vtkm::make_Pair(s, vtkm::filter::CellMetric::RELATIVE_SIZE));
-  expectedValues = {1, 1, 0.0341086, 0.303456, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0.361898, 0.614047, 1, 1,
-                    0.307024, 1};
-
-  filter.reset(new QualityFilter(shapeMetricPairs));
-  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, *filter);
-  std::cout << "Relative Size Square metric test: ";
-  CheckForErrors(errors);
-#endif
-
+  if (numFailures > 0)
+  {
+    printf("Number of failed metrics is %d\n", numFailures);
+    bool see_previous_messages = false; // this variable name plays well with macro
+    VTKM_TEST_ASSERT(see_previous_messages, "Failure occurred during test");
+  }
   return 0;
 }
 
