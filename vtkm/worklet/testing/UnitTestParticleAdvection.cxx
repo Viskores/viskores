@@ -23,6 +23,10 @@
 
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
+//timers
+#include <chrono>
+#include <ctime>
+
 namespace
 {
 vtkm::FloatDefault vecData[125 * 3] = {
@@ -646,19 +650,95 @@ void TestParticleStatus()
   auto res = pa.Run(rk4, seedsArray, maxSteps);
   auto statusPortal = res.status.GetPortalConstControl();
 
-  vtkm::Id tookStep0 = statusPortal.Get(0) &
-    static_cast<vtkm::Id>(vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS);
-  vtkm::Id tookStep1 = statusPortal.Get(1) &
-    static_cast<vtkm::Id>(vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS);
+  vtkm::Id tookStep0 =
+    statusPortal.Get(0) & static_cast<vtkm::Id>(vtkm::ParticleStatus::TOOK_ANY_STEPS);
+  vtkm::Id tookStep1 =
+    statusPortal.Get(1) & static_cast<vtkm::Id>(vtkm::ParticleStatus::TOOK_ANY_STEPS);
   VTKM_TEST_ASSERT(tookStep0 != 0, "Particle failed to take any steps");
   VTKM_TEST_ASSERT(tookStep1 == 0, "Particle took a step when it should not have.");
 }
 
+
+double TestParticleAOS(bool doAOS)
+{
+  vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
+  const vtkm::Id3 dims(5, 5, 5);
+  vtkm::cont::DataSet ds = CreateUniformDataSet(bounds, dims);
+
+  vtkm::Id nElements = dims[0] * dims[1] * dims[2] * 3;
+
+  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> field;
+  for (vtkm::Id i = 0; i < nElements; i++)
+  {
+    vtkm::FloatDefault x = vecData[i];
+    vtkm::FloatDefault y = vecData[++i];
+    vtkm::FloatDefault z = vecData[++i];
+    vtkm::Vec3f vec(x, y, z);
+    field.push_back(vtkm::Normal(vec));
+  }
+
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
+  fieldArray = vtkm::cont::make_ArrayHandle(field);
+
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  vtkm::Id maxSteps = 1000;
+  vtkm::FloatDefault stepSize = 0.001f;
+
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+  RK4Type rk4(eval, stepSize);
+
+  vtkm::worklet::ParticleAdvection pa;
+  std::vector<vtkm::Particle> particles;
+  std::vector<vtkm::Vec3f> pts;
+
+  int n = 10000;
+  for (int i = 0; i < n; i++)
+  {
+    vtkm::Particle p;
+    p.ID = i;
+    p.Status = vtkm::ParticleStatus::SUCCESS;
+    auto pt = RandomPoint(bounds);
+    p.Pos = pt;
+    particles.push_back(p);
+    pts.push_back(pt);
+  }
+
+  std::chrono::duration<double> dT;
+  if (doAOS)
+  {
+    auto seedsArray = vtkm::cont::make_ArrayHandle(particles);
+    //vtkm::cont::printSummary_ArrayHandle(seedsArray, std::cout, true);
+    auto s = std::chrono::system_clock::now();
+    auto res = pa.Run(rk4, seedsArray, maxSteps);
+    auto e = std::chrono::system_clock::now();
+    dT = e - s;
+  }
+  else
+  {
+    auto seedsArray = vtkm::cont::make_ArrayHandle(pts);
+    //vtkm::cont::printSummary_ArrayHandle(seedsArray, std::cout, true);
+    auto s = std::chrono::system_clock::now();
+    auto res = pa.Run(rk4, seedsArray, maxSteps);
+    auto e = std::chrono::system_clock::now();
+    dT = e - s;
+  }
+
+  return dT.count();
+}
+
 void TestParticleAdvection()
 {
-  TestEvaluators();
-  TestParticleWorklets();
-  TestParticleStatus();
+  //  TestEvaluators();
+  //  TestParticleWorklets();
+  //  TestParticleStatus();
+
+  double aosTime = TestParticleAOS(true);
+  double soaTime = TestParticleAOS(false);
+
+  std::cout << "AOS_time= " << aosTime << std::endl;
+  std::cout << "SOA_time= " << soaTime << std::endl;
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])

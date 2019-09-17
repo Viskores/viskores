@@ -20,9 +20,11 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 
+#include <vtkm/Particle.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/ParticlesAOS.h>
 
 namespace vtkm
 {
@@ -30,6 +32,74 @@ namespace worklet
 {
 namespace particleadvection
 {
+
+
+class ParticleAdvectWorkletAOS : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn idx, ExecObject integrator, ExecObject integralCurve);
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  template <typename IntegratorType, typename ParticleType>
+  VTKM_EXEC void operator()(const vtkm::Id& idx,
+                            const IntegratorType* integrator,
+                            ParticleType& particle) const
+  {
+    vtkm::Vec3f inpos = particle.GetPos(idx);
+    vtkm::Vec3f outpos;
+    vtkm::FloatDefault time = particle.GetTime(idx);
+    IntegratorStatus status;
+    bool tookAnySteps = false;
+    //std::cout<<"PA_"<<idx<<" "<<inpos<<std::endl;
+    while (!particle.Done(idx))
+    {
+      status = integrator->Step(inpos, time, outpos);
+      // If the status is OK, we only need to check if the particle
+      // has completed the maximum steps required.
+      if (status == IntegratorStatus::SUCCESS)
+      {
+        particle.TakeStep(idx, outpos, time);
+        // This is to keep track of the particle's time.
+        // This is what the Evaluator uses to determine if the particle
+        // has exited temporal boundary.
+        inpos = outpos;
+        tookAnySteps = true;
+      }
+      // If the particle is at spatial or temporal  boundary, take steps to just
+      // push it a little out of the boundary so that it will start advection in
+      // another domain, or in another time slice. Taking small steps enables
+      // reducing the error introduced at spatial or temporal boundaries.
+      else if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
+      {
+        particle.SetExitTemporalBoundary(idx);
+        break;
+      }
+      else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
+      {
+        status = integrator->SmallStep(inpos, time, outpos);
+        particle.TakeStep(idx, outpos, time);
+        if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
+        {
+          particle.SetExitTemporalBoundary(idx);
+          break;
+        }
+        else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
+        {
+          particle.SetExitSpatialBoundary(idx);
+          break;
+        }
+        else if (status == IntegratorStatus::FAIL)
+        {
+          particle.SetError(idx);
+          break;
+        }
+      }
+    }
+    particle.SetTookAnySteps(idx, tookAnySteps);
+  }
+};
+
 
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
@@ -132,6 +202,33 @@ public:
 
     //Invoke particle advection worklet
     ParticleWorkletDispatchType particleWorkletDispatch;
+    particleWorkletDispatch.Invoke(idxArray, integrator, particles);
+  }
+
+  //AOS version
+  void Run(const IntegratorType& integrator,
+           vtkm::cont::ArrayHandle<vtkm::Particle>& p,
+           const vtkm::Id& MaxSteps)
+  {
+    using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorkletAOS;
+    using ParticleWorkletDispatchType =
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
+    using ParticleTypeAOS = vtkm::worklet::particleadvection::ParticlesAOS;
+
+    vtkm::Id numSeeds = static_cast<vtkm::Id>(p.GetNumberOfValues());
+    //Create and invoke the particle advection.
+    vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
+    ParticleTypeAOS particles(p, MaxSteps);
+
+#ifdef VTKM_CUDA
+    // This worklet needs some extra space on CUDA.
+    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    (void)stack;
+#endif // VTKM_CUDA
+
+    //Invoke particle advection worklet
+    ParticleWorkletDispatchType particleWorkletDispatch;
+    //problem
     particleWorkletDispatch.Invoke(idxArray, integrator, particles);
   }
 };

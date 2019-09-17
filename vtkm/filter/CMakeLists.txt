@@ -155,4 +155,4 @@ install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 add_subdirectory(internal)
 
 #-----------------------------------------------------------------------------
-add_subdirectory(testing)
+#add_subdirectory(testing)
