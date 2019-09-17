@@ -69,8 +69,8 @@ public:
     }
     switch (thisId)
     {
-      vtkmGenericCellShapeMacro(
-        metricValue = this->ComputeMetric<OutType>(numPoints, pts, CellShapeTag(), metric));
+      vtkmGenericCellShapeMacro(metricValue =
+                                  this->ComputeMetric<OutType>(numPoints, pts, CellShapeTag()));
       default:
         this->RaiseError("Asked for metric of unknown cell type.");
         metricValue = OutType(0.0);
@@ -81,14 +81,10 @@ protected:
   // data member
   MetricTagType metric;
 
-  template <typename OutType,
-            typename PointCoordVecType,
-            typename CellShapeType,
-            typename CellMetricType>
+  template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VTKM_EXEC OutType ComputeMetric(const vtkm::IdComponent& numPts,
                                   const PointCoordVecType& pts,
-                                  CellShapeType tag,
-                                  CellMetricType metric) const
+                                  CellShapeType tag) const
   {
     constexpr vtkm::IdComponent dims = vtkm::CellTraits<CellShapeType>::TOPOLOGICAL_DIMENSIONS;
 

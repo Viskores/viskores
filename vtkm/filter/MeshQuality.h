@@ -40,6 +40,7 @@ static const std::string MetricNames[] = {
 };
 
 //Different cell metrics available to use
+//This must follow the same order as the MetricNames above
 enum class CellMetric
 {
   AREA,
@@ -78,6 +79,7 @@ public:
   using SupportedTypes = vtkm::TypeListTagFieldVec3;
 
   VTKM_CONT MeshQuality(CellMetric);
+  void SetOutputName(const std::string& s) { outputName = s; };
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -87,8 +89,8 @@ public:
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  //A user-assigned cell metric per shape/cell type
   CellMetric myMetric;
+  std::string outputName;
 };
 
 } // namespace filter

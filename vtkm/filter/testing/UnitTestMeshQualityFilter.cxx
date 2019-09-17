@@ -191,29 +191,25 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
 template <typename T>
 std::vector<std::string> TestMeshQualityFilter(const vtkm::cont::DataSet& input,
                                                const std::vector<vtkm::FloatDefault>& expectedVals,
+                                               const std::string& outputname,
                                                T filter)
 {
-  fprintf(stderr, "In TMQF\n");
   std::vector<std::string> errors;
   vtkm::cont::DataSet output;
   try
   {
-    fprintf(stderr, "Try execute\n");
     output = filter.Execute(input);
-    fprintf(stderr, "Complete execute\n");
   }
   catch (vtkm::cont::ErrorExecution&)
   {
-    fprintf(stderr, "Catch error\n");
     errors.push_back("Error occured while executing filter. Exiting...");
     return errors;
   }
 
   //Test the computed metric values (for all cells) and expected metric
   //values for equality.
-  const vtkm::Id numFields = output.GetNumberOfFields();
   vtkm::cont::testing::TestEqualResult result = vtkm::cont::testing::test_equal_ArrayHandles(
-    vtkm::cont::make_ArrayHandle(expectedVals), output.GetField(numFields - 1).GetData());
+    vtkm::cont::make_ArrayHandle(expectedVals), output.GetField(outputname).GetData());
   if (!result)
     result.PushMessage(std::string("Data doesn't match"));
 
@@ -262,12 +258,28 @@ int TestMeshQuality()
   //The ground truth metric value for each cell in the input dataset.
   //These values are generated from VisIt using the equivalent pseudocolor
   //mesh quality metric.
-  expectedValues = { 1, 1, 0.0100042, 0.0983333, 0.0732667, 0.0845833, -0.5, -0.5, 0,
-                     0, 1, 1,         1.5,       0.7071068, 2,         1,    0.5,  1 };
+  expectedValues = { 1,
+                     1,
+                     (vtkm::FloatDefault)0.0100042,
+                     (vtkm::FloatDefault)0.0983333,
+                     (vtkm::FloatDefault)0.0732667,
+                     (vtkm::FloatDefault)0.0845833,
+                     -0.5,
+                     -0.5,
+                     0,
+                     0,
+                     1,
+                     1,
+                     1.5,
+                     (vtkm::FloatDefault)0.7071068,
+                     2,
+                     1,
+                     0.5,
+                     1 };
 
   filter.reset(new QualityFilter(vtkm::filter::CellMetric::VOLUME));
   std::vector<std::string> errors =
-    TestMeshQualityFilter<QualityFilter>(input, expectedValues, *filter);
+    TestMeshQualityFilter<QualityFilter>(input, expectedValues, "volume", *filter);
   std::cout << "Volume metric test: ";
   CheckForErrors(errors);
 
@@ -279,10 +291,12 @@ int TestMeshQuality()
             << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
 
 
-  expectedValues = { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 2.23607 };
+  expectedValues = {
+    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, (vtkm::FloatDefault)2.23607
+  };
 
   filter.reset(new QualityFilter(vtkm::filter::CellMetric::DIAGONAL_RATIO));
-  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, *filter);
+  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, "diagonalRatio", *filter);
   std::cout << "Diagonal ratio metric test: ";
   CheckForErrors(errors);
 
@@ -294,10 +308,12 @@ int TestMeshQuality()
             << "\n++++++++++++++++++++++++++++++++++++++++++++++++++\n";
 
 
-  expectedValues = { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 2.23607 };
+  expectedValues = {
+    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, (vtkm::FloatDefault)2.23607
+  };
 
   filter.reset(new QualityFilter(vtkm::filter::CellMetric::JACOBIAN));
-  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, *filter);
+  errors = TestMeshQualityFilter<QualityFilter>(input, expectedValues, "jacobian", *filter);
   std::cout << "Jacobian metric test: ";
   CheckForErrors(errors);
 

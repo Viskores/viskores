@@ -61,6 +61,11 @@ inline VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
 {
   this->SetUseCoordinateSystemAsField(true);
   myMetric = metric;
+  if (myMetric < CellMetric::AREA || myMetric >= CellMetric::NUMBER_OF_CELL_METRICS)
+  {
+    VTKM_ASSERT(true);
+  }
+  outputName = MetricNames[(int)myMetric];
 }
 
 template <typename T, typename StorageType, typename DerivedPolicy>
@@ -86,8 +91,7 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 
   //Append the metric values of all cells into the output
   //dataset as a new field
-  const std::string s = "allCells-metricValues";
-  result.AddField(vtkm::cont::make_FieldCell(s, outArray));
+  result.AddField(vtkm::cont::make_FieldCell(outputName, outArray));
 
   return result;
 }
