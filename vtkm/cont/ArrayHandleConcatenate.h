@@ -22,6 +22,10 @@ namespace internal
 template <typename PortalType1, typename PortalType2>
 class VTKM_ALWAYS_EXPORT ArrayPortalConcatenate
 {
+  using WritableP1 = vtkm::internal::PortalSupportsSets<PortalType1>;
+  using WritableP2 = vtkm::internal::PortalSupportsSets<PortalType2>;
+  using Writable = std::integral_constant<bool, WritableP1::value && WritableP2::value>;
+
 public:
   using ValueType = typename PortalType1::ValueType;
 
@@ -58,18 +62,27 @@ public:
   ValueType Get(vtkm::Id index) const
   {
     if (index < this->portal1.GetNumberOfValues())
+    {
       return this->portal1.Get(index);
+    }
     else
+    {
       return this->portal2.Get(index - this->portal1.GetNumberOfValues());
+    }
   }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     if (index < this->portal1.GetNumberOfValues())
+    {
       this->portal1.Set(index, value);
+    }
     else
+    {
       this->portal2.Set(index - this->portal1.GetNumberOfValues(), value);
+    }
   }
 
   VTKM_EXEC_CONT

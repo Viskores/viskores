@@ -23,6 +23,8 @@ namespace internal
 template <typename P>
 class VTKM_ALWAYS_EXPORT ArrayPortalStreaming
 {
+  using Writable = vtkm::internal::PortalSupportsSets<P>;
+
 public:
   using PortalType = P;
   using ValueType = typename PortalType::ValueType;
@@ -66,8 +68,9 @@ public:
     return this->InputPortal.Get(this->BlockIndex * this->BlockSize + index);
   }
 
-  VTKM_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     this->InputPortal.Set(this->BlockIndex * this->BlockSize + index, value);
   }
