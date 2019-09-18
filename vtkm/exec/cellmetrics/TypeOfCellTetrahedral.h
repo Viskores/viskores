@@ -1,3 +1,22 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
 #ifndef vtk_m_exec_cellmetrics_TypeOfCellTetrahedral
 #define vtk_m_exec_cellmetrics_TypeOfCellTetrahedral
 /**
@@ -219,9 +238,9 @@ VTKM_EXEC Scalar GetTetraArea(const CollectionOfPoints& pts)
   const Scalar b = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L0)));
   const Scalar c = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L4, L1)));
   const Scalar d = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L2)));
-  const Scalar half(0.5);
+  const Scalar hhalf(0.5);
 
-  const Scalar area = half * (a + b + c + d);
+  const Scalar area = hhalf * (a + b + c + d);
   return area;
 }
 

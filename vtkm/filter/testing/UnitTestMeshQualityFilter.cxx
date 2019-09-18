@@ -184,7 +184,7 @@ int TestMeshQuality()
   metricName.push_back("diagonalRatio");
  */
 
-  unsigned long numTests = metrics.size();
+  unsigned long numTests = (unsigned long)metrics.size();
   for (unsigned long i = 0; i < numTests; i++)
   {
     printf("Testing metric %s\n", metricName[i].c_str());

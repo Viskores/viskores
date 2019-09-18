@@ -21,6 +21,11 @@
 set(headers
   CellDiagonalRatioMetric.h
   CellEdgeRatioMetric.h
+  CellJacobianMetric.h
+  TypeOfCellHexahedron.h
+  TypeOfCellQuadrilateral.h
+  TypeOfCellTetrahedral.h
+  TypeOfCellTriangle.h
   )
 
 
