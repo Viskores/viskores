@@ -82,7 +82,7 @@ int main(int argc, char** argv)
   //create seeds randomly placed withing the bounding box of the data.
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
   std::vector<vtkm::Vec3f> seeds;
-  std::vector<vtkm::Particle> particles;
+  std::vector<vtkm::Particle> particles, particles2;
 
   for (int i = 0; i < numSeeds; i++)
   {
@@ -101,10 +101,12 @@ int main(int argc, char** argv)
     pa.Pos = p;
     pa.NumSteps = 0;
     particles.push_back(pa);
+    particles2.push_back(pa);
   }
 
   auto seedArrayPts = vtkm::cont::make_ArrayHandle(seeds);
   auto seedArrayPar = vtkm::cont::make_ArrayHandle(particles);
+  auto seedArrayPar2 = vtkm::cont::make_ArrayHandle(particles2);
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
@@ -131,10 +133,19 @@ int main(int argc, char** argv)
   if (1)
   {
     auto s = std::chrono::system_clock::now();
-    auto res1 = paPART.Run(rk4, seedArrayPar, numSteps);
+    auto res1 = paPART.Run(rk4, seedArrayPar, numSteps, 0);
     auto e = std::chrono::system_clock::now();
     dT = e - s;
     std::cout << "AOS_Time= " << dT.count() << std::endl;
+  }
+
+  if (1)
+  {
+    auto s = std::chrono::system_clock::now();
+    auto res1 = paPART.Run(rk4, seedArrayPar2, numSteps, 1);
+    auto e = std::chrono::system_clock::now();
+    dT = e - s;
+    std::cout << "AOS2_Time= " << dT.count() << std::endl;
   }
 
   /*

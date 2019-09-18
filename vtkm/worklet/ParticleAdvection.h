@@ -139,27 +139,17 @@ public:
   template <typename IntegratorType, typename ParticleStorage>
   ParticleAdvectionResult Run(const IntegratorType& it,
                               vtkm::cont::ArrayHandle<vtkm::Particle, ParticleStorage>& particles,
-                              const vtkm::Id& MaxSteps)
+                              const vtkm::Id& MaxSteps,
+                              int which)
   {
     vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType> worklet;
 
-    worklet.Run(it, particles, MaxSteps);
+    if (which == 0)
+      worklet.Run(it, particles, MaxSteps);
+    else
+      worklet.Run2(it, particles, MaxSteps);
+
     return ParticleAdvectionResult();
-
-
-    /*
-    vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
-
-    vtkm::cont::ArrayHandle<vtkm::Id> status;
-    //Allocate status arrays.
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
-    status.Allocate(numSeeds);
-    vtkm::cont::ArrayCopy(statusOK, status);
-
-    worklet.Run(it, pts, nSteps, status, inputSteps, inputTime);
-    //Create output.
-    return ParticleAdvectionResult(pts, status, inputSteps, inputTime);
-*/
   }
 };
 

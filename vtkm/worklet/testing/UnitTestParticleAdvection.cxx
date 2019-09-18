@@ -658,7 +658,7 @@ void TestParticleStatus()
   VTKM_TEST_ASSERT(tookStep1 == 0, "Particle took a step when it should not have.");
 }
 
-
+#if 0
 double TestParticleAOS(bool doAOS)
 {
   vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
@@ -696,37 +696,38 @@ double TestParticleAOS(bool doAOS)
   int n = 10000;
   for (int i = 0; i < n; i++)
   {
-    vtkm::Particle p;
-    p.ID = i;
-    p.Status = vtkm::ParticleStatus::SUCCESS;
-    auto pt = RandomPoint(bounds);
-    p.Pos = pt;
-    particles.push_back(p);
-    pts.push_back(pt);
+      vtkm::Particle p;
+      p.ID = i;
+      p.Status = vtkm::ParticleStatus::SUCCESS;
+      auto pt = RandomPoint(bounds);
+      p.Pos = pt;
+      particles.push_back(p);
+      pts.push_back(pt);
   }
 
   std::chrono::duration<double> dT;
   if (doAOS)
   {
-    auto seedsArray = vtkm::cont::make_ArrayHandle(particles);
-    //vtkm::cont::printSummary_ArrayHandle(seedsArray, std::cout, true);
-    auto s = std::chrono::system_clock::now();
-    auto res = pa.Run(rk4, seedsArray, maxSteps);
-    auto e = std::chrono::system_clock::now();
-    dT = e - s;
+      auto seedsArray = vtkm::cont::make_ArrayHandle(particles);
+      //vtkm::cont::printSummary_ArrayHandle(seedsArray, std::cout, true);
+      auto s = std::chrono::system_clock::now();
+      auto res = pa.Run(rk4, seedsArray, maxSteps);
+      auto e = std::chrono::system_clock::now();
+      dT = e-s;
   }
   else
   {
-    auto seedsArray = vtkm::cont::make_ArrayHandle(pts);
-    //vtkm::cont::printSummary_ArrayHandle(seedsArray, std::cout, true);
-    auto s = std::chrono::system_clock::now();
-    auto res = pa.Run(rk4, seedsArray, maxSteps);
-    auto e = std::chrono::system_clock::now();
-    dT = e - s;
+      auto seedsArray = vtkm::cont::make_ArrayHandle(pts);
+      //vtkm::cont::printSummary_ArrayHandle(seedsArray, std::cout, true);
+      auto s = std::chrono::system_clock::now();
+      auto res = pa.Run(rk4, seedsArray, maxSteps);
+      auto e = std::chrono::system_clock::now();
+      dT = e-s;
   }
 
   return dT.count();
 }
+#endif
 
 void TestParticleAdvection()
 {
@@ -734,11 +735,11 @@ void TestParticleAdvection()
   //  TestParticleWorklets();
   //  TestParticleStatus();
 
-  double aosTime = TestParticleAOS(true);
-  double soaTime = TestParticleAOS(false);
+  //  double aosTime = TestParticleAOS(true);
+  //  double soaTime = TestParticleAOS(false);
 
-  std::cout << "AOS_time= " << aosTime << std::endl;
-  std::cout << "SOA_time= " << soaTime << std::endl;
+  //  std::cout<<"AOS_time= "<< aosTime<<std::endl;
+  //  std::cout<<"SOA_time= "<< soaTime<<std::endl;
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])

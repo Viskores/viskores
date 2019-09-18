@@ -101,6 +101,92 @@ public:
 };
 
 
+class ParticleAdvectWorkletAOS2 : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(ExecObject integrator, FieldInOut particles, FieldIn maxSteps);
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _3;
+
+  template <typename IntegratorType, typename ParticleType>
+  VTKM_EXEC void operator()(const IntegratorType* integrator,
+                            ParticleType& particle,
+                            const vtkm::Id& maxSteps) const
+
+  {
+    vtkm::Vec3f inpos = particle.Pos, outpos;
+    vtkm::FloatDefault time = particle.Time;
+    IntegratorStatus status;
+    bool tookAnySteps = false;
+    while ((particle.Status & ParticleStatus::SUCCESS) != 0)
+    {
+      status = integrator->Step(inpos, time, outpos);
+      // If the status is OK, we only need to check if the particle
+      // has completed the maximum steps required.
+      if (status == IntegratorStatus::SUCCESS)
+      {
+        //particle.TakeStep(idx, outpos, time);
+        particle.Pos = outpos;
+        particle.NumSteps++;
+        particle.Time = time;
+        if (particle.NumSteps == maxSteps)
+        {
+          particle.Status &= ~ParticleStatus::SUCCESS;
+          particle.Status |= ParticleStatus::TERMINATED;
+        }
+
+        // This is to keep track of the particle's time.
+        // This is what the Evaluator uses to determine if the particle
+        // has exited temporal boundary.
+        inpos = outpos;
+        tookAnySteps = true;
+      }
+      // If the particle is at spatial or temporal  boundary, take steps to just
+      // push it a little out of the boundary so that it will start advection in
+      // another domain, or in another time slice. Taking small steps enables
+      // reducing the error introduced at spatial or temporal boundaries.
+      else if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
+      {
+        particle.Status &= ~ParticleStatus::SUCCESS;
+        particle.Status |= ParticleStatus::EXIT_TEMPORAL_BOUNDARY;
+        break;
+      }
+      else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
+      {
+        status = integrator->SmallStep(inpos, time, outpos);
+        //particle.TakeStep(idx, outpos, time);
+        particle.Pos = outpos;
+        particle.NumSteps++;
+        particle.Time = time;
+
+        if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
+        {
+          particle.Status &= ~ParticleStatus::SUCCESS;
+          particle.Status |= ParticleStatus::EXIT_TEMPORAL_BOUNDARY;
+          break;
+        }
+        else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
+        {
+          particle.Status &= ~ParticleStatus::SUCCESS;
+          particle.Status |= ParticleStatus::EXIT_SPATIAL_BOUNDARY;
+          break;
+        }
+        else if (status == IntegratorStatus::FAIL)
+        {
+          particle.Status &= ~ParticleStatus::SUCCESS;
+          particle.Status |= ParticleStatus::FAIL;
+          break;
+        }
+      }
+    }
+    if (tookAnySteps)
+      particle.Status |= ParticleStatus::TOOK_ANY_STEPS;
+    else
+      particle.Status &= ~ParticleStatus::TOOK_ANY_STEPS;
+  }
+};
+
+
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -228,8 +314,31 @@ public:
 
     //Invoke particle advection worklet
     ParticleWorkletDispatchType particleWorkletDispatch;
-    //problem
     particleWorkletDispatch.Invoke(idxArray, integrator, particles);
+  }
+
+  //AOS version
+  void Run2(const IntegratorType& integrator,
+            vtkm::cont::ArrayHandle<vtkm::Particle>& particles,
+            const vtkm::Id& MaxSteps)
+  {
+    using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorkletAOS2;
+    using ParticleWorkletDispatchType =
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
+
+    vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
+    //Create and invoke the particle advection.
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> maxSteps(MaxSteps, numSeeds);
+
+#ifdef VTKM_CUDA
+    // This worklet needs some extra space on CUDA.
+    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    (void)stack;
+#endif // VTKM_CUDA
+
+    //Invoke particle advection worklet
+    ParticleWorkletDispatchType particleWorkletDispatch;
+    particleWorkletDispatch.Invoke(integrator, particles, maxSteps);
   }
 };
 

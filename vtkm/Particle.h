@@ -29,12 +29,37 @@ enum ParticleStatus : vtkm::Id
 class Particle
 {
 public:
-  Particle() {}
-  Particle(const vtkm::Vec3f& p, vtkm::Id id, vtkm::Id numSteps)
+  VTKM_EXEC_CONT
+  Particle()
+    : Pos()
+    , ID(-1)
+    , NumSteps(0)
+    , Status(vtkm::ParticleStatus::UNDEFINED)
+    , Time(0)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  Particle(const vtkm::Particle& p)
+    : Pos(p.Pos)
+    , ID(p.ID)
+    , NumSteps(p.NumSteps)
+    , Status(p.Status)
+    , Time(p.Time)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  Particle(const vtkm::Vec3f& p,
+           vtkm::Id id,
+           vtkm::Id numSteps,
+           vtkm::Id status = vtkm::ParticleStatus::UNDEFINED,
+           vtkm::FloatDefault time = 0)
     : Pos(p)
     , ID(id)
     , NumSteps(numSteps)
-    , Status(vtkm::ParticleStatus::UNDEFINED)
+    , Status(status)
+    , Time(time)
   {
   }
 
