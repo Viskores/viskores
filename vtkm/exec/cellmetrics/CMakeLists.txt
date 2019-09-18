@@ -22,7 +22,7 @@ set(headers
   CellDiagonalRatioMetric.h
   CellEdgeRatioMetric.h
   CellJacobianMetric.h
-  TypeOfCellHexahedron.h
+  TypeOfCellHexahedral.h
   TypeOfCellQuadrilateral.h
   TypeOfCellTetrahedral.h
   TypeOfCellTriangle.h
