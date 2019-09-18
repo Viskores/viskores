@@ -164,9 +164,9 @@ VTKM_EXEC Scalar GetTriangleArea(const CollectionOfPoints& pts)
 {
   const Vector L0 = GetTriangleL0<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector L1 = GetTriangleL1<Scalar, Vector, CollectionOfPoints>(pts);
-  const Scalar half(0.5);
+  const Scalar hhalf(0.5);
   const Scalar crossProductMagnitude = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L0, L1)));
-  const Scalar area = half * crossProductMagnitude;
+  const Scalar area = hhalf * crossProductMagnitude;
   return area;
 }
 
